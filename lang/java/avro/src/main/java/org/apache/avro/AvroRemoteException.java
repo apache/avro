@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,12 +35,12 @@ public class AvroRemoteException extends IOException {
     super(value != null ? value.toString() : null);
     this.value = value;
   }
-  
+
   public AvroRemoteException(Object value, Throwable cause) {
     super(value != null ? value.toString() : null, cause);
     this.value = value;
   }
-  
+
   public Object getValue() { return value; }
 }
 

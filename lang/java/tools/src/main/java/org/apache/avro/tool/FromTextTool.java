@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,13 +34,13 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 
 /** Reads a text file into an Avro data file.
- * 
+ *
  * Can accept a file name, and HDFS file URI, or stdin. Can write to a file
  * name, an HDFS URI, or stdout.*/
 public class FromTextTool implements Tool {
-  private static final String TEXT_FILE_SCHEMA = 
+  private static final String TEXT_FILE_SCHEMA =
     "\"bytes\"";
-  
+
   @Override
   public String getName() {
     return "fromtext";
@@ -54,7 +54,7 @@ public class FromTextTool implements Tool {
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
-    
+
     OptionParser p = new OptionParser();
     OptionSpec<Integer> level = Util.compressionLevelOption(p);
     OptionSpec<String> codec = Util.compressionCodecOption(p);
@@ -68,14 +68,14 @@ public class FromTextTool implements Tool {
       p.printHelpOn(err);
       return 1;
     }
- 
+
     CodecFactory codecFactory = Util.codecFactory(opts, codec, level);
-  
+
     BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
     BufferedOutputStream outStream = Util.fileOrStdout(nargs.get(1), out);
-    
+
     DataFileWriter<ByteBuffer> writer =
-        new DataFileWriter<ByteBuffer>(new GenericDatumWriter<ByteBuffer>());
+        new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(codecFactory);
     writer.create(Schema.parse(TEXT_FILE_SCHEMA), outStream);
 

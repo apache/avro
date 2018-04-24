@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,23 +37,23 @@ public class ProtocolTask extends Task {
   private File dest = new File(".");
   private StringType stringType = StringType.CharSequence;
 
-  private final ArrayList<FileSet> filesets = new ArrayList<FileSet>();
-  
+  private final ArrayList<FileSet> filesets = new ArrayList<>();
+
   /** Set the schema file. */
   public void setFile(File file) { this.src = file; }
-  
+
   /** Set the output directory */
   public void setDestdir(File dir) { this.dest = dir; }
-  
+
   /** Set the string type. */
   public void setStringType(StringType type) { this.stringType = type; }
-  
+
   /** Get the string type. */
   public StringType getStringType() { return this.stringType; }
-  
+
   /** Add a fileset. */
   public void addFileset(FileSet set) { filesets.add(set); }
-  
+
   /** Run the compiler. */
   @Override
   public void execute() {
@@ -74,7 +74,7 @@ public class ProtocolTask extends Task {
       }
     }
   }
-  
+
   protected void doCompile(File src, File dir) throws IOException {
     Protocol protocol = Protocol.parse(src);
     SpecificCompiler compiler = new SpecificCompiler(protocol);

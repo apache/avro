@@ -1,7 +1,7 @@
 #set( $symbol_pound = '#' )
 #set( $symbol_dollar = '$' )
 #set( $symbol_escape = '\' )
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SimpleOrderService implements OrderProcessingService {
 
-	private Logger log = LoggerFactory.getLogger(SimpleOrderService.class);
+  private Logger log = LoggerFactory.getLogger(SimpleOrderService.class);
 
   @Override
   public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {

@@ -42,7 +42,8 @@ protocol Events {
 
   record JobFinished {
     string jobid;
-    long finishTime;
+    timestamp_ms finishTime;
+    decimal(9,2) finishRatio;
     int finishedMaps;
     int finishedReduces;
     int failedMaps;
@@ -54,7 +55,7 @@ protocol Events {
 
   record JobInited {
     string jobid;
-    long launchTime;
+    timestamp_ms launchTime;
     int totalMaps;
     int totalReduces;
     string jobStatus;
@@ -64,7 +65,7 @@ protocol Events {
     string jobid;
     string jobName;
     string userName;
-    long submitTime;
+    timestamp_ms submitTime;
     string jobConfPath;
   }
 

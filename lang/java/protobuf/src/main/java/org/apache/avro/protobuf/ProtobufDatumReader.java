@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,7 +58,7 @@ public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
   }
 
   @Override
-  protected Object readRecord(Object old, Schema expected, 
+  protected Object readRecord(Object old, Schema expected,
                               ResolvingDecoder in) throws IOException {
     Message.Builder b = (Message.Builder)super.readRecord(old, expected, in);
     return b.build();                             // build instance
@@ -78,7 +78,7 @@ public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
   @Override
   protected Object readBytes(Object old, Decoder in) throws IOException {
     return ByteString.copyFrom(((ByteBuffer)super.readBytes(old, in)).array());
-  }    
+  }
 
 }
 

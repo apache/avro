@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ public interface GenericArray<T> extends List<T>, GenericContainer {
    * store an element, if any.  This permits reuse of arrays and their elements
    * without allocating new objects. */
   T peek();
-  
+
   /** Reverses the order of the elements in this array. */
   void reverse();
 }

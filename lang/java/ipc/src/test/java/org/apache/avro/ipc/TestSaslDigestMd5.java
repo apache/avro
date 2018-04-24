@@ -60,7 +60,7 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
 
   private static final String DIGEST_MD5_MECHANISM = "DIGEST-MD5";
   private static final Map<String, String> DIGEST_MD5_PROPS =
-    new HashMap<String, String>();
+    new HashMap<>();
 
   static {
     DIGEST_MD5_PROPS.put(Sasl.QOP, "auth-int");
@@ -115,7 +115,7 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
     Transceiver c =
       new SaslSocketTransceiver(new InetSocketAddress(s.getPort()));
     GenericRequestor requestor = new GenericRequestor(PROTOCOL, c);
-    GenericRecord params = 
+    GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
     params.put("greeting", "bob");
     Utf8 response = (Utf8)requestor.request("hello", params);
@@ -157,7 +157,7 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
     Transceiver c = new SaslSocketTransceiver
       (new InetSocketAddress(server.getPort()), saslClient);
     GenericRequestor requestor = new GenericRequestor(PROTOCOL, c);
-    GenericRecord params = 
+    GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
     params.put("greeting", "bob");
     Utf8 response = (Utf8)requestor.request("hello", params);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ public class TestProtocolDatagram extends TestProtocolSpecific {
         new InetSocketAddress("localhost",
             new Random().nextInt(10000)+10000));
   }
-  
+
   @Override
   public Transceiver createTransceiver() throws Exception{
     return new DatagramTransceiver(new InetSocketAddress("localhost", server.getPort()));

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,14 +27,14 @@ import org.apache.avro.io.parsing.Symbol;
  * A {@link SchemaValidationStrategy} that checks that the {@link Schema} to
  * validate and the existing schema can mutually read each other according to
  * the default Avro schema resolution rules.
- * 
+ *
  */
 class ValidateMutualRead implements SchemaValidationStrategy {
 
   /**
    * Validate that the schemas provided can mutually read data written by each
    * other according to the default Avro schema resolution rules.
-   * 
+   *
    * @throws SchemaValidationException if the schemas are not mutually compatible.
    */
   @Override
@@ -47,7 +47,7 @@ class ValidateMutualRead implements SchemaValidationStrategy {
   /**
    * Validates that data written with one schema can be read using another,
    * based on the default Avro schema resolution rules.
-   * 
+   *
    * @param writtenWith
    *          The "writer's" schema, representing data to be read.
    * @param readUsing

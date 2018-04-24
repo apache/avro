@@ -7,10 +7,6 @@
 package org.apache.avro.thrift.test;
 
 
-import java.util.Map;
-import java.util.HashMap;
-import org.apache.thrift.TEnum;
-
 public enum E implements org.apache.thrift.TEnum {
   X(1),
   Y(2),
@@ -33,7 +29,7 @@ public enum E implements org.apache.thrift.TEnum {
    * Find a the enum type by its integer value, as defined in the Thrift IDL.
    * @return null if the value is not found.
    */
-  public static E findByValue(int value) { 
+  public static E findByValue(int value) {
     switch (value) {
       case 1:
         return X;

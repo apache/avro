@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class TestBinaryEncoderFidelity {
-  
+
   static byte[] legacydata;
   static byte[] complexdata;
   EncoderFactory factory = EncoderFactory.get();
@@ -116,7 +116,7 @@ public class TestBinaryEncoderFidelity {
     }
     e.flush();
   }
-  
+
   static void generateComplexData(Encoder e) throws IOException {
     e.writeArrayStart();
     e.setItemCount(1);
@@ -136,7 +136,7 @@ public class TestBinaryEncoderFidelity {
     e.writeMapEnd();
     e.flush();
   }
-  
+
   @BeforeClass
   public static void generateLegacyData() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -147,7 +147,7 @@ public class TestBinaryEncoderFidelity {
     generateComplexData(e);
     complexdata = baos.toByteArray();
   }
-  
+
   @Test
   public void testBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -162,7 +162,7 @@ public class TestBinaryEncoderFidelity {
     Assert.assertEquals(complexdata.length, result2.length);
     Assert.assertArrayEquals(complexdata, result2);
   }
-  
+
   @Test
   public void testDirectBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -178,7 +178,7 @@ public class TestBinaryEncoderFidelity {
     Assert.assertArrayEquals(complexdata, result2);
   }
 
-  
+
   @Test
   public void testBlockingBinaryEncoder() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();

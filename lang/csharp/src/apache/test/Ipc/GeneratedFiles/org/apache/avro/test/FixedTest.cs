@@ -17,7 +17,7 @@ namespace org.apache.avro.test
 	{
 		private static Schema _SCHEMA = Avro.Schema.Parse("{\"type\":\"fixed\",\"name\":\"FixedTest\",\"namespace\":\"org.apache.avro.test\",\"size\":10}");
 		private static uint fixedSize = 10;
-		public FixedTest() : 
+		public FixedTest() :
 				base(fixedSize)
 		{
 		}

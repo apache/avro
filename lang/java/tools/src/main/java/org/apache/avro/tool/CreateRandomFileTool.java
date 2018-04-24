@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -82,11 +82,18 @@ public class CreateRandomFileTool implements Tool {
         : new Schema.Parser().parse(schemastr);
 
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+      new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(Util.codecFactory(opts, codec, level));
     writer.create(schema, Util.fileOrStdout(args.get(0), out));
 
-    for (Object datum : new RandomData(schema, (int)count.value(opts)))
+    Integer countValue = count.value(opts);
+    if (countValue == null) {
+      err.println("Need count (--count)");
+      p.printHelpOn(err);
+      return 1;
+    }
+
+    for (Object datum : new RandomData(schema, countValue))
       writer.append(datum);
 
     writer.close();

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,11 +33,11 @@ import org.apache.avro.generic.GenericDatumReader;
 
 /** Reads an avro data file into a plain text file. */
 public class ToTextTool implements Tool {
-  private static final String TEXT_FILE_SCHEMA = 
+  private static final String TEXT_FILE_SCHEMA =
         "\"bytes\"";
-  private static final byte[] LINE_SEPARATOR = 
+  private static final byte[] LINE_SEPARATOR =
         System.getProperty("line.separator").getBytes();
-    
+
   @Override
   public String getName() {
     return "totext";
@@ -51,7 +51,7 @@ public class ToTextTool implements Tool {
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
-      
+
     OptionParser p = new OptionParser();
     OptionSet opts = p.parse(args.toArray(new String[0]));
     if (opts.nonOptionArguments().size() != 2) {
@@ -63,9 +63,9 @@ public class ToTextTool implements Tool {
     BufferedInputStream inStream = Util.fileOrStdin(args.get(0), stdin);
     BufferedOutputStream outStream = Util.fileOrStdout(args.get(1), out);
 
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
     DataFileStream<Object> fileReader =
-        new DataFileStream<Object>(inStream, reader);
+        new DataFileStream<>(inStream, reader);
 
     if (!fileReader.getSchema().equals(new Schema.Parser().parse(TEXT_FILE_SCHEMA))) {
       err.println("Avro file is not generic text schema");
@@ -73,7 +73,7 @@ public class ToTextTool implements Tool {
       fileReader.close();
       return 1;
     }
-    
+
     while (fileReader.hasNext()) {
       ByteBuffer outBuff = (ByteBuffer) fileReader.next();
       outStream.write(outBuff.array());

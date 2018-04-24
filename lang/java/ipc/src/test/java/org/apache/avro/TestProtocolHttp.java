@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.avro;
 
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.Responder;
@@ -42,12 +41,12 @@ public class TestProtocolHttp extends TestProtocolSpecific {
   public Server createServer(Responder testResponder) throws Exception {
     return new HttpServer(testResponder, 0);
   }
-  
+
   @Override
   public Transceiver createTransceiver() throws Exception{
     return new HttpTransceiver(new URL("http://127.0.0.1:"+server.getPort()+"/"));
   }
- 
+
   protected int getExpectedHandshakeCount() {
     return REPEATING;
   }
@@ -74,9 +73,9 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
     Protocol.Message message =
       protocol.createMessage("ack", null,
-                             Schema.createRecord(new ArrayList<Field>()),
+                             Schema.createRecord(new ArrayList<>()),
                              Schema.create(Schema.Type.NULL),
-                             Schema.createUnion(new ArrayList<Schema>()));
+                             Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("ack", message);
 
     // call a server over a stateless protocol that has a one-way "ack"

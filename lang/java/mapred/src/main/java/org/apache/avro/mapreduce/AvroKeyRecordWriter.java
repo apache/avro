@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -67,7 +67,7 @@ public class AvroKeyRecordWriter<T> extends RecordWriter<AvroKey<T>, NullWritabl
    */
   public AvroKeyRecordWriter(Schema writerSchema, GenericData dataModel,
       CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
-    this(writerSchema, dataModel, compressionCodec, outputStream, 
+    this(writerSchema, dataModel, compressionCodec, outputStream,
         DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
@@ -82,10 +82,10 @@ public class AvroKeyRecordWriter<T> extends RecordWriter<AvroKey<T>, NullWritabl
   public void close(TaskAttemptContext context) throws IOException {
     mAvroFileWriter.close();
   }
-  
+
   /** {@inheritDoc} */
   @Override
   public long sync() throws IOException {
     return mAvroFileWriter.sync();
-  }  
+  }
 }

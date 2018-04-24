@@ -53,7 +53,7 @@ namespace Avro.Test
         [TestCase(@"{
   ""protocol"" : ""MyProtocol"",
   ""namespace"" : ""com.foo"",
-  ""types"" : [ 
+  ""types"" : [
    {
 	""type"" : ""record"",
 	""name"" : ""A"",
@@ -65,14 +65,14 @@ namespace Avro.Test
 	""symbols"" : [ ""A"", ""B"", ""C"" ]
    },
    {
-   ""type"": ""fixed"", 
-   ""size"": 16, 
+   ""type"": ""fixed"",
+   ""size"": 16,
    ""name"": ""MyFixed""
    },
    {
 	""type"" : ""record"",
 	""name"" : ""Z"",
-	""fields"" : 
+	""fields"" :
 			[ 	
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
@@ -111,12 +111,12 @@ namespace Avro.Test
         [TestCase(@"{
   ""protocol"" : ""MyProtocol"",
   ""namespace"" : ""com.bar"",
-  ""types"" : [ 
+  ""types"" : [
    {
 	""type"" : ""record"",
 	""name"" : ""A"",
-	""fields"" : 
-		[ 
+	""fields"" :
+		[
 			{ ""name"" : ""f1"", ""type"" : ""long"" }
 		]
    },
@@ -126,14 +126,14 @@ namespace Avro.Test
 	""symbols"" : [ ""A"", ""B"", ""C"" ]
    },
    {
-   ""type"": ""fixed"", 
-   ""size"": 16, 
+   ""type"": ""fixed"",
+   ""size"": 16,
    ""name"": ""MyFixed""
    },
    {
 	""type"" : ""record"",
 	""name"" : ""Z"",
-	""fields"" : 
+	""fields"" :
 			[ 	
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ], ""default"" : 1 },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ], ""default"" : 2 },
@@ -201,7 +201,7 @@ namespace Avro.Test
       ""errors"": [""Curse""]
     }
   }
-}", 
+}",
 @"{
   ""protocol"": ""TestProtocol"",
   ""namespace"": ""com.acme"",

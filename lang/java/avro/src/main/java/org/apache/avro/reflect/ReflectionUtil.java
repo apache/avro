@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,10 +22,10 @@ import org.apache.avro.AvroRuntimeException;
 /**
  * A few utility methods for using @link{java.misc.Unsafe}, mostly for private
  * use.
- * 
+ *
  * Use of Unsafe on Android is forbidden, as Android provides only a very
  * limited functionality for this class compared to the JDK version.
- * 
+ *
  */
 
 class ReflectionUtil {

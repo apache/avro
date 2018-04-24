@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,10 +25,10 @@ import java.lang.annotation.Target;
 /**
  * Adds the given name and space as an alias to the schema.
  * Avro files of this schema can be read into classes
- * named by the alias. 
+ * named by the alias.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.FIELD})
 public @interface AvroAlias {
   String NULL = "NOT A VALID NAMESPACE";
 

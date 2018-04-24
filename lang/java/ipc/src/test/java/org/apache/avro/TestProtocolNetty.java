@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,12 +34,12 @@ public class TestProtocolNetty extends TestProtocolSpecific {
   public Server createServer(Responder testResponder) throws Exception {
     return new NettyServer(responder, new InetSocketAddress(0));
   }
-  
+
   @Override
   public Transceiver createTransceiver() throws Exception{
     return new NettyTransceiver(new InetSocketAddress(server.getPort()), 2000L);
   }
-  
+
   @Override
   protected int getExpectedHandshakeCount() {
     return REPEATING;

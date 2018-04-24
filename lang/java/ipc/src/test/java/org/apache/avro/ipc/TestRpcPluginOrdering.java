@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,17 +35,17 @@ import org.junit.Test;
 public class TestRpcPluginOrdering {
 
   private static AtomicInteger orderCounter = new AtomicInteger();
-  
+
   public class OrderPlugin extends RPCPlugin{
 
     public void clientStartConnect(RPCContext context) {
       assertEquals(0, orderCounter.getAndIncrement());
     }
-    
+
     public void clientSendRequest(RPCContext context) {
       assertEquals(1, orderCounter.getAndIncrement());
     }
-    
+
     public void clientReceiveResponse(RPCContext context) {
       assertEquals(6, orderCounter.getAndIncrement());
     }
@@ -66,16 +66,16 @@ public class TestRpcPluginOrdering {
       assertEquals(4, orderCounter.getAndIncrement());
     }
   }
-  
+
   @Test
   public void testRpcPluginOrdering() throws Exception {
     OrderPlugin plugin = new OrderPlugin();
-    
+
     SpecificResponder responder = new SpecificResponder(Mail.class, new TestMailImpl());
     SpecificRequestor requestor = new SpecificRequestor(Mail.class, new LocalTransceiver(responder));
     responder.addRPCPlugin(plugin);
     requestor.addRPCPlugin(plugin);
-    
+
     Mail client = SpecificRequestor.getClient(Mail.class, requestor);
     Message message = createTestMessage();
     client.send(message);
@@ -89,7 +89,7 @@ public class TestRpcPluginOrdering {
       build();
     return message;
   }
-  
+
   private static class TestMailImpl implements Mail{
     public String send(Message message) throws AvroRemoteException {
       return "Received";

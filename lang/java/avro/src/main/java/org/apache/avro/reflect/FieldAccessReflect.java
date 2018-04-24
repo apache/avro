@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -47,7 +47,7 @@ class FieldAccessReflect extends FieldAccess {
       this.field = field;
       this.field.setAccessible(true);
       isStringable = field.isAnnotationPresent(Stringable.class);
-      isCustomEncoded = field.isAnnotationPresent(AvroEncode.class); 
+      isCustomEncoded = field.isAnnotationPresent(AvroEncode.class);
     }
 
     @Override
@@ -65,17 +65,17 @@ class FieldAccessReflect extends FieldAccess {
         IOException {
       field.set(object, value);
     }
-    
+
     @Override
     protected Field getField() {
       return field;
     }
-    
+
     @Override
     protected boolean isStringable() {
       return isStringable;
     }
-    
+
     @Override
     protected boolean isCustomEncoded() {
       return isCustomEncoded;

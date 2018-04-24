@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -31,21 +31,21 @@ import java.util.Set;
  * Implements a combination of WeakHashMap and IdentityHashMap.
  * Useful for caches that need to key off of a == comparison
  * instead of a .equals.
- * 
+ *
  * <b>
  * This class is not a general-purpose Map implementation! While
  * this class implements the Map interface, it intentionally violates
  * Map's general contract, which mandates the use of the equals method
  * when comparing objects. This class is designed for use only in the
  * rare cases wherein reference-equality semantics are required.
- * 
+ *
  * Note that this implementation is not synchronized.
  * </b>
  */
 public class WeakIdentityHashMap<K, V> implements Map<K, V> {
-  private final ReferenceQueue<K> queue = new ReferenceQueue<K>();
+  private final ReferenceQueue<K> queue = new ReferenceQueue<>();
   private Map<IdentityWeakReference, V> backingStore
-    = new HashMap<IdentityWeakReference, V>();
+    = new HashMap<>();
 
   public WeakIdentityHashMap() {}
 
@@ -66,7 +66,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
 
   public Set<Map.Entry<K, V>> entrySet() {
     reap();
-    Set<Map.Entry<K, V>> ret = new HashSet<Map.Entry<K, V>>();
+    Set<Map.Entry<K, V>> ret = new HashSet<>();
     for (Map.Entry<IdentityWeakReference, V> ref : backingStore.entrySet()) {
       final K key = ref.getKey().get();
       final V value = ref.getValue();
@@ -88,7 +88,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
 
   public Set<K> keySet() {
     reap();
-    Set<K> ret = new HashSet<K>();
+    Set<K> ret = new HashSet<>();
     for (IdentityWeakReference ref : backingStore.keySet()) {
       ret.add(ref.get());
     }
@@ -96,6 +96,9 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   }
 
   public boolean equals(Object o) {
+    if (!(o instanceof WeakIdentityHashMap)) {
+      return false;
+    }
     return backingStore.equals(((WeakIdentityHashMap)o).backingStore);
   }
 
@@ -144,7 +147,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
 
   class IdentityWeakReference extends WeakReference<K> {
     int hash;
-        
+
     @SuppressWarnings("unchecked")
       IdentityWeakReference(Object obj) {
       super((K)obj, queue);
@@ -158,6 +161,9 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     public boolean equals(Object o) {
       if (this == o) {
         return true;
+      }
+      if (!(o instanceof WeakIdentityHashMap.IdentityWeakReference)) {
+        return false;
       }
       IdentityWeakReference ref = (IdentityWeakReference)o;
       if (this.get() == ref.get()) {

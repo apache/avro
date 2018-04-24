@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ import org.apache.avro.util.Utf8;
  * An abstract {@link Encoder} for Avro's binary encoding.
  * <p/>
  * To construct and configure instances, use {@link EncoderFactory}
- * 
+ *
  * @see EncoderFactory
  * @see BufferedBinaryEncoder
  * @see DirectBinaryEncoder
@@ -35,15 +35,15 @@ import org.apache.avro.util.Utf8;
  * @see Decoder
  */
 public abstract class BinaryEncoder extends Encoder {
-  
+
   @Override
   public void writeNull() throws IOException {}
-  
+
   @Override
   public void writeString(Utf8 utf8) throws IOException {
     this.writeBytes(utf8.getBytes(), 0, utf8.getByteLength());
   }
-  
+
   @Override
   public void writeString(String string) throws IOException {
     if (0 == string.length()) {
@@ -65,7 +65,7 @@ public abstract class BinaryEncoder extends Encoder {
       writeFixed(bytes);
     }
   }
-  
+
   @Override
   public void writeBytes(byte[] bytes, int start, int len) throws IOException {
     if (0 == len) {
@@ -75,7 +75,7 @@ public abstract class BinaryEncoder extends Encoder {
     this.writeInt(len);
     this.writeFixed(bytes, start, len);
   }
-  
+
   @Override
   public void writeEnum(int e) throws IOException {
     this.writeInt(e);
@@ -90,7 +90,7 @@ public abstract class BinaryEncoder extends Encoder {
       this.writeLong(itemCount);
     }
   }
-  
+
   @Override
   public void startItem() throws IOException {}
 
@@ -111,10 +111,10 @@ public abstract class BinaryEncoder extends Encoder {
   public void writeIndex(int unionIndex) throws IOException {
     writeInt(unionIndex);
   }
-  
+
   /** Write a zero byte to the underlying output. **/
   protected abstract void writeZero() throws IOException;
-  
+
   /**
    * Returns the number of bytes currently buffered by this encoder. If this
    * Encoder does not buffer, this will always return zero.
@@ -122,6 +122,6 @@ public abstract class BinaryEncoder extends Encoder {
    * Call {@link #flush()} to empty the buffer to the underlying output.
    */
   public abstract int bytesBuffered();
-  
+
 }
 

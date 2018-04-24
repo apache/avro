@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,10 +22,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import static org.junit.Assert.*;
+
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -34,10 +39,6 @@ import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.reflect.ReflectData;
-import org.apache.avro.reflect.ReflectDatumReader;
-import org.apache.avro.reflect.ReflectDatumWriter;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -59,7 +60,7 @@ public class TestNonStringMapKeys {
     String testType = "NonStringKeysTest";
     Company [] entityObjs = {entityObj1, entityObj2};
     byte[] bytes = testSerialization(testType, entityObj1, entityObj2);
-    List<GenericRecord> records = 
+    List<GenericRecord> records =
       (List<GenericRecord>) testGenericDatumRead(testType, bytes, entityObjs);
 
     GenericRecord record = records.get(0);
@@ -76,7 +77,7 @@ public class TestNonStringMapKeys {
     Object id = ((GenericRecord)key).get("id");
     Object name = ((GenericRecord)value).get("name").toString();
     assertTrue (
-      (id.equals(1) && name.equals("Foo")) || 
+      (id.equals(1) && name.equals("Foo")) ||
       (id.equals(2) && name.equals("Bar"))
     );
 
@@ -92,7 +93,7 @@ public class TestNonStringMapKeys {
       id = e.getKey().getId();
       name = e.getValue().getName();
       assertTrue (
-        (id.equals(1) && name.equals("Foo")) || 
+        (id.equals(1) && name.equals("Foo")) ||
         (id.equals(2) && name.equals("Bar"))
       );
     }
@@ -103,7 +104,7 @@ public class TestNonStringMapKeys {
     GenericRecord jsonRecord = testJsonDecoder(testType, jsonBytes, entityObj1);
     assertEquals ("JSON decoder output not same as Binary Decoder", record, jsonRecord);
   }
-  
+
   @Test
   public void testNonStringMapKeysInNestedMaps() throws Exception {
 
@@ -119,7 +120,7 @@ public class TestNonStringMapKeys {
     Object employees = record.get("employees");
     assertTrue ("Unable to read 'employees' map", employees instanceof GenericArray);
     GenericArray employeesMapArray = ((GenericArray)employees);
-    
+
     Object employeeMapElement = employeesMapArray.get(0);
     assertTrue (employeeMapElement instanceof GenericRecord);
     Object key = ((GenericRecord)employeeMapElement).get(ReflectData.NS_MAP_KEY);
@@ -129,11 +130,11 @@ public class TestNonStringMapKeys {
     GenericRecord employeeInfo = (GenericRecord)value;
     Object name = employeeInfo.get("name").toString();
     assertEquals ("Foo", name);
-    
+
     Object companyMap = employeeInfo.get("companyMap");
     assertTrue (companyMap instanceof GenericArray);
     GenericArray companyMapArray = (GenericArray)companyMap;
-    
+
     Object companyMapElement = companyMapArray.get(0);
     assertTrue (companyMapElement instanceof GenericRecord);
     key = ((GenericRecord)companyMapElement).get(ReflectData.NS_MAP_KEY);
@@ -142,7 +143,7 @@ public class TestNonStringMapKeys {
     if (value instanceof Utf8)
       value = ((Utf8)value).toString();
     assertEquals ("CompanyFoo", value);
-    
+
     List<Company2> records2 =
       (List<Company2>) testReflectDatumRead(testType, bytes, entityObjs);
     Company2 co = records2.get(0);
@@ -180,7 +181,7 @@ public class TestNonStringMapKeys {
     Object map1obj = record.get("map1");
     assertTrue ("Unable to read map1", map1obj instanceof GenericArray);
     GenericArray map1array = ((GenericArray)map1obj);
-    
+
     Object map1element = map1array.get(0);
     assertTrue (map1element instanceof GenericRecord);
     Object key = ((GenericRecord)map1element).get(ReflectData.NS_MAP_KEY);
@@ -190,7 +191,7 @@ public class TestNonStringMapKeys {
 
     Object map2obj = record.get("map2");
     assertEquals (map1obj, map2obj);
-    
+
     List<SameMapSignature> records2 =
       (List<SameMapSignature>) testReflectDatumRead(testType, bytes, entityObjs);
     SameMapSignature entity = records2.get(0);
@@ -206,24 +207,32 @@ public class TestNonStringMapKeys {
       assertEquals ("Foo", value.toString());
     }
     assertEquals (entity.getMap1(), entity.getMap2());
+    assertEquals (entity.getMap1(), entity.getMap3());
+    assertEquals (entity.getMap1(), entity.getMap4());
 
 
     ReflectData rdata = ReflectData.get();
     Schema schema = rdata.getSchema(SameMapSignature.class);
     Schema map1schema = schema.getField("map1").schema().getElementType();
     Schema map2schema = schema.getField("map2").schema().getElementType();
+    Schema map3schema = schema.getField("map3").schema().getElementType();
+    Schema map4schema = schema.getField("map4").schema().getElementType();
     log ("Schema for map1 = " + map1schema);
     log ("Schema for map2 = " + map2schema);
+    log ("Schema for map3 = " + map3schema);
+    log ("Schema for map4 = " + map4schema);
     assertEquals (map1schema.getFullName(), "org.apache.avro.reflect.PairIntegerString");
     assertEquals (map1schema, map2schema);
+    assertEquals (map1schema, map3schema);
+    assertEquals (map1schema, map4schema);
 
 
     byte[] jsonBytes = testJsonEncoder (testType, entityObj1);
     assertNotNull ("Unable to serialize using jsonEncoder", jsonBytes);
     GenericRecord jsonRecord = testJsonDecoder(testType, jsonBytes, entityObj1);
-    assertEquals ("JSON decoder output not same as Binary Decoder", 
+    assertEquals ("JSON decoder output not same as Binary Decoder",
       record.get("map1"), jsonRecord.get("map1"));
-    assertEquals ("JSON decoder output not same as Binary Decoder", 
+    assertEquals ("JSON decoder output not same as Binary Decoder",
       record.get("map2"), jsonRecord.get("map2"));
   }
 
@@ -242,7 +251,7 @@ public class TestNonStringMapKeys {
 
     ReflectDatumWriter<T> datumWriter =
       new ReflectDatumWriter (entityObj1.getClass(), rdata);
-    DataFileWriter<T> fileWriter = new DataFileWriter<T> (datumWriter);
+    DataFileWriter<T> fileWriter = new DataFileWriter<>(datumWriter);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     fileWriter.create(schema, baos);
     for (T entityObj : entityObjs) {
@@ -256,21 +265,21 @@ public class TestNonStringMapKeys {
 
   /**
    * Test that non-string map-keys are readable through GenericDatumReader
-   * This methoud should read as array of {key, value} and not as a map
+   * This method should read as array of {key, value} and not as a map
    */
   private <T> List<GenericRecord> testGenericDatumRead
     (String testType, byte[] bytes, T ... entityObjs) throws IOException {
 
     GenericDatumReader<GenericRecord> datumReader =
-      new GenericDatumReader<GenericRecord> ();
+      new GenericDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
     DataFileReader<GenericRecord> fileReader =
-      new DataFileReader<GenericRecord>(avroInputStream, datumReader);
+      new DataFileReader<>(avroInputStream, datumReader);
 
     Schema schema = fileReader.getSchema();
     assertNotNull("Unable to get schema for " + testType, schema);
     GenericRecord record = null;
-    List<GenericRecord> records = new ArrayList<GenericRecord> ();
+    List<GenericRecord> records = new ArrayList<>();
     while (fileReader.hasNext()) {
       records.add (fileReader.next(record));
     }
@@ -279,19 +288,19 @@ public class TestNonStringMapKeys {
 
   /**
    * Test that non-string map-keys are readable through ReflectDatumReader
-   * This methoud should form the original map and should not return any
-   * array of {key, value} as done by {@link #testGenericDatumRead()} 
+   * This method should form the original map and should not return any
+   * array of {key, value} as done by {@link #testGenericDatumRead()}
    */
   private <T> List<T> testReflectDatumRead
     (String testType, byte[] bytes, T ... entityObjs) throws IOException {
 
-    ReflectDatumReader<T> datumReader = new ReflectDatumReader<T> ();
+    ReflectDatumReader<T> datumReader = new ReflectDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
-    DataFileReader<T> fileReader = new DataFileReader<T>(avroInputStream, datumReader);
+    DataFileReader<T> fileReader = new DataFileReader<>(avroInputStream, datumReader);
 
     Schema schema = fileReader.getSchema();
     T record = null;
-    List<T> records = new ArrayList<T> ();
+    List<T> records = new ArrayList<>();
     while (fileReader.hasNext()) {
       records.add (fileReader.next(record));
     }
@@ -306,7 +315,7 @@ public class TestNonStringMapKeys {
     Schema schema = rdata.getSchema(entityObj.getClass());
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, os);
-    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<T>(schema, rdata);
+    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<>(schema, rdata);
     datumWriter.write(entityObj, encoder);
     encoder.flush();
 
@@ -322,7 +331,7 @@ public class TestNonStringMapKeys {
 
     Schema schema = rdata.getSchema(entityObj.getClass());
     GenericDatumReader<GenericRecord> datumReader =
-      new GenericDatumReader<GenericRecord>(schema);
+      new GenericDatumReader<>(schema);
 
     Decoder decoder = DecoderFactory.get().jsonDecoder(schema, new String(bytes));
     GenericRecord r = datumReader.read(null, decoder);
@@ -334,7 +343,7 @@ public class TestNonStringMapKeys {
    */
   private Company buildCompany () {
     Company co = new Company ();
-    HashMap<EmployeeId, EmployeeInfo> employees = new HashMap<EmployeeId, EmployeeInfo>();
+    HashMap<EmployeeId, EmployeeInfo> employees = new HashMap<>();
     co.setEmployees(employees);
     employees.put(new EmployeeId(1), new EmployeeInfo("Foo"));
     employees.put(new EmployeeId(2), new EmployeeInfo("Bar"));
@@ -347,26 +356,30 @@ public class TestNonStringMapKeys {
    */
   private Company2 buildCompany2 () {
     Company2 co = new Company2 ();
-    HashMap<Integer, EmployeeInfo2> employees = new HashMap<Integer, EmployeeInfo2>();
+    HashMap<Integer, EmployeeInfo2> employees = new HashMap<>();
     co.setEmployees(employees);
-    
+
     EmployeeId2 empId = new EmployeeId2(1);
     EmployeeInfo2 empInfo = new EmployeeInfo2("Foo");
-    HashMap<Integer, String> companyMap = new HashMap<Integer, String>();
+    HashMap<Integer, String> companyMap = new HashMap<>();
     empInfo.setCompanyMap(companyMap);
     companyMap.put(14, "CompanyFoo");
-    
+
     employees.put(11, empInfo);
-    
+
     return co;
   }
 
   private SameMapSignature buildSameMapSignature () {
     SameMapSignature obj = new SameMapSignature();
-    obj.setMap1(new HashMap<Integer, String>());
+    obj.setMap1(new HashMap<>());
     obj.getMap1().put(1, "Foo");
-    obj.setMap2(new HashMap<Integer, String>());
+    obj.setMap2(new ConcurrentHashMap<>());
     obj.getMap2().put(1, "Foo");
+    obj.setMap3(new LinkedHashMap<>());
+    obj.getMap3().put(1, "Foo");
+    obj.setMap4(new TreeMap<>());
+    obj.getMap4().put(1, "Foo");
     return obj;
   }
 
@@ -492,18 +505,32 @@ class EmployeeInfo2 {
 class SameMapSignature {
 
   HashMap<Integer, String> map1;
-  HashMap<Integer, String> map2;
+  ConcurrentHashMap<Integer, String> map2;
+  LinkedHashMap<Integer, String> map3;
+  TreeMap<Integer, String> map4;
 
-  public HashMap<Integer, String> getMap1() {
+  public Map<Integer, String> getMap1() {
     return map1;
   }
   public void setMap1(HashMap<Integer, String> map1) {
     this.map1 = map1;
   }
-  public HashMap<Integer, String> getMap2() {
+  public Map<Integer, String> getMap2() {
     return map2;
   }
-  public void setMap2(HashMap<Integer, String> map2) {
+  public void setMap2(ConcurrentHashMap<Integer, String> map2) {
     this.map2 = map2;
+  }
+  public Map<Integer, String> getMap3() {
+    return map3;
+  }
+  public void setMap3(LinkedHashMap<Integer, String> map3) {
+    this.map3 = map3;
+  }
+  public Map<Integer, String> getMap4() {
+    return map4;
+  }
+  public void setMap4(TreeMap<Integer, String> map4) {
+    this.map4 = map4;
   }
 }

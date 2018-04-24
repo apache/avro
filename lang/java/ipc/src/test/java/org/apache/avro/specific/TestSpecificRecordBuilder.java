@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Foo;
 import org.apache.avro.Interop;
@@ -34,6 +32,7 @@ import org.apache.avro.Node;
 import org.apache.avro.ipc.specific.PageView;
 import org.apache.avro.ipc.specific.Person;
 import org.apache.avro.ipc.specific.ProductPage;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -46,42 +45,42 @@ public class TestSpecificRecordBuilder {
     // Create a new builder, and leave some fields with default values empty:
     Person.Builder builder = Person.newBuilder().setName("James Gosling").setYearOfBirth(1955).setState("CA");
     Assert.assertTrue(builder.hasName());
-    Assert.assertEquals("James Gosling", builder.getName().toString());
+    Assert.assertEquals("James Gosling", builder.getName());
     Assert.assertTrue(builder.hasYearOfBirth());
     Assert.assertEquals(new Integer(1955), builder.getYearOfBirth());
     Assert.assertFalse(builder.hasCountry());
     Assert.assertNull(builder.getCountry());
     Assert.assertTrue(builder.hasState());
-    Assert.assertEquals("CA", builder.getState().toString());
+    Assert.assertEquals("CA", builder.getState());
     Assert.assertFalse(builder.hasFriends());
     Assert.assertNull(builder.getFriends());
     Assert.assertFalse(builder.hasLanguages());
     Assert.assertNull(builder.getLanguages());
-    
+
     Person person = builder.build();
-    Assert.assertEquals("James Gosling", person.getName().toString());
+    Assert.assertEquals("James Gosling", person.getName());
     Assert.assertEquals(new Integer(1955), person.getYearOfBirth());
-    Assert.assertEquals("US", person.getCountry().toString());  // country should default to "US"
-    Assert.assertEquals("CA", person.getState().toString());
+    Assert.assertEquals("US", person.getCountry());  // country should default to "US"
+    Assert.assertEquals("CA", person.getState());
     Assert.assertNotNull(person.getFriends());  // friends should default to an empty list
     Assert.assertEquals(0, person.getFriends().size());
     Assert.assertNotNull(person.getLanguages()); // Languages should now be "English" and "Java"
     Assert.assertEquals(2, person.getLanguages().size());
-    Assert.assertEquals("English", person.getLanguages().get(0).toString());
-    Assert.assertEquals("Java", person.getLanguages().get(1).toString());
-    
+    Assert.assertEquals("English", person.getLanguages().get(0));
+    Assert.assertEquals("Java", person.getLanguages().get(1));
+
     // Test copy constructors:
     Assert.assertEquals(builder, Person.newBuilder(builder));
     Assert.assertEquals(person, Person.newBuilder(person).build());
-    
+
     Person.Builder builderCopy = Person.newBuilder(person);
-    Assert.assertEquals("James Gosling", builderCopy.getName().toString());
+    Assert.assertEquals("James Gosling", builderCopy.getName());
     Assert.assertEquals(new Integer(1955), builderCopy.getYearOfBirth());
-    Assert.assertEquals("US", builderCopy.getCountry().toString());  // country should default to "US"
-    Assert.assertEquals("CA", builderCopy.getState().toString());
+    Assert.assertEquals("US", builderCopy.getCountry());  // country should default to "US"
+    Assert.assertEquals("CA", builderCopy.getState());
     Assert.assertNotNull(builderCopy.getFriends());  // friends should default to an empty list
     Assert.assertEquals(0, builderCopy.getFriends().size());
-    
+
     // Test clearing fields:
     builderCopy.clearFriends().clearCountry();
     Assert.assertFalse(builderCopy.hasFriends());
@@ -92,7 +91,7 @@ public class TestSpecificRecordBuilder {
     Assert.assertNotNull(person2.getFriends());
     Assert.assertTrue(person2.getFriends().isEmpty());
   }
-  
+
   @Test
   public void testUnions() {
     long datetime = 1234L;
@@ -106,15 +105,15 @@ public class TestSpecificRecordBuilder {
     Assert.assertEquals(datetime, p.getDatetime().longValue());
     Assert.assertEquals(ProductPage.class, p.getPageContext().getClass());
     Assert.assertEquals(product, ((ProductPage)p.getPageContext()).getProduct());
-    
+
     PageView p2 = PageView.newBuilder(p).build();
-    
+
     Assert.assertEquals(datetime, p2.getDatetime().longValue());
     Assert.assertEquals(ProductPage.class, p2.getPageContext().getClass());
     Assert.assertEquals(product, ((ProductPage)p2.getPageContext()).getProduct());
-    
+
     Assert.assertEquals(p, p2);
-    
+
   }
 
   @Test
@@ -136,7 +135,7 @@ public class TestSpecificRecordBuilder {
         .setStringField("MyInterop")
         .setUnionField(2.71828)
         .build();
-    
+
     Interop copy = Interop.newBuilder(interop).build();
     Assert.assertEquals(interop.getArrayField().size(), copy.getArrayField().size());
     Assert.assertEquals(interop.getArrayField(), copy.getArrayField());
@@ -154,7 +153,7 @@ public class TestSpecificRecordBuilder {
     Assert.assertEquals(interop.getUnionField(), copy.getUnionField());
     Assert.assertEquals(interop, copy);
   }
-  
+
   @Test(expected=org.apache.avro.AvroRuntimeException.class)
   public void attemptToSetNonNullableFieldToNull() {
     Person.newBuilder().setName(null);
@@ -193,8 +192,8 @@ public class TestSpecificRecordBuilder {
   @Test
   public void testBuilderPerformance() {
     int count = 1000000;
-    List<Person> friends = new ArrayList<Person>(0);
-    List<String> languages = new ArrayList<String>(Arrays.asList(new String[] { "English", "Java" }));
+    List<Person> friends = new ArrayList<>(0);
+    List<String> languages = new ArrayList<>(Arrays.asList(new String[]{"English", "Java"}));
     long startTimeNanos = System.nanoTime();
     for (int ii = 0; ii < count; ii++) {
       Person.newBuilder().setName("James Gosling").setYearOfBirth(1955).setCountry("US").setState("CA").setFriends(friends).
@@ -202,11 +201,11 @@ public class TestSpecificRecordBuilder {
     }
     long durationNanos = System.nanoTime() - startTimeNanos;
     double durationMillis = durationNanos / 1e6d;
-    System.out.println("Built " + count + " records in " + durationMillis + "ms (" + 
-        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) + 
+    System.out.println("Built " + count + " records in " + durationMillis + "ms (" +
+        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) +
         "ms/record");
   }
-  
+
   @Ignore
   @Test
   public void testBuilderPerformanceWithDefaultValues() {
@@ -217,8 +216,8 @@ public class TestSpecificRecordBuilder {
     }
     long durationNanos = System.nanoTime() - startTimeNanos;
     double durationMillis = durationNanos / 1e6d;
-    System.out.println("Built " + count + " records in " + durationMillis + "ms (" + 
-        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) + 
+    System.out.println("Built " + count + " records in " + durationMillis + "ms (" +
+        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) +
         "ms/record");
   }
 
@@ -227,8 +226,8 @@ public class TestSpecificRecordBuilder {
   @SuppressWarnings("deprecation")
   public void testManualBuildPerformance() {
     int count = 1000000;
-    List<Person> friends = new ArrayList<Person>(0);
-    List<String> languages = new ArrayList<String>(Arrays.asList(new String[] { "English", "Java" }));
+    List<Person> friends = new ArrayList<>(0);
+    List<String> languages = new ArrayList<>(Arrays.asList(new String[]{"English", "Java"}));
     long startTimeNanos = System.nanoTime();
     for (int ii = 0; ii < count; ii++) {
       Person person = new Person();
@@ -241,8 +240,8 @@ public class TestSpecificRecordBuilder {
     }
     long durationNanos = System.nanoTime() - startTimeNanos;
     double durationMillis = durationNanos / 1e6d;
-    System.out.println("Built " + count + " records in " + durationMillis + "ms (" + 
-        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) + 
+    System.out.println("Built " + count + " records in " + durationMillis + "ms (" +
+        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) +
         "ms/record");
   }
 }

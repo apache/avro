@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,7 @@ public interface FileReader<D> extends Iterator<D>, Iterable<D>, Closeable {
    * #next()}. */
   void sync(long position) throws IOException;
 
-  /** Return true if past the next synchronization point after a position. */ 
+  /** Return true if past the next synchronization point after a position. */
   boolean pastSync(long position) throws IOException;
 
   /** Return the current position in the input. */

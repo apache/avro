@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ import org.apache.hadoop.io.serializer.Deserializer;
 /**
  * Deserializes AvroWrapper objects within Hadoop.
  *
- * <p>Keys and values containing Avro tyeps are more efficiently serialized
+ * <p>Keys and values containing Avro types are more efficiently serialized
  * outside of the WritableSerialization model, so they are wrapper in {@link
  * org.apache.avro.mapred.AvroWrapper} objects and deserialization is handled
  * by this class.</p>
@@ -68,8 +68,8 @@ public abstract class AvroDeserializer<T extends AvroWrapper<D>, D> implements D
                              ClassLoader classLoader) {
     mWriterSchema = writerSchema;
     mReaderSchema = null != readerSchema ? readerSchema : writerSchema;
-    mAvroDatumReader = new ReflectDatumReader<D>(mWriterSchema, mReaderSchema,
-                                                 new ReflectData(classLoader));
+    mAvroDatumReader = new ReflectDatumReader<>(mWriterSchema, mReaderSchema,
+                                                new ReflectData(classLoader));
   }
 
   /**

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,15 +27,15 @@ public class TestMetadataFiltering {
 
   @Test public void testMetadataFiltering() throws Exception {
     JobConf job = new JobConf();
-    
+
     job.set(AvroTrevniOutputFormat.META_PREFIX + "test1", "1");
     job.set(AvroTrevniOutputFormat.META_PREFIX + "test2", "2");
     job.set("test3", "3");
     job.set(AvroJob.TEXT_PREFIX + "test4", "4");
     job.set(AvroTrevniOutputFormat.META_PREFIX + "test5", "5");
-    
+
     ColumnFileMetaData metadata = AvroTrevniOutputFormat.filterMetadata(job);
-    
+
     assertTrue(metadata.get("test1") != null);
     assertTrue(new String(metadata.get("test1")).equals("1"));
     assertTrue(metadata.get("test2") != null);
@@ -44,7 +44,7 @@ public class TestMetadataFiltering {
     assertTrue(new String(metadata.get("test5")).equals("5"));
     assertTrue(metadata.get("test3") == null);
     assertTrue(metadata.get("test4") == null);
-    
+
   }
-  
+
 }

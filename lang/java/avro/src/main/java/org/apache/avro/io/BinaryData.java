@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ public class BinaryData {
        this.d1 = new BinaryDecoder(new byte[0], 0, 0);
        this.d2 = new BinaryDecoder(new byte[0], 0, 0);
     }
-    public void set(byte[] data1, int off1, int len1, 
+    public void set(byte[] data1, int off1, int len1,
                     byte[] data2, int off2, int len2) {
       d1.setBuf(data1, off1, len1);
       d2.setBuf(data2, off2, len2);
@@ -283,7 +283,7 @@ public class BinaryData {
     byte[] bytes = data.decoder.getBuf();
     int start = data.decoder.getPos();
     int end = start+len;
-    if (rev) 
+    if (rev)
       for (int i = end-1; i >= start; i--)
         hashCode = hashCode*31 + bytes[i];
     else
@@ -333,7 +333,7 @@ public class BinaryData {
           }
         }
       }
-    } 
+    }
     buf[pos++] = (byte) n;
     return pos - start;
   }
@@ -395,7 +395,7 @@ public class BinaryData {
   public static int encodeFloat(float f, byte[] buf, int pos) {
     int len = 1;
     int bits = Float.floatToRawIntBits(f);
-    // hotspot compiler works well with this variant 
+    // hotspot compiler works well with this variant
     buf[pos]         = (byte)((bits       ) & 0xFF);
     buf[pos + len++] = (byte)((bits >>>  8) & 0xFF);
     buf[pos + len++] = (byte)((bits >>> 16) & 0xFF);

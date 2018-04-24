@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,7 +52,7 @@ public class TestCatTool {
   private static final int LIMIT_OUT_OF_INPUT_BOUNDS = 100001;
   private static final double SAMPLERATE = .01;
   private static final double SAMPLERATE_TOO_SMALL = .00000001;
-  
+
   private final Schema INTSCHEMA = new Schema.Parser().parse(
     "{\"type\":\"record\", " +
     "\"name\":\"myRecord\", " +
@@ -66,7 +66,7 @@ public class TestCatTool {
     "]}");
   private static final CodecFactory DEFLATE = CodecFactory.deflateCodec(9);
   private static final CodecFactory SNAPPY = CodecFactory.snappyCodec();
-  
+
 
   private GenericRecord aDatum(Type ofType, int forRow) {
     GenericRecord record = null;
@@ -78,7 +78,7 @@ public class TestCatTool {
       case INT:
         record = new GenericData.Record(INTSCHEMA);
         record.put("value", forRow);
-        return record;      
+        return record;
       default:
        throw new AssertionError("I can't generate data for this type");
     }
@@ -95,9 +95,9 @@ public class TestCatTool {
     if(type.equals(Schema.Type.STRING)) {
       schema = STRINGSCHEMA;
     }
-       
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(
-              new GenericDatumWriter<Object>(schema));
+
+    DataFileWriter<Object> writer = new DataFileWriter<>(
+        new GenericDatumWriter<>(schema));
     for(Entry<String, String> metadatum : metadata.entrySet()) {
         writer.setMeta(metadatum.getKey(), metadatum.getValue());
     }
@@ -111,11 +111,11 @@ public class TestCatTool {
 
     return inputFile;
   }
- 
-  
+
+
   private int getFirstIntDatum(File file) throws Exception {
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>( new FileInputStream(file) , 
-      new GenericDatumReader<GenericRecord>());
+    DataFileStream<GenericRecord> reader = new DataFileStream<>(new FileInputStream(file),
+      new GenericDatumReader<>());
 
     int result = (Integer) reader.next().get(0);
     System.out.println(result);
@@ -124,9 +124,9 @@ public class TestCatTool {
   }
 
   private int numRowsInFile(File output) throws Exception {
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
+    DataFileStream<GenericRecord> reader = new DataFileStream<>(
       new FileInputStream(output),
-      new GenericDatumReader<GenericRecord>());
+      new GenericDatumReader<>());
     Iterator<GenericRecord> rows = reader.iterator();
     int rowcount = 0;
     while(rows.hasNext()) {
@@ -139,7 +139,7 @@ public class TestCatTool {
 
   @Test
   public void testCat() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -166,7 +166,7 @@ public class TestCatTool {
     assertEquals(0, returnCode);
 
     assertEquals(LIMIT_WITHIN_INPUT_BOUNDS, numRowsInFile(output));
-    
+
 //    folder input
     args = asList(
       input1.getParentFile().getAbsolutePath(),
@@ -180,12 +180,26 @@ public class TestCatTool {
       args);
     assertEquals(0, returnCode);
     assertEquals(LIMIT_WITHIN_INPUT_BOUNDS, numRowsInFile(output));
+
+//    glob input
+    args = asList(
+      new File(input1.getParentFile(), "/*").getAbsolutePath(),
+      output.getAbsolutePath(),
+      "--offset" , String.valueOf(OFFSET),
+      "--limit" , String.valueOf(LIMIT_WITHIN_INPUT_BOUNDS));
+    returnCode = new CatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
+    assertEquals(0, returnCode);
+    assertEquals(LIMIT_WITHIN_INPUT_BOUNDS, numRowsInFile(output));
   }
 
-  
+
   @Test
   public void testLimitOutOfBounds() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -203,12 +217,12 @@ public class TestCatTool {
       System.err,
       args);
     assertEquals(0, returnCode);
-    assertEquals(ROWS_IN_INPUT_FILES - OFFSET, numRowsInFile(output)); 
+    assertEquals(ROWS_IN_INPUT_FILES - OFFSET, numRowsInFile(output));
   }
-  
+
   @Test
   public void testSamplerateAccuracy() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -226,15 +240,15 @@ public class TestCatTool {
       System.err,
       args);
     assertEquals(0, returnCode);
-    
+
     assertTrue("Outputsize is not roughly (Inputsize - Offset) * samplerate",
-      (ROWS_IN_INPUT_FILES - OFFSET)*SAMPLERATE - numRowsInFile(output) < 2);    
+      (ROWS_IN_INPUT_FILES - OFFSET)*SAMPLERATE - numRowsInFile(output) < 2);
     assertTrue("", (ROWS_IN_INPUT_FILES - OFFSET)*SAMPLERATE - numRowsInFile(output) > -2);
   }
 
   @Test
   public void testOffSetAccuracy() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -256,10 +270,10 @@ public class TestCatTool {
     assertEquals("output does not start at offset",
       OFFSET, getFirstIntDatum(output));
   }
-  
+
   @Test
   public void testOffsetBiggerThanInput() throws Exception{
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -279,10 +293,10 @@ public class TestCatTool {
     assertEquals("output is not empty",
       0, numRowsInFile(output));
   }
-  
+
   @Test
   public void testSamplerateSmallerThanInput() throws Exception{
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
@@ -300,15 +314,15 @@ public class TestCatTool {
       System.err,
       args);
     assertEquals(0, returnCode);
-    
+
     assertEquals("output should only contain the record at offset",
       (int) OFFSET, getFirstIntDatum(output));
   }
-  
-  
+
+
   @Test(expected = IOException.class)
   public void testDifferentSchemasFail() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);
@@ -336,7 +350,7 @@ public class TestCatTool {
       System.in,
       out,
       System.err,
-      Collections.<String>emptyList());
+      Collections.emptyList());
     out.close(); // flushes too
 
     assertEquals(0, returnCode);

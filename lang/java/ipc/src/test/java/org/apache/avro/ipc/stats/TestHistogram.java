@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,10 +35,10 @@ public class TestHistogram {
 
   @Test
   public void testBasicOperation() {
-    Segmenter<String, Integer> s = new Histogram.TreeMapSegmenter<Integer>(
-        new TreeSet<Integer>(Arrays.asList(0, 1, 2, 4, 8, 16)));
+    Segmenter<String, Integer> s = new Histogram.TreeMapSegmenter<>(
+        new TreeSet<>(Arrays.asList(0, 1, 2, 4, 8, 16)));
 
-    Histogram<String, Integer> h = new Histogram<String, Integer>(s);
+    Histogram<String, Integer> h = new Histogram<>(s);
 
     for(int i = 0; i < 20; ++i) {
       h.add(i);
@@ -47,10 +47,10 @@ public class TestHistogram {
     assertArrayEquals(new int[] { 1, 1, 2, 4, 8, 4 }, h.getHistogram());
 
     assertEquals("[0,1)=1;[1,2)=1;[2,4)=2;[4,8)=4;[8,16)=8;[16,infinity)=4", h.toString());
-    
+
     String[] correctBucketLabels = {
         "[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)", "[16,infinity)"};
-    
+
     // test bucket iterator
     int pos = 0;
     Iterator<String> it = h.getSegmenter().getBuckets();
@@ -59,7 +59,7 @@ public class TestHistogram {
       pos = pos + 1;
     }
     assertEquals(correctBucketLabels.length, pos);
-    
+
     List<String> labels = h.getSegmenter().getBucketLabels();
     assertEquals(correctBucketLabels.length, labels.size());
     if (labels.size() == correctBucketLabels.length) {
@@ -71,36 +71,36 @@ public class TestHistogram {
     String[] correctBoundryLabels = {
         "0", "1", "2", "4", "8", "16"};
     List<String> boundryLabels = h.getSegmenter().getBoundaryLabels();
-    
+
     assertEquals(correctBoundryLabels.length, boundryLabels.size());
     if (boundryLabels.size() == correctBoundryLabels.length) {
       for (int i = 0; i < boundryLabels.size(); i++) {
         assertEquals(correctBoundryLabels[i], boundryLabels.get(i));
       }
     }
-    
-    List<Entry<String>> entries = new ArrayList<Entry<String>>();
+
+    List<Entry<String>> entries = new ArrayList<>();
     for (Entry<String> entry : h.entries()) {
       entries.add(entry);
     }
     assertEquals("[0,1)", entries.get(0).bucket);
     assertEquals(4, entries.get(5).count);
     assertEquals(6, entries.size());
-    
+
     h.add(1010);
     h.add(9191);
     List<Integer> recent = h.getRecentAdditions();
     assertTrue(recent.contains(1010));
     assertTrue(recent.contains(9191));
-    
+
   }
 
   @Test(expected=Histogram.SegmenterException.class)
   public void testBadValue() {
-    Segmenter<String, Long> s = new Histogram.TreeMapSegmenter<Long>(
-        new TreeSet<Long>(Arrays.asList(0L, 1L, 2L, 4L, 8L, 16L)));
+    Segmenter<String, Long> s = new Histogram.TreeMapSegmenter<>(
+        new TreeSet<>(Arrays.asList(0L, 1L, 2L, 4L, 8L, 16L)));
 
-    Histogram<String, Long> h = new Histogram<String, Long>(s);
+    Histogram<String, Long> h = new Histogram<>(s);
     h.add(-1L);
   }
 
@@ -110,11 +110,11 @@ public class TestHistogram {
     public Iterator<String> getBuckets() {
       return Arrays.asList("X").iterator();
     }
-    
+
     public List<String> getBoundaryLabels() {
       return Arrays.asList("X");
     }
-    
+
     public List<String> getBucketLabels() {
       return Arrays.asList("X");
     }
@@ -129,7 +129,7 @@ public class TestHistogram {
 
   @Test
   public void testFloatHistogram() {
-    FloatHistogram<String> h = new FloatHistogram<String>(new SingleBucketSegmenter());
+    FloatHistogram<String> h = new FloatHistogram<>(new SingleBucketSegmenter());
     h.add(12.0f);
     h.add(10.0f);
     h.add(20.0f);

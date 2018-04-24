@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,7 +52,7 @@ class TetherKeyComparator
   @Override
   public int compare(TetherData x, TetherData y) {
     ByteBuffer b1 = x.buffer(), b2 = y.buffer();
-    int diff = BinaryData.compare(b1.array(), b1.position(), 
+    int diff = BinaryData.compare(b1.array(), b1.position(),
                                   b2.array(), b2.position(),
                                   schema);
     return diff == 0 ? -1 : diff;

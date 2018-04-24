@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,11 +45,11 @@ class TrevniUtil {
       return new InputFile(new File(filename));
     }
   }
-  
+
   /**
    * Returns stdin if filename is "-", else opens the local or HDFS file
    * and returns an InputStream for it.
-   * @throws IOException 
+   * @throws IOException
    */
   static InputStream input(String filename, InputStream stdin)
     throws IOException {
@@ -62,13 +62,13 @@ class TrevniUtil {
       return new BufferedInputStream(new FileInputStream(new File(filename)));
     }
   }
-  
+
   /**
    * Returns stdout if filename is "-", else opens the local or HDFS file
    * and returns an OutputStream for it.
-   * @throws IOException 
+   * @throws IOException
    */
-  static OutputStream output(String filename, OutputStream stdout) 
+  static OutputStream output(String filename, OutputStream stdout)
     throws IOException {
     if (filename.equals("-"))
       return new BufferedOutputStream(stdout);

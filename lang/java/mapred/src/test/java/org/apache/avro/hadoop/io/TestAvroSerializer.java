@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,7 @@ public class TestAvroSerializer {
   public void testSerialize() throws IOException {
     // Create a serializer.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
-    AvroSerializer<CharSequence> serializer = new AvroSerializer<CharSequence>(writerSchema);
+    AvroSerializer<CharSequence> serializer = new AvroSerializer<>(writerSchema);
 
     // Check the writer schema.
     assertEquals(writerSchema, serializer.getWriterSchema());
@@ -45,14 +45,14 @@ public class TestAvroSerializer {
     // Serialize two records, 'record1' and 'record2'.
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     serializer.open(outputStream);
-    serializer.serialize(new AvroKey<CharSequence>("record1"));
-    serializer.serialize(new AvroKey<CharSequence>("record2"));
+    serializer.serialize(new AvroKey<>("record1"));
+    serializer.serialize(new AvroKey<>("record2"));
     serializer.close();
 
     // Make sure the records were serialized correctly.
     ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
     Schema readerSchema = Schema.create(Schema.Type.STRING);
-    DatumReader<CharSequence> datumReader = new GenericDatumReader<CharSequence>(readerSchema);
+    DatumReader<CharSequence> datumReader = new GenericDatumReader<>(readerSchema);
     Decoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
     CharSequence record = null;
 

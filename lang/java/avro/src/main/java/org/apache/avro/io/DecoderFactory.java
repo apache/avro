@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,7 @@ import org.apache.avro.Schema;
  * Factories are thread-safe, and are generally cached by applications for
  * performance reasons. Multiple instances are only required if multiple
  * concurrent configurations are needed.
- * 
+ *
  * @see Decoder
  */
 
@@ -50,7 +50,7 @@ public class DecoderFactory {
   public static DecoderFactory defaultFactory() {
     return get();
   }
-  
+
   /**
    * Returns an immutable static DecoderFactory configured with default settings
    * All mutating methods throw IllegalArgumentExceptions. All creator methods
@@ -64,7 +64,7 @@ public class DecoderFactory {
    * Configures this factory to use the specified buffer size when creating
    * Decoder instances that buffer their input. The default buffer size is
    * 8192 bytes.
-   * 
+   *
    * @param size The preferred buffer size. Valid values are in the range [32,
    *          16*1024*1024]. Values outside this range are rounded to the nearest
    *          value in the range. Values less than 512 or greater than 1024*1024
@@ -82,7 +82,7 @@ public class DecoderFactory {
     this.binaryDecoderBufferSize = size;
     return this;
   }
-  
+
   /**
    * Returns this factory's configured preferred buffer size.  Used when creating
    * Decoder instances that buffer. See {@link #configureDecoderBufferSize}
@@ -91,14 +91,14 @@ public class DecoderFactory {
   public int getConfiguredBufferSize() {
     return this.binaryDecoderBufferSize;
   }
-  
+
   /** @deprecated use the equivalent
    *  {@link #binaryDecoder(InputStream, BinaryDecoder)} instead */
   @Deprecated
   public BinaryDecoder createBinaryDecoder(InputStream in, BinaryDecoder reuse) {
     return binaryDecoder(in, reuse);
   }
-  
+
   /**
    * Creates or reinitializes a {@link BinaryDecoder} with the input stream
    * provided as the source of data. If <i>reuse</i> is provided, it will be
@@ -113,7 +113,7 @@ public class DecoderFactory {
    * {@link BinaryDecoder#inputStream()} provides a view on the data that is
    * buffer-aware, for users that need to interleave access to data
    * with the Decoder API.
-   * 
+   *
    * @param in
    *          The InputStream to initialize to
    * @param reuse
@@ -135,7 +135,7 @@ public class DecoderFactory {
       return ((BinaryDecoder)reuse).configure(in, binaryDecoderBufferSize);
     }
   }
-  
+
   /**
    * Creates or reinitializes a {@link BinaryDecoder} with the input stream
    * provided as the source of data. If <i>reuse</i> is provided, it will be
@@ -149,7 +149,7 @@ public class DecoderFactory {
    * A "direct" BinaryDecoder does not read ahead from an InputStream or other data source
    * that cannot be rewound.  From the perspective of a client, a "direct" decoder
    * must never read beyond the minimum necessary bytes to service a {@link BinaryDecoder}
-   * API read request.  
+   * API read request.
    * <p/>
    * In the case that the improved performance of a buffering implementation does not outweigh the
    * inconvenience of its buffering semantics, a "direct" decoder can be
@@ -187,7 +187,7 @@ public class DecoderFactory {
       return reuse.configure(bytes, offset, length);
     }
   }
-  
+
   /**
    * Creates or reinitializes a {@link BinaryDecoder} with the byte array
    * provided as the source of data. If <i>reuse</i> is provided, it will
@@ -197,7 +197,7 @@ public class DecoderFactory {
    * {@link BinaryDecoder#inputStream()} provides a view on the data that is
    * buffer-aware and can provide a view of the data not yet read by Decoder API
    * methods.
-   * 
+   *
    * @param bytes The byte array to initialize to
    * @param offset The offset to start reading from
    * @param length The maximum number of bytes to read from the byte array
@@ -223,7 +223,7 @@ public class DecoderFactory {
   public BinaryDecoder createBinaryDecoder(byte[] bytes, BinaryDecoder reuse) {
     return binaryDecoder(bytes, 0, bytes.length, reuse);
   }
-  
+
   /**
    * This method is shorthand for
    * <pre>
@@ -238,7 +238,7 @@ public class DecoderFactory {
    * Creates a {@link JsonDecoder} using the InputStrim provided for reading
    * data that conforms to the Schema provided.
    * <p/>
-   * 
+   *
    * @param schema
    *          The Schema for data read from this JsonEncoder. Cannot be null.
    * @param input
@@ -250,12 +250,12 @@ public class DecoderFactory {
       throws IOException {
     return new JsonDecoder(schema, input);
   }
-  
+
   /**
    * Creates a {@link JsonDecoder} using the String provided for reading data
    * that conforms to the Schema provided.
    * <p/>
-   * 
+   *
    * @param schema
    *          The Schema for data read from this JsonEncoder. Cannot be null.
    * @param input
@@ -272,7 +272,7 @@ public class DecoderFactory {
    * Creates a {@link ValidatingDecoder} wrapping the Decoder provided. This
    * ValidatingDecoder will ensure that operations against it conform to the
    * schema provided.
-   * 
+   *
    * @param schema
    *          The Schema to validate against. Cannot be null.
    * @param wrapped
@@ -290,7 +290,7 @@ public class DecoderFactory {
    * Creates a {@link ResolvingDecoder} wrapping the Decoder provided. This
    * ResolvingDecoder will resolve input conforming to the <i>writer</i> schema
    * from the wrapped Decoder, and present it as the <i>reader</i> schema.
-   * 
+   *
    * @param writer
    *          The Schema that the source data is in. Cannot be null.
    * @param reader
@@ -306,7 +306,7 @@ public class DecoderFactory {
       Decoder wrapped) throws IOException {
     return new ResolvingDecoder(writer, reader, wrapped);
   }
-  
+
   private static class DefaultDecoderFactory extends DecoderFactory {
     @Override
     public DecoderFactory configureDecoderBufferSize(int bufferSize) {

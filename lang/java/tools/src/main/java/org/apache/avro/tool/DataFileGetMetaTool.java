@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,7 +45,7 @@ public class DataFileGetMetaTool implements Tool {
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
-    
+
     OptionParser p = new OptionParser();
     OptionSpec<String> keyOption =
         p.accepts("key", "Metadata key")
@@ -53,7 +53,7 @@ public class DataFileGetMetaTool implements Tool {
         .ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
     String keyName = keyOption.value(opts);
-    
+
     List<String> nargs = (List<String>)opts.nonOptionArguments();
     if (nargs.size() != 1) {
       err.println("Expected 1 arg: input_file");
@@ -62,7 +62,7 @@ public class DataFileGetMetaTool implements Tool {
     }
     FsInput in = Util.openSeekableFromFS(args.get(0));
     DataFileReader<Void> reader =
-      new DataFileReader<Void>(in, new GenericDatumReader<Void>());
+      new DataFileReader<>(in, new GenericDatumReader<>());
     if (keyName != null) {
       byte[] value = reader.getMeta(keyName);
       if (value != null) {
@@ -81,7 +81,7 @@ public class DataFileGetMetaTool implements Tool {
     }
     return 0;
   }
-  
+
   // escape TAB, NL and CR in keys, so that output can be reliably parsed
   static String escapeKey(String key) {
     key = key.replace("\\","\\\\");               // escape backslashes first

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -50,7 +50,7 @@ public class ValidatingDecoder extends ParsingDecoder
   ValidatingDecoder(Schema schema, Decoder in) throws IOException {
     this(getSymbol(schema), in);
   }
-  
+
   private static Symbol getSymbol(Schema schema) {
     if (null == schema) {
       throw new NullPointerException("Schema cannot be null");
@@ -70,7 +70,7 @@ public class ValidatingDecoder extends ParsingDecoder
     parser.advance(Symbol.NULL);
     in.readNull();
   }
-    
+
   @Override
   public boolean readBoolean() throws IOException {
     parser.advance(Symbol.BOOLEAN);
@@ -82,7 +82,7 @@ public class ValidatingDecoder extends ParsingDecoder
     parser.advance(Symbol.INT);
     return in.readInt();
   }
-    
+
   @Override
   public long readLong() throws IOException {
     parser.advance(Symbol.LONG);
@@ -100,7 +100,7 @@ public class ValidatingDecoder extends ParsingDecoder
     parser.advance(Symbol.DOUBLE);
     return in.readDouble();
   }
-    
+
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     parser.advance(Symbol.STRING);
@@ -140,7 +140,7 @@ public class ValidatingDecoder extends ParsingDecoder
         top.size + " but received " + size + " bytes.");
     }
   }
-    
+
   @Override
   public void readFixed(byte[] bytes, int start, int len) throws IOException {
     checkFixed(len);
@@ -201,7 +201,7 @@ public class ValidatingDecoder extends ParsingDecoder
         parser.skipRepeater();
       }
     }
-    parser.advance(Symbol.ARRAY_END);    
+    parser.advance(Symbol.ARRAY_END);
     return 0;
   }
 
@@ -245,7 +245,7 @@ public class ValidatingDecoder extends ParsingDecoder
     parser.pushSymbol(top.getSymbol(result));
     return result;
   }
-  
+
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     return null;

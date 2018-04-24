@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,13 +38,13 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 
 /** The {@link Serialization} used by jobs configured with {@link AvroJob}. */
-public class AvroSerialization<T> extends Configured 
+public class AvroSerialization<T> extends Configured
   implements Serialization<AvroWrapper<T>> {
 
   public boolean accept(Class<?> c) {
     return AvroWrapper.class.isAssignableFrom(c);
   }
-  
+
   /** Returns the specified map output deserializer.  Defaults to the final
    * output deserializer if no map output schema was specified. */
   public Deserializer<AvroWrapper<T>> getDeserializer(Class<AvroWrapper<T>> c) {
@@ -57,7 +57,7 @@ public class AvroSerialization<T> extends Configured
     DatumReader<T> datumReader = dataModel.createDatumReader(schema);
     return new AvroWrapperDeserializer(datumReader, isKey);
   }
-  
+
   private static final DecoderFactory FACTORY = DecoderFactory.get();
 
   private class AvroWrapperDeserializer
@@ -66,21 +66,21 @@ public class AvroSerialization<T> extends Configured
     private DatumReader<T> reader;
     private BinaryDecoder decoder;
     private boolean isKey;
-    
+
     public AvroWrapperDeserializer(DatumReader<T> reader, boolean isKey) {
       this.reader = reader;
       this.isKey = isKey;
     }
-    
+
     public void open(InputStream in) {
       this.decoder = FACTORY.directBinaryDecoder(in, decoder);
     }
-    
+
     public AvroWrapper<T> deserialize(AvroWrapper<T> wrapper)
       throws IOException {
       T datum = reader.read(wrapper == null ? null : wrapper.datum(), decoder);
       if (wrapper == null) {
-        wrapper = isKey? new AvroKey<T>(datum) : new AvroValue<T>(datum);
+        wrapper = isKey? new AvroKey<>(datum) : new AvroValue<>(datum);
       } else {
         wrapper.datum(datum);
       }
@@ -90,9 +90,9 @@ public class AvroSerialization<T> extends Configured
     public void close() throws IOException {
       decoder.inputStream().close();
     }
-    
+
   }
-  
+
   /** Returns the specified output serializer. */
   public Serializer<AvroWrapper<T>> getSerializer(Class<AvroWrapper<T>> c) {
     // AvroWrapper used for final output, AvroKey or AvroValue for map output
@@ -112,15 +112,14 @@ public class AvroSerialization<T> extends Configured
     private DatumWriter<T> writer;
     private OutputStream out;
     private BinaryEncoder encoder;
-    
+
     public AvroWrapperSerializer(DatumWriter<T> writer) {
       this.writer = writer;
     }
 
     public void open(OutputStream out) {
       this.out = out;
-      this.encoder = new EncoderFactory().configureBlockSize(512)
-          .binaryEncoder(out, null);
+      this.encoder = new EncoderFactory().binaryEncoder(out, null);
     }
 
     public void serialize(AvroWrapper<T> wrapper) throws IOException {

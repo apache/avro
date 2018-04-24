@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,7 +58,7 @@ public class ColumnFileWriter {
   }
 
   private void checkColumns(ColumnMetaData[] columnMeta) {
-    Set<String> seen = new HashSet<String>();
+    Set<String> seen = new HashSet<>();
     for (int i = 0; i < columnMeta.length; i++) {
       ColumnMetaData c = columnMeta[i];
       String name = c.getName();
@@ -68,7 +68,7 @@ public class ColumnFileWriter {
       if (parent != null && !seen.contains(parent.getName()))
         throw new TrevniRuntimeException("Parent must precede child: "+name);
       seen.add(name);
-    }          
+    }
   }
 
   void incrementSize(int n) { size += n; }
@@ -133,7 +133,7 @@ public class ColumnFileWriter {
   /** Write all rows added to the named output stream. */
   public void writeTo(OutputStream out) throws IOException {
     writeHeader(out);
-    
+
     for (int column = 0; column < columnCount; column++)
       columns[column].writeTo(out);
   }

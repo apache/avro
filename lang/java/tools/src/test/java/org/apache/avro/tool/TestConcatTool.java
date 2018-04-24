@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashMap;
@@ -65,8 +66,8 @@ public class TestConcatTool {
     inputFile.deleteOnExit();
 
     Schema schema = Schema.create(type);
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(
-              new GenericDatumWriter<Object>(schema));
+    DataFileWriter<Object> writer = new DataFileWriter<>(
+        new GenericDatumWriter<>(schema));
     for(Entry<String, String> metadatum : metadata.entrySet()) {
         writer.setMeta(metadatum.getKey(), metadatum.getValue());
     }
@@ -82,9 +83,9 @@ public class TestConcatTool {
   }
 
   private CodecFactory getCodec(File output) throws Exception {
-      DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
+      DataFileStream<GenericRecord> reader = new DataFileStream<>(
         new FileInputStream(output),
-        new GenericDatumReader<GenericRecord>());
+        new GenericDatumReader<>());
       String codec = reader.getMetaString(DataFileConstants.CODEC);
       try {
         return codec == null ? CodecFactory.nullCodec() : CodecFactory.fromString(codec);
@@ -94,9 +95,9 @@ public class TestConcatTool {
   }
 
   private int numRowsInFile(File output) throws Exception {
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
+    DataFileStream<GenericRecord> reader = new DataFileStream<>(
       new FileInputStream(output),
-      new GenericDatumReader<GenericRecord>());
+      new GenericDatumReader<>());
     Iterator<GenericRecord> rows = reader.iterator();
     int rowcount = 0;
     while(rows.hasNext()) {
@@ -108,8 +109,85 @@ public class TestConcatTool {
   }
 
   @Test
+  public void testDirConcat() throws Exception {
+    Map<String, String> metadata = new HashMap<>();
+
+    File dir = AvroTestUtil.tempDirectory(getClass(), "input");
+
+    for (int i = 0; i < 3; i++) {
+      String filename = "input" + i + ".avro";
+      File input = generateData(filename, Type.STRING, metadata, DEFLATE);
+      boolean ok = input.renameTo(new File(dir, input.getName()));
+      assertTrue(ok);
+    }
+
+    File output = AvroTestUtil.tempFile(getClass(), "default-output.avro");
+    output.deleteOnExit();
+
+    List<String> args = asList(
+      dir.getAbsolutePath(),
+      output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
+    assertEquals(0, returnCode);
+
+    assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
+  }
+
+  @Test
+  public void testGlobPatternConcat() throws Exception {
+    Map<String, String> metadata = new HashMap<>();
+
+    File dir = AvroTestUtil.tempDirectory(getClass(), "input");
+
+    for (int i = 0; i < 3; i++) {
+      String filename = "input" + i + ".avro";
+      File input = generateData(filename, Type.STRING, metadata, DEFLATE);
+      boolean ok = input.renameTo(new File(dir, input.getName()));
+      assertTrue(ok);
+    }
+
+    File output = AvroTestUtil.tempFile(getClass(), "default-output.avro");
+    output.deleteOnExit();
+
+    List<String> args = asList(
+      new File(dir, "/*").getAbsolutePath(),
+      output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
+    assertEquals(0, returnCode);
+
+    assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
+  }
+
+  @Test(expected = FileNotFoundException.class)
+  public void testFileDoesNotExist() throws Exception {
+    Map<String, String> metadata = new HashMap<>();
+
+    File dir = AvroTestUtil.tempDirectory(getClass(), "input");
+
+    File output = AvroTestUtil.tempFile(getClass(), "default-output.avro");
+    output.deleteOnExit();
+
+    List<String> args = asList(
+      new File(dir, "/doNotExist").getAbsolutePath(),
+      output.getAbsolutePath());
+    new ConcatTool().run(
+      System.in,
+      System.out,
+      System.err,
+      args);
+  }
+
+  @Test
   public void testConcat() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);
@@ -137,7 +215,7 @@ public class TestConcatTool {
 
   @Test
   public void testDifferentSchemasFail() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);
@@ -160,9 +238,9 @@ public class TestConcatTool {
 
   @Test
   public void testDifferentMetadataFail() throws Exception {
-    Map<String, String> metadata1 = new HashMap<String, String>();
+    Map<String, String> metadata1 = new HashMap<>();
     metadata1.put("myMetaKey", "myMetaValue");
-    Map<String, String> metadata2 = new HashMap<String, String>();
+    Map<String, String> metadata2 = new HashMap<>();
     metadata2.put("myOtherMetaKey", "myOtherMetaValue");
 
     File input1 = generateData("input1.avro", Type.STRING, metadata1, DEFLATE);
@@ -185,7 +263,7 @@ public class TestConcatTool {
 
   @Test
   public void testDifferentCodecFail() throws Exception {
-    Map<String, String> metadata = new HashMap<String, String>();
+    Map<String, String> metadata = new HashMap<>();
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);
@@ -214,7 +292,7 @@ public class TestConcatTool {
       System.in,
       out,
       System.err,
-      Collections.<String>emptyList());
+      Collections.emptyList());
     out.close(); // flushes too
 
     assertEquals(0, returnCode);

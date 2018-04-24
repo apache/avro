@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,12 +43,6 @@ import org.apache.hadoop.util.ReflectionUtils;
  * @param <V> The job output value type (may be a Writable, AvroValue).
  */
 public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
-  /** Configuration key for storing the type of compression for the target sequence file. */
-  private static final String CONF_COMPRESSION_TYPE = "mapred.output.compression.type";
-
-  /** The default compression type for the target sequence file. */
-  private static final CompressionType DEFAULT_COMPRESSION_TYPE = CompressionType.RECORD;
-
   /** {@inheritDoc} */
   @Override
   public RecordWriter<K, V> getRecordWriter(TaskAttemptContext context)
@@ -112,7 +106,7 @@ public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
    */
   public static void setOutputCompressionType(Job job, CompressionType compressionType) {
     setCompressOutput(job, true);
-    job.getConfiguration().set(CONF_COMPRESSION_TYPE, compressionType.name());
+    job.getConfiguration().set(FileOutputFormat.COMPRESS_TYPE, compressionType.name());
   }
 
   /**
@@ -122,7 +116,10 @@ public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
    * @return The compression type.
    */
   public static CompressionType getOutputCompressionType(Configuration conf) {
-    String typeName = conf.get(CONF_COMPRESSION_TYPE, DEFAULT_COMPRESSION_TYPE.name());
-    return CompressionType.valueOf(typeName);
+    String typeName = conf.get(FileOutputFormat.COMPRESS_TYPE);
+    if (typeName != null) {
+      return CompressionType.valueOf(typeName);
+    }
+    return SequenceFile.getDefaultCompressionType(conf);
   }
 }

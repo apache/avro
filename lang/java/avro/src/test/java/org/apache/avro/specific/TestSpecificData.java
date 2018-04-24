@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -95,7 +95,7 @@ public class TestSpecificData {
   public static class TestRecord extends SpecificRecordBase {
     private static final Schema SCHEMA = Schema.createRecord("TestRecord", null, null, false);
     static {
-      List<Field> fields = new ArrayList<Field>();
+      List<Field> fields = new ArrayList<>();
       fields.add(new Field("x", Schema.create(Type.INT), null, null));
       Schema stringSchema = Schema.create(Type.STRING);
       GenericData.setStringType(stringSchema, GenericData.StringType.String);
@@ -161,7 +161,7 @@ public class TestSpecificData {
     final Schema string = Schema.create(Type.STRING);
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);
-    final DatumWriter<Object> writer = new SpecificDatumWriter<Object>(string);
+    final DatumWriter<Object> writer = new SpecificDatumWriter<>(string);
     try {
       writer.write(new Object(), encoder);
       fail("Non stringable object should be rejected.");

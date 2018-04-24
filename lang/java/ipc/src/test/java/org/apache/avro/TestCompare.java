@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,7 +44,7 @@ public class TestCompare {
   @Test
   public void testNull() throws Exception {
     Schema schema = Schema.parse("\"null\"");
-    byte[] b = render(null, schema, new GenericDatumWriter<Object>());
+    byte[] b = render(null, schema, new GenericDatumWriter<>());
     assertEquals(0, BinaryData.compare(b, 0, b, 0, schema));
   }
 
@@ -102,9 +102,9 @@ public class TestCompare {
   public void testArray() throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
     Schema schema = Schema.parse(json);
-    GenericArray<Long> a1 = new GenericData.Array<Long>(1, schema);
+    GenericArray<Long> a1 = new GenericData.Array<>(1, schema);
     a1.add(1L);
-    GenericArray<Long> a2 = new GenericData.Array<Long>(1, schema);
+    GenericArray<Long> a2 = new GenericData.Array<>(1, schema);
     a2.add(1L);
     a2.add(0L);
     check(json, a1, a2);
@@ -179,12 +179,12 @@ public class TestCompare {
     s2.setHash(new MD5(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6}));
     Schema schema = SpecificData.get().getSchema(TestRecord.class);
 
-    check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
+    check(schema, s1, s2, true, new SpecificDatumWriter<>(schema),
           SpecificData.get());
     s2.setKind(Kind.BAZ);
-    check(schema, s1, s2, true, new SpecificDatumWriter<TestRecord>(schema),
+    check(schema, s1, s2, true, new SpecificDatumWriter<>(schema),
           SpecificData.get());
-  }  
+  }
 
   private static <T> void check(String schemaJson, T o1, T o2)
     throws Exception {
@@ -195,7 +195,7 @@ public class TestCompare {
                             boolean comparable)
     throws Exception {
     check(Schema.parse(schemaJson), o1, o2, comparable,
-          new GenericDatumWriter<T>(), GenericData.get());
+          new GenericDatumWriter<>(), GenericData.get());
   }
 
   private static <T> void check(Schema schema, T o1, T o2,

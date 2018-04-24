@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,7 +52,7 @@ public class AvroTrevniInputFormat<T>
 
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
-    List<FileStatus> result = new ArrayList<FileStatus>();
+    List<FileStatus> result = new ArrayList<>();
     job.setBoolean("mapred.input.dir.recursive", true);
     for (FileStatus file : super.listStatus(job))
       if (file.getPath().getName().endsWith(AvroTrevniOutputFormat.EXT))
@@ -74,14 +74,14 @@ public class AvroTrevniInputFormat<T>
       params.setSchema(AvroJob.getInputSchema(job));
 
     return new RecordReader<AvroWrapper<T>, NullWritable>() {
-      private AvroColumnReader<T> reader = new AvroColumnReader<T>(params);
+      private AvroColumnReader<T> reader = new AvroColumnReader<>(params);
       private float rows = reader.getRowCount();
       private long row;
 
-      public AvroWrapper<T> createKey() { return new AvroWrapper<T>(null); }
-  
+      public AvroWrapper<T> createKey() { return new AvroWrapper<>(null); }
+
       public NullWritable createValue() { return NullWritable.get(); }
-    
+
       public boolean next(AvroWrapper<T> wrapper, NullWritable ignore)
         throws IOException {
         if (!reader.hasNext())
@@ -90,13 +90,13 @@ public class AvroTrevniInputFormat<T>
         row++;
         return true;
       }
-  
+
       public float getProgress() throws IOException { return row / rows; }
-  
+
       public long getPos() throws IOException { return row; }
 
       public void close() throws IOException { reader.close(); }
-  
+
     };
 
   }

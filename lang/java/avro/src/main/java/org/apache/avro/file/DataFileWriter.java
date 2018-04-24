@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,7 +58,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private BufferedFileOutputStream out;
   private BinaryEncoder vout;
 
-  private final Map<String,byte[]> meta = new HashMap<String,byte[]>();
+  private final Map<String,byte[]> meta = new HashMap<>();
 
   private long blockCount;                       // # entries in current block
 
@@ -77,16 +77,16 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   public DataFileWriter(DatumWriter<D> dout) {
     this.dout = dout;
   }
-  
+
   private void assertOpen() {
     if (!isOpen) throw new AvroRuntimeException("not open");
   }
   private void assertNotOpen() {
     if (isOpen) throw new AvroRuntimeException("already open");
   }
-  
-  /** 
-   * Configures this writer to use the given codec. 
+
+  /**
+   * Configures this writer to use the given codec.
    * May not be reset after writes have begun.
    */
   public DataFileWriter<D> setCodec(CodecFactory c) {
@@ -97,7 +97,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   /**
-   * Set the synchronization interval for this file, in bytes. 
+   * Set the synchronization interval for this file, in bytes.
    * Valid values range from 32 to 2^30
    * Suggested values are between 2K and 2M
    *
@@ -108,12 +108,12 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * called with param set to false, then the block may not be flushed to the
    * stream after the sync marker is written. In this case,
    * the {@linkplain #flush()} must be called to flush the stream.
-   * 
+   *
    * Invalid values throw IllegalArgumentException
-   * 
-   * @param syncInterval 
+   *
+   * @param syncInterval
    *   the approximate number of uncompressed bytes to write in each block
-   * @return 
+   * @return
    *   this DataFileWriter
    */
   public DataFileWriter<D> setSyncInterval(int syncInterval) {
@@ -190,11 +190,20 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a writer appending to an existing file. */
   public DataFileWriter<D> appendTo(File file) throws IOException {
-    return appendTo(new SeekableFileInput(file),
-                    new SyncableFileOutputStream(file, true));
+    SeekableInput input = null;
+    try {
+      input = new SeekableFileInput(file);
+      OutputStream output = new SyncableFileOutputStream(file, true);
+      return appendTo(input, output);
+    } finally {
+      if (input != null)
+        input.close();
+      // output does not need to be closed here. It will be closed by invoking close() of this writer.
+    }
   }
 
   /** Open a writer appending to an existing file.
+   * <strong>Since 1.9.0 this method does not close in.</strong>
    * @param in reading the existing file.
    * @param out positioned at the end of the existing file.
    */
@@ -202,7 +211,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     throws IOException {
     assertNotOpen();
     DataFileReader<D> reader =
-      new DataFileReader<D>(in, new GenericDatumReader<D>());
+      new DataFileReader<>(in, new GenericDatumReader<>());
     this.schema = reader.getSchema();
     this.sync = reader.getHeader().sync;
     this.meta.putAll(reader.getHeader().meta);
@@ -213,7 +222,6 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     } else {
       this.codec = CodecFactory.nullCodec().createInstance();
     }
-    reader.close();
 
     init(out);
 
@@ -251,7 +259,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     meta.put(key, value);
     return this;
   }
-  
+
   private DataFileWriter<D> setMetaInternal(String key, String value) {
     try {
       return setMetaInternal(key, value.getBytes("UTF-8"));
@@ -267,7 +275,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
     return setMetaInternal(key, value);
   }
-  
+
   public static boolean isReservedMeta(String key) {
     return key.startsWith("avro.");
   }
@@ -310,7 +318,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     blockCount++;
     writeIfBlockFull();
   }
-  
+
   // if there is an error encoding, flush the encoder and then
   // reset the buffer position to contain size bytes, discarding the rest.
   // Otherwise the file will be corrupt with a partial record.
@@ -330,7 +338,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     blockCount++;
     writeIfBlockFull();
   }
-  
+
   private int bufferInUse() {
     return (buffer.size() + bufOut.bytesBuffered());
   }
@@ -384,17 +392,20 @@ public class DataFileWriter<D> implements Closeable, Flushable {
       }
     }
   }
-  
+
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
-      bufOut.flush();
-      ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
-      DataBlock block = new DataBlock(uncompressed, blockCount);
-      block.setFlushOnWrite(flushOnEveryBlock);
-      block.compressUsing(codec);
-      block.writeBlockTo(vout, sync);
-      buffer.reset();
-      blockCount = 0;
+      try {
+        bufOut.flush();
+        ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
+        DataBlock block = new DataBlock(uncompressed, blockCount);
+        block.setFlushOnWrite(flushOnEveryBlock);
+        block.compressUsing(codec);
+        block.writeBlockTo(vout, sync);
+      } finally {
+        buffer.reset();
+        blockCount = 0;
+      }
     }
   }
 
@@ -466,6 +477,17 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
 
     public long tell() { return position+count; }
+
+    @Override
+    public synchronized void flush() throws IOException {
+      try {
+        super.flush();
+      } finally {
+        // Ensure that count is reset in any case to avoid writing garbage to the end of the file in case of an error
+        // occurred during the write
+        count = 0;
+      }
+    }
   }
 
   private static class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {

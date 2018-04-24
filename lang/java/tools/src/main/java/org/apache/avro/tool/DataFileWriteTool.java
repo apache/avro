@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -82,14 +82,14 @@ public class DataFileWriteTool implements Tool {
     Schema schema = (schemafile != null)
         ? Util.parseSchemaFromFS(schemafile)
         : new Schema.Parser().parse(schemastr);
-    
-    DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+
+    DatumReader<Object> reader = new GenericDatumReader<>(schema);
 
     InputStream input = Util.fileOrStdin(nargs.get(0), stdin);
     try {
       DataInputStream din = new DataInputStream(input);
       DataFileWriter<Object> writer =
-        new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+        new DataFileWriter<>(new GenericDatumWriter<>());
       writer.setCodec(Util.codecFactory(opts, codec, level, DataFileConstants.NULL_CODEC));
       writer.create(schema, out);
       Decoder decoder = DecoderFactory.get().jsonDecoder(schema, din);

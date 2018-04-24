@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,6 @@
  */
 package org.apache.trevni;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.Arrays;
 
@@ -32,13 +29,13 @@ public class TestInputBytes {
   private static final int COUNT = 100;
 
   @Test public void testRandomReads() throws Exception {
-    Random random = new Random();
-    int length = random.nextInt(SIZE);
+    Random random = new Random(19820210);
+    int length = random.nextInt(SIZE) + 1;
     byte[] data = new byte[length];
     random.nextBytes(data);
 
     Input in = new InputBytes(data);
-      
+
     for (int i = 0; i < COUNT; i++) {
       int p = random.nextInt(length);
       int l = Math.min(random.nextInt(SIZE/10), length-p);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,7 +55,7 @@ public class ThriftData extends GenericData {
   private static final ThriftData INSTANCE = new ThriftData();
 
   protected ThriftData() {}
-  
+
   /** Return the singleton instance. */
   public static ThriftData get() { return INSTANCE; }
 
@@ -95,7 +95,7 @@ public class ThriftData extends GenericData {
   }
 
   private final Map<Schema,TFieldIdEnum[]> fieldCache =
-    new ConcurrentHashMap<Schema,TFieldIdEnum[]>();
+    new ConcurrentHashMap<>();
 
   @Override
   @SuppressWarnings("unchecked")
@@ -170,7 +170,7 @@ public class ThriftData extends GenericData {
   }
 
   private final Map<Class,Schema> schemaCache
-    = new ConcurrentHashMap<Class,Schema>();
+    = new ConcurrentHashMap<>();
 
   /** Return a record schema given a thrift generated class. */
   @SuppressWarnings("unchecked")
@@ -180,14 +180,14 @@ public class ThriftData extends GenericData {
     if (schema == null) {                         // cache miss
       try {
         if (TEnum.class.isAssignableFrom(c)) {    // enum
-          List<String> symbols = new ArrayList<String>();
+          List<String> symbols = new ArrayList<>();
           for (Enum e : ((Class<? extends Enum>)c).getEnumConstants())
             symbols.add(e.name());
           schema = Schema.createEnum(c.getName(), null, null, symbols);
         } else if (TBase.class.isAssignableFrom(c)) { // struct
           schema = Schema.createRecord(c.getName(), null, null,
                                        Throwable.class.isAssignableFrom(c));
-          List<Field> fields = new ArrayList<Field>();
+          List<Field> fields = new ArrayList<>();
           for (FieldMetaData f :
                  FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).values()) {
             Schema s = getSchema(f.valueMetaData);

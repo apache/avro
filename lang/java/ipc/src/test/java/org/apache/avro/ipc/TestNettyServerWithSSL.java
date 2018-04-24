@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,7 +42,7 @@ import org.jboss.netty.handler.ssl.SslHandler;
 public class TestNettyServerWithSSL extends TestNettyServer{
   public static final String TEST_CERTIFICATE = "servercert.p12";
   public static final String TEST_CERTIFICATE_PASSWORD = "s3cret";
-  
+
   protected static Server initializeServer(Responder responder) {
     ChannelFactory channelFactory = new NioServerSocketChannelFactory(
         Executors.newCachedThreadPool(),
@@ -52,7 +52,7 @@ public class TestNettyServerWithSSL extends TestNettyServer{
         channelFactory, new SSLChannelPipelineFactory(),
         null);
   }
-  
+
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return  new NettyTransceiver(new InetSocketAddress(serverPort),
         new SSLChannelFactory(),

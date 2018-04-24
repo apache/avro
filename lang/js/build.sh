@@ -30,7 +30,7 @@ case "$1" in
     mv avro-js-*.tgz ../../dist/js
     ;;
   clean)
-    rm -rf node_modules
+    rm -rf coverage
     ;;
   *)
     echo "Usage: $0 {test|dist|clean}" >&2

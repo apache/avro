@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -76,16 +76,16 @@ public class AvroOutputFormat <T>
   public static void setSyncInterval(JobConf job, int syncIntervalInBytes) {
     job.setInt(SYNC_INTERVAL_KEY, syncIntervalInBytes);
   }
-  
+
   static <T> void configureDataFileWriter(DataFileWriter<T> writer,
       JobConf job) throws UnsupportedEncodingException {
-    
+
     CodecFactory factory = getCodecFactory(job);
-    
+
     if (factory != null) {
-      writer.setCodec(factory);  
+      writer.setCodec(factory);
     }
-    
+
     writer.setSyncInterval(job.getInt(SYNC_INTERVAL_KEY, DEFAULT_SYNC_INTERVAL));
 
     // copy metadata from job
@@ -107,16 +107,16 @@ public class AvroOutputFormat <T>
    *   <li>Use avro.output.codec if populated</li>
    *   <li>Next use mapred.output.compression.codec if populated</li>
    *   <li>If not default to Deflate Codec</li>
-   * </ul>  
+   * </ul>
    */
   static CodecFactory getCodecFactory(JobConf job) {
     CodecFactory factory = null;
-    
+
     if (FileOutputFormat.getCompressOutput(job)) {
       int deflateLevel = job.getInt(DEFLATE_LEVEL_KEY, DEFAULT_DEFLATE_LEVEL);
       int xzLevel = job.getInt(XZ_LEVEL_KEY, DEFAULT_XZ_LEVEL);
       String codecName = job.get(AvroJob.OUTPUT_CODEC);
-      
+
       if (codecName == null) {
         String codecClassName = job.get("mapred.output.compression.codec", null);
         String avroCodecName = HadoopCodecFactory.getAvroCodecName(codecClassName);
@@ -127,7 +127,7 @@ public class AvroOutputFormat <T>
         } else {
           return CodecFactory.deflateCodec(deflateLevel);
         }
-      } else { 
+      } else {
         if ( codecName.equals(DEFLATE_CODEC)) {
           factory = CodecFactory.deflateCodec(deflateLevel);
         } else if ( codecName.equals(XZ_CODEC)) {
@@ -137,7 +137,7 @@ public class AvroOutputFormat <T>
         }
       }
     }
-    
+
     return factory;
   }
 
@@ -155,7 +155,7 @@ public class AvroOutputFormat <T>
 
     final DataFileWriter<T> writer =
       new DataFileWriter<T>(dataModel.createDatumWriter(null));
-    
+
     configureDataFileWriter(writer, job);
 
     Path path = FileOutputFormat.getTaskOutputPath(job, name+EXT);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -98,7 +98,7 @@ class OutputBuffer extends ByteArrayOutputStream {
     int len = bytes.limit() - pos;
     writeBytes(bytes.array(), start, len);
   }
-  
+
   public void writeBytes(byte[] bytes) throws IOException {
     writeBytes(bytes, 0, bytes.length);
   }
@@ -158,7 +158,7 @@ class OutputBuffer extends ByteArrayOutputStream {
           }
         }
       }
-    } 
+    }
     buf[count++] = (byte) n;
   }
 
@@ -203,7 +203,7 @@ class OutputBuffer extends ByteArrayOutputStream {
     }
     buf[count++] = (byte) n;
   }
-  
+
   private void ensure(int n) {
     if (count + n > buf.length)
       buf = Arrays.copyOf(buf, Math.max(buf.length << 1, count + n));

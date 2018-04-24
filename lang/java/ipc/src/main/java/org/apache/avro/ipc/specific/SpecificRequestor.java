@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -124,12 +124,12 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
             throw e;
           }
         }
-      
+
         // Next, check for RuntimeExceptions:
         if (e instanceof RuntimeException) {
           throw e;
         }
-      
+
         // Not an expected Exception, so wrap it in AvroRemoteException:
         throw new AvroRemoteException(e);
       }
@@ -137,7 +137,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter<Object>(schema, data);
+    return new SpecificDatumWriter<>(schema, data);
   }
 
   @Deprecated                                     // for compatibility in 1.5
@@ -146,7 +146,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new SpecificDatumReader<Object>(writer, reader, data);
+    return new SpecificDatumReader<>(writer, reader, data);
   }
 
   @Override
@@ -157,7 +157,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     for (Schema.Field param : schema.getFields())
       getDatumWriter(param.schema()).write(args[i++], out);
   }
-    
+
   @Override
   public Object readResponse(Schema writer, Schema reader, Decoder in)
     throws IOException {
@@ -174,22 +174,22 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static  <T> T getClient(Class<T> iface, Transceiver transciever)
+  public static  <T> T getClient(Class<T> iface, Transceiver transceiver)
     throws IOException {
-    return getClient(iface, transciever,
+    return getClient(iface, transceiver,
                      new SpecificData(iface.getClassLoader()));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
-  public static  <T> T getClient(Class<T> iface, Transceiver transciever,
+  public static  <T> T getClient(Class<T> iface, Transceiver transceiver,
                                  SpecificData data)
     throws IOException {
     Protocol protocol = data.getProtocol(iface);
     return (T)Proxy.newProxyInstance
       (data.getClassLoader(),
        new Class[] { iface },
-       new SpecificRequestor(protocol, transciever, data));
+       new SpecificRequestor(protocol, transceiver, data));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
@@ -203,7 +203,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   /** Return the remote protocol for a proxy. */
   public static Protocol getRemote(Object proxy) throws IOException {
     return ((Requestor)Proxy.getInvocationHandler(proxy)).getRemote();
-    
+
   }
 
 }

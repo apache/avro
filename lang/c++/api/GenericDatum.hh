@@ -66,18 +66,14 @@ public:
     /**
      * The avro data type this datum holds.
      */
-    Type type() const {
-        return type_;
-    }
+    Type type() const;
 
     /**
      * Returns the value held by this datum.
      * T The type for the value. This must correspond to the
      * avro type returned by type().
      */
-    template<typename T> const T& value() const {
-        return *boost::any_cast<T>(&value_);
-    }
+    template<typename T> const T& value() const;
 
     /**
      * Returns the reference to the value held by this datum, which
@@ -88,9 +84,7 @@ public:
      * T The type for the value. This must correspond to the
      * avro type returned by type().
      */
-    template<typename T> T& value() {
-        return *boost::any_cast<T>(&value_);
-    }
+    template<typename T> T& value();
 
     /**
      * Returns true if and only if this datum is a union.
@@ -153,7 +147,7 @@ public:
     GenericDatum(const NodePtr& schema, const T& v) :
         type_(schema->type()) {
         init(schema);
-        value<T>() = v;
+        *boost::any_cast<T>(&value_) = v;
     }
 
     /**
@@ -201,6 +195,7 @@ public:
      */
     GenericUnion(const NodePtr& schema) :
         GenericContainer(AVRO_UNION, schema), curBranch_(schema->leaves()) {
+        selectBranch(0);
     }
 
     /**
@@ -492,6 +487,24 @@ public:
         return value_;
     }
 };
+
+inline Type GenericDatum::type() const {
+    return (type_ == AVRO_UNION) ?
+        boost::any_cast<GenericUnion>(&value_)->datum().type() :
+        type_;
+}
+
+template<typename T> T& GenericDatum::value() {
+    return (type_ == AVRO_UNION) ?
+        boost::any_cast<GenericUnion>(&value_)->datum().value<T>() :
+        *boost::any_cast<T>(&value_);
+}
+
+template<typename T> const T& GenericDatum::value() const {
+    return (type_ == AVRO_UNION) ?
+        boost::any_cast<GenericUnion>(&value_)->datum().value<T>() :
+        *boost::any_cast<T>(&value_);
+}
 
 inline size_t GenericDatum::unionBranch() const {
     return boost::any_cast<GenericUnion>(&value_)->currentBranch();

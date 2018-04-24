@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
   public SpecificExceptionBase() {
     super();
   }
-  
+
   public SpecificExceptionBase(Throwable value) {
     super(value);
   }
@@ -41,7 +41,7 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
   public SpecificExceptionBase(Object value) {
     super(value);
   }
-  
+
   public SpecificExceptionBase(Object value, Throwable cause) {
     super(value, cause);
   }

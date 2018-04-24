@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,6 @@ package org.apache.trevni;
 
 import java.util.Random;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 import org.junit.Assert;
@@ -39,7 +38,7 @@ public class TestUtil {
       String configured = System.getProperty("test.seed");
       if (configured != null)
         seed = Long.valueOf(configured);
-      else 
+      else
         seed = System.currentTimeMillis();
       System.err.println("test.seed="+seed);
       seedSet = true;

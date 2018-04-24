@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,13 +31,13 @@ import java.net.HttpURLConnection;
 
 /** An HTTP-based {@link Transceiver} implementation. */
 public class HttpTransceiver extends Transceiver {
-  static final String CONTENT_TYPE = "avro/binary"; 
+  static final String CONTENT_TYPE = "avro/binary";
 
   private URL url;
   private Proxy proxy;
   private HttpURLConnection connection;
   private int timeout;
-  
+
   public HttpTransceiver(URL url) { this.url = url; }
 
   public HttpTransceiver(URL url, Proxy proxy) {
@@ -49,7 +49,7 @@ public class HttpTransceiver extends Transceiver {
   public void setTimeout(int timeout) { this.timeout = timeout; }
 
   public String getRemoteName() { return this.url.toString(); }
-    
+
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
     InputStream in = connection.getInputStream();
     try {
@@ -94,7 +94,7 @@ public class HttpTransceiver extends Transceiver {
 
   static List<ByteBuffer> readBuffers(InputStream in)
     throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       int length = (in.read()<<24)+(in.read()<<16)+(in.read()<<8)+in.read();
       if (length == 0) {                       // end of buffers

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,11 +43,11 @@ import org.apache.avro.util.Utf8;
  */
 public class LegacyBinaryEncoder extends Encoder {
   protected OutputStream out;
-  
+
   private interface ByteWriter {
     void write(ByteBuffer bytes) throws IOException;
   }
-  
+
   private static final class SimpleByteWriter implements ByteWriter {
     private final OutputStream out;
 
@@ -61,7 +61,7 @@ public class LegacyBinaryEncoder extends Encoder {
       out.write(bytes.array(), bytes.position(), bytes.remaining());
     }
   }
-  
+
   private final ByteWriter byteWriter;
 
   /** Create a writer that sends its output to the underlying stream
@@ -80,7 +80,7 @@ public class LegacyBinaryEncoder extends Encoder {
 
   @Override
   public void writeNull() throws IOException { }
-  
+
   @Override
   public void writeBoolean(boolean b) throws IOException {
     out.write(b ? 1 : 0);
@@ -95,7 +95,7 @@ public class LegacyBinaryEncoder extends Encoder {
   public void writeLong(long n) throws IOException {
     encodeLong(n, out);
   }
-  
+
   @Override
   public void writeFloat(float f) throws IOException {
     encodeFloat(f, out);
@@ -110,29 +110,29 @@ public class LegacyBinaryEncoder extends Encoder {
   public void writeString(Utf8 utf8) throws IOException {
     encodeString(utf8.getBytes(), 0, utf8.getByteLength());
   }
-  
+
   @Override
   public void writeString(String string) throws IOException {
     byte[] bytes = Utf8.getBytesFor(string);
     encodeString(bytes, 0, bytes.length);
   }
-  
+
   private void encodeString(byte[] bytes, int offset, int length) throws IOException {
     encodeLong(length, out);
     out.write(bytes, offset, length);
   }
-  
+
   @Override
   public void writeBytes(ByteBuffer bytes) throws IOException {
     byteWriter.write(bytes);
   }
-  
+
   @Override
   public void writeBytes(byte[] bytes, int start, int len) throws IOException {
     encodeLong(len, out);
     out.write(bytes, start, len);
   }
-  
+
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
     out.write(bytes, start, len);
@@ -153,7 +153,7 @@ public class LegacyBinaryEncoder extends Encoder {
       writeLong(itemCount);
     }
   }
-  
+
   @Override
   public void startItem() throws IOException {
   }
@@ -176,7 +176,7 @@ public class LegacyBinaryEncoder extends Encoder {
   public void writeIndex(int unionIndex) throws IOException {
     encodeLong(unionIndex, out);
   }
-  
+
   protected static void encodeLong(long n, OutputStream o) throws IOException {
     n = (n << 1) ^ (n >> 63); // move sign to low-order bit
     while ((n & ~0x7F) != 0) {

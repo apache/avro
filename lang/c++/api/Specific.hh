@@ -25,7 +25,9 @@
 #include <algorithm>
 
 #include "boost/array.hpp"
+#include "boost/blank.hpp"
 
+#include "AvroTraits.hh"
 #include "Config.hh"
 #include "Encoder.hh"
 #include "Decoder.hh"
@@ -46,6 +48,8 @@
  */
 namespace avro {
 
+typedef boost::blank null;
+
 template <typename T> void encode(Encoder& e, const T& t);
 template <typename T> void decode(Decoder& d, T& t);
 
@@ -58,8 +62,7 @@ template <typename T> void decode(Decoder& d, T& t);
  * The default is empty.
  */
 template <typename T>
-struct codec_traits {
-};
+struct codec_traits;
 
 /**
  * codec_traits for Avro boolean.
@@ -250,6 +253,18 @@ template <typename T> struct codec_traits<std::vector<T> > {
     }
 };
 
+typedef codec_traits<std::vector<bool>::const_reference> bool_codec_traits;
+
+template <> struct codec_traits<boost::conditional<avro::is_not_defined<bool_codec_traits>::value,
+         std::vector<bool>::const_reference, void>::type> {
+   /**
+    * Encodes a given value.
+    */
+    static void encode(Encoder& e, std::vector<bool>::const_reference b) {
+        e.encodeBool(b);
+    }
+};
+
 /**
  * codec_traits for Avro maps.
  */
@@ -290,6 +305,27 @@ template <typename T> struct codec_traits<std::map<std::string, T> > {
 };
 
 /**
+* codec_traits for Avro null.
+*/
+template <> struct codec_traits<avro::null> {
+	/**
+	* Encodes a given value.
+	*/
+	static void encode(Encoder& e, const avro::null&) {
+		e.encodeNull();
+	}
+
+	/**
+	* Decodes into a given value.
+	*/
+	static void decode(Decoder& d, avro::null&) {
+		d.decodeNull();
+	}
+};
+
+
+
+/**
  * Generic encoder function that makes use of the codec_traits.
  */
 template <typename T>
@@ -306,6 +342,7 @@ void decode(Decoder& d, T& t) {
 }
 
 }   // namespace avro
+
 #endif // avro_Codec_hh__
 
 

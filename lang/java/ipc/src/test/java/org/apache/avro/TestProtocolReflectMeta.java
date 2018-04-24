@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,6 @@ import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.reflect.ReflectRequestor;
 import org.apache.avro.ipc.reflect.ReflectResponder;
-import org.apache.avro.test.Simple;
 import org.junit.Before;
 
 import java.net.InetSocketAddress;
@@ -36,7 +35,7 @@ public class TestProtocolReflectMeta extends TestProtocolReflect {
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key2"));
     server = new SocketServer(rresp, new InetSocketAddress(0));
     server.start();
-    
+
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     ReflectRequestor requestor = new ReflectRequestor(Simple.class, client);
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key1"));

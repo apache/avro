@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -51,7 +51,7 @@ public class ByteBufferOutputStream extends OutputStream {
     }
     buffers.addAll(0, lists);
   }
-  
+
   /** Append a list of ByteBuffers to this stream. */
   public void append(List<ByteBuffer> lists) {
     for (ByteBuffer buffer: lists) {
@@ -59,9 +59,9 @@ public class ByteBufferOutputStream extends OutputStream {
     }
     buffers.addAll(lists);
   }
-  
+
   public void reset() {
-    buffers = new LinkedList<ByteBuffer>();
+    buffers = new LinkedList<>();
     buffers.add(ByteBuffer.allocate(BUFFER_SIZE));
   }
 

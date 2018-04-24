@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -60,22 +60,22 @@ class SnappyCodec extends Codec {
     int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,
                                  out.array(), 0);
     out.limit(size);
-    
+
     crc32.reset();
     crc32.update(out.array(), 0, size);
     if (in.getInt(in.limit()-4) != (int)crc32.getValue())
       throw new IOException("Checksum failure");
-    
+
     return out;
   }
-  
+
   @Override public int hashCode() { return getName().hashCode(); }
 
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
       return true;
-    if (getClass() != obj.getClass())
+    if (obj == null || obj.getClass() != getClass())
       return false;
     return true;
   }

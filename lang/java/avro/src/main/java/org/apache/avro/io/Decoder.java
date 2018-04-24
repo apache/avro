@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -88,14 +88,14 @@ public abstract class Decoder {
    *           is not the type of the next value to be read
    */
   public abstract double readDouble() throws IOException;
-    
+
   /**
    * Reads a char-string written by {@link Encoder#writeString}.
    * @throws AvroTypeException If this is a stateful reader and
    * char-string is not the type of the next value to be read
    */
   public abstract Utf8 readString(Utf8 old) throws IOException;
-    
+
   /**
    * Reads a char-string written by {@link Encoder#writeString}.
    * @throws AvroTypeException If this is a stateful reader and
@@ -125,7 +125,7 @@ public abstract class Decoder {
    *          byte-string is not the type of the next value to be read
    */
   public abstract void skipBytes() throws IOException;
-  
+
   /**
    * Reads fixed sized binary object.
    * @param bytes The buffer to store the contents being read.
@@ -149,7 +149,7 @@ public abstract class Decoder {
   public void readFixed(byte[] bytes) throws IOException {
     readFixed(bytes, 0, bytes.length);
   }
-  
+
   /**
    * Discards fixed sized binary object.
    * @param length  The size of the binary object to be skipped.
@@ -168,7 +168,7 @@ public abstract class Decoder {
    * @throws IOException
    */
   public abstract int readEnum() throws IOException;
-  
+
   /**
    * Reads and returns the size of the first block of an array.  If
    * this method returns non-zero, then the caller should read the

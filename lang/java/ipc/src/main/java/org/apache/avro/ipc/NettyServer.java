@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -62,13 +62,13 @@ public class NettyServer implements Server {
       "avro-netty-server");
   private final ChannelFactory channelFactory;
   private final CountDownLatch closed = new CountDownLatch(1);
-  private final ExecutionHandler executionHandler;            
-  
+  private final ExecutionHandler executionHandler;
+
   public NettyServer(Responder responder, InetSocketAddress addr) {
     this(responder, addr, new NioServerSocketChannelFactory
          (Executors .newCachedThreadPool(), Executors.newCachedThreadPool()));
   }
-  
+
   public NettyServer(Responder responder, InetSocketAddress addr,
                      ChannelFactory channelFactory) {
       this(responder, addr, channelFactory, null);
@@ -123,12 +123,12 @@ public class NettyServer implements Server {
       }
     }, executionHandler);
   }
-    
+
   @Override
   public void start() {
     // No-op.
   }
-  
+
   @Override
   public void close() {
     ChannelGroupFuture future = allChannels.close();
@@ -136,7 +136,7 @@ public class NettyServer implements Server {
     channelFactory.releaseExternalResources();
     closed.countDown();
   }
-  
+
   @Override
   public int getPort() {
     return ((InetSocketAddress) serverChannel.getLocalAddress()).getPort();
@@ -146,7 +146,7 @@ public class NettyServer implements Server {
   public void join() throws InterruptedException {
     closed.await();
   }
-  
+
   /**
    *
    * @return The number of clients currently connected to this server.
@@ -158,12 +158,12 @@ public class NettyServer implements Server {
   }
 
   /**
-   * Avro server handler for the Netty transport 
+   * Avro server handler for the Netty transport
    */
   class NettyServerAvroHandler extends SimpleChannelUpstreamHandler {
 
     private NettyTransceiver connectionMetadata = new NettyTransceiver();
-    
+
     @Override
     public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e)
         throws Exception {
@@ -189,10 +189,10 @@ public class NettyServer implements Server {
         // response will be null for oneway messages.
         if(res != null) {
           dataPack.setDatas(res);
-          e.getChannel().write(dataPack);          
+          e.getChannel().write(dataPack);
         }
       } catch (IOException ex) {
-        LOG.warn("unexpect error");
+        LOG.warn("unexpected error");
       }
     }
 

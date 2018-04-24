@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,8 +18,11 @@
 package org.apache.avro.reflect;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
@@ -51,7 +54,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   public ReflectDatumWriter(Schema root, ReflectData reflectData) {
     super(root, reflectData);
   }
-  
+
   protected ReflectDatumWriter(ReflectData reflectData) {
     super(reflectData);
   }
@@ -69,7 +72,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     if (null == elementClass) {
       // not a Collection or an Array
       throw new AvroRuntimeException("Array data must be a Collection or Array");
-    } 
+    }
     Schema element = schema.getElementType();
     if (elementClass.isPrimitive()) {
       Schema.Type type = element.getType();
@@ -109,7 +112,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       out.writeArrayEnd();
     }
   }
-  
+
   private void writeObjectArray(Schema element, Object[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
@@ -117,12 +120,12 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
       this.write(element, data[i], out);
     }
   }
-    
+
   private void arrayError(Class<?> cl, Schema.Type type) {
     throw new AvroRuntimeException("Error writing array with inner type " +
       cl + " and avro type: " + type);
   }
-  
+
   @Override
   protected void writeBytes(Object datum, Encoder out) throws IOException {
     if (datum instanceof byte[])
@@ -139,13 +142,19 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     else if (datum instanceof Short)
       datum = ((Short)datum).intValue();
     else if (datum instanceof Character)
-        datum = (int)(char)(Character)datum;
+      datum = (int)(char)(Character)datum;
     else if (datum instanceof Map && ReflectData.isNonStringMapSchema(schema)) {
-        // Maps with non-string keys are written as arrays.
-        // Schema for such maps is already changed. Here we
-        // just switch the map to a similar form too.
-        datum = ((Map)datum).entrySet();
+      // Maps with non-string keys are written as arrays.
+      // Schema for such maps is already changed. Here we
+      // just switch the map to a similar form too.
+      Set entries = ((Map)datum).entrySet();
+      List<Map.Entry> entryList = new ArrayList<>(entries.size());
+      for (Object obj: ((Map)datum).entrySet()) {
+          Map.Entry e = (Map.Entry)obj;
+          entryList.add(new MapEntry(e.getKey(), e.getValue()));
       }
+      datum = entryList;
+    }
     try {
       super.write(schema, datum, out);
     } catch (NullPointerException e) {            // improve error message
@@ -176,7 +185,7 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
             throw new AvroRuntimeException("Failed to write Stringable", e);
           }
           return;
-        }  
+        }
       }
     }
     super.writeField(record, f, out, state);

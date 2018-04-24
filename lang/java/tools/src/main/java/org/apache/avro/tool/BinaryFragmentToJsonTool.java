@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -47,12 +47,12 @@ public class BinaryFragmentToJsonTool implements Tool {
         .accepts("schema-file", "File containing schema, must not occur with inline schema.")
         .withOptionalArg()
         .ofType(String.class);
-    
+
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean noPretty = optionSet.has(noPrettyOption);
     List<String> nargs = (List<String>)optionSet.nonOptionArguments();
     String schemaFile = schemaFileOption.value(optionSet);
-    
+
     if (nargs.size() != (schemaFile == null ? 2 : 1)) {
       err.println("fragtojson --no-pretty --schema-file <file> [inline-schema] input-file");
       err.println("   converts Avro fragments to JSON.");
@@ -72,10 +72,10 @@ public class BinaryFragmentToJsonTool implements Tool {
     InputStream input = Util.fileOrStdin(inputFile, stdin);
 
     try {
-      DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+      DatumReader<Object> reader = new GenericDatumReader<>(schema);
       BinaryDecoder binaryDecoder =
         DecoderFactory.get().binaryDecoder(input, null);
-      DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+      DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(schema, out, !noPretty);
       Object datum = null;
       while (!binaryDecoder.isEnd()){

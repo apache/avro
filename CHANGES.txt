@@ -4,6 +4,239 @@ Trunk (not yet released)
 
   INCOMPATIBLE CHANGES
 
+    AVRO-2003: Report specific location of schema incompatibilities (teabot via nkollar)
+
+    AVRO-2035: Java: validate default values when parsing schemas. (cutting)
+
+    AVRO-2043: Move to java8
+
+    AVRO-2061: Improve Invalid File Format Error Message (Beluga Behr via gabor)
+
+    AVRO-1933: Add more specific error details to SchemaCompatibility class
+    (Anders Sundelin via gabor)
+
+    AVRO-2072: ResolvingGrammarGenerator doesn't implement schema resolution correctly for unions
+    (Nandor Kollar via gabor)
+
+    AVRO-2059: Remove support of Hadoop 1 (gabor)
+
+  NEW FEATURES
+
+    AVRO-1704: Java: Add support for single-message encoding. (blue)
+
+    AVRO-1704: Spec: Add single-message encoding format. (Niels Basjes via blue)
+
+    AVRO-1884: Java: Add method to set the compiler output suffix.
+    (shijinkui via blue)
+
+    AVRO-1932: Java: Allow setting the SchemaStore on generated classes. 
+    (Niels Basjes)
+
+    AVRO-2132: Allow dots in IDL property names. (kdrakon via cutting)
+
+  OPTIMIZATIONS
+
+  IMPROVEMENTS
+
+    AVRO-1889: Update maven-shade-plugin to enable building in Java 8 on Mac.
+    (Sachin Goyal via blue)
+
+    AVRO-1695. Java: Fix GenericData#deepCopy() to support logical types.
+    (cutting)
+
+    AVRO-1719: C++: Fix tests with Boost >= 1.59. (Romain Geissler via blue)
+
+    AVRO-1879: Make conversions field static. (Michael Wong via blue)
+
+    AVRO-1919: Formalize the presence of build.sh. (Suraj Acharya via cutting)
+
+    AVRO-1918: Improve logical type documentation. (Gabor Szadovszky via cutting)
+
+    AVRO-1907: Java: Add debug logging for invalid logical types.
+    (Gabor Szadovszky via blue)
+
+    AVRO-1897: Fix build issues due to VERSION.txt newline, avro-tools.
+    (Suraj Acharya via blue)
+
+    AVRO-1993: C++ Byte ordering macro does not work on FreeBSD (thiru)
+
+    AVRO-1975: Upgrade java dependencies (gabor)
+
+    AVRO-1960: Add log4j properties for avro-tools
+
+    AVRO-1748. Add Snappy Compression to C++ DataFile (J. Langley via thiru)
+
+    AVRO-1723. Add support for forward declarations in avro IDL (Zoltan Farcas via thiru)
+
+    AVRO-1971: Allow alias annotation on fields (Johannes Schulte via gabor)
+
+    AVRO-2021: uuid logical type is not documented (Nandor Kollar via gabor)
+
+    AVRO-2056: DirectBinaryEncoder Creates Buffer For Each Call To writeDouble
+    (Beluga Behr via gabor)
+
+    AVRO-2054: Use StringBuilder instead of StringBuffer
+    (Beluga Behr via gabor)
+
+    AVRO-2050: Clear Array To Allow GC
+    (Beluga Behr via gabor)
+
+    AVRO-2049: Remove Superfluous Configuration From AvroSerializer
+    (Beluga Behr via gabor)
+
+    AVRO-2048: Avro Binary Decoding - Gracefully Handle Long Strings
+    (Beluga Behr via gabor)
+
+    AVRO-2053: Remove Reference To Deprecated Property mapred.output.compression.type
+    (Beluga Behr via gabor)
+
+    AVRO-2055: Remove Magic Value From org.apache.avro.hadoop.io.AvroSequenceFile
+    (Beluga Behr via gabor)
+
+    AVRO-1047: Remaining warnings in generated Java code exposed by -Xlint:all fixed.
+    (Michael Werle via Niels Basjes)
+
+    AVRO-2080: Fix Javadoc Warnings in Generated Records
+    (Bridger Howell via Niels Basjes)
+
+    AVRO-2114: Make missing value exceptions in nested structures easier to read.
+    (Niels Basjes)
+
+    AVRO-2115: Java: Permit @Union annotations on fields of classes.
+    (Miguel Martinez-Espronceda via cutting).
+
+    AVRO-2119: Run Apache Rat check on every java build (Niels Basjes)
+
+    AVRO-2117: Overall cleanup of java code (Niels Basjes)
+
+    AVRO-2109: Reset buffers in case of IOException (gabor)
+
+    AVRO-2133: Log rat failures (gabor)
+
+    AVRO-2113: Improve unexpected type error message (thiru)
+
+  BUG FIXES
+
+    AVRO-1741: Python3: Fix error when codec is not in the header.
+    (Matthew Hayes via blue)
+
+    AVRO-1869: Java: Fix Decimal conversion from ByteBuffer. (blue)
+
+    AVRO-607: Java: Make SpecificData schema cache thread-safe.
+    (Andrius Druzinis-Vitkus via blue)
+
+    AVRO-1888: Java: Fix single-record encoding marker check. (blue)
+
+    AVRO-1848: Ruby: Fix handling of falsey default values.
+    (Brian McKelvey via blue)
+
+    AVRO-1874: Py3: Use recommended module-level logging.
+    (Torgeir Børresen via blue)
+
+    AVRO-1883: Java: Fix incompatible schema detection nested in unions.
+    (Yibing Shi via blue)
+
+    AVRO-1908: Fix TestSpecificCompiler reference to private method.
+    (blue)
+
+    AVRO-1873: Ruby: Add CRC32 checksum to Snappy-compressed blocks.
+    (blue)
+
+    AVRO-1900: Java: Remove dev-tools to fix Java build. (blue)
+
+    AVRO-1913: No warnings in the generated Java code. (Niels Basjes)
+
+    AVRO-1914: Fix licencing errors reported by rat. (Niels Basjes)
+
+    AVRO-1901: Record named "Exception" generated bad code.
+    (Radai Rosenblatt via Niels Basjes)
+
+    AVRO-1849: C++: printJson fails on record with no fields.
+    (Simon Woodford vai tomwhite)
+
+    AVRO-1853: C++: Compiler::toBin crashes on empty string.
+    (Zoltan Ivanfi via tomwhite)
+
+    AVRO-1923, AVRO-1944: Stop infinite recursion in GenericData.toString. (Niels Basjes)
+
+    AVRO-1860: Java: Field#DefaultVal() returns Ints for Long fields.
+    (Gabor Szadovszky via cutting)
+
+    AVRO-1929: Java: SchemaCompatibility fails to recognize
+    string<->bytes promotion.  (Anders Sundelin via cutting)
+
+    AVRO-1882: Java: Fix ConcurrentHashMap with non-string keys.
+    (Sachin Goyal via blue)
+
+    AVRO-1943: Java: Flaky test:
+    TestNettyServerWithCompression.testConnectionsCount
+    (Gabor Szadovszky via tomwhite)
+
+    AVRO-1947: Java: Inconsistent maven profile activation
+    (Gabor Szadovszky via tomwhite)
+
+    AVRO-1626: C#: Fix Avro.pref build error. (Naruto Takahashi via blue)
+
+    AVRO-1951: Python: Fix ipc_test.py with a valid DNS name. (blue)
+
+    AVRO-1966: Java: Fix NPE When copying builder with nullable record. (Niels Basjes)
+
+    AVRO-1967: Java: Fix NPE when calling getXyzBuilder on instance where the xyz is null
+    (Niels Basjes)
+
+    AVRO-1970: Java: Flaky test: TestInputBytes. (Gabor Szadovszky via tomwhite)
+
+    AVRO-1881: Java: Avro (Java) Memory Leak when reusing JsonDecoder instance.
+    (Nandor Kollar via tomwhite)
+
+    AVRO-1954: Java: Schema.Field.defaultVal() generates: Unknown datum type
+    (Nandor Kollar via tomwhite)
+
+    AVRO-1930: JsonParser doesn't handle integer scientific notation (Pietro Cerutti via thiru)
+
+    AVRO-1912: C++ Resolving Decoding doesn't work if element removed from record in array. (via thiru)
+
+    AVRO-1866. JsonNullFormatter fwd-declared as class, defined as struct ( Pietro Cerutti via thiru)
+
+    AVRO-1750. GenericDatum API behavior breaking change (thiru)
+
+    AVRO-1995: JSON Parser does not properly check current state (Victor Mota via thiru)
+
+    AVRO-1216. Setting precision for the output stream (John McClean via thiru)
+
+    AVRO-1813: Incorrect link to build instructions in Java Getting Started (Pietro Menna via gabor)
+
+    AVRO-1937: C++ generator for recursive structure crashes (thiru)
+
+    AVRO-1892. C++ library cannot parse unions with default values (Hua Zhang via thiru)
+
+    AVRO-1994. C++ Code Generator Generates Invalid Code if Field is of type Null (Darryl Green via thiru)
+
+    AVRO-1997. Avro Field.defaultVal broken for Fixed fields. (Zoltan Farkasi via thiru)
+
+    AVRO-2033. GenericUnions constructor defaults to a broken state (Philip Rizk via thiru)
+
+    AVRO-1857: GenericDatumWriter.write using BufferedBinaryEncoder leaves ByteBuffer in indeterminate state
+    (Nandor Kollar via gabor)
+
+    AVRO-1990: CreateRandomFileTool should validate arguments (Nandor Kollar via gabor)
+
+    AVRO-1401: @Nullable does not work with byte[] (Nandor Kollar via gabor)
+
+    AVRO-1985: Unreleased resources (gabor)
+
+    AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
+    (Nandor Kollar via gabor)
+
+    AVRO-2120: Fix NullPointerException thrown by Schema.Parser#parse("")
+
+    AVRO-2122: Cannot validate schemas with recursive definitions
+    (Bart via Nandor Kollar)
+
+Avro 1.8.1 (14 May 2016)
+
+  INCOMPATIBLE CHANGES
+
   NEW FEATURES
 
   OPTIMIZATIONS
@@ -29,6 +262,21 @@ Trunk (not yet released)
 
     AVRO-1834: Lower the Javadoc warnings on the generated code. (nielsbasjes)
 
+    AVRO-1835: Running tests using JDK 1.8 complains about MaxPermSize (nielsbasjes)
+
+    AVRO-1828: Add EditorConfig file and cleanup of whitespace violations (nielsbasjes)
+
+    AVRO-1839: Update the gitignore files to hide generated files (nielsbasjes)
+
+    AVRO-1838: Java: Update checkstyle to catch trailing whitespace.
+    (nielsbasjes via blue)
+
+    AVRO-1840: Ensure that build.sh clean really cleans all generated files (nielsbasjes)
+
+    AVRO-1841: Add clientside githooks to do basic commit validation (nielsbasjes) 
+
+    AVRO-1807: Java/JSON: Throw for unsupported objects rather than ignoring. (blue)
+
   BUG FIXES
 
     AVRO-1493. Java: Avoid the "Turkish Locale Problem". Schema fingerprints are
@@ -48,6 +296,11 @@ Trunk (not yet released)
     (Prateek Rungta and Barry Jones via blue)
 
     AVRO-1826: build.sh rat fails over extra license files and many others (nielsbasjes).
+
+    AVRO-1814: Generated java code fails on variables with a TLD name like 'org' (nielsbasjes)
+
+    AVRO-1711: Java: Fix JsonParser#skipChildren to implement its defined contract.
+    (Zoltan Farkas and Thiruvalluvan M. G. via blue)
 
 Avro 1.8.0 (22 January 2016)
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -85,7 +85,7 @@ public class RpcSendTool implements Tool {
           messageName, protocol));
       return 1;
     }
-    
+
     Object datum;
     if (data.value(opts) != null) {
       datum = Util.jsonToGenericDatum(message.getRequest(), data.value(opts));
@@ -103,9 +103,9 @@ public class RpcSendTool implements Tool {
     return 0;
   }
 
-  private void dumpJson(PrintStream out, Schema schema, Object datum) 
+  private void dumpJson(PrintStream out, Schema schema, Object datum)
   throws IOException {
-    DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
+    DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
     JsonGenerator g =
       new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
     g.useDefaultPrettyPrinter();

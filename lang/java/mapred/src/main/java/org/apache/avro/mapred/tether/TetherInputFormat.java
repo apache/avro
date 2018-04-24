@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import org.apache.avro.mapred.AvroOutputFormat;
 
 /**
  * An {@link org.apache.hadoop.mapred.InputFormat} for tethered Avro input.
- * 
+ *
  * By default, when pointed at a directory, this will silently skip over any
  * files in it that do not have .avro extension. To instead include all files,
  * set the avro.mapred.ignore.inputs.without.extension property to false.
@@ -48,7 +48,7 @@ class TetherInputFormat
   protected FileStatus[] listStatus(JobConf job) throws IOException {
     if (job.getBoolean(AvroInputFormat.IGNORE_FILES_WITHOUT_EXTENSION_KEY,
         AvroInputFormat.IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT)) {
-      List<FileStatus> result = new ArrayList<FileStatus>();
+      List<FileStatus> result = new ArrayList<>();
       for (FileStatus file : super.listStatus(job))
         if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
           result.add(file);

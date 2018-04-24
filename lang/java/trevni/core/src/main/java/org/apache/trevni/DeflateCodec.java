@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,13 +45,13 @@ class DeflateCodec extends Codec {
     writeAndClose(data, new InflaterOutputStream(baos, getInflater()));
     return ByteBuffer.wrap(baos.toByteArray());
   }
-  
+
   private void writeAndClose(ByteBuffer data, OutputStream out)
     throws IOException {
     out.write(data.array(), data.position(), data.remaining());
     out.close();
   }
-  
+
   private Inflater getInflater() {
     if (null == inflater)
       inflater = new Inflater(true);
@@ -65,7 +65,7 @@ class DeflateCodec extends Codec {
     deflater.reset();
     return deflater;
   }
-  
+
   private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
     if (null == outputBuffer)
       outputBuffer = new ByteArrayOutputStream(suggestedLength);

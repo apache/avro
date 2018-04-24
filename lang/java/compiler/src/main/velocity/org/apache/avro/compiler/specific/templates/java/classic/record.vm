@@ -16,9 +16,16 @@
 ## limitations under the License.
 ##
 #if ($schema.getNamespace())
-package $schema.getNamespace();  
+package $schema.getNamespace();
 #end
-@SuppressWarnings("all")
+
+import org.apache.avro.specific.SpecificData;
+#if (!$schema.isError())
+import org.apache.avro.message.BinaryMessageEncoder;
+import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.SchemaStore;
+#end
+
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
@@ -30,6 +37,54 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
+  private static SpecificData MODEL$ = new SpecificData();
+
+#if (!$schema.isError())
+  private static final BinaryMessageEncoder<${this.mangle($schema.getName())}> ENCODER =
+      new BinaryMessageEncoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+
+  private static final BinaryMessageDecoder<${this.mangle($schema.getName())}> DECODER =
+      new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+
+  /**
+   * Return the BinaryMessageDecoder instance used by this class.
+   * @return the message decoder used by this class
+   */
+  public static BinaryMessageDecoder<${this.mangle($schema.getName())}> getDecoder() {
+    return DECODER;
+  }
+
+  /**
+   * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
+   * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
+   */
+  public static BinaryMessageDecoder<${this.mangle($schema.getName())}> createDecoder(SchemaStore resolver) {
+    return new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$, resolver);
+  }
+
+  /**
+   * Serializes this ${schema.getName()} to a ByteBuffer.
+   * @return a buffer holding the serialized data for this instance
+   * @throws java.io.IOException if this instance could not be serialized
+   */
+  public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
+    return ENCODER.encode(this);
+  }
+
+  /**
+   * Deserializes a ${schema.getName()} from a ByteBuffer.
+   * @param b a byte buffer holding serialized data for an instance of this class
+   * @return a ${schema.getName()} instance decoded from the given buffer
+   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+   */
+  public static ${this.mangle($schema.getName())} fromByteBuffer(
+      java.nio.ByteBuffer b) throws java.io.IOException {
+    return DECODER.decode(b);
+  }
+#end
+
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
   /** $field.doc() */
@@ -44,7 +99,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public ${this.mangle($schema.getName())}() {
     super();
   }
-  
+
   public ${this.mangle($schema.getName())}(Object value) {
     super(value);
   }
@@ -56,14 +111,14 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public ${this.mangle($schema.getName())}(Object value, Throwable cause) {
     super(value, cause);
   }
-  
+
 #else
-#if ($schema.getFields().size() > 0)  
+#if ($schema.getFields().size() > 0)
 
   /**
    * Default constructor.  Note that this does not initialize fields
    * to their default values from the schema.  If that is desired then
-   * one should use <code>newBuilder()</code>. 
+   * one should use <code>newBuilder()</code>.
    */
   public ${this.mangle($schema.getName())}() {}
 #if ($this.isCreateAllArgsConstructor())
@@ -93,7 +148,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
 #end
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
-  // Used by DatumWriter.  Applications should not call. 
+  // Used by DatumWriter.  Applications should not call.
   public java.lang.Object get(int field$) {
     switch (field$) {
 #set ($i = 0)
@@ -104,13 +159,34 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
-  // Used by DatumReader.  Applications should not call. 
+
+#if ($this.hasLogicalTypeField($schema))
+  protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
+  protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
+  protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
+  protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
+
+  private static final org.apache.avro.Conversion<?>[] conversions =
+      new org.apache.avro.Conversion<?>[] {
+#foreach ($field in $schema.getFields())
+      ${this.conversionInstance($field.schema())},
+#end
+      null
+  };
+
+  @Override
+  public org.apache.avro.Conversion<?> getConversion(int field) {
+    return conversions[field];
+  }
+
+#end
+  // Used by DatumReader.  Applications should not call.
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-    case $i: ${this.mangle($field.name(), $schema.isError())} = (${this.javaType($field.schema())})value$; break;
+    case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end}value$; break;
 #set ($i = $i + 1)
 #end
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
@@ -148,25 +224,33 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder() {
     return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
   }
-  
+
   /**
    * Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing Builder.
    * @param other The existing builder to copy.
    * @return A new ${this.mangle($schema.getName())} RecordBuilder
    */
   public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder other) {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    if (other == null) {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+    } else {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    }
   }
-  
+
   /**
    * Creates a new ${this.mangle($schema.getName())} RecordBuilder by copying an existing $this.mangle($schema.getName()) instance.
    * @param other The existing instance to copy.
    * @return A new ${this.mangle($schema.getName())} RecordBuilder
    */
   public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    if (other == null) {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+    } else {
+      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+    }
   }
-  
+
   /**
    * RecordBuilder for ${this.mangle($schema.getName())} instances.
    */
@@ -186,9 +270,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
     /** Creates a new Builder */
     private Builder() {
-      super(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.SCHEMA$);
+      super(SCHEMA$);
     }
-    
+
     /**
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
@@ -198,7 +282,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
         this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
-        fieldSetFlags()[$field.pos()] = true;
+        fieldSetFlags()[$field.pos()] = other.fieldSetFlags()[$field.pos()];
       }
 #if (${this.hasBuilder($field.schema())})
       if (other.${this.generateHasBuilderMethod($schema, $field)}()) {
@@ -207,14 +291,14 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 #end
     }
-    
+
     /**
      * Creates a Builder by copying an existing $this.mangle($schema.getName()) instance
      * @param other The existing instance to copy.
      */
     private Builder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
-      #if ($schema.isError())super(other)#else
-      super(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.SCHEMA$)#end;
+#if ($schema.isError())      super(other)#else
+      super(SCHEMA$)#end;
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
         this.${this.mangle($field.name(), $schema.isError())} = data().deepCopy(fields()[$field.pos()].schema(), other.${this.mangle($field.name(), $schema.isError())});
@@ -232,7 +316,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       super.setValue(value);
       return this;
     }
-    
+
     @Override
     public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder clearValue() {
       super.clearValue();
@@ -244,7 +328,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       super.setCause(cause);
       return this;
     }
-    
+
     @Override
     public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder clearCause() {
       super.clearCause();
@@ -277,7 +361,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
       this.${this.mangle($field.name(), $schema.isError())} = value;
       fieldSetFlags()[$field.pos()] = true;
-      return this; 
+      return this;
     }
 
     /**
@@ -351,41 +435,59 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
 #end
     @Override
+    @SuppressWarnings("unchecked")
     public ${this.mangle($schema.getName())} build() {
       try {
         ${this.mangle($schema.getName())} record = new ${this.mangle($schema.getName())}(#if ($schema.isError())getValue(), getCause()#end);
 #foreach ($field in $schema.getFields())
 #if (${this.hasBuilder($field.schema())})
         if (${this.mangle($field.name(), $schema.isError())}Builder != null) {
-          record.${this.mangle($field.name(), $schema.isError())} = this.${this.mangle($field.name(), $schema.isError())}Builder.build();
+          try {
+            record.${this.mangle($field.name(), $schema.isError())} = this.${this.mangle($field.name(), $schema.isError())}Builder.build();
+          } catch (org.apache.avro.AvroMissingFieldException e) {
+            e.addParentField(record.getSchema().getField("${this.mangle($field.name(), $schema.isError())}"));
+            throw e;
+          }
         } else {
-          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
+#if ($this.hasLogicalTypeField($schema))
+          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()], record.getConversion($field.pos()));
+#else
+          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()]);
+#end
         }
 #else
-        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
+#if ($this.hasLogicalTypeField($schema))
+        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()], record.getConversion($field.pos()));
+#else
+        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()]);
+#end
 #end
 #end
         return record;
-      } catch (Exception e) {
+      } catch (org.apache.avro.AvroMissingFieldException e) {
+        throw e;
+      } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
     }
   }
 
-  private static final org.apache.avro.io.DatumWriter
-    WRITER$ = new org.apache.avro.specific.SpecificDatumWriter(SCHEMA$);  
+  @SuppressWarnings("unchecked")
+  private static final org.apache.avro.io.DatumWriter<${this.mangle($schema.getName())}>
+    WRITER$ = (org.apache.avro.io.DatumWriter<${this.mangle($schema.getName())}>)MODEL$.createDatumWriter(SCHEMA$);
 
   @Override public void writeExternal(java.io.ObjectOutput out)
     throws java.io.IOException {
-    WRITER$.write(this, org.apache.avro.specific.SpecificData.getEncoder(out));
+    WRITER$.write(this, SpecificData.getEncoder(out));
   }
 
-  private static final org.apache.avro.io.DatumReader
-    READER$ = new org.apache.avro.specific.SpecificDatumReader(SCHEMA$);  
+  @SuppressWarnings("unchecked")
+  private static final org.apache.avro.io.DatumReader<${this.mangle($schema.getName())}>
+    READER$ = (org.apache.avro.io.DatumReader<${this.mangle($schema.getName())}>)MODEL$.createDatumReader(SCHEMA$);
 
   @Override public void readExternal(java.io.ObjectInput in)
     throws java.io.IOException {
-    READER$.read(this, org.apache.avro.specific.SpecificData.getDecoder(in));
+    READER$.read(this, SpecificData.getDecoder(in));
   }
 
 }

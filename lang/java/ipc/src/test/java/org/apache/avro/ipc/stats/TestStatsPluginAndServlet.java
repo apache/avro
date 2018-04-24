@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,7 +42,6 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.ipc.generic.GenericResponder;
 import org.junit.Test;
-import org.mortbay.log.Log;
 
 public class TestStatsPluginAndServlet {
   Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", "
@@ -138,12 +137,12 @@ public class TestStatsPluginAndServlet {
     r.addRPCPlugin(statsPlugin);
     Transceiver t = new LocalTransceiver(r);
     makeRequest(t);
-    
+
     String resp = generateServletResponse(statsPlugin);
     assertTrue(resp.contains("Average: 2.0"));
- 
+
   }
-  
+
   private RPCContext makeContext() {
     RPCContext context = new RPCContext();
     context.setMessage(message);
@@ -187,7 +186,6 @@ public class TestStatsPluginAndServlet {
         + "   \"request\": [{\"name\": \"millis\", \"type\": \"long\"}," +
           "{\"name\": \"data\", \"type\": \"bytes\"}], "
         + "   \"response\": \"null\"} } }");
-    Log.info("Using protocol: " + protocol.toString());
     Responder r = new SleepyResponder(protocol);
     StatsPlugin p = new StatsPlugin();
     r.addRPCPlugin(p);
@@ -197,10 +195,10 @@ public class TestStatsPluginAndServlet {
     avroServer.start();
 
     StatsServer ss = new StatsServer(p, 8080);
-    
+
     HttpTransceiver trans = new HttpTransceiver(
         new URL("http://localhost:" + Integer.parseInt(args[0])));
-    GenericRequestor req = new GenericRequestor(protocol, trans); 
+    GenericRequestor req = new GenericRequestor(protocol, trans);
 
     while(true) {
       Thread.sleep(1000);

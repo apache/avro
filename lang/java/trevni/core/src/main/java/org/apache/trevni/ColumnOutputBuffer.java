@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,10 +42,10 @@ class ColumnOutputBuffer {
     this.codec = Codec.get(meta);
     this.checksum = Checksum.get(meta);
     this.buffer = new OutputBuffer();
-    this.blockDescriptors = new ArrayList<BlockDescriptor>();
-    this.blockData = new ArrayList<byte[]>();
+    this.blockDescriptors = new ArrayList<>();
+    this.blockData = new ArrayList<>();
     if (meta.hasIndexValues())
-      this.firstValues = new ArrayList<byte[]>();
+      this.firstValues = new ArrayList<>();
   }
 
   public ColumnMetaData getMeta() { return meta; }
@@ -90,9 +90,9 @@ class ColumnOutputBuffer {
          ? firstValues.get(firstValues.size()-1).length
          : 0)
       + data.position();                         // data
-    
+
     writer.incrementSize(sizeIncrement);
-    size += sizeIncrement;                         
+    size += sizeIncrement;
 
     buffer = new OutputBuffer();
     rowCount = 0;

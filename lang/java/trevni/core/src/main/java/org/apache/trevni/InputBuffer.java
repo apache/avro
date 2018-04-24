@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ class InputBuffer {
   private int limit;                              // end of valid buffer data
 
   private CharsetDecoder utf8 = Charset.forName("UTF-8").newDecoder();
-  
+
   private int bitCount;                           // position in booleans
 
   private int runLength;                          // length of run
@@ -233,7 +233,7 @@ class InputBuffer {
     }
     return (l >>> 1) ^ -(l & 1); // back to two's-complement
   }
-  
+
   // splitting readLong up makes it faster because of the JVM does more
   // optimizations on small methods
   private long innerLongDecode(long l) throws IOException {
@@ -302,7 +302,7 @@ class InputBuffer {
     byte[] bytes = new byte[length];
     readFully(bytes, 0, length);
     return utf8.decode(ByteBuffer.wrap(bytes, 0, length)).toString();
-  }  
+  }
 
   public byte[] readBytes() throws IOException {
     byte[] result = new byte[readInt()];

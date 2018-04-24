@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,42 +25,42 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 public class TestBZip2Codec {
-  
+
   @Test
   public void testBZip2CompressionAndDecompression() throws IOException {
-    
+
     MetaData meta = new MetaData();
     meta.setCodec("bzip2");
     Codec codec = Codec.get(meta);
-    
+
     //Confirm that the right codec Came back
     assertTrue(codec instanceof BZip2Codec);
-    
+
     //This is 3 times the byte buffer on the BZip2 decompress plus some extra
     final int inputByteSize = BZip2Codec.DEFAULT_BUFFER_SIZE * 3 + 42;
-    
+
     byte[] inputByteArray = new byte[inputByteSize];
-    
+
     //Generate something that will compress well
     for (int i = 0; i < inputByteSize; i++) {
       inputByteArray[i] = (byte)(65 + i % 10);
     }
-    
+
     ByteBuffer inputByteBuffer = ByteBuffer.wrap(inputByteArray);
-    
+
     ByteBuffer compressedBuffer = codec.compress(inputByteBuffer);
-    
+
     //Make sure something returned
     assertTrue(compressedBuffer.array().length > 0);
     //Make sure the compressed output is smaller then the original
     assertTrue(compressedBuffer.array().length < inputByteArray.length);
-    
+
     ByteBuffer decompressedBuffer = codec.decompress(compressedBuffer);
-    
+
     //The original array should be the same length as the decompressed array
     assertTrue(decompressedBuffer.array().length == inputByteArray.length);
-    
-    //Every byte in the outputByteArray should equal every byte in the input array 
+
+    //Every byte in the outputByteArray should equal every byte in the input array
     byte[] outputByteArray = decompressedBuffer.array();
     for (int i = 0; i < inputByteSize; i++) {
       inputByteArray[i] = outputByteArray[i];

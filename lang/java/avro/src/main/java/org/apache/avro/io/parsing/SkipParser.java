@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,7 +39,7 @@ public class SkipParser extends Parser {
      */
     void skipTopSymbol() throws IOException;
   }
-  
+
   private final SkipHandler skipHandler;
 
   public SkipParser(Symbol root, ActionHandler symbolHandler,

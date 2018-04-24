@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,14 +45,14 @@ import org.apache.trevni.avro.mapreduce.AvroTrevniKeyOutputFormat;
 import org.junit.Test;
 
 public class TestKeyWordCount {
-  
+
   private static long total = 0;
 
   static final Schema STRING = Schema.create(Schema.Type.STRING);
   static { GenericData.setStringType(STRING, GenericData.StringType.String); }
   static final Schema LONG = Schema.create(Schema.Type.LONG);
-  
-  
+
+
   private static class WordCountMapper extends
       Mapper<AvroKey<String>, NullWritable, Text, LongWritable> {
     private LongWritable mCount = new LongWritable();
@@ -79,33 +79,33 @@ public class TestKeyWordCount {
 
     }
   }
-  
+
   private static class WordCountReducer extends Reducer< Text, LongWritable, AvroKey<GenericData.Record>, NullWritable> {
-    
+
     private AvroKey<GenericData.Record> result ;
-    
+
     @Override
     protected void setup(Context context) {
-      result = new AvroKey<GenericData.Record>();
+      result = new AvroKey<>();
       result.datum(new Record(Pair.getPairSchema(STRING,LONG)));
     }
-    
+
     @Override
     protected void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
       long count = 0;
       for (LongWritable value: values) {
         count += value.get();
       }
-      
+
       result.datum().put("key", key.toString());
       result.datum().put("value", count);
-      
+
       context.write(result, NullWritable.get());
     }
   }
-   
 
-  
+
+
   public static class Counter extends
   Mapper<AvroKey<GenericData.Record>, NullWritable, NullWritable, NullWritable> {
     @Override
@@ -114,8 +114,8 @@ public class TestKeyWordCount {
       total += (Long)key.datum().get("value");
     }
   }
-  
-  
+
+
   @Test public void testIOFormat() throws Exception {
     checkOutputFormat();
     checkInputFormat();
@@ -123,56 +123,56 @@ public class TestKeyWordCount {
 
   public void checkOutputFormat() throws Exception {
     Job job = new Job();
-    
+
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyTest", "part-r-00000");
-    
+
     wordCountUtil.writeLinesFile();
-    
+
     AvroJob.setInputKeySchema(job, STRING);
     AvroJob.setOutputKeySchema(job, Pair.getPairSchema(STRING,LONG));
-    
+
     job.setMapperClass(WordCountMapper.class);
     job.setReducerClass(WordCountReducer.class);
-    
+
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(LongWritable.class);
-    
+
     FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/in"));
     FileOutputFormat.setOutputPath(job, new Path(wordCountUtil.getDir().toString() + "/out"));
     FileOutputFormat.setCompressOutput(job, true);
-    
+
     job.setInputFormatClass(AvroKeyInputFormat.class);
     job.setOutputFormatClass(AvroTrevniKeyOutputFormat.class);
 
     job.waitForCompletion(true);
-    
+
     wordCountUtil.validateCountsFile();
   }
-  
+
   public void checkInputFormat() throws Exception {
     Job job = new Job();
-    
+
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyTest");
-    
+
     job.setMapperClass(Counter.class);
 
     Schema subSchema = Schema.parse("{\"type\":\"record\"," +
                                     "\"name\":\"PairValue\","+
-                                    "\"fields\": [ " + 
-                                    "{\"name\":\"value\", \"type\":\"long\"}" + 
+                                    "\"fields\": [ " +
+                                    "{\"name\":\"value\", \"type\":\"long\"}" +
                                     "]}");
     AvroJob.setInputKeySchema(job, subSchema);
-    
+
     FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/out/*"));
     job.setInputFormatClass(AvroTrevniKeyInputFormat.class);
-    
+
     job.setNumReduceTasks(0);
     job.setOutputFormatClass(NullOutputFormat.class);
-    
+
     total = 0;
     job.waitForCompletion(true);
     assertEquals(WordCountUtil.TOTAL, total);
-    
+
   }
-  
+
 }

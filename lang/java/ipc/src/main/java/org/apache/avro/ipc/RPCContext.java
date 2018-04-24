@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,33 +34,33 @@ import org.apache.avro.Protocol.Message;
  *
  */
 public class RPCContext {
-  
+
   private HandshakeRequest handshakeRequest;
   private HandshakeResponse handshakeResponse;
 
   protected Map<String,ByteBuffer> requestCallMeta, responseCallMeta;
-  
+
   protected Object response;
   protected Exception error;
   private Message message;
   List<ByteBuffer> requestPayload;
   List<ByteBuffer> responsePayload;
-  
+
   /** Set the handshake request of this RPC. */
   public void setHandshakeRequest(HandshakeRequest handshakeRequest) {
     this.handshakeRequest = handshakeRequest;
   }
-  
+
   /** Get the handshake request of this RPC. */
   public HandshakeRequest getHandshakeRequest() {
     return this.handshakeRequest;
   }
-  
+
   /** Set the handshake response of this RPC. */
   public void setHandshakeResponse(HandshakeResponse handshakeResponse) {
     this.handshakeResponse = handshakeResponse;
   }
-  
+
   /** Get the handshake response of this RPC. */
   public HandshakeResponse getHandshakeResponse() {
     return this.handshakeResponse;
@@ -74,14 +74,14 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> requestHandshakeMeta() {
     if (handshakeRequest.meta == null)
-      handshakeRequest.meta = new HashMap<String,ByteBuffer>();
+      handshakeRequest.meta = new HashMap<>();
     return handshakeRequest.meta;
   }
-  
+
   void setRequestHandshakeMeta(Map<String,ByteBuffer> newmeta) {
     handshakeRequest.meta = newmeta;
   }
-  
+
   /**
    * This is an access method for the handshake state
    * provided by the server back to the client
@@ -90,14 +90,14 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> responseHandshakeMeta() {
     if (handshakeResponse.meta == null)
-      handshakeResponse.meta = new HashMap<String,ByteBuffer>();
+      handshakeResponse.meta = new HashMap<>();
     return handshakeResponse.meta;
   }
-  
+
   void setResponseHandshakeMeta(Map<String,ByteBuffer> newmeta) {
     handshakeResponse.meta = newmeta;
   }
-  
+
   /**
    * This is an access method for the per-call state
    * provided by the client to the server.
@@ -106,15 +106,15 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> requestCallMeta() {
     if (requestCallMeta == null) {
-      requestCallMeta = new HashMap<String,ByteBuffer>();
+      requestCallMeta = new HashMap<>();
     }
     return requestCallMeta;
   }
-  
+
   void setRequestCallMeta(Map<String,ByteBuffer> newmeta) {
     requestCallMeta = newmeta;
   }
-  
+
   /**
    * This is an access method for the per-call state
    * provided by the server back to the client.
@@ -123,20 +123,20 @@ public class RPCContext {
    */
   public Map<String,ByteBuffer> responseCallMeta() {
     if (responseCallMeta == null) {
-      responseCallMeta = new HashMap<String,ByteBuffer>();
+      responseCallMeta = new HashMap<>();
     }
     return responseCallMeta;
   }
-  
+
   void setResponseCallMeta(Map<String,ByteBuffer> newmeta) {
     responseCallMeta = newmeta;
   }
-  
+
   void setResponse(Object response) {
     this.response = response;
     this.error = null;
   }
-  
+
   /**
    * The response object generated at the server,
    * if it exists.  If an exception was generated,
@@ -147,22 +147,22 @@ public class RPCContext {
   public Object response() {
     return response;
   }
-  
+
   void setError(Exception error) {
     this.response = null;
     this.error = error;
   }
-  
+
   /**
    * The exception generated at the server,
-   * or null if no such exception has occured
+   * or null if no such exception has occurred
    * @return the exception generated at the server, or
    * null if no such exception
    */
   public Exception error() {
     return error;
   }
-  
+
   /**
    * Indicates whether an exception was generated
    * at the server
@@ -172,41 +172,41 @@ public class RPCContext {
   public boolean isError() {
     return error != null;
   }
-  
+
   /** Sets the {@link Message} corresponding to this RPC */
   public void setMessage(Message message) {
-    this.message = message;    
+    this.message = message;
   }
-  
+
   /** Returns the {@link Message} corresponding to this RPC
-   * @return this RPC's {@link Message} 
+   * @return this RPC's {@link Message}
    */
   public Message getMessage() { return message; }
-  
+
   /** Sets the serialized payload of the request in this RPC. Will
    * not include handshake or meta-data. */
   public void setRequestPayload(List<ByteBuffer> payload) {
     this.requestPayload = payload;
   }
- 
+
   /** Returns the serialized payload of the request in this RPC. Will only be
-   * generated from a Requestor and will not include handshake or meta-data. 
+   * generated from a Requestor and will not include handshake or meta-data.
    * If the request payload has not been set yet, returns null.
-   * 
+   *
    * @return this RPC's request payload.*/
   public List<ByteBuffer> getRequestPayload() {
     return this.requestPayload;
   }
-  
+
   /** Returns the serialized payload of the response in this RPC. Will only be
-   * generated from a Responder and will not include handshake or meta-data. 
+   * generated from a Responder and will not include handshake or meta-data.
    * If the response payload has not been set yet, returns null.
-   * 
+   *
    * @return this RPC's response payload.*/
   public List<ByteBuffer> getResponsePayload() {
     return this.responsePayload;
   }
-  
+
   /** Sets the serialized payload of the response in this RPC. Will
    * not include handshake or meta-data. */
   public void setResponsePayload(List<ByteBuffer> payload) {

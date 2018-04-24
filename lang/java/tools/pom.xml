@@ -202,7 +202,7 @@
     </dependency>
 
     <!--For testing TetherTool we need the mapred test jar
-	because that contains the word count example.-->
+        because that contains the word count example.-->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>avro-mapred</artifactId>
@@ -219,11 +219,6 @@
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <version>${commons-logging.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>${commons-httpclient.version}</version>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

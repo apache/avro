@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,37 +49,37 @@ public class TestDeepCopy {
     interopBuilder.setBytesField(ByteBuffer.wrap(new byte[] { 1, 2, 3, 4 }));
     interopBuilder.setDoubleField(3.14d);
     interopBuilder.setEnumField(Kind.B);
-    interopBuilder.setFixedField(new MD5(new byte[] { 
+    interopBuilder.setFixedField(new MD5(new byte[] {
         4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1 }));
     interopBuilder.setFloatField(6.022f);
     interopBuilder.setIntField(32);
     interopBuilder.setLongField(64L);
-    
-    Map<java.lang.String,org.apache.avro.Foo> map = 
-      new HashMap<java.lang.String,org.apache.avro.Foo>(1);
+
+    Map<java.lang.String,org.apache.avro.Foo> map =
+      new HashMap<>(1);
     map.put("foo", Foo.newBuilder().setLabel("bar").build());
     interopBuilder.setMapField(map);
-    
+
     interopBuilder.setNullField(null);
-    
+
     Node.Builder rootBuilder = Node.newBuilder().setLabel("/");
     Node.Builder homeBuilder = Node.newBuilder().setLabel("home");
-    homeBuilder.setChildren(new ArrayList<Node>(0));
+    homeBuilder.setChildren(new ArrayList<>(0));
     rootBuilder.setChildren(Arrays.asList(new Node[] { homeBuilder.build() }));
     interopBuilder.setRecordField(rootBuilder.build());
-    
+
     interopBuilder.setStringField("Hello");
     interopBuilder.setUnionField(Arrays.asList(new ByteBuffer[] {
         ByteBuffer.wrap(new byte[] { 1, 2 }) }));
-    
+
     Interop interop = interopBuilder.build();
-    
+
     // Verify that deepCopy works for all fields:
     for (Field field : Interop.SCHEMA$.getFields()) {
       // Original field and deep copy should be equivalent:
       if (interop.get(field.pos()) instanceof ByteBuffer) {
         assertTrue(Arrays.equals(((ByteBuffer)interop.get(field.pos())).array(),
-            ((ByteBuffer)GenericData.get().deepCopy(field.schema(), 
+            ((ByteBuffer)GenericData.get().deepCopy(field.schema(),
                 interop.get(field.pos()))).array()));
       }
       else {
@@ -87,7 +87,7 @@ public class TestDeepCopy {
             SpecificData.get().deepCopy(
                 field.schema(), interop.get(field.pos())));
       }
-      
+
       // Original field and deep copy should be different instances:
       if ((field.schema().getType() != Type.ENUM)
            && (field.schema().getType() != Type.NULL)
@@ -98,7 +98,7 @@ public class TestDeepCopy {
            && (field.schema().getType() != Type.DOUBLE)
            && (field.schema().getType() != Type.STRING)) {
         assertFalse("Field " + field.name() + " is same instance in deep copy",
-            interop.get(field.pos()) == 
+            interop.get(field.pos()) ==
               GenericData.get().deepCopy(
                   field.schema(), interop.get(field.pos())));
       }

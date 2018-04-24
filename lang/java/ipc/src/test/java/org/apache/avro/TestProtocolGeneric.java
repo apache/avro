@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -90,7 +90,7 @@ public class TestProtocolGeneric {
         error.put("message", new Utf8("an error"));
         throw new AvroRemoteException(error);
       }
-      
+
       throw new AvroRuntimeException("unexpected message: "+message.getName());
     }
 
@@ -111,7 +111,7 @@ public class TestProtocolGeneric {
 
   @Test
   public void testHello() throws IOException {
-    GenericRecord params = 
+    GenericRecord params =
       new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
     params.put("greeting", new Utf8("bob"));
     Utf8 response = (Utf8)requestor.request("hello", params);
@@ -185,7 +185,7 @@ public class TestProtocolGeneric {
       argument to check that schema is sent to parse request. */
   public void testHandshake() throws IOException {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
-    List<Field> fields = new ArrayList<Field>();
+    List<Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
                    null, null));
     fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
@@ -195,7 +195,7 @@ public class TestProtocolGeneric {
                              null /* doc */,
                              Schema.createRecord(fields),
                              Schema.create(Schema.Type.STRING),
-                             Schema.createUnion(new ArrayList<Schema>()));
+                             Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("hello", message);
     Transceiver t
       = new SocketTransceiver(new InetSocketAddress(server.getPort()));
@@ -216,7 +216,7 @@ public class TestProtocolGeneric {
       field to check that correct schema is used to parse response. */
   public void testResponseChange() throws IOException {
 
-    List<Field> fields = new ArrayList<Field>();
+    List<Field> fields = new ArrayList<>();
     for (Field f : PROTOCOL.getType("TestRecord").getFields())
       fields.add(new Field(f.name(), f.schema(), null, null));
     fields.add(new Field("extra", Schema.create(Schema.Type.BOOLEAN),
@@ -226,13 +226,13 @@ public class TestProtocolGeneric {
     record.setFields(fields);
 
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
-    List<Field> params = new ArrayList<Field>();
+    List<Field> params = new ArrayList<>();
     params.add(new Field("record", record, null, null));
 
     Protocol.Message message =
       protocol.createMessage("echo", null, Schema.createRecord(params),
                              record,
-                             Schema.createUnion(new ArrayList<Schema>()));
+                             Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("echo", message);
     Transceiver t
       = new SocketTransceiver(new InetSocketAddress(server.getPort()));

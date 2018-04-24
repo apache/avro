@@ -53,7 +53,7 @@ options {
   ERROR_REPORTING = true;
   STATIC = false;
   FORCE_LA_CHECK = true;
-  JDK_VERSION = "1.6";
+  JDK_VERSION = "1.8";
 }
 
 PARSER_BEGIN(Idl)
@@ -69,6 +69,7 @@ import java.util.Map;
 import java.net.URL;
 
 import org.apache.avro.Schema;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
@@ -236,6 +237,10 @@ TOKEN :
 | < TRUE: "true" >
 | < UNION: "union" >
 | < VOID: "void" >
+| < DATE: "date" >
+| < TIME: "time_ms" >
+| < TIMESTAMP: "timestamp_ms" >
+| < DECIMAL: "decimal" >
 }
 
 /* LITERALS */
@@ -999,7 +1004,7 @@ Protocol CompilationUnit():
   ( < "\u001a" > )?
   ( <STUFF_TO_IGNORE: ~[]> )?
   <EOF>
-  { return p; }
+  { return SchemaResolver.resolve(p); }
 }
 
 /*
@@ -1319,7 +1324,8 @@ void VariableDeclarator(Schema type, List<Field> fields):
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
-    Field field = new Field(name, type, getDoc(), defaultValue, order);
+    boolean validate = !SchemaResolver.isUnresolvedSchema(type);
+    Field field = new Field(name,type, getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
@@ -1465,7 +1471,9 @@ Schema ReferenceType():
       name = namespace + "." + name;
     Schema type = names.get(name);
     if (type == null)
-      throw error("Undefined name '" + name + "'", token);
+    {
+      type = SchemaResolver.unresolvedSchema(name);
+    }
     return type;
   }
 }
@@ -1481,6 +1489,22 @@ Schema PrimitiveType():
 | "double" { return Schema.create(Type.DOUBLE); }
 | "long" { return Schema.create(Type.LONG); }
 | "null" { return Schema.create(Type.NULL); }
+| "date" { return LogicalTypes.date().addToSchema(Schema.create(Type.INT)); }
+| "time_ms" { return LogicalTypes.timeMillis().addToSchema(Schema.create(Type.INT)); }
+| "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
+| "decimal" { return DecimalTypeProperties(); }
+}
+
+Schema DecimalTypeProperties():
+{
+  int precision;
+  int scale;
+}
+{
+  "(" {precision = Json().asInt();} "," {scale = Json().asInt();} ")"
+  {
+    return LogicalTypes.decimal(precision, scale).addToSchema(Schema.create(Type.BYTES)); 
+  }
 }
 
 /**
@@ -1505,6 +1529,8 @@ String PropertyName():
 {
   t = <IDENTIFIER>   { name.append(t.image); }
   ( t = <DASH>       { name.append(t.image); }
+    t = <IDENTIFIER> { name.append(t.image); } |
+    t = <DOT>        { name.append(t.image); }
     t = <IDENTIFIER> { name.append(t.image); }
   ) *
   { return name.toString(); }
@@ -1541,10 +1567,15 @@ Token AnyIdentifier():
    t = <STRING> |
    t = <PROTOCOL> |
    t = <RECORD> |
+   t = <SCHEMA> |
    t = <THROWS> |
    t = <TRUE> |
    t = <UNION> |
    t = <VOID> |
+   t = <DATE> |
+   t = <TIME> |
+   t = <TIMESTAMP> |
+   t = <DECIMAL> |
    t = <IDENTIFIER>)
   {
     return t;

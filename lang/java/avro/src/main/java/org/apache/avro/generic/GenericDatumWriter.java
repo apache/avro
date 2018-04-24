@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,8 +24,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Collection;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -74,27 +76,38 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     }
   }
 
-  private <T> Object convert(Schema schema, LogicalType logicalType,
-                             Conversion<T> conversion, Object datum) {
-    if (conversion == null) {
-      return datum;
+  /**
+   * Convert a high level representation of a logical type (such as a BigDecimal)
+   * to the its underlying representation object (such as a ByteBuffer).
+   * @throws IllegalArgumentException if a null schema or logicalType is passed
+   * in while datum and conversion are not null. Please be noticed that
+   * the exception type has changed. With version 1.8.0 and earlier, in above
+   * circumstance, the exception thrown out depends on the implementation
+   * of conversion (most likely a NullPointerException). Now, an
+   * IllegalArgumentException will be thrown out instead.
+   */
+  protected <T> Object convert(Schema schema, LogicalType logicalType,
+                               Conversion<T> conversion, Object datum) {
+    try {
+      if (conversion == null) {
+        return datum;
+      } else {
+        return Conversions.convertToRawType(datum, schema, logicalType, conversion);
+      }
+    } catch (AvroRuntimeException e) {
+      Throwable cause = e.getCause();
+      if (cause != null && cause.getClass() == ClassCastException.class) {
+        // This is to keep backwards compatibility. The convert function here used to
+        // throw CCE. After being moved to Conversions, it throws AvroRuntimeException
+        // instead. To keep as much same behaviour as before, this function checks if
+        // the cause is a CCE. If yes, rethrow it in case any child class checks it. This
+        // behaviour can be changed later in future versions to make it consistent with
+        // reading path, which throws AvroRuntimeException
+        throw (ClassCastException)cause;
+      } else {
+        throw e;
+      }
     }
-    Class<T> fromClass = conversion.getConvertedType();
-    switch (schema.getType()) {
-    case RECORD:  return conversion.toRecord(fromClass.cast(datum), schema, logicalType);
-    case ENUM:    return conversion.toEnumSymbol(fromClass.cast(datum), schema, logicalType);
-    case ARRAY:   return conversion.toArray(fromClass.cast(datum), schema, logicalType);
-    case MAP:     return conversion.toMap(fromClass.cast(datum), schema, logicalType);
-    case FIXED:   return conversion.toFixed(fromClass.cast(datum), schema, logicalType);
-    case STRING:  return conversion.toCharSequence(fromClass.cast(datum), schema, logicalType);
-    case BYTES:   return conversion.toBytes(fromClass.cast(datum), schema, logicalType);
-    case INT:     return conversion.toInt(fromClass.cast(datum), schema, logicalType);
-    case LONG:    return conversion.toLong(fromClass.cast(datum), schema, logicalType);
-    case FLOAT:   return conversion.toFloat(fromClass.cast(datum), schema, logicalType);
-    case DOUBLE:  return conversion.toDouble(fromClass.cast(datum), schema, logicalType);
-    case BOOLEAN: return conversion.toBoolean(fromClass.cast(datum), schema, logicalType);
-    }
-    return datum;
   }
 
   /** Called to write data.*/
@@ -143,10 +156,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       writeField(datum, f, out, state);
     }
   }
-  
-  /** Called to write a single field of a record. May be overridden for more 
+
+  /** Called to write a single field of a record. May be overridden for more
    * efficient or alternate implementations.*/
-  protected void writeField(Object datum, Field f, Encoder out, Object state) 
+  protected void writeField(Object datum, Field f, Encoder out, Object state)
       throws IOException {
     Object value = data.getField(datum, f.name(), f.pos(), state);
     try {
@@ -155,7 +168,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw npe(e, " in field " + f.name());
     }
   }
-  
+
   /** Called to write an enum value.  May be overridden for alternate enum
    * representations.*/
   protected void writeEnum(Schema schema, Object datum, Encoder out)
@@ -164,7 +177,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw new AvroTypeException("Not an enum: "+datum);
     out.writeEnum(schema.getEnumOrdinal(datum.toString()));
   }
-  
+
   /** Called to write a array.  May be overridden for alternate array
    * representations.*/
   protected void writeArray(Schema schema, Object datum, Encoder out)
@@ -205,7 +218,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected Iterator<? extends Object> getArrayElements(Object array) {
     return ((Collection) array).iterator();
   }
-  
+
   /** Called to write a map.  May be overridden for alternate map
    * representations.*/
   protected void writeMap(Schema schema, Object datum, Encoder out)
@@ -241,7 +254,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected Iterable<Map.Entry<Object,Object>> getMapEntries(Object map) {
     return ((Map) map).entrySet();
   }
-  
+
   /** Called to write a string.  May be overridden for alternate string
    * representations.*/
   protected void writeString(Schema schema, Object datum, Encoder out)
@@ -266,7 +279,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     throws IOException {
     out.writeFixed(((GenericFixed)datum).bytes(), 0, schema.getFixedSize());
   }
-  
+
   private void error(Schema schema, Object datum) {
     throw new AvroTypeException("Not a "+schema+": "+datum);
   }

@@ -64,7 +64,7 @@ void printBuffer(const InputBuffer &buf)
 
 void TestReserve()
 {
-    BOOST_MESSAGE( "TestReserve");
+    BOOST_TEST_MESSAGE( "TestReserve");
     {
         OutputBuffer ob;
         BOOST_CHECK_EQUAL(ob.size(), 0U);
@@ -111,7 +111,7 @@ void addDataToBuffer(OutputBuffer &buf, size_t size)
 
 void TestGrow()
 {
-    BOOST_MESSAGE( "TestGrow");
+    BOOST_TEST_MESSAGE( "TestGrow");
     { 
         OutputBuffer ob;
 
@@ -151,7 +151,7 @@ void TestGrow()
 
 void TestDiscard()
 {
-    BOOST_MESSAGE( "TestDiscard");
+    BOOST_TEST_MESSAGE( "TestDiscard");
     {
         OutputBuffer ob;
         size_t dataSize = kDefaultBlockSize*2 + kDefaultBlockSize/2;
@@ -257,7 +257,7 @@ void TestDiscard()
 
 void TestConvertToInput()
 {
-    BOOST_MESSAGE( "TestConvertToInput");
+    BOOST_TEST_MESSAGE( "TestConvertToInput");
     {
         OutputBuffer ob;
         size_t dataSize = kDefaultBlockSize*2 + kDefaultBlockSize/2;
@@ -277,7 +277,7 @@ void TestConvertToInput()
 
 void TestExtractToInput()
 {
-    BOOST_MESSAGE( "TestExtractToInput");
+    BOOST_TEST_MESSAGE( "TestExtractToInput");
     {
         OutputBuffer ob;
         size_t dataSize = kDefaultBlockSize*2 + kDefaultBlockSize/2;
@@ -376,7 +376,7 @@ void TestExtractToInput()
 
 void TestAppend()
 {
-    BOOST_MESSAGE( "TestAppend");
+    BOOST_TEST_MESSAGE( "TestAppend");
     {
         OutputBuffer ob;
         size_t dataSize = kDefaultBlockSize + kDefaultBlockSize/2;
@@ -405,7 +405,7 @@ void TestAppend()
 
 void TestBufferStream()
 {
-    BOOST_MESSAGE( "TestBufferStream");
+    BOOST_TEST_MESSAGE( "TestBufferStream");
 
     {
         // write enough bytes to a buffer, to create at least 3 blocks
@@ -456,7 +456,7 @@ void TestEof()
 
 void TestBufferStreamEof()
 {
-    BOOST_MESSAGE( "TestBufferStreamEof");
+    BOOST_TEST_MESSAGE( "TestBufferStreamEof");
 
     TestEof<int32_t>();
 
@@ -469,7 +469,7 @@ void TestBufferStreamEof()
 
 void TestSeekAndTell()
 {
-    BOOST_MESSAGE( "TestSeekAndTell");
+    BOOST_TEST_MESSAGE( "TestSeekAndTell");
 
     {
         std::string junk = makeString(kDefaultBlockSize/2);
@@ -501,7 +501,7 @@ void TestSeekAndTell()
 
 void TestReadSome()
 {
-    BOOST_MESSAGE( "TestReadSome");
+    BOOST_TEST_MESSAGE( "TestReadSome");
     {
         std::string junk = makeString(kDefaultBlockSize/2);
 
@@ -531,7 +531,7 @@ void TestReadSome()
 
 void TestSeek()
 {
-    BOOST_MESSAGE( "TestSeek");
+    BOOST_TEST_MESSAGE( "TestSeek");
     {
         const std::string str = "SampleMessage";
 
@@ -592,7 +592,7 @@ void TestSeek()
 
 void TestIterator() 
 {
-    BOOST_MESSAGE( "TestIterator");
+    BOOST_TEST_MESSAGE( "TestIterator");
     {
         OutputBuffer ob(2 * kMaxBlockSize + 10);
         BOOST_CHECK_EQUAL(ob.numChunks(), 3);
@@ -674,7 +674,7 @@ void server(boost::barrier &b)
 void TestAsioBuffer()
 {
     using boost::asio::ip::tcp;
-    BOOST_MESSAGE( "TestAsioBuffer");
+    BOOST_TEST_MESSAGE( "TestAsioBuffer");
     {
         boost::barrier b(2);
 
@@ -746,7 +746,7 @@ void TestAsioBuffer()
 
 void TestSplit()
 {
-    BOOST_MESSAGE( "TestSplit");
+    BOOST_TEST_MESSAGE( "TestSplit");
     {
         const std::string str = "This message is to be split";
 
@@ -773,7 +773,7 @@ void TestSplit()
 
 void TestSplitOnBorder()
 {
-    BOOST_MESSAGE( "TestSplitOnBorder");
+    BOOST_TEST_MESSAGE( "TestSplitOnBorder");
     {
 
         const std::string part1 = "This message";
@@ -812,7 +812,7 @@ void TestSplitOnBorder()
 
 void TestSplitTwice() 
 {
-    BOOST_MESSAGE( "TestSplitTwice");
+    BOOST_TEST_MESSAGE( "TestSplitTwice");
     {
         const std::string msg1 = makeString(30);
 
@@ -842,7 +842,7 @@ void TestSplitTwice()
 
 void TestCopy() 
 {
-    BOOST_MESSAGE( "TestCopy");
+    BOOST_TEST_MESSAGE( "TestCopy");
 
     const std::string msg = makeString(30);
     // Test1, small data, small buffer
@@ -998,7 +998,7 @@ void TestCopy()
 // this is reproducing a sequence of steps that caused a crash
 void TestBug()  
 {
-    BOOST_MESSAGE( "TestBug");
+    BOOST_TEST_MESSAGE( "TestBug");
     {
         OutputBuffer rxBuf;
         OutputBuffer  buf;
@@ -1038,7 +1038,7 @@ void deleteForeign(const std::string &val)
 
 void TestForeign ()  
 {
-    BOOST_MESSAGE( "TestForeign");
+    BOOST_TEST_MESSAGE( "TestForeign");
     {
         std::string hello = "hello ";
         std::string there = "there ";
@@ -1065,7 +1065,7 @@ void TestForeign ()
 
 void TestForeignDiscard ()  
 {
-    BOOST_MESSAGE( "TestForeign");
+    BOOST_TEST_MESSAGE( "TestForeign");
     {
         std::string hello = "hello ";
         std::string again = "again ";
@@ -1104,7 +1104,7 @@ void TestForeignDiscard ()
 
 void TestPrinter()
 {
-    BOOST_MESSAGE( "TestPrinter");
+    BOOST_TEST_MESSAGE( "TestPrinter");
     {
         OutputBuffer ob;
         addDataToBuffer(ob, 128);

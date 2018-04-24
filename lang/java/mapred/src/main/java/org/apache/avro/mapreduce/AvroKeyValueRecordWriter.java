@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -90,7 +90,7 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
     mValueConverter = valueConverter;
 
     // Create a reusable output record.
-    mOutputRecord = new AvroKeyValue<Object, Object>(new GenericData.Record(mKeyValuePairSchema));
+    mOutputRecord = new AvroKeyValue<>(new GenericData.Record(mKeyValuePairSchema));
   }
 
   /**
@@ -106,10 +106,10 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
   public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter,
       AvroDatumConverter<V, ?> valueConverter, GenericData dataModel,
       CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
-    this(keyConverter, valueConverter, dataModel, compressionCodec, outputStream, 
+    this(keyConverter, valueConverter, dataModel, compressionCodec, outputStream,
         DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
-  
+
   /**
    * Gets the writer schema for the key/value pair generic record.
    *
@@ -137,5 +137,5 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
   @Override
   public long sync() throws IOException {
     return mAvroFileWriter.sync();
-  }  
+  }
 }

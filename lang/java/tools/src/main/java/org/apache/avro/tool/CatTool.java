@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,17 +40,17 @@ import org.apache.hadoop.fs.Path;
 
 /** Tool to extract samples from an Avro data file. */
 public class CatTool implements Tool {
-  
+
   private long totalCopied;
   private double sampleCounter;
-  
+
   private GenericRecord reuse;
   private DataFileStream<GenericRecord> reader;
   private DataFileWriter<GenericRecord> writer;
   private Schema schema;
   private List<Path> inFiles;
   private int currentInput;
-  
+
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
@@ -64,12 +64,12 @@ public class CatTool implements Tool {
       .accepts("limit", "maximum number of records in the outputfile")
       .withRequiredArg()
       .ofType(Long.class)
-      .defaultsTo(Long.MAX_VALUE); 
+      .defaultsTo(Long.MAX_VALUE);
     OptionSpec<Double> fracOpt = optParser
       .accepts("samplerate", "rate at which records will be collected")
       .withRequiredArg()
       .ofType(Double.class)
-      .defaultsTo(new Double(1)); 
+      .defaultsTo(new Double(1));
 
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
     List<String> nargs = (List<String>)opts.nonOptionArguments();
@@ -77,7 +77,7 @@ public class CatTool implements Tool {
       printHelp(out);
       return 0;
     }
-    
+
     inFiles = Util.getFiles(nargs.subList(0, nargs.size()-1));
 
     System.out.println("List of input files:");
@@ -86,15 +86,15 @@ public class CatTool implements Tool {
     }
     currentInput = -1;
     nextInput();
-   
+
     OutputStream output = out;
     String lastArg = nargs.get(nargs.size()-1);
     if (nargs.size() > 1 && !lastArg.equals("-")) {
       output = Util.createFromFS(lastArg);
     }
-    writer = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>());
-    
+    writer = new DataFileWriter<>(
+        new GenericDatumWriter<>());
+
     String codecName = reader.getMetaString(DataFileConstants.CODEC);
     CodecFactory codec = (codecName == null)
         ? CodecFactory.fromString(DataFileConstants.NULL_CODEC)
@@ -106,14 +106,14 @@ public class CatTool implements Tool {
       }
     }
     writer.create(schema, output);
-    
+
     long  offset = opts.valueOf(offsetOpt);
     long limit = opts.valueOf(limitOpt);
     double samplerate = opts.valueOf(fracOpt);
     sampleCounter = 1;
     totalCopied = 0;
     reuse = null;
-    
+
     if (limit < 0) {
       System.out.println("limit has to be non-negative");
       this.printHelp(out);
@@ -133,18 +133,18 @@ public class CatTool implements Tool {
     skip(offset);
     writeRecords(limit, samplerate);
     System.out.println(totalCopied + " records written.");
-  
+
     writer.flush();
     writer.close();
     Util.close(out);
     return 0;
   }
-  
+
   private void nextInput() throws IOException{
     currentInput++;
-    Path path = inFiles.get(currentInput); 
+    Path path = inFiles.get(currentInput);
     FSDataInputStream input = new FSDataInputStream(Util.openFromFS(path));
-    reader = new DataFileStream<GenericRecord>(input, new GenericDatumReader<GenericRecord>());
+    reader = new DataFileStream<>(input, new GenericDatumReader<>());
     if (schema == null) {                            // if this is the first file, the schema gets saved
       schema = reader.getSchema();
     }
@@ -152,11 +152,11 @@ public class CatTool implements Tool {
       throw new IOException("schemas dont match");
     }
   }
-  
+
   private boolean hasNextInput() {
     return inFiles.size() > (currentInput + 1);
   }
-  
+
   /**skips a number of records from the input*/
   private long skip(long skip) throws IOException {
     long skipped = 0;
@@ -171,7 +171,7 @@ public class CatTool implements Tool {
     }
   return skipped;
 }
-  
+
   /** writes records with the given samplerate
    * The record at position offset is guaranteed to be taken*/
   private long writeRecords(long count, double samplerate) throws IOException {
@@ -188,11 +188,11 @@ public class CatTool implements Tool {
     totalCopied = totalCopied + written;
     if (written < count && hasNextInput()) { // goto next file
       nextInput();
-      written = written + writeRecords(count - written, samplerate);  
+      written = written + writeRecords(count - written, samplerate);
     }
     return written;
   }
-  
+
   private void printHelp(PrintStream out) {
     out.println("cat --offset <offset> --limit <limit> --samplerate <samplerate> [input-files...] output-file");
     out.println();
@@ -212,5 +212,5 @@ public class CatTool implements Tool {
   public String getShortDescription() {
     return "extracts samples from files";
   }
-  
+
 }

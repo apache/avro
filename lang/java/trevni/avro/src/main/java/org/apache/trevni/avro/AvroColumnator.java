@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,8 +34,8 @@ class AvroColumnator {
 
   private Schema schema;
 
-  private List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
-  private List<Integer> arrayWidths = new ArrayList<Integer>();
+  private List<ColumnMetaData> columns = new ArrayList<>();
+  private List<Integer> arrayWidths = new ArrayList<>();
 
   public AvroColumnator(Schema schema) {
     this.schema = schema;
@@ -57,7 +57,7 @@ class AvroColumnator {
     return result;
   }
 
-  private Map<Schema,Schema> seen = new IdentityHashMap<Schema,Schema>();
+  private Map<Schema,Schema> seen = new IdentityHashMap<>();
 
   private void columnize(String path, Schema s,
                          ColumnMetaData parent, boolean isArray) {
@@ -71,9 +71,9 @@ class AvroColumnator {
     if (seen.containsKey(s))                      // catch recursion
       throw new TrevniRuntimeException("Cannot shred recursive schemas: "+s);
     seen.put(s, s);
-    
+
     switch (s.getType()) {
-    case MAP: 
+    case MAP:
       path = path == null ? ">" : path+">";
       int start = columns.size();
       ColumnMetaData p = addColumn(path, ValueType.NULL, parent, true);
@@ -85,7 +85,7 @@ class AvroColumnator {
       for (Field field : s.getFields())           // flatten fields to columns
         columnize(p(path, field.name(), "#"), field.schema(), parent, isArray);
       break;
-    case ARRAY: 
+    case ARRAY:
       path = path == null ? "[]" : path+"[]";
       addArrayColumn(path, s.getElementType(), parent);
       break;
@@ -131,7 +131,7 @@ class AvroColumnator {
     // complex array: insert a parent column with lengths
     int start = columns.size();
     ColumnMetaData array = addColumn(path, ValueType.NULL, parent, true);
-    columnize(path, element, array, false); 
+    columnize(path, element, array, false);
     arrayWidths.set(start, columns.size()-start); // fixup with actual width
   }
 
@@ -139,8 +139,8 @@ class AvroColumnator {
     switch (s.getType()) {
     case NULL: case BOOLEAN:
     case INT: case LONG:
-    case FLOAT: case DOUBLE: 
-    case BYTES: case STRING: 
+    case FLOAT: case DOUBLE:
+    case BYTES: case STRING:
     case ENUM: case FIXED:
       return true;
     default:
@@ -165,4 +165,4 @@ class AvroColumnator {
     }
   }
 
-}    
+}

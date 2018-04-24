@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,7 @@ import org.apache.avro.Schema;
  * {@link #flush()} is called.
  * <p/>
  * BlockingBinaryEncoder is not thread-safe
- * 
+ *
  * @see BinaryEncoder
  * @see EncoderFactory
  * @see Encoder
@@ -100,7 +100,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
 
     /** The state of this BlockedValue */
     public State state;
-    
+
     /** The location in the buffer where this blocked value starts */
     public int start;
 
@@ -109,7 +109,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
      * is the first item, this is same as {@link #start}.
      */
     public int lastFullItem;
-    
+
     /**
      * Number of items in this blocked value that are stored
      * in the buffer.
@@ -126,7 +126,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
       this.start = this.lastFullItem = 0;
       this.items = 1; // Makes various assertions work out
     }
-    
+
     /**
      * Check invariants of <code>this</code> and also the
      * <code>BlockedValue</code> containing <code>this</code>.
@@ -137,9 +137,9 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
               type == Schema.Type.ARRAY || type == Schema.Type.MAP);
 
       assert 0 <= items;
-      assert 0 != items || start == pos;         // 0==itms ==> start==pos
-      assert 1 < items || start == lastFullItem; // 1<=itms ==> start==lFI
-      assert items <= 1 || start <= lastFullItem; // 1<itms ==> start<=lFI
+      assert 0 != items || start == pos;         // 0==items ==> start==pos
+      assert 1 < items || start == lastFullItem; // 1<=items ==> start==lFI
+      assert items <= 1 || start <= lastFullItem; // 1<items ==> start<=lFI
       assert lastFullItem <= pos;
 
       switch (state) {
@@ -167,12 +167,12 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
    * stream.
    */
   private byte[] buf;
-  
+
   /**
    * Index into the location in {@link #buf}, where next byte can be written.
    */
   private int pos;
-  
+
   /**
    * The state stack.
    */
@@ -232,11 +232,11 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
     if (null == buf || buf.length != blockBufferSize) {
       buf = new byte[blockBufferSize];
     }
-    
+
     assert check();
     return this;
   }
-  
+
   @Override
   public void flush() throws IOException {
       BlockedValue bv = blockStack[stackTop];
@@ -270,7 +270,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
     ensureBounds(10);
     pos += BinaryData.encodeLong(n, buf, pos);
   }
-    
+
   @Override
   public void writeFloat(float f) throws IOException {
     ensureBounds(4);
@@ -287,7 +287,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
     doWriteBytes(bytes, start, len);
   }
-  
+
   @Override
   protected void writeZero() throws IOException {
     ensureBounds(1);
@@ -318,7 +318,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
 
     assert check();
   }
-  
+
   @Override
   public void startItem() throws IOException {
     if (blockStack[stackTop].state == BlockedValue.State.OVERFLOW) {
@@ -371,7 +371,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
       throw new AvroTypeException("Failed to read write expected number of array elements.");
     }
     endBlockedValue();
-    
+
     assert check();
   }
 
@@ -385,7 +385,7 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
   public int bytesBuffered() {
     return pos + super.bytesBuffered();
   }
-  
+
   private void endBlockedValue() throws IOException {
     for (; ;) {
       assert check();

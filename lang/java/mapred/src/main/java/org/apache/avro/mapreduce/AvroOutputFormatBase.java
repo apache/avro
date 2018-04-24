@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  * @param <V> The type of value to write.
  */
 public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> {
-  
+
   /**
    * Gets the configured compression codec from the task context.
    *
@@ -52,7 +52,7 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
       int xzLevel = context.getConfiguration().getInt(
               org.apache.avro.mapred.AvroOutputFormat.XZ_LEVEL_KEY,
               CodecFactory.DEFAULT_XZ_LEVEL);
-      
+
       String outputCodec = context.getConfiguration()
         .get(AvroJob.CONF_OUTPUT_CODEC);
 
@@ -72,7 +72,7 @@ public abstract class AvroOutputFormatBase<K, V> extends FileOutputFormat<K, V> 
         } else {
           return CodecFactory.fromString(outputCodec);
         }
-      
+
       }
 
     // No compression.

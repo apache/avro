@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,12 +17,16 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.test.http.*;
+import org.apache.avro.test.nullable.RecordWithNullables;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class TestSpecificBuilderTree {
@@ -54,7 +58,7 @@ public class TestSpecificBuilderTree {
       requestBuilder
         .getHttpRequestBuilder()
           .getURIBuilder()
-            .setParameters(new ArrayList<QueryParameter>());
+            .setParameters(new ArrayList<>());
     }
 
     requestBuilder
@@ -66,10 +70,15 @@ public class TestSpecificBuilderTree {
     return requestBuilder;
   }
 
-  @Test(expected = org.apache.avro.AvroRuntimeException.class)
+  @Test(expected = AvroMissingFieldException.class)
   public void failOnIncompleteTree() {
-    Request.Builder requestBuilder = createPartialBuilder();
-    Request request = requestBuilder.build();
+    try {
+      createPartialBuilder().build();
+    } catch (AvroMissingFieldException amfe) {
+      assertEquals("Field networkAddress type:STRING pos:1 not set and has no default value", amfe.getMessage());
+      assertEquals("Path in schema: --> connection --> networkAddress", amfe.toString());
+      throw amfe;
+    }
     fail("Should NEVER get here");
   }
 
@@ -252,6 +261,107 @@ public class TestSpecificBuilderTree {
 
     assertEquals(HttpMethod.GET,    request.getHttpRequest().getURI().getMethod());
     assertEquals("/index.html",     request.getHttpRequest().getURI().getPath());
+  }
+
+  @Test
+  public void copyBuilderWithNullables() {
+    RecordWithNullables.Builder builder = RecordWithNullables.newBuilder();
+
+    assertFalse(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+    assertFalse(builder.hasNullableString());
+    assertFalse(builder.hasNullableLong  ());
+    assertFalse(builder.hasNullableInt   ());
+    assertFalse(builder.hasNullableMap   ());
+    assertFalse(builder.hasNullableArray ());
+
+    RecordWithNullables.Builder builderCopy = RecordWithNullables.newBuilder(builder);
+
+    assertFalse(builderCopy.hasNullableRecordBuilder());
+    assertFalse(builderCopy.hasNullableRecord());
+    assertFalse(builderCopy.hasNullableString());
+    assertFalse(builderCopy.hasNullableLong  ());
+    assertFalse(builderCopy.hasNullableInt   ());
+    assertFalse(builderCopy.hasNullableMap   ());
+    assertFalse(builderCopy.hasNullableArray ());
+
+    builderCopy.getNullableRecordBuilder();
+  }
+
+  @Test
+  public void copyBuilderWithNullablesAndSetToNull() {
+    // Create builder with all values default to null, yet unset.
+    RecordWithNullables.Builder builder = RecordWithNullables.newBuilder();
+
+    // Ensure all values have not been set
+    assertFalse(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+    assertFalse(builder.hasNullableString());
+    assertFalse(builder.hasNullableLong  ());
+    assertFalse(builder.hasNullableInt   ());
+    assertFalse(builder.hasNullableMap   ());
+    assertFalse(builder.hasNullableArray ());
+
+    // Set all values to null
+    builder.setNullableRecordBuilder(null);
+    builder.setNullableRecord(null);
+    builder.setNullableString(null);
+    builder.setNullableLong  (null);
+    builder.setNullableInt   (null);
+    builder.setNullableMap   (null);
+    builder.setNullableArray (null);
+
+    // A Builder remains False because it is null
+    assertFalse(builder.hasNullableRecordBuilder());
+
+    // Ensure all values have been set
+    assertTrue(builder.hasNullableRecord());
+    assertTrue(builder.hasNullableString());
+    assertTrue(builder.hasNullableLong  ());
+    assertTrue(builder.hasNullableInt   ());
+    assertTrue(builder.hasNullableMap   ());
+    assertTrue(builder.hasNullableArray ());
+
+    // Implicitly create a builder instance and clear the actual value.
+    builder.getNullableRecordBuilder();
+    assertTrue(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+
+    // Create a copy of this builder.
+    RecordWithNullables.Builder builderCopy = RecordWithNullables.newBuilder(builder);
+
+    // Ensure all values are still the same
+    assertTrue(builder.hasNullableRecordBuilder());
+    assertFalse(builder.hasNullableRecord());
+    assertTrue(builder.hasNullableString());
+    assertTrue(builder.hasNullableLong  ());
+    assertTrue(builder.hasNullableInt   ());
+    assertTrue(builder.hasNullableMap   ());
+    assertTrue(builder.hasNullableArray ());
+  }
+
+  @Test
+  public void getBuilderForRecordWithNullRecord() {
+    // Create a record with all nullable fields set to the default value : null
+    RecordWithNullables recordWithNullables = RecordWithNullables.newBuilder().build();
+
+    // Now create a Builder using this record as the base
+    RecordWithNullables.Builder builder = RecordWithNullables.newBuilder(recordWithNullables);
+
+    // In the past this caused an NPE
+    builder.getNullableRecordBuilder();
+  }
+
+  @Test
+  public void getBuilderForNullRecord() {
+    // In the past this caused an NPE
+    RecordWithNullables.newBuilder((RecordWithNullables)null);
+  }
+
+  @Test
+  public void getBuilderForNullBuilder() {
+    // In the past this caused an NPE
+    RecordWithNullables.newBuilder((RecordWithNullables.Builder)null);
   }
 
 }

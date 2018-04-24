@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,19 +36,19 @@ public class ProtobufDatumWriter<T> extends GenericDatumWriter<T> {
   public ProtobufDatumWriter(Class<T> c) {
     super(ProtobufData.get().getSchema(c), ProtobufData.get());
   }
-  
+
   public ProtobufDatumWriter(Schema schema) {
     super(schema, ProtobufData.get());
   }
-  
+
   protected ProtobufDatumWriter(Schema root, ProtobufData protobufData) {
     super(root, protobufData);
   }
-  
+
   protected ProtobufDatumWriter(ProtobufData protobufData) {
     super(protobufData);
   }
-  
+
   @Override
   protected void writeEnum(Schema schema, Object datum, Encoder out)
     throws IOException {
@@ -61,7 +61,7 @@ public class ProtobufDatumWriter<T> extends GenericDatumWriter<T> {
 
   @Override
   protected void writeBytes(Object datum, Encoder out) throws IOException {
-    ByteString bytes = (ByteString)datum; 
+    ByteString bytes = (ByteString)datum;
     out.writeBytes(bytes.toByteArray(), 0, bytes.size());
   }
 

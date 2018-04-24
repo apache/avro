@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -45,7 +45,7 @@ public class DataFileRepairTool implements Tool {
   public String getShortDescription() {
     return "Recovers data from a corrupt Avro Data file";
   }
-  
+
   private void printInfo(PrintStream output) {
     output.println("Insufficient arguments.  Arguments:  [-o option] "
         + "input_file output_file \n"
@@ -66,7 +66,7 @@ public class DataFileRepairTool implements Tool {
         + "   using the report option.");
   }
 
-  private static final Set<String> OPTIONS = new HashSet<String>();
+  private static final Set<String> OPTIONS = new HashSet<>();
   private static final String ALL = "all";
   private static final String PRIOR = "prior";
   private static final String AFTER = "after";
@@ -101,7 +101,7 @@ public class DataFileRepairTool implements Tool {
       if (args.size() - index < 1) {
         printInfo(err);
         return 1;
-      } 
+      }
     }
     if (ALL.equals(option)) {
       return recoverAll(input, args.get(index), out, err);
@@ -125,8 +125,8 @@ public class DataFileRepairTool implements Tool {
       return 1;
     }
     out.println("Recovering file: " + input);
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileReader<Object> fileReader = new DataFileReader<Object>(infile,
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    DataFileReader<Object> fileReader = new DataFileReader<>(infile,
         reader);
     try {
       Schema schema = fileReader.getSchema();
@@ -134,8 +134,8 @@ public class DataFileRepairTool implements Tool {
       CodecFactory codecFactory = CodecFactory.fromString("" + codecStr);
       List<String> metas = fileReader.getMetaKeys();
       if (recoverPrior || recoverAfter) {
-        GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>();
-        DataFileWriter<Object> fileWriter = new DataFileWriter<Object>(writer);
+        GenericDatumWriter<Object> writer = new GenericDatumWriter<>();
+        DataFileWriter<Object> fileWriter = new DataFileWriter<>(writer);
         try {
           File outfile = new File(output);
           for (String key : metas) {
@@ -151,7 +151,7 @@ public class DataFileRepairTool implements Tool {
         } catch (Exception e) {
           e.printStackTrace(err);
           return 1;
-        } 
+        }
       } else {
         return innerRecover(fileReader, null, out, err, recoverPrior,
             recoverAfter, null, null);
@@ -236,7 +236,7 @@ public class DataFileRepairTool implements Tool {
                     + (pos));
                 if (lastRecordWasBad) {
                   // consecutive bad record
-                  err.println("Second consecutive bad record in block: " + numBlocks 
+                  err.println("Second consecutive bad record in block: " + numBlocks
                       + ". Skipping remainder of block. ");
                   numCorruptRecords += blockRemaining;
                   badRecordsInBlock += blockRemaining;
@@ -272,7 +272,7 @@ public class DataFileRepairTool implements Tool {
             e2.printStackTrace(err);
             return 1;
           }
-        } 
+        }
       }
     } finally {
       if (fileWritten) {

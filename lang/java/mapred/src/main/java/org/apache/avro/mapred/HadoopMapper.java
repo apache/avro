@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ import org.apache.hadoop.util.ReflectionUtils;
  * otherwise assumed to be pairs that are split. */
 class HadoopMapper<IN,OUT,K,V,KO,VO> extends MapReduceBase
   implements Mapper<AvroWrapper<IN>, NullWritable, KO, VO> {
-    
+
   private AvroMapper<IN,OUT> mapper;
   private MapCollector<OUT,K,V,KO,VO> out;
   private boolean isMapOnly;
@@ -48,11 +48,11 @@ class HadoopMapper<IN,OUT,K,V,KO,VO> extends MapReduceBase
   }
 
   @Override
-  public void map(AvroWrapper<IN> wrapper, NullWritable value, 
-                  OutputCollector<KO,VO> collector, 
+  public void map(AvroWrapper<IN> wrapper, NullWritable value,
+                  OutputCollector<KO,VO> collector,
                   Reporter reporter) throws IOException {
     if (this.out == null)
-      this.out = new MapCollector<OUT,K,V,KO,VO>(collector, isMapOnly);
+      this.out = new MapCollector<>(collector, isMapOnly);
     mapper.map(wrapper.datum(), out, reporter);
   }
 

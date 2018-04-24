@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,6 +34,9 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY;
 
 /**
  * A wrapper around a Hadoop {@link org.apache.hadoop.io.SequenceFile} that
@@ -71,10 +74,10 @@ import org.slf4j.LoggerFactory;
 public class AvroSequenceFile {
   private static final Logger LOG = LoggerFactory.getLogger(AvroSequenceFile.class);
 
-  /** The SequencFile.Metadata field for the Avro key writer schema. */
+  /** The SequenceFile.Metadata field for the Avro key writer schema. */
   public static final Text METADATA_FIELD_KEY_SCHEMA = new Text("avro.key.schema");
 
-  /** The SequencFile.Metadata field for the Avro value writer schema. */
+  /** The SequenceFile.Metadata field for the Avro value writer schema. */
   public static final Text METADATA_FIELD_VALUE_SCHEMA = new Text("avro.value.schema");
 
   /** Constructor disabled for this container class. */
@@ -96,7 +99,7 @@ public class AvroSequenceFile {
         options.getFileSystem(), options.getConfigurationWithAvroSerialization(),
         options.getOutputPath(), options.getKeyClass(), options.getValueClass(),
         options.getBufferSizeBytes(), options.getReplicationFactor(),
-        options.getBlockSizeBytes(), 
+        options.getBlockSizeBytes(),
         options.getCompressionType(), options.getCompressionCodec(),
         options.getProgressable(), options.getMetadataWithAvroSchemas());
   }
@@ -109,9 +112,6 @@ public class AvroSequenceFile {
      * A helper class to encapsulate the options that can be used to construct a Writer.
      */
     public static class Options {
-      /** The default write buffer size in bytes. */
-      public static final int DEFAULT_BUFFER_SIZE_BYTES = 4096;
-
       /**
        * A magic value representing the default for buffer size, block size, and
        * replication factor.
@@ -437,7 +437,8 @@ public class AvroSequenceFile {
        */
       public int getBufferSizeBytes() {
         if (DEFAULT == mBufferSizeBytes) {
-          return getConfiguration().getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE_BYTES);
+          return getConfiguration().getInt(IO_FILE_BUFFER_SIZE_KEY,
+              IO_FILE_BUFFER_SIZE_DEFAULT);
         }
         return mBufferSizeBytes;
       }
@@ -445,7 +446,7 @@ public class AvroSequenceFile {
       /**
        * Gets the desired number of replicas to store for each block of the file.
        *
-       * @return The replciation factor for the blocks of the file.
+       * @return The replication factor for the blocks of the file.
        */
       public short getReplicationFactor() {
         if (DEFAULT == mReplicationFactor) {

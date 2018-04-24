@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -224,9 +224,9 @@ public class SortedKeyValueFile {
       DatumReader<GenericRecord> datumReader =
         model.createDatumReader(recordSchema);
       mDataFileReader =
-        new DataFileReader<GenericRecord>
-        (new FsInput(dataFilePath, options.getConfiguration()), datumReader);
-      
+          new DataFileReader<>
+              (new FsInput(dataFilePath, options.getConfiguration()), datumReader);
+
     }
 
     /**
@@ -285,7 +285,7 @@ public class SortedKeyValueFile {
      * @return An iterator.
      */
     public Iterator<AvroKeyValue<K, V>> iterator() {
-      return new AvroKeyValue.Iterator<K, V>(mDataFileReader.iterator());
+      return new AvroKeyValue.Iterator<>(mDataFileReader.iterator());
     }
 
     /** {@inheritDoc} */
@@ -306,8 +306,8 @@ public class SortedKeyValueFile {
         Configuration conf, Path path, Schema keySchema) throws IOException {
       DatumReader<GenericRecord> datumReader = model.createDatumReader(
           AvroKeyValue.getSchema(keySchema, Schema.create(Schema.Type.LONG)));
-      DataFileReader<GenericRecord> fileReader = new DataFileReader<GenericRecord>(
-          new FsInput(path, conf), datumReader);
+      DataFileReader<GenericRecord> fileReader = new DataFileReader<>(
+        new FsInput(path, conf), datumReader);
 
       NavigableMap<K, Long> index;
       if (Schema.create(Schema.Type.STRING).equals(keySchema)) {
@@ -317,13 +317,13 @@ public class SortedKeyValueFile {
         // problem for primitive string types.  If, for example, you tried to use a record
         // type as the key, any string fields inside of it would not be compared correctly
         // against java.lang.Strings.
-        index = new TreeMap<K, Long>(new AvroCharSequenceComparator<K>());
+        index = new TreeMap<>(new AvroCharSequenceComparator<>());
       } else {
-        index = new TreeMap<K, Long>();
+        index = new TreeMap<>();
       }
       try {
         for (GenericRecord genericRecord : fileReader) {
-          AvroKeyValue<K, Long> indexRecord = new AvroKeyValue<K, Long>(genericRecord);
+          AvroKeyValue<K, Long> indexRecord = new AvroKeyValue<>(genericRecord);
           index.put(indexRecord.getKey(), indexRecord.getValue());
         }
       } finally {
@@ -567,7 +567,7 @@ public class SortedKeyValueFile {
       DatumWriter<GenericRecord> datumWriter =
         model.createDatumWriter(mRecordSchema);
       OutputStream dataOutputStream = fileSystem.create(dataFilePath);
-      mDataFileWriter = new DataFileWriter<GenericRecord>(datumWriter)
+      mDataFileWriter = new DataFileWriter<>(datumWriter)
           .setSyncInterval(1 << 20)  // Set the auto-sync interval sufficiently large, since
                                      // we will manually sync every mIndexInterval records.
           .setCodec(options.getCodec())
@@ -580,7 +580,7 @@ public class SortedKeyValueFile {
       DatumWriter<GenericRecord> indexWriter =
         model.createDatumWriter(mIndexSchema);
       OutputStream indexOutputStream = fileSystem.create(indexFilePath);
-      mIndexFileWriter = new DataFileWriter<GenericRecord>(indexWriter)
+      mIndexFileWriter = new DataFileWriter<>(indexWriter)
           .create(mIndexSchema, indexOutputStream);
     }
 
@@ -601,7 +601,7 @@ public class SortedKeyValueFile {
 
       // Construct the data record.
       AvroKeyValue<K, V> dataRecord
-          = new AvroKeyValue<K, V>(new GenericData.Record(mRecordSchema));
+          = new AvroKeyValue<>(new GenericData.Record(mRecordSchema));
       dataRecord.setKey(key);
       dataRecord.setValue(value);
 
@@ -613,7 +613,7 @@ public class SortedKeyValueFile {
 
         // Construct the record to put in the index.
         AvroKeyValue<K, Long> indexRecord
-            = new AvroKeyValue<K, Long>(new GenericData.Record(mIndexSchema));
+            = new AvroKeyValue<>(new GenericData.Record(mIndexSchema));
         indexRecord.setKey(key);
         indexRecord.setValue(position);
         mIndexFileWriter.append(indexRecord.get());

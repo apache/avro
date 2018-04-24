@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,7 +33,7 @@ import org.apache.hadoop.mapred.RecordReader;
 
 /**
  * An {@link org.apache.hadoop.mapred.InputFormat} for Avro data files.
- * 
+ *
  * By default, when pointed at a directory, this will silently skip over any
  * files in it that do not have .avro extension. To instead include all files,
  * set the avro.mapred.ignore.inputs.without.extension property to false.
@@ -44,16 +44,16 @@ public class AvroInputFormat<T>
   /** Whether to silently ignore input files without the .avro extension */
   public static final String IGNORE_FILES_WITHOUT_EXTENSION_KEY =
       "avro.mapred.ignore.inputs.without.extension";
-  
+
   /** Default of whether to silently ignore input files without the .avro
    * extension. */
   public static final boolean IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT = true;
-  
+
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
     if (job.getBoolean(IGNORE_FILES_WITHOUT_EXTENSION_KEY,
         IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT)) {
-      List<FileStatus> result = new ArrayList<FileStatus>();
+      List<FileStatus> result = new ArrayList<>();
       for (FileStatus file : super.listStatus(job))
         if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
           result.add(file);
@@ -68,7 +68,7 @@ public class AvroInputFormat<T>
     getRecordReader(InputSplit split, JobConf job, Reporter reporter)
     throws IOException {
     reporter.setStatus(split.toString());
-    return new AvroRecordReader<T>(job, (FileSplit)split);
+    return new AvroRecordReader<>(job, (FileSplit) split);
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -57,13 +57,18 @@ public class IdlTool implements Tool {
     } else {
       parser = new Idl(in);
     }
-    
-    if (args.size() == 2 && ! "-".equals(args.get(1))) {
+
+    if (args.size() == 2 && !"-".equals(args.get(1))) {
       parseOut = new PrintStream(new FileOutputStream(args.get(1)));
     }
 
     Protocol p = parser.CompilationUnit();
-    parseOut.print(p.toString(true));
+    try {
+      parseOut.print(p.toString(true));
+    } finally {
+      if (parseOut != out) // Close only the newly created FileOutputStream
+        parseOut.close();
+    }
     return 0;
   }
 

@@ -24,7 +24,7 @@ using Avro.Generic;
 namespace Avro.Specific
 {
     /// <summary>
-    /// Base class for all generated classes 
+    /// Base class for all generated classes
     /// </summary>
     public abstract class SpecificFixed : GenericFixed
     {

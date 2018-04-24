@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -76,7 +76,7 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
     protected RecordWriter<AvroKey<T>, NullWritable> create(
         Schema writerSchema, GenericData dataModel, CodecFactory compressionCodec,
         OutputStream outputStream, int syncInterval) throws IOException {
-      return new AvroKeyRecordWriter<T>(writerSchema, dataModel, compressionCodec, outputStream, syncInterval);
+      return new AvroKeyRecordWriter<>(writerSchema, dataModel, compressionCodec, outputStream, syncInterval);
     }
   }
 
@@ -102,8 +102,14 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
 
     GenericData dataModel = AvroSerialization.createDataModel(conf);
 
-    return mRecordWriterFactory.create
-      (writerSchema, dataModel, getCompressionCodec(context),
-       getAvroFileOutputStream(context), getSyncInterval(context));
+    OutputStream out = getAvroFileOutputStream(context);
+    try {
+      return mRecordWriterFactory.create
+              (writerSchema, dataModel, getCompressionCodec(context),
+                      out, getSyncInterval(context));
+    } catch (IOException e) {
+      out.close();
+      throw e;
+    }
   }
 }

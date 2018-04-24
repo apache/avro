@@ -85,15 +85,15 @@
   &#60;groupId&#62;org.apache.maven.plugins&#60;/groupId&#62;
   &#60;artifactId&#62;maven-compiler-plugin&#60;/artifactId&#62;
   &#60;configuration&#62;
-    &#60;source&#62;1.6&#60;/source&#62;
-    &#60;target&#62;1.6&#60;/target&#62;
+    &#60;source&#62;1.8&#60;/source&#62;
+    &#60;target&#62;1.8&#60;/target&#62;
   &#60;/configuration&#62;
 &#60;/plugin&#62;
       </source>
       <p>
         You may also build the required Avro jars from source.  Building Avro is
         beyond the scope of this guide; see the <a
-        href="https://cwiki.apache.org/AVRO/build-documentation.html">Build
+        href="https://cwiki.apache.org/AVRO/Build+Documentation">Build
         Documentation</a> page in the wiki for more information.
       </p>
     </section>

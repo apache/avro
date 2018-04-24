@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -73,10 +73,10 @@ class ColumnDescriptor<T extends Comparable> {
     for (int i = 0; i < blockCount; i++) {
       blocks[i] = BlockDescriptor.read(in);
       if (metaData.hasIndexValues())
-        firstValues[i] = in.<T>readValue(metaData.getType());
+        firstValues[i] = in.readValue(metaData.getType());
     }
     dataStart = in.tell();
-    
+
     // compute blockStarts and firstRows
     Checksum checksum = Checksum.get(metaData);
     blockStarts = new long[blocks.length];

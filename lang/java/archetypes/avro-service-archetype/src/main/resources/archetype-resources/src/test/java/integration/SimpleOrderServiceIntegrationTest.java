@@ -1,7 +1,7 @@
 #set( $symbol_pound = '#' )
 #set( $symbol_dollar = '$' )
 #set( $symbol_escape = '\' )
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,44 +44,44 @@ import ${package}.service.Order;
  */
 public class SimpleOrderServiceIntegrationTest {
 
-	private static SimpleOrderServiceEndpoint service;
-	private static SimpleOrderServiceClient client;
+  private static SimpleOrderServiceEndpoint service;
+  private static SimpleOrderServiceClient client;
 
-	@Test
-	public void simpleRoundTripTest() throws Exception {
-		Order simpleOrder = createOrder();
-		Confirmation c = client.submitOrder(simpleOrder);
+  @Test
+  public void simpleRoundTripTest() throws Exception {
+    Order simpleOrder = createOrder();
+    Confirmation c = client.submitOrder(simpleOrder);
 
-		assertEquals(c.getOrderId(), simpleOrder.getOrderId());
-		assertEquals(c.getCustomerId(), simpleOrder.getCustomerId());
-		assertTrue(c.getEstimatedCompletion() > 0);
-	}
+    assertEquals(c.getOrderId(), simpleOrder.getOrderId());
+    assertEquals(c.getCustomerId(), simpleOrder.getCustomerId());
+    assertTrue(c.getEstimatedCompletion() > 0);
+  }
 
-	@BeforeClass
-	public static void setupTransport() throws Exception {
-		InetSocketAddress endpointAddress = new InetSocketAddress("0.0.0.0", 12345);
-		service = new SimpleOrderServiceEndpoint(endpointAddress);
-		client = new SimpleOrderServiceClient(endpointAddress);
+  @BeforeClass
+  public static void setupTransport() throws Exception {
+    InetSocketAddress endpointAddress = new InetSocketAddress("0.0.0.0", 12345);
+    service = new SimpleOrderServiceEndpoint(endpointAddress);
+    client = new SimpleOrderServiceClient(endpointAddress);
 
-		service.start();
-		client.start();
-	}
+    service.start();
+    client.start();
+  }
 
-	@AfterClass
-	public static void shutdownTransport() throws Exception {
-		client.stop();
-		service.stop();
-	}
+  @AfterClass
+  public static void shutdownTransport() throws Exception {
+    client.stop();
+    service.stop();
+  }
 
-	public Order createOrder() {
-		return Order.newBuilder().setOrderId(1).setCustomerId(1).setOrderItems(createItems()).build();
-	}
+  public Order createOrder() {
+    return Order.newBuilder().setOrderId(1).setCustomerId(1).setOrderItems(createItems()).build();
+  }
 
-	public List<Item> createItems() {
-		List<Item> items = new ArrayList<Item>();
-		for (int x = 0; x < 5; x++)
-			items.add(Item.newBuilder().setName("Item-" + x).setQuantity(x + 1).setSku(1230 + x).build());
-		return items;
-	}
+  public List<Item> createItems() {
+    List<Item> items = new ArrayList<Item>();
+    for (int x = 0; x < 5; x++)
+      items.add(Item.newBuilder().setName("Item-" + x).setQuantity(x + 1).setSku(1230 + x).build());
+    return items;
+  }
 
 }

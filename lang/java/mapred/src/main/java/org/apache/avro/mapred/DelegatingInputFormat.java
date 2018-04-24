@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,19 +46,19 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
   public InputSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
 
     JobConf confCopy = new JobConf(conf);
-    List<InputSplit> splits = new ArrayList<InputSplit>();
+    List<InputSplit> splits = new ArrayList<>();
 
     Map<Path, Class<? extends AvroMapper>> mapperMap = AvroMultipleInputs
        .getMapperTypeMap(conf);
     Map<Path, Schema> schemaMap = AvroMultipleInputs
         .getInputSchemaMap(conf);
     Map<Schema, List<Path>> schemaPaths
-        = new HashMap<Schema, List<Path>>();
+        = new HashMap<>();
 
     // First, build a map of Schemas to Paths
     for (Entry<Path, Schema> entry : schemaMap.entrySet()) {
       if (!schemaPaths.containsKey(entry.getValue())) {
-        schemaPaths.put(entry.getValue(), new LinkedList<Path>());
+        schemaPaths.put(entry.getValue(), new LinkedList<>());
         System.out.println(entry.getValue());
         System.out.println(entry.getKey());
       }
@@ -75,14 +75,14 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
       List<Path> paths = schemaEntry.getValue();
 
       Map<Class<? extends AvroMapper>, List<Path>> mapperPaths
-          = new HashMap<Class<? extends AvroMapper>, List<Path>>();
+          = new HashMap<>();
 
       // Now, for each set of paths that have a common Schema, build
       // a map of Mappers to the paths they're used for
       for (Path path : paths) {
        Class<? extends AvroMapper> mapperClass = mapperMap.get(path);
        if (!mapperPaths.containsKey(mapperClass)) {
-         mapperPaths.put(mapperClass, new LinkedList<Path>());
+         mapperPaths.put(mapperClass, new LinkedList<>());
        }
 
        mapperPaths.get(mapperClass).add(path);

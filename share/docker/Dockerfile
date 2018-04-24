@@ -17,7 +17,7 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM java:7-jdk
+FROM java:8-jdk
 
 WORKDIR /root
 
@@ -37,13 +37,24 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
   ruby ruby-dev rake \
   libsnappy1 libsnappy-dev
 
-# Install Forrest
-RUN mkdir -p /usr/local/apache-forrest
-RUN curl -O http://archive.apache.org/dist/forrest/0.8/apache-forrest-0.8.tar.gz
-RUN tar xzf *forrest* --strip-components 1 -C /usr/local/apache-forrest
+# Install Forrest in /usr/local/apache-forrest
+# Download
+RUN cd /usr/local/ && wget "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz"      -O "apache-forrest-0.9-sources.tar.gz"
+RUN cd /usr/local/ && wget "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" -O "apache-forrest-0.9-dependencies.tar.gz"
+
+# Unpack Apache Forrest
+RUN cd /usr/local/ && \
+    tar xzf apache-forrest-0.9-sources.tar.gz && \
+    tar xzf apache-forrest-0.9-dependencies.tar.gz && \
+    mv apache-forrest-0.9 apache-forrest
+RUN cd /usr/local/apache-forrest/main && ./build.sh
+
+# The solution for https://issues.apache.org/jira/browse/PIG-3906
+RUN mkdir -p /usr/local/apache-forrest/plugins       && chmod a+rwX -R /usr/local/apache-forrest/plugins
+RUN mkdir -p /usr/local/apache-forrest/build/plugins && chmod a+rwX -R /usr/local/apache-forrest/build/plugins
+
+# Configure where forrest can be found
 RUN echo 'forrest.home=/usr/local/apache-forrest' > build.properties
-RUN chmod -R 0777 /usr/local/apache-forrest/build /usr/local/apache-forrest/main \
-  /usr/local/apache-forrest/plugins
 ENV FORREST_HOME /usr/local/apache-forrest
 
 # Install Perl modules

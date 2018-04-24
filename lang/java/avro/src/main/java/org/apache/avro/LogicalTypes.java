@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,14 +21,19 @@ package org.apache.avro;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class LogicalTypes {
+
+  private static final Logger LOG = LoggerFactory.getLogger(LogicalTypes.class);
 
   public interface LogicalTypeFactory {
     LogicalType fromSchema(Schema schema);
   }
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES =
-      new ConcurrentHashMap<String, LogicalTypeFactory>();
+      new ConcurrentHashMap<>();
 
   public static void register(String logicalTypeName, LogicalTypeFactory factory) {
     if (logicalTypeName == null) {
@@ -56,7 +61,9 @@ public class LogicalTypes {
 
     LogicalType logicalType;
     try {
-      if (TIMESTAMP_MILLIS.equals(typeName)) {
+      if (typeName == null) {
+        logicalType = null;
+      } else if (TIMESTAMP_MILLIS.equals(typeName)) {
         logicalType = TIMESTAMP_MILLIS_TYPE;
       } else if (DECIMAL.equals(typeName)) {
         logicalType = new Decimal(schema);
@@ -81,9 +88,11 @@ public class LogicalTypes {
         logicalType.validate(schema);
       }
     } catch (RuntimeException e) {
+      LOG.debug("Invalid logical type found", e);
       if (throwErrors) {
         throw e;
       }
+      LOG.warn("Ignoring invalid logical type for name: {}", typeName);
       // ignore invalid types
       logicalType = null;
     }
@@ -348,4 +357,5 @@ public class LogicalTypes {
       }
     }
   }
+
 }

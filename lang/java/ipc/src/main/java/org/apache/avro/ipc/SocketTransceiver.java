@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,7 @@ public class SocketTransceiver extends Transceiver {
   private ByteBuffer header = ByteBuffer.allocate(4);
 
   private Protocol remote;
-  
+
   public SocketTransceiver(SocketAddress address) throws IOException {
     this(SocketChannel.open(address));
   }
@@ -59,7 +59,7 @@ public class SocketTransceiver extends Transceiver {
   }
 
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       header.clear();
       while (header.hasRemaining()) {

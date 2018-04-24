@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,7 +34,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
    * for the grammar for the grammar for the given schema <tt>sc</tt>.
    */
   public Symbol generate(Schema schema) {
-    return Symbol.root(generate(schema, new HashMap<LitS, Symbol>()));
+    return Symbol.root(generate(schema, new HashMap<>()));
   }
 
   /**

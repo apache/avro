@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -56,10 +56,10 @@ class TetherMapRunner
       // configure it
       LOG.info("send configure to subprocess for map task");
       process.inputClient.configure
-        (TaskType.MAP, 
+        (TaskType.MAP,
          job.get(AvroJob.INPUT_SCHEMA),
          AvroJob.getMapOutputSchema(job).toString());
-         
+
       LOG.info("send partitions to subprocess for map task");
       process.inputClient.partitions(job.getNumReduceTasks());
 
@@ -91,5 +91,5 @@ class TetherMapRunner
         process.close();
     }
   }
-  
+
 }

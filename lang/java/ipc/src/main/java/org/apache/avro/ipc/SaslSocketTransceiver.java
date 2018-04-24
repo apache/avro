@@ -55,7 +55,7 @@ public class SaslSocketTransceiver extends Transceiver {
   private boolean saslResponsePiggybacked;
 
   private Protocol remote;
-  
+
   private ByteBuffer readHeader = ByteBuffer.allocate(4);
   private ByteBuffer writeHeader = ByteBuffer.allocate(4);
   private ByteBuffer zeroHeader = ByteBuffer.allocate(4).putInt(0);
@@ -128,7 +128,7 @@ public class SaslSocketTransceiver extends Transceiver {
       if (sasl.isComplete())
         saslResponsePiggybacked = true;
     }
-    
+
     while (!sasl.isComplete()) {
       Status status  = readStatus();
       ByteBuffer frame = readFrame();
@@ -140,7 +140,7 @@ public class SaslSocketTransceiver extends Transceiver {
           write(Status.FAIL, "Wrong mechanism: "+mechanism);
           throw new SaslException("Wrong mechanism: "+mechanism);
         }
-      case CONTINUE: 
+      case CONTINUE:
         byte[] response;
         try {
           response = sasl.evaluate(frame.array());
@@ -179,7 +179,7 @@ public class SaslSocketTransceiver extends Transceiver {
 
   @Override public synchronized List<ByteBuffer> readBuffers()
     throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       ByteBuffer buffer = readFrameAndUnwrap();
       if (buffer.remaining() == 0)
@@ -213,7 +213,7 @@ public class SaslSocketTransceiver extends Transceiver {
     read(buffer);
     return buffer;
   }
-  
+
   private void read(ByteBuffer buffer) throws IOException {
     buffer.clear();
     while (buffer.hasRemaining())
@@ -225,7 +225,7 @@ public class SaslSocketTransceiver extends Transceiver {
   @Override public synchronized void writeBuffers(List<ByteBuffer> buffers)
     throws IOException {
     if (buffers == null) return;                  // no data to write
-    List<ByteBuffer> writes = new ArrayList<ByteBuffer>(buffers.size()*2+1);
+    List<ByteBuffer> writes = new ArrayList<>(buffers.size() * 2 + 1);
     int currentLength = 0;
     ByteBuffer currentHeader = writeHeader;
     for (ByteBuffer buffer : buffers) {           // gather writes

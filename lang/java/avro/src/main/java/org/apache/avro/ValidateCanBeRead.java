@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,14 +22,14 @@ package org.apache.avro;
  * A {@link SchemaValidationStrategy} that checks that the data written with the
  * {@link Schema} to validate can be read by the existing schema according to
  * the default Avro schema resolution rules.
- * 
+ *
  */
 class ValidateCanBeRead implements SchemaValidationStrategy {
 
   /**
    * Validate that data written with first schema provided can be read using the
    * second schema, according to the default Avro schema resolution rules.
-   * 
+   *
    * @throws SchemaValidationException
    *           if the second schema cannot read data written by the first.
    */

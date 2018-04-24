@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -54,7 +54,7 @@ public class TestProtocolReflect {
     byte[] echoBytes(byte[] data);
     void error() throws SimpleException;
   }
-  
+
   private static boolean throwUndeclaredError;
 
   public static class TestImpl implements Simple {

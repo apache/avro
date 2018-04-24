@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -53,7 +53,7 @@ class TetherOutputFormat
     throws IOException {
 
     Schema schema = AvroJob.getOutputSchema(job);
-    
+
     final DataFileWriter writer = new DataFileWriter(new GenericDatumWriter());
 
     if (FileOutputFormat.getCompressOutput(job)) {

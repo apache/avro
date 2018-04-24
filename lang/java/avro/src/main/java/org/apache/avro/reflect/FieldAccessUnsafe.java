@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -92,7 +92,7 @@ class FieldAccessUnsafe extends FieldAccess {
     protected boolean supportsIO() {
       return true;
     }
-    
+
     @Override
     protected boolean isStringable() {
       return isStringable;
@@ -321,18 +321,18 @@ class FieldAccessUnsafe extends FieldAccess {
     protected Object get(Object object) {
       return UNSAFE.getObject(object, offset);
     }
-    
+
     @Override
     protected boolean supportsIO() {
       return false;
     }
-    
+
   }
-  
+
   final static class UnsafeCustomEncodedField extends UnsafeCachedField {
 
     private CustomEncoding<?> encoding;
-    
+
     UnsafeCustomEncodedField(Field f, CustomEncoding<?> encoding) {
       super(f);
       this.encoding = encoding;
@@ -347,7 +347,7 @@ class FieldAccessUnsafe extends FieldAccess {
     protected void set(Object object, Object value) throws IllegalAccessException, IOException {
       UNSAFE.putObject(object, offset, value);
     }
-    
+
     @Override
     protected void read(Object object, Decoder in) throws IOException {
       UNSAFE.putObject(object, offset, encoding.read(in));
@@ -357,7 +357,7 @@ class FieldAccessUnsafe extends FieldAccess {
     protected void write(Object object, Encoder out) throws IOException {
       encoding.write(UNSAFE.getObject(object, offset), out);
     }
-    
+
     protected boolean isCustomEncoded() {
       return true;
     }

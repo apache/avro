@@ -146,7 +146,7 @@ namespace Avro.Specific
                 string type = Avro.CodeGen.getType(readerSchema, false, ref nEnum);
                 type = type.Remove(0, 6);              // remove IList<
                 type = type.Remove(type.Length - 1);   // remove >
-        
+
                 objCreator = GetConstructor(type, Schema.Type.Array);
             }
 
@@ -198,7 +198,7 @@ namespace Avro.Specific
                 string type = Avro.CodeGen.getType(readerSchema, false, ref nEnum);
                 type = type.Remove(0, 19);             // remove IDictionary<string,
                 type = type.Remove(type.Length - 1);   // remove >
-        
+
                 objCreator = GetConstructor(type, Schema.Type.Map);
             }
 

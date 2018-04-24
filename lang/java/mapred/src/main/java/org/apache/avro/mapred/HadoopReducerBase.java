@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,10 +29,10 @@ import org.apache.hadoop.mapred.Reducer;
 
 abstract class HadoopReducerBase<K,V,OUT,KO,VO> extends MapReduceBase
   implements Reducer<AvroKey<K>, AvroValue<V>, KO, VO> {
-  
+
   private AvroReducer<K,V,OUT> reducer;
   private AvroCollector<OUT> collector;
-  
+
   protected abstract AvroReducer<K,V,OUT> getReducer(JobConf conf);
   protected abstract AvroCollector<OUT> getCollector(OutputCollector<KO,VO> c);
 
@@ -52,9 +52,9 @@ abstract class HadoopReducerBase<K,V,OUT,KO,VO> extends MapReduceBase
 
   @Override
   public final void reduce(AvroKey<K> key, Iterator<AvroValue<V>> values,
-                           OutputCollector<KO, VO> out, 
+                           OutputCollector<KO, VO> out,
                            Reporter reporter) throws IOException {
-    if (this.collector == null) 
+    if (this.collector == null)
       this.collector = getCollector(out);
     reduceIterable.values = values;
     reducer.reduce(key.datum(), reduceIterable, collector, reporter);

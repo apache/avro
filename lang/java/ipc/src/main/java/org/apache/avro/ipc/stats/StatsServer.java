@@ -1,5 +1,5 @@
 package org.apache.avro.ipc.stats;
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,37 +16,37 @@ package org.apache.avro.ipc.stats;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 /* This is a server that displays live information from a StatsPlugin.
- * 
+ *
  *  Typical usage is as follows:
- *    StatsPlugin plugin = new StatsPlugin(); 
+ *    StatsPlugin plugin = new StatsPlugin();
  *    requestor.addPlugin(plugin);
  *    StatsServer server = new StatsServer(plugin, 8080);
- *    
+ *
  *  */
 public class StatsServer {
   Server httpServer;
   StatsPlugin plugin;
-  
-  /* Start a stats server on the given port, 
+
+  /* Start a stats server on the given port,
    * responsible for the given plugin. */
   public StatsServer(StatsPlugin plugin, int port) throws Exception {
     this.httpServer = new Server(port);
     this.plugin = plugin;
-    
-    Context staticContext = new Context(httpServer, "/static");
-    staticContext.addServlet(new ServletHolder(new StaticServlet()), "/");
-    
-    Context context = new Context(httpServer, "/");
-    context.addServlet(new ServletHolder(new StatsServlet(plugin)), "/");
-    
+
+    ServletHandler handler = new ServletHandler();
+    httpServer.setHandler(handler);
+    handler.addServletWithMapping(new ServletHolder(new StaticServlet()), "/");
+
+    handler.addServletWithMapping(new ServletHolder(new StatsServlet(plugin)), "/");
+
     httpServer.start();
   }
-  
+
   /* Stops this server. */
   public void stop() throws Exception {
     this.httpServer.stop();

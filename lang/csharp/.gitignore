@@ -47,3 +47,6 @@
 .builds
 *.dotCover
 *.nupkg
+
+#Test results
+TestResult.xml

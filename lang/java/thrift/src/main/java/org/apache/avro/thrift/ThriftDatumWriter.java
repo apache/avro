@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,15 +34,15 @@ public class ThriftDatumWriter<T> extends GenericDatumWriter<T> {
   public ThriftDatumWriter(Class<T> c) {
     super(ThriftData.get().getSchema(c), ThriftData.get());
   }
-  
+
   public ThriftDatumWriter(Schema schema) {
     super(schema, ThriftData.get());
   }
-  
+
   protected ThriftDatumWriter(Schema root, ThriftData thriftData) {
     super(root, thriftData);
   }
-  
+
   protected ThriftDatumWriter(ThriftData thriftData) {
     super(thriftData);
   }

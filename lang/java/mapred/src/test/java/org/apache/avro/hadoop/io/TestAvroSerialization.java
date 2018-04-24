@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,18 +23,12 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.AvroWrapper;
@@ -50,7 +44,7 @@ import org.junit.Assert;
 public class TestAvroSerialization {
   @Test
   public void testAccept() {
-    AvroSerialization<CharSequence> serialization = new AvroSerialization<CharSequence>();
+    AvroSerialization<CharSequence> serialization = new AvroSerialization<>();
 
     assertTrue(serialization.accept(AvroKey.class));
     assertTrue(serialization.accept(AvroValue.class));
@@ -158,7 +152,7 @@ public class TestAvroSerialization {
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     serializer.open(baos);
-    serializer.serialize(new AvroKey<T>(data));
+    serializer.serialize(new AvroKey<>(data));
     serializer.close();
 
     ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());

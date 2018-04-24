@@ -737,6 +737,9 @@ public:
             if (s.isImplicitAction()) {
                 handler_.handle(s);
                 parsingStack.pop();
+            } else if (s.kind() == Symbol::sSkipStart) {
+                parsingStack.pop();
+                skip(*decoder_);
             } else {
                 break;
             }

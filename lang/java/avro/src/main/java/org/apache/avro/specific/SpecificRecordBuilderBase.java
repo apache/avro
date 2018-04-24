@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,9 +24,9 @@ import org.apache.avro.data.RecordBuilderBase;
  * Abstract base class for specific RecordBuilder implementations.
  * Not thread-safe.
  */
-abstract public class SpecificRecordBuilderBase<T extends SpecificRecord> 
+abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
   extends RecordBuilderBase<T> {
-  
+
   /**
    * Creates a SpecificRecordBuilderBase for building records of the given type.
    * @param schema the schema associated with the record class.
@@ -34,7 +34,7 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
   protected SpecificRecordBuilderBase(Schema schema) {
     super(schema, SpecificData.get());
   }
-  
+
   /**
    * SpecificRecordBuilderBase copy constructor.
    * @param other SpecificRecordBuilderBase instance to copy.
@@ -42,7 +42,7 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
   protected SpecificRecordBuilderBase(SpecificRecordBuilderBase<T> other) {
     super(other, SpecificData.get());
   }
-  
+
   /**
    * Creates a SpecificRecordBuilderBase by copying an existing record instance.
    * @param other the record instance to copy.

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,7 +39,7 @@ import org.apache.avro.util.Utf8;
  * @see Encoder
  * @see EncoderFactory
  */
-public class ValidatingEncoder extends ParsingEncoder 
+public class ValidatingEncoder extends ParsingEncoder
   implements Parser.ActionHandler {
   protected Encoder out;
   protected final Parser parser;
@@ -70,7 +70,7 @@ public class ValidatingEncoder extends ParsingEncoder
     this.out = encoder;
     return this;
   }
-  
+
   @Override
   public void writeNull() throws IOException {
     parser.advance(Symbol.NULL);
@@ -112,13 +112,13 @@ public class ValidatingEncoder extends ParsingEncoder
     parser.advance(Symbol.STRING);
     out.writeString(utf8);
   }
-  
+
   @Override
   public void writeString(String str) throws IOException {
     parser.advance(Symbol.STRING);
     out.writeString(str);
   }
-  
+
   @Override
   public void writeString(CharSequence charSequence) throws IOException {
     parser.advance(Symbol.STRING);

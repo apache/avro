@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,23 +17,10 @@
  */
 package org.apache.avro.ipc;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.security.KeyStore;
-import java.security.Security;
-import java.security.cert.X509Certificate;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
-
-import org.apache.avro.ipc.specific.SpecificRequestor;
-import org.apache.avro.ipc.specific.SpecificResponder;
-import org.apache.avro.test.Mail;
-import org.apache.avro.test.Message;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -43,10 +30,6 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 public class TestNettyServerWithCompression extends TestNettyServer{
 
@@ -60,7 +43,7 @@ public class TestNettyServerWithCompression extends TestNettyServer{
         channelFactory, new CompressionChannelPipelineFactory(),
         null);
   }
-  
+
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return  new NettyTransceiver(new InetSocketAddress(serverPort),
         new CompressionChannelFactory(),

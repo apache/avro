@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,7 @@ class TetherReducer
     this.job = job;
   }
 
-  public void reduce(TetherData datum, Iterator<NullWritable> ignore, 
+  public void reduce(TetherData datum, Iterator<NullWritable> ignore,
                      OutputCollector<TetherData, NullWritable> collector,
                      Reporter reporter) throws IOException {
     try {

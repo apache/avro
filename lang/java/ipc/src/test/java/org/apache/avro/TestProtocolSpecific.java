@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,11 +37,9 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestError;
 import org.apache.avro.test.TestRecord;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertTrue;
 
 import static org.junit.Assert.*;
 
@@ -95,23 +93,23 @@ public class TestProtocolSpecific {
     responder = new SpecificResponder(Simple.class, new TestImpl());
     server = createServer(responder);
     server.start();
-    
+
     client = createTransceiver();
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     addRpcPlugins(req);
     proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
-    
+
     monitor = new HandshakeMonitor();
     responder.addRPCPlugin(monitor);
   }
-  
+
   public void addRpcPlugins(Requestor requestor){}
-  
+
   public Server createServer(Responder testResponder) throws Exception{
     return server = new SocketServer(testResponder,
-                              new InetSocketAddress(0));   
+                              new InetSocketAddress(0));
   }
-  
+
   public Transceiver createTransceiver() throws Exception{
     return new SocketTransceiver(new InetSocketAddress(server.getPort()));
   }
@@ -190,7 +188,7 @@ public class TestProtocolSpecific {
       error = e;
     }
     assertNotNull(error);
-    assertEquals("an error", error.getMessage$().toString());
+    assertEquals("an error", error.getMessage$());
   }
 
   @Test
@@ -218,14 +216,14 @@ public class TestProtocolSpecific {
     try { Thread.sleep(100); } catch (InterruptedException e) {}
     assertEquals(2, ackCount);
   }
-  
+
   @Test
   public void testRepeatedAccess() throws Exception {
     for (int x = 0; x < 1000; x++) {
       proxy.hello("hi!");
     }
   }
-  
+
   @Test(expected = Exception.class)
   public void testConnectionRefusedOneWay() throws IOException {
     Transceiver client = new HttpTransceiver(new URL("http://localhost:4444"));
@@ -240,7 +238,7 @@ public class TestProtocolSpecific {
       argument to check that schema is sent to parse request. */
   public void testParamVariation() throws Exception {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
                    null, null));
     fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
@@ -250,7 +248,7 @@ public class TestProtocolSpecific {
                              null /* doc */,
                              Schema.createRecord(fields),
                              Schema.create(Schema.Type.STRING),
-                             Schema.createUnion(new ArrayList<Schema>()));
+                             Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("hello", message);
     Transceiver t = createTransceiver();
     try {
@@ -277,12 +275,12 @@ public class TestProtocolSpecific {
     server.close();
     server = null;
   }
-  
+
   public class HandshakeMonitor extends RPCPlugin{
-    
+
     private int handshakes;
-    private HashSet<String> seenProtocols = new HashSet<String>();
-    
+    private HashSet<String> seenProtocols = new HashSet<>();
+
     @Override
     public void serverConnecting(RPCContext context) {
       handshakes++;
@@ -299,7 +297,7 @@ public class TestProtocolSpecific {
         seenProtocols.add(clientProtocol);
       }
     }
-    
+
     public void assertHandshake(){
       int expected = getExpectedHandshakeCount();
       if(expected != REPEATING){
@@ -307,7 +305,7 @@ public class TestProtocolSpecific {
       }
     }
   }
-  
+
   protected int getExpectedHandshakeCount() {
    return 3;
   }

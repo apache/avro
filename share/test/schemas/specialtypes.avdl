@@ -95,4 +95,15 @@ protocol LetsBreakIt {
       string value;
     }
 
+    record TopLevelDomainNames {
+      string org;
+      string avro;
+      string com;
+      string net;
+      string nl;
+    }
+
+    record Exception {
+      string whatever;
+    }
 }

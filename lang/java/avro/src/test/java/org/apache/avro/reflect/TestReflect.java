@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,6 +39,7 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.Decoder;
@@ -50,9 +51,9 @@ import org.codehaus.jackson.node.NullNode;
 import org.junit.Test;
 
 public class TestReflect {
-  
+
   EncoderFactory factory = new EncoderFactory();
-  
+
   // test primitive type inference
   @Test public void testVoid() {
     check(Void.TYPE, "\"null\"");
@@ -133,7 +134,7 @@ public class TestReflect {
   @Test public void testUnionWithEnum() {
     Schema s = new Schema.Parser().parse
         ("[\"null\", {\"type\":\"enum\",\"name\":\"E\",\"namespace\":" +
-            "\"org.apache.avro.reflect.TestReflect$\",\"symbols\":[\"A\",\"B\"]}]");
+            "\"org.apache.avro.reflect.TestReflect\",\"symbols\":[\"A\",\"B\"]}]");
     GenericData data = ReflectData.get();
     assertEquals(1, data.resolveUnion(s, E.A));
   }
@@ -146,21 +147,21 @@ public class TestReflect {
 
   // test map, array and list type inference
   public static class R1 {
-    private Map<String,String> mapField = new HashMap<String,String>();
+    private Map<String,String> mapField = new HashMap<>();
     private String[] arrayField = new String[] { "foo" };
-    private List<String> listField = new ArrayList<String>();
+    private List<String> listField = new ArrayList<>();
 
     {
       mapField.put("foo", "bar");
       listField.add("foo");
     }
-    
+
     @Override
     public boolean equals(Object o) {
       if (!(o instanceof R1)) return false;
       R1 that = (R1)o;
       return mapField.equals(that.mapField)
-        && Arrays.equals(this.arrayField, that.arrayField) 
+        && Arrays.equals(this.arrayField, that.arrayField)
         &&  listField.equals(that.listField);
     }
   }
@@ -179,7 +180,7 @@ public class TestReflect {
           "{\"type\":\"array\",\"items\":\"string\""
           +",\"java-class\":\"java.util.List\"}");
   }
-  
+
   @Test public void testR1() throws Exception {
     checkReadWrite(new R1());
   }
@@ -188,12 +189,12 @@ public class TestReflect {
   public static class R2 {
     private String[] arrayField;
     private Collection<String> collectionField;
-    
+
     @Override
     public boolean equals(Object o) {
       if (!(o instanceof R2)) return false;
       R2 that = (R2)o;
-      return Arrays.equals(this.arrayField, that.arrayField) 
+      return Arrays.equals(this.arrayField, that.arrayField)
         &&  collectionField.equals(that.collectionField);
     }
   }
@@ -201,7 +202,7 @@ public class TestReflect {
   @Test public void testR2() throws Exception {
     R2 r2 = new R2();
     r2.arrayField = new String[] {"foo"};
-    r2.collectionField = new ArrayList<String>();
+    r2.collectionField = new ArrayList<>();
     r2.collectionField.add("foo");
     checkReadWrite(r2);
   }
@@ -209,7 +210,7 @@ public class TestReflect {
   // test array i/o of unboxed type
   public static class R3 {
     private int[] intArray;
-    
+
     @Override
     public boolean equals(Object o) {
       if (!(o instanceof R3)) return false;
@@ -230,7 +231,7 @@ public class TestReflect {
     public short[] shorts;
     public byte b;
     public char c;
-    
+
     @Override
     public boolean equals(Object o) {
       if (!(o instanceof R4)) return false;
@@ -296,6 +297,34 @@ public class TestReflect {
     checkReadWrite(r9, ReflectData.get().getSchema(R9.class));
   }
 
+  // test union in fields
+  public static class R9_1  {
+	@Union({Void.class, R7.class, R8.class})
+    public Object value;
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof R9_1)) return false;
+      if (this.value == null) return ((R9_1)o).value == null;
+      return this.value.equals(((R9_1)o).value);
+    }
+  }
+
+  @Test public void testR6_1() throws Exception {
+    R7 r7 = new R7();
+    r7.value = 1;
+    checkReadWrite(r7, ReflectData.get().getSchema(R6.class));
+    R8 r8 = new R8();
+    r8.value = 1;
+    checkReadWrite(r8, ReflectData.get().getSchema(R6.class));
+    R9_1 r9_1 = new R9_1();
+    r9_1.value = null;
+    checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
+    r9_1.value = r7;
+    checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
+    r9_1.value = r8;
+    checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
+  }
+  
   // test union annotation on methods and parameters
   public static interface P0 {
     @Union({Void.class,String.class})
@@ -335,7 +364,7 @@ public class TestReflect {
       return this.text.equals(((R10)o).text);
     }
   }
-  
+
   @Test public void testR10() throws Exception {
     Schema r10Schema = ReflectData.get().getSchema(R10.class);
     assertEquals(Schema.Type.STRING, r10Schema.getType());
@@ -354,7 +383,7 @@ public class TestReflect {
       return this.text.equals(that.text);
     }
   }
-  
+
   @Test public void testR11() throws Exception {
     Schema r11Record = ReflectData.get().getSchema(R11.class);
     assertEquals(Schema.Type.RECORD, r11Record.getType());
@@ -414,7 +443,7 @@ public class TestReflect {
                  ("{\"type\":\"array\",\"items\":[\"null\",\"string\"]}"),
                  s.getField("strings").schema());
   }
-    
+
   @AvroSchema("\"null\"")                          // record
   public class R13 {}
 
@@ -422,7 +451,7 @@ public class TestReflect {
     Schema s = ReflectData.get().getSchema(R13.class);
     assertEquals(Schema.Type.NULL, s.getType());
   }
-    
+
   public interface P4 {
     @AvroSchema("\"int\"")                        // message value
     Object foo(@AvroSchema("\"int\"")Object x);   // message param
@@ -473,10 +502,10 @@ public class TestReflect {
     checkReadWrite(object, ReflectData.get().getSchema(object.getClass()));
   }
   void checkReadWrite(Object object, Schema s) throws Exception {
-    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(s);
+    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<>(s);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.write(object, factory.directBinaryEncoder(out, null));
-    ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(s);
+    ReflectDatumReader<Object> reader = new ReflectDatumReader<>(s);
     Object after =
       reader.read(null, DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
@@ -496,55 +525,55 @@ public class TestReflect {
   public static enum E { A, B };
   @Test public void testEnum() throws Exception {
     check(E.class, "{\"type\":\"enum\",\"name\":\"E\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect$\",\"symbols\":[\"A\",\"B\"]}");
+          +"\"org.apache.avro.reflect.TestReflect\",\"symbols\":[\"A\",\"B\"]}");
   }
 
   public static class R { int a; long b; }
   @Test public void testRecord() throws Exception {
     check(R.class, "{\"type\":\"record\",\"name\":\"R\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect$\",\"fields\":["
+          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":["
           +"{\"name\":\"a\",\"type\":\"int\"},"
           +"{\"name\":\"b\",\"type\":\"long\"}]}");
   }
-  
+
   public static class RAvroIgnore { @AvroIgnore int a; }
   @Test public void testAnnotationAvroIgnore() throws Exception {
     check(RAvroIgnore.class, "{\"type\":\"record\",\"name\":\"RAvroIgnore\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect$\",\"fields\":[]}");
+          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
   }
-  
+
   public static class RAvroMeta { @AvroMeta(key="K", value="V") int a; }
   @Test public void testAnnotationAvroMeta() throws Exception {
     check(RAvroMeta.class, "{\"type\":\"record\",\"name\":\"RAvroMeta\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect$\",\"fields\":[" 
+          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":["
           +"{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\"}]}");
   }
-  
+
   public static class RAvroName { @AvroName("b") int a; }
   @Test public void testAnnotationAvroName() throws Exception {
     check(RAvroName.class, "{\"type\":\"record\",\"name\":\"RAvroName\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect$\",\"fields\":[" 
+          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":["
           +"{\"name\":\"b\",\"type\":\"int\"}]}");
   }
-  
+
   public static class RAvroNameCollide { @AvroName("b") int a; int b; }
   @Test(expected=Exception.class)
   public void testAnnotationAvroNameCollide() throws Exception {
     check(RAvroNameCollide.class, "{\"type\":\"record\",\"name\":\"RAvroNameCollide\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect$\",\"fields\":[" 
-          +"{\"name\":\"b\",\"type\":\"int\"}," 
+          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":["
+          +"{\"name\":\"b\",\"type\":\"int\"},"
           +"{\"name\":\"b\",\"type\":\"int\"}]}");
   }
-  
+
   public static class RAvroStringableField { @Stringable int a; }
   public void testAnnotationAvroStringableFields() throws Exception {
     check(RAvroStringableField.class, "{\"type\":\"record\",\"name\":\"RAvroNameCollide\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect$\",\"fields\":[" 
+          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":["
           +"{\"name\":\"a\",\"type\":\"String\"}]}");
   }
-  
-  
-  
+
+
+
 
   private void check(Object o, String schemaJson) {
     check(o.getClass(), schemaJson);
@@ -557,15 +586,15 @@ public class TestReflect {
   @Test
   public void testRecordIO() throws IOException {
     Schema schm = ReflectData.get().getSchema(SampleRecord.class);
-    ReflectDatumWriter<SampleRecord> writer = 
-      new ReflectDatumWriter<SampleRecord>(schm);
+    ReflectDatumWriter<SampleRecord> writer =
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     SampleRecord record = new SampleRecord();
     record.x = 5;
     record.y = 10;
     writer.write(record, factory.directBinaryEncoder(out, null));
-    ReflectDatumReader<SampleRecord> reader = 
-      new ReflectDatumReader<SampleRecord>(schm);
+    ReflectDatumReader<SampleRecord> reader =
+      new ReflectDatumReader<>(schm);
     SampleRecord decoded =
       reader.read(null, DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
@@ -575,19 +604,19 @@ public class TestReflect {
   public static class AvroEncRecord {
     @AvroEncode(using=DateAsLongEncoding.class)
     java.util.Date date;
-    
-    @Override 
+
+    @Override
     public boolean equals(Object o) {
       if (!(o instanceof AvroEncRecord)) return false;
       return date.equals(((AvroEncRecord)o).date);
     }
   }
-  
+
   public static class multipleAnnotationRecord {
     @AvroIgnore
     @Stringable
     Integer i1;
-    
+
     @AvroIgnore
     @Nullable
     Integer i2;
@@ -595,27 +624,27 @@ public class TestReflect {
     @AvroIgnore
     @AvroName("j")
     Integer i3;
-    
+
     @AvroIgnore
     @AvroEncode(using=DateAsLongEncoding.class)
     java.util.Date i4;
-    
+
     @Stringable
     @Nullable
     Integer i5;
-    
+
     @Stringable
     @AvroName("j6")
-    Integer i6 = 6;    
-    
+    Integer i6 = 6;
+
     @Stringable
     @AvroEncode(using=DateAsLongEncoding.class)
     java.util.Date i7 = new java.util.Date(7L);
-    
+
     @Nullable
     @AvroName("j8")
-    Integer i8;    
-      
+    Integer i8;
+
     @Nullable
     @AvroEncode(using=DateAsLongEncoding.class)
     java.util.Date i9;
@@ -630,12 +659,12 @@ public class TestReflect {
     @AvroEncode(using=DateAsLongEncoding.class)
     java.util.Date i11;
   }
-  
+
   @Test
   public void testMultipleAnnotations() throws IOException {
     Schema schm = ReflectData.get().getSchema(multipleAnnotationRecord.class);
-    ReflectDatumWriter<multipleAnnotationRecord> writer = 
-      new ReflectDatumWriter<multipleAnnotationRecord>(schm);
+    ReflectDatumWriter<multipleAnnotationRecord> writer =
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     multipleAnnotationRecord record = new multipleAnnotationRecord();
     record.i1 = 1;
@@ -649,10 +678,10 @@ public class TestReflect {
     record.i9 = new java.util.Date(9L);
     record.i10 = new java.util.Date(10L);
     record.i11 = new java.util.Date(11L);
-    
+
     writer.write(record, factory.directBinaryEncoder(out, null));
-    ReflectDatumReader<multipleAnnotationRecord> reader = 
-      new ReflectDatumReader<multipleAnnotationRecord>(schm);
+    ReflectDatumReader<multipleAnnotationRecord> reader =
+      new ReflectDatumReader<>(schm);
       multipleAnnotationRecord decoded =
       reader.read(new multipleAnnotationRecord(), DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
@@ -668,39 +697,39 @@ public class TestReflect {
     assertTrue(decoded.i10.getTime() == 10);
     assertTrue(decoded.i11.getTime() == 11);
   }
-  
-  
+
+
   @Test
   public void testAvroEncodeInducing() throws IOException {
     Schema schm = ReflectData.get().getSchema(AvroEncRecord.class);
     assertEquals(schm.toString(), "{\"type\":\"record\",\"name\":\"AvroEncRecord\",\"namespace" +
-      "\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[{\"name\":\"date\"," +
+      "\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[{\"name\":\"date\"," +
       "\"type\":{\"type\":\"long\",\"CustomEncoding\":\"DateAsLongEncoding\"}}]}");
   }
-  
+
   @Test
   public void testAvroEncodeIO() throws IOException {
     Schema schm = ReflectData.get().getSchema(AvroEncRecord.class);
-    ReflectDatumWriter<AvroEncRecord> writer = 
-      new ReflectDatumWriter<AvroEncRecord>(schm);
+    ReflectDatumWriter<AvroEncRecord> writer =
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     AvroEncRecord record = new AvroEncRecord();
     record.date = new java.util.Date(948833323L);
     writer.write(record, factory.directBinaryEncoder(out, null));
-    ReflectDatumReader<AvroEncRecord> reader = 
-      new ReflectDatumReader<AvroEncRecord>(schm);
+    ReflectDatumReader<AvroEncRecord> reader =
+      new ReflectDatumReader<>(schm);
     AvroEncRecord decoded =
       reader.read(new AvroEncRecord(), DecoderFactory.get().binaryDecoder(
           out.toByteArray(), null));
     assertEquals(record, decoded);
   }
-  
+
   @Test
   public void testRecordWithNullIO() throws IOException {
     ReflectData reflectData = ReflectData.AllowNull.get();
     Schema schm = reflectData.getSchema(AnotherSampleRecord.class);
-    ReflectDatumWriter<AnotherSampleRecord> writer = 
-      new ReflectDatumWriter<AnotherSampleRecord>(schm);
+    ReflectDatumWriter<AnotherSampleRecord> writer =
+      new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     // keep record.a null and see if that works
     Encoder e = factory.directBinaryEncoder(out, null);
@@ -709,8 +738,8 @@ public class TestReflect {
     AnotherSampleRecord b = new AnotherSampleRecord(10);
     writer.write(b, e);
     e.flush();
-    ReflectDatumReader<AnotherSampleRecord> reader = 
-      new ReflectDatumReader<AnotherSampleRecord>(schm);
+    ReflectDatumReader<AnotherSampleRecord> reader =
+      new ReflectDatumReader<>(schm);
     ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
     Decoder d = DecoderFactory.get().binaryDecoder(in, null);
     AnotherSampleRecord decoded = reader.read(null, d);
@@ -761,7 +790,7 @@ public class TestReflect {
         return false;
       return true;
     }
-    
+
     public static class AnotherSampleRecord {
       private Integer a = null;
       private SampleRecord s = null;
@@ -823,7 +852,7 @@ public class TestReflect {
   }
 
   @Test(expected=AvroTypeException.class)
-  public void testOverloadedMethod() { 
+  public void testOverloadedMethod() {
     ReflectData.get().getProtocol(P3.class);
   }
 
@@ -847,7 +876,7 @@ public class TestReflect {
     ReflectData data = ReflectData.get();
     // define a record with a field that's a specific Y
     Schema schema = Schema.createRecord("Foo", "", "x.y.z", false);
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("f", data.getSchema(Y.class), "", null));
     schema.setFields(fields);
 
@@ -860,17 +889,17 @@ public class TestReflect {
     // test that this instance can be written & re-read
     checkBinary(schema, record);
   }
-  
+
   @Test
   public void testPrimitiveArray() throws Exception {
     testPrimitiveArrays(false);
   }
-  
+
   @Test
   public void testPrimitiveArrayBlocking() throws Exception {
     testPrimitiveArrays(true);
   }
-  
+
   private void testPrimitiveArrays(boolean blocking) throws Exception {
     testPrimitiveArray(boolean.class, blocking);
     testPrimitiveArray(byte.class, blocking);
@@ -951,16 +980,16 @@ public class TestReflect {
   /** Test Map with stringable key classes. */
   @Test public void testStringableMapKeys() throws Exception {
     M1 record = new M1();
-    record.integerKeyMap = new HashMap<Integer, String>(1);
+    record.integerKeyMap = new HashMap<>(1);
     record.integerKeyMap.put(10, "foo");
 
-    record.bigIntegerKeyMap = new HashMap<java.math.BigInteger, String>(1);
+    record.bigIntegerKeyMap = new HashMap<>(1);
     record.bigIntegerKeyMap.put(java.math.BigInteger.TEN, "bar");
 
-    record.bigDecimalKeyMap = new HashMap<java.math.BigDecimal, String>(1);
+    record.bigDecimalKeyMap = new HashMap<>(1);
     record.bigDecimalKeyMap.put(java.math.BigDecimal.ONE, "bigDecimal");
 
-    record.fileKeyMap = new HashMap<java.io.File, String>(1);
+    record.fileKeyMap = new HashMap<>(1);
     record.fileKeyMap.put(new java.io.File("foo.bar"), "file");
 
     ReflectData data = new ReflectData().addStringable(Integer.class);
@@ -984,10 +1013,10 @@ public class TestReflect {
       Object datum, boolean equals) throws IOException {
     checkBinary(reflectData, schema, datum, equals, false);
   }
-  
+
   private static void checkBinary(ReflectData reflectData, Schema schema,
       Object datum, boolean equals, boolean blocking) throws IOException {
-    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<Object>(schema);
+    ReflectDatumWriter<Object> writer = new ReflectDatumWriter<>(schema);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     if (!blocking) {
       writer.write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
@@ -998,7 +1027,7 @@ public class TestReflect {
     writer.write(datum, EncoderFactory.get().directBinaryEncoder(out, null));
     byte[] data = out.toByteArray();
 
-    ReflectDatumReader<Object> reader = new ReflectDatumReader<Object>(schema);
+    ReflectDatumReader<Object> reader = new ReflectDatumReader<>(schema);
     Object decoded = reader.read(null,
         DecoderFactory.get().binaryDecoder(data, null));
 
@@ -1026,26 +1055,88 @@ public class TestReflect {
   @AvroAlias(alias="a", space="")
   private static class AliasB { }
   @AvroAlias(alias="a")
-  private static class AliasC { }  
-  
+  private static class AliasC { }
+
   @Test
-  public void testAvroAlias() {
-    check(AliasA.class, "{\"type\":\"record\",\"name\":\"AliasA\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"b.a\"]}");
-    check(AliasB.class, "{\"type\":\"record\",\"name\":\"AliasB\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"a\"]}");
-    check(AliasC.class, "{\"type\":\"record\",\"name\":\"AliasC\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[],\"aliases\":[\"a\"]}");    
+  public void testAvroAliasOnClass() {
+    check(AliasA.class, "{\"type\":\"record\",\"name\":\"AliasA\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"aliases\":[\"b.a\"]}");
+    check(AliasB.class, "{\"type\":\"record\",\"name\":\"AliasB\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"aliases\":[\"a\"]}");
+    check(AliasC.class, "{\"type\":\"record\",\"name\":\"AliasC\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[],\"aliases\":[\"a\"]}");
+  }
+
+  private static class Z {}
+
+  @Test public void testDollarTerminatedNamespaceCompatibility() {
+    ReflectData data = ReflectData.get();
+    Schema s = new Schema.Parser().parse
+      ("{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[]}");
+    assertEquals(data.getSchema(data.getClass(s)).toString(),
+       "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
+  }
+
+  private static class ClassWithAliasOnField {
+    @AvroAlias(alias = "aliasName")
+    int primitiveField;
+  }
+
+  private static class ClassWithAliasAndNamespaceOnField {
+    @AvroAlias(alias = "aliasName", space = "forbidden.space.entry")
+    int primitiveField;
+  }
+
+  @Test
+  public void testAvroAliasOnField() {
+
+    Schema expectedSchema = SchemaBuilder.record(ClassWithAliasOnField.class.getSimpleName())
+        .namespace("org.apache.avro.reflect.TestReflect").fields().name("primitiveField").aliases("aliasName")
+        .type(Schema.create(org.apache.avro.Schema.Type.INT)).noDefault().endRecord();
+
+    check(ClassWithAliasOnField.class, expectedSchema.toString());
+  }
+
+  @Test(expected = AvroRuntimeException.class)
+  public void namespaceDefinitionOnFieldAliasMustThrowException() {
+    ReflectData.get().getSchema(ClassWithAliasAndNamespaceOnField.class);
   }
 
   private static class DefaultTest {
     @AvroDefault("1")
     int foo;
-  }  
-  
+  }
+
   @Test
   public void testAvroDefault() {
     check(DefaultTest.class,
           "{\"type\":\"record\",\"name\":\"DefaultTest\","
-          +"\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":["
+          +"\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":["
           +"{\"name\":\"foo\",\"type\":\"int\",\"default\":1}]}");
   }
 
+  public static class NullableBytesTest {
+    @Nullable
+    byte[] bytes;
+
+    NullableBytesTest() {
+    }
+
+    NullableBytesTest(byte[] bytes) {
+      this.bytes = bytes;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj instanceof NullableBytesTest
+              && Arrays.equals(((NullableBytesTest) obj).bytes, this.bytes);
+    }
+  }
+
+  @Test
+  public void testNullableByteArrayNotNullValue() throws Exception {
+    checkReadWrite(new NullableBytesTest("foo".getBytes()));
+  }
+
+  @Test
+  public void testNullableByteArrayNullValue() throws Exception {
+    checkReadWrite(new NullableBytesTest());
+  }
 }

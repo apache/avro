@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,10 +41,10 @@ import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
- * The AvroMultipleOutputs class simplifies writing Avro output data 
+ * The AvroMultipleOutputs class simplifies writing Avro output data
  * to multiple outputs
- * 
- * <p> 
+ *
+ * <p>
  * Case one: writing to additional outputs other than the job default output.
  *
  * Each additional output, or named output, may be configured with its own
@@ -53,14 +53,14 @@ import org.apache.hadoop.util.ReflectionUtils;
  * <p>
  * Case two: to write data to different files provided by user
  * </p>
- * 
+ *
  * <p>
- * AvroMultipleOutputs supports counters, by default they are disabled. The 
- * counters group is the {@link AvroMultipleOutputs} class name. The names of the 
- * counters are the same as the output name. These count the number of records 
- * written to each output name. 
+ * AvroMultipleOutputs supports counters, by default they are disabled. The
+ * counters group is the {@link AvroMultipleOutputs} class name. The names of the
+ * counters are the same as the output name. These count the number of records
+ * written to each output name.
  * </p>
- * 
+ *
  * Usage pattern for job submission:
  * <pre>
  *
@@ -72,18 +72,18 @@ import org.apache.hadoop.util.ReflectionUtils;
  * job.setMapperClass(MyAvroMapper.class);
  * job.setReducerClass(MyAvroReducer.class);
  * ...
- *  
+ *
  * Schema schema;
  * ...
  * // Defines additional single output 'avro1' for the job
  * AvroMultipleOutputs.addNamedOutput(job, "avro1", AvroKeyValueOutputFormat.class,
- * keyschema, valueSchema);  // valueSchema can be set to null if there only Key to be written 
+ * keyschema, valueSchema);  // valueSchema can be set to null if there only Key to be written
                                    to file in the RecordWriter
  *
  * // Defines additional output 'avro2' with different schema for the job
  * AvroMultipleOutputs.addNamedOutput(job, "avro2",
  *   AvroKeyOutputFormat.class,
- *   schema,null); 
+ *   schema,null);
  * ...
  *
  * job.waitForCompletion(true);
@@ -92,7 +92,7 @@ import org.apache.hadoop.util.ReflectionUtils;
  * <p>
  * Usage in Reducer:
  * <pre>
- * 
+ *
  * public class MyAvroReducer extends
  *   Reducer&lt;K, V, T, NullWritable&gt; {
  * private MultipleOutputs amos;
@@ -126,22 +126,22 @@ public class AvroMultipleOutputs{
 
   private static final String MULTIPLE_OUTPUTS = "avro.mapreduce.multipleoutputs";
 
-  private static final String MO_PREFIX = 
+  private static final String MO_PREFIX =
     "avro.mapreduce.multipleoutputs.namedOutput.";
 
   private static final String FORMAT = ".format";
-  private static final String COUNTERS_ENABLED = 
+  private static final String COUNTERS_ENABLED =
     "avro.mapreduce.multipleoutputs.counters";
 
   /**
    * Counters group used by the counters of MultipleOutputs.
    */
   private static final String COUNTERS_GROUP = AvroMultipleOutputs.class.getName();
-  
+
   /**
    * Cache for the taskContexts
    */
-  private Map<String, TaskAttemptContext> taskContexts = new HashMap<String, TaskAttemptContext>();
+  private Map<String, TaskAttemptContext> taskContexts = new HashMap<>();
 
   /**
    * Checks if a named output name is valid token.
@@ -181,7 +181,7 @@ public class AvroMultipleOutputs{
       throw new IllegalArgumentException("output name cannot be 'part'");
     }
   }
-  
+
   /**
    * Checks if a named output name is valid.
    *
@@ -204,7 +204,7 @@ public class AvroMultipleOutputs{
 
   // Returns list of channel names.
   private static List<String> getNamedOutputsList(JobContext job) {
-    List<String> names = new ArrayList<String>();
+    List<String> names = new ArrayList<>();
     StringTokenizer st = new StringTokenizer(
       job.getConfiguration().get(MULTIPLE_OUTPUTS, ""), " ");
     while (st.hasMoreTokens()) {
@@ -270,7 +270,7 @@ public class AvroMultipleOutputs{
 
   /**
    * Enables or disables counters for the named outputs.
-   * 
+   *
    * The counters group is the {@link AvroMultipleOutputs} class name.
    * The names of the counters are the same as the named outputs. These
    * counters count the number records written to each output name.
@@ -287,7 +287,7 @@ public class AvroMultipleOutputs{
    * Returns if the counters for the named outputs are enabled or not.
    * By default these counters are disabled.
    *
-   * @param job    the job 
+   * @param job    the job
    * @return TRUE if the counters are enabled, FALSE if they are disabled.
    */
   public static boolean getCountersEnabled(JobContext job) {
@@ -295,7 +295,7 @@ public class AvroMultipleOutputs{
   }
 
   /**
-   * Wraps RecordWriter to increment counters. 
+   * Wraps RecordWriter to increment counters.
    */
   @SuppressWarnings("unchecked")
   private static class RecordWriterWithCounter extends RecordWriter {
@@ -311,13 +311,13 @@ public class AvroMultipleOutputs{
     }
 
     @SuppressWarnings({"unchecked"})
-    public void write(Object key, Object value) 
+    public void write(Object key, Object value)
         throws IOException, InterruptedException {
       context.getCounter(COUNTERS_GROUP, counterName).increment(1);
       writer.write(key, value);
     }
 
-    public void close(TaskAttemptContext context) 
+    public void close(TaskAttemptContext context)
         throws IOException, InterruptedException {
       writer.close(context);
     }
@@ -329,7 +329,7 @@ public class AvroMultipleOutputs{
   private Set<String> namedOutputs;
   private Map<String, RecordWriter<?, ?>> recordWriters;
   private boolean countersEnabled;
-  
+
   /**
    * Creates and initializes multiple outputs support,
    * it should be instantiated in the Mapper/Reducer setup method.
@@ -340,8 +340,8 @@ public class AvroMultipleOutputs{
       TaskInputOutputContext<?, ?, ?, ?> context) {
     this.context = context;
     namedOutputs = Collections.unmodifiableSet(
-      new HashSet<String>(AvroMultipleOutputs.getNamedOutputsList(context)));
-    recordWriters = new HashMap<String, RecordWriter<?, ?>>();
+      new HashSet<>(AvroMultipleOutputs.getNamedOutputsList(context)));
+    recordWriters = new HashMap<>();
     countersEnabled = getCountersEnabled(context);
   }
 
@@ -350,7 +350,7 @@ public class AvroMultipleOutputs{
    *
    * Output path is a unique file generated for the namedOutput.
    * For example, {namedOutput}-(m|r)-{part-number}
-   * 
+   *
    * @param namedOutput the named output name
    * @param key         the key , value is NullWritable
    */
@@ -367,7 +367,7 @@ public class AvroMultipleOutputs{
    *
    * Output path is a unique file generated for the namedOutput.
    * For example, {namedOutput}-(m|r)-{part-number}
-   * 
+   *
    * @param namedOutput the named output name
    * @param key         the key
    * @param value       the value
@@ -380,7 +380,7 @@ public class AvroMultipleOutputs{
 
   /**
    * Write key and value to baseOutputPath using the namedOutput.
-   * 
+   *
    * @param namedOutput    the named output name
    * @param key            the key
    * @param value          the value
@@ -402,26 +402,26 @@ public class AvroMultipleOutputs{
 
   /**
    * Write key value to an output file name.
-   * 
-   * Gets the record writer from job's output format.  
+   *
+   * Gets the record writer from job's output format.
    * Job's output format should be a FileOutputFormat.
-   * 
+   *
    * @param key       the key
    * @param value     the value
    * @param baseOutputPath base-output path to write the record to.
    * Note: Framework will generate unique filename for the baseOutputPath
    */
-  public void write(Object key, Object value, String baseOutputPath) 
+  public void write(Object key, Object value, String baseOutputPath)
       throws IOException, InterruptedException {
         write(key, value, null, null, baseOutputPath);
   }
-  
+
   /**
    * Write key value to an output file name.
-   * 
+   *
    * Gets the record writer from job's output format. Job's output format should
    * be a FileOutputFormat.
-   * 
+   *
    * @param key   the key
    * @param value the value
    * @param keySchema   keySchema to use
@@ -441,13 +441,13 @@ public class AvroMultipleOutputs{
   }
 
   /**
-   * 
+   *
    * Gets the record writer from job's output format. Job's output format should
-   * be a FileOutputFormat.If the record writer implements Syncable then returns 
+   * be a FileOutputFormat.If the record writer implements Syncable then returns
    * the current position as a value that may be passed to DataFileReader.seek(long)
-   * otherwise returns -1. 
+   * otherwise returns -1.
    * Forces the end of the current block, emitting a synchronization marker.
-   * 
+   *
    * @param namedOutput   the namedOutput
    * @param baseOutputPath base-output path to write the record to. Note: Framework will
    *          generate unique filename for the baseOutputPath
@@ -472,12 +472,12 @@ public class AvroMultipleOutputs{
   // MultithreadedMapper.
   @SuppressWarnings("unchecked")
   private synchronized RecordWriter getRecordWriter(
-      TaskAttemptContext taskContext, String baseFileName) 
+      TaskAttemptContext taskContext, String baseFileName)
       throws IOException, InterruptedException {
-    
+
     // look for record-writer in the cache
     RecordWriter writer = recordWriters.get(baseFileName);
-    
+
     // If not in cache, create a new one
     if (writer == null) {
       // get the record writer from context output format
@@ -490,13 +490,13 @@ public class AvroMultipleOutputs{
       } catch (ClassNotFoundException e) {
         throw new IOException(e);
       }
- 
-      // if counters are enabled, wrap the writer with context 
-      // to increment counters 
+
+      // if counters are enabled, wrap the writer with context
+      // to increment counters
       if (countersEnabled) {
         writer = new RecordWriterWithCounter(writer, baseFileName, context);
       }
-      
+
       // add the record-writer to the cache
       recordWriters.put(baseFileName, writer);
     }
@@ -521,7 +521,7 @@ public class AvroMultipleOutputs{
 
   }
 
-   // Create a taskAttemptContext for the named output with 
+   // Create a taskAttemptContext for the named output with
    // output format and output key/value types put in the context
   @SuppressWarnings("deprecation")
   private TaskAttemptContext getContext(String nameOutput) throws IOException {
@@ -547,13 +547,13 @@ public class AvroMultipleOutputs{
     setSchema(job, keySchema, valSchema);
     taskContext = createTaskAttemptContext(
       job.getConfiguration(), context.getTaskAttemptID());
-    
+
     taskContexts.put(nameOutput, taskContext);
-    
+
     return taskContext;
   }
-  
-  private TaskAttemptContext createTaskAttemptContext(Configuration conf, 
+
+  private TaskAttemptContext createTaskAttemptContext(Configuration conf,
       TaskAttemptID taskId) {
     // Use reflection since the context types changed incompatibly between 1.0
     // and 2.0.
@@ -566,7 +566,7 @@ public class AvroMultipleOutputs{
       throw new IllegalStateException(e);
     }
   }
-  
+
   private Class<?> getTaskAttemptContextClass() {
     try {
       return Class.forName(
@@ -580,14 +580,14 @@ public class AvroMultipleOutputs{
       }
     }
   }
-  
+
   /**
    * Closes all the opened outputs.
-   * 
+   *
    * This should be called from cleanup method of map/reduce task.
    * If overridden subclasses must invoke <code>super.close()</code> at the
    * end of their <code>close()</code>
-   * 
+   *
    */
   @SuppressWarnings("unchecked")
   public void close() throws IOException, InterruptedException {
@@ -597,4 +597,4 @@ public class AvroMultipleOutputs{
   }
 }
 
- 
+

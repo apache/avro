@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -127,12 +127,12 @@ public class AvroJob {
     setInputReflect(job);
     setMapOutputReflect(job);
   }
-  
+
   /** Indicate that a job's input data should use reflect representation.*/
   public static void setInputReflect(JobConf job) {
     job.setBoolean(INPUT_IS_REFLECT, true);
   }
-  
+
   /** Indicate that a job's map output data should use reflect representation.*/
   public static void setMapOutputReflect(JobConf job) {
     job.setBoolean(MAP_OUTPUT_IS_REFLECT, true);
@@ -202,7 +202,7 @@ public class AvroJob {
   public static void setDataModelClass(JobConf job, Class<? extends GenericData> modelClass) {
     job.setClass(CONF_DATA_MODEL, modelClass, GenericData.class);
   }
-  
+
   /** Return the job's data model implementation class. */
   public static Class<? extends GenericData> getDataModelClass(Configuration conf) {
     return (Class<? extends GenericData>) conf.getClass(

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.avro.tool;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -42,16 +43,21 @@ public class SpecificCompilerTool implements Tool {
       List<String> args) throws Exception {
     if (args.size() < 3) {
       System.err
-          .println("Usage: [-encoding <outputencoding>] [-string] (schema|protocol) input... outputdir");
+          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] (schema|protocol) input... outputdir");
       System.err
           .println(" input - input files or directories");
       System.err
           .println(" outputdir - directory to write generated java");
+      System.err.println(" -encoding <outputencoding> - set the encoding of " +
+          "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
+      System.err.println(" -bigDecimal - use java.math.BigDecimal for " +
+          "decimal type instead of java.nio.ByteBuffer");
       return 1;
     }
 
     StringType stringType = StringType.CharSequence;
+    boolean useLogicalDecimal = false;
 
     int arg = 0;
 
@@ -67,8 +73,13 @@ public class SpecificCompilerTool implements Tool {
       arg++;
     }
 
+    if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
+      useLogicalDecimal = true;
+      arg++;
+    }
+
     String method = args.get(arg);
-    List<File> inputs = new ArrayList<File>();
+    List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
 
     for (int i = arg+1; i < args.size() - 1; i++) {
@@ -80,27 +91,33 @@ public class SpecificCompilerTool implements Tool {
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(schema);
-        compiler.setStringType(stringType);
-        if (encoding != null) {
-          compiler.setOutputCharacterEncoding(encoding);
-        }
-        compiler.compileToDestination(src, output);
+        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(protocol);
-        compiler.setStringType(stringType);
-        if (encoding != null) {
-          compiler.setOutputCharacterEncoding(encoding);
-        }
-        compiler.compileToDestination(src, output);
+        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
       }
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
       return 1;
     }
     return 0;
+  }
+
+  private void executeCompiler(SpecificCompiler compiler,
+                               String encoding,
+                               StringType stringType,
+                               boolean enableDecimalLogicalType,
+                               File src,
+                               File output) throws IOException {
+    compiler.setStringType(stringType);
+    compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+    if (encoding != null) {
+      compiler.setOutputCharacterEncoding(encoding);
+    }
+    compiler.compileToDestination(src, output);
   }
 
   @Override
@@ -122,7 +139,7 @@ public class SpecificCompilerTool implements Tool {
    * @return Unique array of files
    */
   private static File[] determineInputs(List<File> inputs, FilenameFilter filter) {
-    Set<File> fileSet = new LinkedHashSet<File>(); // preserve order and uniqueness
+    Set<File> fileSet = new LinkedHashSet<>(); // preserve order and uniqueness
 
     for (File file : inputs) {
       // if directory, look at contents to see what files match extension

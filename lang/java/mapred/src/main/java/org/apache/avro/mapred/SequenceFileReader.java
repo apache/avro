@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -127,7 +127,7 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
 
     Pair<K,V> result = reuse;
     if (result == null)
-      result = new Pair<K,V>(schema);
+      result = new Pair<>(schema);
 
     result.key(keyConverter.convert(key));
     reader.getCurrentValue(value);
@@ -148,7 +148,7 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
       reader.sync(position);
     ready = false;
   }
-  
+
   @Override public boolean pastSync(long position) throws IOException {
     return reader.getPosition() >= position && reader.syncSeen();
   }
@@ -156,7 +156,7 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
   @Override public long tell() throws IOException {return reader.getPosition();}
 
   private static final Map<Type,Schema> WRITABLE_SCHEMAS =
-    new HashMap<Type,Schema>();
+    new HashMap<>();
   static {
     WRITABLE_SCHEMAS.put(NullWritable.class,
                          Schema.create(Schema.Type.NULL));
@@ -179,7 +179,7 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
   private static class WritableData extends ReflectData {
     private static final WritableData INSTANCE = new WritableData();
     protected WritableData() {}
-    
+
     /** Return the singleton instance. */
     public static WritableData get() { return INSTANCE; }
 
@@ -194,9 +194,9 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
   private interface Converter<T> {
     T convert(Writable o);
   }
-  
+
   private static final Map<Type,Converter> WRITABLE_CONVERTERS =
-    new HashMap<Type,Converter>();
+    new HashMap<>();
   static {
     WRITABLE_CONVERTERS.put
       (NullWritable.class,

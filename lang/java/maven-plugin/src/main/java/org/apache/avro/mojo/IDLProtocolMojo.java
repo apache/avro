@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from AvroIDL files (.avdl)
- * 
+ *
  * @goal idl-protocol
  * @requiresDependencyResolution runtime
  * @phase generate-sources
@@ -46,16 +46,16 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avdl</code> is used to select IDL files.
-   * 
+   *
    * @parameter
    */
   private String[] includes = new String[] { "**/*.avdl" };
-  
+
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
    * directory for processing. By default, the pattern
    * <code>**&#47;*.avdl</code> is used to select IDL files.
-   * 
+   *
    * @parameter
    */
   private String[] testIncludes = new String[] { "**/*.avdl" };
@@ -67,7 +67,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       List runtimeClasspathElements = project.getRuntimeClasspathElements();
       Idl parser;
 
-      List<URL> runtimeUrls = new ArrayList<URL>();
+      List<URL> runtimeUrls = new ArrayList<>();
 
       // Add the source directory of avro files to the classpath so that
       // imports can refer to other idl files as classpath resources
@@ -93,6 +93,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       compiler.setTemplateDir(templateDirectory);
       compiler.setFieldVisibility(getFieldVisibility());
       compiler.setCreateSetters(createSetters);
+      compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
       compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);

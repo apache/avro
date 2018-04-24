@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -38,7 +38,7 @@ public abstract class GenericResponder extends Responder {
 
   public GenericResponder(Protocol local) {
     this(local, GenericData.get());
-    
+
   }
 
   public GenericResponder(Protocol local, GenericData data) {
@@ -49,11 +49,11 @@ public abstract class GenericResponder extends Responder {
   public GenericData getGenericData() { return data; }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new GenericDatumWriter<Object>(schema, data);
+    return new GenericDatumWriter<>(schema, data);
   }
 
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
-    return new GenericDatumReader<Object>(actual, expected, data);
+    return new GenericDatumReader<>(actual, expected, data);
   }
 
   @Override

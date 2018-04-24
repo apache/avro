@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,15 +49,15 @@ public class AvroUtf8InputFormat
     RecordReader<AvroWrapper<Utf8>, NullWritable> {
 
     private LineRecordReader lineRecordReader;
-    
+
     private LongWritable currentKeyHolder = new LongWritable();
     private Text currentValueHolder = new Text();
-    
-    public Utf8LineRecordReader(Configuration job, 
+
+    public Utf8LineRecordReader(Configuration job,
         FileSplit split) throws IOException {
       this.lineRecordReader = new LineRecordReader(job, split);
     }
-    
+
     public void close() throws IOException {
       lineRecordReader.close();
     }
@@ -85,7 +85,7 @@ public class AvroUtf8InputFormat
 
     @Override
     public AvroWrapper<Utf8> createKey() {
-      return new AvroWrapper<Utf8>(null);
+      return new AvroWrapper<>(null);
     }
 
     @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,16 +46,16 @@ public class AvroTrevniKeyValueRecordWriter <K, V> extends AvroTrevniRecordWrite
 
   /** The writer schema for the generic record entries of the Trevni container file. */
   Schema mKeyValuePairSchema;
-  
+
   /** A reusable Avro generic record for writing key/value pairs to the file. */
   AvroKeyValue<Object, Object> keyValueRecord;
-  
+
   /** A helper object that converts the input key to an Avro datum. */
   AvroDatumConverter<K, ?> keyConverter;
-  
+
   /** A helper object that converts the input value to an Avro datum. */
   AvroDatumConverter<V, ?> valueConverter;
-    
+
   /**
    * Constructor.
    * @param context The TaskAttempContext to supply the writer with information form the job configuration
@@ -63,30 +63,30 @@ public class AvroTrevniKeyValueRecordWriter <K, V> extends AvroTrevniRecordWrite
   public AvroTrevniKeyValueRecordWriter(TaskAttemptContext context)
       throws IOException {
     super(context);
-    
+
     mKeyValuePairSchema = initSchema(context);
-    keyValueRecord  = new AvroKeyValue<Object, Object>(new GenericData.Record(mKeyValuePairSchema));
+    keyValueRecord  = new AvroKeyValue<>(new GenericData.Record(mKeyValuePairSchema));
   }
-  
+
   /** {@inheritDoc} */
   @Override
   public void write(AvroKey<K> key, AvroValue<V> value) throws IOException,
       InterruptedException {
-    
+
     keyValueRecord.setKey(key.datum());
     keyValueRecord.setValue(value.datum());
     writer.write(keyValueRecord.get());
     if (writer.sizeEstimate() >= blockSize) // block full
       flush();
   }
-  
+
   /** {@inheritDoc} */
   @SuppressWarnings("unchecked")
   @Override
   protected Schema initSchema(TaskAttemptContext context) {
     AvroDatumConverterFactory converterFactory = new AvroDatumConverterFactory(
         context.getConfiguration());
-    
+
     keyConverter = converterFactory.create((Class<K>) context
         .getOutputKeyClass());
     valueConverter = converterFactory.create((Class<V>) context
@@ -95,7 +95,7 @@ public class AvroTrevniKeyValueRecordWriter <K, V> extends AvroTrevniRecordWrite
     // Create the generic record schema for the key/value pair.
     return AvroKeyValue.getSchema(
         keyConverter.getWriterSchema(), valueConverter.getWriterSchema());
-    
+
   }
-  
+
 }

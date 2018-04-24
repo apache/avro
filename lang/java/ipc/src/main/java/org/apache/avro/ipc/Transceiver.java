@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,14 +31,14 @@ public abstract class Transceiver implements Closeable {
   private final ReentrantLock channelLock = new ReentrantLock();
 
   public abstract String getRemoteName() throws IOException;
-  
+
   /**
    * Acquires an exclusive lock on the transceiver's channel.
    */
   public void lockChannel() {
     channelLock.lock();
   }
-  
+
   /**
    * Releases the lock on the transceiver's channel if held by the calling thread.
    */
@@ -61,8 +61,8 @@ public abstract class Transceiver implements Closeable {
       unlockChannel();
     }
   }
-  
-  /** 
+
+  /**
    * Called by {@link Requestor#request(String,Object,Callback)} for two-way messages using callbacks.
    */
   public void transceive(List<ByteBuffer> request, Callback<List<ByteBuffer>> callback)

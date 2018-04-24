@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,7 +27,7 @@ import java.util.Arrays;
 import org.junit.Test;
 
 public class TestRpcReceiveAndSendTools {
-  
+
   /**
    * Starts a server (using the tool) and sends a single message to it.
    */
@@ -38,7 +38,7 @@ public class TestRpcReceiveAndSendTools {
     ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
     PrintStream p1 = new PrintStream(baos1);
     RpcReceiveTool receive = new RpcReceiveTool();
-    receive.run1(null, p1, System.err, 
+    receive.run1(null, p1, System.err,
                  Arrays.asList("http://0.0.0.0:0/",
                                protocolFile, "hello",
                                "-data", "\"Hello!\""));
@@ -47,10 +47,10 @@ public class TestRpcReceiveAndSendTools {
     RpcSendTool send = new RpcSendTool();
     send.run(null, p2, System.err,
              Arrays.asList("http://127.0.0.1:"+receive.server.getPort()+"/",
-                           protocolFile, "hello",  
+                           protocolFile, "hello",
                            "-data", "{ \"greeting\": \"Hi!\" }"));
     receive.run2(System.err);
-    
+
     assertTrue(baos1.toString("UTF-8").replace("\r", "")
                .endsWith("hello\t{\"greeting\":\"Hi!\"}\n"));
     assertEquals("\"Hello!\"\n", baos2.toString("UTF-8").replace("\r", ""));

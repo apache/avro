@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,8 +26,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
 
-/** 
- * Implements DEFLATE (RFC1951) compression and decompression. 
+/**
+ * Implements DEFLATE (RFC1951) compression and decompression.
  *
  * Note that there is a distinction between RFC1951 (deflate)
  * and RFC1950 (zlib).  zlib adds an extra 2-byte header
@@ -37,7 +37,7 @@ import java.util.zip.InflaterOutputStream;
  * RFC1951.
  */
 class DeflateCodec extends Codec {
-  
+
   static class Option extends CodecFactory {
     private int compressionLevel;
 
@@ -55,7 +55,7 @@ class DeflateCodec extends Codec {
   private Deflater deflater;
   private Inflater inflater;
   //currently only do 'nowrap' -- RFC 1951, not zlib
-  private boolean nowrap = true; 
+  private boolean nowrap = true;
   private int compressionLevel;
 
   public DeflateCodec(int compressionLevel) {
@@ -84,7 +84,7 @@ class DeflateCodec extends Codec {
     ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
     return result;
   }
-  
+
   private void writeAndClose(ByteBuffer data, OutputStream to) throws IOException {
     byte[] input = data.array();
     int offset = data.arrayOffset() + data.position();
@@ -95,7 +95,7 @@ class DeflateCodec extends Codec {
       to.close();
     }
   }
-  
+
   // get and initialize the inflater for use.
   private Inflater getInflater() {
     if (null == inflater) {
@@ -113,7 +113,7 @@ class DeflateCodec extends Codec {
     deflater.reset();
     return deflater;
   }
-  
+
   // get and initialize the output buffer for use.
   private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
     if (null == outputBuffer) {
@@ -122,7 +122,7 @@ class DeflateCodec extends Codec {
     outputBuffer.reset();
     return outputBuffer;
   }
-  
+
   @Override
   public int hashCode() {
     return nowrap ? 0 : 1;
@@ -132,7 +132,7 @@ class DeflateCodec extends Codec {
   public boolean equals(Object obj) {
     if (this == obj)
       return true;
-    if (getClass() != obj.getClass())
+    if (obj == null || obj.getClass() != getClass())
       return false;
     DeflateCodec other = (DeflateCodec)obj;
     return (this.nowrap == other.nowrap);

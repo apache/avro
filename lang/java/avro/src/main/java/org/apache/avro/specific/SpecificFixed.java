@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,9 +35,9 @@ public abstract class SpecificFixed
   public SpecificFixed() {
     bytes(new byte[getSchema().getFixedSize()]);
   }
-  
+
   public SpecificFixed(byte[] bytes) {
-    bytes(bytes); 
+    bytes(bytes);
   }
 
   public void bytes(byte[] bytes) { this.bytes = bytes; }

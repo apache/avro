@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -96,7 +96,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         return old;
       }
       if (collectionClass.isAssignableFrom(ArrayList.class))
-        return new ArrayList<Object>();
+        return new ArrayList<>();
       return SpecificData.newInstance(collectionClass, schema);
     }
 
@@ -139,7 +139,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       // Only for non-string keys, we can use NS_MAP_* fields
       // So we check the samee explicitly here
       if (ReflectData.isNonStringMapSchema(expected)) {
-        Collection<Object> c = new ArrayList<Object> ();
+        Collection<Object> c = new ArrayList<>();
         readCollection(c, expectedType, l, in);
         Map m = (Map)array;
         for (Object ele: c) {
@@ -275,13 +275,13 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         if (accessor.isStringable()) {
           try {
             String asString = (String) read(null, f.schema(), in);
-            accessor.set(record, asString == null 
+            accessor.set(record, asString == null
               ? null
               : newInstanceFromString(accessor.getField().getType(), asString));
             return;
           } catch (Exception e) {
             throw new AvroRuntimeException("Failed to read Stringable", e);
-          } 
+          }
         }
         LogicalType logicalType = f.schema().getLogicalType();
         if (logicalType != null) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /** ResolvingGrammarGenerator tests that are not Parameterized.*/
-public class TestResolvingGrammarGenerator2 {  
+public class TestResolvingGrammarGenerator2 {
   @Test public void testFixed() throws java.io.IOException {
     new ResolvingGrammarGenerator().generate
       (Schema.createFixed("MyFixed", null, null, 10),

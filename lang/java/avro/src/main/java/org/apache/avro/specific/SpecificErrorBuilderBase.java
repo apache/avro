@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,18 +23,18 @@ import org.apache.avro.Schema;
 import org.apache.avro.data.ErrorBuilder;
 import org.apache.avro.data.RecordBuilderBase;
 
-/** 
+/**
  * Abstract base class for specific ErrorBuilder implementations.
  * Not thread-safe.
  */
-abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase> 
+abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
   extends RecordBuilderBase<T> implements ErrorBuilder<T> {
   private Constructor<T> errorConstructor;
   private Object value;
   private boolean hasValue;
   private Throwable cause;
   private boolean hasCause;
-  
+
   /**
    * Creates a SpecificErrorBuilderBase for building errors of the given type.
    * @param schema the schema associated with the error class.
@@ -42,7 +42,7 @@ abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
   protected SpecificErrorBuilderBase(Schema schema) {
     super(schema, SpecificData.get());
   }
-  
+
   /**
    * SpecificErrorBuilderBase copy constructor.
    * @param other SpecificErrorBuilderBase instance to copy.
@@ -55,19 +55,19 @@ abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
     this.cause = other.cause;
     this.hasCause = other.hasCause;
   }
-  
+
   /**
    * Creates a SpecificErrorBuilderBase by copying an existing error instance.
    * @param other the error instance to copy.
    */
   protected SpecificErrorBuilderBase(T other) {
     super(other.getSchema(), SpecificData.get());
-    
+
     Object otherValue = other.getValue();
     if (otherValue != null) {
       setValue(otherValue);
     }
-    
+
     Throwable otherCause = other.getCause();
     if (otherCause != null) {
       setCause(otherCause);
@@ -85,12 +85,12 @@ abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
     hasValue = true;
     return this;
   }
-  
+
   @Override
   public boolean hasValue() {
     return hasValue;
   }
-  
+
   @Override
   public SpecificErrorBuilderBase<T> clearValue() {
     value = null;
@@ -109,12 +109,12 @@ abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
     hasCause = true;
     return this;
   }
-  
+
   @Override
   public boolean hasCause() {
     return hasCause;
   }
-  
+
   @Override
   public SpecificErrorBuilderBase<T> clearCause() {
     cause = null;

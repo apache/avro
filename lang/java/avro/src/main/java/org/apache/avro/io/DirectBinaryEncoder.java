@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,7 +43,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
   private final byte[] buf = new byte[12];
 
   /** Create a writer that sends its output to the underlying stream
-   *  <code>out</code>. 
+   *  <code>out</code>.
    **/
   DirectBinaryEncoder(OutputStream out) {
     configure(out);
@@ -84,7 +84,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
   }
 
   /* buffering is slower for writeLong when the number is small enough to
-   * fit in an int. 
+   * fit in an int.
    * (Sun JRE 1.6u22, x64 -server) */
   @Override
   public void writeLong(long n) throws IOException {
@@ -101,7 +101,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
     int len = BinaryData.encodeLong(n, buf, 0);
     out.write(buf, 0, len);
   }
-  
+
   @Override
   public void writeFloat(float f) throws IOException {
     int len = BinaryData.encodeFloat(f, buf, 0);
@@ -110,7 +110,6 @@ public class DirectBinaryEncoder extends BinaryEncoder {
 
   @Override
   public void writeDouble(double d) throws IOException {
-    byte[] buf = new byte[8];
     int len = BinaryData.encodeDouble(d, buf, 0);
     out.write(buf, 0, len);
   }
@@ -124,7 +123,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
   protected void writeZero() throws IOException {
     out.write(0);
   }
-  
+
   @Override
   public int bytesBuffered() {
     return 0;

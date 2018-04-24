@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,6 +18,7 @@
 package org.apache.avro.data;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Iterator;
 
@@ -55,8 +56,12 @@ public class Json {
   public static final Schema SCHEMA;
   static {
     try {
-      SCHEMA = Schema.parse
-        (Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc"));
+      InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc");
+      try {
+        SCHEMA = Schema.parse(in);
+      } finally {
+        in.close();
+      }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
@@ -73,7 +78,7 @@ public class Json {
       if (!SCHEMA.equals(schema))
         throw new RuntimeException("Not the Json schema: "+schema);
     }
-    
+
     @Override
     public void write(JsonNode datum, Encoder out) throws IOException {
       Json.write(datum, out);
@@ -173,7 +178,7 @@ public class Json {
 
   /** Note: this enum must be kept aligned with the union in Json.avsc. */
   private enum JsonType { LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT }
-  
+
   /**
    * Write Json data as Avro data.
    * @deprecated internal method

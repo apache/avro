@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,12 +24,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
@@ -49,31 +48,31 @@ public class TestNettyServer {
   public static class MailImpl implements Mail {
 
     private CountDownLatch allMessages = new CountDownLatch(5);
-    
+
     // in this simple example just return details of the message
     public String send(Message message) {
-      return "Sent message to ["+ message.getTo().toString() + 
-          "] from [" + message.getFrom().toString() + "] with body [" + 
-          message.getBody().toString() + "]";
+      return "Sent message to ["+ message.getTo() +
+          "] from [" + message.getFrom() + "] with body [" +
+        message.getBody() + "]";
     }
-    
+
     public void fireandforget(Message message) {
       allMessages.countDown();
     }
-    
+
     private void awaitMessages() throws InterruptedException {
       allMessages.await(2, TimeUnit.SECONDS);
     }
-    
+
     private void assertAllMessagesReceived() {
       assertEquals(0, allMessages.getCount());
     }
 
     public void reset() {
-      allMessages = new CountDownLatch(5);      
+      allMessages = new CountDownLatch(5);
     }
   }
-  
+
   @BeforeClass
   public static void initializeConnections()throws Exception {
     // start server
@@ -82,23 +81,23 @@ public class TestNettyServer {
     Responder responder = new SpecificResponder(Mail.class, mailService);
     server = initializeServer(responder);
     server.start();
-  
+
     int serverPort = server.getPort();
     System.out.println("server port : " + serverPort);
 
     transceiver = initializeTransceiver(serverPort);
     proxy = SpecificRequestor.getClient(Mail.class, transceiver);
   }
-  
+
   protected static Server initializeServer(Responder responder) {
     return new NettyServer(responder, new InetSocketAddress(0));
   }
-  
+
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return new NettyTransceiver(new InetSocketAddress(
         serverPort), CONNECT_TIMEOUT_MILLIS);
   }
-  
+
   @AfterClass
   public static void tearDownConnections() throws Exception{
     transceiver.close();
@@ -115,9 +114,9 @@ public class TestNettyServer {
   private void verifyResponse(String result) {
     Assert.assertEquals(
         "Sent message to [wife] from [husband] with body [I love you!]",
-        result.toString());
+        result);
   }
-  
+
   @Test
   public void testOneway() throws Exception {
     for (int x = 0; x < 5; x++) {
@@ -126,7 +125,7 @@ public class TestNettyServer {
     mailService.awaitMessages();
     mailService.assertAllMessagesReceived();
   }
-  
+
   @Test
   public void testMixtureOfRequests() throws Exception {
     mailService.reset();
@@ -149,7 +148,16 @@ public class TestNettyServer {
     proxy2.fireandforget(createMessage());
     Assert.assertEquals(2, ((NettyServer) server).getNumActiveConnections());
     transceiver2.close();
-    Assert.assertEquals(1, ((NettyServer) server).getNumActiveConnections());
+
+    // Check the active connections with some retries as closing at the client
+    // side might not take effect on the server side immediately
+    int numActiveConnections = ((NettyServer) server).getNumActiveConnections();
+    for (int i = 0; i < 50 && numActiveConnections == 2; ++i) {
+      System.out.println("Server still has 2 active connections; retrying...");
+      Thread.sleep(100);
+      numActiveConnections = ((NettyServer) server).getNumActiveConnections();
+    }
+    Assert.assertEquals(1, numActiveConnections);
   }
 
   private Message createMessage() {

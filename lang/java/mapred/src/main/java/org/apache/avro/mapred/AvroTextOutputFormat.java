@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,12 +49,12 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
     throws IOException {
 
     Schema schema = Schema.create(Schema.Type.BYTES);
-    
+
     final byte[] keyValueSeparator =
       job.get("mapreduce.output.textoutputformat.separator", "\t").getBytes(UTF8);
 
     final DataFileWriter<ByteBuffer> writer =
-      new DataFileWriter<ByteBuffer>(new ReflectDatumWriter<ByteBuffer>());
+      new DataFileWriter<>(new ReflectDatumWriter<>());
 
     AvroOutputFormat.configureDataFileWriter(writer, job);
 
@@ -63,17 +63,17 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
     return new AvroTextRecordWriter(writer, keyValueSeparator);
   }
-  
+
   class AvroTextRecordWriter implements RecordWriter<K, V> {
     private final DataFileWriter<ByteBuffer> writer;
     private final byte[] keyValueSeparator;
-    
+
     public AvroTextRecordWriter(DataFileWriter<ByteBuffer> writer,
         byte[] keyValueSeparator) {
       this.writer = writer;
       this.keyValueSeparator = keyValueSeparator;
     }
-    
+
     public void write(K key, V value) throws IOException {
       boolean nullKey = key == null || key instanceof NullWritable;
       boolean nullValue = value == null || value instanceof NullWritable;
@@ -87,11 +87,11 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         writer.append(toByteBuffer(key, keyValueSeparator, value));
       }
     }
-    
+
     public void close(Reporter reporter) throws IOException {
       writer.close();
     }
-    
+
     private ByteBuffer toByteBuffer(Object o) throws IOException {
       if (o instanceof Text) {
         Text to = (Text) o;
@@ -100,7 +100,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         return ByteBuffer.wrap(o.toString().getBytes(UTF8));
       }
     }
-    
+
     private ByteBuffer toByteBuffer(Object key, byte[] sep, Object value)
         throws IOException {
       byte[] keyBytes, valBytes;

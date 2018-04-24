@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -57,17 +57,17 @@ public final class SchemaValidatorBuilder {
     this.strategy = new ValidateMutualRead();
     return this;
   }
-  
+
   public SchemaValidator validateLatest() {
     valid();
     return new ValidateLatest(strategy);
   }
-  
+
   public SchemaValidator validateAll() {
     valid();
     return new ValidateAll(strategy);
   }
-  
+
   private void valid() {
     if(null == strategy) {
       throw new AvroRuntimeException("SchemaValidationStrategy not specified in builder");

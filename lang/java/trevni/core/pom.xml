@@ -37,21 +37,12 @@
       <artifactId>snappy-java</artifactId>
       <version>${snappy.version}</version>
       <scope>compile</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 
   <profiles>
   </profiles>

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,7 +34,7 @@ public class ColumnValues<T extends Comparable>
   private InputBuffer values;
   private int block = -1;
   private long row = 0;
-  private T previous; 
+  private T previous;
 
   private int arrayLength;
 
@@ -142,7 +142,7 @@ public class ColumnValues<T extends Comparable>
   /** Expert: Returns the next value in a column. */
   public T nextValue() throws IOException {
     arrayLength--;
-    return previous = values.<T>readValue(type);
+    return previous = values.readValue(type);
   }
 
   @Override public void remove() { throw new UnsupportedOperationException(); }

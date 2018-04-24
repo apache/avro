@@ -65,13 +65,13 @@ namespace Avro.File
         public enum Type
         {
             Deflate,
-            //Snappy 
+            //Snappy
             Null
         };
 
         /// <summary>
         /// Factory method to return child
-        /// codec instance based on Codec.Type  
+        /// codec instance based on Codec.Type
         /// </summary>
         /// <param name="codecType"></param>
         /// <returns></returns>
@@ -88,7 +88,7 @@ namespace Avro.File
 
         /// <summary>
         /// Factory method to return child
-        /// codec instance based on string type  
+        /// codec instance based on string type
         /// </summary>
         /// <param name="codecType"></param>
         /// <returns></returns>

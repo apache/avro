@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,7 @@ import org.apache.avro.util.Utf8;
  * (See {@link #writeArrayStart} for details on these methods.)
  * <p/>
  * {@link EncoderFactory} contains Encoder construction and configuration
- * facilities.  
+ * facilities.
  *  @see EncoderFactory
  *  @see Decoder
  */
@@ -53,7 +53,7 @@ public abstract class Encoder implements Flushable {
    *         null is not expected
    */
   public abstract void writeNull() throws IOException;
-  
+
   /**
    * Write a boolean value.
    * @throws AvroTypeException If this is a stateful writer and a
@@ -74,9 +74,9 @@ public abstract class Encoder implements Flushable {
    * long is not expected
    */
   public abstract void writeLong(long n) throws IOException;
-  
+
   /** Write a float.
-   * @throws IOException 
+   * @throws IOException
    * @throws AvroTypeException If this is a stateful writer and a
    * float is not expected
    */
@@ -98,7 +98,7 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a Unicode character string.  The default implementation converts
-   * the String to a {@link org.apache.avro.util.Utf8}.  Some Encoder 
+   * the String to a {@link org.apache.avro.util.Utf8}.  Some Encoder
    * implementations may want to do something different as a performance optimization.
    * @throws AvroTypeException If this is a stateful writer and a
    * char-string is not expected
@@ -120,25 +120,25 @@ public abstract class Encoder implements Flushable {
     else
       writeString(charSequence.toString());
   }
-  
+
   /**
    * Write a byte string.
    * @throws AvroTypeException If this is a stateful writer and a
    *         byte-string is not expected
    */
   public abstract void writeBytes(ByteBuffer bytes) throws IOException;
-  
+
   /**
    * Write a byte string.
    * @throws AvroTypeException If this is a stateful writer and a
    * byte-string is not expected
    */
   public abstract void writeBytes(byte[] bytes, int start, int len) throws IOException;
-  
+
   /**
    * Writes a byte string.
    * Equivalent to <tt>writeBytes(bytes, 0, bytes.length)</tt>
-   * @throws IOException 
+   * @throws IOException
    * @throws AvroTypeException If this is a stateful writer and a
    * byte-string is not expected
    */
@@ -165,7 +165,7 @@ public abstract class Encoder implements Flushable {
   public void writeFixed(byte[] bytes) throws IOException {
     writeFixed(bytes, 0, bytes.length);
   }
-  
+
   /** Writes a fixed from a ByteBuffer. */
   public void writeFixed(ByteBuffer bytes) throws IOException {
     int pos = bytes.position();
@@ -225,12 +225,12 @@ public abstract class Encoder implements Flushable {
    * to {@link #startItem()} must be equal to the count specified
    * in {@link #setItemCount}. Once a batch is completed you
    * can start another batch with {@link #setItemCount}.
-   * 
+   *
    * @param itemCount The number of {@link #startItem()} calls to follow.
    * @throws IOException
    */
   public abstract void setItemCount(long itemCount) throws IOException;
-  
+
   /**
    * Start a new item of an array or map.
    * See {@link #writeArrayStart} for usage information.

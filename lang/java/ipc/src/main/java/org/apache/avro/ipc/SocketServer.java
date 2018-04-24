@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -83,7 +83,7 @@ public class SocketServer extends Thread implements Server {
   }
 
   public void close() {
-    this.interrupt(); 
+    this.interrupt();
     group.interrupt();
   }
 
@@ -128,7 +128,7 @@ public class SocketServer extends Thread implements Server {
     }
 
   }
-  
+
   public static void main(String[] arg) throws Exception {
     Responder responder =
       new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {

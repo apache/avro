@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -89,14 +89,14 @@ public class AvroColumnWriter<D> {
     assert(count == writer.getColumnCount());
     writer.endRow();
   }
-  
+
   private int write(Object o, Schema s, int column) throws IOException {
     if (isSimple(s)) {
       writeValue(o, s, column);
       return column+1;
     }
     switch (s.getType()) {
-    case MAP: 
+    case MAP:
       Map<?,?> map = (Map)o;
       writer.writeLength(map.size(), column);
       for (Map.Entry e : map.entrySet()) {
@@ -106,11 +106,11 @@ public class AvroColumnWriter<D> {
         assert(c == column+arrayWidths[column]);
       }
       return column+arrayWidths[column];
-    case RECORD: 
+    case RECORD:
       for (Field f : s.getFields())
         column = write(model.getField(o,f.name(),f.pos()), f.schema(), column);
       return column;
-    case ARRAY: 
+    case ARRAY:
       Collection elements = (Collection)o;
       writer.writeLength(elements.size(), column);
       if (isSimple(s.getElementType())) {         // optimize simple arrays
@@ -151,7 +151,7 @@ public class AvroColumnWriter<D> {
 
   private void writeValue(Object value, Schema s, int column)
     throws IOException {
-    
+
     switch (s.getType()) {
     case STRING:
       if (value instanceof Utf8)                    // convert Utf8 to String
@@ -160,7 +160,7 @@ public class AvroColumnWriter<D> {
     case ENUM:
       if (value instanceof Enum)
         value = ((Enum)value).ordinal();
-      else 
+      else
         value = s.getEnumOrdinal(value.toString());
       break;
     case FIXED:

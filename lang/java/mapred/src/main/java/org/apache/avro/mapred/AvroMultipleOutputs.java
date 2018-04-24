@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,10 +42,10 @@ import org.apache.hadoop.io.NullWritable;
 
 
 /**
- * The AvroMultipleOutputs class simplifies writing Avro output data 
+ * The AvroMultipleOutputs class simplifies writing Avro output data
  * to multiple outputs
- * 
- * <p> 
+ *
+ * <p>
  * Case one: writing to additional outputs other than the job default output.
  *
  * Each additional output, or named output, may be configured with its own
@@ -57,16 +57,16 @@ import org.apache.hadoop.io.NullWritable;
  * <p>
  * Case two: to write data to different files provided by user
  * </p>
- * 
+ *
  * <p>
- * AvroMultipleOutputs supports counters, by default they are disabled. The 
- * counters group is the {@link AvroMultipleOutputs} class name. The names of the 
- * counters are the same as the output name. These count the number of records 
+ * AvroMultipleOutputs supports counters, by default they are disabled. The
+ * counters group is the {@link AvroMultipleOutputs} class name. The names of the
+ * counters are the same as the output name. These count the number of records
  * written to each output name. For multi
  * named outputs the name of the counter is the concatenation of the named
  * output, and underscore '_' and the multiname.
  * </p>
- * 
+ *
  * Usage pattern for job submission:
  * <pre>
  *
@@ -79,7 +79,7 @@ import org.apache.hadoop.io.NullWritable;
  * job.setReducerClass(HadoopReducer.class);
  * job.set("avro.reducer",MyAvroReducer.class);
  * ...
- *  
+ *
  * Schema schema;
  * ...
  * // Defines additional single output 'avro1' for the job
@@ -98,7 +98,7 @@ import org.apache.hadoop.io.NullWritable;
  * <p>
  * Usage in Reducer:
  * <pre>
- * 
+ *
  * public class MyAvroReducer extends
  *   AvroReducer&lt;K, V, OUT&gt; {
  * private MultipleOutputs amos;
@@ -140,8 +140,8 @@ public class AvroMultipleOutputs {
   private static final String MULTI = ".multi";
 
   private static final String COUNTERS_ENABLED = "mo.counters";
- 
- 
+
+
   /**
    * Counters group used by the counters of MultipleOutputs.
    */
@@ -218,7 +218,7 @@ public class AvroMultipleOutputs {
    * @return List of channel Names
    */
   public static List<String> getNamedOutputsList(JobConf conf) {
-    List<String> names = new ArrayList<String>();
+    List<String> names = new ArrayList<>();
     StringTokenizer st = new StringTokenizer(conf.get(NAMED_OUTPUTS, ""), " ");
     while (st.hasMoreTokens()) {
       names.add(st.nextToken());
@@ -376,8 +376,8 @@ public class AvroMultipleOutputs {
     this.conf = job;
     outputFormat = new InternalFileOutputFormat();
     namedOutputs = Collections.unmodifiableSet(
-      new HashSet<String>(AvroMultipleOutputs.getNamedOutputsList(job)));
-    recordWriters = new HashMap<String, RecordWriter>();
+      new HashSet<>(AvroMultipleOutputs.getNamedOutputsList(job)));
+    recordWriters = new HashMap<>();
     countersEnabled = getCountersEnabled(job);
   }
 
@@ -444,7 +444,7 @@ public class AvroMultipleOutputs {
       writer.close(reporter);
     }
   }
-  
+
   /**
    * Output Collector for the default schema.
    * <p/>
@@ -457,7 +457,7 @@ public class AvroMultipleOutputs {
   public void collect(String namedOutput, Reporter reporter,Object datum) throws IOException{
     getCollector(namedOutput,reporter).collect(datum);
   }
-  
+
   /**
    * OutputCollector with custom schema.
    * <p/>
@@ -471,7 +471,7 @@ public class AvroMultipleOutputs {
   public void collect(String namedOutput, Reporter reporter, Schema schema,Object datum) throws IOException{
     getCollector(namedOutput,reporter,schema).collect(datum);
   }
-  
+
   /**
    * OutputCollector with custom schema and file name.
    * <p/>
@@ -486,7 +486,7 @@ public class AvroMultipleOutputs {
   public void collect(String namedOutput,Reporter reporter,Schema schema,Object datum,String baseOutputPath) throws IOException{
     getCollector(namedOutput,null,reporter,baseOutputPath,schema).collect(datum);
   }
-  
+
   /**
    * Gets the output collector for a named output.
    * <p/>
@@ -508,14 +508,14 @@ public class AvroMultipleOutputs {
       throws IOException{
     return getCollector(namedOutput,null,reporter,namedOutput,schema);
   }
-  
+
   /**
    * Gets the output collector for a named output.
    * <p/>
    *
    * @param namedOutput the named output name
    * @param reporter    the reporter
-   * @param multiName   the multiname 
+   * @param multiName   the multiname
    * @return the output collector for the given named output
    * @throws IOException thrown if output collector could not be created
    */
@@ -530,8 +530,8 @@ public class AvroMultipleOutputs {
       throws IOException{
     //namedOutputs.add(baseFileName);
     return getCollector(namedOutput,null,reporter,baseFileName,schema);
-  }  
-  
+  }
+
   /**
    * Gets the output collector for a multi named output.
    * <p/>
@@ -568,18 +568,18 @@ public class AvroMultipleOutputs {
       getRecordWriter(namedOutput, baseFileName, reporter,schema);
 
     return new AvroCollector() {
-   
+
       @SuppressWarnings({"unchecked"})
       public void collect(Object key) throws IOException{
        AvroWrapper wrapper = new AvroWrapper(key);
        writer.write(wrapper, NullWritable.get());
       }
-      
+
       public void collect(Object key,Object value) throws IOException
       {
         writer.write(key,value);
-      }  
-    
+      }
+
     };
   }
 
@@ -597,7 +597,7 @@ public class AvroMultipleOutputs {
       writer.close(null);
     }
   }
-  
+
   private static class InternalFileOutputFormat extends FileOutputFormat<Object, Object> {
    public static final String CONFIG_NAMED_OUTPUT = "mo.config.namedOutput";
 
@@ -620,7 +620,7 @@ public class AvroMultipleOutputs {
    }
    OutputFormat outputFormat = outputConf.getOutputFormat();
    return outputFormat.getRecordWriter(fs, outputConf, fileName, arg3);
-   }   
+   }
   }
 }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -66,7 +66,7 @@ public class ColumnFileReader implements Closeable {
 
   /** Return root columns' metadata.  Roots are columns that have no parent. */
   public List<ColumnMetaData> getRoots() {
-    List<ColumnMetaData> result = new ArrayList<ColumnMetaData>();
+    List<ColumnMetaData> result = new ArrayList<>();
     for (int i = 0; i < columnCount; i++)
       if (columns[i].metaData.getParent() == null)
         result.add(columns[i].metaData);
@@ -96,7 +96,7 @@ public class ColumnFileReader implements Closeable {
     this.rowCount = in.readFixed64();
     this.columnCount = in.readFixed32();
     this.metaData = ColumnFileMetaData.read(in);
-    this.columnsByName = new HashMap<String,ColumnDescriptor>(columnCount);
+    this.columnsByName = new HashMap<>(columnCount);
 
     columns = new ColumnDescriptor[columnCount];
     readColumnMetaData(in);
@@ -131,17 +131,17 @@ public class ColumnFileReader implements Closeable {
     for (int i = 0; i < columnCount; i++)
       columns[i].start = in.readFixed64();
   }
- 
+
   /** Return an iterator over values in the named column. */
   public <T extends Comparable> ColumnValues<T> getValues(String columnName)
     throws IOException {
-    return new ColumnValues<T>(getColumn(columnName));
+    return new ColumnValues<>(getColumn(columnName));
   }
 
   /** Return an iterator over values in a column. */
   public <T extends Comparable> ColumnValues<T> getValues(int column)
     throws IOException {
-    return new ColumnValues<T>(columns[column]);
+    return new ColumnValues<>(columns[column]);
   }
 
   @Override public void close() throws IOException {

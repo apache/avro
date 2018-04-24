@@ -20,7 +20,7 @@ module Avro
     VALID_TYPE_SCHEMA_TYPES_SYM = Set.new(VALID_TYPE_SCHEMA_TYPES.map(&:to_sym))
     class ProtocolParseError < Avro::AvroError; end
 
-    attr_reader :name, :namespace, :types, :messages, :md5
+    attr_reader :name, :namespace, :types, :messages, :md5, :doc
     def self.parse(protocol_string)
       json_data = MultiJson.load(protocol_string)
 
@@ -29,13 +29,14 @@ module Avro
         namespace = json_data['namespace']
         types = json_data['types']
         messages = json_data['messages']
-        Protocol.new(name, namespace, types, messages)
+        doc = json_data['doc']
+        Protocol.new(name, namespace, types, messages, doc)
       else
         raise ProtocolParseError, "Not a JSON object: #{json_data}"
       end
     end
 
-    def initialize(name, namespace=nil, types=nil, messages=nil)
+    def initialize(name, namespace=nil, types=nil, messages=nil, doc=nil)
       # Ensure valid ctor args
       if !name
         raise ProtocolParseError, 'Protocols must have a non-empty name.'
@@ -55,6 +56,7 @@ module Avro
       @types = parse_types(types, type_names)
       @messages = parse_messages(messages, type_names)
       @md5 = Digest::MD5.digest(to_s)
+      @doc = doc
     end
 
     def to_s
@@ -92,7 +94,8 @@ module Avro
         request  = body['request']
         response = body['response']
         errors   = body['errors']
-        message_objects[name] = Message.new(name, request, response, errors, names, namespace)
+        doc      = body['doc']
+        message_objects[name] = Message.new(name, request, response, errors, names, namespace, doc)
       end
       message_objects
     end
@@ -111,14 +114,15 @@ module Avro
     end
 
     class Message
-      attr_reader :name, :request, :response, :errors, :default_namespace
+      attr_reader :name, :request, :response, :errors, :default_namespace, :doc
 
-      def initialize(name, request, response, errors=nil, names=nil, default_namespace=nil)
+      def initialize(name, request, response, errors=nil, names=nil, default_namespace=nil, doc=nil)
         @name = name
         @default_namespace = default_namespace
         @request = parse_request(request, names)
         @response = parse_response(response, names)
         @errors = parse_errors(errors, names) if errors
+        @doc = doc
       end
 
       def to_avro(names=Set.new)
@@ -127,6 +131,7 @@ module Avro
           'response' => response.to_avro(names)
         }.tap do |hash|
           hash['errors'] = errors.to_avro(names) if errors
+          hash['doc'] = @doc if @doc
         end
       end
 

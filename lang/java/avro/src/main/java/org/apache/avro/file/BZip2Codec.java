@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -69,11 +69,11 @@ public class BZip2Codec extends Codec {
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
       int readCount = -1;
-      
+
       while ( (readCount = inputStream.read(buffer, compressedData.position(), buffer.length))> 0) {
         baos.write(buffer, 0, readCount);
       }
-      
+
       ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
       return result;
     } finally {
@@ -87,7 +87,7 @@ public class BZip2Codec extends Codec {
   public boolean equals(Object obj) {
     if (this == obj)
       return true;
-    if (getClass() != obj.getClass())
+    if (obj == null || obj.getClass() != getClass())
       return false;
     return true;
   }

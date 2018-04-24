@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,7 +42,7 @@ public class TetherJob extends Configured {
   public static final String TETHER_EXEC_ARGS="avro.tether.executable_args";
   public static final String TETHER_EXEC_CACHED="avro.tether.executable_cached";
   public static final String TETHER_PROTOCOL="avro.tether.protocol";
-  
+
   /** Get the URI of the application's executable. */
   public static URI getExecutable(JobConf job) {
     try {
@@ -51,15 +51,15 @@ public class TetherJob extends Configured {
       throw new RuntimeException(e);
     }
   }
-  
+
   /** Set the URI for the application's executable. Normally this in HDFS. */
   public static void setExecutable(JobConf job, File executable) {
-    setExecutable(job,executable, new ArrayList<String>(),false);
+    setExecutable(job,executable, new ArrayList<>(),false);
   }
-  
+
   /**
-   * Set the URI for the application's executable (i.e the program to run in a subprocess 
-   * and provides the mapper/reducer). 
+   * Set the URI for the application's executable (i.e the program to run in a subprocess
+   * and provides the mapper/reducer).
    * @param job - Job
    * @param executable - The URI of the executable
    * @param args - List of additional arguments; Null if no arguments
@@ -114,7 +114,7 @@ public class TetherJob extends Configured {
     setupTetherJob(conf);
     return new JobClient(conf).submitJob(conf);
   }
-  
+
   /**
    * Determines which transport protocol (e.g http or sasl) used to communicate
    * between the parent and subprocess
@@ -147,7 +147,7 @@ public class TetherJob extends Configured {
 
     // set the map output key class to TetherData
     job.setMapOutputKeyClass(TetherData.class);
-    
+
     // if protocol isn't set
     if (job.getStrings(TETHER_PROTOCOL)==null) {
       job.set(TETHER_PROTOCOL, "sasl");

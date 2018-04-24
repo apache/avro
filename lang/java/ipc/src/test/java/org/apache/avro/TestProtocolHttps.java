@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,27 +17,17 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
-import org.apache.avro.ipc.generic.GenericRequestor;
-import org.apache.avro.ipc.specific.SpecificRequestor;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.test.Simple;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-import org.junit.Test;
 
-import org.mortbay.jetty.security.SslSocketConnector;
 
 import java.net.URL;
-import java.net.ServerSocket;
-import java.net.SocketTimeoutException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
 
 public class TestProtocolHttps extends TestProtocolSpecific {
 
@@ -48,21 +38,21 @@ public class TestProtocolHttps extends TestProtocolSpecific {
     System.setProperty("javax.net.ssl.password", "avrotest");
     System.setProperty("javax.net.ssl.trustStore", "src/test/truststore");
     System.setProperty("javax.net.ssl.trustStorePassword", "avrotest");
-    SslSocketConnector connector = new SslSocketConnector();
-    connector.setPort(18443);
-    connector.setKeystore(System.getProperty("javax.net.ssl.keyStore"));
-    connector.setPassword(System.getProperty("javax.net.ssl.password"));
-    connector.setKeyPassword(System.getProperty("javax.net.ssl.keyStorePassword"));
-    connector.setHost("localhost");
-    connector.setNeedClientAuth(false);
-    return new HttpServer(testResponder, connector);
+    SslConnectionFactory connectionFactory = new SslConnectionFactory("HTTP/1.1");
+    SslContextFactory sslContextFactory = connectionFactory.getSslContextFactory();
+
+    sslContextFactory.setKeyStorePath(System.getProperty("javax.net.ssl.keyStore"));
+    sslContextFactory.setKeyManagerPassword(System.getProperty("javax.net.ssl.password"));
+    sslContextFactory.setKeyStorePassword(System.getProperty("javax.net.ssl.keyStorePassword"));
+    sslContextFactory.setNeedClientAuth(false);
+    return new HttpServer(testResponder, connectionFactory, "localhost", 18443);
   }
-  
+
   @Override
   public Transceiver createTransceiver() throws Exception{
     return new HttpTransceiver(new URL("https://localhost:"+server.getPort()+"/"));
   }
- 
+
   protected int getExpectedHandshakeCount() {
     return REPEATING;
   }

@@ -54,7 +54,7 @@ namespace Avro
         private byte[] md5;
         public byte[] MD5
         {
-            get 
+            get
             {
                 try
                 {
@@ -65,7 +65,7 @@ namespace Avro
                 {
                     throw new AvroRuntimeException("MD5 get exception", ex);
                 }
-                return md5; 
+                return md5;
             }
         }
 
@@ -218,7 +218,7 @@ namespace Avro
 
             Protocol that = obj as Protocol;
 
-            return this.Name.Equals(that.Name) && this.Namespace.Equals(that.Namespace) && 
+            return this.Name.Equals(that.Name) && this.Namespace.Equals(that.Namespace) &&
                     TypesEquals(that.Types) && MessagesEquals(that.Messages);
         }
 
@@ -247,13 +247,13 @@ namespace Avro
         private bool MessagesEquals(IDictionary<string, Message> that)
         {
             if (Messages.Count != that.Count) return false;
-            foreach (KeyValuePair<string, Message> pair in Messages) 
-            { 
+            foreach (KeyValuePair<string, Message> pair in Messages)
+            {
                 if (!that.ContainsKey(pair.Key))
                     return false;
                 if (!pair.Value.Equals(that[pair.Key]))
-                    return false; 
-            } 
+                    return false;
+            }
             return true;
         }
 

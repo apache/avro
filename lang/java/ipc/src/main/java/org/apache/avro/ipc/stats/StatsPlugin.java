@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 /**
  * Collects count and latency statistics about RPC calls.  Keeps
  * data for every method. Can be added to a Requestor (client)
- * or Responder (server). 
+ * or Responder (server).
  *
  * This uses milliseconds as the standard unit of measure
  * throughout the class, stored in floats.
@@ -44,7 +44,7 @@ import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 public class StatsPlugin extends RPCPlugin {
   /** Static declaration of histogram buckets. */
   static final Segmenter<String, Float> LATENCY_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Float>(new TreeSet<Float>(Arrays.asList(
+      new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0f,
            25f,
            50f,
@@ -62,7 +62,7 @@ public class StatsPlugin extends RPCPlugin {
        600000f)));
 
   static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Integer>(new TreeSet<Integer>(Arrays.asList(
+      new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0,
            25,
            50,
@@ -76,33 +76,33 @@ public class StatsPlugin extends RPCPlugin {
          2000,
          5000,
         10000,
-        50000, 
+        50000,
        100000)));
-  
+
   /** Per-method histograms.
    * Must be accessed while holding a lock. */
   Map<Message, FloatHistogram<?>> methodTimings =
-    new HashMap<Message, FloatHistogram<?>>();
+    new HashMap<>();
 
   Map<Message, IntegerHistogram<?>> sendPayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
-  
+    new HashMap<>();
+
   Map<Message, IntegerHistogram<?>> receivePayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
-  
+    new HashMap<>();
+
   /** RPCs in flight. */
   ConcurrentMap<RPCContext, Stopwatch> activeRpcs =
-    new ConcurrentHashMap<RPCContext, Stopwatch>();
+    new ConcurrentHashMap<>();
   private Ticks ticks;
 
   /** How long I've been alive */
   public Date startupTime = new Date();
-  
+
   private Segmenter<?, Float> floatSegmenter;
   private Segmenter<?, Integer> integerSegmenter;
 
   /** Construct a plugin with custom Ticks and Segmenter implementations. */
-  StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter, 
+  StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter,
       Segmenter<?, Integer> integerSegmenter) {
     this.floatSegmenter = floatSegmenter;
     this.integerSegmenter = integerSegmenter;
@@ -114,7 +114,7 @@ public class StatsPlugin extends RPCPlugin {
   public StatsPlugin() {
     this(Stopwatch.SYSTEM_TICKS, LATENCY_SEGMENTER, PAYLOAD_SEGMENTER);
   }
-  
+
   /**
    * Helper to get the size of an RPC payload.
    */
@@ -122,12 +122,12 @@ public class StatsPlugin extends RPCPlugin {
     if (payload == null) {
       return 0;
     }
-    
+
     int size = 0;
     for (ByteBuffer bb: payload) {
       size = size + bb.limit();
     }
-    
+
     return size;
   }
 
@@ -136,7 +136,7 @@ public class StatsPlugin extends RPCPlugin {
     Stopwatch t = new Stopwatch(ticks);
     t.start();
     this.activeRpcs.put(context, t);
-    
+
     synchronized(receivePayloads) {
       IntegerHistogram<?> h = receivePayloads.get(context.getMessage());
       if (h == null) {
@@ -146,13 +146,13 @@ public class StatsPlugin extends RPCPlugin {
       h.add(getPayloadSize(context.getRequestPayload()));
     }
   }
-  
+
   @Override
   public void serverSendResponse(RPCContext context) {
     Stopwatch t = this.activeRpcs.remove(context);
     t.stop();
     publish(context, t);
-    
+
     synchronized(sendPayloads) {
       IntegerHistogram<?> h = sendPayloads.get(context.getMessage());
       if (h == null) {
@@ -162,13 +162,13 @@ public class StatsPlugin extends RPCPlugin {
       h.add(getPayloadSize(context.getResponsePayload()));
     }
   }
-  
+
   @Override
   public void clientSendRequest(RPCContext context) {
     Stopwatch t = new Stopwatch(ticks);
     t.start();
     this.activeRpcs.put(context, t);
-    
+
     synchronized(sendPayloads) {
       IntegerHistogram<?> h = sendPayloads.get(context.getMessage());
       if (h == null) {
@@ -178,13 +178,13 @@ public class StatsPlugin extends RPCPlugin {
       h.add(getPayloadSize(context.getRequestPayload()));
     }
   }
-  
+
   @Override
   public void clientReceiveResponse(RPCContext context) {
     Stopwatch t = this.activeRpcs.remove(context);
     t.stop();
     publish(context, t);
-    
+
     synchronized(receivePayloads) {
       IntegerHistogram<?> h = receivePayloads.get(context.getMessage());
       if (h == null) {
@@ -194,7 +194,7 @@ public class StatsPlugin extends RPCPlugin {
       h.add(getPayloadSize(context.getRequestPayload()));
     }
   }
-  
+
   /** Adds timing to the histograms. */
   private void publish(RPCContext context, Stopwatch t) {
     Message message = context.getMessage();
@@ -218,7 +218,7 @@ public class StatsPlugin extends RPCPlugin {
   private IntegerHistogram<?> createNewIntegerHistogram() {
     return new IntegerHistogram(integerSegmenter);
   }
-  
+
   /** Converts nanoseconds to milliseconds. */
   static float nanosToMillis(long elapsedNanos) {
     return elapsedNanos / 1000000.0f;

@@ -202,7 +202,7 @@ namespace Avro.perf
             var decoder = new BinaryDecoder( stream );
 
             var totalItems = 1000000;
-            
+
             foreach (int itemsPerBatch in new List<int> { 1000 } )
             {
                 int serialized = 0;

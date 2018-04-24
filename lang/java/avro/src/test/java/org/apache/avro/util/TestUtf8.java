@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,6 @@ package org.apache.avro.util;
 
 import java.io.UnsupportedEncodingException;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 
 import static junit.framework.Assert.assertSame;
@@ -35,9 +33,9 @@ public class TestUtf8 {
       assertEquals(bs[i], u.getBytes()[i]);
     }
   }
-  
+
   @Test public void testArrayReusedWhenLargerThanRequestedSize() throws UnsupportedEncodingException {
-    byte[] bs = "55555".getBytes("UTF-8");    
+    byte[] bs = "55555".getBytes("UTF-8");
     Utf8 u = new Utf8(bs);
     assertEquals(5, u.getByteLength());
     byte[] content = u.getBytes();

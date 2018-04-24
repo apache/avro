@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,7 +22,7 @@ package org.apache.avro;
 public class UnresolvedUnionException extends AvroRuntimeException {
   private Object unresolvedDatum;
   private Schema unionSchema;
-  
+
   public UnresolvedUnionException(Schema unionSchema, Object unresolvedDatum) {
     super("Not in union "+unionSchema+": "+unresolvedDatum);
     this.unionSchema = unionSchema;

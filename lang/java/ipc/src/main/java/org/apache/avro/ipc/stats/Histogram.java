@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,8 +39,8 @@ class Histogram<B, T> {
   /**
    * How many recent additions we should track.
    */
-  public static final int MAX_HISTORY_SIZE = 20; 
-  
+  public static final int MAX_HISTORY_SIZE = 20;
+
   private Segmenter<B, T> segmenter;
   private int[] counts;
   protected int totalCount;
@@ -67,13 +67,13 @@ class Histogram<B, T> {
      * is consistent with the segment numbers.
      */
     Iterator<B> getBuckets();
-    
+
     /**
      * Returns a List of bucket boundaries. Useful for printing
      * segmenters.
      */
     List<String> getBoundaryLabels();
-    
+
     /**
      * Returns the bucket labels as an array;
      */
@@ -88,7 +88,7 @@ class Histogram<B, T> {
 
   public static class TreeMapSegmenter<T extends Comparable<T>>
       implements Segmenter<String, T> {
-    private TreeMap<T, Integer> index = new TreeMap<T, Integer>();
+    private TreeMap<T, Integer> index = new TreeMap<>();
     public TreeMapSegmenter(SortedSet<T> leftEndpoints) {
       if (leftEndpoints.isEmpty()) {
         throw new IllegalArgumentException(
@@ -116,33 +116,33 @@ class Histogram<B, T> {
     private String rangeAsString(T a, T b) {
       return String.format("[%s,%s)", a, b == null ? "infinity" : b);
     }
-    
+
     @Override
     public ArrayList<String> getBoundaryLabels() {
-      ArrayList<String> outArray = new ArrayList<String>(index.keySet().size());
+      ArrayList<String> outArray = new ArrayList<>(index.keySet().size());
       for (T obj: index.keySet()) {
         outArray.add(obj.toString());
       }
       return outArray;
     }
-    
+
     @Override
     public ArrayList<String> getBucketLabels() {
-      ArrayList<String> outArray = new ArrayList<String>(index.keySet().size());
+      ArrayList<String> outArray = new ArrayList<>(index.keySet().size());
       Iterator<String> bucketsIt = this.getBuckets();
       while (bucketsIt.hasNext()) {
         outArray.add(bucketsIt.next());
       }
       return outArray;
     }
-    
+
     @Override
     public Iterator<String> getBuckets() {
       return new Iterator<String>() {
         Iterator<T> it = index.keySet().iterator();
         T cur = it.next(); // there's always at least one element
         int pos = 0;
-        
+
         @Override
         public boolean hasNext() {
           return (pos < index.keySet().size());
@@ -170,7 +170,7 @@ class Histogram<B, T> {
   public Histogram(Segmenter<B, T> segmenter) {
     this.segmenter = segmenter;
     this.counts = new int[segmenter.size()];
-    this.recentAdditions = new LinkedList<T>();
+    this.recentAdditions = new LinkedList<>();
   }
 
   /** Tallies a value in the histogram. */
@@ -190,14 +190,14 @@ class Histogram<B, T> {
   public int[] getHistogram() {
     return counts;
   }
-  
+
   /**
    * Returns the underlying segmenter used for this histogram.
    */
   public Segmenter<B, T> getSegmenter() {
     return this.segmenter;
   }
-  
+
   /**
    * Returns values recently added to this histogram. These are in reverse
    * order (most recent first).
@@ -210,7 +210,7 @@ class Histogram<B, T> {
   public int getCount() {
     return totalCount;
   }
-  
+
 
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -251,7 +251,7 @@ class Histogram<B, T> {
 
     @Override
     public Entry<B> next() {
-      return new Entry<B>(bucketNameIterator.next(), counts[i++]);
+      return new Entry<>(bucketNameIterator.next(), counts[i++]);
     }
 
     @Override

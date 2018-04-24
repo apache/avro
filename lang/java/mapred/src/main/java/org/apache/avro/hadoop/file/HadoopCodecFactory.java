@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.file.CodecFactory;
 
-/**  
+/**
  * Encapsulates the ability to specify and configure an avro compression codec
  * from a given hadoop codec defined with the configuration parameter:
  * mapred.output.compression.codec
@@ -39,15 +39,15 @@ import org.apache.avro.file.CodecFactory;
 public class HadoopCodecFactory {
 
   private static final Map<String, String> HADOOP_AVRO_NAME_MAP =
-      new HashMap<String, String>();
- 
+      new HashMap<>();
+
   static {
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.DeflateCodec", "deflate");
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.SnappyCodec", "snappy");
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.BZip2Codec", "bzip2");
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.GZipCodec", "deflate");
   }
-  
+
   /** Maps a hadoop codec name into a CodecFactory.
   *
   * Currently there are four hadoop codecs registered:
@@ -71,7 +71,7 @@ public class HadoopCodecFactory {
     }
     return o;
   }
-  
+
   public static String getAvroCodecName(String hadoopCodecClass) {
     return HADOOP_AVRO_NAME_MAP.get(hadoopCodecClass);
   }

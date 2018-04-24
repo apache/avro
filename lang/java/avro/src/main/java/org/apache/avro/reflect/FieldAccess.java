@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,7 +20,7 @@ package org.apache.avro.reflect;
 import java.lang.reflect.Field;
 
 abstract class FieldAccess {
-  
+
   protected abstract FieldAccessor getAccessor(Field field);
 
 }

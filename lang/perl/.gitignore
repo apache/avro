@@ -8,3 +8,4 @@ Makefile.old
 pm_to_blib
 *~
 /blib
+Avro-*.tar.gz

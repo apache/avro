@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,7 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
   public AvroAsTextRecordReader(JobConf job, FileSplit split)
     throws IOException {
     this(DataFileReader.openReader
-         (new FsInput(split.getPath(), job), new GenericDatumReader<T>()), split);
+         (new FsInput(split.getPath(), job), new GenericDatumReader<>()), split);
   }
 
   protected AvroAsTextRecordReader(FileReader<T> reader, FileSplit split)
@@ -54,11 +54,11 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
   public Text createKey() {
     return new Text();
   }
-  
+
   public Text createValue() {
     return new Text();
   }
-    
+
   public boolean next(Text key, Text ignore) throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
       return false;
@@ -80,7 +80,7 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
     }
     return true;
   }
-  
+
   public float getProgress() throws IOException {
     if (end == start) {
       return 0.0f;
@@ -88,12 +88,12 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
       return Math.min(1.0f, (getPos() - start) / (float)(end - start));
     }
   }
-  
+
   public long getPos() throws IOException {
     return reader.tell();
   }
 
   public void close() throws IOException { reader.close(); }
-  
+
 
 }

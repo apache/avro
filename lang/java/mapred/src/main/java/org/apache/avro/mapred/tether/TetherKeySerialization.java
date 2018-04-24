@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,20 +39,20 @@ class TetherKeySerialization
   public boolean accept(Class<?> c) {
     return TetherData.class.isAssignableFrom(c);
   }
-  
+
   public Deserializer<TetherData> getDeserializer(Class<TetherData> c) {
     return new TetherDataDeserializer();
   }
-  
+
   private static final DecoderFactory FACTORY = DecoderFactory.get();
 
   private class TetherDataDeserializer implements Deserializer<TetherData> {
     private BinaryDecoder decoder;
-    
+
     public void open(InputStream in) {
       this.decoder = FACTORY.directBinaryDecoder(in, decoder);
     }
-    
+
     public TetherData deserialize(TetherData datum) throws IOException {
       if (datum == null) datum = new TetherData();
       datum.buffer(decoder.readBytes(datum.buffer()));
@@ -63,7 +63,7 @@ class TetherKeySerialization
       decoder.inputStream().close();
     }
   }
-  
+
   public Serializer<TetherData> getSerializer(Class<TetherData> c) {
     return new TetherDataSerializer();
   }
@@ -72,7 +72,7 @@ class TetherKeySerialization
 
     private OutputStream out;
     private BinaryEncoder encoder;
-    
+
     public void open(OutputStream out) {
       this.out = out;
       this.encoder = EncoderFactory.get().directBinaryEncoder(out, encoder);

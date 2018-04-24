@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,7 @@ public class BZip2Codec extends Codec {
 
   private ByteArrayOutputStream outputBuffer;
   public static final int DEFAULT_BUFFER_SIZE = 64 * 1024;
-  
+
   @Override
   ByteBuffer compress(ByteBuffer uncompressedData) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(uncompressedData.remaining());
@@ -55,23 +55,23 @@ public class BZip2Codec extends Codec {
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
       int readCount = -1;
-      
+
       while ( (readCount = inputStream.read(buffer, compressedData.position(), buffer.length))> 0) {
         baos.write(buffer, 0, readCount);
       }
-      
+
       ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
       return result;
     } finally {
       inputStream.close();
     }
   }
-  
+
   private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
     if (null == outputBuffer)
       outputBuffer = new ByteArrayOutputStream(suggestedLength);
     outputBuffer.reset();
     return outputBuffer;
   }
-  
+
 }

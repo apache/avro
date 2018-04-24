@@ -39,7 +39,7 @@
       See the <a href="http://hadoop.apache.org/docs/current/">Hadoop
       documentation</a> and the <a href="gettingstartedjava.html">Avro getting
       started guide</a> for introductions to these projects.  This guide uses
-      the old MapReduce API (<code>org.apache.hadoop.mapred</code>) and the new 
+      the old MapReduce API (<code>org.apache.hadoop.mapred</code>) and the new
       MapReduce API (<code>org.apache.hadoop.mapreduce</code>).
     </p>
     <section>
@@ -91,10 +91,10 @@
 &#60;/plugin>
       </source>
       <p>
-        If you do not configure the <em>sourceDirectory</em> and <em>outputDirectory</em> 
-        properties, the defaults will be used. The <em>sourceDirectory</em> property 
-        defaults to <em>src/main/avro</em>. The <em>outputDirectory</em> property 
-        defaults to <em>target/generated-sources</em>. You can change the paths to 
+        If you do not configure the <em>sourceDirectory</em> and <em>outputDirectory</em>
+        properties, the defaults will be used. The <em>sourceDirectory</em> property
+        defaults to <em>src/main/avro</em>. The <em>outputDirectory</em> property
+        defaults to <em>target/generated-sources</em>. You can change the paths to
         match your project layout.
       </p>
       <p>
@@ -297,9 +297,9 @@ public class MapReduceColorCount extends Configured implements Tool {
         ColorCount reads in data files containing <code>User</code> records,
         defined in <em>examples/user.avsc</em>, and counts the number of
         instances of each favorite color.  (This example draws inspiration from
-        the canonical WordCount MapReduce application.)  This example uses the 
-        old MapReduce API.  See MapReduceAvroWordCount, found under 
-        <em>doc/examples/mr-example/src/main/java/example/</em> to see the new MapReduce 
+        the canonical WordCount MapReduce application.)  This example uses the
+        old MapReduce API.  See MapReduceAvroWordCount, found under
+        <em>doc/examples/mr-example/src/main/java/example/</em> to see the new MapReduce
         API example.  The <code>User</code>
         schema is defined as follows:
       </p>

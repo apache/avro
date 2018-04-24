@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,8 +52,8 @@ public class AvroKeyValueRecordReader<K, V>
    */
   public AvroKeyValueRecordReader(Schema keyReaderSchema, Schema valueReaderSchema) {
     super(AvroKeyValue.getSchema(keyReaderSchema, valueReaderSchema));
-    mCurrentKey = new AvroKey<K>(null);
-    mCurrentValue = new AvroValue<V>(null);
+    mCurrentKey = new AvroKey<>(null);
+    mCurrentValue = new AvroValue<>(null);
   }
 
   /** {@inheritDoc} */
@@ -61,7 +61,7 @@ public class AvroKeyValueRecordReader<K, V>
   public boolean nextKeyValue() throws IOException, InterruptedException {
     boolean hasNext = super.nextKeyValue();
     if (hasNext) {
-      AvroKeyValue<K, V> avroKeyValue = new AvroKeyValue<K, V>(getCurrentRecord());
+      AvroKeyValue<K, V> avroKeyValue = new AvroKeyValue<>(getCurrentRecord());
       mCurrentKey.datum(avroKeyValue.getKey());
       mCurrentValue.datum(avroKeyValue.getValue());
     } else {

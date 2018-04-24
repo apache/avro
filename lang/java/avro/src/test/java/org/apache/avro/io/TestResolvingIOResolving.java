@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -191,7 +191,7 @@ public class TestResolvingIOResolving {
           new Object[] { true, 100L, 10.75d } },
         // Array of record with arrays.
         { "{ \"type\": \"array\", \"items\":" +
-        		"{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+            "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
             + "{\"name\":\"f0\", \"type\":\"boolean\"},"
             + "{\"name\":\"f1\", \"type\": {\"type\":\"array\", \"items\": \"boolean\" }}"
             + "]}}", "[c2sB[c2sBsB]sB[c3sBsBsB]]",

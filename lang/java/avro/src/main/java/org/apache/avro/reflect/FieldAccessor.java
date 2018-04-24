@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -41,15 +41,15 @@ abstract class FieldAccessor {
   protected boolean supportsIO() {
     return false;
   }
-  
+
   protected abstract Field getField();
-  
+
   protected boolean isStringable() {
     return false;
   }
-  
+
   protected boolean isCustomEncoded() {
     return false;
   }
-  
+
 }

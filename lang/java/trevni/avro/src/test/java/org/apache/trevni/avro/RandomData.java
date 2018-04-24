@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,7 +18,6 @@
 package org.apache.trevni.avro;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -45,7 +44,7 @@ public class RandomData implements Iterable<Object> {
     this.root = schema;
     this.count = count;
   }
-  
+
   public Iterator<Object> iterator() {
     return new Iterator<Object>() {
       private int n;
@@ -58,14 +57,14 @@ public class RandomData implements Iterable<Object> {
       public void remove() { throw new UnsupportedOperationException(); }
     };
   }
-  
+
   @SuppressWarnings(value="unchecked")
   private static Object generate(Schema schema, Random random, int d) {
     switch (schema.getType()) {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
       for (Schema.Field field : schema.getFields()) {
-        Object value = (field.getJsonProp(USE_DEFAULT) == null) 
+        Object value = (field.getJsonProp(USE_DEFAULT) == null)
           ? generate(field.schema(), random, d+1)
           : GenericData.get().getDefaultValue(field);
         record.put(field.name(), value);
@@ -84,7 +83,7 @@ public class RandomData implements Iterable<Object> {
       return array;
     case MAP:
       length = (random.nextInt(5)+2)-d;
-      Map<Object,Object> map = new HashMap<Object,Object>(length<=0?0:length);
+      Map<Object,Object> map = new HashMap<>(length <= 0 ? 0 : length);
       for (int i = 0; i < length; i++) {
         map.put(TestUtil.randomString(random),
                 generate(schema.getValueType(), random, d+1));
@@ -116,7 +115,7 @@ public class RandomData implements Iterable<Object> {
     }
     Schema sch = Schema.parse(new File(args[0]));
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new GenericDatumWriter<Object>())
+      new DataFileWriter<>(new GenericDatumWriter<>())
       .create(sch, new File(args[1]));
     try {
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {

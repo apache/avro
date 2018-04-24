@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,16 +37,16 @@ import org.apache.trevni.avro.HadoopInput;
  * @param <T> The type of the entries within the Trevni container file being read.
  */
 public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K, V> {
-  
+
   /** The Trevni file reader */
   private AvroColumnReader<T> reader;
-  
+
   /** Number of rows in the Trevni file */
   private float rows;
-  
+
   /** The current row number being read in */
   private long row;
-  
+
   /** A reusable object to hold records of the Avro container file. */
   private T mCurrentRecord;
 
@@ -60,12 +60,12 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
     final AvroColumnReader.Params params =
       new AvroColumnReader.Params(new HadoopInput(file.getPath(), context.getConfiguration()));
     params.setModel(ReflectData.get());
-    
+
     if (AvroJob.getInputKeySchema(context.getConfiguration()) != null) {
       params.setSchema(AvroJob.getInputKeySchema(context.getConfiguration()));
     }
-    
-    reader = new AvroColumnReader<T>(params);
+
+    reader = new AvroColumnReader<>(params);
     rows = reader.getRowCount();
   }
 
@@ -78,7 +78,7 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
     row++;
     return true;
   }
-  
+
   /**
    * Gets the current record read from the Trevni container file.
    *
@@ -93,7 +93,7 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
-    reader.close(); 
+    reader.close();
   }
 
   /** {@inheritDoc} */

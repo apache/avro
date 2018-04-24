@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -83,6 +83,8 @@ public class JacksonUtils {
       generator.writeNumber((Integer) datum);
     } else if (datum instanceof Boolean) { // boolean
       generator.writeBoolean((Boolean) datum);
+    } else {
+      throw new AvroRuntimeException("Unknown datum class: " + datum.getClass());
     }
   }
 
@@ -118,7 +120,8 @@ public class JacksonUtils {
       if (schema == null || schema.getType().equals(Schema.Type.STRING) ||
           schema.getType().equals(Schema.Type.ENUM)) {
         return jsonNode.asText();
-      } else if (schema.getType().equals(Schema.Type.BYTES)) {
+      } else if (schema.getType().equals(Schema.Type.BYTES)
+              || schema.getType().equals(Schema.Type.FIXED)) {
         try {
           return jsonNode.getTextValue().getBytes(BYTES_CHARSET);
         } catch (UnsupportedEncodingException e) {

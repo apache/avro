@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,11 +28,11 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 /**
  * An {@link org.apache.hadoop.mapreduce.InputFormat} for Trevni files.
- * 
+ *
  * This implement was modeled off
  * {@link org.apache.avro.mapreduce.AvroKeyValueInputFormat} to allow for easy
  * transition
- * 
+ *
  * <p>
  * A MapReduce InputFormat that reads from Trevni container files of key/value generic records.
  *
@@ -43,7 +43,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  *
  * @param <K> The type of the Trevni key to read.
  * @param <V> The type of the Trevni value to read.
- * 
+ *
  * <p>
  * A subset schema to be read may be specified with
  * {@link org.apache.avro.mapreduce.AvroJob#setInputKeySchema} and
@@ -56,8 +56,8 @@ public class AvroTrevniKeyValueInputFormat<K, V>  extends FileInputFormat<AvroKe
   public RecordReader<AvroKey<K>, AvroValue<V>> createRecordReader(
       InputSplit split, TaskAttemptContext context) throws IOException,
       InterruptedException {
-    
-    return new AvroTrevniKeyValueRecordReader<K, V>();
+
+    return new AvroTrevniKeyValueRecordReader<>();
   }
 
 

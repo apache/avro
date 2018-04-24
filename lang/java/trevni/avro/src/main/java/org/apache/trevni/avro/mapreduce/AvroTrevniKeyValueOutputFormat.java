@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,11 +28,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /** An {@link org.apache.hadoop.mapreduce.OutputFormat} that writes Avro data to
  * Trevni files.
- * 
- * This implement was modeled off 
+ *
+ * This implement was modeled off
  * {@link org.apache.avro.mapreduce.AvroKeyValueOutputFormat} to allow for easy
- * transition 
- * 
+ * transition
+ *
  *  * FileOutputFormat for writing Trevni container files of key/value pairs.
  *
  * <p>Since Trevni container files can only contain records (not key/value pairs), this
@@ -46,19 +46,19 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  *
  * @param <K> The type of key. If an Avro type, it must be wrapped in an <code>AvroKey</code>.
  * @param <V> The type of value. If an Avro type, it must be wrapped in an <code>AvroValue</code>.
- * 
+ *
  * <p>Writes a directory of files per task, each comprising a single filesystem
  * block.  To reduce the number of files, increase the default filesystem block
  * size for the job.  Each task also requires enough memory to buffer a
  * filesystem block.
  */
-public class AvroTrevniKeyValueOutputFormat <K, V> extends FileOutputFormat<AvroKey<K>, AvroValue<V>> { 
-  
+public class AvroTrevniKeyValueOutputFormat <K, V> extends FileOutputFormat<AvroKey<K>, AvroValue<V>> {
+
   /** {@inheritDoc} */
   @Override
   public RecordWriter<AvroKey<K>, AvroValue<V>> getRecordWriter(TaskAttemptContext context)
       throws IOException, InterruptedException {
-    
-    return new AvroTrevniKeyValueRecordWriter<K, V>(context );
+
+    return new AvroTrevniKeyValueRecordWriter<>(context);
   }
 }

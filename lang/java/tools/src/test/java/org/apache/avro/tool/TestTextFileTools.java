@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,9 +18,7 @@
 package org.apache.avro.tool;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.OutputStream;
 import java.io.InputStream;
@@ -29,19 +27,15 @@ import java.io.FileInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 
 import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.junit.BeforeClass;
 import org.junit.AfterClass;
@@ -57,7 +51,7 @@ public class TestTextFileTools {
   static ByteBuffer[] lines;
   static Schema schema;
   static File schemaFile;
-  
+
   @BeforeClass
   public static void writeRandomFile() throws IOException {
     schema = Schema.create(Type.BYTES);
@@ -82,20 +76,20 @@ public class TestTextFileTools {
     }
     out.close();
   }
-  
+
   private void fromText(String name, String... args) throws Exception {
     File avroFile = AvroTestUtil.tempFile(getClass(), name + ".avro");
 
-    ArrayList<String> arglist = new ArrayList<String>();
+    ArrayList<String> arglist = new ArrayList<>();
     arglist.addAll(Arrays.asList(args));
     arglist.add(linesFile.toString());
     arglist.add(avroFile.toString());
 
     new FromTextTool().run(null, null, null, arglist);
-    
+
     // Read it back, and make sure it's valid.
-    DataFileReader<ByteBuffer> file = new DataFileReader<ByteBuffer>
-      (avroFile, new GenericDatumReader<ByteBuffer>());
+    DataFileReader<ByteBuffer> file = new DataFileReader<>
+      (avroFile, new GenericDatumReader<>());
     int i = 0;
     for (ByteBuffer line : file) {
       System.out.println("Reading line = "+line.remaining());
@@ -104,7 +98,7 @@ public class TestTextFileTools {
     }
     assertEquals(COUNT, i);
   }
-  
+
   @Test
   public void testFromText() throws Exception {
     fromText("null", "--codec", "null");
@@ -123,12 +117,12 @@ public class TestTextFileTools {
     File avroFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".avro");
     File outFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".lines");
 
-    ArrayList<String> arglist = new ArrayList<String>();
+    ArrayList<String> arglist = new ArrayList<>();
     arglist.add(avroFile.toString());
     arglist.add(outFile.toString());
 
     new ToTextTool().run(null, null, null, arglist);
-    
+
     // Read it back, and make sure it's valid.
     InputStream orig = new BufferedInputStream(new FileInputStream(linesFile));
     InputStream after = new BufferedInputStream(new FileInputStream(outFile));

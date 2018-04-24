@@ -24,6 +24,7 @@
 #include <string>
 #include <sstream>
 #include <boost/math/special_functions/fpclassify.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/utility.hpp>
 
 #include "Config.hh"
@@ -51,6 +52,8 @@ public:
         tkObjectEnd
     };
 
+    size_t line() const { return line_; }
+
 private:
     enum State {
         stValue,    // Expect a data type
@@ -72,6 +75,7 @@ private:
     int64_t lv;
     double dv;
     std::string sv;
+    size_t line_;
 
     Token doAdvance();
     Token tryLiteral(const char exp[], size_t n, Token tk);
@@ -81,7 +85,7 @@ private:
     char next();
 
 public:
-    JsonParser() : curState(stValue), hasNext(false), peeked(false) { }
+    JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) { }
 
     void init(InputStream& is) {
         in_.reset(is);
@@ -133,7 +137,8 @@ public:
     }
 };
 
-struct AVRO_DECL JsonNullFormatter {
+class AVRO_DECL JsonNullFormatter {
+public:
     JsonNullFormatter(StreamWriter&) { }
 
     void handleObjectStart() {}
@@ -211,7 +216,7 @@ class AVRO_DECL JsonGenerator {
 
     void escapeCtl(char c) {
         out_.write('\\');
-        out_.write('U');
+        out_.write('u');
         out_.write('0');
         out_.write('0');
         out_.write(toHex((static_cast<unsigned char>(c)) / 16));
@@ -304,7 +309,7 @@ public:
     void encodeNumber(T t) {
         sep();
         std::ostringstream oss;
-        oss << t;
+        oss << boost::lexical_cast<std::string>(t);
         const std::string& s = oss.str();
         out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
         sep2();
@@ -314,7 +319,7 @@ public:
         sep();
         std::ostringstream oss;
         if (boost::math::isfinite(t)) {
-            oss << t;
+            oss << boost::lexical_cast<std::string>(t);
         } else if (boost::math::isnan(t)) {
             oss << "NaN";
         } else if (t == std::numeric_limits<double>::infinity()) {

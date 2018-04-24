@@ -17,7 +17,7 @@
 -->
 
 <project name="Avro" default="dist" xmlns:ivy="antlib:org.apache.ivy.ant">
- 
+
   <!-- Load user's default properties. -->
   <property file="${user.home}/build.properties"/>
 
@@ -40,7 +40,11 @@
   <property name="ivy.jar" value="${basedir}/lib/ivy-${ivy.version}.jar"/>
 
   <!-- Load shared properties -->
-  <loadfile srcFile="${share.dir}/VERSION.txt" property="avro.version" />
+  <loadfile srcFile="${share.dir}/VERSION.txt" property="avro.version">
+    <filterchain>
+      <striplinebreaks/>
+    </filterchain>
+  </loadfile>
   <loadfile srcFile="${share.schema.dir}/org/apache/avro/ipc/HandshakeRequest.avsc" property="handshake.request.json"/>
   <loadfile srcFile="${share.schema.dir}/org/apache/avro/ipc/HandshakeResponse.avsc" property="handshake.response.json"/>
 
@@ -66,7 +70,7 @@
       </classpath>
     </typedef>
   </target>
-  
+
   <target name="ivy-download" unless="ivy.jar.found" >
     <get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar" dest="${ivy.jar}" usetimestamp="true" />
   </target>
@@ -79,13 +83,13 @@
       <fileset dir="${src.dir}">
         <exclude name="**/*.pyc"/>
         <exclude name="**/*.py~"/>
-      </fileset> 
+      </fileset>
     </copy>
     <copy todir="${build.dir}/test">
       <fileset dir="${test.dir}">
         <exclude name="**/*.pyc"/>
         <exclude name="**/*.py~"/>
-      </fileset> 
+      </fileset>
     </copy>
     <copy todir="${build.dir}/lib">
       <fileset dir="${lib.dir}" />
@@ -102,9 +106,9 @@
           toFile="${build.dir}/src/avro/ipc.py"
           overwrite="true">
       <filterset>
-        <filter token="HANDSHAKE_REQUEST_SCHEMA" 
+        <filter token="HANDSHAKE_REQUEST_SCHEMA"
           value="${handshake.request.json}"/>
-        <filter token="HANDSHAKE_RESPONSE_SCHEMA" 
+        <filter token="HANDSHAKE_RESPONSE_SCHEMA"
           value="${handshake.response.json}"/>
      </filterset>
     </copy>
