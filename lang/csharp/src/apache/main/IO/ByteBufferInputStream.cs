@@ -25,7 +25,7 @@ namespace Avro.IO
     {
         private readonly IList<MemoryStream> _buffers;
         private int _currentBuffer;
-        
+
         public ByteBufferInputStream(IList<MemoryStream> buffers)
         {
             _buffers = buffers;

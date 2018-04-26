@@ -27,7 +27,7 @@ namespace Avro.File
         public byte[] Data { get;  set; }
         public long NumberOfEntries { get; set; }
         public long BlockSize { get; set; }
-       
+
         public DataBlock(long numberOfEntries, long blockSize)
         {
             this.NumberOfEntries = numberOfEntries;

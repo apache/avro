@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,10 +19,12 @@ package org.apache.avro.io.parsing;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.apache.avro.Schema;
 
@@ -41,7 +43,7 @@ public abstract class Symbol {
     ROOT,
     /** non-terminal symbol which is a sequence of one or more other symbols */
     SEQUENCE,
-    /** non-termial to represent the contents of an array or map */
+    /** non-terminal to represent the contents of an array or map */
     REPEATER,
     /** non-terminal to represent the union */
     ALTERNATIVE,
@@ -271,8 +273,8 @@ public abstract class Symbol {
     private static Symbol[] makeProduction(Symbol[] symbols) {
       Symbol[] result = new Symbol[flattenedSize(symbols, 0) + 1];
       flatten(symbols, 0, result, 1,
-          new HashMap<Sequence, Sequence>(),
-          new HashMap<Sequence, List<Fixup>>());
+          new HashMap<>(),
+          new HashMap<>());
       return result;
     }
   }
@@ -318,7 +320,7 @@ public abstract class Symbol {
       if (result == null) {
         result = new Sequence(new Symbol[flattenedSize()]);
         map.put(this, result);
-        List<Fixup> l = new ArrayList<Fixup>();
+        List<Fixup> l = new ArrayList<>();
         map2.put(result, l);
 
         flatten(production, 0,
@@ -369,9 +371,19 @@ public abstract class Symbol {
    * for some inputs.
    */
   public static boolean hasErrors(Symbol symbol) {
+    return hasErrors(symbol, new HashSet<Symbol>());
+  }
+
+  private static boolean hasErrors(Symbol symbol, Set<Symbol> visited) {
+    // avoid infinite recursion
+    if (visited.contains(symbol)) {
+      return false;
+    }
+    visited.add(symbol);
+
     switch(symbol.kind) {
     case ALTERNATIVE:
-      return hasErrors(symbol, ((Alternative) symbol).symbols);
+      return hasErrors(symbol, ((Alternative) symbol).symbols, visited);
     case EXPLICIT_ACTION:
       return false;
     case IMPLICIT_ACTION:
@@ -380,16 +392,16 @@ public abstract class Symbol {
       }
 
       if (symbol instanceof UnionAdjustAction) {
-        return hasErrors(((UnionAdjustAction) symbol).symToParse);
+        return hasErrors(((UnionAdjustAction) symbol).symToParse, visited);
       }
 
       return false;
     case REPEATER:
       Repeater r = (Repeater) symbol;
-      return hasErrors(r.end) || hasErrors(symbol, r.production);
+      return hasErrors(r.end, visited) || hasErrors(symbol, r.production, visited);
     case ROOT:
     case SEQUENCE:
-      return hasErrors(symbol, symbol.production);
+      return hasErrors(symbol, symbol.production, visited);
     case TERMINAL:
       return false;
     default:
@@ -397,13 +409,13 @@ public abstract class Symbol {
     }
   }
 
-  private static boolean hasErrors(Symbol root, Symbol[] symbols) {
+  private static boolean hasErrors(Symbol root, Symbol[] symbols, Set<Symbol> visited) {
     if(null != symbols) {
       for(Symbol s: symbols) {
         if (s == root) {
           continue;
         }
-        if (hasErrors(s)) {
+        if (hasErrors(s, visited)) {
           return true;
         }
       }

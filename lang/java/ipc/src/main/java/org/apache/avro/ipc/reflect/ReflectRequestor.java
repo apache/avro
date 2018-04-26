@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -60,30 +60,30 @@ public class ReflectRequestor extends SpecificRequestor {
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new ReflectDatumWriter<Object>(schema, getReflectData());
+    return new ReflectDatumWriter<>(schema, getReflectData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new ReflectDatumReader<Object>(writer, reader, getReflectData());
+    return new ReflectDatumReader<>(writer, reader, getReflectData());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static <T> T getClient(Class<T> iface, Transceiver transciever)
+  public static <T> T getClient(Class<T> iface, Transceiver transceiver)
     throws IOException {
-    return getClient(iface, transciever,
+    return getClient(iface, transceiver,
                      new ReflectData(iface.getClassLoader()));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
-  public static <T> T getClient(Class<T> iface, Transceiver transciever,
+  public static <T> T getClient(Class<T> iface, Transceiver transceiver,
                                 ReflectData reflectData) throws IOException {
     Protocol protocol = reflectData.getProtocol(iface);
     return (T)Proxy.newProxyInstance
       (reflectData.getClassLoader(),
        new Class[] { iface },
-       new ReflectRequestor(protocol, transciever, reflectData));
+       new ReflectRequestor(protocol, transceiver, reflectData));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

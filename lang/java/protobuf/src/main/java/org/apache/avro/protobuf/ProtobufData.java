@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -111,7 +111,7 @@ public class ProtobufData extends GenericData {
   }
 
   private final Map<Descriptor,FieldDescriptor[]> fieldCache =
-    new ConcurrentHashMap<Descriptor,FieldDescriptor[]>();
+    new ConcurrentHashMap<>();
 
   @Override
   protected Object getRecordState(Object r, Schema s) {
@@ -158,11 +158,18 @@ public class ProtobufData extends GenericData {
 
   @Override
   protected Schema getRecordSchema(Object record) {
-    return getSchema(((Message)record).getDescriptorForType());
+    Descriptor descriptor = ((Message)record).getDescriptorForType();
+    Schema schema = schemaCache.get(descriptor);
+
+    if (schema == null) {
+      schema = getSchema(descriptor);
+      schemaCache.put(descriptor, schema);
+    }
+    return schema;
   }
 
-  private final Map<Class,Schema> schemaCache
-    = new ConcurrentHashMap<Class,Schema>();
+  private final Map<Object,Schema> schemaCache
+    = new ConcurrentHashMap<>();
 
   /** Return a record schema given a protobuf message class. */
   public Schema getSchema(Class c) {
@@ -186,7 +193,7 @@ public class ProtobufData extends GenericData {
   private static final ThreadLocal<Map<Descriptor,Schema>> SEEN
     = new ThreadLocal<Map<Descriptor,Schema>>() {
     protected Map<Descriptor,Schema> initialValue() {
-      return new IdentityHashMap<Descriptor,Schema>();
+      return new IdentityHashMap<>();
     }
   };
 
@@ -204,7 +211,7 @@ public class ProtobufData extends GenericData {
 
       seen.put(descriptor, result);
 
-      List<Field> fields = new ArrayList<Field>();
+      List<Field> fields = new ArrayList<>();
       for (FieldDescriptor f : descriptor.getFields())
         fields.add(new Field(f.getName(), getSchema(f), null, getDefault(f)));
       result.setFields(fields);
@@ -293,7 +300,7 @@ public class ProtobufData extends GenericData {
   }
 
   private Schema getSchema(EnumDescriptor d) {
-    List<String> symbols = new ArrayList<String>();
+    List<String> symbols = new ArrayList<>();
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
     }

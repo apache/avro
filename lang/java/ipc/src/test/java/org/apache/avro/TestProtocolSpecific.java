@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,11 +37,9 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestError;
 import org.apache.avro.test.TestRecord;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertTrue;
 
 import static org.junit.Assert.*;
 
@@ -190,7 +188,7 @@ public class TestProtocolSpecific {
       error = e;
     }
     assertNotNull(error);
-    assertEquals("an error", error.getMessage$().toString());
+    assertEquals("an error", error.getMessage$());
   }
 
   @Test
@@ -240,7 +238,7 @@ public class TestProtocolSpecific {
       argument to check that schema is sent to parse request. */
   public void testParamVariation() throws Exception {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
                    null, null));
     fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
@@ -250,7 +248,7 @@ public class TestProtocolSpecific {
                              null /* doc */,
                              Schema.createRecord(fields),
                              Schema.create(Schema.Type.STRING),
-                             Schema.createUnion(new ArrayList<Schema>()));
+                             Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("hello", message);
     Transceiver t = createTransceiver();
     try {
@@ -281,7 +279,7 @@ public class TestProtocolSpecific {
   public class HandshakeMonitor extends RPCPlugin{
 
     private int handshakes;
-    private HashSet<String> seenProtocols = new HashSet<String>();
+    private HashSet<String> seenProtocols = new HashSet<>();
 
     @Override
     public void serverConnecting(RPCContext context) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -114,7 +114,7 @@ public abstract class JsonProperties {
   /** A value representing a JSON <code>null</code>. */
   public static final Null NULL_VALUE = new Null();
 
-  Map<String,JsonNode> props = new LinkedHashMap<String,JsonNode>(1);
+  Map<String,JsonNode> props = new LinkedHashMap<>(1);
 
   private Set<String> reserved;
 
@@ -193,7 +193,7 @@ public abstract class JsonProperties {
 
   /** Return the defined properties that have string values. */
   @Deprecated public Map<String,String> getProps() {
-    Map<String,String> result = new LinkedHashMap<String,String>();
+    Map<String,String> result = new LinkedHashMap<>();
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       if (e.getValue().isTextual())
         result.put(e.getKey(), e.getValue().getTextValue());
@@ -202,14 +202,14 @@ public abstract class JsonProperties {
 
   /** Convert a map of string-valued properties to Json properties. */
   Map<String,JsonNode> jsonProps(Map<String,String> stringProps) {
-    Map<String,JsonNode> result = new LinkedHashMap<String,JsonNode>();
+    Map<String,JsonNode> result = new LinkedHashMap<>();
     for (Map.Entry<String,String> e : stringProps.entrySet())
       result.put(e.getKey(), TextNode.valueOf(e.getValue()));
     return result;
   }
 
   /**
-   * Return the defined properties as an unmodifieable Map.
+   * Return the defined properties as an unmodifiable Map.
    * @deprecated use {@link #getObjectProps()}
    */
   @Deprecated
@@ -217,9 +217,9 @@ public abstract class JsonProperties {
     return Collections.unmodifiableMap(props);
   }
 
-  /** Return the defined properties as an unmodifieable Map. */
+  /** Return the defined properties as an unmodifiable Map. */
   public Map<String,Object> getObjectProps() {
-    Map<String,Object> result = new LinkedHashMap<String,Object>();
+    Map<String,Object> result = new LinkedHashMap<>();
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       result.put(e.getKey(), JacksonUtils.toObject(e.getValue()));
     return result;

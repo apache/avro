@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -37,10 +37,10 @@ public class TestSeekableByteArrayInput {
 
     private byte[] getSerializedMessage(IndexedRecord message, Schema schema) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(4096);
-        SpecificDatumWriter<IndexedRecord> writer = new SpecificDatumWriter<IndexedRecord>();
+        SpecificDatumWriter<IndexedRecord> writer = new SpecificDatumWriter<>();
         DataFileWriter<IndexedRecord> dfw = null;
         try {
-            dfw = new DataFileWriter<IndexedRecord>(writer).create(schema, baos);
+            dfw = new DataFileWriter<>(writer).create(schema, baos);
             dfw.append(message);
         } finally {
             if (dfw != null) {
@@ -52,7 +52,7 @@ public class TestSeekableByteArrayInput {
 
     private Schema getTestSchema() throws Exception {
         Schema schema = Schema.createRecord("TestRecord", "this is a test record", "org.apache.avro.file", false);
-        List<Field> fields = new ArrayList<Field>();
+        List<Field> fields = new ArrayList<>();
         fields.add(new Field("name", Schema.create(Type.STRING), "this is a test field", null));
         schema.setFields(fields);
         return schema;
@@ -66,7 +66,7 @@ public class TestSeekableByteArrayInput {
 
         byte[] data = getSerializedMessage(message, testSchema);
 
-        GenericDatumReader<IndexedRecord> reader = new GenericDatumReader<IndexedRecord>(testSchema);
+        GenericDatumReader<IndexedRecord> reader = new GenericDatumReader<>(testSchema);
 
         SeekableInput in = new SeekableByteArrayInput(data);
         FileReader<IndexedRecord> dfr = null;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -160,7 +160,7 @@ public class AvroMultipleInputs {
     if (conf.get(mappersKey) == null) {
       return Collections.emptyMap();
     }
-    Map<Path, Class<? extends AvroMapper>> m = new HashMap<Path, Class<? extends AvroMapper>>();
+    Map<Path, Class<? extends AvroMapper>> m = new HashMap<>();
     String[] pathMappings = conf.get(mappersKey).split(",");
     for (String pathMapping : pathMappings) {
       String[] split = pathMapping.split(";");
@@ -187,7 +187,7 @@ public class AvroMultipleInputs {
     if (conf.get(schemaKey) == null) {
       return Collections.emptyMap();
     }
-    Map<Path, Schema> m = new HashMap<Path, Schema>();
+    Map<Path, Schema> m = new HashMap<>();
     String[] schemaMappings =
         conf.get(schemaKey).split(",");
     Schema.Parser schemaParser = new Schema.Parser();

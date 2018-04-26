@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -56,7 +56,7 @@ public class SpecificData extends GenericData {
   private static final Class<?>[] NO_ARG = new Class[]{};
   private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
   private static final Map<Class,Constructor> CTOR_CACHE =
-    new ConcurrentHashMap<Class,Constructor>();
+    new ConcurrentHashMap<>();
 
   public static final String CLASS_PROP = "java-class";
   public static final String KEY_CLASS_PROP = "java-key-class";
@@ -67,7 +67,7 @@ public class SpecificData extends GenericData {
    * combined with the boolean and null literals.
    * combined with the classnames used internally in the generated avro code.
    */
-  public static final Set<String> RESERVED_WORDS = new HashSet<String>
+  public static final Set<String> RESERVED_WORDS = new HashSet<>
     (Arrays.asList(new String[] {
         "abstract", "assert", "boolean", "break", "byte", "case", "catch",
         "char", "class", "const", "continue", "default", "do", "double",
@@ -87,7 +87,7 @@ public class SpecificData extends GenericData {
    * that wouldn't be otherwise correctly readable or writable should be added
    * here, e.g., those without a no-arg constructor or those whose fields are
    * all transient. */
-  protected Set<Class> stringableClasses = new HashSet<Class>();
+  protected Set<Class> stringableClasses = new HashSet<>();
   {
     stringableClasses.add(java.math.BigDecimal.class);
     stringableClasses.add(java.math.BigInteger.class);
@@ -143,7 +143,7 @@ public class SpecificData extends GenericData {
       : super.getEnumSchema(datum);
   }
 
-  private Map<String,Class> classCache = new ConcurrentHashMap<String,Class>();
+  private Map<String,Class> classCache = new ConcurrentHashMap<>();
 
   private static final Class NO_CLASS = new Object(){}.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
@@ -161,7 +161,11 @@ public class SpecificData extends GenericData {
         try {
           c = ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
-          c = NO_CLASS;
+          try {                                   // nested class?
+            c = ClassUtils.forName(getClassLoader(), getNestedClassName(schema));
+          } catch (ClassNotFoundException ex) {
+            c = NO_CLASS;
+          }
         }
         classCache.put(name, c);
       }
@@ -205,8 +209,16 @@ public class SpecificData extends GenericData {
     String name = schema.getName();
     if (namespace == null || "".equals(namespace))
       return name;
-    String dot = namespace.endsWith("$") ? "" : ".";
+    String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
     return namespace + dot + name;
+  }
+
+  private String getNestedClassName(Schema schema) {
+    String namespace = schema.getNamespace();
+    String name = schema.getName();
+    if (namespace == null || "".equals(namespace))
+      return name;
+    return namespace + "$" + name;
   }
 
   private final LoadingCache<java.lang.reflect.Type,Schema> schemaCache =
@@ -215,7 +227,7 @@ public class SpecificData extends GenericData {
           .build(new CacheLoader<java.lang.reflect.Type,Schema>() {
             public Schema load(java.lang.reflect.Type type)
                 throws AvroRuntimeException {
-              return createSchema(type, new LinkedHashMap<String,Schema>());
+              return createSchema(type, new LinkedHashMap<>());
             }
           });
 

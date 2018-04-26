@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -137,7 +137,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter<Object>(schema, data);
+    return new SpecificDatumWriter<>(schema, data);
   }
 
   @Deprecated                                     // for compatibility in 1.5
@@ -146,7 +146,7 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new SpecificDatumReader<Object>(writer, reader, data);
+    return new SpecificDatumReader<>(writer, reader, data);
   }
 
   @Override
@@ -174,22 +174,22 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static  <T> T getClient(Class<T> iface, Transceiver transciever)
+  public static  <T> T getClient(Class<T> iface, Transceiver transceiver)
     throws IOException {
-    return getClient(iface, transciever,
+    return getClient(iface, transceiver,
                      new SpecificData(iface.getClassLoader()));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
-  public static  <T> T getClient(Class<T> iface, Transceiver transciever,
+  public static  <T> T getClient(Class<T> iface, Transceiver transceiver,
                                  SpecificData data)
     throws IOException {
     Protocol protocol = data.getProtocol(iface);
     return (T)Proxy.newProxyInstance
       (data.getClassLoader(),
        new Class[] { iface },
-       new SpecificRequestor(protocol, transciever, data));
+       new SpecificRequestor(protocol, transceiver, data));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */

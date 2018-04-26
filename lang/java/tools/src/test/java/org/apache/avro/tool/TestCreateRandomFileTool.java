@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -80,7 +80,7 @@ public class TestCreateRandomFileTool {
   }
 
   private void check(String... extraArgs) throws Exception {
-    ArrayList<String> args = new ArrayList<String>();
+    ArrayList<String> args = new ArrayList<>();
     args.addAll(Arrays.asList(new String[] {
         OUT_FILE.toString(),
         "--count", COUNT,
@@ -90,7 +90,7 @@ public class TestCreateRandomFileTool {
     run(args);
 
     DataFileReader<Object> reader =
-      new DataFileReader(OUT_FILE, new GenericDatumReader<Object>());
+      new DataFileReader(OUT_FILE, new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
     for (Object expected :
@@ -101,7 +101,7 @@ public class TestCreateRandomFileTool {
   }
 
   private void checkMissingCount(String... extraArgs) throws Exception {
-    ArrayList<String> args = new ArrayList<String>();
+    ArrayList<String> args = new ArrayList<>();
     args.addAll(Arrays.asList(new String[] {
             OUT_FILE.toString(),
             "--schema-file", SCHEMA_FILE.toString()
@@ -135,8 +135,8 @@ public class TestCreateRandomFileTool {
     byte[] file = out.toByteArray();
 
     DataFileStream<Object> reader =
-      new DataFileStream(new ByteArrayInputStream(file),
-                         new GenericDatumReader<Object>());
+        new DataFileStream(new ByteArrayInputStream(file),
+                           new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
     for (Object expected :

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -57,12 +57,12 @@ public class TestAvroKeyValueRecordReader {
         Schema.create(Schema.Type.STRING), Schema.create(Schema.Type.INT));
 
     AvroKeyValue<CharSequence, Integer> firstInputRecord
-        = new AvroKeyValue<CharSequence, Integer>(new GenericData.Record(keyValueSchema));
+        = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     firstInputRecord.setKey("first");
     firstInputRecord.setValue(1);
 
     AvroKeyValue<CharSequence, Integer> secondInputRecord
-        = new AvroKeyValue<CharSequence, Integer>(new GenericData.Record(keyValueSchema));
+        = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     secondInputRecord.setKey("second");
     secondInputRecord.setValue(2);
 

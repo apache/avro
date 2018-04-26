@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -57,6 +57,6 @@ public class AvroKeyValueInputFormat<K, V> extends FileInputFormat<AvroKey<K>, A
       LOG.warn("Value reader schema was not set. Use AvroJob.setInputValueSchema() if desired.");
       LOG.info("Using a value reader schema equal to the writer schema.");
     }
-    return new AvroKeyValueRecordReader<K, V>(keyReaderSchema, valueReaderSchema);
+    return new AvroKeyValueRecordReader<>(keyReaderSchema, valueReaderSchema);
   }
 }

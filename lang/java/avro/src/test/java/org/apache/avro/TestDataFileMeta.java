@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,19 +37,19 @@ import org.junit.Test;
 public class TestDataFileMeta {
   @Test(expected=AvroRuntimeException.class)
   public void testUseReservedMeta() {
-    DataFileWriter<?> w = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+    DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>());
     w.setMeta("avro.foo", "bar");
   }
 
   @Test()
   public void testUseMeta() throws IOException {
-    DataFileWriter<?> w = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+    DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>());
     File f = AvroTestUtil.tempFile(getClass(), "testDataFileMeta.avro");
     w.setMeta("hello", "bar");
     w.create(Schema.create(Type.NULL), f);
     w.close();
 
-    DataFileStream<Void> r = new DataFileStream<Void>(new FileInputStream(f), new GenericDatumReader<Void>());
+    DataFileStream<Void> r = new DataFileStream<>(new FileInputStream(f), new GenericDatumReader<>());
 
     assertTrue(r.getMetaKeys().contains("hello"));
 
@@ -58,7 +58,7 @@ public class TestDataFileMeta {
 
   @Test(expected=AvroRuntimeException.class)
   public void testUseMetaAfterCreate() throws IOException {
-    DataFileWriter<?> w = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+    DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>());
     w.create(Schema.create(Type.NULL), new ByteArrayOutputStream());
     w.setMeta("foo", "bar");
   }
@@ -69,7 +69,7 @@ public class TestDataFileMeta {
     for (int i = -1; i < 33; i++) {
       // 33 invalid, one valid
       try {
-        new DataFileWriter<Object>(new GenericDatumWriter<Object>()).setSyncInterval(i);
+        new DataFileWriter<>(new GenericDatumWriter<>()).setSyncInterval(i);
       } catch (IllegalArgumentException iae) {
         exceptions++;
       }

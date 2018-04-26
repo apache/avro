@@ -41,7 +41,7 @@ namespace Avro.File
         private IDictionary<string, byte[]> _metaData;
 
         /// <summary>
-        /// Open a new writer instance to write  
+        /// Open a new writer instance to write
         /// to a file path, using a Null codec
         /// </summary>
         /// <param name="writer"></param>
@@ -53,7 +53,7 @@ namespace Avro.File
         }
 
         /// <summary>
-        /// Open a new writer instance to write  
+        /// Open a new writer instance to write
         /// to an output stream, using a Null codec
         /// </summary>
         /// <param name="writer"></param>
@@ -65,7 +65,7 @@ namespace Avro.File
         }
 
         /// <summary>
-        /// Open a new writer instance to write  
+        /// Open a new writer instance to write
         /// to a file path with a specified codec
         /// </summary>
         /// <param name="writer"></param>
@@ -143,7 +143,7 @@ namespace Avro.File
             _syncInterval = syncInterval;
         }
 
-        public void Append(T datum) 
+        public void Append(T datum)
         {
             AssertOpen();
             EnsureHeader();
@@ -238,8 +238,8 @@ namespace Avro.File
             //SetMetaInternal(DataFileConstants.MetaDataSync, _syncData); - Avro 1.5.4 C
             SetMetaInternal(DataFileConstants.MetaDataCodec, GetByteValue(_codec.GetName()));
             SetMetaInternal(DataFileConstants.MetaDataSchema, GetByteValue(_schema.ToString()));
-            
-            // write metadata 
+
+            // write metadata
             int size = _metaData.Count;
             _encoder.WriteInt(size);
 
@@ -262,21 +262,21 @@ namespace Avro.File
             return _blockStream.Position;
         }
 
-        private void WriteBlock() 
-        { 
-            if (_blockCount > 0) 
+        private void WriteBlock()
+        {
+            if (_blockCount > 0)
             {
                 byte[] dataToWrite = _blockStream.ToArray();
 
-                // write count 
+                // write count
                 _encoder.WriteLong(_blockCount);
 
-                // write data 
+                // write data
                 _encoder.WriteBytes(_codec.Compress(dataToWrite));
-                    
-                // write sync marker 
+
+                // write sync marker
                 _encoder.WriteFixed(_syncData);
-            
+
                 // reset / re-init block
                 _blockCount = 0;
                 _blockStream = new MemoryStream();
@@ -301,7 +301,7 @@ namespace Avro.File
         {
             _metaData.Add(key, value);
         }
-  
+
         private byte[] GetByteValue(string value)
         {
             return System.Text.Encoding.UTF8.GetBytes(value);

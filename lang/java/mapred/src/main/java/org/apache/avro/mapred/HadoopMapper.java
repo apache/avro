@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,7 +52,7 @@ class HadoopMapper<IN,OUT,K,V,KO,VO> extends MapReduceBase
                   OutputCollector<KO,VO> collector,
                   Reporter reporter) throws IOException {
     if (this.out == null)
-      this.out = new MapCollector<OUT,K,V,KO,VO>(collector, isMapOnly);
+      this.out = new MapCollector<>(collector, isMapOnly);
     mapper.map(wrapper.datum(), out, reporter);
   }
 

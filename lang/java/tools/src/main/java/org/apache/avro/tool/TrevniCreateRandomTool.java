@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,7 +55,7 @@ public class TrevniCreateRandomTool implements Tool {
     Schema schema = Schema.parse(schemaFile);
 
     AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
+      new AvroColumnWriter<>(schema, new ColumnFileMetaData());
 
     for (Object datum : new RandomData(schema, count))
       writer.write(datum);

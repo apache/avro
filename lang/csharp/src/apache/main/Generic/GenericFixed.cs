@@ -62,7 +62,7 @@ namespace Avro.Generic
             Value = value;
         }
 
-        protected GenericFixed(uint size) 
+        protected GenericFixed(uint size)
         {
             this.value = new byte[size];
         }

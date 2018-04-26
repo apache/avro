@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,8 +43,8 @@ public final class AvroFiles {
    */
   public static <T> File createFile(File file, Schema schema, T... records)
       throws IOException {
-    DatumWriter<T> datumWriter = new GenericDatumWriter<T>(schema);
-    DataFileWriter<T> fileWriter = new DataFileWriter<T>(datumWriter);
+    DatumWriter<T> datumWriter = new GenericDatumWriter<>(schema);
+    DataFileWriter<T> fileWriter = new DataFileWriter<>(datumWriter);
     fileWriter.create(schema, file);
     for (T record : records) {
       fileWriter.append(record);

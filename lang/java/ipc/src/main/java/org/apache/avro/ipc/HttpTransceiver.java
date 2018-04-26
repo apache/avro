@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -94,7 +94,7 @@ public class HttpTransceiver extends Transceiver {
 
   static List<ByteBuffer> readBuffers(InputStream in)
     throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       int length = (in.read()<<24)+(in.read()<<16)+(in.read()<<8)+in.read();
       if (length == 0) {                       // end of buffers

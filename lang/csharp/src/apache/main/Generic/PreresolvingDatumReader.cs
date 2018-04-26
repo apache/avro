@@ -32,7 +32,7 @@ namespace Avro.Generic
         public Schema WriterSchema { get; private set; }
 
         protected delegate object ReadItem(object reuse, Decoder dec);
-        
+
         // read a specific field from a decoder
         private delegate object DecoderRead(Decoder dec);
         // skip specific field(s) from a decoder
@@ -42,7 +42,7 @@ namespace Avro.Generic
 
         private readonly ReadItem _reader;
         private readonly Dictionary<SchemaPair,ReadItem> _recordReaders = new Dictionary<SchemaPair,ReadItem>();
-        
+
         protected PreresolvingDatumReader(Schema writerSchema, Schema readerSchema)
         {
             ReaderSchema = readerSchema;
@@ -306,7 +306,7 @@ namespace Avro.Generic
         {
             var rs = readerSchema.ValueSchema;
             var ws = writerSchema.ValueSchema;
-            
+
             var reader = ResolveReader(ws, rs);
             var mapAccess = GetMapAccess(readerSchema);
 
@@ -527,7 +527,7 @@ namespace Avro.Generic
             /// <param name="reuse">If appropriate use this instead of creating a new one.</param>
             /// <returns>An object suitable to deserialize an avro array</returns>
             object Create(object reuse);
-            
+
             /// <summary>
             /// Hint that the array should be able to handle at least targetSize elements. The array
             /// is not required to be resized

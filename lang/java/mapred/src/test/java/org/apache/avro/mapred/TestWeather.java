@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,6 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.file.DataFileReader;
 import static org.apache.avro.file.DataFileConstants.SNAPPY_CODEC;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.After;
 import org.junit.Test;
@@ -85,11 +84,11 @@ public class TestWeather {
     JobClient.runJob(job);
 
     // check output is correct
-    DatumReader<Weather> reader = new SpecificDatumReader<Weather>();
-    DataFileReader<Weather> check = new DataFileReader<Weather>
-      (new File(inDir+"/weather.avro"), reader);
-    DataFileReader<Weather> sorted = new DataFileReader<Weather>
-      (new File(output.toString()+"/part-00000.avro"), reader);
+    DatumReader<Weather> reader = new SpecificDatumReader<>();
+    DataFileReader<Weather> check = new DataFileReader<>
+      (new File(inDir + "/weather.avro"), reader);
+    DataFileReader<Weather> sorted = new DataFileReader<>
+      (new File(output.toString() + "/part-00000.avro"), reader);
 
     for (Weather w : sorted)
       assertEquals(check.next(), w);
@@ -103,7 +102,7 @@ public class TestWeather {
     @Override
     public void map(Weather w, AvroCollector<Pair<Weather,Void>> collector,
                       Reporter reporter) throws IOException {
-      collector.collect(new Pair<Weather,Void>(w, (Void)null));
+      collector.collect(new Pair<>(w, (Void) null));
     }
 
     @Override
@@ -166,11 +165,11 @@ public class TestWeather {
     JobClient.runJob(job);
 
     // check output is correct
-    DatumReader<Weather> reader = new SpecificDatumReader<Weather>();
-    DataFileReader<Weather> check = new DataFileReader<Weather>
-      (new File(inDir+"/weather-sorted.avro"), reader);
-    DataFileReader<Weather> sorted = new DataFileReader<Weather>
-      (new File(output.toString()+"/part-00000.avro"), reader);
+    DatumReader<Weather> reader = new SpecificDatumReader<>();
+    DataFileReader<Weather> check = new DataFileReader<>
+      (new File(inDir + "/weather-sorted.avro"), reader);
+    DataFileReader<Weather> sorted = new DataFileReader<>
+      (new File(output.toString() + "/part-00000.avro"), reader);
 
     for (Weather w : sorted)
       assertEquals(check.next(), w);

@@ -41,7 +41,7 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// a boolean is written as a single byte 
+        /// a boolean is written as a single byte
         /// whose value is either 0 (false) or 1 (true).
         /// </summary>
         /// <returns></returns>
@@ -125,7 +125,7 @@ namespace Avro.IO
         }
 
         /// <summary>
-        /// Bytes are encoded as a long followed by that many bytes of data. 
+        /// Bytes are encoded as a long followed by that many bytes of data.
         /// </summary>
         /// <returns></returns>
         public byte[] ReadBytes()

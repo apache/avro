@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,7 +65,7 @@ public class AvroTrevniKeyValueRecordWriter <K, V> extends AvroTrevniRecordWrite
     super(context);
 
     mKeyValuePairSchema = initSchema(context);
-    keyValueRecord  = new AvroKeyValue<Object, Object>(new GenericData.Record(mKeyValuePairSchema));
+    keyValueRecord  = new AvroKeyValue<>(new GenericData.Record(mKeyValuePairSchema));
   }
 
   /** {@inheritDoc} */

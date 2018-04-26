@@ -76,8 +76,8 @@ namespace Avro
 
         /// <summary>
         /// Custom properties for the field. We don't store the fields custom properties in
-        /// the field type's schema because if the field type is only a reference to the schema 
-        /// instead of an actual schema definition, then the schema could already have it's own set 
+        /// the field type's schema because if the field type is only a reference to the schema
+        /// instead of an actual schema definition, then the schema could already have it's own set
         /// of custom properties when it was previously defined.
         /// </summary>
         private readonly PropertyMap Props;

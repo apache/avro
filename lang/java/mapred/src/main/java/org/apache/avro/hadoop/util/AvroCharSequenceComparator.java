@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import java.util.Comparator;
 public class AvroCharSequenceComparator<T> implements Comparator<T> {
   /** A singleton instance. */
   public static final AvroCharSequenceComparator<CharSequence> INSTANCE
-      = new AvroCharSequenceComparator<CharSequence>();
+      = new AvroCharSequenceComparator<>();
 
   /** {@inheritDoc} */
   @Override
