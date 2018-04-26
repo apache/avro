@@ -101,9 +101,6 @@ class SchemaResolutionException(schema.AvroException):
 # Validate
 #
 
-# def _is_timezone_aware_datetime(dt):
-#   return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
-
 def validate(expected_schema, datum):
   """Determine if a python datum is an instance of a schema."""
   schema_type = expected_schema.type
@@ -128,8 +125,7 @@ def validate(expected_schema, datum):
       if expected_schema.logical_type == constants.TIME_MICROS:
         return isinstance(datum, datetime.time)
       elif expected_schema.logical_type in [constants.TIMESTAMP_MILLIS, constants.TIMESTAMP_MICROS]:
-        # TODO(joe): THARS YOUR PROBLEM _is_timezone_aware_datetime
-        return isinstance(datum, datetime.datetime) #and _is_timezone_aware_datetime(datum)
+        return isinstance(datum, datetime.datetime)
     return (isinstance(datum, (int, long))
             and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
   elif schema_type in ['float', 'double']:
@@ -295,7 +291,7 @@ class BinaryDecoder(object):
     """
     timestamp_millis = self.read_long()
     timedelta = datetime.timedelta(microseconds=timestamp_millis * 1000)
-    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
     return unix_epoch_datetime + timedelta
 
   def read_timestamp_micros_from_long(self):
@@ -305,7 +301,7 @@ class BinaryDecoder(object):
     """
     timestamp_micros = self.read_long()
     timedelta = datetime.timedelta(microseconds=timestamp_micros)
-    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
     return unix_epoch_datetime + timedelta
 
 
@@ -473,8 +469,7 @@ class BinaryEncoder(object):
     Encode python datetime object as long.
     It stores the number of milliseconds from midnight of unix epoch, 1 January 1970.
     """
-    datum = datum.astimezone(tz=timezones.utc)
-    timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+    timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
     milliseconds = self._timedelta_total_microseconds(timedelta) / 1000
     self.write_long(long(milliseconds))
 
@@ -483,8 +478,6 @@ class BinaryEncoder(object):
     Encode python datetime object as long.
     It stores the number of microseconds from midnight of unix epoch, 1 January 1970.
     """
-    # datum = datum.astimezone(tz=timezones.utc)
-    # timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
     timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
     microseconds = self._timedelta_total_microseconds(timedelta)
     self.write_long(long(microseconds))
