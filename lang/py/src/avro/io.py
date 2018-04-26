@@ -39,7 +39,6 @@ uses the following mapping:
 import struct
 from avro import schema
 from avro import constants
-from avro import timezones
 import sys
 from binascii import crc32
 import datetime
@@ -921,7 +920,7 @@ class DatumWriter(object):
           writers_schema.logical_type == constants.DATE):
         encoder.write_date_int(datum)
       elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIME_MILLIS):
+          writers_schema.logical_type == constants.TIME_MILLIS):
         encoder.write_time_millis_int(datum)
       else:
         encoder.write_int(datum)
@@ -930,10 +929,10 @@ class DatumWriter(object):
           writers_schema.logical_type == constants.TIME_MICROS):
         encoder.write_time_micros_long(datum)
       elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
+          writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
         encoder.write_timestamp_millis_long(datum)
       elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIMESTAMP_MICROS):
+          writers_schema.logical_type == constants.TIMESTAMP_MICROS):
         encoder.write_timestamp_micros_long(datum)
       else:
         encoder.write_long(datum)
