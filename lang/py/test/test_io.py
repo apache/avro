@@ -69,6 +69,10 @@ SCHEMAS_TO_VALIDATE = (
     '{"type": "long", "logicalType": "timestamp-micros"}',
     datetime.datetime(2000, 1, 18, 2, 2, 1, 123499)
   ),
+  (
+    '{"logicalType": "uuid", "type": "string"}',
+    u'90bbcee8-d579-4863-9c9b-dd4edaebac36'
+  ),
   ("""\
    {"type": "record",
     "name": "Test",
