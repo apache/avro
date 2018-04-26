@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,6 @@ import set_avro_test_path
 
 from avro import schema
 from avro import io
-from avro import timezones
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
@@ -48,27 +47,31 @@ SCHEMAS_TO_VALIDATE = (
   ('{"type": "long", "logicalType": "time-micros"}', datetime.time(0, 0, 0, 000000)),
   (
     '{"type": "long", "logicalType": "timestamp-millis"}',
-    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=timezones.utc)
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000)
   ),
   (
     '{"type": "long", "logicalType": "timestamp-millis"}',
-    datetime.datetime(9999, 12, 31, 23, 59, 59, 999000, tzinfo=timezones.utc)
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999000)
   ),
   (
     '{"type": "long", "logicalType": "timestamp-millis"}',
-    datetime.datetime(2000, 1, 18, 2, 2, 1, 100000, tzinfo=timezones.tst)
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 100000)
   ),
   (
     '{"type": "long", "logicalType": "timestamp-micros"}',
-    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=timezones.utc)
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000)
   ),
   (
     '{"type": "long", "logicalType": "timestamp-micros"}',
-    datetime.datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezones.utc)
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999999)
   ),
   (
     '{"type": "long", "logicalType": "timestamp-micros"}',
-    datetime.datetime(2000, 1, 18, 2, 2, 1, 123499, tzinfo=timezones.tst)
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 123499)
+  ),
+  (
+    '{"logicalType": "uuid", "type": "string"}',
+    u'90bbcee8-d579-4863-9c9b-dd4edaebac36'
   ),
   ("""\
    {"type": "record",
@@ -201,7 +204,7 @@ def check_skip_number(number_type):
     if read_value == VALUE_TO_READ: correct += 1
     print ''
   return correct
-    
+
 class TestIO(unittest.TestCase):
   #
   # BASIC FUNCTIONALITY
@@ -230,8 +233,6 @@ class TestIO(unittest.TestCase):
       round_trip_datum = read_datum(writer, writers_schema)
 
       print 'Round Trip Datum: %s' % round_trip_datum
-      if isinstance(round_trip_datum, datetime.datetime):
-        datum = datum.astimezone(tz=timezones.utc)
       if datum == round_trip_datum: correct += 1
     self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
 

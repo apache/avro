@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -128,7 +128,7 @@ class Schema(object):
     self._props.update(other_props or {})
 
   # Read-only properties dict. Printing schemas
-  # creates JSON properties directly from this dict. 
+  # creates JSON properties directly from this dict.
   props = property(lambda self: self._props)
 
   # Read-only property dict. Non-reserved properties
@@ -157,11 +157,11 @@ class Schema(object):
 
 class Name(object):
   """Class to describe Avro name."""
-  
+
   def __init__(self, name_attr, space_attr, default_space):
     """
     Formulate full name according to the specification.
-    
+
     @arg name_attr: name value read in schema or None.
     @arg space_attr: namespace value read in schema or None.
     @ard default_space: the current default space or None.
@@ -180,19 +180,19 @@ class Name(object):
     elif name_attr == "":
       fail_msg = 'Space must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
-  
+
     if not (isinstance(default_space, basestring) or (default_space is None)):
       fail_msg = 'Default space must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
     elif name_attr == "":
       fail_msg = 'Default must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
-    
-    self._full = None; 
-    
+
+    self._full = None;
+
     if name_attr is None or name_attr == "":
         return;
-    
+
     if (name_attr.find('.') < 0):
       if (space_attr is not None) and (space_attr != ""):
         self._full = "%s.%s" % (space_attr, name_attr)
@@ -202,20 +202,20 @@ class Name(object):
         else:
           self._full = name_attr
     else:
-        self._full = name_attr         
-    
+        self._full = name_attr
+
   def __eq__(self, other):
     if not isinstance(other, Name):
         return False
     return (self.fullname == other.fullname)
-      
+
   fullname = property(lambda self: self._full)
 
   def get_space(self):
     """Back out a namespace from full name."""
     if self._full is None:
         return None
-    
+
     if (self._full.find('.') > 0):
       return self._full.rsplit(".", 1)[0]
     else:
@@ -226,17 +226,17 @@ class Names(object):
   def __init__(self, default_namespace=None):
       self.names = {}
       self.default_namespace = default_namespace
-      
+
   def has_name(self, name_attr, space_attr):
       test = Name(name_attr, space_attr, self.default_namespace).fullname
       return self.names.has_key(test)
-  
-  def get_name(self, name_attr, space_attr):    
+
+  def get_name(self, name_attr, space_attr):
       test = Name(name_attr, space_attr, self.default_namespace).fullname
       if not self.names.has_key(test):
           return None
       return self.names[test]
-  
+
   def prune_namespace(self, properties):
     """given a properties, return properties with namespace removed if
     it matches the own default namespace"""
@@ -257,14 +257,14 @@ class Names(object):
   def add_name(self, name_attr, space_attr, new_schema):
     """
     Add a new schema object to the name set.
-    
+
       @arg name_attr: name value read in schema
       @arg space_attr: namespace value read in schema.
-      
+
       @return: the Name that was just added.
     """
     to_add = Name(name_attr, space_attr, self.default_namespace)
-    
+
     if to_add.fullname in VALID_TYPES:
       fail_msg = '%s is a reserved type name.' % to_add.fullname
       raise SchemaParseException(fail_msg)
@@ -297,12 +297,12 @@ class NamedSchema(Schema):
 
     # Store name and namespace as they were read in origin schema
     self.set_prop('name', name)
-    if namespace is not None: 
+    if namespace is not None:
       self.set_prop('namespace', new_name.get_space())
 
     # Store full name as calculated from name, namespace
     self._fullname = new_name.fullname
-    
+
   def name_ref(self, names):
     if self.namespace == names.default_namespace:
       return self.name
@@ -612,7 +612,7 @@ class RecordSchema(NamedSchema):
     field_names = []
     for i, field in enumerate(field_data):
       if hasattr(field, 'get') and callable(field.get):
-        type = field.get('type')        
+        type = field.get('type')
         name = field.get('name')
 
         # null values can have a default value of None
@@ -654,7 +654,7 @@ class RecordSchema(NamedSchema):
       NamedSchema.__init__(self, schema_type, name, namespace, names,
                            other_props)
 
-    if schema_type == 'record': 
+    if schema_type == 'record':
       old_default = names.default_namespace
       names.default_namespace = Name(name, namespace,
                                      names.default_namespace).get_space()
@@ -804,7 +804,7 @@ def make_avsc_object(json_data, names=None):
   """
   if names == None:
     names = Names()
-  
+
   # JSON object (non-union)
   if hasattr(json_data, 'get') and callable(json_data.get):
     type = json_data.get('type')
@@ -812,8 +812,6 @@ def make_avsc_object(json_data, names=None):
     logical_type = None
     if 'logicalType' in json_data:
       logical_type = json_data.get('logicalType')
-      if logical_type not in constants.SUPPORTED_LOGICAL_TYPE:
-        raise SchemaParseException("Currently does not support %s logical type" % logical_type)
     if type in PRIMITIVE_TYPES:
       if type == 'int' and logical_type == constants.DATE:
         return DateSchema(other_props)
