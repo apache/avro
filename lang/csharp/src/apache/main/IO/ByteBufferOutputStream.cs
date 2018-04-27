@@ -84,7 +84,7 @@ namespace Avro.IO
         public List<MemoryStream> GetBufferList()
         {
             List<MemoryStream> result = _buffers;
-            
+
             Reset();
 
             foreach (MemoryStream b in result)

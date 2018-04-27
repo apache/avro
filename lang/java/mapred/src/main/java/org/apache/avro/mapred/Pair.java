@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -75,7 +75,7 @@ public class Pair<K,V>
   }
 
   private static final Map<Schema,Map<Schema,Schema>> SCHEMA_CACHE =
-    new WeakHashMap<Schema,Map<Schema,Schema>>();
+    new WeakHashMap<>();
 
   /** Get a pair schema. */
   public static Schema getPairSchema(Schema key, Schema value) {
@@ -83,7 +83,7 @@ public class Pair<K,V>
     synchronized (SCHEMA_CACHE) {
       valueSchemas = SCHEMA_CACHE.get(key);
       if (valueSchemas == null) {
-        valueSchemas = new WeakHashMap<Schema,Schema>();
+        valueSchemas = new WeakHashMap<>();
         SCHEMA_CACHE.put(key, valueSchemas);
       }
       Schema result;
@@ -98,7 +98,7 @@ public class Pair<K,V>
 
   private static Schema makePairSchema(Schema key, Schema value) {
     Schema pair = Schema.createRecord(PAIR, null, null, false);
-    List<Field> fields = new ArrayList<Field>();
+    List<Field> fields = new ArrayList<>();
     fields.add(new Field(KEY, key, "", null));
     fields.add(new Field(VALUE, value, "", null, Field.Order.IGNORE));
     pair.setFields(fields);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -96,7 +96,7 @@ public class TestSchemaCompatibilityMissingUnionBranch {
               asList("/1", "/2", "/3") },
         { A_DINT_B_DINT_UNION_RECORD1, A_DINT_B_DINT_STRING_UNION_RECORD1,
               asList("reader union lacking writer type: STRING"), asList("/fields/1/type/1") } };
-    List<Object[]> list = new ArrayList<Object[]>(fields.length);
+    List<Object[]> list = new ArrayList<>(fields.length);
     for (Object[] schemas : fields) {
       list.add(schemas);
     }

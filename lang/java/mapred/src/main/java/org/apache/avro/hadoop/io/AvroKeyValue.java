@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -146,7 +146,7 @@ public class AvroKeyValue<K, V> {
       if (null == genericRecord) {
         return null;
       }
-      return new AvroKeyValue<K, V>(genericRecord);
+      return new AvroKeyValue<>(genericRecord);
     }
 
     /** {@inheritDoc} */

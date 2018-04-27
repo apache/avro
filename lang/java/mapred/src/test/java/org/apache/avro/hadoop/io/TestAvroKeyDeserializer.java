@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,16 +39,15 @@ public class TestAvroKeyDeserializer {
     Schema writerSchema = Schema.create(Schema.Type.STRING);
     Schema readerSchema = Schema.create(Schema.Type.STRING);
     ClassLoader classLoader = this.getClass().getClassLoader();
-    AvroKeyDeserializer<CharSequence> deserializer
-      = new AvroKeyDeserializer<CharSequence>(writerSchema, readerSchema,
-                                              classLoader);
+    AvroKeyDeserializer<CharSequence> deserializer =
+        new AvroKeyDeserializer<>(writerSchema, readerSchema, classLoader);
 
     // Check the schemas.
     assertEquals(writerSchema, deserializer.getWriterSchema());
     assertEquals(readerSchema, deserializer.getReaderSchema());
 
     // Write some records to deserialize.
-    DatumWriter<CharSequence> datumWriter = new GenericDatumWriter<CharSequence>(writerSchema);
+    DatumWriter<CharSequence> datumWriter = new GenericDatumWriter<>(writerSchema);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
     datumWriter.write("record1", encoder);

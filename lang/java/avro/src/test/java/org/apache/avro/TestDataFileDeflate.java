@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,7 @@ public class TestDataFileDeflate {
     Schema schema = Schema.create(Type.STRING);
 
     // Write it
-    DataFileWriter<Utf8> w = new DataFileWriter<Utf8>(new GenericDatumWriter<Utf8>(schema));
+    DataFileWriter<Utf8> w = new DataFileWriter<>(new GenericDatumWriter<>(schema));
     w.setCodec(CodecFactory.deflateCodec(6));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     w.create(schema, baos);
@@ -52,9 +52,9 @@ public class TestDataFileDeflate {
     w.close();
 
     // Read it
-    DataFileStream<Utf8> r = new DataFileStream<Utf8>(
+    DataFileStream<Utf8> r = new DataFileStream<>(
         new ByteArrayInputStream(baos.toByteArray()),
-        new GenericDatumReader<Utf8>(schema));
+        new GenericDatumReader<>(schema));
     assertEquals("hello world", r.next().toString());
     assertEquals("hello moon", r.next().toString());
     assertEquals("bye bye world", r.next().toString());

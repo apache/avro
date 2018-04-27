@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -52,7 +52,7 @@ public class TestSchemaCompatibilityNameMismatch {
         { FIXED_4_BYTES, FIXED_4_ANOTHER_NAME, "expected: AnotherName", "/name" }, { FIXED_4_NAMESPACE_V1,
             FIXED_4_NAMESPACE_V2, "expected: org.apache.avro.tests.v_2_0.Fixed", "/name" },
         { A_DINT_B_DENUM_1_RECORD1, A_DINT_B_DENUM_2_RECORD1, "expected: Enum2", "/fields/1/type/name" } };
-    List<Object[]> list = new ArrayList<Object[]>(fields.length);
+    List<Object[]> list = new ArrayList<>(fields.length);
     for (Object[] schemas : fields) {
       list.add(schemas);
     }

@@ -86,7 +86,7 @@ namespace Avro
         internal static Schema ParseJson(JToken jtok, SchemaNames names, string encspace)
         {
             if (null == jtok) throw new ArgumentNullException("j", "j cannot be null.");
-            
+
             if (jtok.Type == JTokenType.String) // primitive schema with no 'type' property or primitive or named type of a record field
             {
                 string value = (string)jtok;
@@ -117,11 +117,11 @@ namespace Avro
                 {
                     string type = (string)jtype;
 
-                    if (type.Equals("array")) 
+                    if (type.Equals("array"))
                         return ArraySchema.NewInstance(jtok, props, names, encspace);
                     if (type.Equals("map"))
                         return MapSchema.NewInstance(jtok, props, names, encspace);
-                    
+
                     Schema schema = PrimitiveSchema.NewInstance((string)type, props);
                     if (null != schema) return schema;
 
@@ -208,7 +208,7 @@ namespace Avro
         }
 
         /// <summary>
-        /// Writes opening { and 'type' property 
+        /// Writes opening { and 'type' property
         /// </summary>
         /// <param name="writer">JSON writer</param>
         private void writeStartObject(JsonTextWriter writer)

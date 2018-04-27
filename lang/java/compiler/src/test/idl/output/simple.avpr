@@ -54,7 +54,15 @@
       "name": "t",
       "type": {"type": "int", "logicalType": "time-millis"},
       "default": 0
-    } ],
+    } , {
+      "name": "l",
+      "type": {"type": "long", "foo.bar": "bar.foo"},
+      "default": 0
+    } , {
+      "name": "prop",
+      "type": [ "null" , {"type":"string", "foo.foo.bar": 42, "foo.foo.foo": "3foo"} ],
+      "default": null
+    }],
     "my-property" : {
       "key" : 3
     }

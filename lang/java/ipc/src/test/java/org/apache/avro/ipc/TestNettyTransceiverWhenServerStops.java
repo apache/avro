@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,7 +21,6 @@ import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
-import org.junit.Test;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -47,7 +46,7 @@ public class TestNettyTransceiverWhenServerStops {
     final AtomicInteger successes = new AtomicInteger();
     final AtomicInteger failures = new AtomicInteger();
     final AtomicBoolean quitOnFailure = new AtomicBoolean();
-    List<Thread> threads = new ArrayList<Thread>();
+    List<Thread> threads = new ArrayList<>();
 
     // Start a bunch of client threads that use the transceiver to send messages
     for (int i = 0; i < 100; i++) {

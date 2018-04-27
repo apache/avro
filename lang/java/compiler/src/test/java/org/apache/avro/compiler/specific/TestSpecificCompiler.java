@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -96,18 +96,18 @@ public class TestSpecificCompiler {
             compiler.getStandardFileManager(null, null, null);
 
     File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
-    List<File> javaFiles = new ArrayList<File>();
+    List<File> javaFiles = new ArrayList<>();
     for (SpecificCompiler.OutputFile o : outputs) {
       javaFiles.add(o.writeToDestination(null, dstDir));
     }
 
-    final List<Diagnostic<?>> warnings = new ArrayList<Diagnostic<?>>();
+    final List<Diagnostic<?>> warnings = new ArrayList<>();
     DiagnosticListener<JavaFileObject> diagnosticListener = new DiagnosticListener<JavaFileObject>() {
       @Override
       public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
         switch (diagnostic.getKind()) {
         case ERROR:
-          // Do not add these to warnings becuase they will fail the compile, anyway.
+          // Do not add these to warnings because they will fail the compile, anyway.
           LOG.error("{}", diagnostic);
           break;
         case WARNING:
@@ -325,7 +325,7 @@ public class TestSpecificCompiler {
     is.read(fileInDefaultEncoding);
     is.close(); //close input stream otherwise delete might fail
     if (!this.outputFile.delete()) {
-      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasnt changed.
+      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasn't changed.
     }
     // Generate file in another encoding (make sure it has different number of bytes per character)
     String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";

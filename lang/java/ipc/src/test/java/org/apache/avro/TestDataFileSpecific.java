@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,11 +18,7 @@
 package org.apache.avro;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -53,7 +49,7 @@ public class TestDataFileSpecific {
 
     // write a file using generic objects
     DataFileWriter<Record> writer
-      = new DataFileWriter<Record>(new GenericDatumWriter<Record>(s1))
+      = new DataFileWriter<>(new GenericDatumWriter<Record>(s1))
       .create(s1, FILE);
     for (int i = 0; i < 10; i++) {
       Record r = new Record(s1);
@@ -66,10 +62,10 @@ public class TestDataFileSpecific {
     // read using a 'new SpecificDatumReader<T>()' to force inference of
     // reader's schema from runtime
     DataFileReader<Foo> reader =
-      new DataFileReader<Foo>(FILE, new SpecificDatumReader<Foo>());
+      new DataFileReader<>(FILE, new SpecificDatumReader<>());
     int i = 0;
     for (Foo f : reader)
-      Assert.assertEquals(""+(i++), f.getLabel().toString());
+      Assert.assertEquals(""+(i++), f.getLabel());
     Assert.assertEquals(10, i);
     reader.close();
   }

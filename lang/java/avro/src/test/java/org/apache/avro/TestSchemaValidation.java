@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -385,7 +385,7 @@ public class TestSchemaValidation {
 
   private void testValidatorPasses(SchemaValidator validator,
       Schema schema, Schema... prev) throws SchemaValidationException {
-    ArrayList<Schema> prior = new ArrayList<Schema>();
+    ArrayList<Schema> prior = new ArrayList<>();
     for(int i = prev.length - 1; i >= 0; i--) {
       prior.add(prev[i]);
     }
@@ -394,7 +394,7 @@ public class TestSchemaValidation {
 
   private void testValidatorFails(SchemaValidator validator,
       Schema schemaFails, Schema... prev) throws SchemaValidationException {
-    ArrayList<Schema> prior = new ArrayList<Schema>();
+    ArrayList<Schema> prior = new ArrayList<>();
     for(int i = prev.length - 1; i >= 0; i--) {
       prior.add(prev[i]);
     }
@@ -406,5 +406,17 @@ public class TestSchemaValidation {
       threw = true;
     }
     Assert.assertTrue(threw);
+  }
+  public static final org.apache.avro.Schema recursiveSchema = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Node\",\"namespace\":\"avro\",\"fields\":[{\"name\":\"value\",\"type\":[\"null\",\"Node\"],\"default\":null}]}");
+
+  /**
+   * Unit test to verify that recursive schemas can be validated.
+   * See AVRO-2122.
+   */
+  @Test
+  public void testRecursiveSchemaValidation() throws SchemaValidationException {
+    // before AVRO-2122, this would cause a StackOverflowError
+    final SchemaValidator backwardValidator = builder.canReadStrategy().validateLatest();
+    backwardValidator.validate(recursiveSchema, Arrays.asList(recursiveSchema));
   }
 }

@@ -23,13 +23,16 @@
 #include "Boost.hh"
 #include "Types.hh"
 
-/// \file
-///
-/// Define an is_serializable trait for types we can serialize natively. 
-/// New types will need to define the trait as well.
-
+/** @file
+ *
+ * This header contains type traits and similar utilities used by the library.
+ */
 namespace avro {
 
+/**
+ * Define an is_serializable trait for types we can serialize natively. 
+ * New types will need to define the trait as well.
+ */
 template <typename T>
 struct is_serializable : public boost::false_type{};
 
@@ -39,6 +42,47 @@ struct is_promotable : public boost::false_type{};
 template <typename T>
 struct type_to_avro {
     static const Type type = AVRO_NUM_TYPES;
+};
+
+/**
+ * Check if a \p T is a complete type i.e. it is defined as opposed to just
+ * declared.
+ *
+ * is_defined<T>::value will be true or false depending on whether T is a
+ * complete type or not respectively.
+ */
+template <class T>
+struct is_defined {
+
+    typedef char yes[1];
+
+    typedef char no[2];
+
+    template <class U> static yes& test(char(*)[sizeof(U)]) { };
+
+    template <class U> static no& test(...) { };
+
+    static const bool value = sizeof(test<T>(0)) == sizeof(yes);
+};
+
+/**
+ * Similar to is_defined, but used to check if T is not defined.
+ *
+ * is_not_defined<T>::value will be true or false depending on whether T is an
+ * incomplete type or not respectively.
+ */
+template <class T>
+struct is_not_defined {
+
+    typedef char yes[1];
+
+    typedef char no[2];
+
+    template <class U> static yes& test(char(*)[sizeof(U)]) { };
+
+    template <class U> static no& test(...) { };
+
+    static const bool value = sizeof(test<T>(0)) == sizeof(no);
 };
 
 #define DEFINE_PRIMITIVE(CTYPE, AVROTYPE) \

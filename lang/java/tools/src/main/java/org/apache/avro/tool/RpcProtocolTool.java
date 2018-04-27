@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -74,10 +74,10 @@ public class RpcProtocolTool implements Tool {
           .setClientHash(new MD5(new byte[16]))
           .setServerHash(new MD5(new byte[16]))
           .setClientProtocol(null)
-          .setMeta(new LinkedHashMap<String, ByteBuffer>())
+          .setMeta(new LinkedHashMap<>())
           .build();
 
-      DatumWriter<HandshakeRequest> handshakeWriter = new SpecificDatumWriter<HandshakeRequest>(HandshakeRequest.class);
+      DatumWriter<HandshakeRequest> handshakeWriter = new SpecificDatumWriter<>(HandshakeRequest.class);
 
       ByteBufferOutputStream byteBufferOutputStream = new ByteBufferOutputStream();
 
@@ -93,7 +93,7 @@ public class RpcProtocolTool implements Tool {
       // parse the response
       ByteBufferInputStream byteBufferInputStream = new ByteBufferInputStream(response);
 
-      DatumReader<HandshakeResponse> handshakeReader = new SpecificDatumReader<HandshakeResponse>(HandshakeResponse.class);
+      DatumReader<HandshakeResponse> handshakeReader = new SpecificDatumReader<>(HandshakeResponse.class);
 
       HandshakeResponse handshakeResponse = handshakeReader.read(null, DecoderFactory.get().binaryDecoder(byteBufferInputStream, null));
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -197,11 +197,11 @@ public class TestSpecificLogicalTypes {
   private <D> List<D> read(Schema schema, File file)
       throws IOException {
     DatumReader<D> reader = newReader(schema);
-    List<D> data = new ArrayList<D>();
+    List<D> data = new ArrayList<>();
     FileReader<D> fileReader = null;
 
     try {
-      fileReader = new DataFileReader<D>(file, reader);
+      fileReader = new DataFileReader<>(file, reader);
       for (D datum : fileReader) {
         data.add(datum);
       }
@@ -224,7 +224,7 @@ public class TestSpecificLogicalTypes {
       throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = SpecificData.get().createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<D>(writer);
+    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
     try {
       fileWriter.create(schema, file);

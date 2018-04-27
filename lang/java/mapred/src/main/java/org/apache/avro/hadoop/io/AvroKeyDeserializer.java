@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -61,6 +61,6 @@ public class AvroKeyDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D> 
    */
   @Override
   protected AvroWrapper<D> createAvroWrapper() {
-    return new AvroKey<D>(null);
+    return new AvroKey<>(null);
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -50,7 +50,7 @@ public class AvroAsTextInputFormat extends FileInputFormat<Text, Text> {
   protected FileStatus[] listStatus(JobConf job) throws IOException {
     if (job.getBoolean(AvroInputFormat.IGNORE_FILES_WITHOUT_EXTENSION_KEY,
         AvroInputFormat.IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT)) {
-      List<FileStatus> result = new ArrayList<FileStatus>();
+      List<FileStatus> result = new ArrayList<>();
       for (FileStatus file : super.listStatus(job))
         if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
           result.add(file);

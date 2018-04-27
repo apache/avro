@@ -81,7 +81,7 @@ namespace Avro.Specific
     public class SpecificDefaultReader : DefaultReader
     {
         /// <summary>
-        /// Static dictionary of type names and its corresponding assembly type. 
+        /// Static dictionary of type names and its corresponding assembly type.
         /// This is used to prevent multiple reflection for the same type name.
         /// </summary>
         private static IDictionary<string, Type> TypeName = new Dictionary<string, Type>();
@@ -91,7 +91,7 @@ namespace Avro.Specific
         /// </summary>
         /// <param name="writerSchema">schema of the object that wrote the data</param>
         /// <param name="readerSchema">schema of the object that will store the data</param>
-        public SpecificDefaultReader(Schema writerSchema, Schema readerSchema) : base(writerSchema,readerSchema) 
+        public SpecificDefaultReader(Schema writerSchema, Schema readerSchema) : base(writerSchema,readerSchema)
         {
         }
 
@@ -130,7 +130,7 @@ namespace Avro.Specific
                     throw new AvroException(ex.Message + " in field " + wf.Name);
                 }
             }
-            
+
             var defaultStream = new MemoryStream();
             var defaultEncoder = new BinaryEncoder(defaultStream);
             var defaultDecoder = new BinaryDecoder(defaultStream);
@@ -146,7 +146,7 @@ namespace Avro.Specific
                 obj = rec.Get(rf.Pos);
                 rec.Put(rf.Pos, Read(obj, rf.Schema, rf.Schema, defaultDecoder));
             }
-            
+
             return rec;
         }
 
@@ -210,7 +210,7 @@ namespace Avro.Specific
             }
             else
                 array = ObjectCreator.Instance.New(getTargetType(readerSchema), Schema.Type.Array) as System.Collections.IList;
-            
+
             int i = 0;
             for (int n = (int)dec.ReadArrayStart(); n != 0; n = (int)dec.ReadArrayNext())
             {

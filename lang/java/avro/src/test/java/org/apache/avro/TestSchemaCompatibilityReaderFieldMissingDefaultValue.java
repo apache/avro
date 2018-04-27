@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
   public static Iterable<Object[]> data() {
     Object[][] fields = { //
         { A_INT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" }, { A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" } };
-    List<Object[]> list = new ArrayList<Object[]>(fields.length);
+    List<Object[]> list = new ArrayList<>(fields.length);
     for (Object[] schemas : fields) {
       list.add(schemas);
     }

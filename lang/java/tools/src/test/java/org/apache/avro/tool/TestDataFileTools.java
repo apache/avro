@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -67,7 +67,7 @@ public class TestDataFileTools {
     fw.close();
 
     DataFileWriter<Object> writer
-      = new DataFileWriter<Object>(new GenericDatumWriter<Object>(schema))
+      = new DataFileWriter<>(new GenericDatumWriter<>(schema))
       .setMeta(KEY_NEEDING_ESCAPES, "")
       .create(schema, sampleFile);
     StringBuilder builder = new StringBuilder();
@@ -144,7 +144,7 @@ public class TestDataFileTools {
 
   @Test
   public void testWrite() throws Exception {
-    testWrite("plain", Collections.<String>emptyList(), "null");
+    testWrite("plain", Collections.emptyList(), "null");
   }
 
   public void testWrite(String name, List<String> extra, String expectedCodec)
@@ -158,7 +158,7 @@ public class TestDataFileTools {
         TestDataFileTools.class + ".testWrite." + name + ".avro");
     FileOutputStream fout = new FileOutputStream(outFile);
     PrintStream out = new PrintStream(fout);
-    List<String> args = new ArrayList<String>();
+    List<String> args = new ArrayList<>();
     for (String arg : extraArgs) {
         args.add(arg);
     }
@@ -173,8 +173,8 @@ public class TestDataFileTools {
     fout.close();
 
     // Read it back, and make sure it's valid.
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileReader<Object> fileReader = new DataFileReader<Object>(outFile,reader);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    DataFileReader<Object> fileReader = new DataFileReader<>(outFile, reader);
     int i = 0;
     for (Object datum : fileReader) {
       assertEquals(i, datum);
@@ -216,9 +216,9 @@ public class TestDataFileTools {
   }
 
   private int countRecords(File outFile) throws IOException {
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
     DataFileReader<Object> fileReader =
-      new DataFileReader<Object>(outFile,reader);
+      new DataFileReader<>(outFile, reader);
     int i = 0;
     for (@SuppressWarnings("unused") Object datum : fileReader) {
       i++;
@@ -229,7 +229,7 @@ public class TestDataFileTools {
   @Test
   public void testDifferentSeparatorsBetweenJsonRecords() throws Exception {
     File outFile = writeToAvroFile(
-        "seperators",
+        "separators",
         "{ \"type\":\"array\", \"items\":\"int\" }",
         "[]    [] []\n[][3]     ");
     assertEquals(5, countRecords(outFile));

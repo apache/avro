@@ -76,7 +76,7 @@ public class BinaryMessageEncoder<D> implements MessageEncoder<D> {
    */
   public BinaryMessageEncoder(GenericData model, Schema schema,
                               boolean shouldCopy) {
-    this.writeCodec = new V1MessageEncoder<D>(model, schema, shouldCopy);
+    this.writeCodec = new V1MessageEncoder<>(model, schema, shouldCopy);
   }
 
   @Override

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -56,7 +56,7 @@ public class TestDeepCopy {
     interopBuilder.setLongField(64L);
 
     Map<java.lang.String,org.apache.avro.Foo> map =
-      new HashMap<java.lang.String,org.apache.avro.Foo>(1);
+      new HashMap<>(1);
     map.put("foo", Foo.newBuilder().setLabel("bar").build());
     interopBuilder.setMapField(map);
 
@@ -64,7 +64,7 @@ public class TestDeepCopy {
 
     Node.Builder rootBuilder = Node.newBuilder().setLabel("/");
     Node.Builder homeBuilder = Node.newBuilder().setLabel("home");
-    homeBuilder.setChildren(new ArrayList<Node>(0));
+    homeBuilder.setChildren(new ArrayList<>(0));
     rootBuilder.setChildren(Arrays.asList(new Node[] { homeBuilder.build() }));
     interopBuilder.setRecordField(rootBuilder.build());
 

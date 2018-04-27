@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,7 +44,7 @@ import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 public class StatsPlugin extends RPCPlugin {
   /** Static declaration of histogram buckets. */
   static final Segmenter<String, Float> LATENCY_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Float>(new TreeSet<Float>(Arrays.asList(
+      new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0f,
            25f,
            50f,
@@ -62,7 +62,7 @@ public class StatsPlugin extends RPCPlugin {
        600000f)));
 
   static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Integer>(new TreeSet<Integer>(Arrays.asList(
+      new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0,
            25,
            50,
@@ -82,17 +82,17 @@ public class StatsPlugin extends RPCPlugin {
   /** Per-method histograms.
    * Must be accessed while holding a lock. */
   Map<Message, FloatHistogram<?>> methodTimings =
-    new HashMap<Message, FloatHistogram<?>>();
+    new HashMap<>();
 
   Map<Message, IntegerHistogram<?>> sendPayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
+    new HashMap<>();
 
   Map<Message, IntegerHistogram<?>> receivePayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
+    new HashMap<>();
 
   /** RPCs in flight. */
   ConcurrentMap<RPCContext, Stopwatch> activeRpcs =
-    new ConcurrentHashMap<RPCContext, Stopwatch>();
+    new ConcurrentHashMap<>();
   private Ticks ticks;
 
   /** How long I've been alive */

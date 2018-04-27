@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -40,7 +40,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.reduce.IntSumReducer;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -103,28 +102,28 @@ public class TestKeyValueWordCount {
 
     // Verify that the Avro container file generated had the right KeyValuePair generic records.
     File avroFile = new File(outputPath.toString(), "part-r-00000.avro");
-    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<GenericRecord>(
+    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(
         AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING), Schema.create(Schema.Type.INT)));
     DataFileReader<GenericRecord> avroFileReader
-        = new DataFileReader<GenericRecord>(avroFile, datumReader);
+        = new DataFileReader<>(avroFile, datumReader);
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<CharSequence, Integer> appleRecord
-        = new AvroKeyValue<CharSequence, Integer>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(appleRecord.get());
     assertEquals("apple", appleRecord.getKey().toString());
     assertEquals(3, appleRecord.getValue().intValue());
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<CharSequence, Integer> bananaRecord
-        = new AvroKeyValue<CharSequence, Integer>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(bananaRecord.get());
     assertEquals("banana", bananaRecord.getKey().toString());
     assertEquals(2, bananaRecord.getValue().intValue());
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<CharSequence, Integer> carrotRecord
-        = new AvroKeyValue<CharSequence, Integer>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertEquals("carrot", carrotRecord.getKey().toString());
     assertEquals(1, carrotRecord.getValue().intValue());
 

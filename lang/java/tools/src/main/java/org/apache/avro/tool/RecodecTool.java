@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,11 +65,11 @@ public class RecodecTool implements Tool {
       outputNeedsClosing = true;
     }
 
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
-        input, new GenericDatumReader<GenericRecord>());
+    DataFileStream<GenericRecord> reader = new DataFileStream<>(
+        input, new GenericDatumReader<>());
     Schema schema = reader.getSchema();
-    DataFileWriter<GenericRecord> writer = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>());
+    DataFileWriter<GenericRecord> writer = new DataFileWriter<>(
+        new GenericDatumWriter<>());
     // unlike the other Avro tools, we default to a null codec, not deflate
     CodecFactory codec = Util.codecFactory(opts, codecOpt, levelOpt, DataFileConstants.NULL_CODEC);
     writer.setCodec(codec);

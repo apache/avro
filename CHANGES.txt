@@ -32,6 +32,8 @@ Trunk (not yet released)
     AVRO-1932: Java: Allow setting the SchemaStore on generated classes. 
     (Niels Basjes)
 
+    AVRO-2132: Allow dots in IDL property names. (kdrakon via cutting)
+
   OPTIMIZATIONS
 
   IMPROVEMENTS
@@ -102,6 +104,16 @@ Trunk (not yet released)
 
     AVRO-2115: Java: Permit @Union annotations on fields of classes.
     (Miguel Martinez-Espronceda via cutting).
+
+    AVRO-2119: Run Apache Rat check on every java build (Niels Basjes)
+
+    AVRO-2117: Overall cleanup of java code (Niels Basjes)
+
+    AVRO-2109: Reset buffers in case of IOException (gabor)
+
+    AVRO-2133: Log rat failures (gabor)
+
+    AVRO-2113: Improve unexpected type error message (thiru)
 
   BUG FIXES
 
@@ -215,6 +227,11 @@ Trunk (not yet released)
 
     AVRO-1485: Specification says Record field type can be record name but implementation allows any named type.
     (Nandor Kollar via gabor)
+
+    AVRO-2120: Fix NullPointerException thrown by Schema.Parser#parse("")
+
+    AVRO-2122: Cannot validate schemas with recursive definitions
+    (Bart via Nandor Kollar)
 
 Avro 1.8.1 (14 May 2016)
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -53,11 +53,11 @@ public class JsonDecoder extends ParsingDecoder
   implements Parser.ActionHandler {
   private JsonParser in;
   private static JsonFactory jsonFactory = new JsonFactory();
-  Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
+  Stack<ReorderBuffer> reorderBuffers = new Stack<>();
   ReorderBuffer currentReorderBuffer;
 
   private static class ReorderBuffer {
-    public Map<String, List<JsonElement>> savedFields = new HashMap<String, List<JsonElement>>();
+    public Map<String, List<JsonElement>> savedFields = new HashMap<>();
     public JsonParser origParser = null;
   }
 
@@ -96,7 +96,7 @@ public class JsonDecoder extends ParsingDecoder
    * Otherwise, this JsonDecoder will reset its state and then
    * reconfigure its input.
    * @param in
-   *   The IntputStream to read from. Cannot be null.
+   *   The InputStream to read from. Cannot be null.
    * @throws IOException
    * @return this JsonDecoder
    */
@@ -475,7 +475,7 @@ public class JsonDecoder extends ParsingDecoder
             if (currentReorderBuffer == null) {
               currentReorderBuffer = new ReorderBuffer();
             }
-            currentReorderBuffer.savedFields.put(fn, getVaueAsTree(in));
+            currentReorderBuffer.savedFields.put(fn, getValueAsTree(in));
           }
         } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
         throw new AvroTypeException("Expected field name not found: " + fa.fname);
@@ -524,9 +524,9 @@ public class JsonDecoder extends ParsingDecoder
     }
   }
 
-  private static List<JsonElement> getVaueAsTree(JsonParser in) throws IOException {
+  private static List<JsonElement> getValueAsTree(JsonParser in) throws IOException {
     int level = 0;
-    List<JsonElement> result = new ArrayList<JsonElement>();
+    List<JsonElement> result = new ArrayList<>();
     do {
       JsonToken t = in.getCurrentToken();
       switch (t) {

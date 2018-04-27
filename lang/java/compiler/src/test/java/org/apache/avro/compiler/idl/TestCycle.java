@@ -57,7 +57,7 @@ public class TestCycle {
     File output = new File("./target");
     compiler.compileToDestination(null, output);
 
-    Map<String, Schema> schemas = new HashMap<String, Schema>();
+    Map<String, Schema> schemas = new HashMap<>();
     for (Schema schema : protocol.getTypes()) {
       final String name = schema.getName();
       schemas.put(name, schema);

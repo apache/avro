@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -527,7 +527,7 @@ public class TestSchemaCompatibility {
       LOG.debug("Encode datum {} with writer {}.", datum, writerSchema);
       final ByteArrayOutputStream baos = new ByteArrayOutputStream();
       final Encoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-      final DatumWriter<Object> datumWriter = new GenericDatumWriter<Object>(writerSchema);
+      final DatumWriter<Object> datumWriter = new GenericDatumWriter<>(writerSchema);
       datumWriter.write(datum, encoder);
       encoder.flush();
 
@@ -538,7 +538,7 @@ public class TestSchemaCompatibility {
       final Decoder decoder = DecoderFactory.get().resolvingDecoder(
           writerSchema, readerSchema,
           DecoderFactory.get().binaryDecoder(bytes, null));
-      final DatumReader<Object> datumReader = new GenericDatumReader<Object>(readerSchema);
+      final DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
       final Object decodedDatum = datumReader.read(null, decoder);
 
       assertEquals(String.format(
@@ -548,9 +548,9 @@ public class TestSchemaCompatibility {
           expectedDecodedDatum, decodedDatum);
     }
   }
-  
+
   Deque<String> asDeqeue(String... args) {
-    Deque<String> dq = new ArrayDeque<String>();
+    Deque<String> dq = new ArrayDeque<>();
     List<String> x = Arrays.asList(args);
     Collections.reverse(x);
     dq.addAll(x);
