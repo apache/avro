@@ -152,14 +152,24 @@ protocol MyProtocol {
     <section id="format_enums">
       <title>Defining an Enumeration</title>
       <p>
-        Enums are defined in Avro IDL using a syntax similar to C or Java:
+        Enums are defined in Avro IDL using a syntax similar to C or Java. They may also be defined with an optional default.
+        In the case that a reader schema is unable to recognize a symbol written by the writer, the reader will fall back to using the defined default value.
+        Note that this default is only used when an incompatible symbol is read but not if the enum field is missing.
+        Example Writer Schema:
       </p>
       <source>
-enum Suit {
-  SPADES, DIAMONDS, CLUBS, HEARTS
-}
+      enum Shapes {
+        SQUARE, TRIANGLE, CIRCLE, OVAL
+      }
+      </source>
+      <p>Example Reader Schema</p>
+      <source>
+        enum Shapes {
+          SQUARE, TRIANGLE, CIRCLE
+        } = CIRCLE
       </source>
       <p>
+
         Note that, unlike the JSON format, anonymous enums cannot be defined.
       </p>
     </section>

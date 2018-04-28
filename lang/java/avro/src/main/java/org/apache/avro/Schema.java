@@ -102,7 +102,7 @@ public abstract class Schema extends JsonProperties {
   private LogicalType logicalType = null;
 
   Schema(Type type) {
-    super(SCHEMA_RESERVED);
+    super(type.name.equals("enum") ? ENUM_RESERVED : SCHEMA_RESERVED);
     this.type = type;
   }
 
@@ -126,6 +126,11 @@ public abstract class Schema extends JsonProperties {
     Collections.addAll(SCHEMA_RESERVED,
                        "doc", "fields", "items", "name", "namespace",
                        "size", "symbols", "values", "type", "aliases");
+  }
+  private static final Set<String> ENUM_RESERVED = new HashSet<>();
+  static {
+    ENUM_RESERVED.add("default");
+    ENUM_RESERVED.addAll(SCHEMA_RESERVED);
   }
 
   int hashCode = NO_HASHCODE;
@@ -1354,9 +1359,14 @@ public abstract class Schema extends JsonProperties {
       } else
         throw new SchemaParseException("Type not supported: "+type);
       Iterator<String> i = schema.getFieldNames();
+
+      Set reserved = SCHEMA_RESERVED;
+      if (type.equals("enum")) {
+        reserved = ENUM_RESERVED;
+      }
       while (i.hasNext()) {                       // add properties
         String prop = i.next();
-        if (!SCHEMA_RESERVED.contains(prop))      // ignore reserved
+        if (!reserved.contains(prop))      // ignore reserved
           result.addProp(prop, schema.get(prop));
       }
       // parse logical type if present

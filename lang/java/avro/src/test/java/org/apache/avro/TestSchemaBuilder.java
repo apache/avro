@@ -568,7 +568,7 @@ public class TestSchemaBuilder {
     Schema expected = Schema.createEnum("myenum", null, null, symbols, enumDefault);
     expected.addProp("p", "v");
     Schema schema = SchemaBuilder.enumeration("myenum")
-      .prop("p", "v").defaultAndSymbols(enumDefault, "a", "b");
+      .prop("p", "v").defaultSymbol(enumDefault).symbols("a", "b");
     Assert.assertEquals(expected, schema);
   }
 
