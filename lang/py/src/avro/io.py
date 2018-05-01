@@ -127,7 +127,10 @@ def validate(expected_schema, datum):
       if expected_schema.logical_type == constants.TIME_MICROS:
         valid = isinstance(datum, datetime.time)
       elif expected_schema.logical_type in [constants.TIMESTAMP_MILLIS, constants.TIMESTAMP_MICROS]:
-        valid = isinstance(datum, datetime.datetime)
+        valid = isinstance(datum, datetime.datetime) or (
+                    (isinstance(datum, int) or isinstance(datum, long))
+                    and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE
+                )
     else:
       valid = ((isinstance(datum, int) or isinstance(datum, long))
               and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
@@ -485,18 +488,24 @@ class BinaryEncoder(object):
     Encode python datetime object as long.
     It stores the number of milliseconds from midnight of unix epoch, 1 January 1970.
     """
-    timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
-    milliseconds = self._timedelta_total_microseconds(timedelta) / 1000
-    self.write_long(long(milliseconds))
+    if isinstance(datum, datetime.datetime):
+        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+        milliseconds = self._timedelta_total_microseconds(timedelta) / 1000
+        self.write_long(long(milliseconds))
+    else:
+        self.write_long(long(datum))
 
   def write_timestamp_micros_long(self, datum):
     """
     Encode python datetime object as long.
     It stores the number of microseconds from midnight of unix epoch, 1 January 1970.
     """
-    timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
-    microseconds = self._timedelta_total_microseconds(timedelta)
-    self.write_long(long(microseconds))
+    if isinstance(datum, datetime.datetime):
+        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+        microseconds = self._timedelta_total_microseconds(timedelta)
+        self.write_long(long(microseconds))
+    else:
+        self.write_long(long(datum))
 
 
 #

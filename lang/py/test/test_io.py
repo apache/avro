@@ -70,6 +70,14 @@ SCHEMAS_TO_VALIDATE = (
     datetime.datetime(2000, 1, 18, 2, 2, 1, 123499)
   ),
   (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    47
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    47
+  ),
+  (
     '{"logicalType": "uuid", "type": "string"}',
     u'90bbcee8-d579-4863-9c9b-dd4edaebac36'
   ),
@@ -236,8 +244,16 @@ class TestIO(unittest.TestCase):
       writers_schema = schema.parse(example_schema)
       writer, encoder, datum_writer = write_datum(datum, writers_schema)
       round_trip_datum = read_datum(writer, writers_schema)
-
+      if example_schema == '{"type": "long", "logicalType": "timestamp-micros"}' and isinstance(datum, (int, long)):
+          timedelta = datetime.timedelta(microseconds=datum)
+          unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+          datum = unix_epoch_datetime + timedelta
+      elif example_schema == '{"type": "long", "logicalType": "timestamp-millis"}' and isinstance(datum, (int, long)):
+          timedelta = datetime.timedelta(microseconds=datum * 1000)
+          unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+          datum = unix_epoch_datetime + timedelta
       print 'Round Trip Datum: %s' % round_trip_datum
+      self.assertEquals(datum, round_trip_datum)
       if datum == round_trip_datum: correct += 1
     self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
 
