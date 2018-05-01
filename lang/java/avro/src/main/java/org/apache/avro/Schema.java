@@ -102,7 +102,7 @@ public abstract class Schema extends JsonProperties {
   private LogicalType logicalType = null;
 
   Schema(Type type) {
-    super(type.name.equals("enum") ? ENUM_RESERVED : SCHEMA_RESERVED);
+    super(type == Type.ENUM ? ENUM_RESERVED : SCHEMA_RESERVED);
     this.type = type;
   }
 
