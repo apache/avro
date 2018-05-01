@@ -16,11 +16,16 @@
 package com.commercehub.gradle.plugin.avro;
 
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.SourceTask;
 
 import java.io.File;
+
+import static org.gradle.api.tasks.PathSensitivity.NAME_ONLY;
+import static org.gradle.api.tasks.PathSensitivity.RELATIVE;
 
 class OutputDirTask extends SourceTask {
     private File outputDir;
@@ -30,12 +35,17 @@ class OutputDirTask extends SourceTask {
         getOutputs().dir(outputDir);
     }
 
+    @PathSensitive(value=RELATIVE)
+    public FileTree getSource() {
+        return super.getSource();
+    }
+
     @OutputDirectory
     protected File getOutputDir() {
         return outputDir;
     }
 
     protected FileCollection filterSources(Spec<? super File> spec) {
-        return getInputs().getSourceFiles().filter(spec);
+        return getSource().filter(spec);
     }
 }

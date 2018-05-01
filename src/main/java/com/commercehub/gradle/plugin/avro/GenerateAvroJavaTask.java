@@ -25,9 +25,7 @@ import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,6 +42,7 @@ import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
  * Task to generate Java source files based on Avro protocol files and Avro schema files using {@link Protocol} and
  * {@link SpecificCompiler}.
  */
+@CacheableTask
 public class GenerateAvroJavaTask extends OutputDirTask {
     private static Pattern ERROR_UNKNOWN_TYPE = Pattern.compile("(?i).*(undefined name|not a defined name).*");
     private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
@@ -101,7 +100,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     @Optional
-    @Input
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
     public String getTemplateDirectory() {
         return templateDirectory;
     }

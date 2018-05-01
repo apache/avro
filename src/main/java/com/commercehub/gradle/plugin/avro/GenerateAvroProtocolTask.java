@@ -22,6 +22,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.util.GradleVersion;
 
@@ -39,10 +40,11 @@ import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 /**
  * Task to convert Avro IDL files into Avro protocol files using {@link Idl}.
  */
+@CacheableTask
 public class GenerateAvroProtocolTask extends OutputDirTask {
     @TaskAction
     protected void process() {
-        getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
+        getLogger().info("Found {} files", getSource().getFiles().size());
         failOnUnsupportedFiles();
         processFiles();
     }
