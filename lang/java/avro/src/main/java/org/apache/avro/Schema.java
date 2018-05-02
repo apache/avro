@@ -102,7 +102,7 @@ public abstract class Schema extends JsonProperties {
   private LogicalType logicalType = null;
 
   Schema(Type type) {
-    super(SCHEMA_RESERVED);
+    super(type == Type.ENUM ? ENUM_RESERVED : SCHEMA_RESERVED);
     this.type = type;
   }
 
@@ -126,6 +126,11 @@ public abstract class Schema extends JsonProperties {
     Collections.addAll(SCHEMA_RESERVED,
                        "doc", "fields", "items", "name", "namespace",
                        "size", "symbols", "values", "type", "aliases");
+  }
+  private static final Set<String> ENUM_RESERVED = new HashSet<>();
+  static {
+    ENUM_RESERVED.add("default");
+    ENUM_RESERVED.addAll(SCHEMA_RESERVED);
   }
 
   int hashCode = NO_HASHCODE;
@@ -171,7 +176,14 @@ public abstract class Schema extends JsonProperties {
   public static Schema createEnum(String name, String doc, String namespace,
                                   List<String> values) {
     return new EnumSchema(new Name(name, namespace), doc,
-        new LockableArrayList<>(values));
+      new LockableArrayList<>(values), null);
+  }
+
+  /** Create an enum schema. */
+  public static Schema createEnum(String name, String doc, String namespace,
+                                  List<String> values, String enumDefault) {
+    return new EnumSchema(new Name(name, namespace), doc,
+        new LockableArrayList<>(values), enumDefault);
   }
 
   /** Create an array schema. */
@@ -230,6 +242,11 @@ public abstract class Schema extends JsonProperties {
 
   /** If this is an enum, return its symbols. */
   public List<String> getEnumSymbols() {
+    throw new AvroRuntimeException("Not an enum: "+this);
+  }
+
+  /** If this is an enum, return its default value. */
+  public String getEnumDefault() {
     throw new AvroRuntimeException("Not an enum: "+this);
   }
 
@@ -748,15 +765,19 @@ public abstract class Schema extends JsonProperties {
   private static class EnumSchema extends NamedSchema {
     private final List<String> symbols;
     private final Map<String,Integer> ordinals;
+    private final String enumDefault;
     public EnumSchema(Name name, String doc,
-        LockableArrayList<String> symbols) {
+        LockableArrayList<String> symbols, String enumDefault) {
       super(Type.ENUM, name, doc);
       this.symbols = symbols.lock();
       this.ordinals = new HashMap<>();
+      this.enumDefault = enumDefault;
       int i = 0;
       for (String symbol : symbols)
         if (ordinals.put(validateName(symbol), i++) != null)
           throw new SchemaParseException("Duplicate enum symbol: "+symbol);
+      if (enumDefault != null && !symbols.contains(enumDefault))
+        throw new SchemaParseException("The Enum Default: " + enumDefault + " is not in the enum symbol set: " + symbols);
     }
     public List<String> getEnumSymbols() { return symbols; }
     public boolean hasEnumSymbol(String symbol) {
@@ -771,6 +792,8 @@ public abstract class Schema extends JsonProperties {
         && symbols.equals(that.symbols)
         && props.equals(that.props);
     }
+    @Override
+    public String getEnumDefault() { return enumDefault; }
     @Override int computeHash() { return super.computeHash() + symbols.hashCode(); }
     void toJson(Names names, JsonGenerator gen) throws IOException {
       if (writeNameRef(names, gen)) return;
@@ -783,6 +806,8 @@ public abstract class Schema extends JsonProperties {
       for (String symbol : symbols)
         gen.writeString(symbol);
       gen.writeEndArray();
+      if (getEnumDefault() != null)
+        gen.writeStringField("default", getEnumDefault());
       writeProps(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
@@ -1309,7 +1334,11 @@ public abstract class Schema extends JsonProperties {
         LockableArrayList<String> symbols = new LockableArrayList<>(symbolsNode.size());
         for (JsonNode n : symbolsNode)
           symbols.add(n.getTextValue());
-        result = new EnumSchema(name, doc, symbols);
+        JsonNode enumDefault = schema.get("default");
+        String defaultSymbol = null;
+        if (enumDefault != null)
+          defaultSymbol = enumDefault.getTextValue();
+        result = new EnumSchema(name, doc, symbols, defaultSymbol);
         if (name != null) names.add(result);
       } else if (type.equals("array")) {          // array
         JsonNode itemsNode = schema.get("items");
@@ -1330,9 +1359,14 @@ public abstract class Schema extends JsonProperties {
       } else
         throw new SchemaParseException("Type not supported: "+type);
       Iterator<String> i = schema.getFieldNames();
+
+      Set reserved = SCHEMA_RESERVED;
+      if (type.equals("enum")) {
+        reserved = ENUM_RESERVED;
+      }
       while (i.hasNext()) {                       // add properties
         String prop = i.next();
-        if (!SCHEMA_RESERVED.contains(prop))      // ignore reserved
+        if (!reserved.contains(prop))      // ignore reserved
           result.addProp(prop, schema.get(prop));
       }
       // parse logical type if present
@@ -1456,7 +1490,7 @@ public abstract class Schema extends JsonProperties {
     case ENUM:
       if (aliases.containsKey(name))
         result = Schema.createEnum(aliases.get(name).full, s.getDoc(), null,
-                                   s.getEnumSymbols());
+                                   s.getEnumSymbols(), s.getEnumDefault());
       break;
     case ARRAY:
       Schema e = applyAliases(s.getElementType(), seen, aliases, fieldAliases);

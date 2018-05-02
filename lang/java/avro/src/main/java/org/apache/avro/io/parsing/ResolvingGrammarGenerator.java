@@ -99,7 +99,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         if (writer.getFullName() == null
                 || writer.getFullName().equals(reader.getFullName())) {
           return Symbol.seq(mkEnumAdjust(writer.getEnumSymbols(),
-                  reader.getEnumSymbols()), Symbol.ENUM);
+                  reader.getEnumSymbols(), reader.getEnumDefault()), Symbol.ENUM);
         }
         break;
 
@@ -416,11 +416,15 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     }
   }
 
-  private static Symbol mkEnumAdjust(List<String> wsymbols,
-      List<String> rsymbols){
+  private static Symbol mkEnumAdjust(List<String> wsymbols, List<String> rsymbols, Object rEnumDefault){
     Object[] adjustments = new Object[wsymbols.size()];
     for (int i = 0; i < adjustments.length; i++) {
       int j = rsymbols.indexOf(wsymbols.get(i));
+      if (j == -1) {
+        if (rEnumDefault instanceof String) {
+          j = rsymbols.indexOf(rEnumDefault);
+        }
+      }
       adjustments[i] = (j == -1 ? "No match for " + wsymbols.get(i)
                                 : new Integer(j));
     }

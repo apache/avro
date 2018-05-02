@@ -562,6 +562,17 @@ public class TestSchemaBuilder {
   }
 
   @Test
+  public void testEnumWithDefault() {
+    List<String> symbols = Arrays.asList("a", "b");
+    String enumDefault = "a";
+    Schema expected = Schema.createEnum("myenum", null, null, symbols, enumDefault);
+    expected.addProp("p", "v");
+    Schema schema = SchemaBuilder.enumeration("myenum")
+      .prop("p", "v").defaultSymbol(enumDefault).symbols("a", "b");
+    Assert.assertEquals(expected, schema);
+  }
+
+  @Test
   public void testFixed() {
     Schema expected = Schema.createFixed("myfixed", null, null, 16);
     expected.addAlias("myOldFixed");

@@ -767,6 +767,7 @@ public class SchemaBuilder {
     private EnumBuilder(Completion<R> context, NameContext names, String name) {
       super(context, names, name);
     }
+    private String enumDefault = null;
 
     private static <R> EnumBuilder<R> create(Completion<R> context,
         NameContext names, String name) {
@@ -778,14 +779,19 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** Configure this enum type's symbols, and end its configuration. **/
+    /** Configure this enum type's symbols, and end its configuration. Populates the default if it was set.**/
     public R symbols(String... symbols) {
       Schema schema = Schema.createEnum(name(), doc(), space(),
-          Arrays.asList(symbols));
+          Arrays.asList(symbols), this.enumDefault);
       completeSchema(schema);
       return context().complete(schema);
     }
 
+    /** Set the default value of the enum. */
+    public EnumBuilder<R> defaultSymbol(String enumDefault) {
+      this.enumDefault = enumDefault;
+      return self();
+    }
   }
 
   /**
@@ -1200,14 +1206,14 @@ public class SchemaBuilder {
 
     /** Build an Avro enum type. Example usage:
      * <pre>
-     * enumeration("Suits").namespace("org.cards").doc("card suit names")
+     * enumeration("Suits").namespace("org.cards").doc("card suit names").defaultSymbol("HEART")
      *   .symbols("HEART", "SPADE", "DIAMOND", "CLUB")
      * </pre>
      * Equivalent to Avro JSON Schema:
      * <pre>
      * {"type":"enum", "name":"Suits", "namespace":"org.cards",
      *  "doc":"card suit names", "symbols":[
-     *    "HEART", "SPADE", "DIAMOND", "CLUB"]}
+     *    "HEART", "SPADE", "DIAMOND", "CLUB"], "default":"HEART"}
      * </pre>
      **/
     public final EnumBuilder<R> enumeration(String name) {

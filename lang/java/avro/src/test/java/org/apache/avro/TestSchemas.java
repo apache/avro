@@ -19,7 +19,10 @@ package org.apache.avro;
 
 import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+
 import org.apache.avro.Schema.Field;
 
 /** Schemas used by other tests in this package. Therefore package protected. */
@@ -47,6 +50,22 @@ public class TestSchemas {
       list("A", "B", "C"));
   static final Schema ENUM1_BC_SCHEMA = Schema.createEnum("Enum1", null, null, list("B", "C"));
   static final Schema ENUM2_AB_SCHEMA = Schema.createEnum("Enum2", null, null, list("A", "B"));
+  static final Schema ENUM_ABC_ENUM_DEFAULT_A_SCHEMA = Schema.createEnum("Enum", null, null, list("A", "B", "C"), "A");
+  static final Schema ENUM_AB_ENUM_DEFAULT_A_SCHEMA = Schema.createEnum("Enum", null, null, list("A", "B"), "A");
+  static final Schema ENUM_ABC_ENUM_DEFAULT_A_RECORD = Schema.createRecord("Record", null, null, false);
+  static final Schema ENUM_AB_ENUM_DEFAULT_A_RECORD = Schema.createRecord("Record", null, null, false);
+  static final Schema ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD = Schema.createRecord("Record", null, null, false);
+  static final Schema ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD = Schema.createRecord("Record", null, null, false);
+  static {
+    ENUM_ABC_ENUM_DEFAULT_A_RECORD.setFields(
+      list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A","B","C"), "A"), null, null)));
+    ENUM_AB_ENUM_DEFAULT_A_RECORD.setFields(
+      list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A","B"), "A"), null, null)));
+    ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD.setFields(
+      list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A","B","C"), "A"), null, "B")));
+    ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD.setFields(
+      list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A","B"), "B"), null, "A")));
+  }
 
   static final Schema EMPTY_UNION_SCHEMA = Schema.createUnion(new ArrayList<>());
   static final Schema NULL_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA));

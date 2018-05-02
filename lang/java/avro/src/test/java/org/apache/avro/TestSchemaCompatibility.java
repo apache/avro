@@ -35,6 +35,12 @@ import static org.apache.avro.TestSchemas.EMPTY_UNION_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
 import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_RECORD;
+import static org.apache.avro.TestSchemas.ENUM_AB_ENUM_DEFAULT_A_SCHEMA;
+import static org.apache.avro.TestSchemas.ENUM_ABC_ENUM_DEFAULT_A_SCHEMA;
 import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
 import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
 import static org.apache.avro.TestSchemas.FLOAT_UNION_SCHEMA;
@@ -74,9 +80,11 @@ import org.apache.avro.SchemaCompatibility.SchemaCompatibilityType;
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.apache.avro.SchemaCompatibility.SchemaPairCompatibility;
 import org.apache.avro.TestSchemas.ReaderWriter;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
@@ -96,6 +104,9 @@ public class TestSchemaCompatibility {
   private static final Schema WRITER_SCHEMA = Schema.createRecord(list(
       new Schema.Field("oldfield1", INT_SCHEMA, null, null),
       new Schema.Field("oldfield2", STRING_SCHEMA, null, null)));
+
+
+
 
   @Test
   public void testValidateSchemaPairMissingField() throws Exception {
@@ -358,7 +369,10 @@ public class TestSchemaCompatibility {
       new ReaderWriter(LONG_LIST_RECORD, LONG_LIST_RECORD),
       new ReaderWriter(LONG_LIST_RECORD, INT_LIST_RECORD),
 
-      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA)
+      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA),
+      new ReaderWriter(ENUM_AB_ENUM_DEFAULT_A_RECORD, ENUM_ABC_ENUM_DEFAULT_A_RECORD),
+      new ReaderWriter(ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD, ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD)
+
   );
 
   // -----------------------------------------------------------------------------------------------
@@ -501,6 +515,10 @@ public class TestSchemaCompatibility {
       new DecodingTestCase(
           ENUM1_ABC_SCHEMA, new EnumSymbol(ENUM1_ABC_SCHEMA, "B"),
           ENUM1_BC_SCHEMA, new EnumSymbol(ENUM1_BC_SCHEMA, "B")),
+
+      new DecodingTestCase(
+          ENUM_ABC_ENUM_DEFAULT_A_SCHEMA, new EnumSymbol(ENUM_ABC_ENUM_DEFAULT_A_SCHEMA, "C"),
+          ENUM_AB_ENUM_DEFAULT_A_SCHEMA, new EnumSymbol(ENUM_AB_ENUM_DEFAULT_A_SCHEMA, "A")),
 
       new DecodingTestCase(
           INT_STRING_UNION_SCHEMA, "the string",
