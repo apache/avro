@@ -49,7 +49,7 @@ public class Java8TimeConversions {
     public Integer toInt(LocalDate date, Schema schema, LogicalType type) {
       long epochDays = date.toEpochDay();
 
-      return Math.toIntExact(epochDays);
+      return (int) epochDays;
     }
   }
 
@@ -71,7 +71,7 @@ public class Java8TimeConversions {
 
     @Override
     public Integer toInt(LocalTime time, Schema schema, LogicalType type) {
-      return Math.toIntExact(TimeUnit.NANOSECONDS.toMillis(time.toNanoOfDay()));
+      return (int) TimeUnit.NANOSECONDS.toMillis(time.toNanoOfDay());
     }
   }
 

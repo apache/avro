@@ -23,9 +23,6 @@ import java.util.List;
 
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.toList;
-
 /**
  * Base class for all Avro mojo test classes.
  *

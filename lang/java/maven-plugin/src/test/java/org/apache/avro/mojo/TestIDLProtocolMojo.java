@@ -20,10 +20,6 @@ package org.apache.avro.mojo;
 import org.codehaus.plexus.util.FileUtils;
 
 import java.io.File;
-import java.io.FileReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * Test the IDL Protocol Mojo.

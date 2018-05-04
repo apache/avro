@@ -17,8 +17,8 @@
  */
 package org.apache.avro.compiler.specific;
 
-import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeType.JODA;
-import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeType.JAVA8;
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JODA;
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JAVA8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -42,7 +42,6 @@ import org.apache.avro.AvroTestUtil;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
-import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeType;
 import org.apache.avro.generic.GenericData.StringType;
 import org.junit.After;
 import org.junit.Assert;
@@ -148,10 +147,10 @@ public class TestSpecificCompiler {
     return createCompiler(JODA);
   }
 
-  private SpecificCompiler createCompiler(DateTimeLogicalTypeType dateTimeLogicalTypeType) throws IOException {
+  private SpecificCompiler createCompiler(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) throws IOException {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(this.src);
-    SpecificCompiler compiler = new SpecificCompiler(schema, dateTimeLogicalTypeType);
+    SpecificCompiler compiler = new SpecificCompiler(schema, dateTimeLogicalTypeImplementation);
     compiler.setTemplateDir(this.velocityTemplateDir);
     compiler.setStringType(StringType.CharSequence);
     return compiler;

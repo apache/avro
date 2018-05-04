@@ -25,17 +25,15 @@ import org.apache.avro.data.Java8TimeConversions.TimeMillisConversion;
 import org.apache.avro.data.Java8TimeConversions.TimeMicrosConversion;
 import org.apache.avro.data.Java8TimeConversions.TimestampMicrosConversion;
 import org.apache.avro.data.Java8TimeConversions.TimestampMillisConversion;
-
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
-import java.util.Date;
+import java.time.ZoneOffset;
 
 public class TestJava8TimeConversions {
 
@@ -146,7 +144,7 @@ public class TestJava8TimeConversions {
   @Test
   public void testTimestampMillisConversion() throws Exception {
     TimestampMillisConversion conversion = new TimestampMillisConversion();
-    long nowInstant = new Date().getTime(); // ms precision
+    long nowInstant = Instant.now().toEpochMilli(); // ms precision
 
     // round trip
     Instant now = conversion.fromLong(

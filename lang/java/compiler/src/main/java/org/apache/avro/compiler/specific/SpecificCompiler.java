@@ -91,8 +91,27 @@ public class SpecificCompiler {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
   }
 
-  public enum DateTimeLogicalTypeType {
-    JODA, JAVA8
+  public enum DateTimeLogicalTypeImplementation {
+    JODA {
+      @Override
+      void addLogicalTypeConversions(SpecificData specificData) {
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
+      }
+    },
+    JAVA8 {
+      @Override
+      void addLogicalTypeConversions(SpecificData specificData) {
+        specificData.addLogicalTypeConversion(new Java8TimeConversions.DateConversion());
+        specificData.addLogicalTypeConversion(new Java8TimeConversions.TimeMillisConversion());
+        specificData.addLogicalTypeConversion(new Java8TimeConversions.TimestampMillisConversion());
+      }
+    };
+
+    public static final DateTimeLogicalTypeImplementation DEFAULT = JODA;
+
+    abstract void addLogicalTypeConversions(SpecificData specificData);
   }
 
   private final SpecificData specificData = new SpecificData();
@@ -106,7 +125,7 @@ public class SpecificCompiler {
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
-  private DateTimeLogicalTypeType dateTimeLogicalTypeType = DateTimeLogicalTypeType.JODA;
+  private final DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation;
   private String suffix = ".java";
 
   /*
@@ -142,11 +161,11 @@ public class SpecificCompiler {
       " */\n";
 
   public SpecificCompiler(Protocol protocol) {
-    this(protocol, DateTimeLogicalTypeType.JODA);
+    this(protocol, DateTimeLogicalTypeImplementation.JODA);
   }
 
-  public SpecificCompiler(Protocol protocol, DateTimeLogicalTypeType dateTimeLogicalTypeType) {
-    this(dateTimeLogicalTypeType);
+  public SpecificCompiler(Protocol protocol, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
+    this(dateTimeLogicalTypeImplementation);
     // enqueue all types
     for (Schema s : protocol.getTypes()) {
       enqueue(s);
@@ -155,11 +174,11 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
-    this(schema, DateTimeLogicalTypeType.JODA);
+    this(schema, DateTimeLogicalTypeImplementation.JODA);
   }
 
-  public SpecificCompiler(Schema schema, DateTimeLogicalTypeType dateTimeLogicalTypeType) {
-    this(dateTimeLogicalTypeType);
+  public SpecificCompiler(Schema schema, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
+    this(dateTimeLogicalTypeImplementation);
     enqueue(schema);
     this.protocol = null;
   }
@@ -167,21 +186,21 @@ public class SpecificCompiler {
   /**
    * Creates a specific compler with the default (Joda) type for date/time related logical types.
    *
-   * @see #SpecificCompiler(DateTimeLogicalTypeType)
+   * @see #SpecificCompiler(DateTimeLogicalTypeImplementation)
    */
   SpecificCompiler() {
-    this(DateTimeLogicalTypeType.JODA);
+    this(DateTimeLogicalTypeImplementation.JODA);
   }
 
   /**
    * Creates a specific compiler with the given type to use for date/time related logical types.
-   * Use {@link DateTimeLogicalTypeType#JODA} to generate Joda Time classes, use {@link DateTimeLogicalTypeType#JAVA8}
+   * Use {@link DateTimeLogicalTypeImplementation#JODA} to generate Joda Time classes, use {@link DateTimeLogicalTypeImplementation#JAVA8}
    * to generate {@code java.time.*} classes for the date/time local types.
    *
-   * @param dateTimeLogicalTypeType the types used for date/time related logical types
+   * @param dateTimeLogicalTypeImplementation the types used for date/time related logical types
    */
-  SpecificCompiler(DateTimeLogicalTypeType dateTimeLogicalTypeType) {
-    this.dateTimeLogicalTypeType = dateTimeLogicalTypeType;
+  SpecificCompiler(DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
+    this.dateTimeLogicalTypeImplementation = dateTimeLogicalTypeImplementation;
     this.templateDir =
       System.getProperty("org.apache.avro.specific.templates",
                          "/org/apache/avro/compiler/specific/templates/java/classic/");
@@ -250,11 +269,11 @@ public class SpecificCompiler {
   }
 
   public boolean useJodaForDateTimeLogicalTypes() {
-    return dateTimeLogicalTypeType == DateTimeLogicalTypeType.JODA;
+    return dateTimeLogicalTypeImplementation == DateTimeLogicalTypeImplementation.JODA;
   }
 
   public boolean useJava8ForDateTimeLogicalTypes() {
-    return dateTimeLogicalTypeType == DateTimeLogicalTypeType.JAVA8;
+    return dateTimeLogicalTypeImplementation == DateTimeLogicalTypeImplementation.JAVA8;
   }
 
   private static String logChuteName = null;
@@ -286,16 +305,7 @@ public class SpecificCompiler {
   }
 
   private void initializeSpecificData() {
-    if(dateTimeLogicalTypeType == DateTimeLogicalTypeType.JODA) {
-      specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
-      specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
-      specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
-    } else if (dateTimeLogicalTypeType == DateTimeLogicalTypeType.JAVA8) {
-      specificData.addLogicalTypeConversion(new Java8TimeConversions.DateConversion());
-      specificData.addLogicalTypeConversion(new Java8TimeConversions.TimeMillisConversion());
-      specificData.addLogicalTypeConversion(new Java8TimeConversions.TimestampMillisConversion());
-    }
-
+    dateTimeLogicalTypeImplementation.addLogicalTypeConversions(specificData);
     specificData.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
@@ -370,7 +380,7 @@ public class SpecificCompiler {
 
     for (File src : srcFiles) {
       Schema schema = parser.parse(src);
-      SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeType.JODA);
+      SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeImplementation.JODA);
       compiler.compileToDestination(src, dest);
     }
   }

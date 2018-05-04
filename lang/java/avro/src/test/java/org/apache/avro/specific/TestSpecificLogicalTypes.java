@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,10 +40,12 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
@@ -140,10 +143,10 @@ public class TestSpecificLogicalTypes {
     Assert.assertThat(withJava8.getF32(), is(withJoda.getF32()));
     Assert.assertThat(withJava8.getF64(), is(withJoda.getF64()));
     Assert.assertThat(withJava8.getS(), is(withJoda.getS()));
-    // all of these print in the ISO-8601 format
-    Assert.assertThat(withJava8.getD().toString(), is(withJoda.getD().toString()));
-    Assert.assertThat(withJava8.getT().toString(), is(withJoda.getT().toString()));
-    Assert.assertThat(withJava8.getTs().toString(), is(withJoda.getTs().toString()));
+
+    Assert.assertThat(ISO_LOCAL_DATE.format(withJava8.getD()), is(ISODateTimeFormat.date().print(withJoda.getD())));
+    Assert.assertThat(ISO_LOCAL_TIME.format(withJava8.getT()), is(ISODateTimeFormat.time().print(withJoda.getT())));
+    Assert.assertThat(ISO_INSTANT.format(withJava8.getTs()), is(ISODateTimeFormat.dateTime().print(withJoda.getTs())));
     Assert.assertThat(withJava8.getDec(), comparesEqualTo(withJoda.getDec()));
   }
 
@@ -299,16 +302,10 @@ public class TestSpecificLogicalTypes {
       throws IOException {
     DatumReader<D> reader = newReader(schema);
     List<D> data = new ArrayList<>();
-    FileReader<D> fileReader = null;
 
-    try {
-      fileReader = new DataFileReader<>(file, reader);
+    try (FileReader<D> fileReader = new DataFileReader<>(file, reader)) {
       for (D datum : fileReader) {
         data.add(datum);
-      }
-    } finally {
-      if (fileReader != null) {
-        fileReader.close();
       }
     }
 
@@ -325,15 +322,12 @@ public class TestSpecificLogicalTypes {
       throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = SpecificData.get().createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
-    try {
+    try (DataFileWriter<D> fileWriter = new DataFileWriter<>(writer)) {
       fileWriter.create(schema, file);
       for (D datum : data) {
         fileWriter.append(datum);
       }
-    } finally {
-      fileWriter.close();
     }
 
     return file;
