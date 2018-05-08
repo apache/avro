@@ -784,6 +784,21 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
     return self.props == that.props
 
 #
+# decimal type (to serialize python decimal.Decimal objects)
+#
+
+class DecimalSchema(LogicalSchema, PrimitiveSchema):
+    def __init__(self, other_props=None):
+        LogicalSchema.__init__(self, constants.DECIMAL)
+        PrimitiveSchema.__init__(self, 'string', other_props)
+
+    def to_json(self, names=None):
+        return self.props
+
+    def __eq__(self, that):
+        return self.props == that.props
+
+#
 # Module Methods
 #
 def get_other_props(all_props,reserved_props):
@@ -823,6 +838,8 @@ def make_avsc_object(json_data, names=None):
         return TimestampMillisSchema(other_props=other_props)
       elif type == 'long' and logical_type == constants.TIMESTAMP_MICROS:
         return TimestampMicrosSchema(other_props=other_props)
+      elif type == 'string' and logical_type == constants.DECIMAL:
+        return DecimalSchema(other_props=other_props)
       return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')

@@ -42,6 +42,7 @@ from avro import constants
 import sys
 from binascii import crc32
 import datetime
+import decimal
 
 try:
 	import json
@@ -110,7 +111,10 @@ def validate(expected_schema, datum):
   elif schema_type == 'boolean':
     valid = isinstance(datum, bool)
   elif schema_type == 'string':
-    valid = isinstance(datum, basestring)
+    if hasattr(expected_schema, 'logical_type') and expected_schema.logical_type == constants.DECIMAL:
+      valid = isinstance(datum, decimal.Decimal)
+    else:
+      valid = isinstance(datum, basestring)
   elif schema_type == 'bytes':
     valid = isinstance(datum, str)
   elif schema_type == 'int':
@@ -263,6 +267,15 @@ class BinaryDecoder(object):
     that many bytes of UTF-8 encoded character data.
     """
     return unicode(self.read_bytes(), "utf-8")
+
+  def read_decimal_from_string(self):
+    """
+    String is decoded as a Python decimal.Decimal type,
+    representing a fixed point decimal number
+    (useful for avoiding floating point error)
+    """
+    decimal_string = self.read_utf8()
+    return decimal.Decimal(decimal_string)
 
   def read_date_from_int(self):
     """
@@ -454,6 +467,15 @@ class BinaryEncoder(object):
     """
     self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff));
 
+  def write_decimal_string(self, datum):
+    """
+    A Python decimal.Decimal type is encoded as a string.
+    Decmial repesents a fixed point decimal number
+    (useful for avoiding floating point error)
+    """
+    decimal_string = str(datum)
+    self.write_utf8(decimal_string)
+
   def write_date_int(self, datum):
     """
     Encode python date object as int.
@@ -611,7 +633,11 @@ class DatumReader(object):
     elif writers_schema.type == 'boolean':
       return decoder.read_boolean()
     elif writers_schema.type == 'string':
-      return decoder.read_utf8()
+      if (hasattr(writers_schema, 'logical_type') and
+          writers_schema.logical_type == constants.DECIMAL):
+        return decoder.read_decimal_from_string()
+      else:
+        return decoder.read_utf8()
     elif writers_schema.type == 'int':
       if (hasattr(writers_schema, 'logical_type') and
           writers_schema.logical_type == constants.DATE):
@@ -938,7 +964,11 @@ class DatumWriter(object):
     elif writers_schema.type == 'boolean':
       encoder.write_boolean(datum)
     elif writers_schema.type == 'string':
-      encoder.write_utf8(datum)
+      if (hasattr(writers_schema, 'logical_type') and
+          writers_schema.logical_type == constants.DECIMAL):
+        encoder.write_decimal_string(datum)
+      else:
+        encoder.write_utf8(datum)
     elif writers_schema.type == 'int':
       if (hasattr(writers_schema, 'logical_type') and
           writers_schema.logical_type == constants.DATE):
