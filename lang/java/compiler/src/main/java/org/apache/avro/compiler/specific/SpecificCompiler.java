@@ -38,7 +38,7 @@ import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.Java8TimeConversions;
-import org.apache.avro.data.JodaTimeConversions;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
 
@@ -95,9 +95,9 @@ public class SpecificCompiler {
     JODA {
       @Override
       void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.TimeConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.TimestampConversion());
       }
     },
     JAVA8 {
@@ -268,12 +268,8 @@ public class SpecificCompiler {
     this.enableDecimalLogicalType = enableDecimalLogicalType;
   }
 
-  public boolean useJodaForDateTimeLogicalTypes() {
-    return dateTimeLogicalTypeImplementation == DateTimeLogicalTypeImplementation.JODA;
-  }
-
-  public boolean useJava8ForDateTimeLogicalTypes() {
-    return dateTimeLogicalTypeImplementation == DateTimeLogicalTypeImplementation.JAVA8;
+  public DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
+    return dateTimeLogicalTypeImplementation;
   }
 
   private static String logChuteName = null;

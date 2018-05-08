@@ -19,7 +19,7 @@ package org.apache.avro.specific;
 
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
-import org.apache.avro.data.JodaTimeConversions;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.message.MissingSchemaException;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -63,9 +63,9 @@ public class TestSpecificToFromByteArray {
         3.14F,
         3019.34,
         null,
-        new JodaTimeConversions.DateConversion().toInt(LocalDate.now(), null, null),
-        new JodaTimeConversions.TimeConversion().toInt(LocalTime.now(), null, null),
-        new JodaTimeConversions.TimestampConversion().toLong(
+        new TimeConversions.DateConversion().toInt(LocalDate.now(), null, null),
+        new TimeConversions.TimeConversion().toInt(LocalTime.now(), null, null),
+        new TimeConversions.TimestampConversion().toLong(
             DateTime.now().withZone(DateTimeZone.UTC), null, null),
         new Conversions.DecimalConversion().toBytes(
             new BigDecimal("123.45"), null, LogicalTypes.decimal(9, 2))
@@ -86,9 +86,9 @@ public class TestSpecificToFromByteArray {
         3.14F,
         3019.34,
         null,
-        new JodaTimeConversions.DateConversion().toInt(LocalDate.now(), null, null),
-        new JodaTimeConversions.TimeConversion().toInt(LocalTime.now(), null, null),
-        new JodaTimeConversions.TimestampConversion().toLong(
+        new TimeConversions.DateConversion().toInt(LocalDate.now(), null, null),
+        new TimeConversions.TimeConversion().toInt(LocalTime.now(), null, null),
+        new TimeConversions.TimestampConversion().toLong(
             DateTime.now().withZone(DateTimeZone.UTC), null, null),
         new Conversions.DecimalConversion().toBytes(
             new BigDecimal("123.45"), null, LogicalTypes.decimal(9, 2))

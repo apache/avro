@@ -28,7 +28,7 @@ import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
-public class JodaTimeConversions {
+public class TimeConversions {
   public static class DateConversion extends Conversion<LocalDate> {
     private static final LocalDate EPOCH_DATE = new LocalDate(1970, 1, 1);
 
