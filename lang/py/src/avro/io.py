@@ -470,7 +470,7 @@ class BinaryEncoder(object):
   def write_decimal_string(self, datum):
     """
     A Python decimal.Decimal type is encoded as a string.
-    Decmial repesents a fixed point decimal number
+    Decimal repesents a fixed point decimal number
     (useful for avoiding floating point error)
     """
     decimal_string = str(datum)
