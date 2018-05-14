@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@
 # limitations under the License.
 import os
 import unittest
+import datetime
 
 import set_avro_test_path
 
@@ -36,6 +37,47 @@ SCHEMAS_TO_VALIDATE = (
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
   ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),
   ('["string", "null", "long"]', None),
+  ('{"type": "int", "logicalType": "date"}', datetime.date(2000, 1, 1)),
+  ('{"type": "int", "logicalType": "time-millis"}', datetime.time(23, 59, 59, 999000)),
+  ('{"type": "int", "logicalType": "time-millis"}', datetime.time(0, 0, 0, 000000)),
+  ('{"type": "long", "logicalType": "time-micros"}', datetime.time(23, 59, 59, 999999)),
+  ('{"type": "long", "logicalType": "time-micros"}', datetime.time(0, 0, 0, 000000)),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 100000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999999)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 123499)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    47
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    47
+  ),
+  (
+    '{"logicalType": "uuid", "type": "string"}',
+    u'90bbcee8-d579-4863-9c9b-dd4edaebac36'
+  ),
   ("""\
    {"type": "record",
     "name": "Test",

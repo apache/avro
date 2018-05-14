@@ -19,6 +19,8 @@ try:
 except ImportError:
   from StringIO import StringIO
 from binascii import hexlify
+import datetime
+import decimal
 
 import set_avro_test_path
 
@@ -39,6 +41,55 @@ SCHEMAS_TO_VALIDATE = (
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
   ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),
   ('["string", "null", "long"]', None),
+  (
+    '{"type": "int", "logicalType": "some-made-up-logical-type"}',
+    47
+  ),
+  ('{"type": "int", "logicalType": "date"}', datetime.date(2000, 1, 1)),
+  ('{"type": "int", "logicalType": "time-millis"}', datetime.time(23, 59, 59, 999000)),
+  ('{"type": "int", "logicalType": "time-millis"}', datetime.time(0, 0, 0, 000000)),
+  ('{"type": "long", "logicalType": "time-micros"}', datetime.time(23, 59, 59, 999999)),
+  ('{"type": "long", "logicalType": "time-micros"}', datetime.time(0, 0, 0, 000000)),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 100000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(1000, 1, 1, 0, 0, 0, 000000)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(9999, 12, 31, 23, 59, 59, 999999)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    datetime.datetime(2000, 1, 18, 2, 2, 1, 123499)
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-millis"}',
+    47
+  ),
+  (
+    '{"type": "long", "logicalType": "timestamp-micros"}',
+    47
+  ),
+  (
+    '{"logicalType": "uuid", "type": "string"}',
+    u'90bbcee8-d579-4863-9c9b-dd4edaebac36'
+  ),
+  (
+    '{"type": "string", "logicalType": "decimal"}',
+    decimal.Decimal('1.1')
+  ),
   ("""\
    {"type": "record",
     "name": "Test",
@@ -202,8 +253,16 @@ class TestIO(unittest.TestCase):
       writers_schema = schema.parse(example_schema)
       writer, encoder, datum_writer = write_datum(datum, writers_schema)
       round_trip_datum = read_datum(writer, writers_schema)
-
+      if example_schema == '{"type": "long", "logicalType": "timestamp-micros"}' and isinstance(datum, (int, long)):
+          timedelta = datetime.timedelta(microseconds=datum)
+          unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+          datum = unix_epoch_datetime + timedelta
+      elif example_schema == '{"type": "long", "logicalType": "timestamp-millis"}' and isinstance(datum, (int, long)):
+          timedelta = datetime.timedelta(microseconds=datum * 1000)
+          unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+          datum = unix_epoch_datetime + timedelta
       print 'Round Trip Datum: %s' % round_trip_datum
+      self.assertEquals(datum, round_trip_datum)
       if datum == round_trip_datum: correct += 1
     self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
 
