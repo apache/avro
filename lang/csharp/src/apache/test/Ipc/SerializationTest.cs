@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -60,7 +60,7 @@ namespace Avro.Test.Ipc
         private SocketTransceiver transceiver;
         private All simpleClient;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void Init()
         {
             var mailResponder = new SpecificResponder<All>(new AllImpl());
@@ -73,7 +73,7 @@ namespace Avro.Test.Ipc
             simpleClient = SpecificRequestor.CreateClient<All>(transceiver);
         }
 
-        [TestFixtureTearDown]
+        [OneTimeTearDown]
         public void Cleanup()
         {
             server.Stop();
