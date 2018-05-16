@@ -27,7 +27,7 @@ if version_info[:2] <= (2, 5):
 
 setup(
   name = 'avro',
-  version = '1.8.2',
+  version = '1.8.2+postmates.1',
   packages = ['avro',],
   package_dir = {'avro': 'src/avro'},
   scripts = ["./scripts/avro"],
