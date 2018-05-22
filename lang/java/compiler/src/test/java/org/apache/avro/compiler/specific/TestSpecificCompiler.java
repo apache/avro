@@ -18,7 +18,7 @@
 package org.apache.avro.compiler.specific;
 
 import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JODA;
-import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JAVA8;
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JSR310;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -414,8 +414,8 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testJavaTypeWithJava8DateTimeTypes() throws Exception {
-    SpecificCompiler compiler = createCompiler(JAVA8);
+  public void testJavaTypeWithJsr310DateTimeTypes() throws Exception {
+    SpecificCompiler compiler = createCompiler(JSR310);
 
     Schema dateSchema = LogicalTypes.date()
         .addToSchema(Schema.create(Schema.Type.INT));
@@ -471,8 +471,8 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testJavaUnboxJava8DateTime() throws Exception {
-    SpecificCompiler compiler = createCompiler(JAVA8);
+  public void testJavaUnboxJsr310DateTime() throws Exception {
+    SpecificCompiler compiler = createCompiler(JSR310);
 
     Schema dateSchema = LogicalTypes.date()
         .addToSchema(Schema.create(Schema.Type.INT));
@@ -559,11 +559,11 @@ public class TestSpecificCompiler {
   }
 
   @Test
-  public void testLogicalTypesWithMultipleFieldsJava8DateTime() throws Exception {
+  public void testLogicalTypesWithMultipleFieldsJsr310DateTime() throws Exception {
     Schema logicalTypesWithMultipleFields = new Schema.Parser().parse(
         new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(
-        new SpecificCompiler(logicalTypesWithMultipleFields, JAVA8).compile());
+        new SpecificCompiler(logicalTypesWithMultipleFields, JSR310).compile());
   }
 
   @Test

@@ -131,7 +131,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean enableDecimalLogicalType;
 
   /**
-   * Determines which type of classes to generate for date/time related logical types. Either 'joda' or 'java8'.
+   * Determines which type of classes to generate for date/time related logical types. Either 'joda' or 'jsr310'.
    * Defaults to joda for backwards compatibility reasons.
    *
    * @parameter default-value="joda"

@@ -53,12 +53,12 @@ public class ProtocolTask extends Task {
   /** Get the string type. */
   public StringType getStringType() { return this.stringType; }
 
-  /** Sets the date/time logical type type (either JODA or JAVA8) */
+  /** Sets the date/time logical type type (either JODA or JSR310) */
   public void setDateTimeLogicalTypeImplementation(DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
     this.dateTimeLogicalTypeImplementation = dateTimeLogicalTypeImplementation;
   }
 
-  /** Get the date/time logical type type (either JODA or JAVA8) */
+  /** Get the date/time logical type type (either JODA or JSR310) */
   public DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
     return dateTimeLogicalTypeImplementation;
   }

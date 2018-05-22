@@ -20,11 +20,11 @@ package org.apache.avro.data;
 
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.avro.data.Java8TimeConversions.DateConversion;
-import org.apache.avro.data.Java8TimeConversions.TimeMillisConversion;
-import org.apache.avro.data.Java8TimeConversions.TimeMicrosConversion;
-import org.apache.avro.data.Java8TimeConversions.TimestampMicrosConversion;
-import org.apache.avro.data.Java8TimeConversions.TimestampMillisConversion;
+import org.apache.avro.data.Jsr310TimeConversions.DateConversion;
+import org.apache.avro.data.Jsr310TimeConversions.TimeMillisConversion;
+import org.apache.avro.data.Jsr310TimeConversions.TimeMicrosConversion;
+import org.apache.avro.data.Jsr310TimeConversions.TimestampMicrosConversion;
+import org.apache.avro.data.Jsr310TimeConversions.TimestampMillisConversion;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,7 +35,7 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
 
-public class TestJava8TimeConversions {
+public class TestJsr310TimeConversions {
 
   public static Schema DATE_SCHEMA;
   public static Schema TIME_MILLIS_SCHEMA;
@@ -45,15 +45,15 @@ public class TestJava8TimeConversions {
 
   @BeforeClass
   public static void createSchemas() {
-    TestJava8TimeConversions.DATE_SCHEMA = LogicalTypes.date()
+    TestJsr310TimeConversions.DATE_SCHEMA = LogicalTypes.date()
         .addToSchema(Schema.create(Schema.Type.INT));
-    TestJava8TimeConversions.TIME_MILLIS_SCHEMA = LogicalTypes.timeMillis()
+    TestJsr310TimeConversions.TIME_MILLIS_SCHEMA = LogicalTypes.timeMillis()
         .addToSchema(Schema.create(Schema.Type.INT));
-    TestJava8TimeConversions.TIME_MICROS_SCHEMA = LogicalTypes.timeMicros()
+    TestJsr310TimeConversions.TIME_MICROS_SCHEMA = LogicalTypes.timeMicros()
         .addToSchema(Schema.create(Schema.Type.LONG));
-    TestJava8TimeConversions.TIMESTAMP_MILLIS_SCHEMA = LogicalTypes.timestampMillis()
+    TestJsr310TimeConversions.TIMESTAMP_MILLIS_SCHEMA = LogicalTypes.timestampMillis()
         .addToSchema(Schema.create(Schema.Type.LONG));
-    TestJava8TimeConversions.TIMESTAMP_MICROS_SCHEMA = LogicalTypes.timestampMicros()
+    TestJsr310TimeConversions.TIMESTAMP_MICROS_SCHEMA = LogicalTypes.timestampMicros()
         .addToSchema(Schema.create(Schema.Type.LONG));
   }
 

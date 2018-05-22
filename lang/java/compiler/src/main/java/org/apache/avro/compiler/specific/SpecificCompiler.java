@@ -37,7 +37,7 @@ import java.util.Set;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
-import org.apache.avro.data.Java8TimeConversions;
+import org.apache.avro.data.Jsr310TimeConversions;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
@@ -100,12 +100,12 @@ public class SpecificCompiler {
         specificData.addLogicalTypeConversion(new TimeConversions.TimestampConversion());
       }
     },
-    JAVA8 {
+    JSR310 {
       @Override
       void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new Java8TimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new Java8TimeConversions.TimeMillisConversion());
-        specificData.addLogicalTypeConversion(new Java8TimeConversions.TimestampMillisConversion());
+        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.DateConversion());
+        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimeMillisConversion());
+        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimestampMillisConversion());
       }
     };
 
@@ -194,7 +194,7 @@ public class SpecificCompiler {
 
   /**
    * Creates a specific compiler with the given type to use for date/time related logical types.
-   * Use {@link DateTimeLogicalTypeImplementation#JODA} to generate Joda Time classes, use {@link DateTimeLogicalTypeImplementation#JAVA8}
+   * Use {@link DateTimeLogicalTypeImplementation#JODA} to generate Joda Time classes, use {@link DateTimeLogicalTypeImplementation#JSR310}
    * to generate {@code java.time.*} classes for the date/time local types.
    *
    * @param dateTimeLogicalTypeImplementation the types used for date/time related logical types

@@ -63,7 +63,7 @@ import static org.hamcrest.Matchers.not;
  * before AVRO-1684, logical types should not be applied by the read or write
  * paths. Those files should behave as they did before.
  *
- * For AVRO-2079 {@link TestRecordWithJava8LogicalTypes} was generated from
+ * For AVRO-2079 {@link TestRecordWithJsr310LogicalTypes} was generated from
  * the same schema and tests were added to test compatibility between the
  * two versions.
  */
@@ -94,8 +94,8 @@ public class TestSpecificLogicalTypes {
     Assert.assertEquals("Should match written record", record, actual.get(0));
   }
   @Test
-  public void testRecordWithJava8LogicalTypes() throws IOException {
-    TestRecordWithJava8LogicalTypes record = new TestRecordWithJava8LogicalTypes(
+  public void testRecordWithJsr310LogicalTypes() throws IOException {
+    TestRecordWithJsr310LogicalTypes record = new TestRecordWithJsr310LogicalTypes(
         true,
         34,
         35L,
@@ -108,15 +108,15 @@ public class TestSpecificLogicalTypes {
         new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
-    File data = write(TestRecordWithJava8LogicalTypes.getClassSchema(), record);
-    List<TestRecordWithJava8LogicalTypes> actual = read(
-        TestRecordWithJava8LogicalTypes.getClassSchema(), data);
+    File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), record);
+    List<TestRecordWithJsr310LogicalTypes> actual = read(
+        TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
 
     Assert.assertEquals("Should match written record", record, actual.get(0));
   }
 
   @Test
-  public void testAbilityToReadJava8RecordWrittenAsJodaRecord() throws IOException {
+  public void testAbilityToReadJsr310RecordWrittenAsJodaRecord() throws IOException {
     TestRecordWithLogicalTypes withJoda = new TestRecordWithLogicalTypes(
             true,
             34,
@@ -131,28 +131,28 @@ public class TestSpecificLogicalTypes {
     );
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), withJoda);
-    List<TestRecordWithJava8LogicalTypes> actual = read(
-        TestRecordWithJava8LogicalTypes.getClassSchema(), data);
+    List<TestRecordWithJsr310LogicalTypes> actual = read(
+        TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
 
     Assert.assertThat(actual, is(not(empty())));
-    TestRecordWithJava8LogicalTypes withJava8 = actual.get(0);
+    TestRecordWithJsr310LogicalTypes withJsr310 = actual.get(0);
 
-    Assert.assertThat(withJava8.getB(), is(withJoda.getB()));
-    Assert.assertThat(withJava8.getI32(), is(withJoda.getI32()));
-    Assert.assertThat(withJava8.getI64(), is(withJoda.getI64()));
-    Assert.assertThat(withJava8.getF32(), is(withJoda.getF32()));
-    Assert.assertThat(withJava8.getF64(), is(withJoda.getF64()));
-    Assert.assertThat(withJava8.getS(), is(withJoda.getS()));
+    Assert.assertThat(withJsr310.getB(), is(withJoda.getB()));
+    Assert.assertThat(withJsr310.getI32(), is(withJoda.getI32()));
+    Assert.assertThat(withJsr310.getI64(), is(withJoda.getI64()));
+    Assert.assertThat(withJsr310.getF32(), is(withJoda.getF32()));
+    Assert.assertThat(withJsr310.getF64(), is(withJoda.getF64()));
+    Assert.assertThat(withJsr310.getS(), is(withJoda.getS()));
 
-    Assert.assertThat(ISO_LOCAL_DATE.format(withJava8.getD()), is(ISODateTimeFormat.date().print(withJoda.getD())));
-    Assert.assertThat(ISO_LOCAL_TIME.format(withJava8.getT()), is(ISODateTimeFormat.time().print(withJoda.getT())));
-    Assert.assertThat(ISO_INSTANT.format(withJava8.getTs()), is(ISODateTimeFormat.dateTime().print(withJoda.getTs())));
-    Assert.assertThat(withJava8.getDec(), comparesEqualTo(withJoda.getDec()));
+    Assert.assertThat(ISO_LOCAL_DATE.format(withJsr310.getD()), is(ISODateTimeFormat.date().print(withJoda.getD())));
+    Assert.assertThat(ISO_LOCAL_TIME.format(withJsr310.getT()), is(ISODateTimeFormat.time().print(withJoda.getT())));
+    Assert.assertThat(ISO_INSTANT.format(withJsr310.getTs()), is(ISODateTimeFormat.dateTime().print(withJoda.getTs())));
+    Assert.assertThat(withJsr310.getDec(), comparesEqualTo(withJoda.getDec()));
   }
 
   @Test
-  public void testAbilityToReadJodaRecordWrittenAsJava8Record() throws IOException {
-    TestRecordWithJava8LogicalTypes withJava8 = new TestRecordWithJava8LogicalTypes(
+  public void testAbilityToReadJodaRecordWrittenAsJsr310Record() throws IOException {
+    TestRecordWithJsr310LogicalTypes withJsr310 = new TestRecordWithJsr310LogicalTypes(
             true,
             34,
             35L,
@@ -165,24 +165,24 @@ public class TestSpecificLogicalTypes {
             new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
-    File data = write(TestRecordWithJava8LogicalTypes.getClassSchema(), withJava8);
+    File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), withJsr310);
     List<TestRecordWithLogicalTypes> actual = read(
         TestRecordWithLogicalTypes.getClassSchema(), data);
 
     Assert.assertThat(actual, is(not(empty())));
     TestRecordWithLogicalTypes withJoda = actual.get(0);
 
-    Assert.assertThat(withJoda.getB(), is(withJava8.getB()));
-    Assert.assertThat(withJoda.getI32(), is(withJava8.getI32()));
-    Assert.assertThat(withJoda.getI64(), is(withJava8.getI64()));
-    Assert.assertThat(withJoda.getF32(), is(withJava8.getF32()));
-    Assert.assertThat(withJoda.getF64(), is(withJava8.getF64()));
-    Assert.assertThat(withJoda.getS(), is(withJava8.getS()));
+    Assert.assertThat(withJoda.getB(), is(withJsr310.getB()));
+    Assert.assertThat(withJoda.getI32(), is(withJsr310.getI32()));
+    Assert.assertThat(withJoda.getI64(), is(withJsr310.getI64()));
+    Assert.assertThat(withJoda.getF32(), is(withJsr310.getF32()));
+    Assert.assertThat(withJoda.getF64(), is(withJsr310.getF64()));
+    Assert.assertThat(withJoda.getS(), is(withJsr310.getS()));
     // all of these print in the ISO-8601 format
-    Assert.assertThat(withJoda.getD().toString(), is(withJava8.getD().toString()));
-    Assert.assertThat(withJoda.getT().toString(), is(withJava8.getT().toString()));
-    Assert.assertThat(withJoda.getTs().toString(), is(withJava8.getTs().toString()));
-    Assert.assertThat(withJoda.getDec(), comparesEqualTo(withJava8.getDec()));
+    Assert.assertThat(withJoda.getD().toString(), is(withJsr310.getD().toString()));
+    Assert.assertThat(withJoda.getT().toString(), is(withJsr310.getT().toString()));
+    Assert.assertThat(withJoda.getTs().toString(), is(withJsr310.getTs().toString()));
+    Assert.assertThat(withJoda.getDec(), comparesEqualTo(withJsr310.getDec()));
   }
 
   @Test

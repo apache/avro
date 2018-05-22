@@ -57,8 +57,8 @@ public class SpecificCompilerTool implements Tool {
       System.err.println(" -string - use java.lang.String instead of Utf8");
       System.err.println(" -bigDecimal - use java.math.BigDecimal for " +
           "decimal type instead of java.nio.ByteBuffer");
-      System.err.println(" -dateTimeLogicalTypeImpl [joda|java8] - use either " +
-          "Joda time classes (default) or Java 8 native date/time classes (JSR-310)");
+      System.err.println(" -dateTimeLogicalTypeImpl [joda|jsr310] - use either " +
+          "Joda time classes (default) or Java 8 native date/time classes (JSR 310)");
       return 1;
     }
 

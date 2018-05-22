@@ -30,8 +30,8 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(),
           "src/test/resources/unit/protocol/pom-joda.xml");
-  protected File java8TestPom = new File(getBasedir(),
-          "src/test/resources/unit/protocol/pom-java8.xml");
+  protected File jsr310TestPom = new File(getBasedir(),
+          "src/test/resources/unit/protocol/pom-jsr310.xml");
 
   public void testProtocolMojoJoda() throws Exception {
     ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jodaTestPom);
@@ -49,13 +49,13 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
     assertTrue(protocolUserContent.contains("org.joda.time.DateTime"));
   }
 
-  public void testProtocolMojoJava8() throws Exception {
-    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", java8TestPom);
+  public void testProtocolMojoJsr310() throws Exception {
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jsr310TestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/protocol-java8/test");
+    File outputDir = new File(getBasedir(), "target/test-harness/protocol-jsr310/test");
     String[] generatedFiles = new String[]{"ProtocolPrivacy.java",
             "ProtocolTest.java", "ProtocolUser.java"};
 

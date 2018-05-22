@@ -37,16 +37,20 @@
         <artifactId>avro-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>protocol</id>
+            <id>schema</id>
             <goals>
-              <goal>protocol</goal>
+              <goal>schema</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/protocol-java8</outputDirectory>
-          <dateTimeLogicalTypeImplementation>java8</dateTimeLogicalTypeImplementation>
+          <outputDirectory>${basedir}/target/test-harness/schema-jsr310</outputDirectory>
+          <dateTimeLogicalTypeImplementation>jsr310</dateTimeLogicalTypeImplementation>
+          <imports>
+            <import>${basedir}/src/test/avro/imports</import>
+            <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
+          </imports>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>

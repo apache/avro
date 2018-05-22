@@ -30,8 +30,8 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(),
           "src/test/resources/unit/idl/pom-joda.xml");
-  protected File java8TestPom = new File(getBasedir(),
-          "src/test/resources/unit/idl/pom-java8.xml");
+  protected File jsr310TestPom = new File(getBasedir(),
+          "src/test/resources/unit/idl/pom-jsr310.xml");
 
   public void testIdlProtocolMojoJoda() throws Exception {
     IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jodaTestPom);
@@ -47,13 +47,13 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
     assertTrue(idlUserContent.contains("org.joda.time.DateTime"));
   }
 
-  public void testIdlProtocolMojoJava8() throws Exception {
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", java8TestPom);
+  public void testIdlProtocolMojoJsr310() throws Exception {
+    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jsr310TestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/idl-java8/test");
+    File outputDir = new File(getBasedir(), "target/test-harness/idl-jsr310/test");
     String[] generatedFileNames = new String[]{"IdlPrivacy.java",
       "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java"};
 

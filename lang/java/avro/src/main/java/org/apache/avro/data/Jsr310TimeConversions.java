@@ -27,7 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.concurrent.TimeUnit;
 
-public class Java8TimeConversions {
+public class Jsr310TimeConversions {
   public static class DateConversion extends Conversion<LocalDate> {
 
     @Override
