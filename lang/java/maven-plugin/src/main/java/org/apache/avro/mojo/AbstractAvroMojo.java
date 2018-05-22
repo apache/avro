@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-import com.google.common.base.Strings;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation;
 import org.apache.maven.plugin.AbstractMojo;
@@ -248,7 +247,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   protected DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
     try {
-      if (Strings.isNullOrEmpty(this.dateTimeLogicalTypeImplementation)) {
+      if (this.dateTimeLogicalTypeImplementation == null || this.dateTimeLogicalTypeImplementation.isEmpty()) {
         return DateTimeLogicalTypeImplementation.DEFAULT;
       } else {
         String upper = String.valueOf(this.dateTimeLogicalTypeImplementation).trim().toUpperCase();
