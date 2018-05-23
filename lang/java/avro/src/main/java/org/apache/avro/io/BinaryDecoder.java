@@ -257,6 +257,9 @@ public class BinaryDecoder extends Decoder {
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
     int length = readInt();
+    if (limit > 0 && length > limit) {
+      throw new AvroRuntimeException("Malformed data. Length is too long: " + length + ", limit: " + limit);
+    }
     Utf8 result = (old != null ? old : new Utf8());
     result.setByteLength(length);
     if (0 != length) {
