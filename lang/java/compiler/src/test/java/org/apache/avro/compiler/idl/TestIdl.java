@@ -152,7 +152,7 @@ public class TestIdl {
     public void run() throws Exception {
       String output = generate();
       String slurped = slurp(expectedOut);
-      assertEquals(slurped.trim(), output.replace("\r", "").trim());
+      assertEquals(slurped.trim(), output.replace("\\r", "").trim());
     }
 
     public void write() throws Exception {
