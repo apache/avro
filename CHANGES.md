@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.14.2
 * Stop creating default generated output directories when `outputDir` is customized and IntelliJ integration is used (#52)
 
 ## 0.14.1
