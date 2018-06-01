@@ -64,16 +64,18 @@ public class AvroPlugin implements Plugin<Project> {
             public void execute(IdeaPlugin ideaPlugin) {
                 SourceSet mainSourceSet = getMainSourceSet(project);
                 SourceSet testSourceSet = getTestSourceSet(project);
-                final File mainGeneratedOutputDir = getGeneratedOutputDir(project, mainSourceSet, JAVA_EXTENSION);
-                final File testGeneratedOutputDir = getGeneratedOutputDir(project, testSourceSet, JAVA_EXTENSION);
                 project.getTasks().withType(GenerateIdeaModule.class).all(new Action<GenerateIdeaModule>() {
                     @Override
-                    public void execute(GenerateIdeaModule generateIdeaModule) {
-                        generateIdeaModule.doFirst(new Action<Task>() {
+                    public void execute(final GenerateIdeaModule generateIdeaModule) {
+                        project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
                             @Override
-                            public void execute(Task task) {
-                                project.mkdir(mainGeneratedOutputDir);
-                                project.mkdir(testGeneratedOutputDir);
+                            public void execute(final GenerateAvroJavaTask generateAvroJavaTask) {
+                                generateIdeaModule.doFirst(new Action<Task>() {
+                                    @Override
+                                    public void execute(Task task) {
+                                        project.mkdir(generateAvroJavaTask.getOutputDir());
+                                    }
+                                });
                             }
                         });
                     }

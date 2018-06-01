@@ -129,30 +129,4 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         result.output.contains("* $errorFilePath: \"enum\" is not a defined name. The type of the \"gender\" " +
                 "field must be a defined name or a {\"type\": ...} expression.")
     }
-
-    def "generated intellij project files include source directories for generated source"() {
-        given:
-        buildFile << """
-            apply plugin: "idea"
-        """
-        copyResource("user.avsc", avroDir)
-        testProjectDir.newFolder("src", "main", "java")
-        testProjectDir.newFolder("src", "test", "java")
-        testProjectDir.newFolder("src", "test", "avro")
-
-        when:
-        run("idea")
-
-        then:
-        def moduleFile = new File(testProjectDir.root, "${testProjectDir.root.name}.iml")
-        def module = new XmlSlurper().parseText(moduleFile.text)
-        module.component.content.sourceFolder.findAll { it.@isTestSource.text() == "false" }.@url*.text().sort() == [
-            'file://$MODULE_DIR\$/build/generated-main-avro-java',
-            'file://$MODULE_DIR\$/src/main/avro', 'file://$MODULE_DIR\$/src/main/java',
-        ]
-        module.component.content.sourceFolder.findAll { it.@isTestSource.text() == "true" }.@url*.text().sort() == [
-            'file://$MODULE_DIR\$/build/generated-test-avro-java',
-            'file://$MODULE_DIR\$/src/test/avro', 'file://$MODULE_DIR\$/src/test/java',
-        ]
-    }
 }

@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Stop creating default generated output directories when `outputDir` is customized and IntelliJ integration is used (#52)
 
 ## 0.14.1
 * Built using Gradle 4.6
