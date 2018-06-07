@@ -9,9 +9,10 @@ matrix:
 # 7
     - env: JDK='Oracle JDK 7'
       jdk: oraclejdk7
+      dist: precise # Doesn't exist in trusty any more
     - env: JDK='OpenJDK 7'
       jdk: openjdk7
-      before_script: # Try a workaround for https://github.com/travis-ci/travis-ci/issues/8503
+      before_script: # Workaround for https://github.com/travis-ci/travis-ci/issues/8503
       - sudo sed -i 's/security.provider.9/#security.provider.9/g' $JAVA_HOME/jre/lib/security/java.security
 # 8
     - env: JDK='Oracle JDK 8'
@@ -46,6 +47,5 @@ env:
 script:
   - echo PATH = ${PATH}
   - echo JAVA_HOME = ${JAVA_HOME}
-  - ls -LRl $JAVA_HOME
   - java -Xmx32m -version
   - ./gradlew build testRecentVersionCompatibility --info
