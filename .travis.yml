@@ -11,6 +11,8 @@ matrix:
       jdk: oraclejdk7
     - env: JDK='OpenJDK 7'
       jdk: openjdk7
+      before_script: # Try a workaround for https://github.com/travis-ci/travis-ci/issues/8503
+      - sudo sed -i 's/security.provider.9/#security.provider.9/g' $JAVA_HOME/jre/lib/security/java.security
 # 8
     - env: JDK='Oracle JDK 8'
       jdk: oraclejdk8
@@ -34,9 +36,6 @@ matrix:
   allow_failures:
     - env: JDK='Oracle JDK 7'
     - env: JDK='OpenJDK 7'
-    - env: JDK='OpenJDK 9'
-    - env: JDK='Oracle JDK 10'
-    - env: JDK='OpenJDK 10'
     - env: JDK='Oracle JDK 11'
     - env: JDK='OpenJDK 11'
 
@@ -47,5 +46,6 @@ env:
 script:
   - echo PATH = ${PATH}
   - echo JAVA_HOME = ${JAVA_HOME}
+  - ls -LRl $JAVA_HOME
   - java -Xmx32m -version
   - ./gradlew build testRecentVersionCompatibility --info
