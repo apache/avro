@@ -2,16 +2,15 @@ sudo: true
 dist: trusty
 language: java
 
-before_install:
-  - wget https://raw.githubusercontent.com/sormuras/bach/master/install-jdk.sh
-
 install: true
 
 matrix:
   include:
-# Based on https://sormuras.github.io/blog/2018-03-20-jdk-matrix.html
-# 7 isn't included because it reached End of Life in April 2015 and requires
-# various work-arounds on Travis CI to be compatible with Gradle
+# 7
+    - env: JDK='Oracle JDK 7'
+      jdk: oraclejdk7
+    - env: JDK='OpenJDK 7'
+      jdk: openjdk7
 # 8
     - env: JDK='Oracle JDK 8'
       jdk: oraclejdk8
@@ -21,29 +20,32 @@ matrix:
     - env: JDK='Oracle JDK 9'
       jdk: oraclejdk9
     - env: JDK='OpenJDK 9'
-      install: . ./install-jdk.sh -F 9
+      jdk: openjdk9
 # 10
     - env: JDK='Oracle JDK 10'
       jdk: oraclejdk10
     - env: JDK='OpenJDK 10'
-      install: . ./install-jdk.sh -F 10 -L GPL
+      jdk: openjdk10
 # 11
     - env: JDK='Oracle JDK 11'
-      install: . ./install-jdk.sh -F 11 -L BCL
+      jdk: oraclejdk11
     - env: JDK='OpenJDK 11'
-      install: . ./install-jdk.sh -F 11 -L GPL
+      jdk: openjdk11
   allow_failures:
-    - env: JDK='Oracle JDK 10' # Oracle JDK 10 not yet supported; see https://github.com/travis-ci/travis-ci/issues/9368
-    - env: JDK='Oracle JDK 11' # Gradle 4.6 doesn't recognize Java 11 EA versions; should be fixed in Gradle 4.7; https://github.com/gradle/gradle/issues/4515
-    - env: JDK='OpenJDK 11' # Gradle 4.6 doesn't recognize Java 11 EA versions; should be fixed in Gradle 4.7; https://github.com/gradle/gradle/issues/4515
+    - env: JDK='Oracle JDK 7'
+    - env: JDK='OpenJDK 7'
+    - env: JDK='OpenJDK 9'
+    - env: JDK='Oracle JDK 10'
+    - env: JDK='OpenJDK 10'
+    - env: JDK='Oracle JDK 11'
+    - env: JDK='OpenJDK 11'
 
 env:
   global:
-    - TERM="dumb"
     - GRADLE_OPTS="-Xmx386m -Xms386m"
 
 script:
   - echo PATH = ${PATH}
   - echo JAVA_HOME = ${JAVA_HOME}
-  - java -version
+  - java -Xmx32m -version
   - ./gradlew build testRecentVersionCompatibility --info
