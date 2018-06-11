@@ -7,13 +7,17 @@ install: true
 matrix:
   include:
 # 7
-    - env: JDK='Oracle JDK 7'
+    - env:
+        - JDK='Oracle JDK 7'
+        - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
       jdk: oraclejdk7
       dist: precise # Doesn't exist in trusty any more
-    - env: JDK='OpenJDK 7'
+    - env:
+        - JDK='OpenJDK 7'
+        - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m"
       jdk: openjdk7
       before_script: # Workaround for https://github.com/travis-ci/travis-ci/issues/8503
-      - sudo sed -i 's/security.provider.9/#security.provider.9/g' $JAVA_HOME/jre/lib/security/java.security
+        - sudo sed -i 's/security.provider.9/#security.provider.9/g' $JAVA_HOME/jre/lib/security/java.security
 # 8
     - env: JDK='Oracle JDK 8'
       jdk: oraclejdk8
