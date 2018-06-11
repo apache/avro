@@ -1,0 +1,30 @@
+.job_template: &job_definition
+  variables:
+    - GRADLE_OPTS="-Xmx386m -Xms386m"
+  script:
+    - echo PATH = ${PATH}
+    - echo JAVA_HOME = ${JAVA_HOME}
+    - java -Xmx32m -version
+    - ./gradlew build testRecentVersionCompatibility --info
+
+openjdk7:
+  <<: *job_definition
+  image: openjdk:7-jdk
+  variables:
+    - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m" # Java 7 still uses separate permgen
+
+openjdk8:
+  <<: *job_definition
+  image: openjdk:8-jdk
+
+openjdk9:
+  <<: *job_definition
+  image: openjdk:9-jdk
+
+openjdk10:
+  <<: *job_definition
+  image: openjdk:10-jdk
+
+openjdk11:
+  <<: *job_definition
+  image: openjdk:11-jdk
