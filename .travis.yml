@@ -27,8 +27,6 @@ matrix:
     - jdk: oraclejdk11
     - jdk: openjdk11
   allow_failures:
-    - jdk: oraclejdk7
-    - jdk: openjdk7
     - jdk: oraclejdk11
     - jdk: openjdk11
 
