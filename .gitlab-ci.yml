@@ -1,6 +1,6 @@
 .job_template: &job_definition
   variables:
-    - GRADLE_OPTS="-Xmx386m -Xms386m"
+    GRADLE_OPTS: "-Xmx386m -Xms386m"
   script:
     - echo PATH = ${PATH}
     - echo JAVA_HOME = ${JAVA_HOME}
@@ -11,7 +11,7 @@ openjdk7:
   <<: *job_definition
   image: openjdk:7-jdk
   variables:
-    - GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m" # Java 7 still uses separate permgen
+    GRADLE_OPTS: "-Xmx386m -Xms386m -XX:MaxPermSize=128m" # Java 7 still uses separate permgen
 
 openjdk8:
   <<: *job_definition
