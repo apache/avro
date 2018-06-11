@@ -1,6 +1,9 @@
 # Change Log
 
 ## Unreleased
+* Built using Gradle 4.8
+* Updated compatibility testing through Gradle 4.8
+* Began testing using Java 11
 
 ## 0.14.2
 * Stop creating default generated output directories when `outputDir` is customized and IntelliJ integration is used (#52)

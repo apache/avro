@@ -81,11 +81,11 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected BuildResult run(String... args = ["build"]) {
-        return createGradleRunner().withArguments(args).build()
+        return createGradleRunner().withArguments(Arrays.asList(args) + "--stacktrace").build()
     }
 
     protected BuildResult runAndFail(String... args = ["build"]) {
-        return createGradleRunner().withArguments(args).buildAndFail()
+        return createGradleRunner().withArguments(Arrays.asList(args) + "--stacktrace").buildAndFail()
     }
 
     protected boolean isTaskInfoAbsent() {
