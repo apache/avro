@@ -62,7 +62,7 @@ import org.codehaus.jackson.node.TextNode;
  *
  * <pre>
  *   Schema schema = SchemaBuilder
- *   .record("HandshakeRequest").namespace("org.apache.avro.ipc)
+ *   .record("HandshakeRequest").namespace("org.apache.avro.ipc")
  *   .fields()
  *     .name("clientHash").type().fixed("MD5").size(16).noDefault()
  *     .name("clientProtocol").type().nullable().stringType().noDefault()
