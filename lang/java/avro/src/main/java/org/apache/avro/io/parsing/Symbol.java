@@ -553,7 +553,7 @@ public abstract class Symbol {
     @Deprecated public FieldAdjustAction(int rindex, String fname, Set<String> aliases) {
       this.rindex = rindex;
       this.fname = fname;
-      this.aliases = Collections.unmodifiableSet(aliases);
+      this.aliases = aliases;
     }
   }
 
