@@ -18,6 +18,7 @@
 package org.apache.avro.io.parsing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -541,16 +542,18 @@ public abstract class Symbol {
 
   }
 
-  public static FieldAdjustAction fieldAdjustAction(int rindex, String fname) {
-    return new FieldAdjustAction(rindex, fname);
+  public static FieldAdjustAction fieldAdjustAction(int rindex, String fname, Set<String> aliases) {
+    return new FieldAdjustAction(rindex, fname, aliases);
   }
 
   public static class FieldAdjustAction extends ImplicitAction {
     public final int rindex;
     public final String fname;
-    @Deprecated public FieldAdjustAction(int rindex, String fname) {
+    public final Set<String> aliases;
+    @Deprecated public FieldAdjustAction(int rindex, String fname, Set<String> aliases) {
       this.rindex = rindex;
       this.fname = fname;
+      this.aliases = Collections.unmodifiableSet(aliases);
     }
   }
 
