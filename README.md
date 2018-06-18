@@ -4,6 +4,8 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 [![Build Status](https://travis-ci.org/commercehub-oss/gradle-avro-plugin.svg?branch=master)](https://travis-ci.org/commercehub-oss/gradle-avro-plugin)
 
+> See [our security policy](SECURITY.md) for handling of security-related matters.
+
 # Compatibility
 
 * Currently tested against Java 7-11
