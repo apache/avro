@@ -2,6 +2,8 @@
 
 > Before contributing, please read our [code of conduct](https://github.com/commercehub-oss/gradle-avro-plugin/blob/master/CODE_OF_CONDUCT.md).
 
+> See [our security policy](SECURITY.md) for handling of security-related matters.
+
 Before starting work on an enhancement, it's highly recommended to open an [issue](https://github.com/commercehub-oss/gradle-avro-plugin/issues) to describe the intended change.
 This allows for the project maintainers to provide feedback before you've done work that may not fit the project's vision.
 
