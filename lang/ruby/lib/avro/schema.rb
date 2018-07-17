@@ -360,6 +360,7 @@ module Avro
         @default = default
         @order = order
         @doc = doc
+        validate_default! if default?
       end
 
       def default?
@@ -372,6 +373,18 @@ module Avro
           avro['order'] = order if order
           avro['doc'] = doc if doc
         end
+      end
+
+      def validate_default!
+        type_for_default = if type.type_sym == :union
+                             type.schemas.first
+                           else
+                             type
+                           end
+
+        Avro::SchemaValidator.validate!(type_for_default, default)
+      rescue Avro::SchemaValidator::ValidationError => e
+        raise Avro::SchemaParseError, "Error validating default for #{name}: #{e.message}"
       end
     end
   end
