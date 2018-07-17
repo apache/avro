@@ -64,7 +64,7 @@ module Avro
 
     class << self
       def validate!(expected_schema, logical_datum, options = { recursive: true, encoded: false })
-        options ||= {}
+        options ||= { fail_on_extra_fields: false }
         options[:recursive] = true unless options.key?(:recursive)
 
         result = Result.new
@@ -96,6 +96,13 @@ module Avro
           expected_schema.fields.each do |field|
             deeper_path = deeper_path_for_hash(field.name, path)
             validate_recursive(field.type, datum[field.name], deeper_path, result)
+          end
+          if options[:fail_on_extra_fields]
+            datum_fields = datum.keys.map(&:to_s)
+            schema_fields = expected_schema.fields.map(&:name)
+            (datum_fields - schema_fields).each do |extra_field|
+              result.add_error(path, "extra field '#{extra_field}' - not in schema")
+            end
           end
         end
       rescue TypeMismatchError

@@ -17,8 +17,8 @@
 require 'test_help'
 
 class TestSchema < Test::Unit::TestCase
-  def validate!(schema, value)
-    Avro::SchemaValidator.validate!(schema, value)
+  def validate!(schema, value, options=nil)
+    Avro::SchemaValidator.validate!(schema, value, options)
   end
 
   def validate_simple!(schema, value)
@@ -467,5 +467,24 @@ class TestSchema < Test::Unit::TestCase
       "at .[0] expected type int, got null\nat .[1] expected type int, got string with value \"e\"",
       exception.to_s
     )
+  end
+
+  def test_validate_extra_fields
+    schema = hash_to_schema(
+               type: 'record',
+               name: 'fruits',
+               fields: [
+                 {
+                   name: 'veggies',
+                   type: 'string'
+                 }
+                     ]
+    )
+    exception = assert_raise(Avro::SchemaValidator::ValidationError) do
+      validate!(schema, {'veggies' => 'tomato', 'bread' => 'rye'}, fail_on_extra_fields: true)
+    end
+    assert_equal(1, exception.result.errors.size)
+    assert_equal("at . extra field 'bread' - not in schema",
+                 exception.to_s)
   end
 end
