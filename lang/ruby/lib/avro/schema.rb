@@ -375,6 +375,8 @@ module Avro
         end
       end
 
+      private
+
       def validate_default!
         type_for_default = if type.type_sym == :union
                              type.schemas.first
