@@ -18,14 +18,19 @@
 
 package org.apache.avro.mojo;
 
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData.StringType;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URLClassLoader;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.reflect.ReflectData;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
@@ -61,6 +66,47 @@ public class SchemaMojo extends AbstractAvroMojo {
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
 
+  /**
+   * @parameter
+   */
+  private String[] javaImports = new String[] {};
+  private Set<Schema> javaImportsSchemas = new HashSet<>();
+
+
+  @Override
+  public void execute() throws MojoExecutionException {
+    tryParseJavaImports();
+    super.execute();
+  }
+
+  /**
+   * Parse schemas from the provided javaimport classes. Schemas are added to the names known to the parser
+   */
+  private void tryParseJavaImports() {
+    try {
+      if(javaImports.length == 0) {
+        return;
+      }
+      Schema javaImportsSchema = javaImportsSchema();
+      schemaParser.parse(javaImportsSchema.toString());
+      javaImportsSchemas = new SpecificCompiler.SchemaQueue(javaImportsSchema);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * build one schema so there is no redefine schema error
+   */
+  private Schema javaImportsSchema() throws ClassNotFoundException {
+    SchemaBuilder.UnionAccumulator<Schema> unionBuilder = SchemaBuilder.builder().unionOf().nullType();
+    for (String javaimport : javaImports) {
+      Schema javaClassSchema = ReflectData.get().getSchema(Class.forName(javaimport));
+      unionBuilder = unionBuilder.and().type(javaClassSchema);
+    }
+    return unionBuilder.endUnion();
+  }
+
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
@@ -93,7 +139,12 @@ public class SchemaMojo extends AbstractAvroMojo {
       throw new IOException(e);
     }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-    compiler.compileToDestination(src, outputDirectory);
+    Set<Schema> allSchemas = new SpecificCompiler.SchemaQueue(schema);
+    allSchemas.removeAll(javaImportsSchemas);
+    for (Schema s : allSchemas) {
+      SpecificCompiler.OutputFile o = compiler.compile(s);
+      o.writeToDestination(src, outputDirectory);
+    }
   }
 
   @Override
