@@ -41,4 +41,16 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
 
     assertFilesExist(outputDir, generatedFiles);
   }
+
+  public void testSchemaMojoWithJavaImport() throws Exception {
+    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", new File(getBasedir(), "src/test/resources/unit/javaimports/pom.xml"));
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/javaimports/test");
+    String[] generatedFiles = new String[]{"PrivacyJavaImport.java"};
+
+    assertFilesExist(outputDir, generatedFiles);
+  }
 }
