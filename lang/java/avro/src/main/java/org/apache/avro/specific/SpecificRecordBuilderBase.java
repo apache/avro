@@ -17,8 +17,11 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.data.RecordBuilderBase;
+
+import java.io.IOException;
 
 /**
  * Abstract base class for specific RecordBuilder implementations.
@@ -49,5 +52,13 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
    */
   protected SpecificRecordBuilderBase(T other) {
     super(other.getSchema(), SpecificData.get());
+  }
+
+  @Override
+  @SuppressWarnings({ "rawtypes", "unchecked" })
+  protected Object defaultValue(Schema.Field field, Conversion<?> conversion) throws IOException {
+    Schema schema = field.schema();
+    // Here no need for conversion, since getDefaultValue converts to logical types
+    return data.deepCopy(schema, data.getDefaultValue(field));
   }
 }
