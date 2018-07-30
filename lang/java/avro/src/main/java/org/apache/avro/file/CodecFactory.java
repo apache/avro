@@ -65,6 +65,11 @@ public abstract class CodecFactory {
     return new BZip2Codec.Option();
   }
 
+  /** zstandard codec.*/
+  public static CodecFactory zstandardCodec() {
+    return new ZstandardCodec.Option();
+  }
+
   /** Creates internal Codec. */
   protected abstract Codec createInstance();
 
@@ -83,17 +88,19 @@ public abstract class CodecFactory {
     addCodec("snappy", snappyCodec());
     addCodec("bzip2", bzip2Codec());
     addCodec("xz", xzCodec(DEFAULT_XZ_LEVEL));
+    addCodec("zstandard", zstandardCodec());
   }
 
   /** Maps a codec name into a CodecFactory.
    *
-   * Currently there are five codecs registered by default:
+   * Currently there are six codecs registered by default:
    * <ul>
    *   <li>{@code null}</li>
    *   <li>{@code deflate}</li>
    *   <li>{@code snappy}</li>
    *   <li>{@code bzip2}</li>
    *   <li>{@code xz}</li>
+   *   <li>{@code zstandard}</li>
    * </ul>
    */
   public static CodecFactory fromString(String s) {
