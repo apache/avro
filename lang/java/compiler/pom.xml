@@ -127,6 +127,7 @@
             </goals>
             <configuration>
               <sourceDirectory>${project.basedir}/src/test/resources/avro</sourceDirectory>
+              <enableDecimalLogicalType>true</enableDecimalLogicalType>
             </configuration>
           </execution>
         </executions>
