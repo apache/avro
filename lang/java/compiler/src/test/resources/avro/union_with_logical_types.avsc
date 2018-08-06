@@ -4,7 +4,8 @@
   "doc" : "Test unions with logical types in generated Java classes",
   "fields": [
     {"name": "stringOrNull",  "type": ["null", {"type": "string", "java-class": "java.lang.String"}], "default": null},
-    {"name": "dateOrNull",  "type": ["null", {"type": "int", "logicalType": "date"}], "default": null}
+    {"name": "dateOrNull",  "type": ["null", {"type": "int", "logicalType": "date"}], "default": null},
+    {"name": "decimalOrNull",  "type": ["null", {"type": "bytes", "logicalType": "decimal", "precision": 9, "scale": 2}], "default": null}
   ]
 }
 
