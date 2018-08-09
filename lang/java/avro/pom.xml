@@ -37,6 +37,7 @@
   <properties>
     <osgi.import>
       !org.apache.avro*,
+      !com.google.common*,
       com.thoughtworks.paranamer,
       org.codehaus.jackson*,
       org.xerial.snappy;resolution:=optional,
