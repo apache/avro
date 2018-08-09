@@ -113,26 +113,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <version>1.9.0-SNAPSHOT</version>
-        <executions>
-          <execution>
-            <phase>generate-test-sources</phase>
-            <goals>
-              <goal>schema</goal>
-              <goal>protocol</goal>
-              <goal>idl-protocol</goal>
-            </goals>
-            <configuration>
-              <sourceDirectory>${project.basedir}/src/test/resources/avro</sourceDirectory>
-              <enableDecimalLogicalType>true</enableDecimalLogicalType>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
 
     </plugins>
   </build>

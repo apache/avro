@@ -123,6 +123,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean createSetters;
 
   /**
+   * A set of fully qualified class names of custom {@link org.apache.avro.Conversion} implementations to add to the compiler.
+   * The classes must be on the classpath at compile time and whenever the Java objects are serialized.
+   *
+   * @parameter property="customConversions"
+   */
+  protected String[] customConversions = new String[0];
+
+  /**
    * Determines whether or not to use Java classes for decimal types
    *
    * @parameter default-value="false"

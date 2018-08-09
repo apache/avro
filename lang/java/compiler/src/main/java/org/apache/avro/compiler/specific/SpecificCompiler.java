@@ -36,6 +36,7 @@ import java.util.Set;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.Jsr310TimeConversions;
 import org.apache.avro.data.TimeConversions;
@@ -270,6 +271,28 @@ public class SpecificCompiler {
 
   public DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
     return dateTimeLogicalTypeImplementation;
+  }
+
+  public void addCustomConversion(String conversionClass) {
+    try {
+      final Conversion<?> conversion = (Conversion<?>) Class.forName(conversionClass).newInstance();
+      specificData.addLogicalTypeConversion(conversion);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Failed to load conversion class " + conversionClass + ", is it on the classpath?", e);
+    } catch (IllegalAccessException | InstantiationException e) {
+      throw new RuntimeException("Failed to instantiate conversion class " + conversionClass, e);
+    }
+  }
+
+  public Collection<String> getUsedConversionClasses(Schema schema) {
+    Map<String, String> usedConversions = new LinkedHashMap<>();
+    for (Field field : schema.getFields()) {
+      final LogicalType logicalType = field.schema().getLogicalType();
+      if (logicalType != null && !usedConversions.containsKey(logicalType.getName())) {
+        usedConversions.put(logicalType.getName(), specificData.getConversionFor(logicalType).getClass().getCanonicalName());
+      }
+    }
+    return usedConversions.values();
   }
 
   private static String logChuteName = null;

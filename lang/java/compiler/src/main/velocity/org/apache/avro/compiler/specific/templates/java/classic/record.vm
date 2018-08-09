@@ -40,10 +40,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 
   private static SpecificData MODEL$ = new SpecificData();
   static {
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.DateConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.Conversions.DecimalConversion());
+#foreach ($conversion in $this.getUsedConversionClasses($schema))
+    MODEL$.addLogicalTypeConversion(new ${conversion}());
+#end
   }
 
 #if (!$schema.isError())

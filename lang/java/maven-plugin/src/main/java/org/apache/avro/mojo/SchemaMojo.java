@@ -79,6 +79,9 @@ public class SchemaMojo extends AbstractAvroMojo {
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+    for (String customConversion : customConversions) {
+      compiler.addCustomConversion(customConversion);
+    }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
     compiler.compileToDestination(src, outputDirectory);
   }

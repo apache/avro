@@ -1,13 +1,13 @@
-package org.apache.avro.compiler.specific;
+package org.apache.avro.codegentest;
 
-import org.apache.avro.compiler.testdata.UnionWithLogicalTypes;
-import org.joda.time.LocalDate;
+import org.apache.avro.godegentest.testdata.UnionWithLogicalTypes;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.LocalDate;
 
 public class TestEndToEndJavaCodeGeneration {
 
@@ -46,5 +46,4 @@ public class TestEndToEndJavaCodeGeneration {
         Assert.assertEquals(instanceOfGeneratedClass.getDecimalOrNull(), copy.getDecimalOrNull());
         Assert.assertEquals(instanceOfGeneratedClass.getStringOrNull(), copy.getStringOrNull());
     }
-
 }

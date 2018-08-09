@@ -62,6 +62,9 @@ public class ProtocolMojo extends AbstractAvroMojo {
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+    for (String customConversion : customConversions) {
+      compiler.addCustomConversion(customConversion);
+    }
     compiler.compileToDestination(src, outputDirectory);
   }
 
