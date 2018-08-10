@@ -18,12 +18,6 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static SpecificData MODEL$ = new SpecificData();
-  static {
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.DateConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.Conversions.DecimalConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampConversion());
-  }
 
   private static final BinaryMessageEncoder<Player> ENCODER =
       new BinaryMessageEncoder<Player>(MODEL$, SCHEMA$);

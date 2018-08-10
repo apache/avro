@@ -39,11 +39,14 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static SpecificData MODEL$ = new SpecificData();
-  static {
-#foreach ($conversion in $this.getUsedConversionClasses($schema))
+#set ($usedConversions = $this.getUsedConversionClasses($schema))
+#if (!$usedConversions.isEmpty())
+static {
+#foreach ($conversion in $usedConversions)
     MODEL$.addLogicalTypeConversion(new ${conversion}());
 #end
   }
+#end
 
 #if (!$schema.isError())
   private static final BinaryMessageEncoder<${this.mangle($schema.getName())}> ENCODER =
