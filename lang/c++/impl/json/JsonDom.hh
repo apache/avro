@@ -64,7 +64,7 @@ const char* typeToString(EntityType t);
 class AVRO_DECL Entity {
     EntityType type_;
     boost::any value_;
-    const size_t line_;
+    size_t line_; // can't be const else noncopyable...
 
     void ensureType(EntityType) const;
 public:

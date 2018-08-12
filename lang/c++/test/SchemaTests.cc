@@ -94,6 +94,13 @@ const char* basicSchemas[] = {
     "{\"type\": \"array\", \"items\": \"long\", \"extra attribute\": 1}",
     "{\"type\": \"map\", \"values\": \"long\", \"extra attribute\": 1}",
     "{\"type\": \"fixed\", \"name\": \"Test\", \"size\": 1, \"extra attribute\": 1}",
+
+    // defaults
+    // default double -  long
+    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : 2 }]}",
+    // default double - double
+    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : 1.2 }]}"
+
 };
 
 const char* basicSchemaErrors[] = {
@@ -134,6 +141,13 @@ const char* basicSchemaErrors[] = {
     "{\"type\": \"fixed\", \"name\": \"Missing size\"}",
     // No name
     "{\"type\": \"fixed\", \"size\": 314}",
+
+    // defaults
+    // default double - null
+    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : null }]}",
+    // default double - string
+    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : \"string\" }]}"
+
 };
 
 const char* roundTripSchemas[] = {
