@@ -1,4 +1,4 @@
-{"namespace": "org.apache.avro.godegentest.testdata",
+{"namespace": "org.apache.avro.codegentest.testdata",
   "type": "record",
   "name": "UnionWithLogicalTypes",
   "doc" : "Test unions with logical types in generated Java classes",

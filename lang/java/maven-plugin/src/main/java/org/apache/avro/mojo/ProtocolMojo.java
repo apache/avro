@@ -22,15 +22,18 @@ import org.apache.avro.generic.GenericData.StringType;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLClassLoader;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from Avro protocol files (.avpr)
  *
  * @goal protocol
  * @phase generate-sources
+ * @requiresDependencyResolution runtime
  * @threadSafe
  */
 public class ProtocolMojo extends AbstractAvroMojo {
@@ -62,8 +65,16 @@ public class ProtocolMojo extends AbstractAvroMojo {
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-    for (String customConversion : customConversions) {
-      compiler.addCustomConversion(customConversion);
+    final URLClassLoader classLoader;
+    try {
+      classLoader = createClassLoader2();
+      for (String customConversion : customConversions) {
+        compiler.addCustomConversion(classLoader.loadClass(customConversion));
+      }
+    } catch (DependencyResolutionRequiredException e) {
+      throw new IOException(e);
+    } catch (ClassNotFoundException e) {
+      throw new IOException(e);
     }
     compiler.compileToDestination(src, outputDirectory);
   }

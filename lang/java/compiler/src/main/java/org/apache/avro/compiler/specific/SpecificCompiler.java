@@ -272,13 +272,11 @@ public class SpecificCompiler {
     return dateTimeLogicalTypeImplementation;
   }
 
-  public void addCustomConversion(String conversionClass) {
+  public void addCustomConversion(Class<?> conversionClass) {
     try {
-      final Conversion<?> conversion = (Conversion<?>) Class.forName(conversionClass).newInstance();
+      final Conversion<?> conversion = (Conversion<?>)conversionClass.newInstance();
       specificData.addLogicalTypeConversion(conversion);
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException("Failed to load conversion class " + conversionClass + ", is it on the classpath?", e);
-    } catch (IllegalAccessException | InstantiationException e) {
+    }  catch (IllegalAccessException | InstantiationException e) {
       throw new RuntimeException("Failed to instantiate conversion class " + conversionClass, e);
     }
   }

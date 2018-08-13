@@ -1,7 +1,7 @@
 package org.apache.avro.codegentest;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.godegentest.testdata.UnionWithLogicalTypes;
+import org.apache.avro.codegentest.testdata.UnionWithLogicalTypes;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -39,7 +39,7 @@ public class TestEndToEndJavaCodeGeneration {
     @Test
     public void testDecimal() throws IOException {
         final SpecificCompiler specificCompiler = new SpecificCompiler(UnionWithLogicalTypes.SCHEMA$);
-        specificCompiler.addCustomConversion(CustomConversion.class.getCanonicalName());
+        specificCompiler.addCustomConversion(CustomConversion.class);
         specificCompiler.getUsedConversionClasses(UnionWithLogicalTypes.SCHEMA$);
         UnionWithLogicalTypes instanceOfGeneratedClass = UnionWithLogicalTypes.newBuilder()
                 .setStringOrNull("hello")

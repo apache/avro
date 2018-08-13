@@ -48,7 +48,9 @@
               <goal>idl-protocol</goal>
             </goals>
             <configuration>
-              <sourceDirectory>${project.basedir}/src/test/resources/avro</sourceDirectory>
+              <stringType>String</stringType>
+              <testSourceDirectory>${project.basedir}/src/test/resources/avro</testSourceDirectory>
+              <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
               <enableDecimalLogicalType>true</enableDecimalLogicalType>
               <customConversions>org.apache.avro.codegentest.CustomConversion</customConversions>
             </configuration>
@@ -57,7 +59,7 @@
          <dependencies>
            <dependency>
              <groupId>org.apache.avro</groupId>
-             <artifactId>avro-codegen-test</artifactId>
+             <artifactId>avro-codegen-test-deps</artifactId>
              <version>${project.version}</version>
            </dependency>
          </dependencies>
@@ -75,6 +77,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>avro-compiler</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro-codegen-test-deps</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
