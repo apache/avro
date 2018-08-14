@@ -20,6 +20,7 @@ import org.apache.avro.compiler.idl.ParseException;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.UnknownConfigurationException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.TaskAction;
@@ -73,7 +74,8 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
         try {
             idl = new Idl(idlFile, loader);
             String protoJson = idl.CompilationUnit().toString(true);
-            writeJsonFile(protoFile, protoJson);
+            FileUtils.writeJsonFile(protoFile, protoJson);
+            getLogger().debug("Wrote {}", protoFile.getPath());
         } catch (IOException | ParseException ex) {
             throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
         } finally {
@@ -89,13 +91,18 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
 
     private ClassLoader getRuntimeClassLoader(Project project) {
         List<URL> urls = new LinkedList<>();
-        Configuration configuration = project.getConfigurations().getByName(getRuntimeConfigurationName());
-        for (File file : configuration) {
-            try {
-                urls.add(file.toURI().toURL());
-            } catch (MalformedURLException e) {
-                getLogger().debug(e.getMessage());
+        String configurationName = getRuntimeConfigurationName();
+        try {
+            Configuration configuration = project.getConfigurations().getByName(configurationName);
+            for (File file : configuration) {
+                try {
+                    urls.add(file.toURI().toURL());
+                } catch (MalformedURLException e) {
+                    getLogger().debug(e.getMessage());
+                }
             }
+        } catch (UnknownConfigurationException ex) {
+            getLogger().debug("No configuration found with name {}; defaulting to system classloader", configurationName);
         }
         return urls.isEmpty() ? ClassLoader.getSystemClassLoader()
                 : new URLClassLoader(urls.toArray(new URL[urls.size()]), ClassLoader.getSystemClassLoader());
@@ -107,15 +114,5 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
     private static String getRuntimeConfigurationName() {
         return GradleVersion.current().compareTo(GradleVersion.version("3.5")) >= 0
             ? Constants.RUNTIME_CLASSPATH_CONFIGURATION_NAME : Constants.RUNTIME_CONFIGURATION_NAME;
-    }
-
-    /**
-     * Writes a file in a manner appropriate for a JSON file.  UTF-8 will be used, as it is the default encoding for JSON, and should be
-     * maximally interoperable.
-     *
-     * @see <a href="https://tools.ietf.org/html/rfc7159#section-8.1">JSON Character Encoding</a>
-     */
-    private void writeJsonFile(File file, String data) throws IOException {
-        FileUtils.writeStringToFile(file, data, Constants.UTF8_ENCODING);
     }
 }

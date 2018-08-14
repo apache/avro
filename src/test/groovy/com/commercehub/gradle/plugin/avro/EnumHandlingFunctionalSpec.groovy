@@ -21,6 +21,11 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  * Functional tests relating to handling of enums.
  */
 class EnumHandlingFunctionalSpec extends FunctionalSpec {
+    def "setup"() {
+        applyAvroPlugin()
+        addAvroDependency()
+    }
+
     def "supports simple enums"() {
         given:
         copyResource("enumSimple.avsc", avroDir)

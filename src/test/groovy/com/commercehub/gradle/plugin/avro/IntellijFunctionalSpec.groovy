@@ -18,6 +18,10 @@ package com.commercehub.gradle.plugin.avro
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class IntellijFunctionalSpec extends FunctionalSpec {
+    def "setup"() {
+        applyAvroPlugin()
+    }
+
     def "generated intellij project files include source directories for generated source"() {
         given:
         buildFile << """

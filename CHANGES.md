@@ -4,6 +4,8 @@
 * Built using Gradle 4.8
 * Updated compatibility testing through Gradle 4.8
 * Began testing using Java 11
+* Add support for generating schema files (#56)
+* Fix bug where `GenerateAvroProtocolTask` can't be used without a runtime configuration
 
 ## 0.14.2
 * Stop creating default generated output directories when `outputDir` is customized and IntelliJ integration is used (#52)

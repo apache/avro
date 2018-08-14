@@ -289,3 +289,20 @@ The Java classes generated from your Avro files should be automatically accessib
 This is accomplished by this plugin detecting that the Kotlin plugin has been applied, and informing the Kotlin compilation tasks of the presence of the generated sources directories for cross-compilation.
 
 This support does *not* support producing the Avro generated classes as Kotlin classes, as that functionality is not currently provided by the upstream Avro library.
+
+# Generating schema files
+
+If desired, you can generate JSON schema files based on IDL or JSON protocol files.
+To do this, apply the plugin (either `avro` or `avro-base`), and define a custom task for the schema generation.
+
+Example:
+
+```groovy
+apply plugin: "com.commercehub.gradle.plugin.avro-base"
+
+task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+    source file("src/main/avro")
+    include("**/*.avpr")
+    outputDir = file("build/generated-main-avro-avsc")
+}
+```

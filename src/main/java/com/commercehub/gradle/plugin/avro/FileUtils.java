@@ -131,4 +131,14 @@ class FileUtils {
             }
         }
     }
+
+    /**
+     * Writes a file in a manner appropriate for a JSON file.  UTF-8 will be used, as it is the default encoding for JSON, and should be
+     * maximally interoperable.
+     *
+     * @see <a href="https://tools.ietf.org/html/rfc7159#section-8.1">JSON Character Encoding</a>
+     */
+    static void writeJsonFile(File file, String data) throws IOException {
+        writeStringToFile(file, data, Constants.UTF8_ENCODING);
+    }
 }

@@ -27,6 +27,11 @@ class EncodingFunctionalSpec extends FunctionalSpec {
     private static final List<String> AVAILABLE_ENCODINGS =
         ["UTF-8", "UTF-16", "UTF-32", "windows-1252", "X-MacRoman"].findAll { Charset.isSupported(it) }
 
+    def "setup"() {
+        applyAvroPlugin()
+        addAvroDependency()
+    }
+
     def "default encoding matches default compilation behavior"() {
         given:
         copyResource("idioma.avsc", avroDir)

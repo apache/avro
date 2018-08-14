@@ -25,6 +25,11 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  * are used in more than one file.</p>
  */
 class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
+    def "setup"() {
+        applyAvroPlugin()
+        addAvroDependency()
+    }
+
     def "Duplicate enum definition succeeds if definition identical"() {
         given:
         copyIdenticalEnum()

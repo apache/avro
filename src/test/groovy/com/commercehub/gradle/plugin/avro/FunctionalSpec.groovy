@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Commerce Technologies, LLC.
+ * Copyright © 2015-2018 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ import spock.lang.Specification
 @SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
     @SuppressWarnings(["FieldName"])
-    protected static final String avroVersion = System.getProperty("avroVersion")
+    protected static final String avroVersion = System.getProperty("avroVersion", "undefined")
     @SuppressWarnings(["FieldName"])
-    protected static final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion"))
+    protected static final GradleVersion gradleVersion = GradleVersion.version(System.getProperty("gradleVersion", "undefined"))
 
     @Rule
     TemporaryFolder testProjectDir
@@ -60,10 +60,28 @@ abstract class FunctionalSpec extends Specification {
                     classpath files($pluginClasspath)
                 }
             }
-            apply plugin: "com.commercehub.gradle.plugin.avro"
             repositories { jcenter() }
-            dependencies { compile "org.apache.avro:avro:${avroVersion}" }
         """
+    }
+
+    protected void applyAvroPlugin() {
+        applyPlugin("com.commercehub.gradle.plugin.avro")
+    }
+
+    protected void applyAvroBasePlugin() {
+        applyPlugin("com.commercehub.gradle.plugin.avro-base")
+    }
+
+    private void applyPlugin(String pluginId) {
+        buildFile << "apply plugin: \"${pluginId}\"\n"
+    }
+
+    protected void addDependency(String dependencySpec) {
+        buildFile << "dependencies { compile \"${dependencySpec}\" }\n"
+    }
+
+    protected void addAvroDependency() {
+        addDependency("org.apache.avro:avro:${avroVersion}")
     }
 
     protected void copyResource(String name, File targetFolder) {

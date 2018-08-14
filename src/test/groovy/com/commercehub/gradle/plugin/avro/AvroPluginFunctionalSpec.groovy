@@ -19,6 +19,11 @@ import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class AvroPluginFunctionalSpec extends FunctionalSpec {
+    def "setup"() {
+        applyAvroPlugin()
+        addAvroDependency()
+    }
+
     def "can generate and compile java files from json schema"() {
         given:
         copyResource("user.avsc", avroDir)

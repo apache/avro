@@ -19,6 +19,11 @@ import org.gradle.util.GradleVersion
 import spock.lang.IgnoreIf
 
 class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
+    def "setup"() {
+        applyAvroPlugin()
+        addAvroDependency()
+    }
+
     /**
      * Since Kotlin 1.1.2, the Kotlin compiler requires Java 8+
      * https://blog.jetbrains.com/kotlin/2017/04/kotlin-1-1-2-is-out/

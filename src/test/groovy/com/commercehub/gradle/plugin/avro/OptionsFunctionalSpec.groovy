@@ -28,6 +28,10 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}.
  */
 class OptionsFunctionalSpec extends FunctionalSpec {
+    def "setup"() {
+        applyAvroPlugin()
+    }
+
     def "works with default options"() {
         given:
         copyResource("user.avsc", avroDir)

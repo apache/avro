@@ -1,0 +1,15 @@
+{
+  "type" : "record",
+  "name" : "Message",
+  "namespace" : "org.apache.avro.test",
+  "fields" : [ {
+    "name" : "to",
+    "type" : "string"
+  }, {
+    "name" : "from",
+    "type" : "string"
+  }, {
+    "name" : "body",
+    "type" : "string"
+  } ]
+}
