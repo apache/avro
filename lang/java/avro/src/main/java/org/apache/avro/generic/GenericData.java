@@ -49,6 +49,7 @@ import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.fastreader.FastReader;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.util.Utf8;
@@ -69,6 +70,9 @@ public class GenericData {
 
   public static final String STRING_PROP = "avro.java.string";
   protected static final String STRING_TYPE_STRING = "String";
+
+  private boolean fastReaderEnabled = Boolean.parseBoolean( System.getProperty("org.apache.avro.fastread", "false" ) );
+  private FastReader fastReader = new FastReader( this );
 
   private final ClassLoader classLoader;
 
@@ -98,6 +102,18 @@ public class GenericData {
 
   /** Return the class loader that's used (by subclasses). */
   public ClassLoader getClassLoader() { return classLoader; }
+
+  public void setFastReaderEnabled( boolean enabled ) {
+    this.fastReaderEnabled = enabled;
+  }
+
+  public boolean isFastReaderEnabled() {
+    return fastReaderEnabled;
+  }
+
+  public FastReader getFastReader() {
+    return this.fastReader;
+  }
 
   private Map<String, Conversion<?>> conversions =
       new HashMap<>();
@@ -420,12 +436,17 @@ public class GenericData {
 
   /** Returns a {@link DatumReader} for this kind of data. */
   public DatumReader createDatumReader(Schema schema) {
-    return new GenericDatumReader(schema, schema, this);
+    return createDatumReader( schema, schema );
   }
 
   /** Returns a {@link DatumReader} for this kind of data. */
   public DatumReader createDatumReader(Schema writer, Schema reader) {
-    return new GenericDatumReader(writer, reader, this);
+    if ( isFastReaderEnabled() ) {
+      return getFastReader().createReconfigurableDatumReader( writer, reader );
+    }
+    else {
+      return new GenericDatumReader( writer, reader, this );
+    }
   }
 
   /** Returns a {@link DatumWriter} for this kind of data. */
@@ -1097,7 +1118,7 @@ public class GenericData {
         Map<CharSequence, Object> mapCopy =
           new HashMap<>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
-          mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
+          mapCopy.put((deepCopy(STRINGS, entry.getKey())),
               deepCopy(schema.getValueType(), entry.getValue()));
         }
         return mapCopy;

@@ -116,12 +116,17 @@ public class SpecificData extends GenericData {
 
   @Override
   public DatumReader createDatumReader(Schema schema) {
-    return new SpecificDatumReader(schema, schema, this);
+    return createDatumReader( schema, schema );
   }
 
   @Override
   public DatumReader createDatumReader(Schema writer, Schema reader) {
-    return new SpecificDatumReader(writer, reader, this);
+    if ( isFastReaderEnabled() ) {
+      return getFastReader().createReconfigurableDatumReader(writer, reader);
+    }
+    else {
+      return new SpecificDatumReader( writer, reader, this );
+    }
   }
 
   @Override

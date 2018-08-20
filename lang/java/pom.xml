@@ -207,6 +207,19 @@
                 </systemPropertyVariables>
               </configuration>
             </execution>
+            <execution>
+              <id>test-with-fast-readers</id>
+              <phase>test</phase>
+              <goals>
+                <goal>test</goal>
+              </goals>
+              <configuration>
+                <systemPropertyVariables>
+                  <org.apache.avro.fastread>true</org.apache.avro.fastread>
+                  <test.dir>${project.basedir}/target/</test.dir>
+                </systemPropertyVariables>
+              </configuration>
+            </execution>
           </executions>
           <configuration>
             <includes>
