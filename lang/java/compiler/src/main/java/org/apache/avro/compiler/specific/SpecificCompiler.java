@@ -283,7 +283,7 @@ public class SpecificCompiler {
 
   public Collection<String> getUsedConversionClasses(Schema schema) {
     LinkedHashMap<String, Conversion<?>> classnameToConversion = new LinkedHashMap<>();
-    for (Conversion<?> conversion : specificData.getConversions().values()) {
+    for (Conversion<?> conversion : specificData.getConversions()) {
       classnameToConversion.put(conversion.getConvertedType().getCanonicalName(), conversion);
     }
     Collection<String> result = new ArrayList<>();

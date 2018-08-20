@@ -105,8 +105,8 @@ public class GenericData {
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
       new IdentityHashMap<>();
 
-  public Map<String, Conversion<?>> getConversions() {
-    return conversions;
+  public Collection<Conversion<?>> getConversions() {
+    return conversions.values();
   }
 
   /**
