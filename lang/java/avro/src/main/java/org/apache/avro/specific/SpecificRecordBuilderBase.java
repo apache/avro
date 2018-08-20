@@ -32,7 +32,7 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
    * @param schema the schema associated with the record class.
    */
   protected SpecificRecordBuilderBase(Schema schema) {
-    super(schema, SpecificData.get());
+    super(schema, SpecificData.getForSchema(schema));
   }
 
   /**
@@ -40,7 +40,7 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
    * @param other SpecificRecordBuilderBase instance to copy.
    */
   protected SpecificRecordBuilderBase(SpecificRecordBuilderBase<T> other) {
-    super(other, SpecificData.get());
+    super(other, other.data());
   }
 
   /**
@@ -48,6 +48,6 @@ abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
    * @param other the record instance to copy.
    */
   protected SpecificRecordBuilderBase(T other) {
-    super(other.getSchema(), SpecificData.get());
+    super(other.getSchema(), SpecificData.getForSchema(other.getSchema()));
   }
 }

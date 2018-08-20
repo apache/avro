@@ -17,6 +17,7 @@
  */
 package org.apache.avro.specific;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -121,6 +122,55 @@ public class SpecificData extends GenericData {
 
   /** Return the singleton instance. */
   public static SpecificData get() { return INSTANCE; }
+
+  /**
+   * For RECORD type schemas, this method returns the SpecificData instance of the class associated with the schema,
+   * in order to get the right conversions for any logical types used.
+   *
+   * @param reader the reader schema
+   * @return the SpecificData associated with the schema's class, or the default instance.
+   */
+  public static SpecificData getForSchema(Schema reader) {
+    if (reader.getType() == Type.RECORD) {
+      final String className = getClassName(reader);
+      if (className != null) {
+        final Class<?> clazz;
+        try {
+          clazz = Class.forName(className);
+          return getForClass(clazz);
+        } catch (ClassNotFoundException e) {
+          return SpecificData.get();
+        }
+      }
+    }
+    return SpecificData.get();
+  }
+
+  /**
+   * If the given class is assignable to {@link SpecificRecordBase}, this method returns the SpecificData instance
+   * from the field {@code MODEL$}, in order to get the correct {@link org.apache.avro.Conversion} instances for the class.
+   * Falls back to the default instance {@link SpecificData#get()} for other classes or if the field is not found.
+   *
+   * @param c A class
+   * @param <T> .
+   * @return The SpecificData from the SpecificRecordBase instance, or the default SpecificData instance.
+   */
+  public static <T> SpecificData getForClass(Class<T> c) {
+    if (SpecificRecordBase.class.isAssignableFrom(c)) {
+      final Field specificDataField;
+      try {
+        specificDataField = c.getDeclaredField("MODEL$");
+        specificDataField.setAccessible(true);
+        return (SpecificData) specificDataField.get(null);
+      } catch (NoSuchFieldException e) {
+        // Return default instance
+        return SpecificData.get();
+      } catch (IllegalAccessException e) {
+        throw new AvroRuntimeException(e);
+      }
+    }
+    return SpecificData.get();
+  }
 
   @Override
   protected boolean isEnum(Object datum) {
