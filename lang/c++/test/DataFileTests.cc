@@ -498,40 +498,67 @@ void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
 test_suite*
 init_unit_test_suite( int argc, char* argv[] )
 {
-    test_suite* ts= BOOST_TEST_SUITE("DataFile tests");
-    shared_ptr<DataFileTest> t1(new DataFileTest("test1.df", sch, isch));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t1));
-    addReaderTests(ts, t1);
-
-    shared_ptr<DataFileTest> t2(new DataFileTest("test2.df", sch, isch));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGeneric, t2));
-    addReaderTests(ts, t2);
-
-    shared_ptr<DataFileTest> t3(new DataFileTest("test3.df", dsch, dblsch));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteDouble, t3));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDouble, t3));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDoubleTwoStep, t3));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDoubleTwoStepProject,
-        t3));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t3));
-
-    shared_ptr<DataFileTest> t4(new DataFileTest("test4.df", dsch, dblsch));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testTruncate, t4));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t4));
-
-    shared_ptr<DataFileTest> t5(new DataFileTest("test5.df", sch, isch));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGenericByName, t5));
-    addReaderTests(ts, t5);
-
-    shared_ptr<DataFileTest> t6(new DataFileTest("test6.df", dsch, dblsch));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZip, t6));
-    shared_ptr<DataFileTest> t8(new DataFileTest("test8.df", dsch, dblsch));
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.df");
+        shared_ptr<DataFileTest> t1(new DataFileTest("test1.df", sch, isch));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t1));
+        addReaderTests(ts, t1);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test2.df");
+        shared_ptr<DataFileTest> t2(new DataFileTest("test2.df", sch, isch));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGeneric, t2));
+        addReaderTests(ts, t2);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test3.df");
+        shared_ptr<DataFileTest> t3(new DataFileTest("test3.df", dsch, dblsch));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteDouble, t3));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDouble, t3));
+        ts->add(
+            BOOST_CLASS_TEST_CASE(&DataFileTest::testReadDoubleTwoStep, t3));
+        ts->add(BOOST_CLASS_TEST_CASE(
+            &DataFileTest::testReadDoubleTwoStepProject, t3));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t3));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test4.df");
+        shared_ptr<DataFileTest> t4(new DataFileTest("test4.df", dsch, dblsch));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testTruncate, t4));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t4));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test5.df");
+        shared_ptr<DataFileTest> t5(new DataFileTest("test5.df", sch, isch));
+        ts->add(
+            BOOST_CLASS_TEST_CASE(&DataFileTest::testWriteGenericByName, t5));
+        addReaderTests(ts, t5);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test6.df");
+        shared_ptr<DataFileTest> t6(new DataFileTest("test6.df", dsch, dblsch));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testZip, t6));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test8.df");
+        shared_ptr<DataFileTest> t8(new DataFileTest("test8.df", dsch, dblsch));
 #ifdef SNAPPY_CODEC_AVAILABLE
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSnappy, t8));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSnappy, t8));
 #endif
-    shared_ptr<DataFileTest> t7(new DataFileTest("test7.df",fsch,fsch));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWrite,t7));
-    ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup,t7));
-
-    return ts;
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test7.df");
+        shared_ptr<DataFileTest> t7(new DataFileTest("test7.df", fsch, fsch));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWrite, t7));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t7));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    return 0;
 }
