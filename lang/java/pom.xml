@@ -97,8 +97,7 @@
     <module>thrift</module>
     <module>archetypes</module>
     <module>grpc</module>
-    <module>codegen-test</module>
-    <module>codegen-test-deps</module>
+    <module>integration-test</module>
   </modules>
 
   <build>

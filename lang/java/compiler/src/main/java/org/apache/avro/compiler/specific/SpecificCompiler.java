@@ -286,7 +286,7 @@ public class SpecificCompiler {
     for (Conversion<?> conversion : specificData.getConversions()) {
       classnameToConversion.put(conversion.getConvertedType().getCanonicalName(), conversion);
     }
-    Collection<String> result = new ArrayList<>();
+    Collection<String> result = new HashSet<>();
     for (Field field : schema.getFields()) {
       final String className = javaType(field.schema());
       if (classnameToConversion.containsKey(className)) {
@@ -746,14 +746,13 @@ public class SpecificCompiler {
       return "null";
     }
 
-    if (LogicalTypes.date().equals(schema.getLogicalType())) {
-      return "DATE_CONVERSION";
-    } else if (LogicalTypes.timeMillis().equals(schema.getLogicalType())) {
-      return "TIME_CONVERSION";
-    } else if (LogicalTypes.timestampMillis().equals(schema.getLogicalType())) {
-      return "TIMESTAMP_CONVERSION";
-    } else if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass())) {
-      return enableDecimalLogicalType ? "DECIMAL_CONVERSION" : "null";
+    if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass()) && !enableDecimalLogicalType) {
+      return "null";
+    }
+
+    final Conversion<Object> conversion = specificData.getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return "new " + conversion.getClass().getCanonicalName() + "()";
     }
 
     return "null";

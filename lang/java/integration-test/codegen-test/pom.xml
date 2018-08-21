@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>avro-parent</artifactId>
+    <artifactId>avro-integration-test</artifactId>
     <groupId>org.apache.avro</groupId>
     <version>1.9.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
@@ -52,14 +52,14 @@
               <testSourceDirectory>${project.basedir}/src/test/resources/avro</testSourceDirectory>
               <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
               <enableDecimalLogicalType>true</enableDecimalLogicalType>
-              <customConversions>org.apache.avro.codegentest.CustomConversion</customConversions>
+              <customConversions>org.apache.avro.codegentest.CustomDecimalConversion</customConversions>
             </configuration>
           </execution>
         </executions>
          <dependencies>
            <dependency>
              <groupId>org.apache.avro</groupId>
-             <artifactId>avro-codegen-test-deps</artifactId>
+             <artifactId>avro-test-custom-conversions</artifactId>
              <version>${project.version}</version>
            </dependency>
          </dependencies>
@@ -81,7 +81,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>avro-codegen-test-deps</artifactId>
+      <artifactId>avro-test-custom-conversions</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

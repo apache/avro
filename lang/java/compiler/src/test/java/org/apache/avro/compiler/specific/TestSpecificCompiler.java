@@ -582,12 +582,12 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid()
         .addToSchema(Schema.create(Schema.Type.STRING));
 
-    Assert.assertEquals("Should use DATE_CONVERSION for date type",
-        "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
-    Assert.assertEquals("Should use TIME_CONVERSION for time type",
-        "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
-    Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
-        "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use date conversion for date type",
+        "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+    Assert.assertEquals("Should use time conversion for time type",
+        "new org.apache.avro.data.TimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use timestamp conversion for date type",
+        "new org.apache.avro.data.TimeConversions.TimestampConversion()", compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
@@ -611,14 +611,14 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid()
         .addToSchema(Schema.create(Schema.Type.STRING));
 
-    Assert.assertEquals("Should use DATE_CONVERSION for date type",
-        "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
-    Assert.assertEquals("Should use TIME_CONVERSION for time type",
-        "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
-    Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
-        "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use date conversion for date type",
+            "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+    Assert.assertEquals("Should use time conversion for time type",
+            "new org.apache.avro.data.TimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use timestamp conversion for date type",
+            "new org.apache.avro.data.TimeConversions.TimestampConversion()", compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
-        "DECIMAL_CONVERSION", compiler.conversionInstance(decimalSchema));
+        "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(uuidSchema));
   }
