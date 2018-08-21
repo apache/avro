@@ -67,7 +67,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     final URLClassLoader classLoader;
     try {
-      classLoader = createClassLoader2();
+      classLoader = createClassLoader();
       for (String customConversion : customConversions) {
         compiler.addCustomConversion(classLoader.loadClass(customConversion));
       }

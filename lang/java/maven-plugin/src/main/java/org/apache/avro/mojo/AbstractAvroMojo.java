@@ -277,7 +277,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;
 
-  protected URLClassLoader createClassLoader2() throws DependencyResolutionRequiredException, MalformedURLException {
+  protected URLClassLoader createClassLoader() throws DependencyResolutionRequiredException, MalformedURLException {
     List<URL> urls = appendElements(project.getRuntimeClasspathElements());
     urls.addAll(appendElements(project.getTestClasspathElements()));
     return new URLClassLoader(urls.toArray(new URL[urls.size()]),
@@ -293,26 +293,6 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       }
     }
     return runtimeUrls;
-  }
-
-  protected URLClassLoader createClassLoaderIncludingCurrentProjectClasses(File sourceDirectory) throws MalformedURLException, DependencyResolutionRequiredException {
-    List runtimeClasspathElements = project.getRuntimeClasspathElements();
-    List<URL> runtimeUrls = new ArrayList<>();
-
-    // Add the source directory of avro files to the classpath so that
-    // imports can refer to other idl files as classpath resources
-    runtimeUrls.add(sourceDirectory.toURI().toURL());
-
-    // If runtimeClasspathElements is not empty values add its values to Idl path.
-    if (runtimeClasspathElements != null && !runtimeClasspathElements.isEmpty()) {
-      for (Object runtimeClasspathElement : runtimeClasspathElements) {
-        String element = (String) runtimeClasspathElement;
-        runtimeUrls.add(new File(element).toURI().toURL());
-      }
-    }
-
-    return new URLClassLoader
-        (runtimeUrls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
   }
 
   protected abstract String[] getIncludes();

@@ -83,7 +83,7 @@ public class SchemaMojo extends AbstractAvroMojo {
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     try {
-      final URLClassLoader classLoader = createClassLoader2();
+      final URLClassLoader classLoader = createClassLoader();
       for (String customConversion : customConversions) {
         compiler.addCustomConversion(classLoader.loadClass(customConversion));
       }
