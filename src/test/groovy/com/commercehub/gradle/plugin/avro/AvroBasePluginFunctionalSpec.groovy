@@ -74,4 +74,38 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Node.avsc").file
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Interop.avsc").file
     }
+
+    def "example of converting both IDL and json protocol simultaneously"() {
+        given:
+        buildFile << """
+            task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+                source file("src/main/avro")
+                include("**/*.avdl")
+                outputDir = file("build/generated-avro-main-avpr")
+            }
+
+            task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+                dependsOn generateProtocol
+                source file("src/main/avro")
+                source file("build/generated-avro-main-avpr")
+                include("**/*.avpr")
+                outputDir = file("build/generated-main-avro-avsc")
+            }
+        """
+
+        copyResource("mail.avpr", avroDir)
+        copyResource("interop.avdl", avroDir)
+
+        when:
+        def result = run("generateSchema")
+
+        then:
+        taskInfoAbsent || result.task(":generateSchema").outcome == SUCCESS
+        projectFile("build/generated-main-avro-avsc/org/apache/avro/test/Message.avsc").file
+        projectFile("build/generated-main-avro-avsc/org/apache/avro/Foo.avsc").file
+        projectFile("build/generated-main-avro-avsc/org/apache/avro/Kind.avsc").file
+        projectFile("build/generated-main-avro-avsc/org/apache/avro/MD5.avsc").file
+        projectFile("build/generated-main-avro-avsc/org/apache/avro/Node.avsc").file
+        projectFile("build/generated-main-avro-avsc/org/apache/avro/Interop.avsc").file
+    }
 }

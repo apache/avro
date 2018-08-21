@@ -293,16 +293,26 @@ This support does *not* support producing the Avro generated classes as Kotlin c
 
 # Generating schema files
 
-If desired, you can generate JSON schema files based on IDL or JSON protocol files.
-To do this, apply the plugin (either `avro` or `avro-base`), and define a custom task for the schema generation.
+If desired, you can generate JSON schema files.
+To do this, apply the plugin (either `avro` or `avro-base`), and define custom tasks as needed for the schema generation.
+From JSON protocol files, all that's needed is the `GenerateAvroSchemaTask`.
+From IDL files, first use `GenerateAvroProtocolTask` to convert the IDL files to JSON protocol files, then use `GenerateAvroSchemaTask`.
 
-Example:
+Example using base plugin with support for both IDL and JSON protocol files in `src/main/avro`:
 
 ```groovy
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
-task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
     source file("src/main/avro")
+    include("**/*.avdl")
+    outputDir = file("build/generated-avro-main-avpr")
+}
+
+task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+    dependsOn generateProtocol
+    source file("src/main/avro")
+    source file("build/generated-avro-main-avpr")
     include("**/*.avpr")
     outputDir = file("build/generated-main-avro-avsc")
 }
