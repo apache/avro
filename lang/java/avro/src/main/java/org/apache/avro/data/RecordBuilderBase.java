@@ -17,18 +17,15 @@
  */
 package org.apache.avro.data;
 
-import java.io.IOException;
-import java.util.Arrays;
-
 import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.Conversion;
-import org.apache.avro.Conversions;
-import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.IndexedRecord;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 /** Abstract base class for RecordBuilder implementations.  Not thread-safe. */
 public abstract class RecordBuilderBase<T extends IndexedRecord>
@@ -136,29 +133,6 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
   @SuppressWarnings({ "rawtypes", "unchecked" })
   protected Object defaultValue(Field field) throws IOException {
     return data.deepCopy(field.schema(), data.getDefaultValue(field));
-  }
-
-  /**
-   * Gets the default value of the given field, if any. Pass in a conversion
-   * to convert data to logical type class. Please make sure the schema does
-   * have a logical type, otherwise an exception would be thrown out.
-   * @param field the field whose default value should be retrieved.
-   * @param conversion the tool to convert data to logical type class
-   * @return the default value associated with the given field,
-   * or null if none is specified in the schema.
-   * @throws IOException
-   */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  protected Object defaultValue(Field field, Conversion<?> conversion) throws IOException {
-    Schema schema = field.schema();
-    LogicalType logicalType = schema.getLogicalType();
-    Object rawDefaultValue = data.deepCopy(schema, data.getDefaultValue(field));
-    if (conversion == null || logicalType == null) {
-      return rawDefaultValue;
-    } else {
-      return Conversions.convertToLogicalType(rawDefaultValue, schema,
-          logicalType, conversion);
-    }
   }
 
   @Override
