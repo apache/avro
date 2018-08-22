@@ -32,7 +32,7 @@ tasks.withType(JavaCompile) {
 }
 sourceCompatibility = 1.7
 
-version = "0.14.3-SNAPSHOT"
+version = "0.15.0"
 group = "com.commercehub.gradle.plugin"
 
 task sourcesJar(type: Jar, dependsOn: classes) {
