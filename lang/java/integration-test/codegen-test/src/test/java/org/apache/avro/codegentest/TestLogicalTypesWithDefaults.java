@@ -19,32 +19,22 @@
 package org.apache.avro.codegentest;
 
 import org.apache.avro.codegentest.testdata.LogicalTypesWithDefaults;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.joda.time.LocalDate;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class TestLogicalTypesWithDefaults {
+public class TestLogicalTypesWithDefaults extends AbstractSpecificRecordTest {
 
-    LocalDate DEFAULT_VALUE = LocalDate.parse("1973-05-19");
+    private static final LocalDate DEFAULT_VALUE = LocalDate.parse("1973-05-19");
 
     @Test
     public void testDefaultValueOfNullableField() throws IOException {
         LogicalTypesWithDefaults instanceOfGeneratedClass = LogicalTypesWithDefaults.newBuilder()
                 .setNonNullDate(LocalDate.now())
                 .build();
-        final byte[] serialized = serialize(instanceOfGeneratedClass);
-        final LogicalTypesWithDefaults copy = deserialize(serialized);
-        Assert.assertEquals(DEFAULT_VALUE, instanceOfGeneratedClass.getNullableDate());
-        Assert.assertEquals(instanceOfGeneratedClass.getNullableDate(), copy.getNullableDate());
-        Assert.assertEquals(instanceOfGeneratedClass.getNonNullDate(), copy.getNonNullDate());
+        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
     }
 
     @Test
@@ -52,11 +42,8 @@ public class TestLogicalTypesWithDefaults {
         LogicalTypesWithDefaults instanceOfGeneratedClass = LogicalTypesWithDefaults.newBuilder()
                 .setNullableDate(LocalDate.now())
                 .build();
-        final byte[] serialized = serialize(instanceOfGeneratedClass);
-        final LogicalTypesWithDefaults copy = deserialize(serialized);
         Assert.assertEquals(DEFAULT_VALUE, instanceOfGeneratedClass.getNonNullDate());
-        Assert.assertEquals(instanceOfGeneratedClass.getNullableDate(), copy.getNullableDate());
-        Assert.assertEquals(instanceOfGeneratedClass.getNonNullDate(), copy.getNonNullDate());
+        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
     }
 
     @Test
@@ -65,31 +52,7 @@ public class TestLogicalTypesWithDefaults {
                 .setNullableDate(LocalDate.now())
                 .setNonNullDate(LocalDate.now())
                 .build();
-        final byte[] serialized = serialize(instanceOfGeneratedClass);
-        final LogicalTypesWithDefaults copy = deserialize(serialized);
-        Assert.assertEquals(instanceOfGeneratedClass.getNullableDate(), copy.getNullableDate());
-        Assert.assertEquals(instanceOfGeneratedClass.getNonNullDate(), copy.getNonNullDate());
-    }
-
-    private byte[] serialize(LogicalTypesWithDefaults object) {
-        SpecificDatumWriter<LogicalTypesWithDefaults> datumWriter = new SpecificDatumWriter<>(LogicalTypesWithDefaults.getClassSchema());
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            datumWriter.write(object, EncoderFactory.get().directBinaryEncoder(outputStream, null));
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private LogicalTypesWithDefaults deserialize(byte[] bytes) {
-        SpecificDatumReader<LogicalTypesWithDefaults> datumReader = new SpecificDatumReader<>(LogicalTypesWithDefaults.getClassSchema(), LogicalTypesWithDefaults.getClassSchema());
-        try {
-            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-            return datumReader.read(null, DecoderFactory.get().directBinaryDecoder(byteArrayInputStream, null));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
     }
 
 }

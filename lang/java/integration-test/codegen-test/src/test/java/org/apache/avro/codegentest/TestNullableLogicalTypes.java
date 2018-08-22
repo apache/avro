@@ -19,28 +19,19 @@
 package org.apache.avro.codegentest;
 
 import org.apache.avro.codegentest.testdata.NullableLogicalTypes;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.joda.time.LocalDate;
-import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class TestNullableLogicalTypes {
+public class TestNullableLogicalTypes extends AbstractSpecificRecordTest {
 
     @Test
     public void testWithNullValues() throws IOException {
         NullableLogicalTypes instanceOfGeneratedClass = NullableLogicalTypes.newBuilder()
                 .setNullableDate(null)
                 .build();
-        final byte[] serialized = serialize(instanceOfGeneratedClass);
-        final NullableLogicalTypes copy = deserialize(serialized);
-        Assert.assertEquals(instanceOfGeneratedClass.getNullableDate(), copy.getNullableDate());
+        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
     }
 
     @Test
@@ -48,30 +39,7 @@ public class TestNullableLogicalTypes {
         NullableLogicalTypes instanceOfGeneratedClass = NullableLogicalTypes.newBuilder()
                 .setNullableDate(LocalDate.now())
                 .build();
-        final byte[] serialized = serialize(instanceOfGeneratedClass);
-        final NullableLogicalTypes copy = deserialize(serialized);
-        Assert.assertEquals(instanceOfGeneratedClass.getNullableDate(), copy.getNullableDate());
-    }
-
-    private byte[] serialize(NullableLogicalTypes object) {
-        SpecificDatumWriter<NullableLogicalTypes> datumWriter = new SpecificDatumWriter<>(NullableLogicalTypes.getClassSchema());
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            datumWriter.write(object, EncoderFactory.get().directBinaryEncoder(outputStream, null));
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private NullableLogicalTypes deserialize(byte[] bytes) {
-        SpecificDatumReader<NullableLogicalTypes> datumReader = new SpecificDatumReader<>(NullableLogicalTypes.getClassSchema(), NullableLogicalTypes.getClassSchema());
-        try {
-            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-            return datumReader.read(null, DecoderFactory.get().directBinaryDecoder(byteArrayInputStream, null));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
     }
 
 }

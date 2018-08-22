@@ -19,29 +19,19 @@
 package org.apache.avro.codegentest;
 
 import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversion;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.avro.specific.SpecificDatumWriter;
-import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 
-public class TestCustomConversion {
+public class TestCustomConversion extends AbstractSpecificRecordTest {
 
     @Test
     public void testNullValues() throws IOException {
         LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
                 .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
                 .build();
-        final byte[] serialized = serialize(instanceOfGeneratedClass);
-        final LogicalTypesWithCustomConversion copy = deserialize(serialized);
-        Assert.assertEquals(instanceOfGeneratedClass.getNonNullCustomField(), copy.getNonNullCustomField());
-        Assert.assertEquals(instanceOfGeneratedClass.getNullableCustomField(), copy.getNullableCustomField());
+        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
     }
 
     @Test
@@ -50,31 +40,6 @@ public class TestCustomConversion {
                 .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
                 .setNullableCustomField(new CustomDecimal(BigInteger.valueOf(3000), 2))
                 .build();
-        final byte[] serialized = serialize(instanceOfGeneratedClass);
-        final LogicalTypesWithCustomConversion copy = deserialize(serialized);
-        Assert.assertEquals(instanceOfGeneratedClass.getNullableCustomField(), copy.getNullableCustomField());
-        Assert.assertEquals(instanceOfGeneratedClass.getNonNullCustomField(), copy.getNonNullCustomField());
+        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
     }
-
-    private byte[] serialize(LogicalTypesWithCustomConversion object) {
-        SpecificDatumWriter<LogicalTypesWithCustomConversion> datumWriter = new SpecificDatumWriter<>(LogicalTypesWithCustomConversion.getClassSchema());
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            datumWriter.write(object, EncoderFactory.get().directBinaryEncoder(outputStream, null));
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private LogicalTypesWithCustomConversion deserialize(byte[] bytes) {
-        SpecificDatumReader<LogicalTypesWithCustomConversion> datumReader = new SpecificDatumReader<>(LogicalTypesWithCustomConversion.getClassSchema(), LogicalTypesWithCustomConversion.getClassSchema());
-        try {
-            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-            return datumReader.read(null, DecoderFactory.get().directBinaryDecoder(byteArrayInputStream, null));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }

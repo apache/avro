@@ -24,7 +24,7 @@ import java.math.BigInteger;
 /**
  * Wraps a BigDecimal just to demonstrate that it is possible to use custom implementation classes with custom conversions.
  */
-public class CustomDecimal {
+public class CustomDecimal implements Comparable<CustomDecimal> {
 
     private final BigDecimal internalValue;
 
@@ -56,5 +56,10 @@ public class CustomDecimal {
     @Override
     public int hashCode() {
         return internalValue.hashCode();
+    }
+
+    @Override
+    public int compareTo(CustomDecimal o) {
+        return this.internalValue.compareTo(o.internalValue);
     }
 }
