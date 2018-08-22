@@ -540,8 +540,9 @@ public class GenericData {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet()) {
-        toString(entry.getKey(), buffer, seenObjects);
-        buffer.append(": ");
+        buffer.append("\"");
+        buffer.append(String.valueOf(entry.getKey()));
+        buffer.append("\": ");
         toString(entry.getValue(), buffer, seenObjects);
         if (++count < map.size())
           buffer.append(", ");
