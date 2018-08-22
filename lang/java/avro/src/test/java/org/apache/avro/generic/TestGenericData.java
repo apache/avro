@@ -343,8 +343,8 @@ public class TestGenericData {
     intPair.put(2, "two");
 
     HashMap<java.math.BigDecimal, String> decPair =  new HashMap<>();
-    intPair.put(1, "one");
-    intPair.put(2, "two");
+    decPair.put(java.math.BigDecimal.valueOf(1), "one");
+    decPair.put(java.math.BigDecimal.valueOf(2), "two");
 
     HashMap<Boolean, String> boolPair =  new HashMap<>();
     boolPair.put(true, "isTrue");
