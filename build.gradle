@@ -182,7 +182,7 @@ if (!org.gradle.api.JavaVersion.current().isJava9Compatible()) { // Gradle 4.2.1
 if (!org.gradle.api.JavaVersion.current().isJava11Compatible()) { // Gradle 4.8 appears to be the first version that supports Java 11, as per https://github.com/gradle/gradle/pull/4759 and testing
     gradleVersions.addAll("4.2.1", "4.3", "4.3.1", "4.4", "4.4.1", "4.5", "4.5.1", "4.6", "4.7")
 }
-gradleVersions.addAll("4.8")
+gradleVersions.addAll("4.8", "4.8.1", "4.9")
 // Support for running Gradle on Java 7 is deprecated and will be removed in Gradle 5, as per https://docs.gradle.org/4.2.1/release-notes.html
 
 avroVersions.each { def avroVersion ->

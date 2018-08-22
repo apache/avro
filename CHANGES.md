@@ -1,8 +1,8 @@
 # Change Log
 
 ## Unreleased
-* Built using Gradle 4.8
-* Updated compatibility testing through Gradle 4.8
+* Built using Gradle 4.9
+* Updated compatibility testing through Gradle 4.9
 * Began testing using Java 11
 * Add support for generating schema files (#56)
 * Fix bug where `GenerateAvroProtocolTask` can't be used without a runtime configuration
