@@ -5,7 +5,7 @@ plugins {
     id "idea"
     id "maven-publish"
     id "java-gradle-plugin"
-    id "com.jfrog.bintray" version "1.7.3"
+    id "com.jfrog.bintray" version "1.8.1"
     id "com.github.hierynomus.license" version "0.14.0"
 }
 
