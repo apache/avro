@@ -19,6 +19,7 @@ package org.apache.avro.generic;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -314,6 +315,51 @@ public class TestGenericData {
     // \u2013 is EN DASH
     r.put(stringField.name(), "hello\nthere\"\tyou\u2013}");
     r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(),"a"));
+
+    String json = r.toString();
+    JsonFactory factory = new JsonFactory();
+    JsonParser parser = factory.createJsonParser(json);
+    ObjectMapper mapper = new ObjectMapper();
+
+    // will throw exception if string is not parsable json
+    mapper.readTree(parser);
+  }
+
+  @Test
+  public void testMapWithNonStringKeyToStringIsJson() throws JsonParseException, IOException, URISyntaxException {
+    Schema intMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
+    Field intMapField = new Field("intMap", Schema.createMap(intMapSchema), null, null);
+    Schema decMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
+    Field decMapField = new Field("decMap", Schema.createMap(decMapSchema), null, null);
+    Schema boolMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
+    Field boolMapField = new Field("boolMap", Schema.createMap(decMapSchema), null, null);
+    Schema fileMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
+    Field fileMapField = new Field("fileMap", Schema.createMap(decMapSchema), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(intMapField,decMapField,boolMapField,fileMapField));
+
+    HashMap<Integer, String> intPair =  new HashMap<>();
+    intPair.put(1, "one");
+    intPair.put(2, "two");
+
+    HashMap<java.math.BigDecimal, String> decPair =  new HashMap<>();
+    intPair.put(1, "one");
+    intPair.put(2, "two");
+
+    HashMap<Boolean, String> boolPair =  new HashMap<>();
+    boolPair.put(true, "isTrue");
+    boolPair.put(false, "isFalse");
+    boolPair.put(null, null);
+
+    HashMap<java.io.File, String> filePair =  new HashMap<>();
+    java.io.File f = new java.io.File( getClass().getResource("/mapTestFile.txt").toURI() );
+    filePair.put(f, "File");
+
+    GenericRecord r = new GenericData.Record(schema);
+    r.put(intMapField.name(), intPair);
+    r.put(decMapField.name(), decPair);
+    r.put(boolMapField.name(), boolPair);
+    r.put(fileMapField.name(), filePair);
 
     String json = r.toString();
     JsonFactory factory = new JsonFactory();
