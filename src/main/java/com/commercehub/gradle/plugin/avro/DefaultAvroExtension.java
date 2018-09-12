@@ -83,7 +83,11 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     public void setCreateSetters(String createSetters) {
-        this.createSetters = Boolean.parseBoolean(createSetters);
+        setCreateSetters(Boolean.parseBoolean(createSetters));
+    }
+
+    public void setCreateSetters(boolean createSetters) {
+        this.createSetters = createSetters;
     }
 
     @Override
@@ -92,12 +96,20 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     public void setEnableDecimalLogicalType(String enableDecimalLogicalType) {
-        this.enableDecimalLogicalType = Boolean.parseBoolean(enableDecimalLogicalType);
+        setEnableDecimalLogicalType(Boolean.parseBoolean(enableDecimalLogicalType));
+    }
+
+    public void setEnableDecimalLogicalType(boolean enableDecimalLogicalType) {
+        this.enableDecimalLogicalType = enableDecimalLogicalType;
     }
 
     @Override
     public boolean isValidateDefaults() {
         return validateDefaults;
+    }
+
+    public void setValidateDefaults(String validateDefaults) {
+        setValidateDefaults(Boolean.parseBoolean(validateDefaults));
     }
 
     public void setValidateDefaults(boolean validateDefaults) {

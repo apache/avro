@@ -25,6 +25,8 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * Currently tested against Kotlin 1.2.31
     * Kotlin 1.1.2 and higher requires Java 8+
     * Doesn't work with Gradle 3.2-3.2.1
+* Incubating: support for Gradle Kotlin DSL
+    * No test coverage yet; will attempt to address incompatibilities as they are discovered
 
 # Usage
 
@@ -290,6 +292,13 @@ The Java classes generated from your Avro files should be automatically accessib
 This is accomplished by this plugin detecting that the Kotlin plugin has been applied, and informing the Kotlin compilation tasks of the presence of the generated sources directories for cross-compilation.
 
 This support does *not* support producing the Avro generated classes as Kotlin classes, as that functionality is not currently provided by the upstream Avro library.
+
+# Kotlin DSL Support
+
+Special notes relevant to using this plugin via the Gradle Kotlin DSL:
+
+* Apply the plugin declaratively using the `plugins {}` block.  Otherwise, various features may not work as intended.  See [Configuring Plugins in the Gradle Kotlin DSL](https://github.com/gradle/kotlin-dsl/blob/master/doc/getting-started/Configuring-Plugins.md) for more details.
+* Most configuration in the `avro {}` block can be used identically to the Groovy DSL.  Boolean settings are an exception, as they require an "is" prefix.  For example, instead of `createSetters = false`, one would use `isCreateSetters = false`.  See [Getters and Setters](https://kotlinlang.org/docs/reference/java-interop.html#getters-and-setters) for more details.
 
 # Generating schema files
 

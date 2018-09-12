@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Fix "Boolean configuration cannot be set with boolean values from Kotlin DSL" (#60)
 
 ## 0.15.0
 * Built using Gradle 4.9
