@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.15.1
 * Fix "Boolean configuration cannot be set with boolean values from Kotlin DSL" (#60)
 
 ## 0.15.0
