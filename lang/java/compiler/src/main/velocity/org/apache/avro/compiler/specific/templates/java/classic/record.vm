@@ -133,7 +133,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 #end
    */
-  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end) {
+  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($foreach.count < $schema.getFields().size()), #end#end) {
 #foreach ($field in $schema.getFields())
     this.${this.mangle($field.name())} = ${this.mangle($field.name())};
 #end
