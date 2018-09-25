@@ -20,6 +20,7 @@ package org.apache.avro.data;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 
 import java.time.Instant;
@@ -51,6 +52,11 @@ public class Jsr310TimeConversions {
 
       return (int) epochDays;
     }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
+    }
   }
 
   public static class TimeMillisConversion extends Conversion<LocalTime> {
@@ -72,6 +78,11 @@ public class Jsr310TimeConversions {
     @Override
     public Integer toInt(LocalTime time, Schema schema, LogicalType type) {
       return (int) TimeUnit.NANOSECONDS.toMillis(time.toNanoOfDay());
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     }
   }
 
@@ -95,6 +106,11 @@ public class Jsr310TimeConversions {
     public Long toLong(LocalTime time, Schema schema, LogicalType type) {
       return TimeUnit.NANOSECONDS.toMicros(time.toNanoOfDay());
     }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    }
   }
 
   public static class TimestampMillisConversion extends Conversion<Instant> {
@@ -116,6 +132,11 @@ public class Jsr310TimeConversions {
     @Override
     public Long toLong(Instant timestamp, Schema schema, LogicalType type) {
       return timestamp.toEpochMilli();
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 
@@ -153,6 +174,11 @@ public class Jsr310TimeConversions {
 
         return Math.addExact(micros, nanos / 1_000);
       }
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 }

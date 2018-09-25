@@ -184,7 +184,7 @@ public class SpecificCompiler {
   }
 
   /**
-   * Creates a specific compler with the default (Joda) type for date/time related logical types.
+   * Creates a specific compiler with the default (Joda) type for date/time related logical types.
    *
    * @see #SpecificCompiler(DateTimeLogicalTypeImplementation)
    */
