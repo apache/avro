@@ -45,7 +45,7 @@ import org.apache.avro.ipc.RPCContext;
 /**
  * Exposes information provided by a StatsPlugin as
  * a web page.
- *
+ * <p>
  * This class follows the same synchronization conventions
  * as StatsPlugin, to avoid requiring StatsPlugin to serve
  * a copy of the data.
@@ -56,6 +56,12 @@ public class StatsServlet extends HttpServlet {
   private static final SimpleDateFormat FORMATTER =
     new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
 
+  /**
+   * Instantiates a new Stats servlet.
+   *
+   * @param statsPlugin the stats plugin
+   * @throws UnavailableException the unavailable exception
+   */
   public StatsServlet(StatsPlugin statsPlugin) throws UnavailableException {
     this.statsPlugin = statsPlugin;
     this.velocityEngine = new VelocityEngine();
@@ -70,33 +76,71 @@ public class StatsServlet extends HttpServlet {
     velocityEngine.setProperty("runtime.log.logsystem.class", logChuteName);
   }
 
+  /**
+   * The type Renderable message.
+   */
   /* Helper class to store per-message data which is passed to templates.
    *
    * The template expects a list of charts, each of which is parameterized by
    * map key-value string attributes. */
   public class RenderableMessage { // Velocity brakes if not public
+    /**
+     * The Name.
+     */
     public String name;
+    /**
+     * The Num calls.
+     */
     public int numCalls;
+    /**
+     * The Charts.
+     */
     public ArrayList<HashMap<String, String>> charts;
 
+    /**
+     * Instantiates a new Renderable message.
+     *
+     * @param name the name
+     */
     public RenderableMessage(String name) {
       this.name = name;
       this.charts = new ArrayList<>();
     }
 
+    /**
+     * Gets charts.
+     *
+     * @return the charts
+     */
     public ArrayList<HashMap<String, String>> getCharts() {
       return this.charts;
     }
 
+    /**
+     * Gets .
+     *
+     * @return the
+     */
     public String getname() {
       return this.name;
     }
 
+    /**
+     * Gets num calls.
+     *
+     * @return the num calls
+     */
     public int getNumCalls() {
       return this.numCalls;
     }
   }
 
+  /**
+   * Escape string array list.
+   *
+   * @param input the input
+   * @return the list
+   */
   /* Surround each string in an array with
    * quotation marks and escape existing quotes.
    *
@@ -125,6 +169,12 @@ public class StatsServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Write stats.
+   *
+   * @param w the w
+   * @throws IOException the io exception
+   */
   void writeStats(Writer w) throws IOException {
     VelocityContext context = new VelocityContext();
     context.put("title", "Avro RPC Stats");

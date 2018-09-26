@@ -32,11 +32,15 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
-/** Tool to read Trevni files and print them as JSON.
+/**
+ * Tool to read Trevni files and print them as JSON.
  * This can read any Trevni file.  Nested structure is reconstructed from the
  * columns rather than any schema information.
  */
 public class TrevniToJsonTool implements Tool {
+  /**
+   * The Factory.
+   */
   static final JsonFactory FACTORY = new JsonFactory();
 
   private JsonGenerator generator;
@@ -74,7 +78,13 @@ public class TrevniToJsonTool implements Tool {
     return 0;
   }
 
-  /** Read a Trevni file and print each row as a JSON object. */
+  /**
+   * Read a Trevni file and print each row as a JSON object.  @param input the input
+   *
+   * @param out    the out
+   * @param pretty the pretty
+   * @throws IOException the io exception
+   */
   public void toJson(Input input, PrintStream out, boolean pretty)
     throws IOException {
     this.generator = FACTORY.createJsonGenerator(out, JsonEncoding.UTF8);

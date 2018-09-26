@@ -31,12 +31,20 @@ import org.junit.Test;
 
 import org.apache.avro.Foo;
 
+/**
+ * The type Test data file specific.
+ */
 public class TestDataFileSpecific {
 
   private static final File DIR =
     new File(System.getProperty("test.dir","/tmp"));
   private static final File FILE = new File(DIR, "specific.avro");
 
+  /**
+   * Test specific datum reader default ctor.
+   *
+   * @throws IOException the io exception
+   */
   /* Test when using SpecificDatumReader<T>() constructor to read from a file
    * with a different schema that both reader & writer schemas are found.*/
   @Test

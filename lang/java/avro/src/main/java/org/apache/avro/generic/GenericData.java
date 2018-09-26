@@ -418,22 +418,42 @@ public class GenericData {
     }
   }
 
-  /** Returns a {@link DatumReader} for this kind of data. */
+  /**
+   * Returns a {@link DatumReader} for this kind of data.
+   *
+   * @param schema The schema to create the reader
+   * @return A compatible reader based on the schema
+   */
   public DatumReader createDatumReader(Schema schema) {
     return new GenericDatumReader(schema, schema, this);
   }
 
-  /** Returns a {@link DatumReader} for this kind of data. */
+  /** Returns a {@link DatumReader} for this kind of data.
+   *
+   * @param writer The writer schema of the reader
+   * @param writer The reader schema of the reader
+   * @return A compatible reader based on the schemas
+   */
   public DatumReader createDatumReader(Schema writer, Schema reader) {
     return new GenericDatumReader(writer, reader, this);
   }
 
-  /** Returns a {@link DatumWriter} for this kind of data. */
+  /**
+   * Returns a {@link DatumWriter} for this kind of data.
+   *
+   * @param schema The schema to create the writer
+   * @return The writer based on the schema
+   */
   public DatumWriter createDatumWriter(Schema schema) {
     return new GenericDatumWriter(schema, this);
   }
 
-  /** Returns true if a Java datum matches a schema. */
+  /**
+   * Returns true if a Java datum matches a schema.
+   * @param schema The schema to validate against
+   * @param datum The object that will be validated
+   * @return True if the object is compatible with the schema
+   */
   public boolean validate(Schema schema, Object datum) {
     switch (schema.getType()) {
     case RECORD:
@@ -482,7 +502,12 @@ public class GenericData {
     }
   }
 
-  /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
+  /**
+   * Renders a Java datum as <a href="http://www.json.org/">JSON</a>.
+   *
+   * @param datum The datum to convert to JSON
+   * @return A JSON representation of the Java datum
+   */
   public String toString(Object datum) {
     StringBuilder buffer = new StringBuilder();
     toString(datum, buffer, new IdentityHashMap<>(128) );
@@ -618,7 +643,12 @@ public class GenericData {
     }
   }
 
-  /** Create a schema given an example datum. */
+  /**
+   * Create a schema given an example datum.
+   *
+   * @param datum The object to reflect the schema from
+   * @return The extracted schema
+   */
   public Schema induce(Object datum) {
     if (isRecord(datum)) {
       return getRecordSchema(datum);
@@ -667,37 +697,74 @@ public class GenericData {
     else throw new AvroTypeException("Can't create schema for: "+datum);
   }
 
-  /** Called by {@link GenericDatumReader#readRecord} to set a record fields
+  /**
+   * Called by {@link GenericDatumReader#readRecord} to set a record fields
    * value to a record instance.  The default implementation is for {@link
-   * IndexedRecord}.*/
+   * IndexedRecord}.
+   *
+   * @param record The raw record
+   * @param name The name of the field
+   * @param position The position of the field
+   * @param o The object to map the value onto
+   */
   public void setField(Object record, String name, int position, Object o) {
     ((IndexedRecord)record).put(position, o);
   }
 
-  /** Called by {@link GenericDatumReader#readRecord} to retrieve a record
+  /**
+   * Called by {@link GenericDatumReader#readRecord} to retrieve a record
    * field value from a reused instance.  The default implementation is for
-   * {@link IndexedRecord}.*/
+   * {@link IndexedRecord}.
+   *
+   * @param record The raw record
+   * @param name The name of the field
+   * @param position The position of the field
+   * @return The extracted field
+   */
   public Object getField(Object record, String name, int position) {
     return ((IndexedRecord)record).get(position);
   }
 
-  /** Produce state for repeated calls to {@link
-   * #getField(Object,String,int,Object)} and {@link
-   * #setField(Object,String,int,Object,Object)} on the same record.*/
+  /**
+   * Produce state for repeated calls to {@link #getField(Object,String,int,Object)} and
+   * {@link #setField(Object,String,int,Object,Object)} on the same record.
+   *
+   * @param record The raw record
+   * @param schema The schema of the record
+   * @return Always null
+   */
   protected Object getRecordState(Object record, Schema schema) { return null; }
 
-  /** Version of {@link #setField} that has state. */
+  /**
+   * Version of {@link #setField} that has state.
+   *
+   * @param r The raw record
+   * @param n The name of the field
+   * @param p The position of the field
+   * @param state The state of the object
+   */
   protected void setField(Object r, String n, int p, Object o, Object state) {
     setField(r, n, p, o);
   }
 
-  /** Version of {@link #getField} that has state. */
+  /**
+   * Version of {@link #getField} that has state.
+   *
+   * @param record The raw record
+   * @param name The name of the field
+   * @param pos The position of the field
+   * @param state The state of the object
+   */
   protected Object getField(Object record, String name, int pos, Object state) {
     return getField(record, name, pos);
   }
 
-  /** Return the index for a datum within a union.  Implemented with {@link
-   * Schema#getIndexNamed(String)} and {@link #getSchemaName(Object)}.*/
+  /**
+   * Implemented with {@link Schema#getIndexNamed(String)} and {@link #getSchemaName(Object)}.
+   *
+   * @param union The schema that consists of an union
+   * @param datum The index for a datum within a union
+   */
   public int resolveUnion(Schema union, Object datum) {
     // if there is a logical type that works, use it first
     // this allows logical type concrete classes to overlap with supported ones
@@ -787,69 +854,119 @@ public class GenericData {
     }
   }
 
-  /** Called by the default implementation of {@link #instanceOf}.*/
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is an {@link Collection}
+   */
   protected boolean isArray(Object datum) {
     return datum instanceof Collection;
   }
 
-  /** Called to access an array as a collection. */
+  /**
+   * Called to access an array as a collection.
+   *
+   * @param datum The object which is a {@link Collection}
+   * @return The array as a collection
+   */
   protected Collection getArrayAsCollection(Object datum) {
     return (Collection)datum;
   }
 
-  /** Called by the default implementation of {@link #instanceOf}.*/
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is an {@link IndexedRecord}
+   */
   protected boolean isRecord(Object datum) {
     return datum instanceof IndexedRecord;
   }
 
-  /** Called to obtain the schema of a record.  By default calls
+  /**
+   * Called to obtain the schema of a record.  By default calls
    * {GenericContainer#getSchema().  May be overridden for alternate record
-   * representations. */
+   * representations.
+   *
+   * @param record The object which is a {@link GenericContainer}
+   * @return The record schema
+   */
   protected Schema getRecordSchema(Object record) {
     return ((GenericContainer)record).getSchema();
   }
 
-  /** Called by the default implementation of {@link #instanceOf}.*/
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is an Enum
+   */
   protected boolean isEnum(Object datum) {
     return datum instanceof GenericEnumSymbol;
   }
 
-  /** Called to obtain the schema of a enum.  By default calls
+  /**
+   * Called to obtain the schema of a enum.  By default calls
    * {GenericContainer#getSchema().  May be overridden for alternate enum
-   * representations. */
+   * representations.
+   *
+   * @param enu The object which is a {@link GenericContainer}
+   * @return The enum schema
+   */
   protected Schema getEnumSchema(Object enu) {
     return ((GenericContainer)enu).getSchema();
   }
 
-  /** Called by the default implementation of {@link #instanceOf}.*/
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a Map
+   */
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
   }
 
-  /** Called by the default implementation of {@link #instanceOf}.*/
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a fixed schema
+   */
   protected boolean isFixed(Object datum) {
     return datum instanceof GenericFixed;
   }
 
-  /** Called to obtain the schema of a fixed.  By default calls
+  /**
+   * Called to obtain the schema of a fixed.  By default calls
    * {GenericContainer#getSchema().  May be overridden for alternate fixed
-   * representations. */
+   * representations.
+   *
+   * @param fixed The object which is a {@link GenericContainer}
+   * @return The fixed schmea
+   */
   protected Schema getFixedSchema(Object fixed) {
     return ((GenericContainer)fixed).getSchema();
   }
 
-  /** Called by the default implementation of {@link #instanceOf}.*/
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a string
+   */
   protected boolean isString(Object datum) {
     return datum instanceof CharSequence;
   }
 
-  /** Called by the default implementation of {@link #instanceOf}.*/
+  /**
+   * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a byte
+   */
   protected boolean isBytes(Object datum) {
     return datum instanceof ByteBuffer;
   }
 
-   /**
+  /**
    * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a int
    */
   protected boolean isInteger(Object datum) {
     return datum instanceof Integer;
@@ -857,6 +974,8 @@ public class GenericData {
 
   /**
    * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a long
    */
   protected boolean isLong(Object datum) {
     return datum instanceof Long;
@@ -864,6 +983,8 @@ public class GenericData {
 
   /**
    * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a float
    */
   protected boolean isFloat(Object datum) {
     return datum instanceof Float;
@@ -871,6 +992,8 @@ public class GenericData {
 
   /**
    * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a double
    */
   protected boolean isDouble(Object datum) {
     return datum instanceof Double;
@@ -878,6 +1001,8 @@ public class GenericData {
 
   /**
    * Called by the default implementation of {@link #instanceOf}.
+   *
+   * @return True if it is a boolean
    */
   protected boolean isBoolean(Object datum) {
     return datum instanceof Boolean;

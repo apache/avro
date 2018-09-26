@@ -42,6 +42,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * The type Test data file repair tool.
+ */
 public class TestDataFileRepairTool {
 
   private static final Schema SCHEMA = Schema.create(Schema.Type.STRING);
@@ -50,6 +53,11 @@ public class TestDataFileRepairTool {
 
   private File repairedFile;
 
+  /**
+   * Write corrupt file.
+   *
+   * @throws IOException the io exception
+   */
   @BeforeClass
   public static void writeCorruptFile() throws IOException {
     // Write a data file
@@ -100,11 +108,17 @@ public class TestDataFileRepairTool {
     out.close();
   }
 
+  /**
+   * Sets up.
+   */
   @Before
   public void setUp() {
     repairedFile = AvroTestUtil.tempFile(TestDataFileRepairTool.class, "repaired.avro");
   }
 
+  /**
+   * Tear down.
+   */
   @After
   public void tearDown() {
     repairedFile.delete();
@@ -125,6 +139,11 @@ public class TestDataFileRepairTool {
     return out.toString("UTF-8").replace("\r", "");
   }
 
+  /**
+   * Test report corrupt block.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testReportCorruptBlock() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "report", corruptBlockFile.getPath());
@@ -132,6 +151,11 @@ public class TestDataFileRepairTool {
     assertTrue(output, output.contains("Number of records: 5 Number of corrupt records: 0"));
   }
 
+  /**
+   * Test report corrupt record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testReportCorruptRecord() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "report", corruptRecordFile.getPath());
@@ -139,6 +163,11 @@ public class TestDataFileRepairTool {
     assertTrue(output, output.contains("Number of records: 8 Number of corrupt records: 2"));
   }
 
+  /**
+   * Test repair all corrupt block.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRepairAllCorruptBlock() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "all",
@@ -148,6 +177,11 @@ public class TestDataFileRepairTool {
     checkFileContains(repairedFile, "apple", "banana", "celery", "guava", "hazelnut");
   }
 
+  /**
+   * Test repair all corrupt record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRepairAllCorruptRecord() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "all",
@@ -158,6 +192,11 @@ public class TestDataFileRepairTool {
         "hazelnut");
   }
 
+  /**
+   * Test repair prior corrupt block.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRepairPriorCorruptBlock() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "prior",
@@ -167,6 +206,11 @@ public class TestDataFileRepairTool {
     checkFileContains(repairedFile, "apple", "banana", "celery");
   }
 
+  /**
+   * Test repair prior corrupt record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRepairPriorCorruptRecord() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "prior",
@@ -176,6 +220,11 @@ public class TestDataFileRepairTool {
     checkFileContains(repairedFile, "apple", "banana", "celery", "date");
   }
 
+  /**
+   * Test repair after corrupt block.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRepairAfterCorruptBlock() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "after",
@@ -185,6 +234,11 @@ public class TestDataFileRepairTool {
     checkFileContains(repairedFile, "guava", "hazelnut");
   }
 
+  /**
+   * Test repair after corrupt record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRepairAfterCorruptRecord() throws Exception {
     String output = run(new DataFileRepairTool(), "-o", "after",

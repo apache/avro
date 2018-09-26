@@ -119,7 +119,9 @@ public class SpecificData extends GenericData {
     return new SpecificDatumWriter(schema, this);
   }
 
-  /** Return the singleton instance. */
+  /**
+   * @return the singleton instance.
+   */
   public static SpecificData get() { return INSTANCE; }
 
   @Override
@@ -148,7 +150,11 @@ public class SpecificData extends GenericData {
   private static final Class NO_CLASS = new Object(){}.getClass();
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
-  /** Return the class that implements a schema, or null if none exists. */
+  /**
+   * Return the class that implements a schema, or null if none exists.
+   * @param schema The schema of which we want to determine the class
+   * @return The class that belongs to the schema
+   */
   public Class getClass(Schema schema) {
     switch (schema.getType()) {
     case FIXED:
@@ -203,7 +209,10 @@ public class SpecificData extends GenericData {
     return getClass(schema);
   }
 
-  /** Returns the Java class name indicated by a schema's name and namespace. */
+  /**
+   * @param schema The schema of which we want to determine the class name
+   * @return Java class name indicated by a schema's name and namespace.
+   */
   public static String getClassName(Schema schema) {
     String namespace = schema.getNamespace();
     String name = schema.getName();
@@ -231,7 +240,11 @@ public class SpecificData extends GenericData {
             }
           });
 
-  /** Find the schema for a Java type. */
+  /**
+   * Find the schema for a Java type.
+   * @param type The type of which we want to determine the schema
+   * @return The schema for the given java type
+   */
   public Schema getSchema(java.lang.reflect.Type type) {
     try {
       return schemaCache.get(type);
@@ -241,7 +254,13 @@ public class SpecificData extends GenericData {
     }
   }
 
-  /** Create the schema for a Java type. */
+  /**
+   * Create the schema for a Java type.
+   *
+   * @param type The type of the schema
+   * @param names The names for the schema
+   * @return The generated schema
+   */
   @SuppressWarnings(value="unchecked")
   protected Schema createSchema(java.lang.reflect.Type type,
                                 Map<String,Schema> names) {
@@ -314,12 +333,21 @@ public class SpecificData extends GenericData {
     return super.getSchemaName(datum);
   }
 
-  /** True iff a class should be serialized with toString(). */
+  /**
+   * @param c If the class can be converted to a String
+   * @return True iff a class should be serialized with toString().
+   */
   protected boolean isStringable(Class<?> c) {
     return stringableClasses.contains(c);
   }
 
-  /** Return the protocol for a Java interface. */
+  /**
+   * Return the protocol for a Java interface.
+   *
+   * @param iface The class that is a protocol
+   * @throws NoSuchFieldException The class is not a protocol
+   * @return The protocol
+   */
   public Protocol getProtocol(Class iface) {
     try {
       Protocol p = (Protocol)(iface.getDeclaredField("PROTOCOL").get(null));

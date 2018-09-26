@@ -28,8 +28,10 @@ import java.nio.channels.DatagramChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A datagram-based {@link Transceiver} implementation. This uses a simple,
- * non-standard wire protocol and is not intended for production services. */
+/**
+ * A datagram-based {@link Transceiver} implementation. This uses a simple,
+ * non-standard wire protocol and is not intended for production services.
+ */
 public class DatagramTransceiver extends Transceiver {
   private static final Logger LOG
     = LoggerFactory.getLogger(DatagramTransceiver.class);
@@ -42,11 +44,22 @@ public class DatagramTransceiver extends Transceiver {
 
   public String getRemoteName() { return remote.toString(); }
 
+  /**
+   * Instantiates a new Datagram transceiver.
+   *
+   * @param remote the remote
+   * @throws IOException the io exception
+   */
   public DatagramTransceiver(SocketAddress remote) throws IOException {
     this(DatagramChannel.open());
     this.remote = remote;
   }
 
+  /**
+   * Instantiates a new Datagram transceiver.
+   *
+   * @param channel the channel
+   */
   public DatagramTransceiver(DatagramChannel channel) {
     this.channel = channel;
   }

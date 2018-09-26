@@ -20,12 +20,18 @@ package org.apache.avro.ipc.stats;
 /**
  * Specific implementation of histogram for floats,
  * which also keeps track of basic summary statistics.
- * @param <B>
+ *
+ * @param <B> the type parameter
  */
 class FloatHistogram<B> extends Histogram<B, Float> {
   private float runningSum;
   private float runningSumOfSquares;
 
+  /**
+   * Instantiates a new Float histogram.
+   *
+   * @param segmenter the segmenter
+   */
   public FloatHistogram(Segmenter<B, Float> segmenter) {
     super(segmenter);
   }
@@ -37,6 +43,11 @@ class FloatHistogram<B> extends Histogram<B, Float> {
     runningSumOfSquares += value*value;
   }
 
+  /**
+   * Gets mean.
+   *
+   * @return the mean
+   */
   public float getMean() {
     if (totalCount == 0) {
       return Float.NaN;
@@ -44,6 +55,11 @@ class FloatHistogram<B> extends Histogram<B, Float> {
     return runningSum / totalCount;
   }
 
+  /**
+   * Gets unbiased std dev.
+   *
+   * @return the unbiased std dev
+   */
   public float getUnbiasedStdDev() {
     if (totalCount <= 1) {
       return Float.NaN;

@@ -33,10 +33,12 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 
-/** Reads a text file into an Avro data file.
- *
+/**
+ * Reads a text file into an Avro data file.
+ * <p>
  * Can accept a file name, and HDFS file URI, or stdin. Can write to a file
- * name, an HDFS URI, or stdout.*/
+ * name, an HDFS URI, or stdout.
+ */
 public class FromTextTool implements Tool {
   private static final String TEXT_FILE_SCHEMA =
     "\"bytes\"";

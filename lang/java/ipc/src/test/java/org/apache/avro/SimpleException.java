@@ -17,9 +17,20 @@
  */
 package org.apache.avro;
 
-/** This should be a static nested class in TestProtocolReflect, but that
- * breaks CheckStyle (http://jira.codehaus.org/browse/MPCHECKSTYLE-20). */
+/**
+ * This should be a static nested class in TestProtocolReflect, but that
+ * breaks CheckStyle (http://jira.codehaus.org/browse/MPCHECKSTYLE-20).
+ */
 public class SimpleException extends Exception {
+  /**
+   * Instantiates a new Simple exception.
+   */
   SimpleException() {}
+
+  /**
+   * Instantiates a new Simple exception.
+   *
+   * @param message the message
+   */
   SimpleException(String message) { super(message) ; }
 }

@@ -39,15 +39,33 @@ import org.apache.avro.util.ByteBufferOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A {@link Transceiver} that uses {@link javax.security.sasl} for
- * authentication and encryption. */
+/**
+ * A {@link Transceiver} that uses {@link javax.security.sasl} for
+ * authentication and encryption.
+ */
 public class SaslSocketTransceiver extends Transceiver {
   private static final Logger LOG =
     LoggerFactory.getLogger(SaslSocketTransceiver.class);
 
   private static final ByteBuffer EMPTY = ByteBuffer.allocate(0);
 
-  private static enum Status { START, CONTINUE, FAIL, COMPLETE }
+  private static enum Status {
+    /**
+     * Start status.
+     */
+    START,
+    /**
+     * Continue status.
+     */
+    CONTINUE,
+    /**
+     * Fail status.
+     */
+    FAIL,
+    /**
+     * Complete status.
+     */
+    COMPLETE }
 
   private SaslParticipant sasl;
   private SocketChannel channel;
@@ -60,13 +78,24 @@ public class SaslSocketTransceiver extends Transceiver {
   private ByteBuffer writeHeader = ByteBuffer.allocate(4);
   private ByteBuffer zeroHeader = ByteBuffer.allocate(4).putInt(0);
 
-  /** Create using SASL's anonymous (<a
-   * href="http://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism. */
+  /**
+   * Create using SASL's anonymous RFC 2245 mechanism.
+   *
+   * @param address The socket to connect to
+   * @throws IOException the io exception
+   * @see <a href="http://www.ietf.org/rfc/rfc2245.txt">RFC 2245</a>
+   */
   public SaslSocketTransceiver(SocketAddress address) throws IOException {
     this(address, new AnonymousClient());
   }
 
-  /** Create using the specified {@link SaslClient}. */
+  /**
+   * Create using the specified {@link SaslClient}.
+   *
+   * @param address    The socket to connect to
+   * @param saslClient The sasl client that you want to use
+   * @throws IOException the io exception
+   */
   public SaslSocketTransceiver(SocketAddress address, SaslClient saslClient)
     throws IOException {
     this.sasl = new SaslParticipant(saslClient);
@@ -76,7 +105,13 @@ public class SaslSocketTransceiver extends Transceiver {
     open(true);
   }
 
-  /** Create using the specified {@link SaslServer}. */
+  /**
+   * Create using the specified {@link SaslServer}.
+   *
+   * @param channel    The channel to use to connect
+   * @param saslServer The sasl server that you want to connect to
+   * @throws IOException the io exception
+   */
   public SaslSocketTransceiver(SocketChannel channel, SaslServer saslServer)
     throws IOException {
     this.sasl = new SaslParticipant(saslServer);
@@ -313,18 +348,39 @@ public class SaslSocketTransceiver extends Transceiver {
    * unfortunately don't share a common superclass.
    */
   private static class SaslParticipant {
-    // One of these will always be null.
+    /**
+     * The Server.
+     */
+// One of these will always be null.
     public SaslServer server;
+    /**
+     * The Client.
+     */
     public SaslClient client;
 
+    /**
+     * Instantiates a new Sasl participant.
+     *
+     * @param server the server
+     */
     public SaslParticipant(SaslServer server) {
       this.server = server;
     }
 
+    /**
+     * Instantiates a new Sasl participant.
+     *
+     * @param client the client
+     */
     public SaslParticipant(SaslClient client) {
       this.client = client;
     }
 
+    /**
+     * Gets mechanism name.
+     *
+     * @return the mechanism name
+     */
     public String getMechanismName() {
       if (client != null)
         return client.getMechanismName();
@@ -332,6 +388,11 @@ public class SaslSocketTransceiver extends Transceiver {
         return server.getMechanismName();
     }
 
+    /**
+     * Is complete boolean.
+     *
+     * @return the boolean
+     */
     public boolean isComplete() {
       if (client != null)
         return client.isComplete();
@@ -339,6 +400,11 @@ public class SaslSocketTransceiver extends Transceiver {
         return server.isComplete();
     }
 
+    /**
+     * Dispose.
+     *
+     * @throws SaslException the sasl exception
+     */
     public void dispose() throws SaslException {
       if (client != null)
         client.dispose();
@@ -346,6 +412,13 @@ public class SaslSocketTransceiver extends Transceiver {
         server.dispose();
     }
 
+    /**
+     * Unwrap byte [ ].
+     *
+     * @param buf the buf
+     * @return the byte [ ]
+     * @throws SaslException the sasl exception
+     */
     public byte[] unwrap(byte[] buf) throws SaslException {
       if (client != null)
         return client.unwrap(buf, 0, buf.length);
@@ -353,10 +426,26 @@ public class SaslSocketTransceiver extends Transceiver {
         return server.unwrap(buf, 0, buf.length);
     }
 
+    /**
+     * Wrap byte [ ].
+     *
+     * @param buf the buf
+     * @return the byte [ ]
+     * @throws SaslException the sasl exception
+     */
     public byte[] wrap(byte[] buf) throws SaslException {
       return wrap(buf, 0, buf.length);
     }
 
+    /**
+     * Wrap byte [ ].
+     *
+     * @param buf   the buf
+     * @param start the start
+     * @param len   the len
+     * @return the byte [ ]
+     * @throws SaslException the sasl exception
+     */
     public byte[] wrap(byte[] buf, int start, int len) throws SaslException {
       if (client != null)
         return client.wrap(buf, start, len);
@@ -364,6 +453,12 @@ public class SaslSocketTransceiver extends Transceiver {
         return server.wrap(buf, start, len);
     }
 
+    /**
+     * Gets negotiated property.
+     *
+     * @param propName the prop name
+     * @return the negotiated property
+     */
     public Object getNegotiatedProperty(String propName) {
       if (client != null)
         return client.getNegotiatedProperty(propName);
@@ -371,6 +466,13 @@ public class SaslSocketTransceiver extends Transceiver {
         return server.getNegotiatedProperty(propName);
     }
 
+    /**
+     * Evaluate byte [ ].
+     *
+     * @param buf the buf
+     * @return the byte [ ]
+     * @throws SaslException the sasl exception
+     */
     public byte[] evaluate(byte[] buf) throws SaslException {
       if (client != null)
         return client.evaluateChallenge(buf);

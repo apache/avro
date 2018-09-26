@@ -22,11 +22,18 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
-/** IPC utilities, including client and server factories. */
+/**
+ * IPC utilities, including client and server factories.
+ */
 public class Ipc {
   private Ipc() {}                                // no public ctor
 
-  /** Create a client {@link Transceiver} connecting to the provided URI. */
+  /**
+   * Create a client {@link Transceiver} connecting to the provided URI.  @param uri the uri
+   *
+   * @return the transceiver
+   * @throws IOException the io exception
+   */
   public static Transceiver createTransceiver(URI uri) throws IOException {
     if ("http".equals(uri.getScheme()))
        return new HttpTransceiver(uri.toURL());
@@ -37,8 +44,14 @@ public class Ipc {
       throw new IOException("unknown uri scheme: "+uri);
   }
 
-  /** Create a {@link Server} listening at the named URI using the provided
-   * responder. */
+  /**
+   * Create a {@link Server} listening at the named URI using the provided
+   * responder.  @param responder the responder
+   *
+   * @param uri the uri
+   * @return the server
+   * @throws IOException the io exception
+   */
   public static Server createServer(Responder responder,
                                     URI uri) throws IOException {
     if ("http".equals(uri.getScheme()))

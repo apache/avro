@@ -28,6 +28,9 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Simple;
 
+/**
+ * The type Test protocol datagram.
+ */
 public class TestProtocolDatagram extends TestProtocolSpecific {
   @Override
   public Server createServer(Responder testResponder) throws Exception {

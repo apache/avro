@@ -47,41 +47,81 @@ public class TestJsonToFromBinaryFragmentTools {
   private static final String JSON =
     "\"Long string implies readable length encoding.\"\n";
 
+  /**
+   * Test binary to json.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testBinaryToJson() throws Exception {
     binaryToJson(AVRO, JSON, STRING_SCHEMA);
   }
 
+  /**
+   * Test json to binary.
+   *
+   * @throws Exception the exception
+   */
   @Test
     public void testJsonToBinary() throws Exception {
     jsonToBinary(JSON, AVRO, STRING_SCHEMA);
   }
 
+  /**
+   * Test multi binary to json.
+   *
+   * @throws Exception the exception
+   */
   @Test
     public void testMultiBinaryToJson() throws Exception {
     binaryToJson(AVRO + AVRO + AVRO, JSON + JSON + JSON, STRING_SCHEMA);
   }
 
+  /**
+   * Test multi json to binary.
+   *
+   * @throws Exception the exception
+   */
   @Test
     public void testMultiJsonToBinary() throws Exception {
     jsonToBinary(JSON + JSON + JSON, AVRO + AVRO + AVRO, STRING_SCHEMA);
   }
 
+  /**
+   * Test binary to no pretty json.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testBinaryToNoPrettyJson() throws Exception {
     binaryToJson(AVRO, JSON, "--no-pretty", STRING_SCHEMA);
   }
 
+  /**
+   * Test multi binary to no pretty json.
+   *
+   * @throws Exception the exception
+   */
   @Test
     public void testMultiBinaryToNoPrettyJson() throws Exception {
     binaryToJson(AVRO + AVRO + AVRO, JSON + JSON + JSON, "--no-pretty", STRING_SCHEMA);
   }
 
+  /**
+   * Test binary to json schema file.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testBinaryToJsonSchemaFile() throws Exception {
     binaryToJson(AVRO, JSON, "--schema-file", schemaFile());
   }
 
+  /**
+   * Test json to binary schema file.
+   *
+   * @throws Exception the exception
+   */
   @Test
     public void testJsonToBinarySchemaFile() throws Exception {
     jsonToBinary(JSON, AVRO, "--schema-file", schemaFile());

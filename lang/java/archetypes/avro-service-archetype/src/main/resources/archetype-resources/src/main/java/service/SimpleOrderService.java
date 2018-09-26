@@ -33,6 +33,14 @@ public class SimpleOrderService implements OrderProcessingService {
 
   private Logger log = LoggerFactory.getLogger(SimpleOrderService.class);
 
+  /**
+   * Submit order confirmation.
+   *
+   * @param order the order
+   * @return the confirmation
+   * @throws AvroRemoteException the avro remote exception
+   * @throws OrderFailure        the order failure
+   */
   @Override
   public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {
     log.info("Received order for '{}' items from customer with id '{}'",

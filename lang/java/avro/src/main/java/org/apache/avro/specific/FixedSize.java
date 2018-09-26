@@ -31,7 +31,10 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Documented
 public @interface FixedSize {
-  /** The declared size of instances of classes with this annotation. */
+  /**
+   * The declared size of instances of classes with this annotation.
+   * @return The size of the fixed size field
+   */
   int value();
 }
 

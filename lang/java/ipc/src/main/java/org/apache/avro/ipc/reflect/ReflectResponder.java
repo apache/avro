@@ -30,24 +30,57 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
-/** {@link org.apache.avro.ipc.Responder} for existing interfaces.*/
+/**
+ * {@link org.apache.avro.ipc.Responder} for existing interfaces.
+ */
 public class ReflectResponder extends SpecificResponder {
+  /**
+   * Instantiates a new Reflect responder.
+   *
+   * @param iface the iface
+   * @param impl  the
+   */
   public ReflectResponder(Class iface, Object impl) {
     this(iface, impl, new ReflectData(impl.getClass().getClassLoader()));
   }
 
+  /**
+   * Instantiates a new Reflect responder.
+   *
+   * @param protocol the protocol
+   * @param impl     the
+   */
   public ReflectResponder(Protocol protocol, Object impl) {
     this(protocol, impl, new ReflectData(impl.getClass().getClassLoader()));
   }
 
+  /**
+   * Instantiates a new Reflect responder.
+   *
+   * @param iface the iface
+   * @param impl  the
+   * @param data  the data
+   */
   public ReflectResponder(Class iface, Object impl, ReflectData data) {
     this(data.getProtocol(iface), impl, data);
   }
 
+  /**
+   * Instantiates a new Reflect responder.
+   *
+   * @param protocol the protocol
+   * @param impl     the
+   * @param data     the data
+   */
   public ReflectResponder(Protocol protocol, Object impl, ReflectData data) {
     super(protocol, impl, data);
   }
 
+  /**
+   * Gets reflect data.
+   *
+   * @return the reflect data
+   */
   public ReflectData getReflectData() { return (ReflectData)getSpecificData(); }
 
   @Override

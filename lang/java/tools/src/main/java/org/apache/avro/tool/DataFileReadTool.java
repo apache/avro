@@ -34,7 +34,9 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
 
-/** Reads a data file and dumps to JSON */
+/**
+ * Reads a data file and dumps to JSON
+ */
 public class DataFileReadTool implements Tool {
 
   @Override

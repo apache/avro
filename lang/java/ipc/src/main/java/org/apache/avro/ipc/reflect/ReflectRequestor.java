@@ -31,31 +31,68 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 
-/** A {@link org.apache.avro.ipc.Requestor} for existing interfaces. */
+/**
+ * A {@link org.apache.avro.ipc.Requestor} for existing interfaces.
+ */
 public class ReflectRequestor extends SpecificRequestor {
 
+  /**
+   * Instantiates a new Reflect requestor.
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @throws IOException the io exception
+   */
   public ReflectRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
     this(iface, transceiver, new ReflectData(iface.getClassLoader()));
   }
 
+  /**
+   * Instantiates a new Reflect requestor.
+   *
+   * @param protocol    the protocol
+   * @param transceiver the transceiver
+   * @throws IOException the io exception
+   */
   protected ReflectRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
     this(protocol, transceiver, ReflectData.get());
   }
 
+  /**
+   * Instantiates a new Reflect requestor.
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @param data        the data
+   * @throws IOException the io exception
+   */
   public ReflectRequestor(Class<?> iface, Transceiver transceiver,
                           ReflectData data)
     throws IOException {
     this(data.getProtocol(iface), transceiver, data);
   }
 
+  /**
+   * Instantiates a new Reflect requestor.
+   *
+   * @param protocol    the protocol
+   * @param transceiver the transceiver
+   * @param data        the data
+   * @throws IOException the io exception
+   */
   public ReflectRequestor(Protocol protocol, Transceiver transceiver,
                           ReflectData data)
     throws IOException {
     super(protocol, transceiver, data);
   }
 
+  /**
+   * Gets reflect data.
+   *
+   * @return the reflect data
+   */
   public ReflectData getReflectData() { return (ReflectData)getSpecificData(); }
 
   @Override
@@ -68,14 +105,29 @@ public class ReflectRequestor extends SpecificRequestor {
     return new ReflectDatumReader<>(writer, reader, getReflectData());
   }
 
-  /** Create a proxy instance whose methods invoke RPCs. */
+  /**
+   * Create a proxy instance whose methods invoke RPCs.  @param <T>  the type parameter
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @return the client
+   * @throws IOException the io exception
+   */
   public static <T> T getClient(Class<T> iface, Transceiver transceiver)
     throws IOException {
     return getClient(iface, transceiver,
                      new ReflectData(iface.getClassLoader()));
   }
 
-  /** Create a proxy instance whose methods invoke RPCs. */
+  /**
+   * Create a proxy instance whose methods invoke RPCs.  @param <T>  the type parameter
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @param reflectData the reflect data
+   * @return the client
+   * @throws IOException the io exception
+   */
   @SuppressWarnings("unchecked")
   public static <T> T getClient(Class<T> iface, Transceiver transceiver,
                                 ReflectData reflectData) throws IOException {
@@ -86,7 +138,14 @@ public class ReflectRequestor extends SpecificRequestor {
        new ReflectRequestor(protocol, transceiver, reflectData));
   }
 
-  /** Create a proxy instance whose methods invoke RPCs. */
+  /**
+   * Create a proxy instance whose methods invoke RPCs.  @param <T>  the type parameter
+   *
+   * @param iface the iface
+   * @param rreq  the rreq
+   * @return the client
+   * @throws IOException the io exception
+   */
   @SuppressWarnings("unchecked")
   public static <T> T getClient(Class<T> iface, ReflectRequestor rreq)
     throws IOException {

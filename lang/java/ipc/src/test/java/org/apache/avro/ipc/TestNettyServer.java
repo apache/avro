@@ -38,13 +38,22 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * The type Test netty server.
+ */
 public class TestNettyServer {
+  /**
+   * The Connect timeout millis.
+   */
   static final long CONNECT_TIMEOUT_MILLIS = 2000; // 2 sec
   private static Server server;
   private static Transceiver transceiver;
   private static Mail proxy;
   private static MailImpl mailService;
 
+  /**
+   * The type Mail.
+   */
   public static class MailImpl implements Mail {
 
     private CountDownLatch allMessages = new CountDownLatch(5);
@@ -68,11 +77,19 @@ public class TestNettyServer {
       assertEquals(0, allMessages.getCount());
     }
 
+    /**
+     * Reset.
+     */
     public void reset() {
       allMessages = new CountDownLatch(5);
     }
   }
 
+  /**
+   * Initialize connections.
+   *
+   * @throws Exception the exception
+   */
   @BeforeClass
   public static void initializeConnections()throws Exception {
     // start server
@@ -89,21 +106,44 @@ public class TestNettyServer {
     proxy = SpecificRequestor.getClient(Mail.class, transceiver);
   }
 
+  /**
+   * Initialize server server.
+   *
+   * @param responder the responder
+   * @return the server
+   */
   protected static Server initializeServer(Responder responder) {
     return new NettyServer(responder, new InetSocketAddress(0));
   }
 
+  /**
+   * Initialize transceiver transceiver.
+   *
+   * @param serverPort the server port
+   * @return the transceiver
+   * @throws IOException the io exception
+   */
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return new NettyTransceiver(new InetSocketAddress(
         serverPort), CONNECT_TIMEOUT_MILLIS);
   }
 
+  /**
+   * Tear down connections.
+   *
+   * @throws Exception the exception
+   */
   @AfterClass
   public static void tearDownConnections() throws Exception{
     transceiver.close();
     server.close();
   }
 
+  /**
+   * Test request response.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRequestResponse() throws Exception {
       for(int x = 0; x < 5; x++) {
@@ -117,6 +157,11 @@ public class TestNettyServer {
         result);
   }
 
+  /**
+   * Test oneway.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testOneway() throws Exception {
     for (int x = 0; x < 5; x++) {
@@ -126,6 +171,11 @@ public class TestNettyServer {
     mailService.assertAllMessagesReceived();
   }
 
+  /**
+   * Test mixture of requests.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testMixtureOfRequests() throws Exception {
     mailService.reset();
@@ -139,6 +189,11 @@ public class TestNettyServer {
 
   }
 
+  /**
+   * Test connections count.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testConnectionsCount() throws Exception {
     Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
@@ -169,7 +224,12 @@ public class TestNettyServer {
     return msg;
   }
 
-  // send a malformed request (HTTP) to the NettyServer port
+  /**
+   * Test bad request.
+   *
+   * @throws IOException the io exception
+   */
+// send a malformed request (HTTP) to the NettyServer port
   @Test
   public void testBadRequest() throws IOException {
     int port = server.getPort();

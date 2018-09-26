@@ -31,8 +31,14 @@ import org.apache.avro.ipc.stats.Histogram.Entry;
 import org.apache.avro.ipc.stats.Histogram.Segmenter;
 import org.junit.Test;
 
+/**
+ * The type Test histogram.
+ */
 public class TestHistogram {
 
+  /**
+   * Test basic operation.
+   */
   @Test
   public void testBasicOperation() {
     Segmenter<String, Integer> s = new Histogram.TreeMapSegmenter<>(
@@ -95,6 +101,9 @@ public class TestHistogram {
 
   }
 
+  /**
+   * Test bad value.
+   */
   @Test(expected=Histogram.SegmenterException.class)
   public void testBadValue() {
     Segmenter<String, Long> s = new Histogram.TreeMapSegmenter<>(
@@ -104,7 +113,9 @@ public class TestHistogram {
     h.add(-1L);
   }
 
-  /** Only has one bucket */
+  /**
+   * Only has one bucket
+   */
   static class SingleBucketSegmenter implements Segmenter<String, Float >{
     @Override
     public Iterator<String> getBuckets() {
@@ -127,6 +138,9 @@ public class TestHistogram {
 
   }
 
+  /**
+   * Test float histogram.
+   */
   @Test
   public void testFloatHistogram() {
     FloatHistogram<String> h = new FloatHistogram<>(new SingleBucketSegmenter());

@@ -29,10 +29,10 @@ import java.util.TreeMap;
  * Represents a histogram of values.  This class uses a {@link Segmenter}
  * to determine which bucket to place a given value into. Also stores the last
  * MAX_HISTORY_SIZE entries which have been added to this histogram, in order.
- *
+ * <p>
  * Note that Histogram, by itself, is not synchronized.
- * @param <B> Bucket type.  Often String, since buckets are typically
- * used for their toString() representation.
+ *
+ * @param <B> Bucket type.  Often String, since buckets are typically used for their toString() representation.
  * @param <T> Type of value
  */
 class Histogram<B, T> {
@@ -43,52 +43,88 @@ class Histogram<B, T> {
 
   private Segmenter<B, T> segmenter;
   private int[] counts;
+  /**
+   * The Total count.
+   */
   protected int totalCount;
   private LinkedList<T> recentAdditions;
 
   /**
    * Interface to determine which bucket to place a value in.
-   *
+   * <p>
    * Segmenters should be immutable, so many histograms can re-use
    * the same segmenter.
+   *
+   * @param <B> the type parameter
+   * @param <T> the type parameter
    */
   interface Segmenter<B, T> {
-    /** Number of buckets to use. */
+    /**
+     * Number of buckets to use.  @return the int
+     */
     int size();
+
     /**
      * Which bucket to place value in.
      *
+     * @param value the value
      * @return Index of bucket for the value.  At least 0 and less than size().
      * @throws SegmenterException if value does not fit in a bucket.
      */
     int segment(T value);
+
     /**
      * Returns an iterator of buckets. The order of iteration
      * is consistent with the segment numbers.
+     *
+     * @return the buckets
      */
     Iterator<B> getBuckets();
 
     /**
      * Returns a List of bucket boundaries. Useful for printing
      * segmenters.
+     *
+     * @return the boundary labels
      */
     List<String> getBoundaryLabels();
 
     /**
      * Returns the bucket labels as an array;
+     *
+     * @return the bucket labels
      */
     List<String> getBucketLabels();
   }
 
+  /**
+   * The type Segmenter exception.
+   */
   public static class SegmenterException extends RuntimeException {
+    /**
+     * Instantiates a new Segmenter exception.
+     *
+     * @param s the s
+     */
     public SegmenterException(String s) {
       super(s);
     }
   }
 
+  /**
+   * The type Tree map segmenter.
+   *
+   * @param <T> the type parameter
+   */
   public static class TreeMapSegmenter<T extends Comparable<T>>
       implements Segmenter<String, T> {
     private TreeMap<T, Integer> index = new TreeMap<>();
+
+    /**
+     * Instantiates a new Tree map segmenter.
+     *
+     * @param leftEndpoints the left endpoints
+     */
     public TreeMapSegmenter(SortedSet<T> leftEndpoints) {
       if (leftEndpoints.isEmpty()) {
         throw new IllegalArgumentException(
@@ -166,6 +202,8 @@ class Histogram<B, T> {
 
   /**
    * Creates a histogram using the specified segmenter.
+   *
+   * @param segmenter the segmenter
    */
   public Histogram(Segmenter<B, T> segmenter) {
     this.segmenter = segmenter;
@@ -173,7 +211,9 @@ class Histogram<B, T> {
     this.recentAdditions = new LinkedList<>();
   }
 
-  /** Tallies a value in the histogram. */
+  /**
+   * Tallies a value in the histogram.  @param value the value
+   */
   public void add(T value) {
     int i = segmenter.segment(value);
     counts[i]++;
@@ -186,6 +226,8 @@ class Histogram<B, T> {
 
   /**
    * Returns the underlying bucket values.
+   *
+   * @return the int [ ]
    */
   public int[] getHistogram() {
     return counts;
@@ -193,6 +235,8 @@ class Histogram<B, T> {
 
   /**
    * Returns the underlying segmenter used for this histogram.
+   *
+   * @return the segmenter
    */
   public Segmenter<B, T> getSegmenter() {
     return this.segmenter;
@@ -201,12 +245,16 @@ class Histogram<B, T> {
   /**
    * Returns values recently added to this histogram. These are in reverse
    * order (most recent first).
+   *
+   * @return the recent additions
    */
   public List<T> getRecentAdditions() {
     return this.recentAdditions;
   }
 
-  /** Returns the total count of entries. */
+  /**
+   * Returns the total count of entries.  @return the count
+   */
   public int getCount() {
     return totalCount;
   }
@@ -226,17 +274,41 @@ class Histogram<B, T> {
     return sb.toString();
   }
 
+  /**
+   * The type Entry.
+   *
+   * @param <B> the type parameter
+   */
   static class Entry<B> {
+    /**
+     * Instantiates a new Entry.
+     *
+     * @param bucket the bucket
+     * @param count  the count
+     */
     public Entry(B bucket, int count) {
       this.bucket = bucket;
       this.count = count;
     }
+
+    /**
+     * The Bucket.
+     */
     B bucket;
+    /**
+     * The Count.
+     */
     int count;
   }
 
   private class EntryIterator implements Iterable<Entry<B>>, Iterator<Entry<B>> {
+    /**
+     * The .
+     */
     int i = 0;
+    /**
+     * The Bucket name iterator.
+     */
     Iterator<B> bucketNameIterator = segmenter.getBuckets();
 
     @Override
@@ -261,6 +333,11 @@ class Histogram<B, T> {
 
   }
 
+  /**
+   * Entries iterable.
+   *
+   * @return the iterable
+   */
   public Iterable<Entry<B>> entries() {
     return new EntryIterator();
   }

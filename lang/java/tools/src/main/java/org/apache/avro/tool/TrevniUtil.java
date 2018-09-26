@@ -35,9 +35,18 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-/** Static utility methods for tools. */
+/**
+ * Static utility methods for tools.
+ */
 class TrevniUtil {
 
+  /**
+   * Input input.
+   *
+   * @param filename the filename
+   * @return the input
+   * @throws IOException the io exception
+   */
   static Input input(String filename) throws IOException {
     if (filename.startsWith("hdfs://")) {
       return new HadoopInput(new Path(filename), new Configuration());
@@ -49,7 +58,11 @@ class TrevniUtil {
   /**
    * Returns stdin if filename is "-", else opens the local or HDFS file
    * and returns an InputStream for it.
-   * @throws IOException
+   *
+   * @param filename the filename
+   * @param stdin    the stdin
+   * @return the input stream
+   * @throws IOException the io exception
    */
   static InputStream input(String filename, InputStream stdin)
     throws IOException {
@@ -66,7 +79,11 @@ class TrevniUtil {
   /**
    * Returns stdout if filename is "-", else opens the local or HDFS file
    * and returns an OutputStream for it.
-   * @throws IOException
+   *
+   * @param filename the filename
+   * @param stdout   the stdout
+   * @return the output stream
+   * @throws IOException the io exception
    */
   static OutputStream output(String filename, OutputStream stdout)
     throws IOException {

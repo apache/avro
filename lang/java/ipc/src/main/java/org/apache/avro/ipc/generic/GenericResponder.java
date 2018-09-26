@@ -32,26 +32,57 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.ipc.Responder;
 
-/** {@link Responder} implementation for generic Java data. */
+/**
+ * {@link Responder} implementation for generic Java data.
+ */
 public abstract class GenericResponder extends Responder {
   private GenericData data;
 
+  /**
+   * Instantiates a new Generic responder.
+   *
+   * @param local the local
+   */
   public GenericResponder(Protocol local) {
     this(local, GenericData.get());
 
   }
 
+  /**
+   * Instantiates a new Generic responder.
+   *
+   * @param local the local
+   * @param data  the data
+   */
   public GenericResponder(Protocol local, GenericData data) {
     super(local);
     this.data = data;
   }
 
+  /**
+   * Gets generic data.
+   *
+   * @return the generic data
+   */
   public GenericData getGenericData() { return data; }
 
+  /**
+   * Gets datum writer.
+   *
+   * @param schema the schema
+   * @return the datum writer
+   */
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
     return new GenericDatumWriter<>(schema, data);
   }
 
+  /**
+   * Gets datum reader.
+   *
+   * @param actual   the actual
+   * @param expected the expected
+   * @return the datum reader
+   */
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
     return new GenericDatumReader<>(actual, expected, data);
   }

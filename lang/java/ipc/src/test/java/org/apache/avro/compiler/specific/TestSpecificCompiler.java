@@ -53,7 +53,13 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.compiler.specific.SpecificCompiler.OutputFile;
 import org.junit.Test;
 
+/**
+ * The type Test specific compiler.
+ */
 public class TestSpecificCompiler {
+  /**
+   * The Protocol.
+   */
   static final String PROTOCOL = "" +
         "{ \"protocol\": \"default\",\n" +
         "  \"types\":\n" +
@@ -72,11 +78,17 @@ public class TestSpecificCompiler {
         "   }\n" +
         "}\n";
 
+  /**
+   * Test esc.
+   */
   @Test
   public void testEsc() {
     assertEquals("\\\"", SpecificCompiler.javaEscape("\""));
   }
 
+  /**
+   * Test make path.
+   */
   @Test
   public void testMakePath() {
     SpecificCompiler compiler = new SpecificCompiler();
@@ -84,11 +96,19 @@ public class TestSpecificCompiler {
     assertEquals("baz.java", compiler.makePath("baz", ""));
   }
 
+  /**
+   * Test primitive schema generates nothing.
+   */
   @Test
   public void testPrimitiveSchemaGeneratesNothing() {
     assertEquals(0, new SpecificCompiler(Schema.parse("\"double\"")).compile().size());
   }
 
+  /**
+   * Test simple enum schema.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testSimpleEnumSchema() throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(Schema.parse(TestSchema.BASIC_ENUM_SCHEMA)).compile();
@@ -99,12 +119,20 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(outputs);
   }
 
+  /**
+   * Test mangle if reserved.
+   */
   @Test
   public void testMangleIfReserved() {
     assertEquals("foo", SpecificCompiler.mangle("foo"));
     assertEquals("goto$", SpecificCompiler.mangle("goto"));
   }
 
+  /**
+   * Test mangling for protocols.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testManglingForProtocols() throws IOException {
     String protocolDef = PROTOCOL;
@@ -135,6 +163,11 @@ public class TestSpecificCompiler {
       "                {\"name\": \"short\", \"type\": \"volatile\" } ] }";
 
 
+  /**
+   * Test mangling for records.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testManglingForRecords() throws IOException {
     Collection<OutputFile> c =
@@ -149,6 +182,11 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(c);
   }
 
+  /**
+   * Test mangling for enums.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testManglingForEnums() throws IOException {
     String enumSchema = "" +
@@ -164,6 +202,11 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(c);
   }
 
+  /**
+   * Test schema split.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testSchemaSplit() throws IOException {
     SpecificCompiler compiler = new SpecificCompiler(Schema.parse(SCHEMA));
@@ -172,6 +215,11 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(files);
   }
 
+  /**
+   * Test protocol split.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testProtocolSplit() throws IOException {
     SpecificCompiler compiler = new SpecificCompiler(Protocol.parse(PROTOCOL));
@@ -180,6 +228,9 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(files);
   }
 
+  /**
+   * Test schema with docs.
+   */
   @Test
   public void testSchemaWithDocs() {
     Collection<OutputFile> outputs = new SpecificCompiler(
@@ -208,6 +259,11 @@ public class TestSpecificCompiler {
     assertEquals(3, count);
   }
 
+  /**
+   * Test protocol with docs.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testProtocolWithDocs() throws IOException {
     Protocol protocol = TestProtocolParsing.getSimpleProtocol();
@@ -224,6 +280,12 @@ public class TestSpecificCompiler {
     assertEquals("Missed generated protocol!", 1, count);
   }
 
+  /**
+   * Test need compile.
+   *
+   * @throws IOException          the io exception
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void testNeedCompile() throws IOException, InterruptedException {
     String schema = "" +
@@ -272,6 +334,9 @@ public class TestSpecificCompiler {
     return record;
   }
 
+  /**
+   * Generate get method.
+   */
   @Test
   public void generateGetMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
@@ -368,6 +433,9 @@ public class TestSpecificCompiler {
         createRecord("test", false, schema, Schema$), Schema$));
   }
 
+  /**
+   * Generate set method.
+   */
   @Test
   public void generateSetMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
@@ -464,6 +532,9 @@ public class TestSpecificCompiler {
         createRecord("test", false, schema, Schema$), Schema$));
   }
 
+  /**
+   * Generate has method.
+   */
   @Test
   public void generateHasMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
@@ -560,6 +631,9 @@ public class TestSpecificCompiler {
         createRecord("test", false, schema, Schema$), Schema$));
   }
 
+  /**
+   * Generate clear method.
+   */
   @Test
   public void generateClearMethod() {
     Field height = new Field("height", Schema.create(Type.INT), null, null);
@@ -656,6 +730,11 @@ public class TestSpecificCompiler {
         createRecord("test", false, schema, Schema$), Schema$));
   }
 
+  /**
+   * Test annotations.
+   *
+   * @throws Exception the exception
+   */
   @Test public void testAnnotations() throws Exception {
     // an interface generated for protocol
     assertNotNull(Simple.class.getAnnotation(TestAnnotation.class));
@@ -674,6 +753,11 @@ public class TestSpecificCompiler {
                   .getAnnotation(TestAnnotation.class));
   }
 
+  /**
+   * Test aliases.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testAliases() throws IOException {
     Schema s = Schema.parse
@@ -693,6 +777,10 @@ public class TestSpecificCompiler {
    * Checks that a schema passes through the SpecificCompiler, and,
    * optionally, uses the system's Java compiler to check
    * that the generated code is valid.
+   *
+   * @param schema          the schema
+   * @param useJavaCompiler the use java compiler
+   * @throws IOException the io exception
    */
   public static void
       assertCompiles(Schema schema, boolean useJavaCompiler)
@@ -708,6 +796,10 @@ public class TestSpecificCompiler {
    * Checks that a protocol passes through the SpecificCompiler,
    * and, optionally, uses the system's Java compiler to check
    * that the generated code is valid.
+   *
+   * @param protocol        the protocol
+   * @param useJavaCompiler the use java compiler
+   * @throws IOException the io exception
    */
   public static void assertCompiles(Protocol protocol, boolean useJavaCompiler)
   throws IOException {
@@ -718,7 +810,11 @@ public class TestSpecificCompiler {
     }
   }
 
-  /** Uses the system's java compiler to actually compile the generated code. */
+  /**
+   * Uses the system's java compiler to actually compile the generated code.  @param outputs the outputs
+   *
+   * @throws IOException the io exception
+   */
   static void assertCompilesWithJavaCompiler(Collection<OutputFile> outputs)
   throws IOException {
     if (outputs.isEmpty()) {

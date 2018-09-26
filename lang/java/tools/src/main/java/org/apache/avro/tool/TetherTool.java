@@ -40,8 +40,14 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 
 
+/**
+ * The type Tether tool.
+ */
 @SuppressWarnings("deprecation")
 public class TetherTool implements Tool {
+  /**
+   * The Job.
+   */
   public TetherJob job;
 
   @Override

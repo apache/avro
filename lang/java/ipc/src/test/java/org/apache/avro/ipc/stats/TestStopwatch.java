@@ -23,7 +23,13 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+/**
+ * The type Test stopwatch.
+ */
 public class TestStopwatch {
+  /**
+   * Test normal.
+   */
   @Test
   public void testNormal() {
     FakeTicks f = new FakeTicks();
@@ -38,6 +44,9 @@ public class TestStopwatch {
     assertEquals(60, s.elapsedNanos());
   }
 
+  /**
+   * Test not started 1.
+   */
   @Test(expected=IllegalStateException.class)
   public void testNotStarted1() {
     FakeTicks f = new FakeTicks();
@@ -45,6 +54,9 @@ public class TestStopwatch {
     s.elapsedNanos();
   }
 
+  /**
+   * Test not started 2.
+   */
   @Test(expected=IllegalStateException.class)
   public void testNotStarted2() {
     FakeTicks f = new FakeTicks();
@@ -52,6 +64,9 @@ public class TestStopwatch {
     s.stop();
   }
 
+  /**
+   * Test twice started.
+   */
   @Test(expected=IllegalStateException.class)
   public void testTwiceStarted() {
     FakeTicks f = new FakeTicks();
@@ -60,6 +75,9 @@ public class TestStopwatch {
     s.start();
   }
 
+  /**
+   * Test twice stopped.
+   */
   @Test(expected=IllegalStateException.class)
   public void testTwiceStopped() {
     FakeTicks f = new FakeTicks();
@@ -69,6 +87,9 @@ public class TestStopwatch {
     s.stop();
   }
 
+  /**
+   * Test system stopwatch.
+   */
   @Test
   public void testSystemStopwatch() {
     Stopwatch s = new Stopwatch(Stopwatch.SYSTEM_TICKS);

@@ -39,10 +39,25 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.ssl.SslHandler;
 
+/**
+ * The type Test netty server with ssl.
+ */
 public class TestNettyServerWithSSL extends TestNettyServer{
+  /**
+   * The constant TEST_CERTIFICATE.
+   */
   public static final String TEST_CERTIFICATE = "servercert.p12";
+  /**
+   * The constant TEST_CERTIFICATE_PASSWORD.
+   */
   public static final String TEST_CERTIFICATE_PASSWORD = "s3cret";
 
+  /**
+   * Initialize server server.
+   *
+   * @param responder the responder
+   * @return the server
+   */
   protected static Server initializeServer(Responder responder) {
     ChannelFactory channelFactory = new NioServerSocketChannelFactory(
         Executors.newCachedThreadPool(),
@@ -53,6 +68,13 @@ public class TestNettyServerWithSSL extends TestNettyServer{
         null);
   }
 
+  /**
+   * Initialize transceiver transceiver.
+   *
+   * @param serverPort the server port
+   * @return the transceiver
+   * @throws IOException the io exception
+   */
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return  new NettyTransceiver(new InetSocketAddress(serverPort),
         new SSLChannelFactory(),
@@ -64,6 +86,9 @@ public class TestNettyServerWithSSL extends TestNettyServer{
    * Factory of SSL-enabled client channels
    */
   private static class SSLChannelFactory extends NioClientSocketChannelFactory {
+    /**
+     * Instantiates a new Ssl channel factory.
+     */
     public SSLChannelFactory() {
       super(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
     }

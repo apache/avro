@@ -26,10 +26,18 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.avro.Protocol;
 
-/** Base transport class used by {@link Requestor}. */
+/**
+ * Base transport class used by {@link Requestor}.
+ */
 public abstract class Transceiver implements Closeable {
   private final ReentrantLock channelLock = new ReentrantLock();
 
+  /**
+   * Gets remote name.
+   *
+   * @return the remote name
+   * @throws IOException the io exception
+   */
   public abstract String getRemoteName() throws IOException;
 
   /**
@@ -48,9 +56,14 @@ public abstract class Transceiver implements Closeable {
     }
   }
 
-  /** Called by {@link Requestor#request(String,Object)} for two-way messages.
+  /**
+   * Called by {@link Requestor#request(String, Object)} for two-way messages.
    * By default calls {@link #writeBuffers(List)} followed by
-   * {@link #readBuffers()}. */
+   * {@link #readBuffers()}.  @param request the request
+   *
+   * @return the list
+   * @throws IOException the io exception
+   */
   public List<ByteBuffer> transceive(List<ByteBuffer> request)
     throws IOException {
     lockChannel();
@@ -63,7 +76,11 @@ public abstract class Transceiver implements Closeable {
   }
 
   /**
-   * Called by {@link Requestor#request(String,Object,Callback)} for two-way messages using callbacks.
+   * Called by {@link Requestor#request(String, Object, Callback)} for two-way messages using callbacks.
+   *
+   * @param request  the request
+   * @param callback the callback
+   * @throws IOException the io exception
    */
   public void transceive(List<ByteBuffer> request, Callback<List<ByteBuffer>> callback)
     throws IOException {
@@ -76,30 +93,44 @@ public abstract class Transceiver implements Closeable {
     }
   }
 
-  /** Called by the default definition of {@link #transceive(List)}.*/
+  /**
+   * Called by the default definition of {@link #transceive(List)}. @return the list
+   *
+   * @throws IOException the io exception
+   */
   public abstract List<ByteBuffer> readBuffers() throws IOException;
 
-  /** Called by {@link Requestor#request(String,Object)} for one-way messages.*/
+  /**
+   * Called by {@link Requestor#request(String, Object)} for one-way messages. @param buffers the buffers
+   *
+   * @throws IOException the io exception
+   */
   public abstract void writeBuffers(List<ByteBuffer> buffers)
     throws IOException;
 
-  /** True if a handshake has been completed for this connection.  Used to
+  /**
+   * True if a handshake has been completed for this connection.  Used to
    * determine whether a handshake need be completed prior to a one-way
    * message.  Requests and responses are always prefixed by handshakes, but
    * one-way messages.  If the first request sent over a connection is one-way,
    * then a handshake-only response is returned.  Subsequent one-way messages
    * over the connection will have no response data sent.  Returns false by
-   * default. */
+   * default.  @return the boolean
+   */
   public boolean isConnected() { return false; }
 
-  /** Called with the remote protocol when a handshake has been completed.
+  /**
+   * Called with the remote protocol when a handshake has been completed.
    * After this has been called and while a connection is maintained, {@link
-   * #isConnected()} should return true and #getRemote() should return this
-   * protocol.  Does nothing by default. */
+   * #isConnected()}* should return true and #getRemote() should return this
+   * protocol.  Does nothing by default.  @param protocol the protocol
+   */
   public void setRemote(Protocol protocol) {}
 
-  /** Returns the protocol passed to {@link #setRemote(Protocol)}.  Throws
-   * IllegalStateException by default. */
+  /**
+   * Returns the protocol passed to {@link #setRemote(Protocol)}.  Throws
+   * IllegalStateException by default.  @return the remote
+   */
   public Protocol getRemote() {
     throw new IllegalStateException("Not connected.");
   }

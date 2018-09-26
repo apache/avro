@@ -31,10 +31,10 @@ import org.apache.avro.util.Utf8;
 /**
  * An implementation of {@link Encoder} that wraps another Encoder and
  * ensures that the sequence of operations conforms to the provided schema.
- * <p/>
+ *
  * Use {@link EncoderFactory#validatingEncoder(Schema, Encoder)} to construct
  * and configure.
- * <p/>
+ *
  * ValidatingEncoder is not thread-safe.
  * @see Encoder
  * @see EncoderFactory

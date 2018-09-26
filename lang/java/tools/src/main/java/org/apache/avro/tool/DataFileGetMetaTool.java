@@ -29,7 +29,9 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.mapred.FsInput;
 
-/** Reads a data file to get its metadata. */
+/**
+ * Reads a data file to get its metadata.
+ */
 public class DataFileGetMetaTool implements Tool {
 
   @Override
@@ -82,7 +84,13 @@ public class DataFileGetMetaTool implements Tool {
     return 0;
   }
 
-  // escape TAB, NL and CR in keys, so that output can be reliably parsed
+  /**
+   * Escape key string.
+   *
+   * @param key the key
+   * @return the string
+   */
+// escape TAB, NL and CR in keys, so that output can be reliably parsed
   static String escapeKey(String key) {
     key = key.replace("\\","\\\\");               // escape backslashes first
     key = key.replace("\t","\\t");                // TAB

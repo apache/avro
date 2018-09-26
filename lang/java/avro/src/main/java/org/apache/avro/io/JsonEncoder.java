@@ -35,12 +35,11 @@ import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
 /** An {@link Encoder} for Avro's JSON data encoding.
- * </p>
  * Construct using {@link EncoderFactory}.
- * </p>
+ *
  * JsonEncoder buffers output, and data may not appear on the output
  * until {@link Encoder#flush()} is called.
- * </p>
+ *
  * JsonEncoder is not thread-safe.
  * */
 public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler {
@@ -102,9 +101,9 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   /**
    * Reconfigures this JsonEncoder to use the output stream provided.
-   * <p/>
+   *
    * If the OutputStream provided is null, a NullPointerException is thrown.
-   * <p/>
+   *
    * Otherwise, this JsonEncoder will flush its current output and then
    * reconfigure its output to use a default UTF8 JsonGenerator that writes
    * to the provided OutputStream.
@@ -121,9 +120,9 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
 
   /**
    * Reconfigures this JsonEncoder to output to the JsonGenerator provided.
-   * <p/>
+   *
    * If the JsonGenerator provided is null, a NullPointerException is thrown.
-   * <p/>
+   *
    * Otherwise, this JsonEncoder will flush its current output and then
    * reconfigure its output to use the provided JsonGenerator.
    *

@@ -25,15 +25,23 @@ import java.util.TreeMap;
 
 import java.io.InputStream;
 
-/** Command-line driver.*/
+/**
+ * Command-line driver.
+ */
 public class Main {
   /**
    * Available tools, initialized in constructor.
    */
   final Map<String, Tool> tools;
 
+  /**
+   * The Max len.
+   */
   int maxLen = 0;
 
+  /**
+   * Instantiates a new Main.
+   */
   Main() {
     tools = new TreeMap<>();
     for (Tool tool : new Tool[] {
@@ -72,6 +80,12 @@ public class Main {
     }
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws Exception the exception
+   */
   public static void main(String[] args) throws Exception {
     int rc = new Main().run(args);
     System.exit(rc);

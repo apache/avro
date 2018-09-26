@@ -21,10 +21,17 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-/** Implementation of IPC that remains in process. */
+/**
+ * Implementation of IPC that remains in process.
+ */
 public class LocalTransceiver extends Transceiver {
   private Responder responder;
 
+  /**
+   * Instantiates a new Local transceiver.
+   *
+   * @param responder the responder
+   */
   public LocalTransceiver(Responder responder) {
     this.responder = responder;
   }

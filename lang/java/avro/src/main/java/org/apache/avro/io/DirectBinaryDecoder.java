@@ -27,7 +27,7 @@ import org.apache.avro.util.ByteBufferInputStream;
 
 /**
  *  A non-buffering version of {@link BinaryDecoder}.
- *  <p/>
+ *
  *  This implementation will not read-ahead from the provided InputStream
  *  beyond the minimum required to service the API requests.
  *

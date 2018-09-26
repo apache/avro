@@ -70,15 +70,15 @@ import org.codehaus.jackson.node.TextNode;
  *     .name("meta").type().nullable().map().values().bytesType().noDefault()
  *   .endRecord();
  * </pre>
- * <p/>
+ * <br>
  *
- * <h5>Usage Guide</h5>
+ * <h1>Usage Guide</h1>
  * SchemaBuilder chains together many smaller builders and maintains nested
  * context in order to mimic the Avro Schema specification. Every Avro type in
  * JSON has required and optional JSON properties, as well as user-defined
  * properties.
- * <p/>
- * <h6>Selecting and Building an Avro Type</h6>
+ * <br>
+ * <h2>Selecting and Building an Avro Type</h2>
  * The API analogy for the right hand side of the Avro Schema JSON
  * <pre>
  * "type":
@@ -86,8 +86,8 @@ import org.codehaus.jackson.node.TextNode;
  * is a {@link TypeBuilder}, {@link FieldTypeBuilder}, or
  * {@link UnionFieldTypeBuilder}, depending on the context. These types all
  * share a similar API for selecting and building types.
- * <p/>
- * <h5>Primitive Types</h5>
+ * <br>
+ * <h1>Primitive Types</h1>
  * All Avro primitive types are trivial to configure. A primitive type in
  * Avro JSON can be declared two ways, one that supports custom properties
  * and one that does not:
@@ -106,21 +106,25 @@ import org.codehaus.jackson.node.TextNode;
  * Every primitive type has a shortcut to create the trivial type, and
  * a builder when custom properties are required.  The first line above is
  * a shortcut for the second, analogous to the JSON case.
- * <h6>Named Types</h6>
+ * <h2>Named Types</h2>
  * Avro named types have names, namespace, aliases, and doc.  In this API
  * these share a common parent, {@link NamespacedBuilder}.
  * The builders for named types require a name to be constructed, and optional
  * configuration via:
+ * <ul>
  * <li>{@link NamespacedBuilder#doc()}</li>
  * <li>{@link NamespacedBuilder#namespace(String)}</li>
  * <li>{@link NamespacedBuilder#aliases(String...)}</li>
  * <li>{@link PropBuilder#prop(String, String)}</li>
- * <p/>
+ * </ul>
+ * <br>
  * Each named type completes configuration of the optional properties
  * with its own method:
+ * <ul>
  * <li>{@link FixedBuilder#size(int)}</li>
  * <li>{@link EnumBuilder#symbols(String...)}</li>
  * <li>{@link RecordBuilder#fields()}</li>
+ * </ul>
  * Example use of a named type with all optional parameters:
  * <pre>
  * .enumeration("Suit").namespace("org.apache.test")
@@ -139,31 +143,31 @@ import org.codehaus.jackson.node.TextNode;
  *   "symbols":["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
  * }
  * </pre>
- * <h6>Nested Types</h6>
+ * <h2>Nested Types</h2>
  * The Avro nested types, map and array, can have custom properties like
  * all avro types, are not named, and must specify a nested type.
  * After configuration of optional properties, an array or map
  * builds or selects its nested type with {@link ArrayBuilder#items()}
  * and {@link MapBuilder#values()}, respectively.
  *
- * <h6>Fields</h6>
+ * <h2>Fields</h2>
  * {@link RecordBuilder#fields()} returns a {@link FieldAssembler} for
  * defining the fields of the record and completing it.
  * Each field must have a name, specified via {@link FieldAssembler#name(String)},
  * which returns a {@link FieldBuilder} for defining aliases, custom properties,
  * and documentation of the field.  After configuring these optional values for
  * a field, the type is selected or built with {@link FieldBuilder#type()}.
- * <p/>
+ * <br>
  * Fields have default values that must be specified to complete the field.
  * {@link FieldDefault#noDefault()} is available for all field types, and
  * a specific method is available for each type to use a default, for example
  * {@link IntDefault#intDefault(int)}
- * <p/>
+ * <br>
  * There are field shortcut methods on {@link FieldAssembler} for primitive types.
  * These shortcuts create required, optional, and nullable fields, but do not
  * support field aliases, doc, or custom properties.
  *
- * <h6>Unions</h6>
+ * <h2>Unions</h2>
  * Union types are built via {@link TypeBuilder#unionOf()} or
  * {@link FieldTypeBuilder#unionOf()} in the context of type selection.
  * This chains together multiple types, in union order.  For example:
@@ -183,7 +187,7 @@ import org.codehaus.jackson.node.TextNode;
  * </pre>
  * In a field context, the first type of a union defines what default type
  * is allowed.
- * </p>
+ * <br>
  * Unions have two shortcuts for common cases.  nullable()
  * creates a union of a type and null.  In a field type context, optional()
  * is available and creates a union of null and a type, with a null default.
@@ -198,7 +202,7 @@ import org.codehaus.jackson.node.TextNode;
  *   .name("f").type().optional().longType()
  * </pre>
  *
- * <h6>Explicit Types and Types by Name</h6>
+ * <h2>Explicit Types and Types by Name</h2>
  * Types can also be specified explicitly by passing in a Schema, or by name:
  * <pre>
  *   .type(Schema.create(Schema.Type.INT)) // explicitly specified
@@ -210,7 +214,7 @@ import org.codehaus.jackson.node.TextNode;
  * propagate as a default to child fields, nested types, or later defined types
  * in a union.  To specify a name that has no namespace and ignore the inherited
  * namespace, set the namespace to "".
- * <p/>
+ * <br>
  * {@link SchemaBuilder#builder(String)} returns a type builder with a default
  * namespace.  {@link SchemaBuilder#builder()} returns a type builder with no
  * default namespace.
@@ -221,7 +225,7 @@ public class SchemaBuilder {
   }
 
   /**
-   * Create a builder for Avro schemas.
+   * @return A builder for Avro Schemas
    */
   public static TypeBuilder<Schema> builder() {
     return new TypeBuilder<>(new SchemaCompletion(), new NameContext());
@@ -230,6 +234,9 @@ public class SchemaBuilder {
   /**
    * Create a builder for Avro schemas with a default namespace. Types created
    * without namespaces will inherit the namespace provided.
+   *
+   * @param namespace The namespace of the Schema
+   * @return A new TypeBuilder
    */
   public static TypeBuilder<Schema> builder(String namespace) {
     return new TypeBuilder<>(new SchemaCompletion(),
@@ -243,6 +250,7 @@ public class SchemaBuilder {
    *   builder().record(name);
    * </pre>
    * @param name the record name
+   * @return A new RecordBuilder
    */
   public static RecordBuilder<Schema> record(String name) {
     return builder().record(name);
@@ -255,6 +263,7 @@ public class SchemaBuilder {
    *   builder().enumeration(name);
    * </pre>
    * @param name the enum name
+   * @return A new EnumBuilder
    */
   public static EnumBuilder<Schema> enumeration(String name) {
     return builder().enumeration(name);
@@ -267,6 +276,7 @@ public class SchemaBuilder {
    *   builder().fixed(name);
    * </pre>
    * @param name the fixed name
+   * @return A new FixedBuilder
    */
   public static FixedBuilder<Schema> fixed(String name) {
     return builder().fixed(name);
@@ -278,6 +288,7 @@ public class SchemaBuilder {
    * <pre>
    *   builder().array();
    * </pre>
+   * @return A new ArrayBuilder
    */
   public static ArrayBuilder<Schema> array() {
     return builder().array();
@@ -289,6 +300,7 @@ public class SchemaBuilder {
    * <pre>
    *   builder().map();
    * </pre>
+   * @return A new MapBuilder
    */
   public static MapBuilder<Schema> map() {
     return builder().map();
@@ -300,6 +312,7 @@ public class SchemaBuilder {
    * <pre>
    *   builder().unionOf();
    * </pre>
+   * @return A new BaseTypeBuilder
    */
   public static BaseTypeBuilder<UnionAccumulator<Schema>> unionOf() {
     return builder().unionOf();
@@ -318,6 +331,7 @@ public class SchemaBuilder {
    * <pre>
    *   unionOf().intType().and().nullType().endUnion();
    * </pre>
+   * @return A new BaseTypeBuilder
    */
   public static BaseTypeBuilder<Schema> nullable() {
     return builder().nullable();
@@ -327,6 +341,7 @@ public class SchemaBuilder {
   /**
    * An abstract builder for all Avro types.  All Avro types
    * can have arbitrary string key-value properties.
+   *
    */
   public static abstract class PropBuilder<S extends PropBuilder<S>> {
     private Map<String, JsonNode> props = null;
@@ -335,6 +350,10 @@ public class SchemaBuilder {
 
     /**
      * Set name-value pair properties for this type or field.
+     *
+     * @param name The name of the property
+     * @param val the value of the property
+     * @return the contructed property
      */
     public final S prop(String name, String val) {
       return prop(name, TextNode.valueOf(val));
@@ -342,6 +361,10 @@ public class SchemaBuilder {
 
     /**
      * Set name-value pair properties for this type or field.
+     *
+     * @param name The name of the property
+     * @param value the value of the property
+     * @return the contructed property
      */
     public final S prop(String name, Object value) {
       return prop(name, JacksonUtils.toJsonNode(value));
@@ -368,8 +391,12 @@ public class SchemaBuilder {
       }
       return jsonable;
     }
-    /** a self-type for chaining builder subclasses.  Concrete subclasses
-     * must return 'this' **/
+
+    /**
+     * A self-type for chaining builder subclasses. Concrete subclasses must return 'this'
+     *
+     * @return itself
+     */
     protected abstract S self();
   }
 
@@ -377,7 +404,7 @@ public class SchemaBuilder {
    * An abstract type that provides builder methods for configuring the name,
    * doc, and aliases of all Avro types that have names (fields, Fixed, Record,
    * and Enum).
-   * <p/>
+   * <br>
    * All Avro named types and fields have 'doc', 'aliases', and 'name'
    * components. 'name' is required, and provided to this builder. 'doc' and
    * 'aliases' are optional.
@@ -395,13 +422,23 @@ public class SchemaBuilder {
       this.name = name;
     }
 
-    /** configure this type's optional documentation string **/
+    /**
+     * Configure this type's optional documentation string
+     *
+     * @param doc The docstring
+     * @return {@link S}
+     */
     public final S doc(String doc) {
       this.doc = doc;
       return self();
     }
 
-    /** configure this type's optional name aliases **/
+    /**
+     * Configure this type's optional name aliases
+     *
+     * @param aliases Set one or more aliasses
+     * @return {@link S}
+     */
     public final S aliases(String... aliases) {
       this.aliases = aliases;
       return self();
@@ -456,10 +493,13 @@ public class SchemaBuilder {
 
     /**
      * Set the namespace of this type. To clear the namespace, set empty string.
-     * <p/>
+     * <br>
      * When the namespace is null or unset, the namespace of the type defaults
      * to the namespace of the enclosing context.
-     **/
+     *
+     * @param namespace The namespace of the schema
+     * @return {@link S}
+     */
     public final S namespace(String namespace) {
       this.namespace = namespace;
       return self();
@@ -511,7 +551,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro boolean type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endBoolean()}
-   **/
+   */
   public static final class BooleanBuilder<R> extends
       PrimitiveBuilder<R, BooleanBuilder<R>> {
     private BooleanBuilder(Completion<R> context, NameContext names) {
@@ -528,7 +568,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endBoolean() {
       return super.end();
     }
@@ -537,7 +580,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro int type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endInt()}
-   **/
+   */
   public static final class IntBuilder<R> extends
       PrimitiveBuilder<R, IntBuilder<R>> {
     private IntBuilder(Completion<R> context, NameContext names) {
@@ -554,7 +597,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * Complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endInt() {
       return super.end();
     }
@@ -563,7 +609,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro long type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endLong()}
-   **/
+   */
   public static final class LongBuilder<R> extends
       PrimitiveBuilder<R, LongBuilder<R>> {
     private LongBuilder(Completion<R> context, NameContext names) {
@@ -580,7 +626,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * Complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endLong() {
       return super.end();
     }
@@ -589,7 +638,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro float type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endFloat()}
-   **/
+   */
   public static final class FloatBuilder<R> extends
       PrimitiveBuilder<R, FloatBuilder<R>> {
     private FloatBuilder(Completion<R> context, NameContext names) {
@@ -606,7 +655,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endFloat() {
       return super.end();
     }
@@ -615,7 +667,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro double type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endDouble()}
-   **/
+   */
   public static final class DoubleBuilder<R> extends
       PrimitiveBuilder<R, DoubleBuilder<R>> {
     private DoubleBuilder(Completion<R> context, NameContext names) {
@@ -632,7 +684,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * Complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endDouble() {
       return super.end();
     }
@@ -641,7 +696,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro string type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endString()}
-   **/
+   */
   public static final class StringBldr<R> extends
       PrimitiveBuilder<R, StringBldr<R>> {
     private StringBldr(Completion<R> context, NameContext names) {
@@ -658,7 +713,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endString() {
       return super.end();
     }
@@ -667,7 +725,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro bytes type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endBytes()}
-   **/
+   */
   public static final class BytesBuilder<R> extends
       PrimitiveBuilder<R, BytesBuilder<R>> {
     private BytesBuilder(Completion<R> context, NameContext names) {
@@ -684,7 +742,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * Complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endBytes() {
       return super.end();
     }
@@ -693,7 +754,7 @@ public class SchemaBuilder {
   /**
    * Builds an Avro null type with optional properties. Set properties with
    * {@link #prop(String, String)}, and finalize with {@link #endNull()}
-   **/
+   */
   public static final class NullBuilder<R> extends
       PrimitiveBuilder<R, NullBuilder<R>> {
     private NullBuilder(Completion<R> context, NameContext names) {
@@ -710,7 +771,10 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** complete building this type, return control to context **/
+    /**
+     * Complete building this type, return control to context
+     * @return {@link R}
+     */
     public R endNull() {
       return super.end();
     }
@@ -719,14 +783,14 @@ public class SchemaBuilder {
   /**
    * Builds an Avro Fixed type with optional properties, namespace, doc, and
    * aliases.
-   * <p/>
+   * <br>
    * Set properties with {@link #prop(String, String)}, namespace with
    * {@link #namespace(String)}, doc with {@link #doc(String)}, and aliases with
    * {@link #aliases(String[])}.
-   * <p/>
+   * <br>
    * The Fixed schema is finalized when its required size is set via
    * {@link #size(int)}.
-   **/
+   */
   public static final class FixedBuilder<R> extends
       NamespacedBuilder<R, FixedBuilder<R>> {
     private FixedBuilder(Completion<R> context, NameContext names, String name) {
@@ -743,7 +807,12 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** Configure this fixed type's size, and end its configuration. **/
+    /**
+     * Complete building this type, return control to context
+     *
+     * @param size The size of the {@link FixedBuilder}
+     * @return {@link R}
+     */
     public R size(int size) {
       Schema schema = Schema.createFixed(name(), super.doc(), space(), size);
       completeSchema(schema);
@@ -754,14 +823,14 @@ public class SchemaBuilder {
   /**
    * Builds an Avro Enum type with optional properties, namespace, doc, and
    * aliases.
-   * <p/>
+   * <br>
    * Set properties with {@link #prop(String, String)}, namespace with
    * {@link #namespace(String)}, doc with {@link #doc(String)}, and aliases with
    * {@link #aliases(String[])}.
-   * <p/>
+   * <br>
    * The Enum schema is finalized when its required symbols are set via
    * {@link #symbols(String[])}.
-   **/
+   */
   public static final class EnumBuilder<R> extends
       NamespacedBuilder<R, EnumBuilder<R>> {
     private EnumBuilder(Completion<R> context, NameContext names, String name) {
@@ -779,7 +848,12 @@ public class SchemaBuilder {
       return this;
     }
 
-    /** Configure this enum type's symbols, and end its configuration. Populates the default if it was set.**/
+    /**
+     * Configure this enum type's symbols, and end its configuration. Populates the default if it was set.
+     *
+     * @param symbols One or more symbols to construct the enum
+     * @return {@link R}
+     */
     public R symbols(String... symbols) {
       Schema schema = Schema.createEnum(name(), doc(), space(),
           Arrays.asList(symbols), this.enumDefault);
@@ -787,7 +861,11 @@ public class SchemaBuilder {
       return context().complete(schema);
     }
 
-    /** Set the default value of the enum. */
+    /**
+     * Set the default value of the enum.
+     * @param enumDefault The default symbol
+     * @return {@link R}
+     */
     public EnumBuilder<R> defaultSymbol(String enumDefault) {
       this.enumDefault = enumDefault;
       return self();
@@ -796,12 +874,12 @@ public class SchemaBuilder {
 
   /**
    * Builds an Avro Map type with optional properties.
-   * <p/>
+   * <br>
    * Set properties with {@link #prop(String, String)}.
-   * <p/>
+   * <br>
    * The Map schema's properties are finalized when {@link #values()} or
    * {@link #values(Schema)} is called.
-   **/
+   */
   public static final class MapBuilder<R> extends PropBuilder<MapBuilder<R>> {
     private final Completion<R> context;
     private final NameContext names;
@@ -825,7 +903,9 @@ public class SchemaBuilder {
      * Return a type builder for configuring the map's nested values schema.
      * This builder will return control to the map's enclosing context when
      * complete.
-     **/
+     *
+     * @return {@link TypeBuilder}
+     */
     public TypeBuilder<R> values() {
       return new TypeBuilder<>(new MapCompletion<>(this, context), names);
     }
@@ -833,7 +913,9 @@ public class SchemaBuilder {
     /**
      * Complete configuration of this map, setting the schema of the map values
      * to the schema provided. Returns control to the enclosing context.
-     **/
+     * @param valueSchema The schema to be set
+     * @return {@link R}
+     */
     public R values(Schema valueSchema) {
       return new MapCompletion<>(this, context).complete(valueSchema);
     }
@@ -841,12 +923,12 @@ public class SchemaBuilder {
 
   /**
    * Builds an Avro Array type with optional properties.
-   * <p/>
+   * <br>
    * Set properties with {@link #prop(String, String)}.
-   * <p/>
+   * <br>
    * The Array schema's properties are finalized when {@link #items()} or
    * {@link #items(Schema)} is called.
-   **/
+   */
   public static final class ArrayBuilder<R> extends
       PropBuilder<ArrayBuilder<R>> {
     private final Completion<R> context;
@@ -871,7 +953,9 @@ public class SchemaBuilder {
      * Return a type builder for configuring the array's nested items schema.
      * This builder will return control to the array's enclosing context when
      * complete.
-     **/
+     *
+     * @return The nested items of the schema
+     */
     public TypeBuilder<R> items() {
       return new TypeBuilder<>(new ArrayCompletion<>(this, context), names);
     }
@@ -879,7 +963,10 @@ public class SchemaBuilder {
     /**
      * Complete configuration of this array, setting the schema of the array
      * items to the schema provided. Returns control to the enclosing context.
-     **/
+     *
+     * @param itemsSchema Schema to complete the configuration
+     * @return The enclosing context control
+     */
     public R items(Schema itemsSchema) {
       return new ArrayCompletion<>(this, context).complete(itemsSchema);
     }
@@ -888,13 +975,12 @@ public class SchemaBuilder {
   /**
    * internal class for passing the naming context around. This allows for the
    * following:
-   * <li>Cache and re-use primitive schemas when they do not set
-   * properties.</li>
-   * <li>Provide a default namespace for nested contexts (as
-   * the JSON Schema spec does).</li>
-   * <li>Allow previously defined named types or primitive types
-   * to be referenced by name.</li>
-   **/
+   * <ul>
+   * <li>Cache and re-use primitive schemas when they do not set properties.</li>
+   * <li>Provide a default namespace for nested contexts (as the JSON Schema spec does).</li>
+   * <li>Allow previously defined named types or primitive types to be referenced by name.</li>
+   * </ul>
+   */
   private static class NameContext {
     private static final Set<String> PRIMITIVES = new HashSet<>();
     static {
@@ -973,15 +1059,17 @@ public class SchemaBuilder {
    * A common API for building types within a context. BaseTypeBuilder can build
    * all types other than Unions. {@link TypeBuilder} can additionally build
    * Unions.
-   * <p/>
+   * <br>
    * The builder has two contexts:
+   * <ul>
    * <li>A naming context provides a default namespace and allows for previously
    * defined named types to be referenced from {@link #type(String)}</li>
    * <li>A completion context representing the scope that the builder was
    * created in. A builder created in a nested context (for example,
    * {@link MapBuilder#values()} will have a completion context assigned by the
    * {@link MapBuilder}</li>
-   **/
+   * </ul>
+   */
   public static class BaseTypeBuilder<R> {
     private final Completion<R> context;
     private final NameContext names;
@@ -991,7 +1079,12 @@ public class SchemaBuilder {
       this.names = names;
     }
 
-    /** Use the schema provided as the type. **/
+    /**
+     * Use the schema provided as the type.
+     *
+     * @param schema The provided schema
+     * @return The completed record
+     */
     public final R type(Schema schema) {
       return context.complete(schema);
     }
@@ -999,11 +1092,14 @@ public class SchemaBuilder {
     /**
      * Look up the type by name. This type must be previously defined in the
      * context of this builder.
-     * <p/>
+     * <br>
      * The name may be fully qualified or a short name. If it is a short name,
      * the default namespace of the current context will additionally be
      * searched.
-     **/
+     *
+     * @param name The lookup name
+     * @return The completed record
+     */
     public final R type(String name) {
       return type(name, null);
     }
@@ -1011,12 +1107,16 @@ public class SchemaBuilder {
     /**
      * Look up the type by name and namespace. This type must be previously
      * defined in the context of this builder.
-     * <p/>
+     * <br>
      * The name may be fully qualified or a short name. If it is a fully
      * qualified name, the namespace provided is ignored. If it is a short name,
      * the namespace provided is used if not null, else the default namespace of
      * the current context will be used.
-     **/
+     *
+     * @param name The lookup name
+     * @param namespace The namespace to search in
+     * @return The completed record
+     */
     public final R type(String name, String namespace) {
       return type(names.get(name, namespace));
     }
@@ -1026,6 +1126,8 @@ public class SchemaBuilder {
      * <pre>
      * booleanBuilder().endBoolean();
      * </pre>
+     *
+     * @return Record
      */
     public final R booleanType() {
       return booleanBuilder().endBoolean();
@@ -1034,6 +1136,8 @@ public class SchemaBuilder {
     /**
      * Build a boolean type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #booleanType()}.
+     *
+     * @return {@link BooleanBuilder}
      */
     public final BooleanBuilder<R> booleanBuilder() {
       return BooleanBuilder.create(context, names);
@@ -1044,6 +1148,8 @@ public class SchemaBuilder {
      * <pre>
      * intBuilder().endInt();
      * </pre>
+     *
+     * @return Record
      */
     public final R intType() {
       return intBuilder().endInt();
@@ -1052,6 +1158,8 @@ public class SchemaBuilder {
     /**
      * Build an int type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #intType()}.
+     *
+     * @return {@link IntBuilder}
      */
     public final IntBuilder<R> intBuilder() {
       return IntBuilder.create(context, names);
@@ -1062,6 +1170,8 @@ public class SchemaBuilder {
      * <pre>
      * longBuilder().endLong();
      * </pre>
+     *
+     * @return Record
      */
     public final R longType() {
       return longBuilder().endLong();
@@ -1070,6 +1180,8 @@ public class SchemaBuilder {
     /**
      * Build a long type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #longType()}.
+     *
+     * @return {@link LongBuilder}
      */
     public final LongBuilder<R> longBuilder() {
       return LongBuilder.create(context, names);
@@ -1080,6 +1192,8 @@ public class SchemaBuilder {
      * <pre>
      * floatBuilder().endFloat();
      * </pre>
+     *
+     * @return {@link R}
      */
     public final R floatType() {
       return floatBuilder().endFloat();
@@ -1088,6 +1202,8 @@ public class SchemaBuilder {
     /**
      * Build a float type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #floatType()}.
+     *
+     * @return {@link FloatBuilder}
      */
     public final FloatBuilder<R> floatBuilder() {
       return FloatBuilder.create(context, names);
@@ -1098,6 +1214,8 @@ public class SchemaBuilder {
      * <pre>
      * doubleBuilder().endDouble();
      * </pre>
+     *
+     * @return Record
      */
     public final R doubleType() {
       return doubleBuilder().endDouble();
@@ -1106,6 +1224,8 @@ public class SchemaBuilder {
     /**
      * Build a double type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #doubleType()}.
+     *
+     * @return {@link DoubleBuilder}
      */
     public final DoubleBuilder<R> doubleBuilder() {
       return DoubleBuilder.create(context, names);
@@ -1116,6 +1236,8 @@ public class SchemaBuilder {
      * <pre>
      * stringBuilder().endString();
      * </pre>
+     *
+     * @return Record
      */
     public final R stringType() {
       return stringBuilder().endString();
@@ -1124,6 +1246,8 @@ public class SchemaBuilder {
     /**
      * Build a string type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #stringType()}.
+     *
+     * @return {@link StringBldr}
      */
     public final StringBldr<R> stringBuilder() {
       return StringBldr.create(context, names);
@@ -1134,6 +1258,8 @@ public class SchemaBuilder {
      * <pre>
      * bytesBuilder().endBytes();
      * </pre>
+     *
+     * @return Record
      */
     public final R bytesType() {
       return bytesBuilder().endBytes();
@@ -1142,6 +1268,8 @@ public class SchemaBuilder {
     /**
      * Build a bytes type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #bytesType()}.
+     *
+     * @return {@link BytesBuilder}
      */
     public final BytesBuilder<R> bytesBuilder() {
       return BytesBuilder.create(context, names);
@@ -1152,6 +1280,8 @@ public class SchemaBuilder {
      * <pre>
      * nullBuilder().endNull();
      * </pre>
+     *
+     * @return Record
      */
     public final R nullType() {
       return nullBuilder().endNull();
@@ -1160,6 +1290,8 @@ public class SchemaBuilder {
     /**
      * Build a null type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #nullType()}.
+     *
+     * @return {@link NullBuilder}
      */
     public final NullBuilder<R> nullBuilder() {
       return NullBuilder.create(context, names);
@@ -1173,12 +1305,15 @@ public class SchemaBuilder {
      * <pre>
      * {"type":"map", "values":"int"}
      * </pre>
-     **/
+     *
+     * @return {@link MapBuilder}
+     */
     public final MapBuilder<R> map() {
       return MapBuilder.create(context, names);
     }
 
-    /** Build an Avro array type  Example usage:
+    /**
+     * Build an Avro array type  Example usage:
      * <pre>
      * array().items().longType()
      * </pre>
@@ -1186,12 +1321,15 @@ public class SchemaBuilder {
      * <pre>
      * {"type":"array", "values":"long"}
      * </pre>
-     **/
+     *
+     * @return {@link ArrayBuilder}
+     */
     public final ArrayBuilder<R> array() {
       return ArrayBuilder.create(context, names);
     }
 
-    /** Build an Avro fixed type. Example usage:
+    /**
+     * Build an Avro fixed type. Example usage:
      * <pre>
      * fixed("com.foo.IPv4").size(4)
      * </pre>
@@ -1199,7 +1337,10 @@ public class SchemaBuilder {
      * <pre>
      * {"type":"fixed", "name":"com.foo.IPv4", "size":4}
      * </pre>
-     **/
+     *
+     * @param name The name of the field
+     * @return {@link FixedBuilder}
+     */
     public final FixedBuilder<R> fixed(String name) {
       return FixedBuilder.create(context, names, name);
     }
@@ -1215,7 +1356,10 @@ public class SchemaBuilder {
      *  "doc":"card suit names", "symbols":[
      *    "HEART", "SPADE", "DIAMOND", "CLUB"], "default":"HEART"}
      * </pre>
-     **/
+     *
+     * @param name The name of the field
+     * @return {@link EnumBuilder}
+     */
     public final EnumBuilder<R> enumeration(String name) {
       return EnumBuilder.create(context, names, name);
     }
@@ -1238,49 +1382,65 @@ public class SchemaBuilder {
      *     ]}
      *   ]}
      * </pre>
-     **/
+     *
+     * @param name The name of the field
+     * @return {@link RecordBuilder}
+     */
     public final RecordBuilder<R> record(String name) {
       return RecordBuilder.create(context, names, name);
     }
 
     /** Build an Avro union schema type. Example usage:
      * <pre>unionOf().stringType().and().bytesType().endUnion()</pre>
-     **/
+     *
+     * @return {@link BaseTypeBuilder}
+     */
     protected BaseTypeBuilder<UnionAccumulator<R>> unionOf() {
       return UnionBuilder.create(context, names);
     }
 
     /** A shortcut for building a union of a type and null.
-     * <p/>
+     * <br>
      * For example, the code snippets below are equivalent:
      * <pre>nullable().booleanType()</pre>
      * <pre>unionOf().booleanType().and().nullType().endUnion()</pre>
-     **/
+     *
+     * @return {@link BaseTypeBuilder}
+     */
     protected BaseTypeBuilder<R> nullable() {
       return new BaseTypeBuilder<>(new NullableCompletion<>(context), names);
     }
 
   }
 
-  /** A Builder for creating any Avro schema type.
-   **/
+  /**
+   * A Builder for creating any Avro schema type.
+   */
   public static final class TypeBuilder<R> extends BaseTypeBuilder<R> {
     private TypeBuilder(Completion<R> context, NameContext names) {
       super(context, names);
     }
 
+    /**
+     * @return {@link BaseTypeBuilder}
+     */
     @Override
     public BaseTypeBuilder<UnionAccumulator<R>> unionOf() {
       return super.unionOf();
     }
 
+    /**
+     * @return {@link BaseTypeBuilder}
+     */
     @Override
     public BaseTypeBuilder<R> nullable() {
       return super.nullable();
     }
   }
 
-  /** A special builder for unions.  Unions cannot nest unions directly **/
+  /**
+   * A special builder for unions.  Unions cannot nest unions directly
+   */
   private static final class UnionBuilder<R> extends
       BaseTypeBuilder<UnionAccumulator<R>> {
     private UnionBuilder(Completion<R> context, NameContext names) {
@@ -1300,11 +1460,11 @@ public class SchemaBuilder {
    * A special Builder for Record fields. The API is very similar to
    * {@link BaseTypeBuilder}. However, fields have their own names, properties,
    * and default values.
-   * <p/>
+   * <br>
    * The methods on this class create builder instances that return their
    * control to the {@link FieldAssembler} of the enclosing record context after
    * configuring a default for the field.
-   * <p/>
+   * <br>
    * For example, an int field with default value 1:
    * <pre>
    * intSimple().withDefault(1);
@@ -1330,6 +1490,8 @@ public class SchemaBuilder {
      * <pre>
      * booleanBuilder().endBoolean();
      * </pre>
+     *
+     * @return {@link BooleanDefault}
      */
     public final BooleanDefault<R> booleanType() {
       return booleanBuilder().endBoolean();
@@ -1338,6 +1500,8 @@ public class SchemaBuilder {
     /**
      * Build a boolean type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #booleanType()}.
+     *
+     * @return {@link BooleanBuilder}
      */
     public final BooleanBuilder<BooleanDefault<R>> booleanBuilder() {
       return BooleanBuilder.create(wrap(new BooleanDefault<>(bldr)), names);
@@ -1348,6 +1512,8 @@ public class SchemaBuilder {
      * <pre>
      * intBuilder().endInt();
      * </pre>
+     *
+     * @return {@link IntDefault}
      */
     public final IntDefault<R> intType() {
       return intBuilder().endInt();
@@ -1356,6 +1522,8 @@ public class SchemaBuilder {
     /**
      * Build an int type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #intType()}.
+     *
+     * @return {@link IntBuilder}
      */
     public final IntBuilder<IntDefault<R>> intBuilder() {
       return IntBuilder.create(wrap(new IntDefault<>(bldr)), names);
@@ -1366,6 +1534,8 @@ public class SchemaBuilder {
      * <pre>
      * longBuilder().endLong();
      * </pre>
+     *
+     * @return {@link LongDefault}
      */
     public final LongDefault<R> longType() {
       return longBuilder().endLong();
@@ -1374,6 +1544,8 @@ public class SchemaBuilder {
     /**
      * Build a long type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #longType()}.
+     *
+     * @return {@link LongBuilder}
      */
     public final LongBuilder<LongDefault<R>> longBuilder() {
       return LongBuilder.create(wrap(new LongDefault<>(bldr)), names);
@@ -1384,6 +1556,8 @@ public class SchemaBuilder {
      * <pre>
      * floatBuilder().endFloat();
      * </pre>
+     *
+     * @return {@link FloatDefault}
      */
     public final FloatDefault<R> floatType() {
       return floatBuilder().endFloat();
@@ -1392,6 +1566,8 @@ public class SchemaBuilder {
     /**
      * Build a float type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #floatType()}.
+     *
+     * @return {@link FloatBuilder}
      */
     public final FloatBuilder<FloatDefault<R>> floatBuilder() {
       return FloatBuilder.create(wrap(new FloatDefault<>(bldr)), names);
@@ -1402,6 +1578,8 @@ public class SchemaBuilder {
      * <pre>
      * doubleBuilder().endDouble();
      * </pre>
+     *
+     * @return {@link DoubleDefault}
      */
     public final DoubleDefault<R> doubleType() {
       return doubleBuilder().endDouble();
@@ -1410,6 +1588,8 @@ public class SchemaBuilder {
     /**
      * Build a double type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #doubleType()}.
+     *
+     * @return {@link DoubleBuilder}
      */
     public final DoubleBuilder<DoubleDefault<R>> doubleBuilder() {
       return DoubleBuilder.create(wrap(new DoubleDefault<>(bldr)), names);
@@ -1420,6 +1600,8 @@ public class SchemaBuilder {
      * <pre>
      * stringBuilder().endString();
      * </pre>
+     *
+     * @return {@link StringDefault}
      */
     public final StringDefault<R> stringType() {
       return stringBuilder().endString();
@@ -1428,6 +1610,8 @@ public class SchemaBuilder {
     /**
      * Build a string type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #stringType()}.
+     *
+     * @return {@link StringBldr}
      */
     public final StringBldr<StringDefault<R>> stringBuilder() {
       return StringBldr.create(wrap(new StringDefault<>(bldr)), names);
@@ -1438,6 +1622,8 @@ public class SchemaBuilder {
      * <pre>
      * bytesBuilder().endBytes();
      * </pre>
+     *
+     * @return {@link BytesDefault}
      */
     public final BytesDefault<R> bytesType() {
       return bytesBuilder().endBytes();
@@ -1446,6 +1632,8 @@ public class SchemaBuilder {
     /**
      * Build a bytes type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #bytesType()}.
+     *
+     * @return {@link BytesBuilder}
      */
     public final BytesBuilder<BytesDefault<R>> bytesBuilder() {
       return BytesBuilder.create(wrap(new BytesDefault<>(bldr)), names);
@@ -1456,6 +1644,8 @@ public class SchemaBuilder {
      * <pre>
      * nullBuilder().endNull();
      * </pre>
+     *
+     * @return {@link NullDefault}
      */
     public final NullDefault<R> nullType() {
       return nullBuilder().endNull();
@@ -1464,32 +1654,57 @@ public class SchemaBuilder {
     /**
      * Build a null type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #nullType()}.
+     *
+     * @return {@link NullBuilder}
      */
     public final NullBuilder<NullDefault<R>> nullBuilder() {
       return NullBuilder.create(wrap(new NullDefault<>(bldr)), names);
     }
 
-    /** Build an Avro map type **/
+    /**
+     * Build an Avro map type
+     *
+     * @return {@link MapBuilder}
+     */
     public final MapBuilder<MapDefault<R>> map() {
       return MapBuilder.create(wrap(new MapDefault<>(bldr)), names);
     }
 
-    /** Build an Avro array type **/
+    /**
+     * Build an Avro array type
+     *
+     * @return {@link ArrayBuilder}
+     */
     public final ArrayBuilder<ArrayDefault<R>> array() {
       return ArrayBuilder.create(wrap(new ArrayDefault<>(bldr)), names);
     }
 
-    /** Build an Avro fixed type. **/
+    /**
+     * Build an Avro fixed type
+     *
+     * @param name The name of the type
+     * @return {@link FixedBuilder}
+     */
     public final FixedBuilder<FixedDefault<R>> fixed(String name) {
       return FixedBuilder.create(wrap(new FixedDefault<>(bldr)), names, name);
     }
 
-    /** Build an Avro enum type. **/
+    /**
+     * Build an Avro enum type.
+     *
+     * @param name The name of the enumeration
+     * @return {@link EnumBuilder}
+     */
     public final EnumBuilder<EnumDefault<R>> enumeration(String name) {
       return EnumBuilder.create(wrap(new EnumDefault<>(bldr)), names, name);
     }
 
-    /** Build an Avro record type. **/
+    /**
+     * Build an Avro record type.
+     *
+     * @param name The name of the record
+     * @return {@link RecordBuilder}
+     */
     public final RecordBuilder<RecordDefault<R>> record(String name) {
       return RecordBuilder.create(wrap(new RecordDefault<>(bldr)), names, name);
     }
@@ -1503,14 +1718,20 @@ public class SchemaBuilder {
     }
   }
 
-  /** FieldTypeBuilder adds {@link #unionOf()}, {@link #nullable()}, and {@link #optional()}
-   * to BaseFieldTypeBuilder. **/
+  /**
+   * FieldTypeBuilder adds {@link #unionOf()}, {@link #nullable()}, and {@link #optional()}
+   * to BaseFieldTypeBuilder.
+   */
   public static final class FieldTypeBuilder<R> extends BaseFieldTypeBuilder<R> {
     private FieldTypeBuilder(FieldBuilder<R> bldr) {
       super(bldr, null);
     }
 
-    /** Build an Avro union schema type. **/
+    /**
+     * Build an Avro union schema type.
+     *
+     * @return UnionFieldTypeBuilder
+     */
     public UnionFieldTypeBuilder<R> unionOf() {
       return new UnionFieldTypeBuilder<>(bldr);
     }
@@ -1518,21 +1739,25 @@ public class SchemaBuilder {
     /**
      * A shortcut for building a union of a type and null, with an optional default
      * value of the non-null type.
-     * <p/>
+     * <br>
      * For example, the two code snippets below are equivalent:
      * <pre>nullable().booleanType().booleanDefault(true)</pre>
      * <pre>unionOf().booleanType().and().nullType().endUnion().booleanDefault(true)</pre>
-     **/
+     *
+     * @return BaseFieldTypeBuilder
+     */
     public BaseFieldTypeBuilder<R> nullable() {
       return new BaseFieldTypeBuilder<>(bldr, new NullableCompletionWrapper());
     }
 
     /**
      * A shortcut for building a union of null and a type, with a null default.
-     * <p/>
+     * <br>
      * For example, the two code snippets below are equivalent:
      * <pre>optional().booleanType()</pre>
      * <pre>unionOf().nullType().and().booleanType().endUnion().nullDefault()</pre>
+     *
+     * @return BaseTypeBuilder
      */
     public BaseTypeBuilder<FieldAssembler<R>> optional() {
       return new BaseTypeBuilder<>(
@@ -1557,6 +1782,8 @@ public class SchemaBuilder {
      * <pre>
      * booleanBuilder().endBoolean();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<BooleanDefault<R>> booleanType() {
       return booleanBuilder().endBoolean();
@@ -1565,6 +1792,8 @@ public class SchemaBuilder {
     /**
      * Build a boolean type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #booleanType()}.
+     *
+     * @return BooleanBuilder
      */
     public BooleanBuilder<UnionAccumulator<BooleanDefault<R>>> booleanBuilder() {
       return BooleanBuilder.create(completion(new BooleanDefault<>(bldr)), names);
@@ -1575,6 +1804,8 @@ public class SchemaBuilder {
      * <pre>
      * intBuilder().endInt();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<IntDefault<R>> intType() {
       return intBuilder().endInt();
@@ -1583,6 +1814,8 @@ public class SchemaBuilder {
     /**
      * Build an int type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #intType()}.
+     *
+     * @return IntBuilder
      */
     public IntBuilder<UnionAccumulator<IntDefault<R>>> intBuilder() {
       return IntBuilder.create(completion(new IntDefault<>(bldr)), names);
@@ -1593,6 +1826,8 @@ public class SchemaBuilder {
      * <pre>
      * longBuilder().endLong();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<LongDefault<R>> longType() {
       return longBuilder().endLong();
@@ -1601,6 +1836,8 @@ public class SchemaBuilder {
     /**
      * Build a long type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #longType()}.
+     *
+     * @return LongBuilder
      */
     public LongBuilder<UnionAccumulator<LongDefault<R>>> longBuilder() {
       return LongBuilder.create(completion(new LongDefault<>(bldr)), names);
@@ -1611,6 +1848,8 @@ public class SchemaBuilder {
      * <pre>
      * floatBuilder().endFloat();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<FloatDefault<R>> floatType() {
       return floatBuilder().endFloat();
@@ -1619,6 +1858,8 @@ public class SchemaBuilder {
     /**
      * Build a float type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #floatType()}.
+     *
+     * @return FloatBuilder
      */
     public FloatBuilder<UnionAccumulator<FloatDefault<R>>> floatBuilder() {
       return FloatBuilder.create(completion(new FloatDefault<>(bldr)), names);
@@ -1629,6 +1870,8 @@ public class SchemaBuilder {
      * <pre>
      * doubleBuilder().endDouble();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<DoubleDefault<R>> doubleType() {
       return doubleBuilder().endDouble();
@@ -1637,6 +1880,8 @@ public class SchemaBuilder {
     /**
      * Build a double type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #doubleType()}.
+     *
+     * @return DoubleBuilder
      */
     public DoubleBuilder<UnionAccumulator<DoubleDefault<R>>> doubleBuilder() {
       return DoubleBuilder.create(completion(new DoubleDefault<>(bldr)), names);
@@ -1647,6 +1892,8 @@ public class SchemaBuilder {
      * <pre>
      * stringBuilder().endString();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<StringDefault<R>> stringType() {
       return stringBuilder().endString();
@@ -1655,6 +1902,8 @@ public class SchemaBuilder {
     /**
      * Build a string type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #stringType()}.
+     *
+     * @return StringBldr
      */
     public StringBldr<UnionAccumulator<StringDefault<R>>> stringBuilder() {
       return StringBldr.create(completion(new StringDefault<>(bldr)), names);
@@ -1665,6 +1914,8 @@ public class SchemaBuilder {
      * <pre>
      * bytesBuilder().endBytes();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<BytesDefault<R>> bytesType() {
       return bytesBuilder().endBytes();
@@ -1673,6 +1924,8 @@ public class SchemaBuilder {
     /**
      * Build a bytes type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #bytesType()}.
+     *
+     * @return BytesBuilder
      */
     public BytesBuilder<UnionAccumulator<BytesDefault<R>>> bytesBuilder() {
       return BytesBuilder.create(completion(new BytesDefault<>(bldr)), names);
@@ -1683,6 +1936,8 @@ public class SchemaBuilder {
      * <pre>
      * nullBuilder().endNull();
      * </pre>
+     *
+     * @return UnionAccumulator
      */
     public UnionAccumulator<NullDefault<R>> nullType() {
       return nullBuilder().endNull();
@@ -1691,36 +1946,65 @@ public class SchemaBuilder {
     /**
      * Build a null type that can set custom properties. If custom properties
      * are not needed it is simpler to use {@link #nullType()}.
+     *
+     * @return NullBuilder
      */
     public NullBuilder<UnionAccumulator<NullDefault<R>>> nullBuilder() {
       return NullBuilder.create(completion(new NullDefault<>(bldr)), names);
     }
 
-    /** Build an Avro map type **/
+    /**
+     * Build an Avro map type
+     *
+     * @return MapBuilder
+     */
     public MapBuilder<UnionAccumulator<MapDefault<R>>> map() {
       return MapBuilder.create(completion(new MapDefault<>(bldr)), names);
     }
 
-    /** Build an Avro array type **/
+    /**
+     * Build an Avro array type
+     *
+     * @return ArrayBuilder
+     */
     public ArrayBuilder<UnionAccumulator<ArrayDefault<R>>> array() {
       return ArrayBuilder.create(completion(new ArrayDefault<>(bldr)), names);
     }
 
-    /** Build an Avro fixed type. **/
+    /**
+     * Build an Avro fixed type.
+     *
+     * @param name The name of the type
+     * @return {@link FixedBuilder}
+     */
     public FixedBuilder<UnionAccumulator<FixedDefault<R>>> fixed(String name) {
       return FixedBuilder.create(completion(new FixedDefault<>(bldr)), names, name);
     }
 
-    /** Build an Avro enum type. **/
+    /**
+     * Build an Avro enum type.
+     *
+     * @param name The name of the type
+     * @return EnumBuilder
+     */
     public EnumBuilder<UnionAccumulator<EnumDefault<R>>> enumeration(String name) {
       return EnumBuilder.create(completion(new EnumDefault<>(bldr)), names, name);
     }
 
-    /** Build an Avro record type. **/
+    /**
+     * Build an Avro record type.
+     *
+     * @param name The name of the type
+     * @return RecordBuilder
+     */
     public RecordBuilder<UnionAccumulator<RecordDefault<R>>> record(String name) {
       return RecordBuilder.create(completion(new RecordDefault<>(bldr)), names, name);
     }
 
+    /**
+     * @param context The completion context
+     * @return A completed UnionCompletion
+     */
     private <C> UnionCompletion<C> completion(Completion<C> context) {
       return new UnionCompletion<>(context, names, new ArrayList<>());
     }
@@ -1742,6 +2026,9 @@ public class SchemaBuilder {
       return this;
     }
 
+    /**
+     * @return FieldAssembler
+     */
     public FieldAssembler<R> fields() {
       Schema record = Schema.createRecord(name(), doc(), space(), false);
       // place the record in the name context, fields yet to be set.
@@ -1765,6 +2052,7 @@ public class SchemaBuilder {
 
     /**
      * Add a field with the given name.
+     * @param fieldName The fieldname of the builder
      * @return A {@link FieldBuilder} for the given name.
      */
     public FieldBuilder<R> name(String fieldName) {
@@ -1773,10 +2061,12 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a boolean field with the given name and no default.
-     * <p/>This is equivalent to:
+     * <br>This is equivalent to:
      * <pre>
      *   name(fieldName).type().booleanType().noDefault()
      * </pre>
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name.
      */
     public FieldAssembler<R> requiredBoolean(String fieldName) {
       return name(fieldName).type().booleanType().noDefault();
@@ -1784,11 +2074,14 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an optional boolean field: a union of null and
-     * boolean with null default.<p/>
+     * boolean with null default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().optional().booleanType()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> optionalBoolean(String fieldName) {
       return name(fieldName).type().optional().booleanType();
@@ -1797,12 +2090,16 @@ public class SchemaBuilder {
     /**
      * Shortcut for creating a nullable boolean field: a union of boolean and
      * null with an boolean default.
-     * <p/>
+     * <br>
      * This is equivalent to:
      *
      * <pre>
      * name(fieldName).type().nullable().booleanType().booleanDefault(defaultVal)
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @param defaultVal The default value
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> nullableBoolean(String fieldName, boolean defaultVal) {
       return name(fieldName)
@@ -1811,10 +2108,13 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an int field with the given name and no default.
-     * <p/>This is equivalent to:
+     * <br>This is equivalent to:
      * <pre>
      *   name(fieldName).type().intType().noDefault()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> requiredInt(String fieldName) {
       return name(fieldName).type().intType().noDefault();
@@ -1822,11 +2122,14 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an optional int field: a union of null and int
-     * with null default.<p/>
+     * with null default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().optional().intType()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> optionalInt(String fieldName) {
       return name(fieldName).type().optional().intType();
@@ -1834,11 +2137,15 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a nullable int field: a union of int and null
-     * with an int default.<p/>
+     * with an int default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().nullable().intType().intDefault(defaultVal)
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @param defaultVal The default value
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> nullableInt(String fieldName, int defaultVal) {
       return name(fieldName).type().nullable().intType().intDefault(defaultVal);
@@ -1846,10 +2153,13 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a long field with the given name and no default.
-     * <p/>This is equivalent to:
+     * <br>This is equivalent to:
      * <pre>
      *   name(fieldName).type().longType().noDefault()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> requiredLong(String fieldName) {
       return name(fieldName).type().longType().noDefault();
@@ -1857,11 +2167,14 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an optional long field: a union of null and long
-     * with null default.<p/>
+     * with null default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().optional().longType()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> optionalLong(String fieldName) {
       return name(fieldName).type().optional().longType();
@@ -1869,11 +2182,15 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a nullable long field: a union of long and null
-     * with a long default.<p/>
+     * with a long default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().nullable().longType().longDefault(defaultVal)
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @param defaultVal The default value
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> nullableLong(String fieldName, long defaultVal) {
       return name(fieldName).type().nullable().longType().longDefault(defaultVal);
@@ -1881,10 +2198,13 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a float field with the given name and no default.
-     * <p/>This is equivalent to:
+     * <br>This is equivalent to:
      * <pre>
      *   name(fieldName).type().floatType().noDefault()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> requiredFloat(String fieldName) {
       return name(fieldName).type().floatType().noDefault();
@@ -1892,11 +2212,14 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an optional float field: a union of null and float
-     * with null default.<p/>
+     * with null default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().optional().floatType()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> optionalFloat(String fieldName) {
       return name(fieldName).type().optional().floatType();
@@ -1904,11 +2227,15 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a nullable float field: a union of float and null
-     * with a float default.<p/>
+     * with a float default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().nullable().floatType().floatDefault(defaultVal)
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @param defaultVal The default value
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> nullableFloat(String fieldName, float defaultVal) {
       return name(fieldName).type().nullable().floatType().floatDefault(defaultVal);
@@ -1916,10 +2243,13 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a double field with the given name and no default.
-     * <p/>This is equivalent to:
+     * <br>This is equivalent to:
      * <pre>
      *   name(fieldName).type().doubleType().noDefault()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> requiredDouble(String fieldName) {
       return name(fieldName).type().doubleType().noDefault();
@@ -1927,11 +2257,14 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an optional double field: a union of null and double
-     * with null default.<p/>
+     * with null default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().optional().doubleType()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> optionalDouble(String fieldName) {
       return name(fieldName).type().optional().doubleType();
@@ -1939,11 +2272,15 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a nullable double field: a union of double and null
-     * with a double default.<p/>
+     * with a double default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().nullable().doubleType().doubleDefault(defaultVal)
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @param defaultVal The default value
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> nullableDouble(String fieldName, double defaultVal) {
       return name(fieldName).type().nullable().doubleType().doubleDefault(defaultVal);
@@ -1951,10 +2288,13 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a string field with the given name and no default.
-     * <p/>This is equivalent to:
+     * <br>This is equivalent to:
      * <pre>
      *   name(fieldName).type().stringType().noDefault()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> requiredString(String fieldName) {
       return name(fieldName).type().stringType().noDefault();
@@ -1962,11 +2302,14 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an optional string field: a union of null and string
-     * with null default.<p/>
+     * with null default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().optional().stringType()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> optionalString(String fieldName) {
       return name(fieldName).type().optional().stringType();
@@ -1974,11 +2317,15 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a nullable string field: a union of string and null
-     * with a string default.<p/>
+     * with a string default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().nullable().stringType().stringDefault(defaultVal)
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @param defaultVal The default value
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> nullableString(String fieldName, String defaultVal) {
       return name(fieldName).type().nullable().stringType().stringDefault(defaultVal);
@@ -1986,10 +2333,13 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a bytes field with the given name and no default.
-     * <p/>This is equivalent to:
+     * <br>This is equivalent to:
      * <pre>
      *   name(fieldName).type().bytesType().noDefault()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> requiredBytes(String fieldName) {
       return name(fieldName).type().bytesType().noDefault();
@@ -1997,11 +2347,14 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating an optional bytes field: a union of null and bytes
-     * with null default.<p/>
+     * with null default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().optional().bytesType()
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> optionalBytes(String fieldName) {
       return name(fieldName).type().optional().bytesType();
@@ -2009,11 +2362,15 @@ public class SchemaBuilder {
 
     /**
      * Shortcut for creating a nullable bytes field: a union of bytes and null
-     * with a bytes default.<p/>
+     * with a bytes default.<br>
      * This is equivalent to:
      * <pre>
      *   name(fieldName).type().nullable().bytesType().bytesDefault(defaultVal)
      * </pre>
+     *
+     * @param fieldName The fieldname of the builder
+     * @param defaultVal The default value
+     * @return A {@link FieldAssembler} for the given name, if available
      */
     public FieldAssembler<R> nullableBytes(String fieldName, byte[] defaultVal) {
       return name(fieldName).type().nullable().bytesType().bytesDefault(defaultVal);
@@ -2022,6 +2379,8 @@ public class SchemaBuilder {
     /**
      * End adding fields to this record, returning control
      * to the context that this record builder was created in.
+     *
+     * @return The closed record
      */
     public R endRecord() {
       record.setFields(fields);
@@ -2055,19 +2414,28 @@ public class SchemaBuilder {
       this.fields = fields;
     }
 
-    /** Set this field to have ascending order.  Ascending is the default **/
+    /**
+     * Set this field to have ascending order.  Ascending is the default
+     * @return {@link FieldBuilder}
+     */
     public FieldBuilder<R> orderAscending() {
       order = Schema.Field.Order.ASCENDING;
       return self();
     }
 
-    /** Set this field to have descending order.  Descending is the default **/
+    /**
+     * Set this field to have descending order.  Descending is the default
+     * @return {@link FieldBuilder}
+     */
     public FieldBuilder<R> orderDescending() {
       order = Schema.Field.Order.DESCENDING;
       return self();
     }
 
-    /** Set this field to ignore order.  **/
+    /**
+     * Set this field to ignore order.
+     * @return {@link FieldBuilder}
+     */
     public FieldBuilder<R> orderIgnore() {
       order = Schema.Field.Order.IGNORE;
       return self();
@@ -2086,6 +2454,9 @@ public class SchemaBuilder {
      * Final step in configuring this field, finalizing name, namespace, alias,
      * and order.  Sets the field's type to the provided schema, returns a
      * {@link GenericDefault}.
+     *
+     * @param type The type of the schema
+     * @return {@link GenericDefault}
      */
     public GenericDefault<R> type(Schema type) {
       return new GenericDefault<>(this, type);
@@ -2094,14 +2465,17 @@ public class SchemaBuilder {
     /**
      * Final step in configuring this field, finalizing name, namespace, alias,
      * and order. Sets the field's type to the schema by name reference.
-     * <p/>
+     * <br>
      * The name must correspond with a named schema that has already been
      * created in the context of this builder. The name may be a fully qualified
      * name, or a short name. If it is a short name, the namespace context of
      * this builder will be used.
-     * <p/>
+     * <br>
      * The name and namespace context rules are the same as the Avro schema JSON
      * specification.
+     *
+     * @param name The name of the schema
+     * @return {@link GenericDefault}
      */
     public GenericDefault<R> type(String name) {
       return type(name, null);
@@ -2110,15 +2484,19 @@ public class SchemaBuilder {
     /**
      * Final step in configuring this field, finalizing name, namespace, alias,
      * and order. Sets the field's type to the schema by name reference.
-     * <p/>
+     * <br>
      * The name must correspond with a named schema that has already been
      * created in the context of this builder. The name may be a fully qualified
      * name, or a short name. If it is a full name, the namespace is ignored. If
      * it is a short name, the namespace provided is used. If the namespace
      * provided is null, the namespace context of this builder will be used.
-     * <p/>
+     * <br>
      * The name and namespace context rules are the same as the Avro schema JSON
      * specification.
+     *
+     * @param name The name of the schema
+     * @param namespace The namespace of the schema
+     * @return {@link GenericDefault}
      */
     public GenericDefault<R> type(String name, String namespace) {
       Schema schema = names().get(name, namespace);
@@ -2147,7 +2525,7 @@ public class SchemaBuilder {
     }
   }
 
-  /** Abstract base class for field defaults. **/
+  /** Abstract base class for field defaults. */
   public static abstract class FieldDefault<R, S extends FieldDefault<R, S>> extends Completion<S> {
     private final FieldBuilder<R> field;
     private Schema schema;
@@ -2155,7 +2533,10 @@ public class SchemaBuilder {
       this.field = field;
     }
 
-    /** Completes this field with no default value **/
+    /**
+     * Completes this field with no default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> noDefault() {
       return field.completeField(schema);
     }
@@ -2173,13 +2554,17 @@ public class SchemaBuilder {
     abstract S self();
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class BooleanDefault<R> extends FieldDefault<R, BooleanDefault<R>> {
     private BooleanDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided **/
+    /**
+     * Completes this field with the default value provided
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> booleanDefault(boolean defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2190,13 +2575,17 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class IntDefault<R> extends FieldDefault<R, IntDefault<R>> {
     private IntDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided **/
+    /**
+     * Completes this field with the default value provided
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> intDefault(int defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2207,13 +2596,17 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class LongDefault<R> extends FieldDefault<R, LongDefault<R>> {
     private LongDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided **/
+    /**
+     * Completes this field with the default value provided
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> longDefault(long defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2224,13 +2617,17 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class FloatDefault<R> extends FieldDefault<R, FloatDefault<R>> {
     private FloatDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided **/
+    /**
+     * Completes this field with the default value provided
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> floatDefault(float defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2241,13 +2638,17 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class DoubleDefault<R> extends FieldDefault<R, DoubleDefault<R>> {
     private DoubleDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided **/
+    /**
+     * Completes this field with the default value provided
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> doubleDefault(double defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2258,13 +2659,17 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class StringDefault<R> extends FieldDefault<R, StringDefault<R>> {
     private StringDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided. Cannot be null. **/
+    /**
+     * Completes this field with the default value provided. Cannot be null.
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> stringDefault(String defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2275,25 +2680,37 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class BytesDefault<R> extends FieldDefault<R, BytesDefault<R>> {
     private BytesDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> bytesDefault(byte[] defaultVal) {
       return super.usingDefault(ByteBuffer.wrap(defaultVal));
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> bytesDefault(ByteBuffer defaultVal) {
       return super.usingDefault(defaultVal);
     }
 
-    /** Completes this field with the default value provided, cannot be null.
+    /**
+     * Completes this field with the default value provided, cannot be null.
      * The string is interpreted as a byte[], with each character code point
-     * value equalling the byte value, as in the Avro spec JSON default. **/
+     * value equalling the byte value, as in the Avro spec JSON default.
+     * @param defaultVal Default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> bytesDefault(String defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2304,13 +2721,16 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class NullDefault<R> extends FieldDefault<R, NullDefault<R>> {
     private NullDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with a default value of null **/
+    /**
+     * Completes this field with a default value of null
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> nullDefault() {
       return super.usingDefault(null);
     }
@@ -2321,13 +2741,19 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class MapDefault<R> extends FieldDefault<R, MapDefault<R>> {
     private MapDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     * @param <K> The key type
+     * @param <V> The value type
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public final <K, V> FieldAssembler<R> mapDefault(Map<K, V> defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2338,13 +2764,19 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class ArrayDefault<R> extends FieldDefault<R, ArrayDefault<R>> {
     private ArrayDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     *
+     * @param <V> The field to construct
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public final <V> FieldAssembler<R> arrayDefault(List<V> defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2355,25 +2787,39 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class FixedDefault<R> extends FieldDefault<R, FixedDefault<R>> {
     private FixedDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     *
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> fixedDefault(byte[] defaultVal) {
       return super.usingDefault(ByteBuffer.wrap(defaultVal));
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     *
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> fixedDefault(ByteBuffer defaultVal) {
       return super.usingDefault(defaultVal);
     }
 
     /** Completes this field with the default value provided, cannot be null.
      * The string is interpreted as a byte[], with each character code point
-     * value equalling the byte value, as in the Avro spec JSON default. **/
+     * value equalling the byte value, as in the Avro spec JSON default.
+     *
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> fixedDefault(String defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2384,30 +2830,43 @@ public class SchemaBuilder {
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class EnumDefault<R> extends FieldDefault<R, EnumDefault<R>> {
     private EnumDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     *
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> enumDefault(String defaultVal) {
       return super.usingDefault(defaultVal);
     }
 
+    /**
+     * @return itself
+     */
     @Override
     final EnumDefault<R> self() {
       return this;
     }
   }
 
-  /** Choose whether to use a default value for the field or not. **/
+  /** Choose whether to use a default value for the field or not. */
   public static class RecordDefault<R> extends FieldDefault<R, RecordDefault<R>> {
     private RecordDefault(FieldBuilder<R> field) {
       super(field);
     }
 
-    /** Completes this field with the default value provided, cannot be null **/
+    /**
+     * Completes this field with the default value provided, cannot be null
+     *
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public final FieldAssembler<R> recordDefault(GenericRecord defaultVal) {
       return super.usingDefault(defaultVal);
     }
@@ -2426,13 +2885,22 @@ public class SchemaBuilder {
       this.schema = schema;
     }
 
-    /** Do not use a default value for this field. **/
+    /**
+     * Do not use a default value for this field.
+     *
+     * @return {@link FieldAssembler}
+     */
     public FieldAssembler<R> noDefault() {
       return field.completeField(schema);
     }
 
-    /** Completes this field with the default value provided.
-     * The value must conform to the schema of the field. **/
+    /**
+     * Completes this field with the default value provided.
+     * The value must conform to the schema of the field.
+     *
+     * @param defaultVal The default value
+     * @return {@link FieldAssembler}
+     */
     public FieldAssembler<R> withDefault(Object defaultVal) {
       return field.completeField(schema, defaultVal);
     }
@@ -2471,9 +2939,11 @@ public class SchemaBuilder {
 
   private static class OptionalCompletion<R> extends Completion<FieldAssembler<R>> {
     private final FieldBuilder<R> bldr;
+
     public OptionalCompletion(FieldBuilder<R> bldr) {
       this.bldr = bldr;
     }
+
     @Override
     protected FieldAssembler<R> complete(Schema schema) {
       // wrap the schema as a union of null and the schema
@@ -2568,12 +3038,18 @@ public class SchemaBuilder {
       this.schemas = schemas;
     }
 
-    /** Add an additional type to this union **/
+    /**
+     * Add an additional type to this union
+     * @return {@link BaseTypeBuilder}
+     */
     public BaseTypeBuilder<UnionAccumulator<R>> and() {
       return new UnionBuilder<>(context, names, schemas);
     }
 
-    /** Complete this union **/
+    /**
+     * Complete this union
+     * @return {@link R}
+     */
     public R endUnion() {
       Schema schema = Schema.createUnion(schemas);
       return context.complete(schema);

@@ -27,6 +27,9 @@ import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
 
 
+/**
+ * The type Test protocol specific meta.
+ */
 public class TestProtocolSpecificMeta extends TestProtocolSpecific {
 
   @Override

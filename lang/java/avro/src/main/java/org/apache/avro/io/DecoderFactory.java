@@ -24,7 +24,7 @@ import org.apache.avro.Schema;
 
 /**
  * A factory for creating and configuring {@link Decoder}s.
- * <p/>
+ *
  * Factories are thread-safe, and are generally cached by applications for
  * performance reasons. Multiple instances are only required if multiple
  * concurrent configurations are needed.
@@ -103,13 +103,13 @@ public class DecoderFactory {
    * Creates or reinitializes a {@link BinaryDecoder} with the input stream
    * provided as the source of data. If <i>reuse</i> is provided, it will be
    * reinitialized to the given input stream.
-   * <p/>
+   *
    * {@link BinaryDecoder} instances returned by this method buffer their input,
    * reading up to {@link #getConfiguredBufferSize()} bytes past the minimum
    * required to satisfy read requests in order to achieve better performance.
    * If the buffering is not desired, use
    * {@link #directBinaryDecoder(InputStream, BinaryDecoder)}.
-   * <p/>
+   *
    * {@link BinaryDecoder#inputStream()} provides a view on the data that is
    * buffer-aware, for users that need to interleave access to data
    * with the Decoder API.
@@ -140,17 +140,17 @@ public class DecoderFactory {
    * Creates or reinitializes a {@link BinaryDecoder} with the input stream
    * provided as the source of data. If <i>reuse</i> is provided, it will be
    * reinitialized to the given input stream.
-   * <p/>
+   *
    * {@link BinaryDecoder} instances returned by this method do not buffer their input.
    * In most cases a buffering BinaryDecoder is sufficient in combination with
    * {@link BinaryDecoder#inputStream()} which provides a buffer-aware view on
    * the data.
-   * <p/>
+   *
    * A "direct" BinaryDecoder does not read ahead from an InputStream or other data source
    * that cannot be rewound.  From the perspective of a client, a "direct" decoder
    * must never read beyond the minimum necessary bytes to service a {@link BinaryDecoder}
    * API read request.
-   * <p/>
+   *
    * In the case that the improved performance of a buffering implementation does not outweigh the
    * inconvenience of its buffering semantics, a "direct" decoder can be
    * used.
@@ -193,7 +193,7 @@ public class DecoderFactory {
    * provided as the source of data. If <i>reuse</i> is provided, it will
    * attempt to reinitialize <i>reuse</i> to the new byte array. This instance
    * will use the provided byte array as its buffer.
-   * <p/>
+   *
    * {@link BinaryDecoder#inputStream()} provides a view on the data that is
    * buffer-aware and can provide a view of the data not yet read by Decoder API
    * methods.
@@ -237,7 +237,7 @@ public class DecoderFactory {
   /**
    * Creates a {@link JsonDecoder} using the InputStrim provided for reading
    * data that conforms to the Schema provided.
-   * <p/>
+   *
    *
    * @param schema
    *          The Schema for data read from this JsonEncoder. Cannot be null.
@@ -254,7 +254,7 @@ public class DecoderFactory {
   /**
    * Creates a {@link JsonDecoder} using the String provided for reading data
    * that conforms to the Schema provided.
-   * <p/>
+   *
    *
    * @param schema
    *          The Schema for data read from this JsonEncoder. Cannot be null.

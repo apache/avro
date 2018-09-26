@@ -26,6 +26,8 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * A Future implementation for RPCs.
+ *
+ * @param <T> the type parameter
  */
 public class CallFuture<T> implements Future<T>, Callback<T> {
   private final CountDownLatch latch = new CountDownLatch(1);
@@ -43,6 +45,7 @@ public class CallFuture<T> implements Future<T>, Callback<T> {
   /**
    * Creates a CallFuture with a chained Callback which will be invoked
    * when this CallFuture's Callback methods are invoked.
+   *
    * @param chainedCallback the chained Callback to set.
    */
   public CallFuture(Callback<T> chainedCallback) {
@@ -82,8 +85,8 @@ public class CallFuture<T> implements Future<T>, Callback<T> {
    * Using {@link #get()} or {@link #get(long, TimeUnit)} is usually
    * preferred because these methods block until the result is available or
    * an error occurs.
-   * @return the value of the response, or null if no result was returned or
-   * the RPC has not yet completed.
+   *
+   * @return the value of the response, or null if no result was returned or the RPC has not yet completed.
    */
   public T getResult() {
     return result;
@@ -93,8 +96,8 @@ public class CallFuture<T> implements Future<T>, Callback<T> {
    * Gets the error that was thrown during RPC execution.  Does not block.
    * Either {@link #get()} or {@link #get(long, TimeUnit)} should be called
    * first because these methods block until the RPC has completed.
-   * @return the RPC error that was thrown, or null if no error has occurred or
-   * if the RPC has not yet completed.
+   *
+   * @return the RPC error that was thrown, or null if no error has occurred or if the RPC has not yet completed.
    */
   public Throwable getError() {
     return error;
@@ -135,6 +138,7 @@ public class CallFuture<T> implements Future<T>, Callback<T> {
 
   /**
    * Waits for the CallFuture to complete without returning the result.
+   *
    * @throws InterruptedException if interrupted.
    */
   public void await() throws InterruptedException {
@@ -143,10 +147,11 @@ public class CallFuture<T> implements Future<T>, Callback<T> {
 
   /**
    * Waits for the CallFuture to complete without returning the result.
+   *
    * @param timeout the maximum time to wait.
-   * @param unit the time unit of the timeout argument.
+   * @param unit    the time unit of the timeout argument.
    * @throws InterruptedException if interrupted.
-   * @throws TimeoutException if the wait timed out.
+   * @throws TimeoutException     if the wait timed out.
    */
   public void await(long timeout, TimeUnit unit)
     throws InterruptedException, TimeoutException {

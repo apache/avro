@@ -29,8 +29,13 @@ import java.util.List;
 import java.net.URL;
 import java.net.HttpURLConnection;
 
-/** An HTTP-based {@link Transceiver} implementation. */
+/**
+ * An HTTP-based {@link Transceiver} implementation.
+ */
 public class HttpTransceiver extends Transceiver {
+  /**
+   * The Content type.
+   */
   static final String CONTENT_TYPE = "avro/binary";
 
   private URL url;
@@ -38,14 +43,27 @@ public class HttpTransceiver extends Transceiver {
   private HttpURLConnection connection;
   private int timeout;
 
+  /**
+   * Instantiates a new Http transceiver.
+   *
+   * @param url the url
+   */
   public HttpTransceiver(URL url) { this.url = url; }
 
+  /**
+   * Instantiates a new Http transceiver.
+   *
+   * @param url   the url
+   * @param proxy the proxy
+   */
   public HttpTransceiver(URL url, Proxy proxy) {
     this(url);
     this.proxy = proxy;
   }
 
-  /** Set the connect and read timeouts, in milliseconds. */
+  /**
+   * Set the connect and read timeouts, in milliseconds.  @param timeout the timeout
+   */
   public void setTimeout(int timeout) { this.timeout = timeout; }
 
   public String getRemoteName() { return this.url.toString(); }
@@ -82,6 +100,12 @@ public class HttpTransceiver extends Transceiver {
     }
   }
 
+  /**
+   * Gets length.
+   *
+   * @param buffers the buffers
+   * @return the length
+   */
   static int getLength(List<ByteBuffer> buffers) {
     int length = 0;
     for (ByteBuffer buffer : buffers) {
@@ -92,6 +116,13 @@ public class HttpTransceiver extends Transceiver {
     return length;
   }
 
+  /**
+   * Read buffers list.
+   *
+   * @param in the in
+   * @return the list
+   * @throws IOException the io exception
+   */
   static List<ByteBuffer> readBuffers(InputStream in)
     throws IOException {
     List<ByteBuffer> buffers = new ArrayList<>();
@@ -113,6 +144,13 @@ public class HttpTransceiver extends Transceiver {
     }
   }
 
+  /**
+   * Write buffers.
+   *
+   * @param buffers the buffers
+   * @param out     the out
+   * @throws IOException the io exception
+   */
   static void writeBuffers(List<ByteBuffer> buffers, OutputStream out)
     throws IOException {
     for (ByteBuffer buffer : buffers) {

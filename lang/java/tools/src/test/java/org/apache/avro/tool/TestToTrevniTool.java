@@ -32,6 +32,9 @@ import org.apache.trevni.avro.RandomData;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * The type Test to trevni tool.
+ */
 public class TestToTrevniTool {
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "200"));
@@ -49,6 +52,11 @@ public class TestToTrevniTool {
     return baos.toString("UTF-8").replace("\r", "");
   }
 
+  /**
+   * Test.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void test() throws Exception {
     Schema schema = Schema.parse(SCHEMA_FILE);

@@ -29,7 +29,15 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.test.TestRecordWithUnion;
 import org.junit.Test;
 
+/**
+ * The type Test specific datum writer.
+ */
 public class TestSpecificDatumWriter {
+  /**
+   * Test resolve union.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testResolveUnion() throws IOException {
     final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<>();

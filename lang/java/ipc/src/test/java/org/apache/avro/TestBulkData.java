@@ -36,6 +36,9 @@ import java.util.Random;
 
 import org.apache.avro.test.BulkData;
 
+/**
+ * The type Test bulk data.
+ */
 public class TestBulkData {
   private static final long COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
@@ -50,6 +53,9 @@ public class TestBulkData {
     rand.nextBytes(DATA.array());
   }
 
+  /**
+   * The type Bulk data.
+   */
   public static class BulkDataImpl implements BulkData {
     public ByteBuffer read() { return DATA.duplicate(); }
     public Void write(ByteBuffer data) {
@@ -62,6 +68,11 @@ public class TestBulkData {
   private static Transceiver client;
   private static BulkData proxy;
 
+  /**
+   * Start server.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void startServer() throws Exception {
     if (server != null) return;
@@ -74,23 +85,44 @@ public class TestBulkData {
     proxy = SpecificRequestor.getClient(BulkData.class, client);
   }
 
+  /**
+   * Test read.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testRead() throws IOException {
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(SIZE, proxy.read().remaining());
   }
 
+  /**
+   * Test write.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testWrite() throws IOException {
     for (int i = 0; i < COUNT; i++)
       proxy.write(DATA.duplicate());
   }
 
+  /**
+   * Stop server.
+   *
+   * @throws Exception the exception
+   */
   @AfterClass
   public static void stopServer() throws Exception {
     server.close();
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws Exception the exception
+   */
   public static void main(String[] args) throws Exception {
     TestBulkData test = new TestBulkData();
     test.startServer();

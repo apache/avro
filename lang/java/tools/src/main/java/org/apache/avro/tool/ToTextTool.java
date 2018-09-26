@@ -31,7 +31,9 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 
-/** Reads an avro data file into a plain text file. */
+/**
+ * Reads an avro data file into a plain text file.
+ */
 public class ToTextTool implements Tool {
   private static final String TEXT_FILE_SCHEMA =
         "\"bytes\"";

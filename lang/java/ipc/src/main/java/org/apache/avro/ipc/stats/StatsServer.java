@@ -20,6 +20,9 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+/**
+ * The type Stats server.
+ */
 /* This is a server that displays live information from a StatsPlugin.
  *
  *  Typical usage is as follows:
@@ -29,9 +32,22 @@ import org.eclipse.jetty.servlet.ServletHolder;
  *
  *  */
 public class StatsServer {
+  /**
+   * The Http server.
+   */
   Server httpServer;
+  /**
+   * The Plugin.
+   */
   StatsPlugin plugin;
 
+  /**
+   * Instantiates a new Stats server.
+   *
+   * @param plugin the plugin
+   * @param port   the port
+   * @throws Exception the exception
+   */
   /* Start a stats server on the given port,
    * responsible for the given plugin. */
   public StatsServer(StatsPlugin plugin, int port) throws Exception {
@@ -47,6 +63,11 @@ public class StatsServer {
     httpServer.start();
   }
 
+  /**
+   * Stop.
+   *
+   * @throws Exception the exception
+   */
   /* Stops this server. */
   public void stop() throws Exception {
     this.httpServer.stop();

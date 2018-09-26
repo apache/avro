@@ -43,11 +43,20 @@ import org.apache.avro.ipc.generic.GenericRequestor;
 import org.apache.avro.ipc.generic.GenericResponder;
 import org.junit.Test;
 
+/**
+ * The type Test stats plugin and servlet.
+ */
 public class TestStatsPluginAndServlet {
+  /**
+   * The Protocol.
+   */
   Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", "
       + "\"messages\": { \"m\": {"
       + "   \"request\": [{\"name\": \"x\", \"type\": \"int\"}], "
       + "   \"response\": \"int\"} } }");
+  /**
+   * The Message.
+   */
   Message message = protocol.getMessages().get("m");
 
   private static final long MS = 1000*1000L;
@@ -71,8 +80,15 @@ public class TestStatsPluginAndServlet {
     return o;
   }
 
-  /** Expects 0 and returns 1. */
+  /**
+   * Expects 0 and returns 1.
+   */
   static class TestResponder extends GenericResponder {
+    /**
+     * Instantiates a new Test responder.
+     *
+     * @param local the local
+     */
     public TestResponder(Protocol local) {
       super(local);
     }
@@ -94,6 +110,11 @@ public class TestStatsPluginAndServlet {
     assertEquals(1, r.request("m", params));
   }
 
+  /**
+   * Test full server path.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testFullServerPath() throws IOException {
     Responder r = new TestResponder(protocol);
@@ -109,6 +130,11 @@ public class TestStatsPluginAndServlet {
     assertTrue(o.contains("10 calls"));
   }
 
+  /**
+   * Test multiple rp cs.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testMultipleRPCs() throws IOException {
     FakeTicks t = new FakeTicks();
@@ -130,6 +156,11 @@ public class TestStatsPluginAndServlet {
     assertTrue(r.contains("Average: 500.0ms"));
   }
 
+  /**
+   * Test payload size.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testPayloadSize() throws IOException {
     Responder r = new TestResponder(protocol);
@@ -151,6 +182,11 @@ public class TestStatsPluginAndServlet {
 
   /** Sleeps as requested. */
   private static class SleepyResponder extends GenericResponder {
+    /**
+     * Instantiates a new Sleepy responder.
+     *
+     * @param local the local
+     */
     public SleepyResponder(Protocol local) {
       super(local);
     }
@@ -174,8 +210,9 @@ public class TestStatsPluginAndServlet {
    * <pre>
    * java -jar build/avro-tools-*.jar rpcsend '{"protocol":"sleepy","namespace":null,"types":[],"messages":{"sleep":{"request":[{"name":"millis","type":"long"}],"response":"null"}}}' sleep localhost 7002 '{"millis": 20000}'
    * </pre>
-   * @param args
-   * @throws Exception
+   *
+   * @param args the input arguments
+   * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
     if (args.length == 0) {

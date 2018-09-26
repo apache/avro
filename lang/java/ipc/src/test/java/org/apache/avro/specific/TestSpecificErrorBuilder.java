@@ -25,6 +25,9 @@ import org.junit.Test;
  * Unit test for the SpecificErrorBuilderBase class.
  */
 public class TestSpecificErrorBuilder {
+  /**
+   * Test specific error builder.
+   */
   @Test
   public void testSpecificErrorBuilder() {
     TestError.Builder testErrorBuilder = TestError.newBuilder().
@@ -67,6 +70,9 @@ public class TestSpecificErrorBuilder {
     Assert.assertNull(testErrorBuilder.getMessage$());
   }
 
+  /**
+   * Attempt to set non nullable field to null.
+   */
   @Test(expected=org.apache.avro.AvroRuntimeException.class)
   public void attemptToSetNonNullableFieldToNull() {
     TestError.newBuilder().setMessage$(null);

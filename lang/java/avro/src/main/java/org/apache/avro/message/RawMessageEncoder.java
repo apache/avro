@@ -57,7 +57,7 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * Buffers returned by {@link #encode(D)} are copied and will not be modified
+   * Buffers returned by {@link #encode(Object)} are copied and will not be modified
    * by future calls to {@code encode}.
    *
    * @param model the {@link GenericData data model} for datum instances
@@ -72,7 +72,7 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * If {@code shouldCopy} is true, then buffers returned by {@link #encode(D)}
+   * If {@code shouldCopy} is true, then buffers returned by {@link #encode(Object)}
    * are copied and will not be modified by future calls to {@code encode}.
    * <p>
    * If {@code shouldCopy} is false, then buffers returned by {@code encode}

@@ -46,6 +46,9 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Test;
 
+/**
+ * The type Test concat tool.
+ */
 public class TestConcatTool {
   private static final int ROWS_IN_INPUT_FILES = 100000;
   private static final CodecFactory DEFLATE = CodecFactory.deflateCodec(9);
@@ -108,6 +111,11 @@ public class TestConcatTool {
     return rowcount;
   }
 
+  /**
+   * Test dir concat.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testDirConcat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -137,6 +145,11 @@ public class TestConcatTool {
     assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
   }
 
+  /**
+   * Test glob pattern concat.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testGlobPatternConcat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -166,6 +179,11 @@ public class TestConcatTool {
     assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
   }
 
+  /**
+   * Test file does not exist.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected = FileNotFoundException.class)
   public void testFileDoesNotExist() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -185,6 +203,11 @@ public class TestConcatTool {
       args);
   }
 
+  /**
+   * Test concat.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testConcat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -213,6 +236,11 @@ public class TestConcatTool {
     assertEquals(getCodec(input1).getClass(), getCodec(output).getClass());
   }
 
+  /**
+   * Test different schemas fail.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testDifferentSchemasFail() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -236,6 +264,11 @@ public class TestConcatTool {
     assertEquals(1, returnCode);
   }
 
+  /**
+   * Test different metadata fail.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testDifferentMetadataFail() throws Exception {
     Map<String, String> metadata1 = new HashMap<>();
@@ -261,6 +294,11 @@ public class TestConcatTool {
     assertEquals(2, returnCode);
   }
 
+  /**
+   * Test different codec fail.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testDifferentCodecFail() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -284,6 +322,11 @@ public class TestConcatTool {
     assertEquals(3, returnCode);
   }
 
+  /**
+   * Test helpful message when no args given.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testHelpfulMessageWhenNoArgsGiven() throws Exception {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream(1024);

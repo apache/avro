@@ -51,17 +51,29 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
+/**
+ * The type Test schema.
+ */
 public class TestSchema {
 
+  /**
+   * The constant LISP_SCHEMA.
+   */
   public static final String LISP_SCHEMA = "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
             +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
             +"{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
             +"{\"name\":\"car\", \"type\":\"Lisp\"},"
             +"{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}";
 
+  /**
+   * The constant BASIC_ENUM_SCHEMA.
+   */
   public static final String BASIC_ENUM_SCHEMA = "{\"type\":\"enum\", \"name\":\"Test\","
             +"\"symbols\": [\"A\", \"B\"]}";
 
+  /**
+   * The constant SCHEMA_WITH_DOC_TAGS.
+   */
   public static final String SCHEMA_WITH_DOC_TAGS = "{\n"
       + "  \"type\": \"record\",\n"
       + "  \"name\": \"outer_record\",\n"
@@ -83,6 +95,11 @@ public class TestSchema {
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "30"));
 
+  /**
+   * Test null.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNull() throws Exception {
     assertEquals(Schema.create(Type.NULL), Schema.parse("\"null\""));
@@ -90,6 +107,11 @@ public class TestSchema {
     check("\"null\"", "null", null);
   }
 
+  /**
+   * Test boolean.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testBoolean() throws Exception {
     assertEquals(Schema.create(Type.BOOLEAN), Schema.parse("\"boolean\""));
@@ -98,6 +120,11 @@ public class TestSchema {
     check("\"boolean\"", "true", Boolean.TRUE);
   }
 
+  /**
+   * Test string.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testString() throws Exception {
     assertEquals(Schema.create(Type.STRING), Schema.parse("\"string\""));
@@ -106,6 +133,11 @@ public class TestSchema {
     check("\"string\"", "\"foo\"", new Utf8("foo"));
   }
 
+  /**
+   * Test bytes.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testBytes() throws Exception {
     assertEquals(Schema.create(Type.BYTES), Schema.parse("\"bytes\""));
@@ -115,6 +147,11 @@ public class TestSchema {
           ByteBuffer.wrap(new byte[]{0,65,66,67,-1}));
   }
 
+  /**
+   * Test int.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testInt() throws Exception {
     assertEquals(Schema.create(Type.INT), Schema.parse("\"int\""));
@@ -122,6 +159,11 @@ public class TestSchema {
     check("\"int\"", "9", new Integer(9));
   }
 
+  /**
+   * Test long.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testLong() throws Exception {
     assertEquals(Schema.create(Type.LONG), Schema.parse("\"long\""));
@@ -129,6 +171,11 @@ public class TestSchema {
     check("\"long\"", "11", new Long(11));
   }
 
+  /**
+   * Test float.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testFloat() throws Exception {
     assertEquals(Schema.create(Type.FLOAT), Schema.parse("\"float\""));
@@ -140,6 +187,11 @@ public class TestSchema {
     checkDefault("\"float\"", "\"-Infinity\"", Float.NEGATIVE_INFINITY);
   }
 
+  /**
+   * Test double.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testDouble() throws Exception {
     assertEquals(Schema.create(Type.DOUBLE), Schema.parse("\"double\""));
@@ -151,6 +203,11 @@ public class TestSchema {
     checkDefault("\"double\"", "\"-Infinity\"", Double.NEGATIVE_INFINITY);
   }
 
+  /**
+   * Test array.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testArray() throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
@@ -164,6 +221,11 @@ public class TestSchema {
     checkParseError("{\"type\":\"array\"}");      // items required
   }
 
+  /**
+   * Test map.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testMap() throws Exception {
     HashMap<Utf8,Long> map = new HashMap<>();
@@ -172,6 +234,11 @@ public class TestSchema {
     checkParseError("{\"type\":\"map\"}");        // values required
   }
 
+  /**
+   * Test union map.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testUnionMap() throws Exception {
     String unionMapSchema = "{\"name\":\"foo\", \"type\":\"record\"," +
@@ -184,6 +251,11 @@ public class TestSchema {
     check(unionMapSchema, true);
   }
 
+  /**
+   * Test record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRecord() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
@@ -220,12 +292,20 @@ public class TestSchema {
                     +"{\"name\":\"f.g\",\"type\":\"int\"}]}");
   }
 
+  /**
+   * Test invalid name tolerance.
+   */
   @Test public void testInvalidNameTolerance() {
     Schema.parse("{\"type\":\"record\",\"name\":\"1X\",\"fields\":[]}", false);
     Schema.parse("{\"type\":\"record\",\"name\":\"X-\",\"fields\":[]}", false);
     Schema.parse("{\"type\":\"record\",\"name\":\"X$\",\"fields\":[]}", false);
   }
 
+  /**
+   * Test map in record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testMapInRecord() throws Exception {
     String json = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
@@ -240,6 +320,11 @@ public class TestSchema {
   }
 
 
+  /**
+   * Test enum.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testEnum() throws Exception {
     check(BASIC_ENUM_SCHEMA, "\"B\"",
@@ -255,6 +340,11 @@ public class TestSchema {
     checkParseError("{\"type\":\"enum\",\"name\":\"X\",\"symbols\":[\"X.Y\"]}");
   }
 
+  /**
+   * Test fixed.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testFixed() throws Exception {
     String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
@@ -264,6 +354,11 @@ public class TestSchema {
     checkParseError("{\"type\":\"fixed\"}");        // size required
   }
 
+  /**
+   * Test recursive.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRecursive() throws Exception {
     check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
@@ -273,6 +368,11 @@ public class TestSchema {
           false);
   }
 
+  /**
+   * Test recursive equals.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRecursiveEquals() throws Exception {
     String jsonSchema = "{\"type\":\"record\", \"name\":\"List\", \"fields\": ["
@@ -283,6 +383,11 @@ public class TestSchema {
     s1.hashCode();                                // test no stackoverflow
   }
 
+  /**
+   * Test schema explosion.
+   *
+   * @throws Exception the exception
+   */
   @Test
   /** Test that equals() and hashCode() don't require exponential time on
    *  certain pathological schemas. */
@@ -310,11 +415,21 @@ public class TestSchema {
     }
   }
 
+  /**
+   * Test lisp.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testLisp() throws Exception {
     check(LISP_SCHEMA, false);
   }
 
+  /**
+   * Test union.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testUnion() throws Exception {
     check("[\"string\", \"long\"]", false);
@@ -360,6 +475,11 @@ public class TestSchema {
               "{\"Baz\":\"X\"}");
   }
 
+  /**
+   * Test complex unions.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testComplexUnions() throws Exception {
     // one of each unnamed type and two of named types
@@ -426,6 +546,11 @@ public class TestSchema {
     checkUnionError(new Schema[] {union});
   }
 
+  /**
+   * Test complex prop.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testComplexProp() throws Exception {
     String json = "{\"type\":\"null\", \"foo\": [0]}";
@@ -433,12 +558,22 @@ public class TestSchema {
     assertEquals(null, s.getProp("foo"));
   }
 
+  /**
+   * Test prop ordering.
+   *
+   * @throws Exception the exception
+   */
   @Test public void testPropOrdering() throws Exception {
     String json = "{\"type\":\"int\",\"z\":\"c\",\"yy\":\"b\",\"x\":\"a\"}";
     Schema s = Schema.parse(json);
     assertEquals(json, s.toString());
   }
 
+  /**
+   * Test parse input stream.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testParseInputStream() throws IOException {
     Schema s = Schema.parse(
@@ -446,6 +581,11 @@ public class TestSchema {
     assertEquals(Schema.parse("\"boolean\""), s);
   }
 
+  /**
+   * Test namespace scope.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNamespaceScope() throws Exception {
     String z = "{\"type\":\"record\",\"name\":\"Z\",\"fields\":[]}";
@@ -461,6 +601,11 @@ public class TestSchema {
     assertEquals("q.Z", ys.getField("f").schema().getFullName());
   }
 
+  /**
+   * Test namespace nesting.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNamespaceNesting() throws Exception {
     String y = "{\"type\":\"record\",\"name\":\"y.Y\",\"fields\":["
@@ -472,6 +617,11 @@ public class TestSchema {
     assertEquals(xs, Schema.parse(xs.toString()));
   }
 
+  /**
+   * Test nested null namespace.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNestedNullNamespace() throws Exception {
     Schema inner =
@@ -481,6 +631,9 @@ public class TestSchema {
     assertEquals(outer, Schema.parse(outer.toString()));
   }
 
+  /**
+   * Test nested null namespace referencing.
+   */
   @Test
   public void testNestedNullNamespaceReferencing() {
     Schema inner =
@@ -491,6 +644,9 @@ public class TestSchema {
     assertEquals(outer, Schema.parse(outer.toString()));
   }
 
+  /**
+   * Test nested null namespace referencing with union.
+   */
   @Test
   public void testNestedNullNamespaceReferencingWithUnion() {
     Schema inner =
@@ -502,6 +658,11 @@ public class TestSchema {
     assertEquals(outer, Schema.parse(outer.toString()));
   }
 
+  /**
+   * Test nested non null namespace 1.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNestedNonNullNamespace1() throws Exception {
     Schema inner1 = Schema.createEnum("InnerEnum", null, "space", Arrays.asList("x"));
@@ -513,6 +674,11 @@ public class TestSchema {
     assertEquals(nullOuter, Schema.parse(nullOuter.toString()));
   }
 
+  /**
+   * Test nested non null namespace 2.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNestedNonNullNamespace2() throws Exception {
     Schema inner1 = Schema.createFixed("InnerFixed", null, "space", 1);
@@ -524,6 +690,11 @@ public class TestSchema {
     assertEquals(nullOuter, Schema.parse(nullOuter.toString()));
   }
 
+  /**
+   * Test null namespace alias.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNullNamespaceAlias() throws Exception {
     Schema s =
@@ -535,6 +706,11 @@ public class TestSchema {
     assertEquals("x.Y", u.getFullName());
   }
 
+  /**
+   * Test null pointer.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNullPointer() throws Exception {
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\", \"fields\":"
@@ -591,6 +767,9 @@ public class TestSchema {
     assertEquals("Inner Union", schema.getField("inner_union").doc());
   }
 
+  /**
+   * Test field docs.
+   */
   @Test
   public void testFieldDocs() {
     String schemaStr = "{\"name\": \"Rec\",\"type\": \"record\",\"fields\" : ["+
@@ -605,6 +784,11 @@ public class TestSchema {
     assertEquals("test", schema.getField("f").doc());
   }
 
+  /**
+   * Test aliases.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testAliases() throws Exception {
     String t1 = "{\"type\":\"record\",\"name\":\"a.b\",\"fields\":["
@@ -709,6 +893,15 @@ public class TestSchema {
     assertFalse(s0.equals(s2));
   }
 
+  /**
+   * Check binary.
+   *
+   * @param schema the schema
+   * @param datum  the datum
+   * @param writer the writer
+   * @param reader the reader
+   * @throws IOException the io exception
+   */
   public static void checkBinary(Schema schema, Object datum,
                                  DatumWriter<Object> writer,
                                  DatumReader<Object> reader)
@@ -716,6 +909,17 @@ public class TestSchema {
     checkBinary(schema, datum, writer, reader, null);
   }
 
+  /**
+   * Check binary object.
+   *
+   * @param schema the schema
+   * @param datum  the datum
+   * @param writer the writer
+   * @param reader the reader
+   * @param reuse  the reuse
+   * @return the object
+   * @throws IOException the io exception
+   */
   public static Object checkBinary(Schema schema, Object datum,
                                  DatumWriter<Object> writer,
                                  DatumReader<Object> reader,
@@ -738,6 +942,15 @@ public class TestSchema {
     return decoded;
   }
 
+  /**
+   * Check direct binary.
+   *
+   * @param schema the schema
+   * @param datum  the datum
+   * @param writer the writer
+   * @param reader the reader
+   * @throws IOException the io exception
+   */
   public static void checkDirectBinary(Schema schema, Object datum,
       DatumWriter<Object> writer, DatumReader<Object> reader)
       throws IOException {
@@ -756,6 +969,15 @@ public class TestSchema {
     assertEquals("Decoded data does not match.", datum, decoded);
   }
 
+  /**
+   * Check blocking binary.
+   *
+   * @param schema the schema
+   * @param datum  the datum
+   * @param writer the writer
+   * @param reader the reader
+   * @throws IOException the io exception
+   */
   public static void checkBlockingBinary(Schema schema, Object datum,
       DatumWriter<Object> writer, DatumReader<Object> reader)
       throws IOException {
@@ -817,6 +1039,12 @@ public class TestSchema {
     assertEquals("Decoded data does not match.", datum, decoded);
   }
 
+  /**
+   * Check binary json.
+   *
+   * @param json the json
+   * @throws Exception the exception
+   */
   public static void checkBinaryJson(String json) throws Exception {
     Object node = Json.parseJson(json);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -867,6 +1095,11 @@ public class TestSchema {
     }
   }
 
+  /**
+   * Test no default field.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected=AvroTypeException.class)
   public void testNoDefaultField() throws Exception {
     Schema expected =
@@ -877,6 +1110,11 @@ public class TestSchema {
         new ByteArrayInputStream(new byte[0]), null));
   }
 
+  /**
+   * Test enum mismatch.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testEnumMismatch() throws Exception {
     Schema actual = Schema.parse
@@ -903,11 +1141,17 @@ public class TestSchema {
     }
   }
 
+  /**
+   * Test record with primitive name.
+   */
   @Test(expected=AvroTypeException.class)
   public void testRecordWithPrimitiveName() {
     Schema.parse("{\"type\":\"record\", \"name\":\"string\", \"fields\": []}");
   }
 
+  /**
+   * Test enum with primitive name.
+   */
   @Test(expected=AvroTypeException.class)
   public void testEnumWithPrimitiveName() {
     Schema.parse("{\"type\":\"enum\", \"name\":\"null\", \"symbols\": [\"A\"]}");
@@ -918,6 +1162,9 @@ public class TestSchema {
         + "\"symbols\": [\"a\", \"b\"]}");
   }
 
+  /**
+   * Test immutability 1.
+   */
   @Test(expected=AvroRuntimeException.class)
   public void testImmutability1() {
     Schema s = enumSchema();
@@ -925,6 +1172,9 @@ public class TestSchema {
     s.addProp("p1", "2");
   }
 
+  /**
+   * Test immutability 2.
+   */
   @Test(expected=AvroRuntimeException.class)
   public void testImmutability2() {
     Schema s = enumSchema();
@@ -936,50 +1186,77 @@ public class TestSchema {
         "a", "b", "c"})).lock();
   }
 
+  /**
+   * Test locked array list 1.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList1() {
     lockedArrayList().add("p");
   }
 
+  /**
+   * Test locked array list 2.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList2() {
     lockedArrayList().remove("a");
   }
 
+  /**
+   * Test locked array list 3.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList3() {
     lockedArrayList().addAll(Arrays.asList(new String[] { "p" }));
   }
 
+  /**
+   * Test locked array list 4.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList4() {
     lockedArrayList().addAll(0,
         Arrays.asList(new String[] { "p" }));
   }
 
+  /**
+   * Test locked array list 5.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList5() {
     lockedArrayList().
       removeAll(Arrays.asList(new String[] { "a" }));
   }
 
+  /**
+   * Test locked array list 6.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList6() {
     lockedArrayList().
       retainAll(Arrays.asList(new String[] { "a" }));
   }
 
+  /**
+   * Test locked array list 7.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList7() {
     lockedArrayList().clear();
   }
 
+  /**
+   * Test locked array list 8.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList8() {
     lockedArrayList().iterator().remove();
   }
 
 
+  /**
+   * Test locked array list 9.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList9() {
     Iterator<String> it = lockedArrayList().iterator();
@@ -987,11 +1264,17 @@ public class TestSchema {
     it.remove();
   }
 
+  /**
+   * Test locked array list 10.
+   */
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList10() {
     lockedArrayList().remove(1);
   }
 
+  /**
+   * Test names get with inherited namespace.
+   */
   @Test
   public void testNames_GetWithInheritedNamespace() {
     Schema schema = Schema.create(Type.STRING);
@@ -1002,6 +1285,9 @@ public class TestSchema {
     assertEquals(schema, names.get("Name"));
   }
 
+  /**
+   * Test names get with null namespace.
+   */
   @Test
   public void testNames_GetWithNullNamespace() {
     Schema schema = Schema.create(Type.STRING);
@@ -1012,6 +1298,9 @@ public class TestSchema {
     assertEquals(schema, names.get("Name"));
   }
 
+  /**
+   * Test names get not found.
+   */
   @Test
   public void testNames_GetNotFound() {
     Schema.Names names = new Schema.Names("space");

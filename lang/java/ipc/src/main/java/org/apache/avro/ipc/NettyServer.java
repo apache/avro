@@ -64,23 +64,37 @@ public class NettyServer implements Server {
   private final CountDownLatch closed = new CountDownLatch(1);
   private final ExecutionHandler executionHandler;
 
+  /**
+   * Instantiates a new Netty server.
+   *
+   * @param responder the responder
+   * @param addr      the addr
+   */
   public NettyServer(Responder responder, InetSocketAddress addr) {
     this(responder, addr, new NioServerSocketChannelFactory
          (Executors .newCachedThreadPool(), Executors.newCachedThreadPool()));
   }
 
+  /**
+   * Instantiates a new Netty server.
+   *
+   * @param responder      the responder
+   * @param addr           the addr
+   * @param channelFactory the channel factory
+   */
   public NettyServer(Responder responder, InetSocketAddress addr,
                      ChannelFactory channelFactory) {
       this(responder, addr, channelFactory, null);
   }
 
   /**
-   * @param executionHandler if not null, will be inserted into the Netty
-   *                         pipeline. Use this when your responder does
-   *                         long, non-cpu bound processing (see Netty's
-   *                         ExecutionHandler javadoc).
-   * @param pipelineFactory  Avro-related handlers will be added on top of
-   *                         what this factory creates
+   * Instantiates a new Netty server.
+   *
+   * @param responder        the responder
+   * @param addr             the addr
+   * @param channelFactory   the channel factory
+   * @param pipelineFactory  Avro-related handlers will be added on top of                         what this factory creates
+   * @param executionHandler if not null, will be inserted into the Netty                         pipeline. Use this when your responder does                         long, non-cpu bound processing (see Netty's                         ExecutionHandler javadoc).
    */
   public NettyServer(Responder responder, InetSocketAddress addr,
                      ChannelFactory channelFactory,
@@ -108,10 +122,12 @@ public class NettyServer implements Server {
   }
 
   /**
-   * @param executionHandler if not null, will be inserted into the Netty
-   *                         pipeline. Use this when your responder does
-   *                         long, non-cpu bound processing (see Netty's
-   *                         ExecutionHandler javadoc).
+   * Instantiates a new Netty server.
+   *
+   * @param responder        the responder
+   * @param addr             the addr
+   * @param channelFactory   the channel factory
+   * @param executionHandler if not null, will be inserted into the Netty                         pipeline. Use this when your responder does                         long, non-cpu bound processing (see Netty's                         ExecutionHandler javadoc).
    */
   public NettyServer(Responder responder, InetSocketAddress addr,
                      ChannelFactory channelFactory,
@@ -148,6 +164,7 @@ public class NettyServer implements Server {
   }
 
   /**
+   * Gets num active connections.
    *
    * @return The number of clients currently connected to this server.
    */

@@ -33,6 +33,9 @@ import org.slf4j.LoggerFactory;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * The type Test sasl anonymous.
+ */
 public class TestSaslAnonymous extends TestProtocolGeneric {
 
   private static final Logger LOG =
@@ -50,11 +53,25 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
   @Override public void testHandshake() throws IOException {}
   @Override public void testResponseChange() throws IOException {}
 
+  /**
+   * The interface Proto interface.
+   */
   public interface ProtoInterface {
+    /**
+     * Test byte [ ].
+     *
+     * @param b the b
+     * @return the byte [ ]
+     */
     byte[] test(byte[] b);
   }
 
-  // test big enough to fill socket output buffer
+  /**
+   * Test 64 k request.
+   *
+   * @throws Exception the exception
+   */
+// test big enough to fill socket output buffer
   @Test
   public void test64kRequest() throws Exception {
     SaslSocketServer s = new SaslSocketServer

@@ -33,7 +33,9 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 
-/** Reads an Avro data file and writes a Trevni file. */
+/**
+ * Reads an Avro data file and writes a Trevni file.
+ */
 public class ToTrevniTool implements Tool {
 
   @Override

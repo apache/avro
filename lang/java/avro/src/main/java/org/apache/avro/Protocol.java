@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -100,20 +101,46 @@ public class Protocol extends JsonProperties {
         }
     }
 
-    /** The name of this message. */
+    /**
+     * The name of this message
+     *
+     * @return Name of the messages
+     */
     public String getName() { return name; }
-    /** The parameters of this message. */
+
+    /**
+     * The parameters of this message
+     *
+     * @return The schema of the message
+     */
     public Schema getRequest() { return request; }
-    /** The returned data. */
+
+    /**
+     * The returned data
+     *
+     * @return The schema of the response
+     */
     public Schema getResponse() { return Schema.create(Schema.Type.NULL); }
-    /** Errors that might be thrown. */
+
+    /**
+     * Errors that might be thrown
+     *
+     * @return The schema of the errors
+     */
     public Schema getErrors() {
       return Schema.createUnion(new ArrayList<>());
     }
 
-    /** Returns true if this is a one-way message, with no response or errors.*/
+    /**
+     * Returns true if this is a one-way message, with no response or errors
+     *
+     * @return Boolean indicating if it is a one way messages
+     */
     public boolean isOneWay() { return true; }
 
+    /**
+     * @return A JSON representation of the protocol
+     */
     public String toString() {
       try {
         StringWriter writer = new StringWriter();
@@ -125,6 +152,7 @@ public class Protocol extends JsonProperties {
         throw new AvroRuntimeException(e);
       }
     }
+
     void toJson(JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       if (doc != null) gen.writeStringField("doc", doc);
@@ -240,50 +268,100 @@ public class Protocol extends JsonProperties {
     this(name, null, namespace);
   }
 
-  /** The name of this protocol. */
+  /**
+   * @return Name of this protocol
+   */
   public String getName() { return name; }
 
-  /** The namespace of this protocol.  Qualifies its name. */
+  /**
+   * @return Namespace of this protocol. Qualifies its name.
+   */
   public String getNamespace() { return namespace; }
 
-  /** Doc string for this protocol. */
+  /**
+   * @return Doc string for this protocol
+   */
   public String getDoc() { return doc; }
 
-  /** The types of this protocol. */
+  /**
+   * @return The types of this protocol
+   */
   public Collection<Schema> getTypes() { return types.values(); }
 
-  /** Returns the named type. */
+  /**
+   * @param name the name of the type
+   * @return The named type
+   */
   public Schema getType(String name) { return types.get(name); }
 
-  /** Set the types of this protocol. */
+  /**
+   * Set the types of this protocol
+   * @param newTypes Types of this protocol
+   */
   public void setTypes(Collection<Schema> newTypes) {
     types = new Schema.Names();
     for (Schema s : newTypes)
       types.add(s);
   }
 
-  /** The messages of this protocol. */
+  /**
+   * @return Messages of this protocol
+   */
   public Map<String,Message> getMessages() { return messages; }
 
-  /** Create a one-way message. */
+  /**
+   * Create a one-way message.
+   * @param name Name of the message
+   * @param doc Docstring of the message
+   * @param request Schema of the message
+   * @return One-way message
+   */
   @Deprecated
   public Message createMessage(String name, String doc, Schema request) {
     return createMessage(name, doc, new LinkedHashMap<String,String>(),request);
   }
-  /** Create a one-way message. */
+
+  /**
+   * Create a one-way message.
+   * @param <T> The type of the message to be created
+   * @param name Name of the message
+   * @param doc Docstring of the message
+   * @param propMap Properties of the message
+   * @param request Schema of the message
+   * @return One-way message
+   */
   public <T> Message createMessage(String name, String doc,
                                    Map<String,T> propMap, Schema request) {
     return new Message(name, doc, propMap, request);
   }
 
-  /** Create a two-way message. */
+  /**
+   * Create a two-way message.
+   * @param name Name of the message
+   * @param doc Docstring of the message
+   * @param request Schema of the request message
+   * @param response Schema of the response message
+   * @param errors Schema of the errors
+   * @return Two-way message
+   */
   @Deprecated
   public Message createMessage(String name, String doc, Schema request,
                                Schema response, Schema errors) {
     return createMessage(name, doc, new LinkedHashMap<String,String>(),
                          request, response, errors);
   }
-  /** Create a two-way message. */
+
+  /**
+   * Create a two-way message.
+   * @param <T> The type of the message to be created
+   * @param name Name of the message
+   * @param doc Docstring of the message
+   * @param propMap Properties of the message
+   * @param request Schema of the request message
+   * @param response Schema of the response message
+   * @param errors Schema of the errors
+   * @return Two-way message
+   */
   public <T> Message createMessage(String name, String doc,
                                    Map<String,T> propMap, Schema request,
                                    Schema response, Schema errors) {
@@ -306,12 +384,17 @@ public class Protocol extends JsonProperties {
       + types.hashCode() + messages.hashCode() + props.hashCode();
   }
 
-  /** Render this as <a href="http://json.org/">JSON</a>.*/
+  /**
+   * Render this as <a href="http://json.org/">JSON</a>.
+   * @return A JSON representation of the protocol
+   */
   @Override
   public String toString() { return toString(false); }
 
-  /** Render this as <a href="http://json.org/">JSON</a>.
+  /**
+   * Render this as <a href="http://json.org/">JSON</a>.
    * @param pretty if true, pretty-print JSON.
+   * @return JSON representation of the protocol
    */
   public String toString(boolean pretty) {
     try {
@@ -325,6 +408,7 @@ public class Protocol extends JsonProperties {
       throw new AvroRuntimeException(e);
     }
   }
+
   void toJson(JsonGenerator gen) throws IOException {
     types.space(namespace);
 
@@ -350,29 +434,47 @@ public class Protocol extends JsonProperties {
     gen.writeEndObject();
   }
 
-  /** Return the MD5 hash of the text of this protocol. */
+  /**
+   * Return the MD5 hash of the text of this protocol.
+   * @return The MD5 hash as a byte array
+   */
   public byte[] getMD5() {
     if (md5 == null)
       try {
         md5 = MessageDigest.getInstance("MD5")
-          .digest(this.toString().getBytes("UTF-8"));
+          .digest(this.toString().getBytes(StandardCharsets.UTF_8));
       } catch (Exception e) {
         throw new AvroRuntimeException(e);
       }
     return md5;
   }
 
-  /** Read a protocol from a Json file. */
+  /**
+   * Read a protocol from a JSON file
+   * @param file The file that contains the JSON to parse
+   * @throws IOException if the file cannot be read
+   * @return the parsed protocol
+   */
   public static Protocol parse(File file) throws IOException {
     return parse(Schema.FACTORY.createJsonParser(file));
   }
 
-  /** Read a protocol from a Json stream. */
+  /**
+   * Read a protocol from a JSON stream
+   * @param stream The InputStream providing JSON
+   * @throws IOException if the stream cannot be consumed
+   * @return the parsed protocol
+   */
   public static Protocol parse(InputStream stream) throws IOException {
     return parse(Schema.FACTORY.createJsonParser(stream));
   }
 
-  /** Read a protocol from one or more json strings */
+  /**
+   * Read a protocol from one or more JSON strings
+   * @param string One JSON string representing a protocol
+   * @param more Additional JSON strings representing one or more protocols
+   * @return the parsed protocol
+   */
   public static Protocol parse(String string, String... more) {
     StringBuilder b = new StringBuilder(string);
     for (String part : more)
@@ -380,11 +482,15 @@ public class Protocol extends JsonProperties {
     return parse(b.toString());
   }
 
-  /** Read a protocol from a Json string. */
+  /**
+   * Read a protocol from one JSON strings
+   * @param string JSON string containing a protocol
+   * @return the parsed protocol
+   */
   public static Protocol parse(String string) {
     try {
       return parse(Schema.FACTORY.createJsonParser
-                   (new ByteArrayInputStream(string.getBytes("UTF-8"))));
+                   (new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8))));
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }

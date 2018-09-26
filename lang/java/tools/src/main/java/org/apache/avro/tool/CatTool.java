@@ -38,7 +38,9 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 
-/** Tool to extract samples from an Avro data file. */
+/**
+ * Tool to extract samples from an Avro data file.
+ */
 public class CatTool implements Tool {
 
   private long totalCopied;

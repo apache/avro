@@ -32,7 +32,7 @@ import org.apache.avro.ipc.generic.GenericResponder;
 
 /**
  * Naively measures overhead of using the stats plugin.
- *
+ * <p>
  * The API used is the generic one.
  * The protocol is the "null" protocol: null is sent
  * and returned.
@@ -47,6 +47,11 @@ public class StatsPluginOverhead {
       + "   \"response\": \"null\"} } }");
 
   private static class IdentityResponder extends GenericResponder {
+    /**
+     * Instantiates a new Identity responder.
+     *
+     * @param local the local
+     */
     public IdentityResponder(Protocol local) {
       super(local);
     }
@@ -58,6 +63,12 @@ public class StatsPluginOverhead {
     }
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws Exception the exception
+   */
   public static void main(String[] args) throws Exception {
     double with = sendRpcs(true)/1000000000.0;
     double without = sendRpcs(false)/1000000000.0;

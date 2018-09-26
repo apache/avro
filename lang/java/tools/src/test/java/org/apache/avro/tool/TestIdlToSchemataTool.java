@@ -25,8 +25,16 @@ import java.util.List;
 
 import org.junit.Test;
 
+/**
+ * The type Test idl to schemata tool.
+ */
 public class TestIdlToSchemataTool {
 
+  /**
+   * Test split idl into schemata.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testSplitIdlIntoSchemata() throws Exception {
     String idl = "src/test/idl/protocol.avdl";

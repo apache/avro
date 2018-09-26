@@ -32,16 +32,31 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
 
-/** Generates schema data as Java objects with random values. */
+/**
+ * Generates schema data as Java objects with random values.
+ */
 public class RandomData implements Iterable<Object> {
   private final Schema root;
   private final long seed;
   private final int count;
 
+  /**
+   * Instantiates a new Random data.
+   *
+   * @param schema the schema
+   * @param count  the count
+   */
   public RandomData(Schema schema, int count) {
     this(schema, count, System.currentTimeMillis());
   }
 
+  /**
+   * Instantiates a new Random data.
+   *
+   * @param schema the schema
+   * @param count  the count
+   * @param seed   the seed
+   */
   public RandomData(Schema schema, int count, long seed) {
     this.root = schema;
     this.seed = seed;
@@ -122,6 +137,12 @@ public class RandomData implements Iterable<Object> {
     return bytes;
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws Exception the exception
+   */
   public static void main(String[] args) throws Exception {
     if(args.length != 3) {
       System.out.println("Usage: RandomData <schemafile> <outputfile> <count>");

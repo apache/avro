@@ -37,12 +37,14 @@ import org.apache.avro.ipc.stats.Stopwatch.Ticks;
  * Collects count and latency statistics about RPC calls.  Keeps
  * data for every method. Can be added to a Requestor (client)
  * or Responder (server).
- *
+ * <p>
  * This uses milliseconds as the standard unit of measure
  * throughout the class, stored in floats.
  */
 public class StatsPlugin extends RPCPlugin {
-  /** Static declaration of histogram buckets. */
+  /**
+   * Static declaration of histogram buckets.
+   */
   static final Segmenter<String, Float> LATENCY_SEGMENTER =
       new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0f,
@@ -61,6 +63,9 @@ public class StatsPlugin extends RPCPlugin {
         60000f, // 1 minute
        600000f)));
 
+  /**
+   * The Payload segmenter.
+   */
   static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
       new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0,
@@ -79,29 +84,46 @@ public class StatsPlugin extends RPCPlugin {
         50000,
        100000)));
 
-  /** Per-method histograms.
-   * Must be accessed while holding a lock. */
+  /**
+   * Per-method histograms.
+   * Must be accessed while holding a lock.
+   */
   Map<Message, FloatHistogram<?>> methodTimings =
     new HashMap<>();
 
+  /**
+   * The Send payloads.
+   */
   Map<Message, IntegerHistogram<?>> sendPayloads =
     new HashMap<>();
 
+  /**
+   * The Receive payloads.
+   */
   Map<Message, IntegerHistogram<?>> receivePayloads =
     new HashMap<>();
 
-  /** RPCs in flight. */
+  /**
+   * RPCs in flight.
+   */
   ConcurrentMap<RPCContext, Stopwatch> activeRpcs =
     new ConcurrentHashMap<>();
   private Ticks ticks;
 
-  /** How long I've been alive */
+  /**
+   * How long I've been alive
+   */
   public Date startupTime = new Date();
 
   private Segmenter<?, Float> floatSegmenter;
   private Segmenter<?, Integer> integerSegmenter;
 
-  /** Construct a plugin with custom Ticks and Segmenter implementations. */
+  /**
+   * Construct a plugin with custom Ticks and Segmenter implementations.  @param ticks the ticks
+   *
+   * @param floatSegmenter   the float segmenter
+   * @param integerSegmenter the integer segmenter
+   */
   StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter,
       Segmenter<?, Integer> integerSegmenter) {
     this.floatSegmenter = floatSegmenter;
@@ -109,8 +131,10 @@ public class StatsPlugin extends RPCPlugin {
     this.ticks = ticks;
   }
 
-  /** Construct a plugin with default (system) ticks, and default
-   * histogram segmentation. */
+  /**
+   * Construct a plugin with default (system) ticks, and default
+   * histogram segmentation.
+   */
   public StatsPlugin() {
     this(Stopwatch.SYSTEM_TICKS, LATENCY_SEGMENTER, PAYLOAD_SEGMENTER);
   }
@@ -219,7 +243,11 @@ public class StatsPlugin extends RPCPlugin {
     return new IntegerHistogram(integerSegmenter);
   }
 
-  /** Converts nanoseconds to milliseconds. */
+  /**
+   * Converts nanoseconds to milliseconds.  @param elapsedNanos the elapsed nanos
+   *
+   * @return the float
+   */
   static float nanosToMillis(long elapsedNanos) {
     return elapsedNanos / 1000000.0f;
   }

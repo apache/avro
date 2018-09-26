@@ -23,16 +23,20 @@ package org.apache.avro.ipc;
  * For each request with an asynchronous callback,
  * either {@link #handleResult(Object)} or {@link #handleError(Throwable)}
  * will be invoked.
+ *
+ * @param <T> the type parameter
  */
 public interface Callback<T> {
   /**
    * Receives a callback result.
+   *
    * @param result the result returned in the callback.
    */
   void handleResult(T result);
 
   /**
    * Receives an error.
+   *
    * @param error the error returned in the callback.
    */
   void handleError(Throwable error);

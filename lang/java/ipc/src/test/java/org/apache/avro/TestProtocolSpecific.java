@@ -57,16 +57,31 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 
+/**
+ * The type Test protocol specific.
+ */
 public class TestProtocolSpecific {
 
+  /**
+   * The constant REPEATING.
+   */
   protected static final int REPEATING = -1;
+  /**
+   * The constant SERVER_PORTS_DIR.
+   */
   protected static final File SERVER_PORTS_DIR
   = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
 
+  /**
+   * The constant ackCount.
+   */
   public static int ackCount;
 
   private static boolean throwUndeclaredError;
 
+  /**
+   * The type Test.
+   */
   public static class TestImpl implements Simple {
     public String hello(String greeting) { return "goodbye"; }
     public int add(int arg1, int arg2) { return arg1 + arg2; }
@@ -79,14 +94,34 @@ public class TestProtocolSpecific {
     public void ack() { ackCount++; }
   }
 
+  /**
+   * The constant server.
+   */
   protected static Server server;
+  /**
+   * The constant client.
+   */
   protected static Transceiver client;
+  /**
+   * The constant proxy.
+   */
   protected static Simple proxy;
 
+  /**
+   * The constant responder.
+   */
   protected static SpecificResponder responder;
 
+  /**
+   * The constant monitor.
+   */
   protected static HandshakeMonitor monitor;
 
+  /**
+   * Test start server.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void testStartServer() throws Exception {
     if (server != null) return;
@@ -103,17 +138,40 @@ public class TestProtocolSpecific {
     responder.addRPCPlugin(monitor);
   }
 
+  /**
+   * Add rpc plugins.
+   *
+   * @param requestor the requestor
+   */
   public void addRpcPlugins(Requestor requestor){}
 
+  /**
+   * Create server server.
+   *
+   * @param testResponder the test responder
+   * @return the server
+   * @throws Exception the exception
+   */
   public Server createServer(Responder testResponder) throws Exception{
     return server = new SocketServer(testResponder,
                               new InetSocketAddress(0));
   }
 
+  /**
+   * Create transceiver transceiver.
+   *
+   * @return the transceiver
+   * @throws Exception the exception
+   */
   public Transceiver createTransceiver() throws Exception{
     return new SocketTransceiver(new InetSocketAddress(server.getPort()));
   }
 
+  /**
+   * Test class loader.
+   *
+   * @throws Exception the exception
+   */
   @Test public void testClassLoader() throws Exception {
     ClassLoader loader = new ClassLoader() {};
 
@@ -127,22 +185,42 @@ public class TestProtocolSpecific {
     assertEquals(requestor.getSpecificData().getClassLoader(), loader);
   }
 
+  /**
+   * Test get remote.
+   *
+   * @throws IOException the io exception
+   */
   @Test public void testGetRemote() throws IOException {
     assertEquals(Simple.PROTOCOL, SpecificRequestor.getRemote(proxy));
   }
 
+  /**
+   * Test hello.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testHello() throws IOException {
     String response = proxy.hello("bob");
     assertEquals("goodbye", response);
   }
 
+  /**
+   * Test hash code.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testHashCode() throws IOException {
     TestError error = new TestError();
     error.hashCode();
   }
 
+  /**
+   * Test echo.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
@@ -154,12 +232,22 @@ public class TestProtocolSpecific {
     assertEquals(record.hashCode(), echoed.hashCode());
   }
 
+  /**
+   * Test add.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testAdd() throws IOException {
     int result = proxy.add(1, 2);
     assertEquals(3, result);
   }
 
+  /**
+   * Test echo bytes.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEchoBytes() throws IOException {
     Random random = new Random();
@@ -171,6 +259,11 @@ public class TestProtocolSpecific {
     assertEquals(data, echoed);
   }
 
+  /**
+   * Test empty echo bytes.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEmptyEchoBytes() throws IOException {
     ByteBuffer data = ByteBuffer.allocate(0);
@@ -179,6 +272,11 @@ public class TestProtocolSpecific {
     assertEquals(data, echoed);
   }
 
+  /**
+   * Test error.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testError() throws IOException {
     TestError error = null;
@@ -191,6 +289,11 @@ public class TestProtocolSpecific {
     assertEquals("an error", error.getMessage$());
   }
 
+  /**
+   * Test undeclared error.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testUndeclaredError() throws Exception {
     this.throwUndeclaredError = true;
@@ -207,6 +310,11 @@ public class TestProtocolSpecific {
   }
 
 
+  /**
+   * Test one way.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testOneWay() throws IOException {
     ackCount = 0;
@@ -217,6 +325,11 @@ public class TestProtocolSpecific {
     assertEquals(2, ackCount);
   }
 
+  /**
+   * Test repeated access.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRepeatedAccess() throws Exception {
     for (int x = 0; x < 1000; x++) {
@@ -224,6 +337,11 @@ public class TestProtocolSpecific {
     }
   }
 
+  /**
+   * Test connection refused one way.
+   *
+   * @throws IOException the io exception
+   */
   @Test(expected = Exception.class)
   public void testConnectionRefusedOneWay() throws IOException {
     Transceiver client = new HttpTransceiver(new URL("http://localhost:4444"));
@@ -233,6 +351,11 @@ public class TestProtocolSpecific {
     proxy.ack();
   }
 
+  /**
+   * Test param variation.
+   *
+   * @throws Exception the exception
+   */
   @Test
   /** Construct and use a protocol whose "hello" method has an extra
       argument to check that schema is sent to parse request. */
@@ -264,11 +387,21 @@ public class TestProtocolSpecific {
     }
   }
 
+  /**
+   * Test handshake count.
+   *
+   * @throws IOException the io exception
+   */
   @AfterClass
   public static void testHandshakeCount() throws IOException {
     monitor.assertHandshake();
   }
 
+  /**
+   * Test stop server.
+   *
+   * @throws IOException the io exception
+   */
   @AfterClass
   public static void testStopServer() throws IOException {
     client.close();
@@ -276,6 +409,9 @@ public class TestProtocolSpecific {
     server = null;
   }
 
+  /**
+   * The type Handshake monitor.
+   */
   public class HandshakeMonitor extends RPCPlugin{
 
     private int handshakes;
@@ -298,6 +434,9 @@ public class TestProtocolSpecific {
       }
     }
 
+    /**
+     * Assert handshake.
+     */
     public void assertHandshake(){
       int expected = getExpectedHandshakeCount();
       if(expected != REPEATING){
@@ -306,13 +445,26 @@ public class TestProtocolSpecific {
     }
   }
 
+  /**
+   * Gets expected handshake count.
+   *
+   * @return the expected handshake count
+   */
   protected int getExpectedHandshakeCount() {
    return 3;
   }
 
+  /**
+   * The type Interop test.
+   */
   public static class InteropTest {
 
-  @Test
+    /**
+     * Test client.
+     *
+     * @throws Exception the exception
+     */
+    @Test
     public void testClient() throws Exception {
       for (File f : SERVER_PORTS_DIR.listFiles()) {
         LineNumberReader reader = new LineNumberReader(new FileReader(f));
@@ -334,6 +486,9 @@ public class TestProtocolSpecific {
 
     /**
      * Starts the RPC server.
+     *
+     * @param args the input arguments
+     * @throws Exception the exception
      */
     public static void main(String[] args) throws Exception {
       SocketServer server = new SocketServer(

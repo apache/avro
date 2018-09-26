@@ -41,25 +41,54 @@ public class NettyTransportCodec {
     private int serial; // to track each call in client side
     private List<ByteBuffer> datas;
 
+    /**
+     * Instantiates a new Netty data pack.
+     */
     public NettyDataPack() {}
 
+    /**
+     * Instantiates a new Netty data pack.
+     *
+     * @param serial the serial
+     * @param datas  the datas
+     */
     public NettyDataPack(int serial, List<ByteBuffer> datas) {
       this.serial = serial;
       this.datas = datas;
     }
 
+    /**
+     * Sets serial.
+     *
+     * @param serial the serial
+     */
     public void setSerial(int serial) {
       this.serial = serial;
     }
 
+    /**
+     * Gets serial.
+     *
+     * @return the serial
+     */
     public int getSerial() {
       return serial;
     }
 
+    /**
+     * Sets datas.
+     *
+     * @param datas the datas
+     */
     public void setDatas(List<ByteBuffer> datas) {
       this.datas = datas;
     }
 
+    /**
+     * Gets datas.
+     *
+     * @return the datas
+     */
     public List<ByteBuffer> getDatas() {
       return datas;
     }
@@ -124,6 +153,9 @@ public class NettyTransportCodec {
     private static final long SIZEOF_REF = 8L; // mem usage of 64-bit pointer
 
 
+    /**
+     * Instantiates a new Netty frame decoder.
+     */
     public NettyFrameDecoder() {
       maxMem = Runtime.getRuntime().maxMemory();
     }

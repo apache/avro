@@ -35,27 +35,60 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.ipc.generic.GenericResponder;
 
-/** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
+/**
+ * {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.
+ */
 public class SpecificResponder extends GenericResponder {
   private Object impl;
 
+  /**
+   * Instantiates a new Specific responder.
+   *
+   * @param iface the iface
+   * @param impl  the
+   */
   public SpecificResponder(Class iface, Object impl) {
     this(iface, impl, new SpecificData(impl.getClass().getClassLoader()));
   }
 
+  /**
+   * Instantiates a new Specific responder.
+   *
+   * @param protocol the protocol
+   * @param impl     the
+   */
   public SpecificResponder(Protocol protocol, Object impl) {
     this(protocol, impl, new SpecificData(impl.getClass().getClassLoader()));
   }
 
+  /**
+   * Instantiates a new Specific responder.
+   *
+   * @param iface the iface
+   * @param impl  the
+   * @param data  the data
+   */
   public SpecificResponder(Class iface, Object impl, SpecificData data) {
     this(data.getProtocol(iface), impl, data);
   }
 
+  /**
+   * Instantiates a new Specific responder.
+   *
+   * @param protocol the protocol
+   * @param impl     the
+   * @param data     the data
+   */
   public SpecificResponder(Protocol protocol, Object impl, SpecificData data) {
     super(protocol, data);
     this.impl = impl;
   }
 
+  /**
+   * Gets specific data.
+   *
+   * @return the specific data
+   */
   public SpecificData getSpecificData() {return (SpecificData)getGenericData();}
 
   @Override

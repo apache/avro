@@ -39,6 +39,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * The type Test create random file tool.
+ */
 public class TestCreateRandomFileTool {
   private static final String COUNT = System.getProperty("test.count", "200");
   private static final File DIR
@@ -52,12 +55,20 @@ public class TestCreateRandomFileTool {
   private ByteArrayOutputStream out;
   private ByteArrayOutputStream err;
 
+  /**
+   * Before.
+   */
   @Before
   public void before() {
     out = new ByteArrayOutputStream();
     err = new ByteArrayOutputStream();
   }
 
+  /**
+   * After.
+   *
+   * @throws Exception the exception
+   */
   @After
   public void after() throws Exception {
     out.close();
@@ -111,21 +122,41 @@ public class TestCreateRandomFileTool {
     assertTrue(err.toString().contains("Need count (--count)"));
   }
 
+  /**
+   * Test simple.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testSimple() throws Exception {
     check();
   }
 
+  /**
+   * Test codec.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testCodec() throws Exception {
     check("--codec", "snappy");
   }
 
+  /**
+   * Test missing count parameter.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testMissingCountParameter() throws Exception {
     checkMissingCount();
   }
 
+  /**
+   * Test std out.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testStdOut() throws Exception {
     TestUtil.resetRandomSeed();

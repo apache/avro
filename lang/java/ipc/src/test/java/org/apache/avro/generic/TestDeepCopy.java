@@ -37,8 +37,13 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificData;
 import org.junit.Test;
 
-/** Unit test for performing a deep copy of an object with a schema */
+/**
+ * Unit test for performing a deep copy of an object with a schema
+ */
 public class TestDeepCopy {
+  /**
+   * Test deep copy.
+   */
   @Test
   public void testDeepCopy() {
     // Set all non-default fields in an Interop instance:

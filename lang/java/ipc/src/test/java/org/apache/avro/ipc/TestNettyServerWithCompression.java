@@ -31,9 +31,18 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
 
+/**
+ * The type Test netty server with compression.
+ */
 public class TestNettyServerWithCompression extends TestNettyServer{
 
 
+  /**
+   * Initialize server server.
+   *
+   * @param responder the responder
+   * @return the server
+   */
   protected static Server initializeServer(Responder responder) {
     ChannelFactory channelFactory = new NioServerSocketChannelFactory(
         Executors.newCachedThreadPool(),
@@ -44,6 +53,13 @@ public class TestNettyServerWithCompression extends TestNettyServer{
         null);
   }
 
+  /**
+   * Initialize transceiver transceiver.
+   *
+   * @param serverPort the server port
+   * @return the transceiver
+   * @throws IOException the io exception
+   */
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
     return  new NettyTransceiver(new InetSocketAddress(serverPort),
         new CompressionChannelFactory(),
@@ -55,6 +71,9 @@ public class TestNettyServerWithCompression extends TestNettyServer{
    * Factory of Compression-enabled client channels
    */
   private static class CompressionChannelFactory extends NioClientSocketChannelFactory {
+    /**
+     * Instantiates a new Compression channel factory.
+     */
     public CompressionChannelFactory() {
       super(Executors.newCachedThreadPool(), Executors.newCachedThreadPool());
     }

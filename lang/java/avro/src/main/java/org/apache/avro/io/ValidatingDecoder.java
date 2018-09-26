@@ -30,10 +30,10 @@ import org.apache.avro.util.Utf8;
 /**
  * An implementation of {@link Decoder} that ensures that the sequence
  * of operations conforms to a schema.
- * <p/>
+ *
  * Use {@link DecoderFactory#validatingDecoder(Schema, Decoder)} to construct
  * and configure.
- * <p/>
+ *
  * ValidatingDecoder is not thread-safe.
  * @see Decoder
  * @see DecoderFactory

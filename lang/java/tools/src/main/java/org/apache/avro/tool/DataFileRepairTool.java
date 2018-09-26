@@ -33,7 +33,9 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 
-/** Recovers data from a corrupt Avro Data file */
+/**
+ * Recovers data from a corrupt Avro Data file
+ */
 public class DataFileRepairTool implements Tool {
 
   @Override

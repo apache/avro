@@ -26,10 +26,15 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+/**
+ * The type Test rpc receive and send tools.
+ */
 public class TestRpcReceiveAndSendTools {
 
   /**
    * Starts a server (using the tool) and sends a single message to it.
+   *
+   * @throws Exception the exception
    */
   @Test
   public void testServeAndSend() throws Exception {
