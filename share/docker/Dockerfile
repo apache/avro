@@ -21,52 +21,88 @@ FROM java:8-jdk
 
 WORKDIR /root
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Add the repository for node.js 4.x
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
 # Install dependencies from packages
-RUN apt-get update && apt-get install --no-install-recommends -y \
-  git subversion curl ant make maven \
-  gcc cmake libjansson-dev asciidoc source-highlight \
-  g++ flex bison libboost-all-dev doxygen \
-  mono-devel mono-gmcs nunit \
-  nodejs \
-  perl \
-  php5 phpunit php5-gmp bzip2 \
-  python python-setuptools python3-setuptools \
-  ruby ruby-dev rake \
-  libsnappy1 libsnappy-dev
+RUN apt-get update && \
+  apt-get install --no-install-recommends -y \
+    ant \
+    asciidoc \
+    bison \
+    bzip2 \
+    cmake \
+    curl \
+    doxygen \
+    flex \
+    g++ \
+    gcc \
+    git \
+    libboost-all-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libglib2.0-dev \
+    libjansson-dev \
+    libsnappy-dev \
+    libsnappy1 \
+    make \
+    maven \
+    mono-devel \
+    nodejs \
+    nunit \
+    perl \
+    php5 \
+    php5-gmp \
+    phpunit \
+    python \
+    python-setuptools \
+    python3-setuptools \
+    rake \
+    ruby \
+    ruby-dev \
+    source-highlight \
+    subversion && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
 
 # Install Forrest in /usr/local/apache-forrest
-# Download
-RUN cd /usr/local/ && wget "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz"      -O "apache-forrest-0.9-sources.tar.gz"
-RUN cd /usr/local/ && wget "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" -O "apache-forrest-0.9-dependencies.tar.gz"
-
-# Unpack Apache Forrest
-RUN cd /usr/local/ && \
-    tar xzf apache-forrest-0.9-sources.tar.gz && \
-    tar xzf apache-forrest-0.9-dependencies.tar.gz && \
-    mv apache-forrest-0.9 apache-forrest
-RUN cd /usr/local/apache-forrest/main && ./build.sh
+RUN curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz" | tar -xzf - -C /usr/local/ && \
+    curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" | tar -xzf - -C /usr/local/ && \
+    mv /usr/local/apache-forrest-0.9 /usr/local/apache-forrest && \
+    cd /usr/local/apache-forrest/main && \
+    ./build.sh
 
 # The solution for https://issues.apache.org/jira/browse/PIG-3906
-RUN mkdir -p /usr/local/apache-forrest/plugins       && chmod a+rwX -R /usr/local/apache-forrest/plugins
-RUN mkdir -p /usr/local/apache-forrest/build/plugins && chmod a+rwX -R /usr/local/apache-forrest/build/plugins
-
 # Configure where forrest can be found
-RUN echo 'forrest.home=/usr/local/apache-forrest' > build.properties
+RUN mkdir -p /usr/local/apache-forrest/plugins       && chmod a+rwX -R /usr/local/apache-forrest/plugins && \
+    mkdir -p /usr/local/apache-forrest/build/plugins && chmod a+rwX -R /usr/local/apache-forrest/build/plugins && \
+    echo 'forrest.home=/usr/local/apache-forrest' > build.properties
+
 ENV FORREST_HOME /usr/local/apache-forrest
 
 # Install Perl modules
-RUN curl -L http://cpanmin.us | perl - --self-upgrade # non-interactive cpan
-RUN cpanm install Module::Install Module::Install::ReadmeFromPod \
+RUN curl -L http://cpanmin.us | perl - --self-upgrade && \
+  cpanm install Module::Install Module::Install::ReadmeFromPod \
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
   Test::Exception Test::Pod
+
+# Install mono modules
+RUN mkdir -p /tmp/nunit/ && \
+  cd /tmp/nunit/ && \
+  curl -L -s -o nunit.zip https://github.com/nunit-legacy/nunitv2/releases/download/2.7.0/NUnit-2.7.0.zip && \
+  unzip nunit.zip && \
+  rm nunit.zip
+
+ENV MONO_PATH /tmp/nunit/bin/lib
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy
 
 # Install global Node modules
 RUN npm install -g grunt-cli
+
+CMD ["/avro/share/docker/run-tests.sh"]
