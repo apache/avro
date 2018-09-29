@@ -223,7 +223,7 @@ UserSpecificDocker
         -v ${HOME}/.m2:/home/${USER_NAME}/.m2 \
         -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
         -u ${USER_NAME} \
-        avro-build-${USER_NAME}
+        avro-build-${USER_NAME} bash
       ;;
 
     rat)

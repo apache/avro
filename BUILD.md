@@ -26,6 +26,9 @@ dependencies installed by installing Docker and run:
 
 ```bash
 ./build.sh docker
+docker@539f6535c9db:~/avro$ cd lang/java/
+docker@539f6535c9db:~/avro/lang/java$ ./build.sh test
+[INFO] Scanning for projects...
 ```
 
 When this completes you will be in a shell running in the
