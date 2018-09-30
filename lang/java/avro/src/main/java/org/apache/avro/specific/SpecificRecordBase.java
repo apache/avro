@@ -98,7 +98,7 @@ public abstract class SpecificRecordBase
     * <code>SpecificDatumReader/Writer</code> to selectively use
     * {@link #encode} and {@link #decode} to optimize the (de)serialization of
     * values. */
-  public boolean hasCustomCoders() { return false; }
+  protected boolean hasCustomCoders() { return false; }
 
   public void encode(Encoder out) throws IOException {
     throw new UnsupportedOperationException();

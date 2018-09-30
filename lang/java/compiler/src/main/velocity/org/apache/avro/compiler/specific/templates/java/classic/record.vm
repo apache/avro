@@ -712,7 +712,8 @@ $II    $var = in.readString(${var} instanceof Utf8 ? (Utf8)${var} : null);
 #set ($et = $this.javaType($s.ElementType))
 #set ($gat = "SpecificData.Array<${et}>")
 $I    long size${nv} = in.readArrayStart();
-$I    $t a${nv} = ${var}; // Need fresh name due to limitation of macro system
+## Need fresh variable name due to limitation of macro system
+$I    $t a${nv} = ${var};
 $I    if (a${nv} == null) {
 $I      a${nv} = new ${gat}((int)size${nv}, ${rs});
 $I      $var = a${nv};

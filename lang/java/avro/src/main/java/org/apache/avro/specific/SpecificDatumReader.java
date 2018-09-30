@@ -105,10 +105,8 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   protected Object readRecord(Object old, Schema expected, ResolvingDecoder in)
     throws IOException {
     SpecificData data = getSpecificData();
-    Object r = data.newRecord(old, expected);
-    if (SpecificData.get().useCustomCoders()
-        && r instanceof SpecificRecordBase) // TODO: Is this needed?
-    {
+    if (this.getSpecificData().useCustomCoders()) {
+      Object r = data.newRecord(old, expected);
       SpecificRecordBase d = (SpecificRecordBase) r;
       if (d.hasCustomCoders()) {
         d.decode(in);

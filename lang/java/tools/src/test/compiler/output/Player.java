@@ -510,7 +510,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     this.last_name = in.readString(this.last_name instanceof Utf8 ? (Utf8)this.last_name : null);
 
     long size0 = in.readArrayStart();
-    java.util.List<avro.examples.baseball.Position> a0 = this.position; // Need fresh name due to limitation of macro system
+    java.util.List<avro.examples.baseball.Position> a0 = this.position;
     if (a0 == null) {
       a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
       this.position = a0;
