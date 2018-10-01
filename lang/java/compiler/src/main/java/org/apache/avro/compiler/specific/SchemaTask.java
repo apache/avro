@@ -28,7 +28,7 @@ public class SchemaTask extends ProtocolTask {
   protected void doCompile(File src, File dest) throws IOException {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(schema);
+    SpecificCompiler compiler = new SpecificCompiler(schema, getDateTimeLogicalTypeImplementation());
     compiler.setStringType(getStringType());
     compiler.compileToDestination(src, dest);
   }

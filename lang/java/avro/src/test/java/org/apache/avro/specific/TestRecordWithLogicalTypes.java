@@ -5,6 +5,7 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 
@@ -264,9 +265,9 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     this.ts = value;
   }
 
-  protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
+  protected static final TimeConversions.DateConversion DATE_CONVERSION = new TimeConversions.DateConversion();
+  protected static final TimeConversions.TimeConversion TIME_CONVERSION = new TimeConversions.TimeConversion();
+  protected static final TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new TimeConversions.TimestampConversion();
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
   private final org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {
