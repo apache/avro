@@ -96,15 +96,15 @@ public abstract class SpecificRecordBase
   /** Returns true iff an instance supports the {@link #encode} and
     * {@link #decode} operations.  Should only be used by
     * <code>SpecificDatumReader/Writer</code> to selectively use
-    * {@link #encode} and {@link #decode} to optimize the (de)serialization of
+    * {@link #customEncode} and {@link #customDecode} to optimize the (de)serialization of
     * values. */
   protected boolean hasCustomCoders() { return false; }
 
-  public void encode(Encoder out) throws IOException {
+  protected void customEncode(Encoder out) throws IOException {
     throw new UnsupportedOperationException();
   }
 
-  public void decode(Decoder in) throws IOException {
+  protected void customDecode(Decoder in) throws IOException {
     throw new UnsupportedOperationException();
   }
 }

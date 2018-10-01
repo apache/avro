@@ -499,9 +499,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   }
 
 #if ($this.isCustomCodable($schema))
-  @Override public boolean hasCustomCoders() { return true; }
+  @Override protected boolean hasCustomCoders() { return true; }
 
-  @Override public void encode(org.apache.avro.io.Encoder out)
+  @Override protected void customEncode(org.apache.avro.io.Encoder out)
     throws java.io.IOException
   {
 #set ($nv = 0)## Counter to ensure unique var-names
@@ -515,7 +515,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
   }
 
-  @Override public void decode(org.apache.avro.io.Decoder in)
+  @Override protected void customDecode(org.apache.avro.io.Decoder in)
     throws java.io.IOException
   {
 #set ($nv = 0)## Counter to ensure unique var-names
@@ -545,7 +545,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 ##### Use the generated "encode" method as fast way to write
 ##### (specific) record types:
 #elseif ($s.Type.Name.equals("record"))
-$I    ${var}.encode(out);
+$I    ${var}.customEncode(out);
 ##### For rest of cases, generate calls out.writeXYZ:
 #elseif ($s.Type.Name.equals("null"))
 $I    out.writeNull();
@@ -663,7 +663,7 @@ $I    }
 $I    if (${var} == null) {
 $I      ${var} = new ${this.javaType($s)}();
 $I    }
-$I    ${var}.decode(in);
+$I    ${var}.customDecode(in);
 ##### For rest of cases, generate calls in.readXYZ:
 #elseif ($s.Type.Name.equals("null"))
 $I    in.readNull();

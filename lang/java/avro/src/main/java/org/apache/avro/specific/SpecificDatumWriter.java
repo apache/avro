@@ -77,7 +77,7 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
     if (this.getSpecificData().useCustomCoders()) {
       SpecificRecordBase d = (SpecificRecordBase) datum;
       if (d.hasCustomCoders()) {
-        d.encode(out);
+        d.customEncode(out);
         return;
       }
     }

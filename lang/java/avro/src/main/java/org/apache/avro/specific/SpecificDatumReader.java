@@ -109,7 +109,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
       Object r = data.newRecord(old, expected);
       SpecificRecordBase d = (SpecificRecordBase) r;
       if (d.hasCustomCoders()) {
-        d.decode(in);
+        d.customDecode(in);
         return d;
       }
     }

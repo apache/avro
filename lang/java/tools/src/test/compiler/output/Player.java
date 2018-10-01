@@ -474,9 +474,9 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
-  @Override public boolean hasCustomCoders() { return true; }
+  @Override protected boolean hasCustomCoders() { return true; }
 
-  @Override public void encode(org.apache.avro.io.Encoder out)
+  @Override protected void customEncode(org.apache.avro.io.Encoder out)
     throws java.io.IOException
   {
     out.writeInt(this.number);
@@ -500,7 +500,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
 
   }
 
-  @Override public void decode(org.apache.avro.io.Decoder in)
+  @Override protected void customDecode(org.apache.avro.io.Decoder in)
     throws java.io.IOException
   {
     this.number = in.readInt();
