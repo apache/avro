@@ -122,9 +122,10 @@ public class SpecificData extends GenericData {
   /** Return the singleton instance. */
   public static SpecificData get() { return INSTANCE; }
 
-  private static final boolean USE_CUSTOM_CODERS
+  private boolean useCustomCoderFlag
     = Boolean.parseBoolean(System.getProperty("org.apache.avro.specific.use_custom_coders","false"));
-  public boolean useCustomCoders() { return USE_CUSTOM_CODERS; }
+  public boolean useCustomCoders() { return useCustomCoderFlag; }
+  public void setCustomCoders(boolean flag) { useCustomCoderFlag = flag; }
 
   @Override
   protected boolean isEnum(Object datum) {
