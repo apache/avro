@@ -767,14 +767,6 @@ struct TestResolution
     ValidSchema unionTwo_;
 };
 
-
-template<typename T>
-void addTestCase(boost::unit_test::test_suite &test) 
-{
-    boost::shared_ptr<T> newtest( new T );
-    test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
-}
-
 boost::unit_test::test_suite*
 init_unit_test_suite( int argc, char* argv[] ) 
 {
@@ -782,12 +774,18 @@ init_unit_test_suite( int argc, char* argv[] )
 
     test_suite* test= BOOST_TEST_SUITE( "Avro C++ unit test suite" );
 
-    addTestCase<TestEncoding>(*test);
-    addTestCase<TestSchema>(*test);
-    addTestCase<TestNested>(*test);
-    addTestCase<TestGenerated>(*test);
-    addTestCase<TestBadStuff>(*test);
-    addTestCase<TestResolution>(*test);
+    test->add(BOOST_CLASS_TEST_CASE(&TestEncoding::test,
+                                    boost::make_shared<TestEncoding>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestSchema::test,
+                                    boost::make_shared<TestSchema>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestNested::test,
+                                    boost::make_shared<TestNested>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestGenerated::test,
+                                    boost::make_shared<TestGenerated>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestBadStuff::test,
+                                    boost::make_shared<TestBadStuff>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestResolution::test,
+                                    boost::make_shared<TestResolution>()));
 
     return test;
 }

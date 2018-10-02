@@ -42,7 +42,7 @@ namespace avro {
 namespace {
 struct BufferCopyIn {
     virtual ~BufferCopyIn() { }
-    virtual void seek(size_t len) = 0;
+    virtual void seek(ssize_t len) = 0;
     virtual bool read(uint8_t* b, size_t toRead, size_t& actual) = 0;
 
 };
@@ -61,7 +61,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::CloseHandle(h_);
     }
 
-    void seek(size_t len) {
+    void seek(ssize_t len) {
         if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) != INVALID_SET_FILE_POINTER) {
             throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
         }
@@ -90,7 +90,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::close(fd_);
     }
 
-    void seek(size_t len) {
+    void seek(ssize_t len) {
         off_t r = ::lseek(fd_, len, SEEK_CUR);
         if (r == static_cast<off_t>(-1)) {
             throw Exception(boost::format("Cannot skip file: %1%") %
@@ -116,7 +116,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
     IStreamBufferCopyIn(istream& is) : is_(is) {
     }
 
-    void seek(size_t len) {
+    void seek(ssize_t len) {
         if (! is_.seekg(len, std::ios_base::cur)) {
             throw Exception("Cannot skip stream");
         }
@@ -135,7 +135,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
 
 }
 
-class BufferCopyInInputStream : public InputStream {
+class BufferCopyInInputStream : public SeekableInputStream {
     const size_t bufferSize_;
     uint8_t* const buffer_;
     auto_ptr<BufferCopyIn> in_;
@@ -188,6 +188,13 @@ class BufferCopyInInputStream : public InputStream {
         return false;
     }
 
+    void seek(int64_t position) {
+      // BufferCopyIn::seek is relative to byteCount_, whereas position is
+      // absolute.
+      in_->seek(position - byteCount_ - available_);
+      byteCount_ = position;
+      available_ = 0;
+    }
 
 public:
     BufferCopyInInputStream(auto_ptr<BufferCopyIn>& in, size_t bufferSize) :
@@ -327,7 +334,16 @@ auto_ptr<InputStream> fileInputStream(const char* filename,
     size_t bufferSize)
 {
     auto_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
-    return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
+    return auto_ptr<InputStream>(
+        new BufferCopyInInputStream(in, bufferSize));
+}
+
+auto_ptr<SeekableInputStream> fileSeekableInputStream(const char* filename,
+    size_t bufferSize)
+{
+    auto_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
+    return auto_ptr<SeekableInputStream>(
+        new BufferCopyInInputStream(in, bufferSize));
 }
 
 auto_ptr<InputStream> istreamInputStream(istream& is,

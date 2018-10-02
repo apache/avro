@@ -172,12 +172,14 @@ public:
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
-    const std::auto_ptr<InputStream> stream_;
+    const std::auto_ptr<SeekableInputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
     Codec codec_;
-
+    int64_t blockStart_;
+    int64_t blockEnd_;
+    
     ValidSchema readerSchema_;
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;
@@ -247,6 +249,29 @@ public:
      * Closes the reader. No further operation is possible on this reader.
      */
     void close();
+
+    /**
+     * Move to a specific, known synchronization point, for example one returned
+     * from tell() after sync().
+     */
+    void seek(int64_t position);
+
+    /**
+     * Move to the next synchronization point after a position. To process a
+     * range of file entires, call this with the starting position, then check
+     * pastSync() with the end point before each use of decoder().
+     */
+    void sync(int64_t position);
+
+    /**
+     * Return true if past the next synchronization point after a position.
+     */
+    bool pastSync(int64_t position);
+
+    /**
+     * Return the last synchronization point before our current position.
+     */
+    int64_t previousSync();
 };
 
 /**
@@ -330,6 +355,29 @@ public:
      * Closes the reader. No further operation is possible on this reader.
      */
     void close() { return base_->close(); }
+
+    /**
+     * Move to a specific, known synchronization point, for example one returned
+     * from previousSync().
+     */
+    void seek(int64_t position) { base_->seek(position); }
+
+    /**
+     * Move to the next synchronization point after a position. To process a
+     * range of file entires, call this with the starting position, then check
+     * pastSync() with the end point before each call to read().
+     */
+    void sync(int64_t position) { base_->sync(position); }
+
+    /**
+     * Return true if past the next synchronization point after a position.
+     */
+    bool pastSync(int64_t position) { return base_->pastSync(position); }
+
+    /**
+     * Return the last synchronization point before our current position.
+     */
+    int64_t previousSync() { return base_->previousSync(); }
 };
 
 }   // namespace avro

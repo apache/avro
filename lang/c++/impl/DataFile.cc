@@ -249,8 +249,9 @@ void DataFileWriterBase::setMetadata(const string& key, const string& value)
 }
 
 DataFileReaderBase::DataFileReaderBase(const char* filename) :
-    filename_(filename), stream_(fileInputStream(filename)),
-    decoder_(binaryDecoder()), objectCount_(0), eof_(false)
+    filename_(filename), stream_(fileSeekableInputStream(filename)),
+    decoder_(binaryDecoder()), objectCount_(0), eof_(false), blockStart_(-1),
+    blockEnd_(-1)
 {
     readHeader();
 }
@@ -295,7 +296,7 @@ std::ostream& operator << (std::ostream& os, const DataFileSync& s)
 
 bool DataFileReaderBase::hasMore()
 {
-     if (eof_) {
+    if (eof_) {
         return false;
     } else if (objectCount_ != 0) {
         return true;
@@ -358,6 +359,7 @@ auto_ptr<InputStream> boundedInputStream(InputStream& in, size_t limit)
 bool DataFileReaderBase::readDataBlock()
 {
     decoder_->init(*stream_);
+    blockStart_ = stream_->byteCount();
     const uint8_t* p = 0;
     size_t n = 0;
     if (! stream_->next(&p, &n)) {
@@ -369,7 +371,8 @@ bool DataFileReaderBase::readDataBlock()
     int64_t byteCount;
     avro::decode(*decoder_, byteCount);
     decoder_->init(*stream_);
-
+    blockEnd_ = stream_->byteCount() + byteCount;
+    
     auto_ptr<InputStream> st = boundedInputStream(*stream_, static_cast<size_t>(byteCount));
     if (codec_ == NULL_CODEC) {
         dataDecoder_->init(*st);
@@ -489,6 +492,73 @@ void DataFileReaderBase::readHeader()
     }
 
     avro::decode(*decoder_, sync_);
+    decoder_->init(*stream_);
+    blockStart_ = stream_->byteCount();
+}
+
+void DataFileReaderBase::seek(int64_t position) {
+    if (!eof_) {
+        dataDecoder_->init(*dataStream_);
+        drain(*dataStream_);
+    }
+    decoder_->init(*stream_);
+    stream_->seek(position);
+    eof_ = false;
+    readDataBlock();
+}
+
+void DataFileReaderBase::sync(int64_t position) {
+    if (!eof_) {
+        dataDecoder_->init(*dataStream_);
+        drain(*dataStream_);
+    }
+    decoder_->init(*stream_);
+    stream_->seek(position);
+    eof_ = false;
+    DataFileSync sync_buffer;
+    const uint8_t *p = 0;
+    size_t n = 0;
+    int i = 0;
+    while (i < DataFileSync::static_size) {
+        if (n == 0 && !stream_->next(&p, &n)) {
+            eof_ = true;
+            return;
+        }
+        int len =
+            std::min(static_cast<size_t>(DataFileSync::static_size - i), n);
+        memcpy(&sync_buffer[i], p, len);
+        p += len;
+        n -= len;
+        i += len;
+    }
+    for (;;) {
+        int j = 0;
+        for (; j < DataFileSync::static_size; ++j) {
+            if (sync_[j] != sync_buffer[(i + j) % DataFileSync::static_size]) {
+                break;
+            }
+        }
+        if (j == DataFileSync::static_size) {
+            // Found the sync marker!
+            break;
+        }
+        if (n == 0 && !stream_->next(&p, &n)) {
+            eof_ = true;
+            return;
+        }
+        sync_buffer[i++ % DataFileSync::static_size] = *p++;
+        --n;
+    }
+    stream_->backup(n);
+    readDataBlock();
+}
+
+bool DataFileReaderBase::pastSync(int64_t position) {
+  return !hasMore() || blockStart_ >= position + DataFileSync::static_size;
+}
+
+int64_t DataFileReaderBase::previousSync() {
+  return blockStart_;
 }
 
 }   // namespace avro
