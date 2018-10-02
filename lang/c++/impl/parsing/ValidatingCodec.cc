@@ -103,7 +103,7 @@ ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr& n,
             reverse(result->begin(), result->end());
 
             m[n] = result;
-            return result;
+            return make_shared<Production>(1, Symbol::indirect(result));
         }
     case AVRO_ENUM:
         {
@@ -311,11 +311,10 @@ size_t ValidatingDecoder<P>::arrayStart()
 {
     parser.advance(Symbol::sArrayStart);
     size_t result = base->arrayStart();
+    parser.pushRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sArrayEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -324,11 +323,10 @@ template <typename P>
 size_t ValidatingDecoder<P>::arrayNext()
 {
     size_t result = base->arrayNext();
+    parser.nextRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sArrayEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -341,7 +339,7 @@ size_t ValidatingDecoder<P>::skipArray()
     if (n == 0) {
         parser.pop();
     } else {
-        parser.setRepeatCount(n);
+        parser.pushRepeatCount(n);
         parser.skip(*base);
     }
     parser.advance(Symbol::sArrayEnd);
@@ -353,11 +351,10 @@ size_t ValidatingDecoder<P>::mapStart()
 {
     parser.advance(Symbol::sMapStart);
     size_t result = base->mapStart();
+    parser.pushRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sMapEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -366,11 +363,10 @@ template <typename P>
 size_t ValidatingDecoder<P>::mapNext()
 {
     size_t result = base->mapNext();
+    parser.nextRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sMapEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -383,7 +379,7 @@ size_t ValidatingDecoder<P>::skipMap()
     if (n == 0) {
         parser.pop();
     } else {
-        parser.setRepeatCount(n);
+        parser.pushRepeatCount(n);
         parser.skip(*base);
     }
     parser.advance(Symbol::sMapEnd);
@@ -518,6 +514,7 @@ template<typename P>
 void ValidatingEncoder<P>::arrayStart()
 {
     parser_.advance(Symbol::sArrayStart);
+    parser_.pushRepeatCount(0);
     base_->arrayStart();
 }
 
@@ -533,6 +530,7 @@ template<typename P>
 void ValidatingEncoder<P>::mapStart()
 {
     parser_.advance(Symbol::sMapStart);
+    parser_.pushRepeatCount(0);
     base_->mapStart();
 }
 
@@ -547,7 +545,7 @@ void ValidatingEncoder<P>::mapEnd()
 template<typename P>
 void ValidatingEncoder<P>::setItemCount(size_t count)
 {
-    parser_.setRepeatCount(count);
+    parser_.nextRepeatCount(count);
     base_->setItemCount(count);
 }
 
