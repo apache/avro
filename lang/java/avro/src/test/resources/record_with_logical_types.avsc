@@ -40,6 +40,14 @@
       "type" : "long",
       "logicalType" : "timestamp-millis"
     }
+  }, {
+    "name" : "dec",
+    "type" : {
+      "type" : "bytes",
+      "logicalType" : "decimal",
+      "precision" : 9,
+      "scale" : 2
+    }
   } ]
 }
 
