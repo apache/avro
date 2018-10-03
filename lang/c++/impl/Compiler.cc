@@ -238,7 +238,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
         return GenericDatum(static_cast<float>(e.doubleValue()));
     case AVRO_DOUBLE:
         if (dt == json::etLong) {
-            return GenericDatum(static_cast<float>(e.longValue()));
+            return GenericDatum(static_cast<double>(e.longValue()));
         }
         assertType(e, json::etDouble);
         return GenericDatum(e.doubleValue());
