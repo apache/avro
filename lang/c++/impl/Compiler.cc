@@ -231,13 +231,15 @@ static GenericDatum makeGenericDatum(NodePtr n,
         assertType(e, json::etLong);
         return GenericDatum(e.longValue());
     case AVRO_FLOAT:
-        if (dt == json::etLong)
+        if (dt == json::etLong) {
             return GenericDatum(static_cast<float>(e.longValue()));
+        }
         assertType(e, json::etDouble);
         return GenericDatum(static_cast<float>(e.doubleValue()));
     case AVRO_DOUBLE:
-        if (dt == json::etLong)
+        if (dt == json::etLong) {
             return GenericDatum(static_cast<float>(e.longValue()));
+        }
         assertType(e, json::etDouble);
         return GenericDatum(e.doubleValue());
     case AVRO_BOOL:
