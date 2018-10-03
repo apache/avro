@@ -161,7 +161,11 @@ public class SpecificData extends GenericData {
         try {
           c = ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
-          c = NO_CLASS;
+          try {                                   // nested class?
+            c = ClassUtils.forName(getClassLoader(), getNestedClassName(schema));
+          } catch (ClassNotFoundException ex) {
+            c = NO_CLASS;
+          }
         }
         classCache.put(name, c);
       }
@@ -205,8 +209,16 @@ public class SpecificData extends GenericData {
     String name = schema.getName();
     if (namespace == null || "".equals(namespace))
       return name;
-    String dot = namespace.endsWith("$") ? "" : ".";
+    String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
     return namespace + dot + name;
+  }
+
+  private String getNestedClassName(Schema schema) {
+    String namespace = schema.getNamespace();
+    String name = schema.getName();
+    if (namespace == null || "".equals(namespace))
+      return name;
+    return namespace + "$" + name;
   }
 
   private final LoadingCache<java.lang.reflect.Type,Schema> schemaCache =

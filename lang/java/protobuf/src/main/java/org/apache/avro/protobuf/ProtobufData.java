@@ -158,10 +158,17 @@ public class ProtobufData extends GenericData {
 
   @Override
   protected Schema getRecordSchema(Object record) {
-    return getSchema(((Message)record).getDescriptorForType());
+    Descriptor descriptor = ((Message)record).getDescriptorForType();
+    Schema schema = schemaCache.get(descriptor);
+
+    if (schema == null) {
+      schema = getSchema(descriptor);
+      schemaCache.put(descriptor, schema);
+    }
+    return schema;
   }
 
-  private final Map<Class,Schema> schemaCache
+  private final Map<Object,Schema> schemaCache
     = new ConcurrentHashMap<>();
 
   /** Return a record schema given a protobuf message class. */

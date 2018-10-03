@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -91,6 +93,286 @@ public class TestSchemaBuilder {
     Assert.assertEquals(2, size);
     Assert.assertEquals("v1", s.getProp("p1"));
     Assert.assertEquals("v2real", s.getProp("p2"));
+  }
+
+  @Test
+  public void testObjectProps() {
+    Schema s = SchemaBuilder.builder().intBuilder()
+      .prop("booleanProp", true)
+      .prop("intProp", Integer.MAX_VALUE)
+      .prop("longProp", Long.MAX_VALUE)
+      .prop("floatProp", 1.0f)
+      .prop("doubleProp", Double.MAX_VALUE)
+      .prop("byteProp", new byte[] {0x41, 0x42, 0x43} )
+      .prop("stringProp", "abc" )
+      .endInt();
+
+    //string properties
+    @SuppressWarnings("deprecation")
+    Map<String, String> stringProps = s.getProps();
+    Assert.assertEquals(2, stringProps.size());
+    Assert.assertEquals("ABC", stringProps.get("byteProp"));
+    Assert.assertEquals("abc", stringProps.get("stringProp"));
+
+    //object properties
+    Assert.assertEquals(7, s.getObjectProps().size());
+    Assert.assertTrue(s.getObjectProp("booleanProp") instanceof Boolean);
+    Assert.assertEquals(true, s.getObjectProp("booleanProp"));
+    Assert.assertTrue(s.getObjectProp("intProp") instanceof Integer);
+    Assert.assertEquals(Integer.MAX_VALUE, s.getObjectProp("intProp"));
+    Assert.assertTrue(s.getObjectProp("intProp") instanceof Integer);
+    Assert.assertTrue(s.getObjectProp("longProp") instanceof Long);
+    Assert.assertEquals(Long.MAX_VALUE, s.getObjectProp("longProp"));
+    Assert.assertTrue(s.getObjectProp("floatProp") instanceof Double);
+    //float converts to double
+    Assert.assertEquals(1.0d, s.getObjectProp("floatProp"));
+    Assert.assertTrue(s.getObjectProp("doubleProp") instanceof Double);
+    Assert.assertEquals(Double.MAX_VALUE, s.getObjectProp("doubleProp"));
+    //byte[] converts to string
+    Assert.assertTrue(s.getObjectProp("byteProp") instanceof String);
+    Assert.assertEquals("ABC", s.getObjectProp("byteProp"));
+    Assert.assertTrue(s.getObjectProp("stringProp") instanceof String);
+    Assert.assertEquals("abc", s.getObjectProp("stringProp"));
+  }
+
+  @Test
+  public void testFieldObjectProps() {
+    Schema s = SchemaBuilder.builder().record("MyRecord")
+      .fields().name("myField")
+      .prop("booleanProp", true)
+      .prop("intProp", Integer.MAX_VALUE)
+      .prop("longProp", Long.MAX_VALUE)
+      .prop("floatProp", 1.0f)
+      .prop("doubleProp", Double.MAX_VALUE)
+      .prop("byteProp", new byte[] {0x41, 0x42, 0x43} )
+      .prop("stringProp", "abc" )
+      .type().intType()
+      .noDefault()
+      .endRecord();
+
+    Schema.Field f = s.getField("myField");
+
+    //string properties
+    @SuppressWarnings("deprecation")
+    Map<String, String> stringProps = f.getProps();
+    Assert.assertEquals(2, stringProps.size());
+    Assert.assertEquals("ABC", stringProps.get("byteProp"));
+    Assert.assertEquals("abc", stringProps.get("stringProp"));
+
+    //object properties
+    Assert.assertEquals(7, f.getObjectProps().size());
+    Assert.assertTrue(f.getObjectProp("booleanProp") instanceof Boolean);
+    Assert.assertEquals(true, f.getObjectProp("booleanProp"));
+    Assert.assertTrue(f.getObjectProp("intProp") instanceof Integer);
+    Assert.assertEquals(Integer.MAX_VALUE, f.getObjectProp("intProp"));
+    Assert.assertTrue(f.getObjectProp("intProp") instanceof Integer);
+    Assert.assertTrue(f.getObjectProp("longProp") instanceof Long);
+    Assert.assertEquals(Long.MAX_VALUE, f.getObjectProp("longProp"));
+    Assert.assertTrue(f.getObjectProp("floatProp") instanceof Double);
+    //float converts to double
+    Assert.assertEquals(1.0d, f.getObjectProp("floatProp"));
+    Assert.assertTrue(f.getObjectProp("doubleProp") instanceof Double);
+    Assert.assertEquals(Double.MAX_VALUE, f.getObjectProp("doubleProp"));
+    //byte[] converts to string
+    Assert.assertTrue(f.getObjectProp("byteProp") instanceof String);
+    Assert.assertEquals("ABC", f.getObjectProp("byteProp"));
+    Assert.assertTrue(f.getObjectProp("stringProp") instanceof String);
+    Assert.assertEquals("abc", f.getObjectProp("stringProp"));
+  }
+
+  @Test
+  public void testArrayObjectProp() {
+    List<Object> values = new ArrayList<Object>();
+    values.add(true);
+    values.add(Integer.MAX_VALUE);
+    values.add(Long.MAX_VALUE);
+    values.add(1.0f);
+    values.add(Double.MAX_VALUE);
+    values.add(new byte[] {0x41, 0x42, 0x43});
+    values.add("abc");
+
+    Schema s = SchemaBuilder.builder().intBuilder()
+      .prop("arrayProp", values)
+      .endInt();
+
+    //string properties
+    @SuppressWarnings("deprecation")
+    int size = s.getProps().size();
+    Assert.assertEquals(0, size);
+
+    //object properties
+    Assert.assertEquals(1, s.getObjectProps().size());
+
+    Assert.assertTrue(s.getObjectProp("arrayProp") instanceof Collection);
+    @SuppressWarnings("unchecked")
+    Collection<Object> valueCollection = (Collection<Object>) s.getObjectProp("arrayProp");
+    Iterator<Object> iter = valueCollection.iterator();
+    Assert.assertEquals(7, valueCollection.size());
+    Assert.assertEquals(true, iter.next());
+    Assert.assertEquals(Integer.MAX_VALUE, iter.next());
+    Assert.assertEquals(Long.MAX_VALUE, iter.next());
+    //float converts to double
+    Assert.assertEquals(1.0d, iter.next());
+    Assert.assertEquals(Double.MAX_VALUE, iter.next());
+    //byte[] converts to string
+    Assert.assertEquals("ABC", iter.next());
+    Assert.assertEquals("abc", iter.next());
+  }
+
+  @Test
+  public void testFieldArrayObjectProp() {
+    List<Object> values = new ArrayList<Object>();
+    values.add(true);
+    values.add(Integer.MAX_VALUE);
+    values.add(Long.MAX_VALUE);
+    values.add(1.0f);
+    values.add(Double.MAX_VALUE);
+    values.add(new byte[] {0x41, 0x42, 0x43});
+    values.add("abc");
+
+    Schema s = SchemaBuilder.builder().record("MyRecord")
+      .fields().name("myField")
+      .prop("arrayProp", values)
+      .type().intType()
+      .noDefault()
+      .endRecord();
+
+    Schema.Field f = s.getField("myField");
+
+    //string properties
+    @SuppressWarnings("deprecation")
+    int size = f.getProps().size();
+    Assert.assertEquals(0, size);
+
+    //object properties
+    Assert.assertEquals(1, f.getObjectProps().size());
+
+    Assert.assertTrue(f.getObjectProp("arrayProp") instanceof Collection);
+    @SuppressWarnings("unchecked")
+    Collection<Object> valueCollection = (Collection<Object>) f.getObjectProp("arrayProp");
+    Iterator<Object> iter = valueCollection.iterator();
+    Assert.assertEquals(7, valueCollection.size());
+    Assert.assertEquals(true, iter.next());
+    Assert.assertEquals(Integer.MAX_VALUE, iter.next());
+    Assert.assertEquals(Long.MAX_VALUE, iter.next());
+    //float converts to double
+    Assert.assertEquals(1.0d, iter.next());
+    Assert.assertEquals(Double.MAX_VALUE, iter.next());
+    //byte[] converts to string
+    Assert.assertEquals("ABC", iter.next());
+    Assert.assertEquals("abc", iter.next());
+  }
+
+  @Test
+  public void testMapObjectProp() {
+    Map<String, Object> values = new HashMap<String, Object>();
+    values.put("booleanKey", true);
+    values.put("intKey", Integer.MAX_VALUE);
+    values.put("longKey", Long.MAX_VALUE);
+    values.put("floatKey", 1.0f);
+    values.put("doubleKey", Double.MAX_VALUE);
+    values.put("byteKey", new byte[] {0x41, 0x42, 0x43});
+    values.put("stringKey", "abc");
+
+    Schema s = SchemaBuilder.builder().intBuilder()
+      .prop("mapProp", values)
+      .endInt();
+
+    //string properties
+    @SuppressWarnings("deprecation")
+    int size = s.getProps().size();
+    Assert.assertEquals(0, size);
+    Assert.assertEquals(1, s.getObjectProps().size());
+
+    //object properties
+    Assert.assertTrue(s.getObjectProp("mapProp") instanceof Map);
+    @SuppressWarnings("unchecked")
+    Map<String, Object> valueMap = (Map<String, Object>) s.getObjectProp("mapProp");
+    Assert.assertEquals(values.size(), valueMap.size());
+
+    Assert.assertTrue(valueMap.get("booleanKey") instanceof Boolean);
+    Assert.assertEquals(true, valueMap.get("booleanKey"));
+    Assert.assertTrue(valueMap.get("intKey") instanceof Integer);
+    Assert.assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
+    Assert.assertTrue(valueMap.get("longKey") instanceof Long);
+    Assert.assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
+    //float converts to double
+    Assert.assertTrue(valueMap.get("floatKey") instanceof Double);
+    Assert.assertEquals(1.0d, valueMap.get("floatKey"));
+    Assert.assertTrue(valueMap.get("doubleKey") instanceof Double);
+    Assert.assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
+    //byte[] converts to string
+    Assert.assertTrue(valueMap.get("byteKey") instanceof String);
+    Assert.assertEquals("ABC", valueMap.get("byteKey"));
+    Assert.assertTrue(valueMap.get("stringKey") instanceof String);
+    Assert.assertEquals("abc", valueMap.get("stringKey"));
+  }
+
+  @Test
+  public void testFieldMapObjectProp() {
+    Map<String, Object> values = new HashMap<String, Object>();
+    values.put("booleanKey", true);
+    values.put("intKey", Integer.MAX_VALUE);
+    values.put("longKey", Long.MAX_VALUE);
+    values.put("floatKey", 1.0f);
+    values.put("doubleKey", Double.MAX_VALUE);
+    values.put("byteKey", new byte[] {0x41, 0x42, 0x43});
+    values.put("stringKey", "abc");
+
+    Schema s = SchemaBuilder.builder().record("MyRecord")
+      .fields().name("myField")
+      .prop("mapProp", values)
+      .type().intType()
+      .noDefault()
+      .endRecord();
+
+    Schema.Field f = s.getField("myField");
+
+    //string properties
+    @SuppressWarnings("deprecation")
+    int size = f.getProps().size();
+    Assert.assertEquals(0, size);
+    Assert.assertEquals(1, f.getObjectProps().size());
+
+    //object properties
+    Assert.assertTrue(f.getObjectProp("mapProp") instanceof Map);
+    @SuppressWarnings("unchecked")
+    Map<String, Object> valueMap = (Map<String, Object>) f.getObjectProp("mapProp");
+    Assert.assertEquals(values.size(), valueMap.size());
+
+    Assert.assertTrue(valueMap.get("booleanKey") instanceof Boolean);
+    Assert.assertEquals(true, valueMap.get("booleanKey"));
+    Assert.assertTrue(valueMap.get("intKey") instanceof Integer);
+    Assert.assertEquals(Integer.MAX_VALUE, valueMap.get("intKey"));
+    Assert.assertTrue(valueMap.get("longKey") instanceof Long);
+    Assert.assertEquals(Long.MAX_VALUE, valueMap.get("longKey"));
+    //float converts to double
+    Assert.assertTrue(valueMap.get("floatKey") instanceof Double);
+    Assert.assertEquals(1.0d, valueMap.get("floatKey"));
+    Assert.assertTrue(valueMap.get("doubleKey") instanceof Double);
+    Assert.assertEquals(Double.MAX_VALUE, valueMap.get("doubleKey"));
+    //byte[] converts to string
+    Assert.assertTrue(valueMap.get("byteKey") instanceof String);
+    Assert.assertEquals("ABC", valueMap.get("byteKey"));
+    Assert.assertTrue(valueMap.get("stringKey") instanceof String);
+    Assert.assertEquals("abc", valueMap.get("stringKey"));
+  }
+
+  @Test(expected = AvroRuntimeException.class)
+  public void testNullObjectProp() {
+    SchemaBuilder.builder().intBuilder()
+      .prop("nullProp", (Object) null)
+      .endInt();
+  }
+
+  @Test(expected = AvroRuntimeException.class)
+  public void testFieldNullObjectProp() {
+    SchemaBuilder.builder().record("MyRecord")
+      .fields().name("myField")
+      .prop("nullProp", (Object) null)
+      .type().intType()
+      .noDefault()
+      .endRecord();
   }
 
   @Test
@@ -276,6 +558,17 @@ public class TestSchemaBuilder {
     expected.addProp("p", "v");
     Schema schema = SchemaBuilder.enumeration("myenum")
         .prop("p", "v").symbols("a", "b");
+    Assert.assertEquals(expected, schema);
+  }
+
+  @Test
+  public void testEnumWithDefault() {
+    List<String> symbols = Arrays.asList("a", "b");
+    String enumDefault = "a";
+    Schema expected = Schema.createEnum("myenum", null, null, symbols, enumDefault);
+    expected.addProp("p", "v");
+    Schema schema = SchemaBuilder.enumeration("myenum")
+      .prop("p", "v").defaultSymbol(enumDefault).symbols("a", "b");
     Assert.assertEquals(expected, schema);
   }
 

@@ -156,7 +156,9 @@ static void assertType(const Entity& e, EntityType et)
 {
     if (e.type() != et) {
         throw Exception(boost::format("Unexpected type for default value: "
-            "Expected %1%, but found %2%") % et % e.type());
+            "Expected %1%, but found %2% in line %3%") %
+                json::typeToString(et) % json::typeToString(e.type()) %
+                e.line());
     }
 }
 
@@ -205,8 +207,8 @@ static string nameof(const NodePtr& n)
     }
 }
 
-static GenericDatum makeGenericDatum(NodePtr n, const Entity& e,
-    const SymbolTable& st)
+static GenericDatum makeGenericDatum(NodePtr n,
+        const Entity& e, const SymbolTable& st)
 {
     Type t = n->type();
     if (t == AVRO_SYMBOLIC) {

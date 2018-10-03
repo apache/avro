@@ -33,6 +33,8 @@
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
 
+#include <boost/algorithm/string_regex.hpp>
+
 #include "Compiler.hh"
 #include "ValidSchema.hh"
 #include "NodeImpl.hh"
@@ -721,8 +723,14 @@ void CodeGen::generate(const ValidSchema& schema)
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
         << "\n";
 
+    vector<string> nsVector;
     if (! ns_.empty()) {
-        os_ << "namespace " << ns_ << " {\n";
+        boost::algorithm::split_regex(nsVector, ns_, boost::regex("::"));
+        for (vector<string>::const_iterator it =
+            nsVector.begin();
+            it != nsVector.end(); ++it) {
+            os_ << "namespace " << *it << " {\n";
+        }
         inNamespace_ = true;
     }
 
@@ -745,7 +753,11 @@ void CodeGen::generate(const ValidSchema& schema)
 
     if (! ns_.empty()) {
         inNamespace_ = false;
-        os_ << "}\n";
+        for (vector<string>::const_iterator it =
+            nsVector.begin();
+            it != nsVector.end(); ++it) {
+            os_ << "}\n";
+        }
     }
 
     os_ << "namespace avro {\n";

@@ -73,7 +73,7 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
       break;
       case ENUM:
         newSchema = Schema.createEnum(terminal.getName(), terminal.getDoc(),
-                terminal.getNamespace(), terminal.getEnumSymbols());
+                terminal.getNamespace(), terminal.getEnumSymbols(), terminal.getEnumDefault());
         break;
       case FIXED:
         newSchema = Schema.createFixed(terminal.getName(), terminal.getDoc(),

@@ -1099,13 +1099,16 @@ Schema EnumDeclaration():
 {
   String name;
   List<String> symbols;
+  String defaultSymbol = null;
 }
 {
-  "enum"
+  "enum" {   String doc = getDoc(); }
   name = Identifier()
   symbols = EnumBody()
+      [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON>]
   {
-    Schema s = Schema.createEnum(name, getDoc(), this.namespace, symbols);
+    Schema s = Schema.createEnum(name, doc, this.namespace, symbols,
+                                 defaultSymbol);
     names.put(s.getFullName(), s);
     return s;
   }
@@ -1324,7 +1327,8 @@ void VariableDeclarator(Schema type, List<Field> fields):
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
-    Field field = new Field(name, type, getDoc(), defaultValue, order);
+    boolean validate = !SchemaResolver.isUnresolvedSchema(type);
+    Field field = new Field(name,type, getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
@@ -1528,6 +1532,8 @@ String PropertyName():
 {
   t = <IDENTIFIER>   { name.append(t.image); }
   ( t = <DASH>       { name.append(t.image); }
+    t = <IDENTIFIER> { name.append(t.image); } |
+    t = <DOT>        { name.append(t.image); }
     t = <IDENTIFIER> { name.append(t.image); }
   ) *
   { return name.toString(); }
@@ -1564,6 +1570,7 @@ Token AnyIdentifier():
    t = <STRING> |
    t = <PROTOCOL> |
    t = <RECORD> |
+   t = <SCHEMA> |
    t = <THROWS> |
    t = <TRUE> |
    t = <UNION> |

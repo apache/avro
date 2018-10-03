@@ -25,6 +25,7 @@ protocol IdlTest {
     record IdlUser {
       union { null, string } id;
       union { null, long } createdOn;
+      timestamp_ms modifiedOn;
       union { null, IdlPrivacy } privacy;
     }
 

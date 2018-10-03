@@ -32,6 +32,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,6 +42,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
+import static org.hamcrest.Matchers.comparesEqualTo;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 /**
  * This tests compatibility between classes generated before and after
@@ -53,6 +62,10 @@ import java.util.List;
  * Avro with existing Avro-generated sources. When using classes generated
  * before AVRO-1684, logical types should not be applied by the read or write
  * paths. Those files should behave as they did before.
+ *
+ * For AVRO-2079 {@link TestRecordWithJsr310LogicalTypes} was generated from
+ * the same schema and tests were added to test compatibility between the
+ * two versions.
  */
 public class TestSpecificLogicalTypes {
 
@@ -79,6 +92,97 @@ public class TestSpecificLogicalTypes {
         TestRecordWithLogicalTypes.getClassSchema(), data);
 
     Assert.assertEquals("Should match written record", record, actual.get(0));
+  }
+  @Test
+  public void testRecordWithJsr310LogicalTypes() throws IOException {
+    TestRecordWithJsr310LogicalTypes record = new TestRecordWithJsr310LogicalTypes(
+        true,
+        34,
+        35L,
+        3.14F,
+        3019.34,
+        null,
+        java.time.LocalDate.now(),
+        java.time.LocalTime.now(),
+        java.time.Instant.now(),
+        new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+    );
+
+    File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), record);
+    List<TestRecordWithJsr310LogicalTypes> actual = read(
+        TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
+
+    Assert.assertEquals("Should match written record", record, actual.get(0));
+  }
+
+  @Test
+  public void testAbilityToReadJsr310RecordWrittenAsJodaRecord() throws IOException {
+    TestRecordWithLogicalTypes withJoda = new TestRecordWithLogicalTypes(
+            true,
+            34,
+            35L,
+            3.14F,
+            3019.34,
+            null,
+            LocalDate.now(),
+            LocalTime.now(),
+            DateTime.now().withZone(DateTimeZone.UTC),
+            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+    );
+
+    File data = write(TestRecordWithLogicalTypes.getClassSchema(), withJoda);
+    List<TestRecordWithJsr310LogicalTypes> actual = read(
+        TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
+
+    Assert.assertThat(actual, is(not(empty())));
+    TestRecordWithJsr310LogicalTypes withJsr310 = actual.get(0);
+
+    Assert.assertThat(withJsr310.getB(), is(withJoda.getB()));
+    Assert.assertThat(withJsr310.getI32(), is(withJoda.getI32()));
+    Assert.assertThat(withJsr310.getI64(), is(withJoda.getI64()));
+    Assert.assertThat(withJsr310.getF32(), is(withJoda.getF32()));
+    Assert.assertThat(withJsr310.getF64(), is(withJoda.getF64()));
+    Assert.assertThat(withJsr310.getS(), is(withJoda.getS()));
+
+    Assert.assertThat(ISO_LOCAL_DATE.format(withJsr310.getD()), is(ISODateTimeFormat.date().print(withJoda.getD())));
+    Assert.assertThat(ISO_LOCAL_TIME.format(withJsr310.getT()), is(ISODateTimeFormat.time().print(withJoda.getT())));
+    Assert.assertThat(ISO_INSTANT.format(withJsr310.getTs()), is(ISODateTimeFormat.dateTime().print(withJoda.getTs())));
+    Assert.assertThat(withJsr310.getDec(), comparesEqualTo(withJoda.getDec()));
+  }
+
+  @Test
+  public void testAbilityToReadJodaRecordWrittenAsJsr310Record() throws IOException {
+    TestRecordWithJsr310LogicalTypes withJsr310 = new TestRecordWithJsr310LogicalTypes(
+            true,
+            34,
+            35L,
+            3.14F,
+            3019.34,
+            null,
+            java.time.LocalDate.now(),
+            java.time.LocalTime.now(),
+            java.time.Instant.now(),
+            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+    );
+
+    File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), withJsr310);
+    List<TestRecordWithLogicalTypes> actual = read(
+        TestRecordWithLogicalTypes.getClassSchema(), data);
+
+    Assert.assertThat(actual, is(not(empty())));
+    TestRecordWithLogicalTypes withJoda = actual.get(0);
+
+    Assert.assertThat(withJoda.getB(), is(withJsr310.getB()));
+    Assert.assertThat(withJoda.getI32(), is(withJsr310.getI32()));
+    Assert.assertThat(withJoda.getI64(), is(withJsr310.getI64()));
+    Assert.assertThat(withJoda.getF32(), is(withJsr310.getF32()));
+    Assert.assertThat(withJoda.getF64(), is(withJsr310.getF64()));
+    Assert.assertThat(withJoda.getS(), is(withJsr310.getS()));
+    // all of these print in the ISO-8601 format
+    Assert.assertThat(withJoda.getD().toString(), is(withJsr310.getD().toString()));
+    Assert.assertThat(withJoda.getT().toString(), is(withJsr310.getT().toString()));
+    Assert.assertThat(withJoda.getTs().toString(), is(withJsr310.getTs().toString()));
+    Assert.assertThat(withJoda.getDec(), comparesEqualTo(withJsr310.getDec()));
   }
 
   @Test
@@ -198,16 +302,10 @@ public class TestSpecificLogicalTypes {
       throws IOException {
     DatumReader<D> reader = newReader(schema);
     List<D> data = new ArrayList<>();
-    FileReader<D> fileReader = null;
 
-    try {
-      fileReader = new DataFileReader<>(file, reader);
+    try (FileReader<D> fileReader = new DataFileReader<>(file, reader)) {
       for (D datum : fileReader) {
         data.add(datum);
-      }
-    } finally {
-      if (fileReader != null) {
-        fileReader.close();
       }
     }
 
@@ -224,15 +322,12 @@ public class TestSpecificLogicalTypes {
       throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = SpecificData.get().createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
-    try {
+    try (DataFileWriter<D> fileWriter = new DataFileWriter<>(writer)) {
       fileWriter.create(schema, file);
       for (D datum : data) {
         fileWriter.append(datum);
       }
-    } finally {
-      fileWriter.close();
     }
 
     return file;

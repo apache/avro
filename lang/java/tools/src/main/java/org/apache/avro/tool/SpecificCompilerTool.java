@@ -23,12 +23,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
@@ -43,7 +47,7 @@ public class SpecificCompilerTool implements Tool {
       List<String> args) throws Exception {
     if (args.size() < 3) {
       System.err
-          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] (schema|protocol) input... outputdir");
+          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-dateTimeLogicalTypeImpl <dateTimeType>] (schema|protocol) input... outputdir");
       System.err
           .println(" input - input files or directories");
       System.err
@@ -53,18 +57,21 @@ public class SpecificCompilerTool implements Tool {
       System.err.println(" -string - use java.lang.String instead of Utf8");
       System.err.println(" -bigDecimal - use java.math.BigDecimal for " +
           "decimal type instead of java.nio.ByteBuffer");
+      System.err.println(" -dateTimeLogicalTypeImpl [joda|jsr310] - use either " +
+          "Joda time classes (default) or Java 8 native date/time classes (JSR 310)");
       return 1;
     }
 
     StringType stringType = StringType.CharSequence;
     boolean useLogicalDecimal = false;
+    Optional<DateTimeLogicalTypeImplementation> dateTimeLogicalTypeImplementation = Optional.empty();
+    Optional<String> encoding = Optional.empty();
 
     int arg = 0;
 
-    String encoding = null;
     if ("-encoding".equals(args.get(arg))) {
       arg++;
-      encoding = args.get(arg);
+      encoding = Optional.of(args.get(arg));
       arg++;
     }
 
@@ -75,6 +82,17 @@ public class SpecificCompilerTool implements Tool {
 
     if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
       useLogicalDecimal = true;
+      arg++;
+    }
+
+    if ("-dateTimeLogicalTypeImpl".equalsIgnoreCase(args.get(arg))) {
+      arg++;
+      try {
+        dateTimeLogicalTypeImplementation = Optional.of(DateTimeLogicalTypeImplementation.valueOf(args.get(arg).toUpperCase()));
+      } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+        System.err.println("Expected one of " + Arrays.toString(DateTimeLogicalTypeImplementation.values()));
+        return 1;
+      }
       arg++;
     }
 
@@ -90,13 +108,15 @@ public class SpecificCompilerTool implements Tool {
       Schema.Parser parser = new Schema.Parser();
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
-        SpecificCompiler compiler = new SpecificCompiler(schema);
+        SpecificCompiler compiler = new SpecificCompiler(schema,
+          dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
         executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
-        SpecificCompiler compiler = new SpecificCompiler(protocol);
+        SpecificCompiler compiler = new SpecificCompiler(protocol,
+          dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
         executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
       }
     } else {
@@ -107,16 +127,14 @@ public class SpecificCompilerTool implements Tool {
   }
 
   private void executeCompiler(SpecificCompiler compiler,
-                               String encoding,
+                               Optional<String> encoding,
                                StringType stringType,
                                boolean enableDecimalLogicalType,
                                File src,
                                File output) throws IOException {
     compiler.setStringType(stringType);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-    if (encoding != null) {
-      compiler.setOutputCharacterEncoding(encoding);
-    }
+    encoding.ifPresent(compiler::setOutputCharacterEncoding);
     compiler.compileToDestination(src, output);
   }
 
@@ -144,9 +162,8 @@ public class SpecificCompilerTool implements Tool {
     for (File file : inputs) {
       // if directory, look at contents to see what files match extension
       if (file.isDirectory()) {
-        for (File f : file.listFiles(filter)) {
-          fileSet.add(f);
-        }
+        File[] files = file.listFiles(filter);
+        Collections.addAll(fileSet, files != null ? files : new File[0]);
       }
       // otherwise, just add the file.
       else {
@@ -164,7 +181,7 @@ public class SpecificCompilerTool implements Tool {
       System.err.println("No input files found.");
     }
 
-    return fileSet.toArray((new File[fileSet.size()]));
+    return fileSet.toArray(new File[0]);
   }
 
   private static final FileExtensionFilter SCHEMA_FILTER =

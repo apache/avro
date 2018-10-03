@@ -29,6 +29,9 @@
 #include "Parser.hh"
 #include "Compiler.hh"
 #include "SchemaResolution.hh"
+#include "Stream.hh"
+#include "Encoder.hh"
+#include "Decoder.hh"
 #include "buffer/BufferStream.hh"
 #include "buffer/BufferPrint.hh"
 
@@ -477,31 +480,62 @@ struct TestNested
     void createSchema() 
     {
         std::cout << "TestNested\n";
-        RecordSchema rec("LongList");
-        rec.addField("value", LongSchema());
+        RecordSchema rec("LongListContainer");
+
+        RecordSchema list("LongList");
+        list.addField("value", LongSchema());
         UnionSchema next;
         next.addType(NullSchema());
-        next.addType(SymbolicSchema(Name("LongList"), rec.root()));
-        rec.addField("next", next);
-        rec.addField("end", BoolSchema());
+        next.addType(SymbolicSchema(Name("LongList"), list.root()));
+        list.addField("next", next);
+        list.addField("end", BoolSchema());
+        rec.addField("list", list);
 
+        RecordSchema arrayTree("ArrayTree");
+        arrayTree.addField("label", StringSchema());
+        arrayTree.addField("children", ArraySchema(
+            SymbolicSchema(Name("ArrayTree"), arrayTree.root())));
+        rec.addField("array_tree", arrayTree);
+        
         schema_.setSchema(rec);
         schema_.toJson(std::cout);
         schema_.toFlatList(std::cout);
     }
 
-    InputBuffer serializeNoRecurse()
-    {
+    InputBuffer serializeNoRecurse() {
         std::cout << "No recurse\n";
         Serializer<ValidatingWriter> s(schema_);
         s.writeRecord();
-        s.writeLong(1);
-        s.writeUnion(0);
-        s.writeNull();
-        s.writeBool(true);
+        {
+            s.writeRecord();
+            s.writeLong(1);
+            s.writeUnion(0);
+            s.writeNull();
+            s.writeBool(true);
+            s.writeRecordEnd();
+        }
+        {
+            s.writeRecord();
+            s.writeString("hello world");
+            s.writeArrayEnd();
+            s.writeRecordEnd();
+        }
         s.writeRecordEnd();
 
         return s.buffer();
+    }
+
+    static void encodeNoRecurse(Encoder &e)
+    {
+        std::cout << "Encode no recurse\n";
+        e.encodeLong(1);
+        e.encodeUnionIndex(0);
+        e.encodeNull();
+        e.encodeBool(true);
+
+        e.encodeString("hello world");
+        e.arrayStart();
+        e.arrayEnd();
     }
 
     InputBuffer serializeRecurse()
@@ -509,40 +543,116 @@ struct TestNested
         std::cout << "Recurse\n";
         Serializer<ValidatingWriter> s(schema_);
         s.writeRecord();
-        s.writeLong(1);
-        s.writeUnion(1);
         {
             s.writeRecord();
-            s.writeLong(2);
+            s.writeLong(1);
             s.writeUnion(1);
             {
                 s.writeRecord();
-                s.writeLong(3);
-                s.writeUnion(0);
-                { 
-                    s.writeNull();
+                s.writeLong(2);
+                s.writeUnion(1);
+                {
+                    s.writeRecord();
+                    s.writeLong(3);
+                    s.writeUnion(0);
+                    { s.writeNull(); }
+                    s.writeBool(false);
+                    s.writeRecordEnd();
                 }
                 s.writeBool(false);
                 s.writeRecordEnd();
             }
-            s.writeBool(false);
+            s.writeBool(true);
             s.writeRecordEnd();
-
         }
-        s.writeBool(true);
+        {
+            s.writeRecord();
+            s.writeString("a");
+            s.writeArrayBlock(2);
+            {
+                s.writeRecord();
+                s.writeString("aa");
+                s.writeArrayBlock(1);
+                {
+                    s.writeRecord();
+                    s.writeString("aaa");
+                    s.writeArrayEnd();
+                    s.writeRecordEnd();
+                }
+                s.writeArrayEnd();
+                s.writeRecordEnd();
+            }
+            {
+                s.writeRecord();
+                s.writeString("ab");
+                s.writeArrayEnd();
+                s.writeRecordEnd();
+            }
+            s.writeArrayEnd();
+            s.writeRecordEnd();
+        }
         s.writeRecordEnd();
 
         return s.buffer();
     }
 
-    void readRecord(Parser<ValidatingReader> &p) 
+    static void encodeRecurse(Encoder &e)
+    {
+        std::cout << "Encode recurse\n";
+        e.encodeLong(1);
+        e.encodeUnionIndex(1);
+        {
+            e.encodeLong(2);
+            e.encodeUnionIndex(1);
+            {
+                e.encodeLong(3);
+                e.encodeUnionIndex(0);
+                {
+                    e.encodeNull();
+                }
+                e.encodeBool(false);
+            }
+            e.encodeBool(false);
+        }
+        e.encodeBool(true);
+
+        e.encodeString("a");
+        e.arrayStart();
+	e.setItemCount(2);
+        {
+            e.encodeString("aa");
+            e.arrayStart();
+	    e.setItemCount(1);
+            {
+                e.encodeString("aaa");
+                e.arrayStart();
+                e.arrayEnd();
+            }
+            e.arrayEnd();
+        }
+        {
+            e.encodeString("ab");
+            e.arrayStart();
+            e.arrayEnd();
+        }
+        e.arrayEnd();
+    }
+
+    void readRecord(Parser<ValidatingReader> &p) {
+        p.readRecord();
+        readListRecord(p);
+        readArrayRecord(p);
+        p.readRecordEnd();
+    }
+  
+    void readListRecord(Parser<ValidatingReader> &p) 
     {
         p.readRecord();
         int64_t val = p.readLong();
         std::cout << "longval = " << val << '\n';
         int64_t path = p.readUnion();
         if (path == 1) {
-            readRecord(p);
+            readListRecord(p);
         }
         else {
             p.readNull();
@@ -552,12 +662,60 @@ struct TestNested
         p.readRecordEnd();
     }
 
+    void readArrayRecord(Parser<ValidatingReader> &p)
+    {
+        p.readRecord();
+        std::string label;
+        p.readString(label);
+        std::cout << "label = " << label << '\n';
+        for (int64_t bs = p.readArrayBlockSize(); bs > 0;
+             bs = p.readArrayBlockSize()) {
+            for (int64_t i = 0; i < bs; ++i) {
+                readArrayRecord(p);
+            }
+        }
+        p.readRecordEnd();
+    }
+
     void validatingParser(InputBuffer &buf) 
     {
         Parser<ValidatingReader> p(schema_, buf);
         readRecord(p);
     }
 
+    void decodeListRecord(Decoder& d)
+    {
+        int64_t val = d.decodeLong();
+        std::cout << "longval = " << val << '\n';
+        int64_t path = d.decodeUnionIndex();
+        if (path == 1) {
+            decodeListRecord(d);
+        }
+        else {
+          d.decodeNull();
+        }
+        bool b = d.decodeBool();
+        std::cout << "bval = " << b << '\n';      
+    }
+
+    void decodeArrayRecord(Decoder& d)
+    {
+      std::string label = d.decodeString();
+      std::cout << "label = " << label << '\n';
+      for (int64_t bs = d.arrayStart(); bs > 0; bs = d.arrayNext()) {
+	std::cout << "array block size = " << bs << '\n';
+        for (int64_t i = 0; i < bs; ++i) {
+          decodeArrayRecord(d);
+        }
+      }
+    }
+
+    void runDecoder(Decoder& d)
+    {
+      decodeListRecord(d);
+      decodeArrayRecord(d);
+    }
+  
     void testToScreen() {
         InputBuffer buf1 = serializeNoRecurse();
         InputBuffer buf2 = serializeRecurse();
@@ -565,6 +723,7 @@ struct TestNested
         std::cout << buf2;
     }
 
+    // Tests for Serializer + Parser
     void testParseNoRecurse() {
         std::cout << "ParseNoRecurse\n";
         InputBuffer buf = serializeNoRecurse();
@@ -579,6 +738,50 @@ struct TestNested
         validatingParser(buf);
     }
 
+    // Tests for encode + decode
+    void runEncodeDecode(Encoder &e, Decoder &d, void (*encode_fn)(Encoder &))
+    {
+	std::auto_ptr<OutputStream> out = memoryOutputStream();
+	e.init(*out);
+	encode_fn(e);
+	std::auto_ptr<InputStream> in = memoryInputStream(*out);
+	d.init(*in);
+        runDecoder(d);
+    }
+
+    void testDecodeNoRecurse()
+    {
+        std::cout << "DecodeNoRecurse\n";
+	runEncodeDecode(*validatingEncoder(schema_, binaryEncoder()),
+			*validatingDecoder(schema_, binaryDecoder()),
+			encodeNoRecurse);
+	
+    }
+
+    void testDecodeRecurse()
+    {
+        std::cout << "DecodeRecurse\n";
+	runEncodeDecode(*validatingEncoder(schema_, binaryEncoder()),
+			*validatingDecoder(schema_, binaryDecoder()),
+			encodeRecurse);
+    }
+
+  void testDecodeNoRecurseJson()
+    {
+        std::cout << "DecodeNoRecurseJson\n";
+ 	runEncodeDecode(*jsonEncoder(schema_),
+			*jsonDecoder(schema_),
+			encodeNoRecurse);
+	
+    }
+
+    void testDecodeRecurseJson()
+    {
+        std::cout << "DecodeRecurseJson\n";
+	runEncodeDecode(*jsonEncoder(schema_),
+			*jsonDecoder(schema_),
+			encodeRecurse);
+    }
 
     void test() {
         createSchema();
@@ -587,6 +790,10 @@ struct TestNested
         testParseNoRecurse();
         testParseRecurse();
 
+        testDecodeNoRecurse();
+        testDecodeRecurse();
+        testDecodeNoRecurseJson();
+        testDecodeRecurseJson();
     }
 
     ValidSchema schema_;
@@ -767,14 +974,6 @@ struct TestResolution
     ValidSchema unionTwo_;
 };
 
-
-template<typename T>
-void addTestCase(boost::unit_test::test_suite &test) 
-{
-    boost::shared_ptr<T> newtest( new T );
-    test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
-}
-
 boost::unit_test::test_suite*
 init_unit_test_suite( int argc, char* argv[] ) 
 {
@@ -782,12 +981,18 @@ init_unit_test_suite( int argc, char* argv[] )
 
     test_suite* test= BOOST_TEST_SUITE( "Avro C++ unit test suite" );
 
-    addTestCase<TestEncoding>(*test);
-    addTestCase<TestSchema>(*test);
-    addTestCase<TestNested>(*test);
-    addTestCase<TestGenerated>(*test);
-    addTestCase<TestBadStuff>(*test);
-    addTestCase<TestResolution>(*test);
+    test->add(BOOST_CLASS_TEST_CASE(&TestEncoding::test,
+                                    boost::make_shared<TestEncoding>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestSchema::test,
+                                    boost::make_shared<TestSchema>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestNested::test,
+                                    boost::make_shared<TestNested>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestGenerated::test,
+                                    boost::make_shared<TestGenerated>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestBadStuff::test,
+                                    boost::make_shared<TestBadStuff>()));
+    test->add(BOOST_CLASS_TEST_CASE(&TestResolution::test,
+                                    boost::make_shared<TestResolution>()));
 
     return test;
 }

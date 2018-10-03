@@ -19,6 +19,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <artifactId>avro-parent</artifactId>
+    <groupId>org.apache.avro</groupId>
+    <version>1.9.0-SNAPSHOT</version>
+    <relativePath>../../../../../../../../../pom.xml</relativePath>
+  </parent>
+
   <artifactId>avro-maven-plugin-test</artifactId>
   <packaging>jar</packaging>
 
@@ -30,19 +37,15 @@
         <artifactId>avro-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>schema</id>
+            <id>protocol</id>
             <goals>
-              <goal>schema</goal>
+              <goal>protocol</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/schema</outputDirectory>
-          <imports>
-            <import>${basedir}/src/test/avro/imports</import>
-            <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
-          </imports>
+          <outputDirectory>${basedir}/target/test-harness/protocol-joda</outputDirectory>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>
@@ -52,7 +55,7 @@
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
-      <version>1.7.3-SNAPSHOT</version>
+      <version>${parent.version}</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
