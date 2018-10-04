@@ -211,6 +211,8 @@ static GenericDatum makeGenericDatum(NodePtr n,
         const Entity& e, const SymbolTable& st)
 {
     Type t = n->type();
+    EntityType dt = e.type();
+
     if (t == AVRO_SYMBOLIC) {
         n = st.find(n->name())->second;
         t = n->type();
@@ -229,9 +231,15 @@ static GenericDatum makeGenericDatum(NodePtr n,
         assertType(e, json::etLong);
         return GenericDatum(e.longValue());
     case AVRO_FLOAT:
+        if (dt == json::etLong) {
+            return GenericDatum(static_cast<float>(e.longValue()));
+        }
         assertType(e, json::etDouble);
         return GenericDatum(static_cast<float>(e.doubleValue()));
     case AVRO_DOUBLE:
+        if (dt == json::etLong) {
+            return GenericDatum(static_cast<double>(e.longValue()));
+        }
         assertType(e, json::etDouble);
         return GenericDatum(e.doubleValue());
     case AVRO_BOOL:
