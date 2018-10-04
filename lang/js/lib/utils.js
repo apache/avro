@@ -487,7 +487,7 @@ Tap.prototype.writeBinary = function (str, len) {
   if (this.pos > this.buf.length) {
     return;
   }
-  this.buf.binaryWrite(str, pos, len);
+  this.buf.write(str, pos, len, 'binary');
 };
 
 // Binary comparison methods.
