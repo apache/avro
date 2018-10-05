@@ -1,6 +1,6 @@
-Apache Avro Build Instructions
+# Apache Avro Build Instructions
 
-REQUIREMENTS
+## Requirements
 
 The following packages must be installed before Avro can be built:
 
@@ -18,13 +18,18 @@ The following packages must be installed before Avro can be built:
    IO::String, Object::Tiny, Compress::ZLib, Test::More,
    Test::Exception, Test::Pod
  - Apache Ant 1.7
- - Apache Forrest 0.8 (for documentation)
+ - Apache Forrest 0.9 (for documentation)
  - md5sum, sha1sum, used by top-level dist target
 
 To simplify this, you can run a Docker container with all the above
-dependencies installed by installing docker.io and typing:
+dependencies installed by installing Docker and run:
 
- ./build.sh docker
+```bash
+./build.sh docker
+docker@539f6535c9db:~/avro$ cd lang/java/
+docker@539f6535c9db:~/avro/lang/java$ ./build.sh test
+[INFO] Scanning for projects...
+```
 
 When this completes you will be in a shell running in the
 container. Building the image the first time may take a while (20
@@ -36,11 +41,22 @@ The working directory in the container is mounted from your host. This
 allows you to access the files in your Avro development tree from the
 Docker container.
 
-BUILDING
+## Building
 
 Once the requirements are installed (or from the Docker container),
 build.sh can be used as follows:
 
- './build.sh test' runs tests for all languages
- './build.sh dist' creates all release distribution files in dist/
- './build.sh clean' removes all generated artifacts
+```
+./build.sh test # runs tests for all languages
+./build.sh dist # creates all release distribution files in dist/
+./build.sh clean # removes all generated artifacts
+```
+
+## Testing
+
+Testing is done with the same Docker container as mentioned in the building
+step. The difference is that it will do clean run of the full test suite:
+
+```bash
+./build.sh docker-test
+```

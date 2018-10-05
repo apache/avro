@@ -22,7 +22,7 @@ cd `dirname "$0"`     # connect to root
 VERSION=`cat share/VERSION.txt`
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker|rat|githooks}"
+  echo "Usage: $0 {test|dist|sign|clean|docker|rat|githooks|docker-test}"
   exit 1
 }
 
@@ -197,7 +197,7 @@ do
       ;;
 
     docker)
-      docker build -t avro-build share/docker
+      docker build -t avro-build -f share/docker/Dockerfile .
       if [ "$(uname -s)" == "Linux" ]; then
         USER_NAME=${SUDO_USER:=$USER}
         USER_ID=$(id -u $USER_NAME)
@@ -217,13 +217,13 @@ UserSpecificDocker
       # within the container and use the result on your normal
       # system.  And this also is a significant speedup in subsequent
       # builds because the dependencies are downloaded only once.
-      docker run --rm=true -t -i \
+      docker run --rm -t -i \
         -v ${PWD}:/home/${USER_NAME}/avro \
         -w /home/${USER_NAME}/avro \
         -v ${HOME}/.m2:/home/${USER_NAME}/.m2 \
         -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
         -u ${USER_NAME} \
-        avro-build-${USER_NAME}
+        avro-build-${USER_NAME} bash
       ;;
 
     rat)
@@ -234,6 +234,11 @@ UserSpecificDocker
       echo "Installing AVRO git hooks."
       cp share/githooks/* .git/hooks
       find .git/hooks/ -type f | fgrep -v sample | xargs chmod 755
+      ;;
+
+    docker-test)
+      docker build -t avro-test -f share/docker/Dockerfile .
+      docker run --rm -v ${PWD}:/avro/ avro-test
       ;;
 
     *)

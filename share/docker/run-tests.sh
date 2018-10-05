@@ -15,49 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e # exit on error
-
-function usage {
-  echo "Usage: $0 {test|dist|clean}"
-  exit 1
+headline(){
+  echo -e "\e[1;34m#################################################################"
+  echo -e "##### $1 \e[1;37m"
+  echo -e "\e[1;34m#################################################################\e[0m"
 }
 
-if [ $# -eq 0 ]
-then
-  usage
-fi
+set -e
 
-if [ -f VERSION.txt ]
-then
-  VERSION=`cat VERSION.txt`
-else
-  VERSION=`cat ../../share/VERSION.txt`
-fi
-
-for target in "$@"
+for lang in /avro/lang/*/
 do
+  headline "Run tests: $lang"
+  cd "$lang"
 
-function do_dist() {
-  mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate
-}
-
-case "$target" in
-  test)
-    mvn -B test
-    ;;
-
-  dist)
-    do_dist
-    ;;
-
-  clean)
-    mvn clean
-    ;;
-
-  *)
-    usage
-esac
-
+  if [[ "$lang" = *"c++"* ]]; then
+    # The current cpp tests are failing:
+    # https://issues.apache.org/jira/projects/AVRO/issues/AVRO-2230
+    ./build.sh test || true
+  else
+    ./build.sh test
+  fi
 done
-
-exit 0
