@@ -380,19 +380,19 @@ class SimpleParser {
     Handler& handler_;
     std::stack<Symbol> parsingStack;
 
-    static void throwMismatch(Symbol::Kind expected, Symbol::Kind actual)
+    static void throwMismatch(Symbol::Kind actual, Symbol::Kind expected)
     {
         std::ostringstream oss;
-        oss << "Invalid operation. Expected: " <<
-            Symbol::toString(expected) << " got " <<
+        oss << "Invalid operation. Schema requires: " <<
+            Symbol::toString(expected) << ", got: " <<
             Symbol::toString(actual);
         throw Exception(oss.str());
     }
 
-    static void assertMatch(Symbol::Kind expected, Symbol::Kind actual)
+    static void assertMatch(Symbol::Kind actual, Symbol::Kind expected)
     {
         if (expected != actual) {
-            throwMismatch(expected, actual);
+            throwMismatch(actual, expected);
         }
 
     }
