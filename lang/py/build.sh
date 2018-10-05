@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {test|dist|clean|interop-data-generate|interop-data-test}"
   exit 1
 }
 
@@ -49,6 +49,14 @@ case "$target" in
   clean)
     ant clean
     rm -rf userlogs/
+    ;;
+
+  interop-data-generate)
+    ant interop-data-generate
+    ;;
+
+  interop-data-test)
+    ant interop-data-test
     ;;
 
   *)

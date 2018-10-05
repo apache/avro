@@ -19,7 +19,7 @@
 
 FROM java:8-jdk
 
-WORKDIR /root
+WORKDIR /avro/
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -105,4 +105,4 @@ RUN gem install echoe yajl-ruby multi_json snappy
 # Install global Node modules
 RUN npm install -g grunt-cli
 
-CMD ["/avro/share/docker/run-tests.sh"]
+CMD ["./build.sh", "test"]

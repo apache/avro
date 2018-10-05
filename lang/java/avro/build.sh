@@ -15,24 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-headline(){
-  echo -e "\e[1;34m#################################################################"
-  echo -e "##### $1 \e[1;37m"
-  echo -e "\e[1;34m#################################################################\e[0m"
+set -e # exit on error
+
+function usage {
+  echo "Usage: $0 {test|clean|interop-data-generate|interop-data-test}"
+  exit 1
 }
 
-set -e
+case "$target" in
+  test)
+    mvn -B test
+    ;;
 
-for lang in /avro/lang/*/
-do
-  headline "Run tests: $lang"
-  cd "$lang"
+  clean)
+    mvn clean
+    ;;
 
-  if [[ "$lang" = *"c++"* ]]; then
-    # The current cpp tests are failing:
-    # https://issues.apache.org/jira/projects/AVRO/issues/AVRO-2230
-    ./build.sh test || true
-  else
-    ./build.sh test
-  fi
+  interop-data-test)
+    mvn clean
+    ;;
+
+  *)
+    usage
+esac
+
 done
+
+exit 0

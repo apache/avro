@@ -56,6 +56,14 @@ case "$target" in
     do_clean
     ;;
 
+  interop-data-generate)
+    echo "Not (yet) implemented"
+    ;;
+
+  interop-data-test)
+    echo "Not (yet) implemented"
+    ;;
+
   *)
     usage
 esac

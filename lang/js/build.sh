@@ -24,16 +24,27 @@ case "$1" in
     npm install
     npm run cover
     ;;
+
   dist)
     npm pack
     mkdir -p ../../dist/js
     mv avro-js-*.tgz ../../dist/js
     ;;
+
   clean)
     rm -rf coverage
     ;;
+
+  interop-data-generate)
+    echo "Not (yet) implemented"
+    ;;
+
+  interop-data-test)
+    echo "Not (yet) implemented"
+    ;;
+
   *)
-    echo "Usage: $0 {test|dist|clean}" >&2
+    echo "Usage: $0 {test|dist|clean|interop-data-generate|interop-data-test}" >&2
     exit 1
 esac
 

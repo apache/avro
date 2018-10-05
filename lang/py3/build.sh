@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {test|dist|clean|interop-data-generate|interop-data-test}"
   exit 1
 }
 
@@ -54,6 +54,14 @@ case "$target" in
 
   clean)
     do_clean
+    ;;
+
+  interop-data-generate)
+    echo "Not (yet) implemented"
+    ;;
+
+  interop-data-test)
+    echo "Not (yet) implemented"
     ;;
 
   *)

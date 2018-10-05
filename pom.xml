@@ -299,6 +299,7 @@
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**/*.csproj.FilesWrittenAbsolute.txt</exclude>
                 <exclude>lang/js/coverage/**</exclude>
+                <exclude>.dockerignore</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>
                 <exclude>DIST_README.txt</exclude>

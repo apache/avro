@@ -71,7 +71,7 @@
     <bundle-plugin-version>3.2.0</bundle-plugin-version>
     <compiler-plugin.version>3.6.0</compiler-plugin.version>
     <exec-plugin.version>1.5.0</exec-plugin.version>
-    <jar-plugin.version>2.6</jar-plugin.version>
+    <jar-plugin.version>3.1.0</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
     <javadoc-plugin.version>2.10.4</javadoc-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
@@ -155,40 +155,6 @@
                 </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${compiler-plugin.version}</version>
-          <configuration>
-            <source>1.8</source>
-            <target>1.8</target>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>${jar-plugin.version}</version>
-
-          <!--We want to be able to resuse the test-jars for mapred
-              to test avro-tool
-              see http://maven.apache.org/guides/mini/guide-attached-tests.html
-          -->
-          <executions>
-            <execution>
-              <goals>
-                <goal>test-jar</goal>
-              </goals>
-            </execution>
-          </executions>
-          <configuration>
-            <archive>
-              <manifest>
-                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-              </manifest>
-            </archive>
           </configuration>
         </plugin>
         <plugin>
@@ -278,6 +244,40 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${compiler-plugin.version}</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${jar-plugin.version}</version>
+
+        <!--We want to be able to resuse the test-jars for mapred
+            to test avro-tool
+            see http://maven.apache.org/guides/mini/guide-attached-tests.html
+        -->
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>

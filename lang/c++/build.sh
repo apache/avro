@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean|install|doc}"
+  echo "Usage: $0 {test|dist|clean|install|doc|interop-data-test|interop-data-generate}"
   exit 1
 }
 
@@ -101,6 +101,14 @@ case "$target" in
   clean)
     (cd build && make clean)
     rm -rf doc test.avro test6.df
+    ;;
+
+  interop-data-generate)
+    echo "Not (yet) implemented"
+    ;;
+
+  interop-data-test)
+    echo "Not (yet) implemented"
     ;;
 
   install)

@@ -58,6 +58,14 @@ case "$1" in
     rm -f  TestResult.xml
     ;;
 
+  interop-data-generate)
+    echo "Not (yet) implemented"
+    ;;
+
+  interop-data-test)
+    echo "Not (yet) implemented"
+    ;;
+
   *)
     echo "Usage: $0 {test|clean|dist|perf}"
     exit 1

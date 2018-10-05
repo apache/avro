@@ -42,8 +42,16 @@ case "$1" in
         rm -rf tmp avro.gemspec data.avr
        ;;
 
+     interop-data-generate)
+        rake generate_interop
+       ;;
+
+     interop-data-test)
+        rake interop
+       ;;
+
      *)
-       echo "Usage: $0 {test|dist|clean}"
+       echo "Usage: $0 {test|dist|clean|interop-data-generate|interop-data-test}"
        exit 1
 
 esac

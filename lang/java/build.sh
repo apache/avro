@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {test|dist|clean|interop-data-generate|interop-data-test}"
   exit 1
 }
 
@@ -52,6 +52,16 @@ case "$target" in
 
   clean)
     mvn clean
+    ;;
+
+
+  interop-data-generate)
+    (cd avro/; mvn -B -P interop-data-generate generate-resources)
+    ;;
+
+  interop-data-test)
+    #(cd avro/; mvn -B -P interop-data-test)
+    echo "Not (yet) implemented"
     ;;
 
   *)
