@@ -32,8 +32,11 @@ public class SchemaNormalization {
 
   private SchemaNormalization() {}
 
-  /** Returns "Parsing Canonical Form" of a schema as defined by Avro
-    * spec. */
+  /**
+   * Returns "Parsing Canonical Form" of a schema as defined by Avro spec.
+   * @param s The input schema
+   * @return The canonical form as a string
+   */
   public static String toParsingForm(Schema s) {
     try {
       Map<String,String> env = new HashMap<>();
@@ -44,20 +47,27 @@ public class SchemaNormalization {
     }
   }
 
-  /** Returns a fingerprint of a string of bytes.  This string is
-    * presumed to contain a canonical form of a schema.  The
-    * algorithm used to compute the fingerprint is selected by the
-    * argument <i>fpName</i>.  If <i>fpName</i> equals the string
-    * <code>"CRC-64-AVRO"</code>, then the result of {@link #fingerprint64} is
-    * returned in little-endian format.  Otherwise, <i>fpName</i> is
-    * used as an algorithm name for {@link
-    * MessageDigest#getInstance(String)}, which will throw
-    * <code>NoSuchAlgorithmException</code> if it doesn't recognize
-    * the name.
-    * <p> Recommended Avro practice dictates that
-    * <code>"CRC-64-AVRO"</code> is used for 64-bit fingerprints,
-    * <code>"MD5"</code> is used for 128-bit fingerprints, and
-    * <code>"SHA-256"</code> is used for 256-bit fingerprints. */
+  /**
+   *  Returns a fingerprint of a string of bytes.  This string is
+   * presumed to contain a canonical form of a schema.  The
+   * algorithm used to compute the fingerprint is selected by the
+   * argument <i>fpName</i>.  If <i>fpName</i> equals the string
+   * <code>"CRC-64-AVRO"</code>, then the result of {@link #fingerprint64} is
+   * returned in little-endian format.  Otherwise, <i>fpName</i> is
+   * used as an algorithm name for {@link
+   * MessageDigest#getInstance(String)}, which will throw
+   * <code>NoSuchAlgorithmException</code> if it doesn't recognize
+   * the name.
+   * <p>Recommended Avro practice dictates that</p>
+   * <code>"CRC-64-AVRO"</code> is used for 64-bit fingerprints,
+   * <code>"MD5"</code> is used for 128-bit fingerprints, and
+   * <code>"SHA-256"</code> is used for 256-bit fingerprints.
+   *
+   * @param fpName The fingerprint name
+   * @param data The Avro data as bytes
+   * @throws NoSuchAlgorithmException In case the algorithm isn't available
+   * @return The fingerprint as bytes
+   */
   public static byte[] fingerprint(String fpName, byte[] data)
     throws NoSuchAlgorithmException
   {
@@ -75,8 +85,10 @@ public class SchemaNormalization {
     return md.digest(data);
   }
 
-  /** Returns the 64-bit Rabin Fingerprint (as recommended in the Avro
-    * spec) of a byte string. */
+  /**
+   * @param data The data of the Avro message
+   * @return 64-bit Rabin Fingerprint (as recommended in the Avro spec) of a byte string.
+   */
   public static long fingerprint64(byte[] data) {
     long result = EMPTY64;
     for (byte b: data)
@@ -84,8 +96,13 @@ public class SchemaNormalization {
     return result;
   }
 
-  /** Returns {@link #fingerprint} applied to the parsing canonical form
-    * of the supplied schema. */
+  /**
+   * @param fpName The fingerprint name
+   * @param s Avro schema
+   *
+   * @throws NoSuchAlgorithmException In case the selected algoritm isn't available
+   * @return {@link #fingerprint} applied to the parsing canonical form of the supplied schema.
+   */
   public static byte[] parsingFingerprint(String fpName, Schema s)
     throws NoSuchAlgorithmException
   {
@@ -94,8 +111,10 @@ public class SchemaNormalization {
     } catch (UnsupportedEncodingException e) { throw new RuntimeException(e); }
   }
 
-  /** Returns {@link #fingerprint64} applied to the parsing canonical form
-    * of the supplied schema. */
+  /**
+   * @param s The Avro schema
+   * @return {@link #fingerprint64} applied to the parsing canonical form of the supplied schema.
+   */
   public static long parsingFingerprint64(Schema s) {
     try {
       return fingerprint64(toParsingForm(s).getBytes("UTF-8"));

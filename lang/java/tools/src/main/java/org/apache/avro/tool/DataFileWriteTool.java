@@ -36,7 +36,9 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 
-/** Reads new-line delimited JSON records and writers an Avro data file. */
+/**
+ * Reads new-line delimited JSON records and writers an Avro data file.
+ */
 public class DataFileWriteTool implements Tool {
 
   @Override

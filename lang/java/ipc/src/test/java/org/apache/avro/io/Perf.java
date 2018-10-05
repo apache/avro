@@ -59,17 +59,41 @@ public class Perf {
    */
   private static final long SEED = 19781210;
 
+  /**
+   * New random random.
+   *
+   * @return the random
+   */
   protected static Random newRandom() {
     return new Random(SEED);
   }
 
   private static class TestDescriptor {
+    /**
+     * The Test.
+     */
     Class<? extends Test> test;
+    /**
+     * The Param.
+     */
     String param;
+
+    /**
+     * Instantiates a new Test descriptor.
+     *
+     * @param test  the test
+     * @param param the param
+     */
     TestDescriptor(Class<? extends Test> test, String param) {
       this.test = test;
       this.param = param;
     }
+
+    /**
+     * Add.
+     *
+     * @param typeList the type list
+     */
     void add(List<TestDescriptor> typeList) {
       ALL_TESTS.put(param, this);
       typeList.add(this);
@@ -155,6 +179,12 @@ public class Perf {
     System.out.print(details.toString());
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param args the input arguments
+   * @throws Exception the exception
+   */
   public static void main(String[] args) throws Exception {
     List<Test> tests = new ArrayList<>();
     boolean writeTests = true;
@@ -273,14 +303,42 @@ public class Perf {
      * Name of the test.
      */
     public final String name;
+    /**
+     * The Count.
+     */
     public final int count;
+    /**
+     * The Cycles.
+     */
     public final int cycles;
+    /**
+     * The Encoded size.
+     */
     public long encodedSize = 0;
+    /**
+     * The Is read test.
+     */
     protected boolean isReadTest = true;
+    /**
+     * The Is write test.
+     */
     protected boolean isWriteTest = true;
+    /**
+     * The Decoder factory.
+     */
     static DecoderFactory decoder_factory = new DecoderFactory();
+    /**
+     * The Encoder factory.
+     */
     static EncoderFactory encoder_factory = new EncoderFactory();
 
+    /**
+     * Instantiates a new Test.
+     *
+     * @param name   the name
+     * @param cycles the cycles
+     * @param count  the count
+     */
     public Test(String name, int cycles, int count) {
       this.name = name;
       this.cycles = cycles;
@@ -289,26 +347,46 @@ public class Perf {
 
     /**
      * Reads data from a Decoder and returns the time taken in nanoseconds.
+     *
+     * @return the long
+     * @throws IOException the io exception
      */
     abstract long readTest() throws IOException;
 
     /**
      * Writes data to an Encoder and returns the time taken in nanoseconds.
+     *
+     * @return the long
+     * @throws IOException the io exception
      */
     abstract long writeTest() throws IOException;
 
+    /**
+     * Is write test boolean.
+     *
+     * @return the boolean
+     */
     final boolean isWriteTest() {
       return isWriteTest;
     }
 
+    /**
+     * Is read test boolean.
+     *
+     * @return the boolean
+     */
     final boolean isReadTest() {
       return isReadTest;
     }
 
-    /** initializes data for read and write tests **/
+    /**
+     * initializes data for read and write tests  @throws IOException the io exception
+     */
     abstract void init() throws IOException;
 
-    /** clears generated data arrays and other large objects created during initialization **/
+    /**
+     * clears generated data arrays and other large objects created during initialization
+     */
     abstract void reset();
 
     @Override
@@ -323,11 +401,34 @@ public class Perf {
    * higher level constructs, just manual serialization.
    */
   private static abstract class BasicTest extends Test {
+    /**
+     * The Schema.
+     */
     protected final Schema schema;
+    /**
+     * The Data.
+     */
     protected byte[] data;
+
+    /**
+     * Instantiates a new Basic test.
+     *
+     * @param name the name
+     * @param json the json
+     * @throws IOException the io exception
+     */
     BasicTest(String name, String json) throws IOException {
       this(name, json, 1);
     }
+
+    /**
+     * Instantiates a new Basic test.
+     *
+     * @param name   the name
+     * @param json   the json
+     * @param factor the factor
+     * @throws IOException the io exception
+     */
     BasicTest(String name, String json, int factor) throws IOException {
       super(name, CYCLES, COUNT/factor);
       this.schema = new Schema.Parser().parse(json);
@@ -350,6 +451,12 @@ public class Perf {
       return (System.nanoTime() - t);
     }
 
+    /**
+     * Gets decoder.
+     *
+     * @return the decoder
+     * @throws IOException the io exception
+     */
     protected Decoder getDecoder() throws IOException {
       return newDecoder();
     }
@@ -358,10 +465,22 @@ public class Perf {
       return newEncoder(getOutputStream());
     }
 
+    /**
+     * New decoder decoder.
+     *
+     * @return the decoder
+     */
     protected Decoder newDecoder() {
       return decoder_factory.binaryDecoder(data, null);
     }
 
+    /**
+     * New encoder encoder.
+     *
+     * @param out the out
+     * @return the encoder
+     * @throws IOException the io exception
+     */
     protected Encoder newEncoder(ByteArrayOutputStream out) throws IOException {
       Encoder e = encoder_factory.binaryEncoder(out, null);
 //    Encoder e = encoder_factory.directBinaryEncoder(out, null);
@@ -386,13 +505,42 @@ public class Perf {
       //System.out.println(this.getClass().getSimpleName() + " encodedSize=" + encodedSize);
     }
 
+    /**
+     * Gen source data.
+     */
     abstract void genSourceData();
+
+    /**
+     * Read internal.
+     *
+     * @param d the d
+     * @throws IOException the io exception
+     */
     abstract void readInternal(Decoder d) throws IOException;
+
+    /**
+     * Write internal.
+     *
+     * @param e the e
+     * @throws IOException the io exception
+     */
     abstract void writeInternal(Encoder e) throws IOException;
   }
 
+  /**
+   * The type Int test.
+   */
   static class IntTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     protected int[] sourceData = null;
+
+    /**
+     * Instantiates a new Int test.
+     *
+     * @throws IOException the io exception
+     */
     public IntTest() throws IOException {
       this("Int", "{ \"type\": \"int\"} ");
     }
@@ -440,8 +588,16 @@ public class Perf {
     }
   }
 
-  // This is the same data as ReadInt, but using readLong.
+  /**
+   * The type Small long test.
+   */
+// This is the same data as ReadInt, but using readLong.
   static class SmallLongTest extends IntTest {
+    /**
+     * Instantiates a new Small long test.
+     *
+     * @throws IOException the io exception
+     */
     public SmallLongTest() throws IOException {
       super("SmallLong", "{ \"type\": \"long\"} ");
     }
@@ -467,9 +623,18 @@ public class Perf {
     }
   }
 
-  // this tests reading Longs that are sometimes very large
+  /**
+   * The type Long test.
+   */
+// this tests reading Longs that are sometimes very large
   static class LongTest extends BasicTest {
     private long[] sourceData = null;
+
+    /**
+     * Instantiates a new Long test.
+     *
+     * @throws IOException the io exception
+     */
     public LongTest() throws IOException {
       super("Long", "{ \"type\": \"long\"} ");
     }
@@ -517,11 +682,31 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Float test.
+   */
   static class FloatTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     float[] sourceData = null;
+
+    /**
+     * Instantiates a new Float test.
+     *
+     * @throws IOException the io exception
+     */
     public FloatTest() throws IOException {
       this("Float", "{ \"type\": \"float\"} ");
     }
+
+    /**
+     * Instantiates a new Float test.
+     *
+     * @param name   the name
+     * @param schema the schema
+     * @throws IOException the io exception
+     */
     public FloatTest(String name, String schema) throws IOException {
       super(name, schema);
     }
@@ -562,8 +747,20 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Double test.
+   */
   static class DoubleTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     double[] sourceData = null;
+
+    /**
+     * Instantiates a new Double test.
+     *
+     * @throws IOException the io exception
+     */
     public DoubleTest() throws IOException {
       super("Double", "{ \"type\": \"double\"} ");
     }
@@ -604,8 +801,20 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Bool test.
+   */
   static class BoolTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     boolean[] sourceData = null;
+
+    /**
+     * Instantiates a new Bool test.
+     *
+     * @throws IOException the io exception
+     */
     public BoolTest() throws IOException {
       super("Boolean", "{ \"type\": \"boolean\"} ");
     }
@@ -646,8 +855,20 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Bytes test.
+   */
   static class BytesTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     byte[][] sourceData = null;
+
+    /**
+     * Instantiates a new Bytes test.
+     *
+     * @throws IOException the io exception
+     */
     public BytesTest() throws IOException {
       super("Bytes", "{ \"type\": \"bytes\"} ", 5);
     }
@@ -699,8 +920,20 @@ public class Perf {
     return new String(data);
   }
 
+  /**
+   * The type String test.
+   */
   static class StringTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     String[] sourceData = null;
+
+    /**
+     * Instantiates a new String test.
+     *
+     * @throws IOException the io exception
+     */
     public StringTest() throws IOException {
       super("String", "{ \"type\": \"string\"} ", 5);
     }
@@ -741,7 +974,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Array test.
+   */
   static class ArrayTest extends FloatTest {
+    /**
+     * Instantiates a new Array test.
+     *
+     * @throws IOException the io exception
+     */
     public ArrayTest() throws IOException {
       super("Array",
           "{ \"type\": \"array\", \"items\": " +
@@ -792,7 +1033,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Map test.
+   */
   static class MapTest extends FloatTest {
+    /**
+     * Instantiates a new Map test.
+     *
+     * @throws IOException the io exception
+     */
     public MapTest() throws IOException {
       super("Map", "{ \"type\": \"map\", \"values\": " +
           "  { \"type\": \"record\", \"name\":\"Vals\", \"fields\": [" +
@@ -859,15 +1108,43 @@ public class Perf {
     + "] }";
 
   private static class Rec {
+    /**
+     * The F 1.
+     */
     double f1;
+    /**
+     * The F 2.
+     */
     double f2;
+    /**
+     * The F 3.
+     */
     double f3;
+    /**
+     * The F 4.
+     */
     int f4;
+    /**
+     * The F 5.
+     */
     int f5;
+    /**
+     * The F 6.
+     */
     int f6;
+
+    /**
+     * Instantiates a new Rec.
+     */
     Rec() {
 
     }
+
+    /**
+     * Instantiates a new Rec.
+     *
+     * @param r the r
+     */
     Rec(Random r) {
       f1 = r.nextDouble();
       f2 = r.nextDouble();
@@ -878,11 +1155,30 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Record test.
+   */
   static class RecordTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     Rec[] sourceData = null;
+
+    /**
+     * Instantiates a new Record test.
+     *
+     * @throws IOException the io exception
+     */
     public RecordTest() throws IOException {
       this("Record");
     }
+
+    /**
+     * Instantiates a new Record test.
+     *
+     * @param name the name
+     * @throws IOException the io exception
+     */
     public RecordTest(String name) throws IOException {
       super(name, RECORD_SCHEMA, 6);
     }
@@ -924,7 +1220,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Validating record.
+   */
   static class ValidatingRecord extends RecordTest {
+    /**
+     * Instantiates a new Validating record.
+     *
+     * @throws IOException the io exception
+     */
     ValidatingRecord() throws IOException {
       super("ValidatingRecord");
     }
@@ -938,7 +1242,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Resolving record.
+   */
   static class ResolvingRecord extends RecordTest {
+    /**
+     * Instantiates a new Resolving record.
+     *
+     * @throws IOException the io exception
+     */
     public ResolvingRecord() throws IOException {
       super("ResolvingRecord");
       isWriteTest = false;
@@ -989,6 +1301,12 @@ public class Perf {
    */
   static class RecordWithDefault extends RecordTest {
     private final Schema readerSchema;
+
+    /**
+     * Instantiates a new Record with default.
+     *
+     * @throws IOException the io exception
+     */
     public RecordWithDefault() throws IOException {
       super("RecordWithDefault");
       readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_DEFAULT);
@@ -1031,6 +1349,12 @@ public class Perf {
    */
   static class RecordWithOutOfOrder extends RecordTest {
     private final Schema readerSchema;
+
+    /**
+     * Instantiates a new Record with out of order.
+     *
+     * @throws IOException the io exception
+     */
     public RecordWithOutOfOrder() throws IOException {
       super("RecordWithOutOfOrder");
       readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_OUT_OF_ORDER);
@@ -1069,6 +1393,12 @@ public class Perf {
    */
   static class RecordWithPromotion extends RecordTest {
     private final Schema readerSchema;
+
+    /**
+     * Instantiates a new Record with promotion.
+     *
+     * @throws IOException the io exception
+     */
     public RecordWithPromotion() throws IOException {
       super("RecordWithPromotion");
       readerSchema = new Schema.Parser().parse(RECORD_SCHEMA_WITH_PROMOTION);
@@ -1102,22 +1432,64 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Generic test.
+   */
   static class GenericTest extends BasicTest {
+    /**
+     * The Source data.
+     */
     GenericRecord[] sourceData = null;
+    /**
+     * The Reader.
+     */
     protected final GenericDatumReader<Object> reader;
+
+    /**
+     * Instantiates a new Generic test.
+     *
+     * @throws IOException the io exception
+     */
     public GenericTest() throws IOException {
       this("Generic");
     }
+
+    /**
+     * Instantiates a new Generic test.
+     *
+     * @param name the name
+     * @throws IOException the io exception
+     */
     protected GenericTest(String name) throws IOException {
       this(name, RECORD_SCHEMA);
     }
+
+    /**
+     * Instantiates a new Generic test.
+     *
+     * @param name         the name
+     * @param writerSchema the writer schema
+     * @throws IOException the io exception
+     */
     protected GenericTest(String name, String writerSchema) throws IOException {
       super(name, writerSchema, 12);
       reader = newReader();
     }
+
+    /**
+     * Gets reader.
+     *
+     * @return the reader
+     */
     protected GenericDatumReader<Object> getReader() {
       return reader;
     }
+
+    /**
+     * New reader generic datum reader.
+     *
+     * @return the generic datum reader
+     */
     protected GenericDatumReader<Object> newReader() {
       return new GenericDatumReader<>(schema);
     }
@@ -1164,7 +1536,15 @@ public class Perf {
     + "{ \"name\": \"f3\", \"type\": \"string\" }\n"
     + "] }";
 
+  /**
+   * The type Generic strings.
+   */
   static class GenericStrings extends GenericTest {
+    /**
+     * Instantiates a new Generic strings.
+     *
+     * @throws IOException the io exception
+     */
     public GenericStrings() throws IOException {
       super("GenericStrings", GENERIC_STRINGS);
     }
@@ -1182,7 +1562,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Generic nested.
+   */
   static class GenericNested extends GenericTest {
+    /**
+     * Instantiates a new Generic nested.
+     *
+     * @throws IOException the io exception
+     */
     public GenericNested() throws IOException {
       super("GenericNested_", NESTED_RECORD_SCHEMA);
     }
@@ -1191,6 +1579,14 @@ public class Perf {
       sourceData = generateGenericNested(schema, count);
     }
   }
+
+  /**
+   * Generate generic nested generic record [ ].
+   *
+   * @param schema the schema
+   * @param count  the count
+   * @return the generic record [ ]
+   */
   static GenericRecord[] generateGenericNested(Schema schema, int count) {
     Random r = newRandom();
     GenericRecord[] sourceData = new GenericRecord[count];
@@ -1215,10 +1611,22 @@ public class Perf {
     return sourceData;
   }
 
+  /**
+   * The type Generic nested fake.
+   */
   static class GenericNestedFake extends BasicTest {
-    //reads and writes generic data, but not using
+    /**
+     * The Source data.
+     */
+//reads and writes generic data, but not using
     //GenericDatumReader or GenericDatumWriter
     GenericRecord[] sourceData = null;
+
+    /**
+     * Instantiates a new Generic nested fake.
+     *
+     * @throws IOException the io exception
+     */
     public GenericNestedFake() throws IOException {
       super("GenericNestedFake_", NESTED_RECORD_SCHEMA, 12);
     }
@@ -1271,6 +1679,12 @@ public class Perf {
   }
 
   private static abstract class GenericResolving extends GenericTest {
+    /**
+     * Instantiates a new Generic resolving.
+     *
+     * @param name the name
+     * @throws IOException the io exception
+     */
     protected GenericResolving(String name)
     throws IOException {
       super(name);
@@ -1280,10 +1694,24 @@ public class Perf {
     protected GenericDatumReader<Object> newReader() {
       return new GenericDatumReader<>(schema, getReaderSchema());
     }
+
+    /**
+     * Gets reader schema.
+     *
+     * @return the reader schema
+     */
     protected abstract Schema getReaderSchema();
   }
 
+  /**
+   * The type Generic with default.
+   */
   static class GenericWithDefault extends GenericResolving {
+    /**
+     * Instantiates a new Generic with default.
+     *
+     * @throws IOException the io exception
+     */
     GenericWithDefault() throws IOException {
       super("GenericWithDefault_");
     }
@@ -1293,7 +1721,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Generic with out of order.
+   */
   static class GenericWithOutOfOrder extends GenericResolving {
+    /**
+     * Instantiates a new Generic with out of order.
+     *
+     * @throws IOException the io exception
+     */
     GenericWithOutOfOrder() throws IOException {
       super("GenericWithOutOfOrder_");
     }
@@ -1303,7 +1739,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Generic with promotion.
+   */
   static class GenericWithPromotion extends GenericResolving {
+    /**
+     * Instantiates a new Generic with promotion.
+     *
+     * @throws IOException the io exception
+     */
     GenericWithPromotion() throws IOException {
       super("GenericWithPromotion_");
     }
@@ -1313,7 +1757,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Generic one time decoder use.
+   */
   static class GenericOneTimeDecoderUse extends GenericTest {
+    /**
+     * Instantiates a new Generic one time decoder use.
+     *
+     * @throws IOException the io exception
+     */
     public GenericOneTimeDecoderUse() throws IOException {
       super("GenericOneTimeDecoderUse_");
       isWriteTest = false;
@@ -1324,7 +1776,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Generic one time reader use.
+   */
   static class GenericOneTimeReaderUse extends GenericTest {
+    /**
+     * Instantiates a new Generic one time reader use.
+     *
+     * @throws IOException the io exception
+     */
     public GenericOneTimeReaderUse() throws IOException {
       super("GenericOneTimeReaderUse_");
       isWriteTest = false;
@@ -1335,7 +1795,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Generic one time use.
+   */
   static class GenericOneTimeUse extends GenericTest {
+    /**
+     * Instantiates a new Generic one time use.
+     *
+     * @throws IOException the io exception
+     */
     public GenericOneTimeUse() throws IOException {
       super("GenericOneTimeUse_");
       isWriteTest = false;
@@ -1350,25 +1818,67 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Specific test.
+   *
+   * @param <T> the type parameter
+   */
   static abstract class SpecificTest<T extends SpecificRecordBase> extends BasicTest {
+    /**
+     * The Reader.
+     */
     protected final SpecificDatumReader<T> reader;
+    /**
+     * The Writer.
+     */
     protected final SpecificDatumWriter<T> writer;
     private Object[] sourceData;
 
+    /**
+     * Instantiates a new Specific test.
+     *
+     * @param name         the name
+     * @param writerSchema the writer schema
+     * @throws IOException the io exception
+     */
     protected SpecificTest(String name, String writerSchema) throws IOException {
       super(name, writerSchema, 48);
       reader = newReader();
       writer = newWriter();
     }
+
+    /**
+     * Gets reader.
+     *
+     * @return the reader
+     */
     protected SpecificDatumReader<T> getReader() {
       return reader;
     }
+
+    /**
+     * Gets writer.
+     *
+     * @return the writer
+     */
     protected SpecificDatumWriter<T> getWriter() {
       return writer;
     }
+
+    /**
+     * New reader specific datum reader.
+     *
+     * @return the specific datum reader
+     */
     protected SpecificDatumReader<T> newReader() {
       return new SpecificDatumReader<>(schema);
     }
+
+    /**
+     * New writer specific datum writer.
+     *
+     * @return the specific datum writer
+     */
     protected SpecificDatumWriter<T> newWriter() {
       return new SpecificDatumWriter<>(schema);
     }
@@ -1381,6 +1891,12 @@ public class Perf {
       }
     }
 
+    /**
+     * Gen single record t.
+     *
+     * @param r the r
+     * @return the t
+     */
     protected abstract T genSingleRecord(Random r);
 
     @Override
@@ -1404,8 +1920,16 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Foo bar specific record test.
+   */
   static class FooBarSpecificRecordTest extends
       SpecificTest<FooBarSpecificRecord> {
+    /**
+     * Instantiates a new Foo bar specific record test.
+     *
+     * @throws IOException the io exception
+     */
     public FooBarSpecificRecordTest() throws IOException {
       super("FooBarSpecificRecordTest", FooBarSpecificRecord.SCHEMA$.toString());
     }
@@ -1430,12 +1954,37 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect test.
+   *
+   * @param <T> the type parameter
+   */
   static abstract class ReflectTest<T> extends BasicTest {
+    /**
+     * The Source data.
+     */
     T[] sourceData = null;
+    /**
+     * The Reader.
+     */
     ReflectDatumReader<T> reader;
+    /**
+     * The Writer.
+     */
     ReflectDatumWriter<T> writer;
+    /**
+     * The Clazz.
+     */
     Class<T> clazz;
 
+    /**
+     * Instantiates a new Reflect test.
+     *
+     * @param name   the name
+     * @param sample the sample
+     * @param factor the factor
+     * @throws IOException the io exception
+     */
     @SuppressWarnings("unchecked")
     ReflectTest(String name, T sample, int factor) throws IOException {
       super(name, ReflectData.get().getSchema(sample.getClass()).toString(), factor);
@@ -1454,6 +2003,12 @@ public class Perf {
       }
     }
 
+    /**
+     * Create datum t.
+     *
+     * @param r the r
+     * @return the t
+     */
     protected abstract T createDatum(Random r);
 
     @Override
@@ -1477,7 +2032,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect record test.
+   */
   static class ReflectRecordTest extends ReflectTest<Rec> {
+    /**
+     * Instantiates a new Reflect record test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectRecordTest() throws IOException {
       super("ReflectRecord", new Rec(), 12);
     }
@@ -1488,7 +2051,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect float test.
+   */
   static class ReflectFloatTest extends ReflectTest<float[]> {
+    /**
+     * Instantiates a new Reflect float test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectFloatTest() throws IOException {
       super("ReflectFloat", new float[0], COUNT);
     }
@@ -1499,7 +2070,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect double test.
+   */
   static class ReflectDoubleTest extends ReflectTest<double[]> {
+    /**
+     * Instantiates a new Reflect double test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectDoubleTest() throws IOException {
       super("ReflectDouble", new double[0], COUNT);
     }
@@ -1510,7 +2089,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect float array test.
+   */
   static class ReflectFloatArrayTest extends ReflectTest<float[]> {
+    /**
+     * Instantiates a new Reflect float array test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectFloatArrayTest() throws IOException {
       super("ReflectFloatArray", new float[0], 10);
     }
@@ -1521,7 +2108,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect double array test.
+   */
   static class ReflectDoubleArrayTest extends ReflectTest<double[]> {
+    /**
+     * Instantiates a new Reflect double array test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectDoubleArrayTest() throws IOException {
       super("ReflectDoubleArray", new double[0], 20);
     }
@@ -1532,7 +2127,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect int array test.
+   */
   static class ReflectIntArrayTest extends ReflectTest<int[]> {
+    /**
+     * Instantiates a new Reflect int array test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectIntArrayTest() throws IOException {
       super("ReflectIntArray", new int[0], 12);
     }
@@ -1543,7 +2146,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect long array test.
+   */
   static class ReflectLongArrayTest extends ReflectTest<long[]> {
+    /**
+     * Instantiates a new Reflect long array test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectLongArrayTest() throws IOException {
       super("ReflectLongArray", new long[0], 24);
     }
@@ -1555,8 +2166,16 @@ public class Perf {
   }
 
 
+  /**
+   * The type Reflect nested object array test.
+   */
   static class ReflectNestedObjectArrayTest extends
       ReflectTest<ReflectNestedObjectArrayTest.Foo> {
+    /**
+     * Instantiates a new Reflect nested object array test.
+     *
+     * @throws IOException the io exception
+     */
     ReflectNestedObjectArrayTest() throws IOException {
       super("ReflectNestedObjectArray", new Foo(new Random()), 50);
     }
@@ -1566,12 +2185,26 @@ public class Perf {
       return new Foo(r);
     }
 
+    /**
+     * The type Foo.
+     */
     static public class Foo {
+      /**
+       * The Bar.
+       */
       Vals[] bar;
 
+      /**
+       * Instantiates a new Foo.
+       */
       Foo() {
       }
 
+      /**
+       * Instantiates a new Foo.
+       *
+       * @param r the r
+       */
       Foo(Random r) {
         bar = new Vals[smallArraySize(r)];
         for (int i = 0; i < bar.length; i++) {
@@ -1580,15 +2213,38 @@ public class Perf {
       }
     }
 
+    /**
+     * The type Vals.
+     */
     static class Vals {
+      /**
+       * The F 1.
+       */
       float f1;
+      /**
+       * The F 2.
+       */
       float f2;
+      /**
+       * The F 3.
+       */
       float f3;
+      /**
+       * The F 4.
+       */
       float f4;
 
+      /**
+       * Instantiates a new Vals.
+       */
       Vals(){
       }
 
+      /**
+       * Instantiates a new Vals.
+       *
+       * @param r the r
+       */
       Vals(Random r) {
         this.f1 = r.nextFloat();
         this.f2 = r.nextFloat();
@@ -1599,12 +2255,27 @@ public class Perf {
 
   }
 
+  /**
+   * The type Float foo.
+   */
   static public class FloatFoo {
+    /**
+     * The Float bar.
+     */
     float[] floatBar;
 
+    /**
+     * Instantiates a new Float foo.
+     */
     FloatFoo() {
     }
 
+    /**
+     * Instantiates a new Float foo.
+     *
+     * @param r     the r
+     * @param large the large
+     */
     FloatFoo(Random r, boolean large) {
       floatBar = populateFloatArray(r, large);
     }
@@ -1620,11 +2291,25 @@ public class Perf {
     return r.nextInt(97) + 16;
   }
 
+  /**
+   * Populate float array float [ ].
+   *
+   * @param r     the r
+   * @param large the large
+   * @return the float [ ]
+   */
   static float[] populateFloatArray(Random r, boolean large) {
     int size = large ? largeArraySize(r) : smallArraySize(r);
     return populateFloatArray(r, size);
   }
 
+  /**
+   * Populate float array float [ ].
+   *
+   * @param r    the r
+   * @param size the size
+   * @return the float [ ]
+   */
   static float[] populateFloatArray(Random r, int size) {
     float[] result = new float[size];
     for (int i = 0; i < result.length; i++) {
@@ -1633,10 +2318,23 @@ public class Perf {
     return result;
   }
 
+  /**
+   * Populate double array double [ ].
+   *
+   * @param r the r
+   * @return the double [ ]
+   */
   static double[] populateDoubleArray(Random r) {
     return populateDoubleArray(r, smallArraySize(r));
   }
 
+  /**
+   * Populate double array double [ ].
+   *
+   * @param r    the r
+   * @param size the size
+   * @return the double [ ]
+   */
   static double[] populateDoubleArray(Random r, int size) {
     double[] result = new double[size];
     for (int i = 0; i < result.length; i++) {
@@ -1645,6 +2343,12 @@ public class Perf {
     return result;
   }
 
+  /**
+   * Populate int array int [ ].
+   *
+   * @param r the r
+   * @return the int [ ]
+   */
   static int[] populateIntArray(Random r) {
     int size = smallArraySize(r);
     int[] result = new int[size];
@@ -1654,6 +2358,12 @@ public class Perf {
     return result;
   }
 
+  /**
+   * Populate long array long [ ].
+   *
+   * @param r the r
+   * @return the long [ ]
+   */
   static long[] populateLongArray(Random r) {
     int size = smallArraySize(r);
     long[] result = new long[size];
@@ -1663,7 +2373,15 @@ public class Perf {
     return result;
   }
 
+  /**
+   * The type Reflect nested float array test.
+   */
   static class ReflectNestedFloatArrayTest extends ReflectTest<FloatFoo> {
+    /**
+     * Instantiates a new Reflect nested float array test.
+     *
+     * @throws IOException the io exception
+     */
     public ReflectNestedFloatArrayTest() throws IOException {
       super("ReflectNestedFloatArray", new FloatFoo(new Random(), false), 10);
     }
@@ -1674,7 +2392,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect nested large float array test.
+   */
   static class ReflectNestedLargeFloatArrayTest extends ReflectTest<FloatFoo> {
+    /**
+     * Instantiates a new Reflect nested large float array test.
+     *
+     * @throws IOException the io exception
+     */
     public ReflectNestedLargeFloatArrayTest() throws IOException {
       super("ReflectNestedLargeFloatArray", new FloatFoo(new Random(), true),
           60);
@@ -1687,7 +2413,15 @@ public class Perf {
 
   }
 
+  /**
+   * The type Reflect nested large float array blocked test.
+   */
   static class ReflectNestedLargeFloatArrayBlockedTest extends ReflectTest<FloatFoo> {
+    /**
+     * Instantiates a new Reflect nested large float array blocked test.
+     *
+     * @throws IOException the io exception
+     */
     public ReflectNestedLargeFloatArrayBlockedTest() throws IOException {
       super("ReflectNestedLargeFloatArrayBlocked", new FloatFoo(new Random(), true),
           60);
@@ -1707,22 +2441,66 @@ public class Perf {
 
   @SuppressWarnings("unused")
   private static class Rec1 {
+    /**
+     * The D 1.
+     */
     double d1;
+    /**
+     * The D 11.
+     */
     double d11;
+    /**
+     * The F 2.
+     */
     float f2;
+    /**
+     * The F 22.
+     */
     float f22;
+    /**
+     * The F 3.
+     */
     int f3;
+    /**
+     * The F 33.
+     */
     int f33;
+    /**
+     * The F 4.
+     */
     long f4;
+    /**
+     * The F 44.
+     */
     long f44;
+    /**
+     * The F 5.
+     */
     byte f5;
+    /**
+     * The F 55.
+     */
     byte f55;
+    /**
+     * The F 6.
+     */
     short f6;
+    /**
+     * The F 66.
+     */
     short f66;
 
+    /**
+     * Instantiates a new Rec 1.
+     */
     Rec1() {
     }
 
+    /**
+     * Instantiates a new Rec 1.
+     *
+     * @param r the r
+     */
     Rec1(Random r) {
       d1 = r.nextDouble();
       d11 = r.nextDouble();
@@ -1739,7 +2517,15 @@ public class Perf {
     }
   }
 
+  /**
+   * The type Reflect big record test.
+   */
   static class ReflectBigRecordTest extends ReflectTest<Rec1> {
+    /**
+     * Instantiates a new Reflect big record test.
+     *
+     * @throws IOException the io exception
+     */
     public ReflectBigRecordTest() throws IOException {
       super("ReflectBigRecord", new Rec1(new Random()), 20);
     }

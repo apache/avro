@@ -176,6 +176,7 @@ public class Conversions {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer)
+   * @param <T> The return type
    * @param datum The object to be converted.
    * @param schema The schema of datum. Cannot be null if datum is not null.
    * @param type The {@link org.apache.avro.LogicalType} of datum. Cannot

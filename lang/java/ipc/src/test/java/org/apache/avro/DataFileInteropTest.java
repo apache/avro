@@ -29,17 +29,28 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * The type Data file interop test.
+ */
 public class DataFileInteropTest {
 
   private static final File DATAFILE_DIR =
     new File(System.getProperty("test.dir", "/tmp"));
 
+  /**
+   * Print dir.
+   */
   @BeforeClass
   public static void printDir() {
     System.out.println("Reading data files from directory: "
         + DATAFILE_DIR.getAbsolutePath());
   }
 
+  /**
+   * Test generated generic.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testGeneratedGeneric() throws IOException {
     System.out.println("Reading with generic:");
@@ -51,6 +62,11 @@ public class DataFileInteropTest {
     readFiles(provider);
   }
 
+  /**
+   * Test generated specific.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testGeneratedSpecific() throws IOException {
     System.out.println("Reading with specific:");
@@ -95,7 +111,17 @@ public class DataFileInteropTest {
     }
   }
 
+  /**
+   * The interface Datum reader provider.
+   *
+   * @param <T> the type parameter
+   */
   interface DatumReaderProvider<T extends Object> {
+    /**
+     * Get datum reader.
+     *
+     * @return the datum reader
+     */
     public DatumReader<T> get();
   }
 

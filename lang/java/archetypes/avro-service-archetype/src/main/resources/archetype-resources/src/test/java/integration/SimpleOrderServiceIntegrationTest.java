@@ -47,6 +47,11 @@ public class SimpleOrderServiceIntegrationTest {
   private static SimpleOrderServiceEndpoint service;
   private static SimpleOrderServiceClient client;
 
+  /**
+   * Simple round trip test.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void simpleRoundTripTest() throws Exception {
     Order simpleOrder = createOrder();
@@ -57,6 +62,11 @@ public class SimpleOrderServiceIntegrationTest {
     assertTrue(c.getEstimatedCompletion() > 0);
   }
 
+  /**
+   * Sets transport.
+   *
+   * @throws Exception the exception
+   */
   @BeforeClass
   public static void setupTransport() throws Exception {
     InetSocketAddress endpointAddress = new InetSocketAddress("0.0.0.0", 12345);
@@ -67,16 +77,31 @@ public class SimpleOrderServiceIntegrationTest {
     client.start();
   }
 
+  /**
+   * Shutdown transport.
+   *
+   * @throws Exception the exception
+   */
   @AfterClass
   public static void shutdownTransport() throws Exception {
     client.stop();
     service.stop();
   }
 
+  /**
+   * Create order order.
+   *
+   * @return the order
+   */
   public Order createOrder() {
     return Order.newBuilder().setOrderId(1).setCustomerId(1).setOrderItems(createItems()).build();
   }
 
+  /**
+   * Create items list.
+   *
+   * @return the list
+   */
   public List<Item> createItems() {
     List<Item> items = new ArrayList<Item>();
     for (int x = 0; x < 5; x++)

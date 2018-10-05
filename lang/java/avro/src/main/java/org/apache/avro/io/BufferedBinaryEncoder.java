@@ -27,17 +27,17 @@ import org.apache.avro.AvroRuntimeException;
 
 /**
  * An {@link Encoder} for Avro's binary encoding.
- * <p/>
+ *
  * This implementation buffers output to enhance performance.
  * Output may not appear on the underlying output until flush() is called.
- * <p/>
+ *
  * {@link DirectBinaryEncoder} can be used in place of this implementation if
  * the buffering semantics are not desired, and the performance difference
  * is acceptable.
- * <p/>
+ *
  * To construct or reconfigure, use
  * {@link EncoderFactory#binaryEncoder(OutputStream, BinaryEncoder)}.
- * <p/>
+ *
  * To change the buffer size, configure the factory instance used to
  * create instances with {@link EncoderFactory#configureBufferSize(int)}
  *  @see Encoder
@@ -189,11 +189,11 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   /**
    * ByteSink abstracts the destination of written data from the core workings
    * of BinaryEncoder.
-   * <p/>
+   *
    * Currently the only destination option is an OutputStream, but we may later
    * want to handle other constructs or specialize for certain OutputStream
    * Implementations such as ByteBufferOutputStream.
-   * <p/>
+   *
    */
   private abstract static class ByteSink {
     protected ByteSink() {}

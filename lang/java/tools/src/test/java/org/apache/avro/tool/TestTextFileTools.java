@@ -41,17 +41,37 @@ import org.junit.BeforeClass;
 import org.junit.AfterClass;
 import org.junit.Test;
 
+/**
+ * The type Test text file tools.
+ */
 @SuppressWarnings("deprecation")
 public class TestTextFileTools {
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "10"));
 
   private static final byte[] LINE_SEP = System.getProperty("line.separator").getBytes();
+  /**
+   * The Lines file.
+   */
   static File linesFile;
+  /**
+   * The Lines.
+   */
   static ByteBuffer[] lines;
+  /**
+   * The Schema.
+   */
   static Schema schema;
+  /**
+   * The Schema file.
+   */
   static File schemaFile;
 
+  /**
+   * Write random file.
+   *
+   * @throws IOException the io exception
+   */
   @BeforeClass
   public static void writeRandomFile() throws IOException {
     schema = Schema.create(Type.BYTES);
@@ -99,6 +119,11 @@ public class TestTextFileTools {
     assertEquals(COUNT, i);
   }
 
+  /**
+   * Test from text.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testFromText() throws Exception {
     fromText("null", "--codec", "null");
@@ -106,6 +131,11 @@ public class TestTextFileTools {
     fromText("snappy", "--codec", "snappy");
   }
 
+  /**
+   * Test to text.
+   *
+   * @throws Exception the exception
+   */
   @AfterClass
   public static void testToText() throws Exception {
     toText("null");

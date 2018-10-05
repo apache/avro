@@ -35,8 +35,14 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+/**
+ * The type Test namespace specific.
+ */
 public class TestNamespaceSpecific {
 
+  /**
+   * The type Test.
+   */
   public static class TestImpl implements TestNamespace {
     public TestRecord echo(TestRecord record) { return record; }
     public Void error() throws AvroRemoteException {
@@ -44,10 +50,24 @@ public class TestNamespaceSpecific {
     }
   }
 
+  /**
+   * The constant server.
+   */
   protected static SocketServer server;
+  /**
+   * The constant client.
+   */
   protected static Transceiver client;
+  /**
+   * The constant proxy.
+   */
   protected static TestNamespace proxy;
 
+  /**
+   * Test start server.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void testStartServer() throws Exception {
     if (server != null) return;
@@ -58,6 +78,11 @@ public class TestNamespaceSpecific {
     proxy = SpecificRequestor.getClient(TestNamespace.class, client);
   }
 
+  /**
+   * Test echo.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
@@ -67,6 +92,11 @@ public class TestNamespaceSpecific {
     assertEquals(record.hashCode(), echoed.hashCode());
   }
 
+  /**
+   * Test error.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testError() throws IOException {
     TestError error = null;
@@ -79,6 +109,11 @@ public class TestNamespaceSpecific {
     assertEquals("an error", error.getMessage$());
   }
 
+  /**
+   * Test stop server.
+   *
+   * @throws IOException the io exception
+   */
   @AfterClass
   public static void testStopServer() throws IOException {
     client.close();

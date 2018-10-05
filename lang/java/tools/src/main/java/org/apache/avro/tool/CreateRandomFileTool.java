@@ -30,7 +30,9 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.trevni.avro.RandomData;
 
-/** Creates a file filled with randomly-generated instances of a schema. */
+/**
+ * Creates a file filled with randomly-generated instances of a schema.
+ */
 public class CreateRandomFileTool implements Tool {
 
   @Override

@@ -29,10 +29,18 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.avro.AvroRuntimeException;
 
-/** An {@link HttpServlet} that responds to Avro RPC requests. */
+/**
+ * An {@link HttpServlet} that responds to Avro RPC requests.
+ */
 public class ResponderServlet extends HttpServlet {
   private Responder responder;
 
+  /**
+   * Instantiates a new Responder servlet.
+   *
+   * @param responder the responder
+   * @throws IOException the io exception
+   */
   public ResponderServlet(Responder responder) throws IOException {
     this.responder = responder;
   }

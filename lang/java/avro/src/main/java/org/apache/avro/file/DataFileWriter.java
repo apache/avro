@@ -354,7 +354,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
    * of the two files are compatible, data blocks are copied directly without
    * decompression.  If the codecs are not compatible, blocks from otherFile
    * are uncompressed and then compressed using this file's codec.
-   * <p/>
+   *
    * If the recompress flag is set all blocks are decompressed and then compressed
    * using this file's codec.  This is useful when the two files have compatible
    * compression codecs but different codec options.  For example, one might

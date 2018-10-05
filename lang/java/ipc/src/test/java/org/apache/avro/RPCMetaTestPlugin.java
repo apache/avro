@@ -35,8 +35,16 @@ import org.apache.avro.ipc.RPCPlugin;
  */
 public final class RPCMetaTestPlugin extends RPCPlugin {
 
+  /**
+   * The Key.
+   */
   protected final String key;
 
+  /**
+   * Instantiates a new Rpc meta test plugin.
+   *
+   * @param keyname the keyname
+   */
   public RPCMetaTestPlugin(String keyname) {
     key = keyname;
   }
@@ -171,6 +179,11 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     checkRPCMetaMap(context.responseCallMeta());
   }
 
+  /**
+   * Check rpc meta map.
+   *
+   * @param rpcMeta the rpc meta
+   */
   protected void checkRPCMetaMap(Map<String,ByteBuffer> rpcMeta) {
     Assert.assertNotNull(rpcMeta);
     Assert.assertTrue("key not present in map", rpcMeta.containsKey(key));

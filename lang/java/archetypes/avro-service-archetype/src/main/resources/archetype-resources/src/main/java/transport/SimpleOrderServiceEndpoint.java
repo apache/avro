@@ -44,10 +44,20 @@ public class SimpleOrderServiceEndpoint {
 
   private Server service;
 
+  /**
+   * Instantiates a new Simple order service endpoint.
+   *
+   * @param endpointAddress the endpoint address
+   */
   public SimpleOrderServiceEndpoint(InetSocketAddress endpointAddress) {
     this.endpointAddress = endpointAddress;
   }
 
+  /**
+   * Start.
+   *
+   * @throws Exception the exception
+   */
   public synchronized void start() throws Exception {
     if (log.isInfoEnabled()) {
       log.info("Starting Simple Ordering Netty Server on '{}'", endpointAddress);
@@ -58,6 +68,11 @@ public class SimpleOrderServiceEndpoint {
     service.start();
   }
 
+  /**
+   * Stop.
+   *
+   * @throws Exception the exception
+   */
   public synchronized void stop() throws Exception {
     if (log.isInfoEnabled()) {
       log.info("Stopping Simple Ordering Server on '{}'", endpointAddress);

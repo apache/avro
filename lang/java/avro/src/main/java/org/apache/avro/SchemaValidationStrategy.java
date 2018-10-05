@@ -23,13 +23,15 @@ package org.apache.avro;
  * another.
  * <p>
  * What makes one schema compatible with another is not defined by the contract.
- * <p/>
+ *
  */
 public interface SchemaValidationStrategy {
 
   /**
    * Validates that one schema is compatible with another.
    *
+   * @param toValidate The schema to be validated
+   * @param existing The current schema to check compatibility with
    * @throws SchemaValidationException if the schemas are not compatible.
    */
   void validate(Schema toValidate, Schema existing)

@@ -50,10 +50,20 @@ public class SimpleOrderServiceClient implements OrderProcessingService {
 
   private OrderProcessingService service;
 
+  /**
+   * Instantiates a new Simple order service client.
+   *
+   * @param endpointAddress the endpoint address
+   */
   public SimpleOrderServiceClient(InetSocketAddress endpointAddress) {
     this.endpointAddress = endpointAddress;
   }
 
+  /**
+   * Start.
+   *
+   * @throws IOException the io exception
+   */
   public synchronized void start() throws IOException {
     if (log.isInfoEnabled()) {
       log.info("Starting Simple Ordering Netty client on '{}'", endpointAddress);
@@ -62,6 +72,11 @@ public class SimpleOrderServiceClient implements OrderProcessingService {
     service = SpecificRequestor.getClient(OrderProcessingService.class, transceiver);
   }
 
+  /**
+   * Stop.
+   *
+   * @throws IOException the io exception
+   */
   public void stop() throws IOException {
     if (log.isInfoEnabled()) {
       log.info("Stopping Simple Ordering Netty client on '{}'", endpointAddress);
@@ -71,6 +86,14 @@ public class SimpleOrderServiceClient implements OrderProcessingService {
     }
   }
 
+  /**
+   * Submit order confirmation.
+   *
+   * @param order the order
+   * @return the confirmation
+   * @throws AvroRemoteException the avro remote exception
+   * @throws OrderFailure        the order failure
+   */
   @Override
   public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {
     return service.submitOrder(order);

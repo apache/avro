@@ -73,11 +73,19 @@ public class TestSpecificCompilerTool {
   private static final File TEST_OUTPUT_STRING_POSITION =
     new File(TEST_OUTPUT_STRING_DIR, "avro/examples/baseball/Position.java");
 
+  /**
+   * Sets up.
+   */
   @Before
   public void setUp() {
     TEST_OUTPUT_DIR.delete();
   }
 
+  /**
+   * Test compile schema single file.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testCompileSchemaSingleFile() throws Exception {
 
@@ -87,6 +95,11 @@ public class TestSpecificCompilerTool {
     assertFileMatch(TEST_EXPECTED_POSITION, TEST_OUTPUT_POSITION);
   }
 
+  /**
+   * Test compile schema two files.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testCompileSchemaTwoFiles() throws Exception {
 
@@ -98,6 +111,11 @@ public class TestSpecificCompilerTool {
     assertFileMatch(TEST_EXPECTED_PLAYER,   TEST_OUTPUT_PLAYER);
   }
 
+  /**
+   * Test compile schema file and directory.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testCompileSchemaFileAndDirectory() throws Exception {
 
@@ -109,6 +127,11 @@ public class TestSpecificCompilerTool {
     assertFileMatch(TEST_EXPECTED_PLAYER,   TEST_OUTPUT_PLAYER);
   }
 
+  /**
+   * Test compile schemas using string.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testCompileSchemasUsingString() throws Exception {
 

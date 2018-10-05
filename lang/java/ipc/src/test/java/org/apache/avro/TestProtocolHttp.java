@@ -35,6 +35,9 @@ import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 
+/**
+ * The type Test protocol http.
+ */
 public class TestProtocolHttp extends TestProtocolSpecific {
 
   @Override
@@ -51,6 +54,11 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     return REPEATING;
   }
 
+  /**
+   * Test timeout.
+   *
+   * @throws Throwable the throwable
+   */
   @Test(expected=SocketTimeoutException.class)
     public void testTimeout() throws Throwable {
     ServerSocket s = new ServerSocket(0);
@@ -67,7 +75,9 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     }
   }
 
-  /** Test that Responder ignores one-way with stateless transport. */
+  /**
+   * Test that Responder ignores one-way with stateless transport.  @throws Exception the exception
+   */
   @Test public void testStatelessOneway() throws Exception {
     // a version of the Simple protocol that doesn't declare "ack" one-way
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");

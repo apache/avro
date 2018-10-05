@@ -30,19 +30,32 @@ import javax.security.auth.callback.CallbackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A {@link Server} that uses {@link javax.security.sasl} for authentication
- * and encryption. */
+/**
+ * A {@link Server} that uses {@link javax.security.sasl} for authentication
+ * and encryption.
+ */
 public class SaslSocketServer extends SocketServer {
   private static final Logger LOG = LoggerFactory.getLogger(SaslServer.class);
 
   private static abstract class SaslServerFactory {
+    /**
+     * Gets server.
+     *
+     * @return the server
+     * @throws SaslException the sasl exception
+     */
     protected abstract SaslServer getServer() throws SaslException;
   }
 
   private SaslServerFactory factory;
 
-  /** Create using SASL's anonymous (<a
-   * href="http://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism. */
+  /**
+   * Create using SASL's anonymous (<a
+   * href="http://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism.  @param responder the responder
+   *
+   * @param addr the addr
+   * @throws IOException the io exception
+   */
   public SaslSocketServer(Responder responder, SocketAddress addr)
     throws IOException {
     this(responder, addr,
@@ -51,7 +64,17 @@ public class SaslSocketServer extends SocketServer {
          });
   }
 
-  /** Create using the specified {@link SaslServer} parameters. */
+  /**
+   * Create using the specified {@link SaslServer} parameters.  @param responder the responder
+   *
+   * @param addr       the addr
+   * @param mechanism  the mechanism
+   * @param protocol   the protocol
+   * @param serverName the server name
+   * @param props      the props
+   * @param cbh        the cbh
+   * @throws IOException the io exception
+   */
   public SaslSocketServer(Responder responder, SocketAddress addr,
                           final String mechanism, final String protocol,
                           final String serverName, final Map<String,?> props,

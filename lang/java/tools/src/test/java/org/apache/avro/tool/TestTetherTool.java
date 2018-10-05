@@ -40,13 +40,18 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
+/**
+ * The type Test tether tool.
+ */
 public class TestTetherTool {
 
   /**
    * Test that the tether tool works with the mapreduce example
-   *
+   * <p>
    * TODO: How can we ensure that when we run, the WordCountTether example has
    * been properly compiled?
+   *
+   * @throws Exception the exception
    */
   @Test
   public void test() throws Exception {

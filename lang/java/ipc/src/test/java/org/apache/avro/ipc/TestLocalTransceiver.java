@@ -31,14 +31,28 @@ import org.apache.avro.ipc.generic.GenericResponder;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
+/**
+ * The type Test local transceiver.
+ */
 public class TestLocalTransceiver {
 
+  /**
+   * The Protocol.
+   */
   Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", "
       + "\"messages\": { \"m\": {"
       + "   \"request\": [{\"name\": \"x\", \"type\": \"string\"}], "
       + "   \"response\": \"string\"} } }");
 
+  /**
+   * The type Test responder.
+   */
   static class TestResponder extends GenericResponder {
+    /**
+     * Instantiates a new Test responder.
+     *
+     * @param local the local
+     */
     public TestResponder(Protocol local) {
       super(local);
     }
@@ -52,6 +66,11 @@ public class TestLocalTransceiver {
 
   }
 
+  /**
+   * Test single rpc.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testSingleRpc() throws IOException {
     Transceiver t = new LocalTransceiver(new TestResponder(protocol));

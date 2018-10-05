@@ -31,10 +31,23 @@ import java.nio.ByteBuffer;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * The type Test custom schema store.
+ */
 public class TestCustomSchemaStore {
 
+  /**
+   * The type Custom schema store.
+   */
   static class CustomSchemaStore implements SchemaStore {
+    /**
+     * The Cache.
+     */
     Cache cache;
+
+    /**
+     * Instantiates a new Custom schema store.
+     */
     CustomSchemaStore() {
       cache = new Cache();
       cache.addSchema(NestedEvolve1.getClassSchema());
@@ -49,6 +62,11 @@ public class TestCustomSchemaStore {
 
   private BinaryMessageDecoder<NestedEvolve1> decoder = NestedEvolve1.createDecoder(new CustomSchemaStore());
 
+  /**
+   * Test compatible read with schema from schema store.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testCompatibleReadWithSchemaFromSchemaStore() throws Exception {
     // Create and encode a NestedEvolve2 record.
@@ -65,6 +83,11 @@ public class TestCustomSchemaStore {
     assertEquals(nestedEvolve1.getNested().getValue(), Long.valueOf(1));
   }
 
+  /**
+   * Test incompatible read with schema from schema store.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected = MissingSchemaException.class)
   public void testIncompatibleReadWithSchemaFromSchemaStore() throws Exception {
     // Create and encode a NestedEvolve3 record.

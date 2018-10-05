@@ -26,6 +26,9 @@ import org.junit.Before;
 
 import java.net.InetSocketAddress;
 
+/**
+ * The type Test namespace reflect.
+ */
 public class TestNamespaceReflect extends TestNamespaceSpecific {
 
   @Before @Override

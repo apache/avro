@@ -33,15 +33,35 @@ import org.apache.avro.ipc.Callback;
 import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.Transceiver;
 
-/** {@link Requestor} implementation for generic Java data. */
+/**
+ * {@link Requestor} implementation for generic Java data.
+ */
 public class GenericRequestor extends Requestor {
+  /**
+   * The Data.
+   */
   GenericData data;
 
+  /**
+   * Instantiates a new Generic requestor.
+   *
+   * @param protocol    the protocol
+   * @param transceiver the transceiver
+   * @throws IOException the io exception
+   */
   public GenericRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
     this(protocol, transceiver, GenericData.get());
   }
 
+  /**
+   * Instantiates a new Generic requestor.
+   *
+   * @param protocol    the protocol
+   * @param transceiver the transceiver
+   * @param data        the data
+   * @throws IOException the io exception
+   */
   public GenericRequestor(Protocol protocol, Transceiver transceiver,
                           GenericData data)
     throws IOException {
@@ -49,6 +69,11 @@ public class GenericRequestor extends Requestor {
     this.data = data;
   }
 
+  /**
+   * Gets generic data.
+   *
+   * @return the generic data
+   */
   public GenericData getGenericData() { return data; }
 
   @Override

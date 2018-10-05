@@ -47,8 +47,14 @@ import org.apache.avro.test.Reserved;
 
 import org.apache.avro.generic.GenericRecord;
 
+/**
+ * The type Test specific data.
+ */
 public class TestSpecificData {
 
+  /**
+   * Test hash code.
+   */
   @Test
   /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
   public void testHashCode() {
@@ -56,6 +62,9 @@ public class TestSpecificData {
     SpecificData.get().hashCode(null, TestRecord.SCHEMA$);
   }
 
+  /**
+   * Test to string.
+   */
   @Test
   /** Make sure that even with nulls, toString() doesn't throw NPE. */
   public void testToString() {
@@ -63,14 +72,27 @@ public class TestSpecificData {
   }
 
   private static class X {
+    /**
+     * The Map.
+     */
     public Map<String,String> map;
   }
 
+  /**
+   * Test get map schema.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testGetMapSchema() throws Exception {
     SpecificData.get().getSchema(X.class.getField("map").getGenericType());
   }
 
+  /**
+   * Test specific within generic.
+   *
+   * @throws Exception the exception
+   */
   @Test
   /** Test nesting of specific data within generic. */
   public void testSpecificWithinGeneric() throws Exception {
@@ -102,6 +124,9 @@ public class TestSpecificData {
         new SpecificDatumReader<>());
 }
 
+  /**
+   * Test convert generic to specific.
+   */
   @Test public void testConvertGenericToSpecific() {
     GenericRecord generic = new GenericData.Record(TestRecord.SCHEMA$);
     generic.put("name", "foo");
@@ -112,12 +137,22 @@ public class TestSpecificData {
       (TestRecord)SpecificData.get().deepCopy(TestRecord.SCHEMA$, generic);
   }
 
+  /**
+   * Test get class schema.
+   *
+   * @throws Exception the exception
+   */
   @Test public void testGetClassSchema() throws Exception {
     Assert.assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
     Assert.assertEquals(MD5.getClassSchema(), MD5.SCHEMA$);
     Assert.assertEquals(Kind.getClassSchema(), Kind.SCHEMA$);
   }
 
+  /**
+   * Test specific record to string.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testSpecificRecordToString() throws IOException {
     FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder()
@@ -137,6 +172,11 @@ public class TestSpecificData {
     mapper.readTree(parser);
   }
 
+  /**
+   * Test externalizeable.
+   *
+   * @throws Exception the exception
+   */
   @Test public void testExternalizeable() throws Exception {
     TestRecord before = new TestRecord();
     before.setName("foo");
@@ -155,6 +195,11 @@ public class TestSpecificData {
 
   }
 
+  /**
+   * Test reserved enum symbol.
+   *
+   * @throws Exception the exception
+   */
   @Test public void testReservedEnumSymbol() throws Exception {
     Assert.assertEquals(Reserved.default$,
                         SpecificData.get().createEnum("default",

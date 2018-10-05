@@ -49,6 +49,9 @@ public class RpcReceiveTool implements Tool {
   /** Used to communicate between server thread (responder) and run() */
   private CountDownLatch latch;
   private Message expectedMessage;
+  /**
+   * The Server.
+   */
   Server server;
 
   @Override
@@ -63,6 +66,11 @@ public class RpcReceiveTool implements Tool {
 
   private class SinkResponder extends GenericResponder {
 
+    /**
+     * Instantiates a new Sink responder.
+     *
+     * @param local the local
+     */
     public SinkResponder(Protocol local) {
       super(local);
     }
@@ -114,6 +122,16 @@ public class RpcReceiveTool implements Tool {
     return run2(err);
   }
 
+  /**
+   * Run 1 int.
+   *
+   * @param in   the in
+   * @param out  the out
+   * @param err  the err
+   * @param args the args
+   * @return the int
+   * @throws Exception the exception
+   */
   int run1(InputStream in, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
     OptionParser p = new OptionParser();
@@ -164,6 +182,13 @@ public class RpcReceiveTool implements Tool {
     return 0;
   }
 
+  /**
+   * Run 2 int.
+   *
+   * @param err the err
+   * @return the int
+   * @throws InterruptedException the interrupted exception
+   */
   int run2(PrintStream err) throws InterruptedException {
     latch.await();
     err.println("Closing server.");

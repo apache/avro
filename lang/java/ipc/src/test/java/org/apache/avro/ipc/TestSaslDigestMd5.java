@@ -47,6 +47,9 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * The type Test sasl digest md 5.
+ */
 public class TestSaslDigestMd5 extends TestProtocolGeneric {
 
   private static final Logger LOG =
@@ -106,6 +109,11 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
     requestor = new GenericRequestor(PROTOCOL, client);
   }
 
+  /**
+   * Test anonymous client.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected=SaslException.class)
   public void testAnonymousClient() throws Exception {
     Server s = new SaslSocketServer
@@ -145,6 +153,11 @@ public class TestSaslDigestMd5 extends TestProtocolGeneric {
     }
   }
 
+  /**
+   * Test wrong password.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected=SaslException.class)
   public void testWrongPassword() throws Exception {
     Server s = new SaslSocketServer

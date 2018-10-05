@@ -33,11 +33,16 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
- *
+ * The type Test rpc protocol tool.
  */
 @RunWith(Parameterized.class)
 public class TestRpcProtocolTool {
 
+  /**
+   * Data list.
+   *
+   * @return the list
+   */
   @Parameterized.Parameters(/*name = "{0}"*/)
   public static List<Object[]> data() {
     return Arrays.asList( new Object[]{"http"},
@@ -49,10 +54,20 @@ public class TestRpcProtocolTool {
 
   private String uriScheme ;
 
+  /**
+   * Instantiates a new Test rpc protocol tool.
+   *
+   * @param uriScheme the uri scheme
+   */
   public TestRpcProtocolTool(String uriScheme) {
     this.uriScheme = uriScheme;
   }
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     String protocolFile =
@@ -70,12 +85,22 @@ public class TestRpcProtocolTool {
             "-data", "\"Hello!\""));
   }
 
+  /**
+   * Tear down.
+   *
+   * @throws Exception the exception
+   */
   @After
   public void tearDown() throws Exception {
     if( receive != null )
       receive.server.close(); // force the server to finish
   }
 
+  /**
+   * Test rpc protocol.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRpcProtocol() throws Exception {
 

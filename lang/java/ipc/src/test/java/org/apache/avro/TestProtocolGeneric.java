@@ -44,11 +44,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * The type Test protocol generic.
+ */
 public class TestProtocolGeneric {
   private static final Logger LOG
     = LoggerFactory.getLogger(TestProtocolGeneric.class);
 
+  /**
+   * The constant FILE.
+   */
   protected static final File FILE = new File("../../../share/test/schemas/simple.avpr");
+  /**
+   * The constant PROTOCOL.
+   */
   protected static final Protocol PROTOCOL;
   static {
     try {
@@ -60,7 +69,13 @@ public class TestProtocolGeneric {
 
   private static boolean throwUndeclaredError;
 
+  /**
+   * The type Test responder.
+   */
   protected static class TestResponder extends GenericResponder {
+    /**
+     * Instantiates a new Test responder.
+     */
     public TestResponder() { super(PROTOCOL); }
     public Object respond(Message message, Object request)
       throws AvroRemoteException {
@@ -96,10 +111,24 @@ public class TestProtocolGeneric {
 
   }
 
+  /**
+   * The constant server.
+   */
   protected static SocketServer server;
+  /**
+   * The constant client.
+   */
   protected static Transceiver client;
+  /**
+   * The constant requestor.
+   */
   protected static GenericRequestor requestor;
 
+  /**
+   * Test start server.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void testStartServer() throws Exception {
     if (server != null) return;
@@ -109,6 +138,11 @@ public class TestProtocolGeneric {
     requestor = new GenericRequestor(PROTOCOL, client);
   }
 
+  /**
+   * Test hello.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testHello() throws IOException {
     GenericRecord params =
@@ -118,6 +152,11 @@ public class TestProtocolGeneric {
     assertEquals(new Utf8("goodbye"), response);
   }
 
+  /**
+   * Test echo.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEcho() throws IOException {
     GenericRecord record =
@@ -135,6 +174,11 @@ public class TestProtocolGeneric {
     assertEquals(record, echoed);
   }
 
+  /**
+   * Test echo bytes.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEchoBytes() throws IOException {
     Random random = new Random();
@@ -149,6 +193,11 @@ public class TestProtocolGeneric {
     assertEquals(data, echoed);
   }
 
+  /**
+   * Test error.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testError() throws IOException {
     GenericRecord params =
@@ -163,6 +212,11 @@ public class TestProtocolGeneric {
     assertEquals("an error", ((GenericRecord)error.getValue()).get("message").toString());
   }
 
+  /**
+   * Test undeclared error.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testUndeclaredError() throws IOException {
     this.throwUndeclaredError = true;
@@ -180,6 +234,11 @@ public class TestProtocolGeneric {
     assertTrue(error.toString().contains("foo"));
   }
 
+  /**
+   * Test handshake.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   /** Construct and use a different protocol whose "hello" method has an extra
       argument to check that schema is sent to parse request. */
@@ -211,6 +270,11 @@ public class TestProtocolGeneric {
     }
   }
 
+  /**
+   * Test response change.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   /** Construct and use a different protocol whose "echo" response has an extra
       field to check that correct schema is used to parse response. */
@@ -255,6 +319,11 @@ public class TestProtocolGeneric {
     }
   }
 
+  /**
+   * Test stop server.
+   *
+   * @throws IOException the io exception
+   */
   @AfterClass
   public static void testStopServer() throws IOException {
     client.close();

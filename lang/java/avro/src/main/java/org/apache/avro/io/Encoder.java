@@ -25,12 +25,12 @@ import org.apache.avro.util.Utf8;
 
 /**
  * Low-level support for serializing Avro values.
- * <p/>
+ *
  * This class has two types of methods.  One type of methods support
  * the writing of leaf values (for example, {@link #writeLong} and
  * {@link #writeString}).  These methods have analogs in {@link
  * Decoder}.
- * <p/>
+ *
  * The other type of methods support the writing of maps and arrays.
  * These methods are {@link #writeArrayStart}, {@link
  * #startItem}, and {@link #writeArrayEnd} (and similar methods for
@@ -38,7 +38,7 @@ import org.apache.avro.util.Utf8;
  * buffering required to break large maps and arrays into blocks,
  * which is necessary for applications that want to do streaming.
  * (See {@link #writeArrayStart} for details on these methods.)
- * <p/>
+ *
  * {@link EncoderFactory} contains Encoder construction and configuration
  * facilities.
  *  @see EncoderFactory
@@ -49,49 +49,49 @@ public abstract class Encoder implements Flushable {
   /**
    * "Writes" a null value.  (Doesn't actually write anything, but
    * advances the state of the parser if this class is stateful.)
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    *         null is not expected
    */
   public abstract void writeNull() throws IOException;
 
   /**
    * Write a boolean value.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * boolean is not expected
    */
   public abstract void writeBoolean(boolean b) throws IOException;
 
   /**
    * Writes a 32-bit integer.
-   * @throws AvroTypeException If this is a stateful writer and an
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and an
    * integer is not expected
    */
   public abstract void writeInt(int n) throws IOException;
 
   /**
    * Write a 64-bit integer.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * long is not expected
    */
   public abstract void writeLong(long n) throws IOException;
 
   /** Write a float.
    * @throws IOException
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * float is not expected
    */
   public abstract void writeFloat(float f) throws IOException;
 
   /**
    * Write a double.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * double is not expected
    */
   public abstract void writeDouble(double d) throws IOException;
 
   /**
    * Write a Unicode character string.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * char-string is not expected
    */
   public abstract void writeString(Utf8 utf8) throws IOException;
@@ -100,7 +100,7 @@ public abstract class Encoder implements Flushable {
    * Write a Unicode character string.  The default implementation converts
    * the String to a {@link org.apache.avro.util.Utf8}.  Some Encoder
    * implementations may want to do something different as a performance optimization.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * char-string is not expected
    */
   public void writeString(String str) throws IOException {
@@ -111,7 +111,7 @@ public abstract class Encoder implements Flushable {
    * Write a Unicode character string.  If the CharSequence is an
    * {@link org.apache.avro.util.Utf8} it writes this directly, otherwise
    * the CharSequence is converted to a String via toString() and written.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * char-string is not expected
    */
   public void writeString(CharSequence charSequence) throws IOException {
@@ -123,14 +123,14 @@ public abstract class Encoder implements Flushable {
 
   /**
    * Write a byte string.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    *         byte-string is not expected
    */
   public abstract void writeBytes(ByteBuffer bytes) throws IOException;
 
   /**
    * Write a byte string.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * byte-string is not expected
    */
   public abstract void writeBytes(byte[] bytes, int start, int len) throws IOException;
@@ -139,7 +139,7 @@ public abstract class Encoder implements Flushable {
    * Writes a byte string.
    * Equivalent to <tt>writeBytes(bytes, 0, bytes.length)</tt>
    * @throws IOException
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * byte-string is not expected
    */
   public void writeBytes(byte[] bytes) throws IOException {
@@ -152,7 +152,7 @@ public abstract class Encoder implements Flushable {
    * @param start The position within <tt>bytes</tt> where the contents
    * start.
    * @param len The number of bytes to write.
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * byte-string is not expected
    * @throws IOException
    */
@@ -182,7 +182,7 @@ public abstract class Encoder implements Flushable {
   /**
    * Writes an enumeration.
    * @param e
-   * @throws AvroTypeException If this is a stateful writer and an enumeration
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and an enumeration
    * is not expected or the <tt>e</tt> is out of range.
    * @throws IOException
    */
@@ -213,7 +213,7 @@ public abstract class Encoder implements Flushable {
    *  }
    *  out.writeArrayEnd();
    *  </pre>
-   *  @throws AvroTypeException If this is a stateful writer and an
+   *  @throws org.apache.avro.AvroTypeException If this is a stateful writer and an
    *          array is not expected
    */
   public abstract void writeArrayStart() throws IOException;
@@ -234,7 +234,7 @@ public abstract class Encoder implements Flushable {
   /**
    * Start a new item of an array or map.
    * See {@link #writeArrayStart} for usage information.
-   * @throws AvroTypeException If called outside of an array or map context
+   * @throws org.apache.avro.AvroTypeException If called outside of an array or map context
    */
   public abstract void startItem() throws IOException;
 
@@ -242,9 +242,9 @@ public abstract class Encoder implements Flushable {
    * Call this method to finish writing an array.
    * See {@link #writeArrayStart} for usage information.
    *
-   * @throws AvroTypeException If items written does not match count
+   * @throws org.apache.avro.AvroTypeException If items written does not match count
    *          provided to {@link #writeArrayStart}
-   * @throws AvroTypeException If not currently inside an array
+   * @throws org.apache.avro.AvroTypeException If not currently inside an array
    */
   public abstract void writeArrayEnd() throws IOException;
 
@@ -255,7 +255,8 @@ public abstract class Encoder implements Flushable {
    * As an example of usage, let's say you want to write a map of
    * records, the record consisting of an Long field and a Boolean
    * field.  Your code would look something like this:
-   * <pre>
+   *
+   * <pre>{@code
    * out.writeMapStart();
    * out.setItemCount(list.size());
    * for (Map.Entry<String,Record> entry : map.entrySet()) {
@@ -265,8 +266,9 @@ public abstract class Encoder implements Flushable {
    *   out.writeBoolean(entry.getValue().boolField);
    * }
    * out.writeMapEnd();
-   * </pre>
-   * @throws AvroTypeException If this is a stateful writer and a
+   * }</pre>
+   *
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * map is not expected
    */
   public abstract void writeMapStart() throws IOException;
@@ -275,9 +277,9 @@ public abstract class Encoder implements Flushable {
    * Call this method to terminate the inner-most, currently-opened
    * map.  See {@link #writeArrayStart} for more details.
    *
-   * @throws AvroTypeException If items written does not match count
+   * @throws org.apache.avro.AvroTypeException If items written does not match count
    *          provided to {@link #writeMapStart}
-   * @throws AvroTypeException If not currently inside a map
+   * @throws org.apache.avro.AvroTypeException If not currently inside a map
    */
   public abstract void writeMapEnd() throws IOException;
 
@@ -291,7 +293,7 @@ public abstract class Encoder implements Flushable {
    * out.writeLong(record.longField);
    * out.writeBoolean(record.boolField);
    * </pre>
-   * @throws AvroTypeException If this is a stateful writer and a
+   * @throws org.apache.avro.AvroTypeException If this is a stateful writer and a
    * map is not expected
    */
   public abstract void writeIndex(int unionIndex) throws IOException;

@@ -21,7 +21,13 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+/**
+ * The type Test main.
+ */
 public class TestMain {
+  /**
+   * Test tool description length.
+   */
   @Test
   /** Make sure that tool descriptions fit in 80 characters. */
   public void testToolDescriptionLength() {

@@ -28,13 +28,30 @@ import org.apache.avro.ipc.HttpTransceiver;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * The type Test specific requestor.
+ */
 public class TestSpecificRequestor {
+  /**
+   * The interface Sample specific protocol.
+   */
   public interface SampleSpecificProtocol {
+    /**
+     * The constant PROTOCOL.
+     */
     public static final Protocol PROTOCOL = Protocol.parse("{\"protocol\":\"SampleSpecificProtocol\",\"namespace\":\"org.apache.avro.ipc.specific\",\"types\":[],\"messages\":{}}");
   }
 
+  /**
+   * The Proxy.
+   */
   static Object proxy;
 
+  /**
+   * Initialize proxy.
+   *
+   * @throws Exception the exception
+   */
   @BeforeClass
   public static void initializeProxy() throws Exception {
     HttpTransceiver client = new HttpTransceiver(new URL("http://localhost"));
@@ -42,6 +59,11 @@ public class TestSpecificRequestor {
     proxy = SpecificRequestor.getClient(SampleSpecificProtocol.class, requestor);
   }
 
+  /**
+   * Test hash code.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testHashCode() throws IOException {
     try {
@@ -51,6 +73,11 @@ public class TestSpecificRequestor {
     }
   }
 
+  /**
+   * Test equals.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEquals() throws IOException {
     try {
@@ -60,6 +87,11 @@ public class TestSpecificRequestor {
     }
   }
 
+  /**
+   * Test to string.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testToString() throws IOException {
     try {

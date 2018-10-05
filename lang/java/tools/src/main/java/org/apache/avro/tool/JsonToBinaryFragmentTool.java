@@ -34,7 +34,9 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 
-/** Tool to convert JSON data into the binary form. */
+/**
+ * Tool to convert JSON data into the binary form.
+ */
 public class JsonToBinaryFragmentTool implements Tool {
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,

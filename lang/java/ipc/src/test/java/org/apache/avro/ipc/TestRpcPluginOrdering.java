@@ -32,10 +32,16 @@ import org.apache.avro.test.Mail;
 import org.apache.avro.test.Message;
 import org.junit.Test;
 
+/**
+ * The type Test rpc plugin ordering.
+ */
 public class TestRpcPluginOrdering {
 
   private static AtomicInteger orderCounter = new AtomicInteger();
 
+  /**
+   * The type Order plugin.
+   */
   public class OrderPlugin extends RPCPlugin{
 
     public void clientStartConnect(RPCContext context) {
@@ -67,6 +73,11 @@ public class TestRpcPluginOrdering {
     }
   }
 
+  /**
+   * Test rpc plugin ordering.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRpcPluginOrdering() throws Exception {
     OrderPlugin plugin = new OrderPlugin();

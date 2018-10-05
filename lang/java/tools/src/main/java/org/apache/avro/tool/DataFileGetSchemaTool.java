@@ -24,7 +24,9 @@ import java.util.List;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 
-/** Reads a data file to get its schema. */
+/**
+ * Reads a data file to get its schema.
+ */
 public class DataFileGetSchemaTool implements Tool {
 
   @Override

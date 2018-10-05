@@ -40,6 +40,9 @@ import org.junit.Test;
  * Unit test for the SpecificRecordBuilder class.
  */
 public class TestSpecificRecordBuilder {
+  /**
+   * Test specific builder.
+   */
   @Test
   public void testSpecificBuilder() {
     // Create a new builder, and leave some fields with default values empty:
@@ -92,6 +95,9 @@ public class TestSpecificRecordBuilder {
     Assert.assertTrue(person2.getFriends().isEmpty());
   }
 
+  /**
+   * Test unions.
+   */
   @Test
   public void testUnions() {
     long datetime = 1234L;
@@ -116,6 +122,9 @@ public class TestSpecificRecordBuilder {
 
   }
 
+  /**
+   * Test interop.
+   */
   @Test
   public void testInterop() {
     Interop interop = Interop.newBuilder()
@@ -154,16 +163,25 @@ public class TestSpecificRecordBuilder {
     Assert.assertEquals(interop, copy);
   }
 
+  /**
+   * Attempt to set non nullable field to null.
+   */
   @Test(expected=org.apache.avro.AvroRuntimeException.class)
   public void attemptToSetNonNullableFieldToNull() {
     Person.newBuilder().setName(null);
   }
 
+  /**
+   * Build without setting required fields 1.
+   */
   @Test(expected=org.apache.avro.AvroRuntimeException.class)
   public void buildWithoutSettingRequiredFields1() {
     Person.newBuilder().build();
   }
 
+  /**
+   * Build without setting required fields 2.
+   */
   @Test
   public void buildWithoutSettingRequiredFields2() {
     // Omit required non-primitive field
@@ -176,6 +194,9 @@ public class TestSpecificRecordBuilder {
     }
   }
 
+  /**
+   * Build without setting required fields 3.
+   */
   @Test
   public void buildWithoutSettingRequiredFields3() {
     // Omit required primitive field
@@ -188,6 +209,9 @@ public class TestSpecificRecordBuilder {
     }
   }
 
+  /**
+   * Test builder performance.
+   */
   @Ignore
   @Test
   public void testBuilderPerformance() {
@@ -206,6 +230,9 @@ public class TestSpecificRecordBuilder {
         "ms/record");
   }
 
+  /**
+   * Test builder performance with default values.
+   */
   @Ignore
   @Test
   public void testBuilderPerformanceWithDefaultValues() {
@@ -221,6 +248,9 @@ public class TestSpecificRecordBuilder {
         "ms/record");
   }
 
+  /**
+   * Test manual build performance.
+   */
   @Ignore
   @Test
   @SuppressWarnings("deprecation")

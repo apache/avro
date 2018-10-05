@@ -29,6 +29,9 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.net.URL;
 
+/**
+ * The type Test protocol https.
+ */
 public class TestProtocolHttps extends TestProtocolSpecific {
 
   @Override

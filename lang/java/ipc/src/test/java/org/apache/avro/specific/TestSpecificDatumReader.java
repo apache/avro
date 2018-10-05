@@ -37,8 +37,18 @@ import org.junit.Test;
 
 import test.StringablesRecord;
 
+/**
+ * The type Test specific datum reader.
+ */
 public class TestSpecificDatumReader {
 
+  /**
+   * Serialize record byte [ ].
+   *
+   * @param fooBarSpecificRecord the foo bar specific record
+   * @return the byte [ ]
+   * @throws IOException the io exception
+   */
   public static byte[] serializeRecord(FooBarSpecificRecord fooBarSpecificRecord) throws IOException {
     SpecificDatumWriter<FooBarSpecificRecord> datumWriter =
         new SpecificDatumWriter<>(FooBarSpecificRecord.SCHEMA$);
@@ -49,6 +59,13 @@ public class TestSpecificDatumReader {
     return byteArrayOutputStream.toByteArray();
   }
 
+  /**
+   * Serialize record byte [ ].
+   *
+   * @param stringablesRecord the stringables record
+   * @return the byte [ ]
+   * @throws IOException the io exception
+   */
   public static byte[] serializeRecord(StringablesRecord stringablesRecord) throws IOException {
     SpecificDatumWriter<StringablesRecord> datumWriter =
         new SpecificDatumWriter<>(StringablesRecord.SCHEMA$);
@@ -59,6 +76,11 @@ public class TestSpecificDatumReader {
     return byteArrayOutputStream.toByteArray();
   }
 
+  /**
+   * Test read.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testRead() throws IOException {
     Builder newBuilder = FooBarSpecificRecord.newBuilder();
@@ -78,6 +100,11 @@ public class TestSpecificDatumReader {
     assertEquals(specificRecord, deserialized);
   }
 
+  /**
+   * Test stringables.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testStringables() throws IOException {
     StringablesRecord.Builder newBuilder = StringablesRecord.newBuilder();

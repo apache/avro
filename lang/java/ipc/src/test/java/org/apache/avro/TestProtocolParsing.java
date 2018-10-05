@@ -28,12 +28,26 @@ import org.junit.Test;
 
 import org.apache.avro.Protocol.Message;
 
+/**
+ * The type Test protocol parsing.
+ */
 public class TestProtocolParsing {
+  /**
+   * Gets simple protocol.
+   *
+   * @return the simple protocol
+   * @throws IOException the io exception
+   */
   public static Protocol getSimpleProtocol() throws IOException {
     File file = new File("../../../share/test/schemas/simple.avpr");
     return Protocol.parse(file);
   }
 
+  /**
+   * Test parsing.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testParsing() throws IOException {
     Protocol protocol = getSimpleProtocol();
@@ -51,6 +65,11 @@ public class TestProtocolParsing {
                           + "}}").getMessages().values().iterator().next();
   }
 
+  /**
+   * One way.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void oneWay() throws Exception {
     Message m;
@@ -67,6 +86,11 @@ public class TestProtocolParsing {
     assertTrue(m.isOneWay());
   }
 
+  /**
+   * One way response.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected=SchemaParseException.class)
   public void oneWayResponse() throws Exception {
     // prohibit one-way messages with a non-null response type
@@ -76,6 +100,11 @@ public class TestProtocolParsing {
                  +"\"one-way\": true}");
   }
 
+  /**
+   * One way error.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected=SchemaParseException.class)
   public void oneWayError() throws Exception {
     // prohibit one-way messages with errors
@@ -85,6 +114,11 @@ public class TestProtocolParsing {
                  +"\"one-way\": true}");
   }
 
+  /**
+   * Test message field aliases.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testMessageFieldAliases() throws IOException{
     Protocol protocol = getSimpleProtocol();
@@ -95,6 +129,11 @@ public class TestProtocolParsing {
     assertTrue(field.aliases().contains("salute"));
   }
 
+  /**
+   * Test message custom properties.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testMessageCustomProperties() throws IOException{
     Protocol protocol = getSimpleProtocol();

@@ -27,7 +27,9 @@ import org.apache.trevni.ColumnFileMetaData;
 import org.apache.trevni.avro.AvroColumnWriter;
 import org.apache.trevni.avro.RandomData;
 
-/** Tool to create randomly populated Trevni file based on an Avro schema */
+/**
+ * Tool to create randomly populated Trevni file based on an Avro schema
+ */
 public class TrevniCreateRandomTool implements Tool {
 
   @Override

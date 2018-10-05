@@ -96,7 +96,7 @@ public abstract class Schema extends JsonProperties {
     private String name;
     private Type() { this.name = this.name().toLowerCase(Locale.ENGLISH); }
     public String getName() { return name; }
-  };
+  }
 
   private final Type type;
   private LogicalType logicalType = null;
@@ -106,7 +106,11 @@ public abstract class Schema extends JsonProperties {
     this.type = type;
   }
 
-  /** Create a schema for a primitive type. */
+  /**
+   * Create a schema for a primitive type.
+   * @param type The type of the schema to be created
+   * @return The created schema
+   */
   public static Schema create(Type type) {
     switch (type) {
     case STRING:  return new StringSchema();
@@ -153,72 +157,143 @@ public abstract class Schema extends JsonProperties {
     this.logicalType = logicalType;
   }
 
-  /** Create an anonymous record schema. */
+  /**
+   * Create an anonymous record schema
+   * @param fields A list of fields that will construct the record
+   * @return A new Schema
+   */
   public static Schema createRecord(List<Field> fields) {
     Schema result = createRecord(null, null, null, false);
     result.setFields(fields);
     return result;
   }
 
-  /** Create a named record schema. */
+  /**
+   * Create a named record schema
+   *
+   * @param name The name of the record
+   * @param doc Docstring of the record
+   * @param namespace The namespace of the record
+   * @param isError indicates if there is an error
+   * @return A new Schema
+   */
   public static Schema createRecord(String name, String doc, String namespace,
                                     boolean isError) {
     return new RecordSchema(new Name(name, namespace), doc, isError);
   }
 
-  /** Create a named record schema with fields already set. */
+
+  /**
+   * Create a named record schema with fields already set
+   *
+   * @param name The name of the record
+   * @param doc Docstring of the record
+   * @param namespace The namespace of the record
+   * @param isError Indicates if there is an error
+   * @param fields the preset fields
+   * @return A new Schema
+   */
   public static Schema createRecord(String name, String doc, String namespace,
                                     boolean isError, List<Field> fields) {
     return new RecordSchema(new Name(name, namespace), doc, isError, fields);
   }
 
-  /** Create an enum schema. */
+  /**
+   * Create an enum schema
+   *
+   * @param name The name of the record
+   * @param doc The docstring of the record
+   * @param namespace The namespace of the record
+   * @param values The enum values
+   * @return A new enum Schema
+   */
   public static Schema createEnum(String name, String doc, String namespace,
                                   List<String> values) {
     return new EnumSchema(new Name(name, namespace), doc,
       new LockableArrayList<>(values), null);
   }
 
-  /** Create an enum schema. */
+  /**
+   * Create an enum schema
+   *
+   * @param name The name of the record
+   * @param doc Docstring of the record
+   * @param namespace The namespace of the record
+   * @param values The enum values
+   * @param enumDefault The default enum value
+   * @return A new enum Schema
+   */
   public static Schema createEnum(String name, String doc, String namespace,
                                   List<String> values, String enumDefault) {
     return new EnumSchema(new Name(name, namespace), doc,
         new LockableArrayList<>(values), enumDefault);
   }
 
-  /** Create an array schema. */
+  /**
+   * Create an array schema
+   *
+   * @param elementType The type of element
+   * @return An array schema
+   */
   public static Schema createArray(Schema elementType) {
     return new ArraySchema(elementType);
   }
 
-  /** Create a map schema. */
+  /**
+   * Create a map schema
+   *
+   * @param valueType The value types of the map
+   * @return A map schema
+   */
   public static Schema createMap(Schema valueType) {
     return new MapSchema(valueType);
   }
 
-  /** Create a union schema. */
+  /**
+   * Create an union schema
+   *
+   * @param types The list of the schema types
+   * @return An union schema
+   */
   public static Schema createUnion(List<Schema> types) {
     return new UnionSchema(new LockableArrayList<>(types));
   }
 
-  /** Create a union schema. */
+  /**
+   * Create an union schema
+   *
+   * @param types One or more of the schema types
+   * @return An union schema
+   */
   public static Schema createUnion(Schema... types) {
     return createUnion(new LockableArrayList<>(types));
   }
 
-  /** Create a union schema. */
-  public static Schema createFixed(String name, String doc, String space,
-      int size) {
+  /**
+   * Create a map schema
+   *
+   * @param name The name of the schema
+   * @param doc The doc of the schema
+   * @param space The space
+   * @param size The capacity of the FixedSchema
+   * @return A fixed schema
+   */
+  public static Schema createFixed(String name, String doc, String space, int size) {
     return new FixedSchema(new Name(name, space), doc, size);
   }
 
-  /** Return the type of this schema. */
+  /**
+   * @return Type of this schema
+   */
   public Type getType() { return type; }
 
   /**
    * If this is a record, returns the Field with the
    * given name <tt>fieldName</tt>. If there is no field by that name, a
    * <tt>null</tt> is returned.
+   *
+   * @param fieldname The fieldname to look for
+   * @return The Field if set
    */
   public Field getField(String fieldname) {
     throw new AvroRuntimeException("Not a record: "+this);
@@ -227,6 +302,8 @@ public abstract class Schema extends JsonProperties {
   /**
    * If this is a record, returns the fields in it. The returned
    * list is in the order of their positions.
+   *
+   * @return A list of all the fields
    */
   public List<Field> getFields() {
     throw new AvroRuntimeException("Not a record: "+this);
@@ -235,103 +312,171 @@ public abstract class Schema extends JsonProperties {
   /**
    * If this is a record, set its fields. The fields can be set
    * only once in a schema.
+   *
+   * @param fields The fields to set
    */
   public void setFields(List<Field> fields) {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
-  /** If this is an enum, return its symbols. */
+  /**
+   * If this is an enum, return its symbols
+   *
+   * @return A list strings that represent the symbols of the enum
+   */
   public List<String> getEnumSymbols() {
     throw new AvroRuntimeException("Not an enum: "+this);
   }
 
-  /** If this is an enum, return its default value. */
+  /**
+   * If this is an enum, return its default value
+   *
+   * @return The default value of the enum
+   */
   public String getEnumDefault() {
     throw new AvroRuntimeException("Not an enum: "+this);
   }
 
-  /** If this is an enum, return a symbol's ordinal value. */
+  /**
+   * If this is an enum, return a symbol's ordinal value
+   *
+   * @param symbol The symbol to look for in the enum
+   * @return the ordinal value of the symbol
+   */
   public int getEnumOrdinal(String symbol) {
     throw new AvroRuntimeException("Not an enum: "+this);
   }
 
-  /** If this is an enum, returns true if it contains given symbol. */
+  /**
+   * If this is an enum, returns true if it contains given symbol
+   *
+   * @param symbol The symbol name
+   * @return Check if the symbol exists within the enum
+   */
   public boolean hasEnumSymbol(String symbol) {
     throw new AvroRuntimeException("Not an enum: "+this);
   }
 
-  /** If this is a record, enum or fixed, returns its name, otherwise the name
-   * of the primitive type. */
+  /**
+   * @return If this is a record, enum or fixed, returns its name, otherwise the name of the primitive type
+   */
   public String getName() { return type.name; }
 
-  /** If this is a record, enum, or fixed, returns its docstring,
-   * if available.  Otherwise, returns null. */
+  /**
+   * @return If this is a record, enum, or fixed, returns its docstring, if available.  Otherwise, returns null.
+   */
   public String getDoc() {
     return null;
   }
 
-  /** If this is a record, enum or fixed, returns its namespace, if any. */
+  /**
+   * @return If this is a record, enum or fixed, returns its namespace, if any.
+   */
   public String getNamespace() {
     throw new AvroRuntimeException("Not a named type: "+this);
   }
 
-  /** If this is a record, enum or fixed, returns its namespace-qualified name,
-   * otherwise returns the name of the primitive type. */
+  /**
+   * @return If this is a record, enum or fixed, returns its namespace-qualified name, otherwise returns the name of the primitive type.
+   */
   public String getFullName() {
     return getName();
   }
 
-  /** If this is a record, enum or fixed, add an alias. */
+  /**
+   * If this is a record, enum or fixed, add an alias
+   *
+   * @param alias The alias to be added
+   */
   public void addAlias(String alias) {
     throw new AvroRuntimeException("Not a named type: "+this);
   }
 
-  /** If this is a record, enum or fixed, add an alias. */
+  /**
+   * If this is a record, enum or fixed, add an alias
+   *
+   * @param alias The alias to be added
+   * @param space The space
+   */
   public void addAlias(String alias, String space) {
     throw new AvroRuntimeException("Not a named type: "+this);
   }
 
-  /** If this is a record, enum or fixed, return its aliases, if any. */
+  /**
+   * If this is a record, enum or fixed, return its aliases, if any.
+   *
+   * @return A set of all the known aliases
+   */
   public Set<String> getAliases() {
     throw new AvroRuntimeException("Not a named type: "+this);
   }
 
-  /** Returns true if this record is an error type. */
+  /**
+   * @return True if this record is an error type
+   */
   public boolean isError() {
     throw new AvroRuntimeException("Not a record: "+this);
   }
 
-  /** If this is an array, returns its element type. */
+  /**
+   * If this is an array, returns its element type
+   *
+   * @return The element type
+   */
   public Schema getElementType() {
     throw new AvroRuntimeException("Not an array: "+this);
   }
 
-  /** If this is a map, returns its value type. */
+  /**
+   * If this is a map, returns its value type
+   *
+   * @return Value type
+   */
   public Schema getValueType() {
     throw new AvroRuntimeException("Not a map: "+this);
   }
 
-  /** If this is a union, returns its types. */
+  /**
+   * If this is a union, returns its types
+   *
+   * @return Types
+   */
   public List<Schema> getTypes() {
     throw new AvroRuntimeException("Not a union: "+this);
   }
 
-  /** If this is a union, return the branch with the provided full name. */
+  /**
+   * If this is a union, return the branch with the provided full name
+   *
+   * @param name The lookup name
+   * @return The index of the given name
+   */
   public Integer getIndexNamed(String name) {
     throw new AvroRuntimeException("Not a union: "+this);
   }
 
-  /** If this is fixed, returns its size. */
+  /**
+   * If this is fixed, returns its size
+   *
+   * @return The fixed size of the schema
+   */
   public int getFixedSize() {
     throw new AvroRuntimeException("Not fixed: "+this);
   }
 
-  /** Render this as <a href="http://json.org/">JSON</a>.*/
+  /**
+   * Render this as <a href="http://json.org/">JSON</a>.
+   *
+   * @return the schema as a JSON representation
+   */
   @Override
   public String toString() { return toString(false); }
 
-  /** Render this as <a href="http://json.org/">JSON</a>.
+  /**
+   * Render this as <a href="http://json.org/">JSON</a>.
+   *
    * @param pretty if true, pretty-print JSON.
+   * @return JSON representation of the schema
    */
   public String toString(boolean pretty) {
     try {
@@ -406,18 +551,42 @@ public abstract class Schema extends JsonProperties {
     private final Order order;
     private Set<String> aliases;
 
-    /** @deprecated use {@link #Field(String, Schema, String, Object)} */
+    /**
+     * @deprecated use {@link #Field(String, Schema, String, Object)}
+     *
+     * @param name the name of the field
+     * @param schema the schema of the field
+     * @param doc the docstring of the field
+     * @param defaultValue The default value of the field
+     */
     @Deprecated
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue) {
       this(name, schema, doc, defaultValue, Order.ASCENDING);
     }
-    /** @deprecated use {@link #Field(String, Schema, String, Object, Order)} */
+
+    /**
+     * @deprecated use {@link #Field(String, Schema, String, Object, Order)}
+     * @param name the name of the field
+     * @param schema the schema of the field
+     * @param doc the docstring of the field
+     * @param defaultValue The default value of the field
+     * @param order The ordering of the field
+     */
     @Deprecated
     public Field(String name, Schema schema, String doc,
         JsonNode defaultValue, Order order) {
       this(name, schema, doc, defaultValue, true, order);
     }
+
+    /**
+     * @param name the name of the field
+     * @param schema the schema of the field
+     * @param doc the docstring of the field
+     * @param defaultValue the default value for this field specified using the mapping in {@link JsonProperties}
+     * @param validateDefault Validate the value by default
+     * @param order The ordering of the field
+     */
     public Field(String name, Schema schema, String doc,
                  JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
@@ -430,48 +599,96 @@ public abstract class Schema extends JsonProperties {
       this.order = order;
     }
     /**
-     * @param defaultValue the default value for this field specified using the mapping
-     *  in {@link JsonProperties}
+     *
+     * @param name the name of the field
+     * @param schema the schema of the field
+     * @param doc the docstring of the field
+     * @param defaultValue the default value for this field specified using the mapping in {@link JsonProperties}
      */
     public Field(String name, Schema schema, String doc,
         Object defaultValue) {
       this(name, schema, doc, defaultValue, Order.ASCENDING);
     }
+
+
     /**
-     * @param defaultValue the default value for this field specified using the mapping
-     *  in {@link JsonProperties}
+     * @param name the name of the field
+     * @param schema the schema of the field
+     * @param doc the docstring of the field
+     * @param defaultValue the default value for this field specified using the mapping in {@link JsonProperties}
+     * @param order The ordering of the field
      */
     public Field(String name, Schema schema, String doc,
         Object defaultValue, Order order) {
       this(name, schema, doc, JacksonUtils.toJsonNode(defaultValue), order);
     }
-    public String name() { return name; };
-    /** The position of this field within the record. */
+
+    /**
+     * @return The name of the field
+     */
+    public String name() { return name; }
+
+    /**
+     * @return position of this field within the record
+     */
     public int pos() { return position; }
-    /** This field's {@link Schema}. */
+
+    /**
+     * This field's {@link Schema}
+     *
+     * @return The schema of the field
+     */
     public Schema schema() { return schema; }
-    /** Field's documentation within the record, if set. May return null. */
+
+    /**
+     * Field's documentation within the record, if set. May return null
+     *
+     * @return The docstring of the field
+     */
     public String doc() { return doc; }
-    /** @deprecated use {@link #defaultVal() } */
+
+    /**
+     * @deprecated use {@link #defaultVal() }
+     * @return The default value of the field
+     */
     @Deprecated public JsonNode defaultValue() { return defaultValue; }
+
     /**
      * @return the default value for this field specified using the mapping
      *  in {@link JsonProperties}
      */
     public Object defaultVal() { return JacksonUtils.toObject(defaultValue, schema); }
+
+    /**
+     * This field's ordering {@link Order}
+     *
+     * @return The ordering of the field
+     */
     public Order order() { return order; }
+
+    /**
+     * @return The properties of the field
+     */
     @Deprecated public Map<String,String> props() { return getProps(); }
     public void addAlias(String alias) {
       if (aliases == null)
         this.aliases = new LinkedHashSet<>();
       aliases.add(alias);
     }
-    /** Return the defined aliases as an unmodifiable Set. */
+
+    /**
+     * @return the defined aliases as an unmodifiable Set
+     */
     public Set<String> aliases() {
       if (aliases == null)
         return Collections.emptySet();
       return Collections.unmodifiableSet(aliases);
     }
+
+    /**
+     * @param other The object to compare with
+     * @return If the objects are equal
+     */
     public boolean equals(Object other) {
       if (other == this) return true;
       if (!(other instanceof Field)) return false;
@@ -482,6 +699,10 @@ public abstract class Schema extends JsonProperties {
         (order == that.order) &&
         props.equals(that.props);
     }
+
+    /**
+     * @return returns the hashcode of the schema
+     */
     public int hashCode() { return name.hashCode() + schema.computeHash(); }
 
     private boolean defaultValueEquals(JsonNode thatDefaultValue) {
@@ -991,15 +1212,22 @@ public abstract class Schema extends JsonProperties {
     private boolean validate = true;
     private boolean validateDefaults = true;
 
-    /** Adds the provided types to the set of defined, named types known to
-     * this parser. */
+    /**
+     * Add the provided types to the set of defined, named types known to this parser.
+     *
+     * @param types Types to add to the current schema
+     * @return The schema with the appended types
+     */
     public Parser addTypes(Map<String,Schema> types) {
       for (Schema s : types.values())
         names.add(s);
       return this;
     }
 
-    /** Returns the set of defined, named types known to this parser. */
+    /**
+     * Returns the set of defined, named types known to this parser
+     * @return A map of all the names schema pair
+     */
     public Map<String,Schema> getTypes() {
       Map<String,Schema> result = new LinkedHashMap<>();
       for (Schema s : names.values())
@@ -1007,39 +1235,69 @@ public abstract class Schema extends JsonProperties {
       return result;
     }
 
-    /** Enable or disable name validation. */
+    /**
+     * @param validate Enable or disable name validation
+     * @return the parser
+     */
     public Parser setValidate(boolean validate) {
       this.validate = validate;
       return this;
     }
 
-    /** True iff names are validated.  True by default. */
+    /**
+     * True iff names are validated.  True by default.
+     * @return boolean if validation is on
+     */
     public boolean getValidate() { return this.validate; }
 
-    /** Enable or disable default value validation. */
+    /**
+     * Enable or disable default value validation
+     *
+     * @param validateDefaults Set validation on or of by default
+     * @return The current schema
+     */
     public Parser setValidateDefaults(boolean validateDefaults) {
       this.validateDefaults = validateDefaults;
       return this;
     }
 
-    /** True iff default values are validated.  False by default. */
+    /**
+     * @return True iff default values are validated. False by default.
+     */
     public boolean getValidateDefaults() { return this.validateDefaults; }
 
-    /** Parse a schema from the provided file.
-     * If named, the schema is added to the names known to this parser. */
+    /**
+     * Parse a schema from the provided file. If named, the schema is added to the names known to this parser.
+     *
+     * @param file The file which contains the schema
+     * @throws IOException Throws an exception if it cannot access the file
+     * @return the parsed schema
+     */
     public Schema parse(File file) throws IOException {
       return parse(FACTORY.createJsonParser(file));
     }
 
-    /** Parse a schema from the provided stream.
+    /**
+     * Parse a schema from the provided stream.
      * If named, the schema is added to the names known to this parser.
-     * The input stream stays open after the parsing. */
+     * The input stream stays open after the parsing.
+     *
+     * @param in the inputstream which provides the schema in json format
+     * @throws IOException Throws an exception if it cannot access the inputstream
+     * @return The parsed schema
+     */
     public Schema parse(InputStream in) throws IOException {
       return parse(FACTORY.createJsonParser(in).disable(
               JsonParser.Feature.AUTO_CLOSE_SOURCE));
     }
 
-    /** Read a schema from one or more json strings */
+    /**
+     * Read a schema from one or more json strings
+     *
+     * @param s The string containing the schema
+     * @param more one or more strings containing a schema
+     * @return The parsed schema based on the input string(s)
+     */
     public Schema parse(String s, String... more) {
       StringBuilder b = new StringBuilder(s);
       for (String part : more)
@@ -1047,8 +1305,13 @@ public abstract class Schema extends JsonProperties {
       return parse(b.toString());
     }
 
-    /** Parse a schema from the provided string.
-     * If named, the schema is added to the names known to this parser. */
+    /**
+     * Parse a schema from the provided string.
+     * If named, the schema is added to the names known to this parser.
+     *
+     * @param s The string to be parsed
+     * @return The parsed Schema
+     */
     public Schema parse(String s) {
       try {
         return parse(FACTORY.createJsonParser(new StringReader(s)));
@@ -1057,6 +1320,10 @@ public abstract class Schema extends JsonProperties {
       }
     }
 
+    /**
+     * @param parser The JsonParser which will provide the schema
+     * @return The parsed Schema
+     */
     private Schema parse(JsonParser parser) throws IOException {
       boolean saved = validateNames.get();
       boolean savedValidateDefaults = VALIDATE_DEFAULTS.get();
@@ -1100,16 +1367,22 @@ public abstract class Schema extends JsonProperties {
     return new Parser().parse(in);
   }
 
-  /** Construct a schema from <a href="http://json.org/">JSON</a> text.
+  /**
+   * Construct a schema from <a href="http://json.org/">JSON</a> text.
    * @deprecated use {@link Schema.Parser} instead.
+   * @param jsonSchema The JSON representing a schema
+   * @return the parsed schema based on the input JSON
    */
   public static Schema parse(String jsonSchema) {
     return new Parser().parse(jsonSchema);
   }
 
-  /** Construct a schema from <a href="http://json.org/">JSON</a> text.
-   * @param validate true if names should be validated, false if not.
+  /**
+   * Construct a schema from <a href="http://json.org/">JSON</a> text.
    * @deprecated use {@link Schema.Parser} instead.
+   * @param jsonSchema The JSON representing a schema
+   * @param validate true if names should be validated, false if not.
+   * @return the parsed schema based on the input JSON
    */
   public static Schema parse(String jsonSchema, boolean validate) {
     return new Parser().setValidate(validate).parse(jsonSchema);
@@ -1430,6 +1703,8 @@ public abstract class Schema extends JsonProperties {
   /**
    * Parses a string as Json.
    * @deprecated use {@link org.apache.avro.data.Json#parseJson(String)}
+   * @param s JSON representation as a string
+   * @return The parsed JsonNode
    */
   @Deprecated
   public static JsonNode parseJson(String s) {
@@ -1446,7 +1721,12 @@ public abstract class Schema extends JsonProperties {
    * permits reading records, enums and fixed schemas whose names have changed,
    * and records whose field names have changed.  The returned schema always
    * contains the same data elements in the same order, but with possibly
-   * different names. */
+   * different names.
+   *
+   * @param writer writer
+   * @param reader reader
+   * @return Schema
+   */
   public static Schema applyAliases(Schema writer, Schema reader) {
     if (writer == reader) return writer;          // same schema
 

@@ -578,6 +578,12 @@ public class SchemaCompatibility {
      * Returns a details object representing an incompatible schema pair, including error details.
      * @return a SchemaCompatibilityDetails object with INCOMPATIBLE SchemaCompatibilityType, and
      *         state representing the violating part.
+     *
+     * @param incompatibilityType {@link SchemaIncompatibilityType}
+     * @param readerFragment {@link Schema}
+     * @param writerFragment {@link Schema}
+     * @param message {@link String}
+     * @param location {@link List}
      */
     public static SchemaCompatibilityResult incompatible(
         SchemaIncompatibilityType incompatibilityType,

@@ -39,8 +39,16 @@ import org.apache.avro.test.TestRecord;
 import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 
+/**
+ * The type Test compare.
+ */
 public class TestCompare {
 
+  /**
+   * Test null.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testNull() throws Exception {
     Schema schema = Schema.parse("\"null\"");
@@ -48,11 +56,21 @@ public class TestCompare {
     assertEquals(0, BinaryData.compare(b, 0, b, 0, schema));
   }
 
+  /**
+   * Test boolean.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testBoolean() throws Exception {
     check("\"boolean\"", Boolean.FALSE, Boolean.TRUE);
   }
 
+  /**
+   * Test string.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testString() throws Exception {
     check("\"string\"", new Utf8(""), new Utf8("a"));
@@ -61,6 +79,11 @@ public class TestCompare {
     check("\"string\"", new Utf8("ab"), new Utf8("b"));
   }
 
+  /**
+   * Test bytes.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testBytes() throws Exception {
     check("\"bytes\"",
@@ -74,30 +97,55 @@ public class TestCompare {
           ByteBuffer.wrap(new byte[]{2}));
   }
 
+  /**
+   * Test int.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testInt() throws Exception {
     check("\"int\"", new Integer(-1), new Integer(0));
     check("\"int\"", new Integer(0), new Integer(1));
   }
 
+  /**
+   * Test long.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testLong() throws Exception {
     check("\"long\"", new Long(11), new Long(12));
     check("\"long\"", new Long(-1), new Long(1));
   }
 
+  /**
+   * Test float.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testFloat() throws Exception {
     check("\"float\"", new Float(1.1), new Float(1.2));
     check("\"float\"", new Float(-1.1), new Float(1.0));
   }
 
+  /**
+   * Test double.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testDouble() throws Exception {
     check("\"double\"", new Double(1.2), new Double(1.3));
     check("\"double\"", new Double(-1.2), new Double(1.3));
   }
 
+  /**
+   * Test array.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testArray() throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
@@ -110,6 +158,11 @@ public class TestCompare {
     check(json, a1, a2);
   }
 
+  /**
+   * Test record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRecord() throws Exception {
     String fields = " \"fields\":["
@@ -141,6 +194,11 @@ public class TestCompare {
     assert(!r1.equals(r3));                       // same fields, diff name
   }
 
+  /**
+   * Test enum.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testEnum() throws Exception {
     String json =
@@ -151,6 +209,11 @@ public class TestCompare {
           new GenericData.EnumSymbol(schema, "B"));
   }
 
+  /**
+   * Test fixed.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testFixed() throws Exception {
     String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
@@ -160,6 +223,11 @@ public class TestCompare {
           new GenericData.Fixed(schema, new byte[]{(byte)'b'}));
   }
 
+  /**
+   * Test union.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testUnion() throws Exception {
     check("[\"string\", \"long\"]", new Utf8("a"), new Utf8("b"), false);
@@ -167,6 +235,11 @@ public class TestCompare {
     check("[\"string\", \"long\"]", new Utf8("a"), new Long(1), false);
   }
 
+  /**
+   * Test specific record.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testSpecificRecord() throws Exception {
     TestRecord s1 = new TestRecord();

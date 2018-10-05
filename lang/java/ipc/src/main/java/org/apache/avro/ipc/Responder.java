@@ -47,7 +47,9 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
-/** Base class for the server side of a protocol interaction. */
+/**
+ * Base class for the server side of a protocol interaction.
+ */
 public abstract class Responder {
   private static final Logger LOG = LoggerFactory.getLogger(Responder.class);
 
@@ -66,8 +68,16 @@ public abstract class Responder {
 
   private final Protocol local;
   private final MD5 localHash;
+  /**
+   * The Rpc meta plugins.
+   */
   protected final List<RPCPlugin> rpcMetaPlugins;
 
+  /**
+   * Instantiates a new Responder.
+   *
+   * @param local the local
+   */
   protected Responder(Protocol local) {
     this.local = local;
     this.localHash = new MD5();
@@ -77,31 +87,47 @@ public abstract class Responder {
       new CopyOnWriteArrayList<>();
   }
 
-  /** Return the remote protocol.  Accesses a {@link ThreadLocal} that's set
-   * around calls to {@link #respond(Protocol.Message, Object)}. */
+  /**
+   * Return the remote protocol.  Accesses a {@link ThreadLocal} that's set
+   * around calls to {@link #respond(Protocol.Message, Object)}.  @return the remote
+   */
   public static Protocol getRemote() { return REMOTE.get(); }
 
-  /** Return the local protocol. */
+  /**
+   * Return the local protocol.  @return the local
+   */
   public Protocol getLocal() { return local; }
 
   /**
    * Adds a new plugin to manipulate per-call metadata.  Plugins
    * are executed in the order that they are added.
+   *
    * @param plugin a plugin that will manipulate RPC metadata
    */
   public void addRPCPlugin(RPCPlugin plugin) {
     rpcMetaPlugins.add(plugin);
   }
 
-  /** Called by a server to deserialize a request, compute and serialize
-   * a response or error. */
+  /**
+   * Called by a server to deserialize a request, compute and serialize
+   * a response or error.  @param buffers the buffers
+   *
+   * @return the list
+   * @throws IOException the io exception
+   */
   public List<ByteBuffer> respond(List<ByteBuffer> buffers) throws IOException {
     return respond(buffers, null);
   }
 
-  /** Called by a server to deserialize a request, compute and serialize a
+  /**
+   * Called by a server to deserialize a request, compute and serialize a
    * response or error.  Transceiver is used by connection-based servers to
-   * track handshake status of connection. */
+   * track handshake status of connection.  @param buffers the buffers
+   *
+   * @param connection the connection
+   * @return the list
+   * @throws IOException the io exception
+   */
   public List<ByteBuffer> respond(List<ByteBuffer> buffers,
                                   Transceiver connection) throws IOException {
     Decoder in = DecoderFactory.get().binaryDecoder(
@@ -240,19 +266,44 @@ public abstract class Responder {
     return remote;
   }
 
-  /** Computes the response for a message. */
+  /**
+   * Computes the response for a message.  @param message the message
+   *
+   * @param request the request
+   * @return the object
+   * @throws Exception the exception
+   */
   public abstract Object respond(Message message, Object request)
     throws Exception;
 
-  /** Reads a request message. */
+  /**
+   * Reads a request message.  @param actual the actual
+   *
+   * @param expected the expected
+   * @param in       the in
+   * @return the object
+   * @throws IOException the io exception
+   */
   public abstract Object readRequest(Schema actual, Schema expected, Decoder in)
     throws IOException;
 
-  /** Writes a response message. */
+  /**
+   * Writes a response message.  @param schema the schema
+   *
+   * @param response the response
+   * @param out      the out
+   * @throws IOException the io exception
+   */
   public abstract void writeResponse(Schema schema, Object response,
                                      Encoder out) throws IOException;
 
-  /** Writes an error message. */
+  /**
+   * Writes an error message.  @param schema the schema
+   *
+   * @param error the error
+   * @param out   the out
+   * @throws IOException the io exception
+   */
   public abstract void writeError(Schema schema, Object error,
                                   Encoder out) throws IOException;
 

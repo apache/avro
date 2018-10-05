@@ -33,8 +33,13 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
-/** Tool to print Trevni file metadata as JSON. */
+/**
+ * Tool to print Trevni file metadata as JSON.
+ */
 public class TrevniMetadataTool implements Tool {
+  /**
+   * The Factory.
+   */
   static final JsonFactory FACTORY = new JsonFactory();
 
   private JsonGenerator generator;
@@ -70,7 +75,13 @@ public class TrevniMetadataTool implements Tool {
     return 0;
   }
 
-  /** Read a Trevni file and print each row as a JSON object. */
+  /**
+   * Read a Trevni file and print each row as a JSON object.  @param input the input
+   *
+   * @param out    the out
+   * @param pretty the pretty
+   * @throws IOException the io exception
+   */
   public void dump(Input input, PrintStream out, boolean pretty)
     throws IOException {
     this.generator = FACTORY.createJsonGenerator(out, JsonEncoding.UTF8);

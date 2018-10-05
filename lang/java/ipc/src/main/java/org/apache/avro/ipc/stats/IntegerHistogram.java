@@ -20,12 +20,18 @@ package org.apache.avro.ipc.stats;
 /**
  * Specific implementation of histogram for integers,
  * which also keeps track of basic summary statistics.
- * @param <B>
+ *
+ * @param <B> the type parameter
  */
 class IntegerHistogram<B> extends Histogram<B, Integer> {
   private float runningSum;
   private float runningSumOfSquares;
 
+  /**
+   * Instantiates a new Integer histogram.
+   *
+   * @param segmenter the segmenter
+   */
   public IntegerHistogram(Segmenter<B, Integer> segmenter) {
     super(segmenter);
   }
@@ -37,6 +43,11 @@ class IntegerHistogram<B> extends Histogram<B, Integer> {
     runningSumOfSquares += value*value;
   }
 
+  /**
+   * Gets mean.
+   *
+   * @return the mean
+   */
   public float getMean() {
     if (totalCount == 0) {
       return -1;
@@ -44,6 +55,11 @@ class IntegerHistogram<B> extends Histogram<B, Integer> {
     return runningSum / (float) totalCount;
   }
 
+  /**
+   * Gets unbiased std dev.
+   *
+   * @return the unbiased std dev
+   */
   public float getUnbiasedStdDev() {
     if (totalCount <= 1) {
       return -1;

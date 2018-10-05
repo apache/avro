@@ -37,8 +37,14 @@ import java.net.InetSocketAddress;
 import java.util.Random;
 import java.io.IOException;
 
+/**
+ * The type Test protocol reflect.
+ */
 public class TestProtocolReflect {
 
+  /**
+   * The type Test record.
+   */
   public static class TestRecord {
     private String name;
     public int hashCode() { return this.name.hashCode(); }
@@ -47,16 +53,56 @@ public class TestProtocolReflect {
     }
   }
 
+  /**
+   * The interface Simple.
+   */
   public interface Simple {
+    /**
+     * Hello string.
+     *
+     * @param greeting the greeting
+     * @return the string
+     */
     String hello(String greeting);
+
+    /**
+     * Echo test record.
+     *
+     * @param record the record
+     * @return the test record
+     */
     TestRecord echo(TestRecord record);
+
+    /**
+     * Add int.
+     *
+     * @param arg1 the arg 1
+     * @param arg2 the arg 2
+     * @return the int
+     */
     int add(int arg1, int arg2);
+
+    /**
+     * Echo bytes byte [ ].
+     *
+     * @param data the data
+     * @return the byte [ ]
+     */
     byte[] echoBytes(byte[] data);
+
+    /**
+     * Error.
+     *
+     * @throws SimpleException the simple exception
+     */
     void error() throws SimpleException;
   }
 
   private static boolean throwUndeclaredError;
 
+  /**
+   * The type Test.
+   */
   public static class TestImpl implements Simple {
     public String hello(String greeting) { return "goodbye"; }
     public int add(int arg1, int arg2) { return arg1 + arg2; }
@@ -68,10 +114,24 @@ public class TestProtocolReflect {
     }
   }
 
+  /**
+   * The constant server.
+   */
   protected static Server server;
+  /**
+   * The constant client.
+   */
   protected static Transceiver client;
+  /**
+   * The constant proxy.
+   */
   protected static Simple proxy;
 
+  /**
+   * Test start server.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void testStartServer() throws Exception {
     if (server != null) return;
@@ -82,6 +142,11 @@ public class TestProtocolReflect {
     proxy = ReflectRequestor.getClient(Simple.class, client);
   }
 
+  /**
+   * Test class loader.
+   *
+   * @throws Exception the exception
+   */
   @Test public void testClassLoader() throws Exception {
     ClassLoader loader = new ClassLoader() {};
 
@@ -95,12 +160,22 @@ public class TestProtocolReflect {
     assertEquals(requestor.getReflectData().getClassLoader(), loader);
   }
 
+  /**
+   * Test hello.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testHello() throws IOException {
     String response = proxy.hello("bob");
     assertEquals("goodbye", response);
   }
 
+  /**
+   * Test echo.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
@@ -109,12 +184,22 @@ public class TestProtocolReflect {
     assertEquals(record, echoed);
   }
 
+  /**
+   * Test add.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testAdd() throws IOException {
     int result = proxy.add(1, 2);
     assertEquals(3, result);
   }
 
+  /**
+   * Test echo bytes.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testEchoBytes() throws IOException {
     Random random = new Random();
@@ -125,6 +210,11 @@ public class TestProtocolReflect {
     assertArrayEquals(data, echoed);
   }
 
+  /**
+   * Test error.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void testError() throws IOException {
     SimpleException error = null;
@@ -137,6 +227,11 @@ public class TestProtocolReflect {
     assertEquals("foo", error.getMessage());
   }
 
+  /**
+   * Test undeclared error.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testUndeclaredError() throws Exception {
     this.throwUndeclaredError = true;
@@ -152,6 +247,11 @@ public class TestProtocolReflect {
     assertTrue(error.toString().contains("foo"));
   }
 
+  /**
+   * Test stop server.
+   *
+   * @throws IOException the io exception
+   */
   @AfterClass
   public static void testStopServer() throws IOException {
     client.close();

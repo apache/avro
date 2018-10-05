@@ -18,18 +18,28 @@
 
 package org.apache.avro.ipc;
 
-/** A server listening on a port. */
+/**
+ * A server listening on a port.
+ */
 public interface Server {
-  /** The port this server runs on. */
+  /**
+   * The port this server runs on.  @return the port
+   */
   int getPort();
 
-  /** Start this server. */
+  /**
+   * Start this server.
+   */
   void start();
 
-  /** Stop this server. */
+  /**
+   * Stop this server.
+   */
   void close();
 
-  /** Wait for this server to exit. */
+  /**
+   * Wait for this server to exit.  @throws InterruptedException the interrupted exception
+   */
   void join() throws InterruptedException;
 
 }

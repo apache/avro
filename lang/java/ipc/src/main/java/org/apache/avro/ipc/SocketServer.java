@@ -33,8 +33,10 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.ipc.generic.GenericResponder;
 
-/** A socket-based server implementation. This uses a simple, non-standard wire
+/**
+ * A socket-based server implementation. This uses a simple, non-standard wire
  * protocol and is not intended for production services.
+ *
  * @deprecated use {@link SaslSocketServer} instead.
  */
 public class SocketServer extends Thread implements Server {
@@ -44,6 +46,13 @@ public class SocketServer extends Thread implements Server {
   private ServerSocketChannel channel;
   private ThreadGroup group;
 
+  /**
+   * Instantiates a new Socket server.
+   *
+   * @param responder the responder
+   * @param addr      the addr
+   * @throws IOException the io exception
+   */
   public SocketServer(Responder responder, SocketAddress addr)
     throws IOException {
     String name = "SocketServer on "+addr;
@@ -87,8 +96,13 @@ public class SocketServer extends Thread implements Server {
     group.interrupt();
   }
 
-  /** Creates an appropriate {@link Transceiver} for this server.
-   * Returns a {@link SocketTransceiver} by default. */
+  /**
+   * Creates an appropriate {@link Transceiver} for this server.
+   * Returns a {@link SocketTransceiver} by default.  @param channel the channel
+   *
+   * @return the transceiver
+   * @throws IOException the io exception
+   */
   protected Transceiver getTransceiver(SocketChannel channel)
     throws IOException {
     return new SocketTransceiver(channel);
@@ -96,9 +110,21 @@ public class SocketServer extends Thread implements Server {
 
   private class Connection implements Runnable {
 
+    /**
+     * The Channel.
+     */
     SocketChannel channel;
+    /**
+     * The Xc.
+     */
     Transceiver xc;
 
+    /**
+     * Instantiates a new Connection.
+     *
+     * @param channel the channel
+     * @throws IOException the io exception
+     */
     public Connection(SocketChannel channel) throws IOException {
       this.channel = channel;
 
@@ -129,6 +155,12 @@ public class SocketServer extends Thread implements Server {
 
   }
 
+  /**
+   * The entry point of application.
+   *
+   * @param arg the input arguments
+   * @throws Exception the exception
+   */
   public static void main(String[] arg) throws Exception {
     Responder responder =
       new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {

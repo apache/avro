@@ -35,7 +35,12 @@ import static org.junit.Assert.assertEquals;
  */
 public class NettyTransceiverWhenFailsToConnect {
 
-    @Test(expected = IOException.class)
+  /**
+   * Test netty transceiver releases netty channel on failing to connect.
+   *
+   * @throws Exception the exception
+   */
+  @Test(expected = IOException.class)
     public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
         ServerSocket serverSocket = null;
         LastChannelRememberingChannelFactory socketChannelFactory = null;
@@ -68,9 +73,15 @@ public class NettyTransceiverWhenFailsToConnect {
         }
     }
 
-    class LastChannelRememberingChannelFactory extends NioClientSocketChannelFactory implements ChannelFactory {
+  /**
+   * The type Last channel remembering channel factory.
+   */
+  class LastChannelRememberingChannelFactory extends NioClientSocketChannelFactory implements ChannelFactory {
 
-        volatile SocketChannel lastChannel;
+    /**
+     * The Last channel.
+     */
+    volatile SocketChannel lastChannel;
 
         @Override
         public SocketChannel newChannel(ChannelPipeline pipeline) {

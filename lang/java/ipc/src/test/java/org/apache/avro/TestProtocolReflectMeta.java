@@ -25,6 +25,9 @@ import org.junit.Before;
 
 import java.net.InetSocketAddress;
 
+/**
+ * The type Test protocol reflect meta.
+ */
 public class TestProtocolReflectMeta extends TestProtocolReflect {
 
   @Before @Override

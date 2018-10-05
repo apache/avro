@@ -57,6 +57,11 @@ public class TestNettyServerWithCallbacks {
     new AtomicReference<>(new CountDownLatch(1));
   private static Simple simpleService = new SimpleImpl(ackFlag);
 
+  /**
+   * Initialize connections.
+   *
+   * @throws Exception the exception
+   */
   @BeforeClass
   public static void initializeConnections() throws Exception {
     // start server
@@ -72,6 +77,11 @@ public class TestNettyServerWithCallbacks {
     simpleClient = SpecificRequestor.getClient(Simple.Callback.class, transceiver);
   }
 
+  /**
+   * Tear down connections.
+   *
+   * @throws Exception the exception
+   */
   @AfterClass
   public static void tearDownConnections() throws Exception {
     if (transceiver != null) {
@@ -82,6 +92,11 @@ public class TestNettyServerWithCallbacks {
     }
   }
 
+  /**
+   * Greeting.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void greeting() throws Exception {
     // Test synchronous RPC:
@@ -109,6 +124,11 @@ public class TestNettyServerWithCallbacks {
     Assert.assertNull(future2.getError());
   }
 
+  /**
+   * Echo.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void echo() throws Exception {
     TestRecord record = TestRecord.newBuilder().setHash(
@@ -142,6 +162,11 @@ public class TestNettyServerWithCallbacks {
     Assert.assertNull(future2.getError());
   }
 
+  /**
+   * Add.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void add() throws Exception {
     // Test synchronous RPC:
@@ -169,6 +194,11 @@ public class TestNettyServerWithCallbacks {
     Assert.assertNull(future2.getError());
   }
 
+  /**
+   * Echo bytes.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void echoBytes() throws Exception {
     ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 });
@@ -198,6 +228,13 @@ public class TestNettyServerWithCallbacks {
     Assert.assertNull(future2.getError());
   }
 
+  /**
+   * Error.
+   *
+   * @throws IOException          the io exception
+   * @throws InterruptedException the interrupted exception
+   * @throws TimeoutException     the timeout exception
+   */
   @Test()
   public void error() throws IOException, InterruptedException, TimeoutException {
     // Test synchronous RPC:
@@ -245,6 +282,11 @@ public class TestNettyServerWithCallbacks {
     Assert.assertTrue(errorRef.get() instanceof TestError);
   }
 
+  /**
+   * Ack.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void ack() throws Exception {
     simpleClient.ack();
@@ -257,6 +299,11 @@ public class TestNettyServerWithCallbacks {
     Assert.assertFalse("Expected ack flag to be cleared", ackFlag.get());
   }
 
+  /**
+   * Test send after channel close.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testSendAfterChannelClose() throws Exception {
     // Start up a second server so that closing the server doesn't
@@ -324,6 +371,11 @@ public class TestNettyServerWithCallbacks {
     }
   }
 
+  /**
+   * Cancel pending requests on transceiver close.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void cancelPendingRequestsOnTransceiverClose() throws Exception {
     // Start up a second server so that closing the server doesn't
@@ -371,6 +423,11 @@ public class TestNettyServerWithCallbacks {
     }
   }
 
+  /**
+   * Cancel pending requests after channel close by server shutdown.
+   *
+   * @throws Throwable the throwable
+   */
   @Test(timeout = 20000)
   public void cancelPendingRequestsAfterChannelCloseByServerShutdown() throws Throwable {
     // The purpose of this test is to verify that a client doesn't stay
@@ -451,6 +508,11 @@ public class TestNettyServerWithCallbacks {
     }
   }
 
+  /**
+   * Client reconnect after server restart.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void clientReconnectAfterServerRestart() throws Exception {
     // Start up a second server so that closing the server doesn't
@@ -492,6 +554,11 @@ public class TestNettyServerWithCallbacks {
     }
   }
 
+  /**
+   * Performance test.
+   *
+   * @throws Exception the exception
+   */
   @Ignore
   @Test
   public void performanceTest() throws Exception {
@@ -539,6 +606,7 @@ public class TestNettyServerWithCallbacks {
 
     /**
      * Creates a SimpleImpl.
+     *
      * @param ackFlag the AtomicBoolean to toggle when ack() is called.
      */
     public SimpleImpl(final AtomicBoolean ackFlag) {

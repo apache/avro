@@ -59,12 +59,26 @@ import org.slf4j.LoggerFactory;
  * A Netty-based {@link Transceiver} implementation.
  */
 public class NettyTransceiver extends Transceiver {
-  /** If not specified, the default connection timeout will be used (60 sec). */
+  /**
+   * If not specified, the default connection timeout will be used (60 sec).
+   */
   public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60 * 1000L;
+  /**
+   * The constant NETTY_CONNECT_TIMEOUT_OPTION.
+   */
   public static final String NETTY_CONNECT_TIMEOUT_OPTION =
       "connectTimeoutMillis";
+  /**
+   * The constant NETTY_TCP_NODELAY_OPTION.
+   */
   public static final String NETTY_TCP_NODELAY_OPTION = "tcpNoDelay";
+  /**
+   * The constant NETTY_KEEPALIVE_OPTION.
+   */
   public static final String NETTY_KEEPALIVE_OPTION = "keepAlive";
+  /**
+   * The constant DEFAULT_TCP_NODELAY_VALUE.
+   */
   public static final boolean DEFAULT_TCP_NODELAY_VALUE = true;
 
   private static final Logger LOG = LoggerFactory.getLogger(NettyTransceiver.class
@@ -79,7 +93,13 @@ public class NettyTransceiver extends Transceiver {
   private final ClientBootstrap bootstrap;
   private final InetSocketAddress remoteAddr;
 
+  /**
+   * The Channel future.
+   */
   volatile ChannelFuture channelFuture;
+  /**
+   * The Stopping.
+   */
   volatile boolean stopping;
   private final Object channelFutureLock = new Object();
 
@@ -91,6 +111,9 @@ public class NettyTransceiver extends Transceiver {
   private Channel channel;       // Synchronized on stateLock
   private Protocol remote;       // Synchronized on stateLock
 
+  /**
+   * Instantiates a new Netty transceiver.
+   */
   NettyTransceiver() {
     channelFactory = null;
     connectTimeoutMillis = 0L;
@@ -103,6 +126,7 @@ public class NettyTransceiver extends Transceiver {
    * Creates a NettyTransceiver, and attempts to connect to the given address.
    * {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS} is used for the connection
    * timeout.
+   *
    * @param addr the address to connect to.
    * @throws IOException if an error occurs connecting to the given address.
    */
@@ -112,10 +136,9 @@ public class NettyTransceiver extends Transceiver {
 
   /**
    * Creates a NettyTransceiver, and attempts to connect to the given address.
-   * @param addr the address to connect to.
-   * @param connectTimeoutMillis maximum amount of time to wait for connection
-   * establishment in milliseconds, or null to use
-   * {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
+   *
+   * @param addr                 the address to connect to.
+   * @param connectTimeoutMillis maximum amount of time to wait for connection establishment in milliseconds, or null to use {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
    * @throws IOException if an error occurs connecting to the given address.
    */
   public NettyTransceiver(InetSocketAddress addr,
@@ -132,7 +155,8 @@ public class NettyTransceiver extends Transceiver {
    * Creates a NettyTransceiver, and attempts to connect to the given address.
    * {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS} is used for the connection
    * timeout.
-   * @param addr the address to connect to.
+   *
+   * @param addr           the address to connect to.
    * @param channelFactory the factory to use to create a new Netty Channel.
    * @throws IOException if an error occurs connecting to the given address.
    */
@@ -143,11 +167,10 @@ public class NettyTransceiver extends Transceiver {
 
   /**
    * Creates a NettyTransceiver, and attempts to connect to the given address.
-   * @param addr the address to connect to.
-   * @param channelFactory the factory to use to create a new Netty Channel.
-   * @param connectTimeoutMillis maximum amount of time to wait for connection
-   * establishment in milliseconds, or null to use
-   * {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
+   *
+   * @param addr                 the address to connect to.
+   * @param channelFactory       the factory to use to create a new Netty Channel.
+   * @param connectTimeoutMillis maximum amount of time to wait for connection establishment in milliseconds, or null to use {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
    * @throws IOException if an error occurs connecting to the given address.
    */
   public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory,
@@ -163,10 +186,10 @@ public class NettyTransceiver extends Transceiver {
    * to prevent connect/disconnect attempts from hanging indefinitely.  It is
    * also recommended that the {@link #NETTY_TCP_NODELAY_OPTION} option be set
    * to true to minimize RPC latency.
-   * @param addr the address to connect to.
-   * @param channelFactory the factory to use to create a new Netty Channel.
-   * @param nettyClientBootstrapOptions map of Netty ClientBootstrap options
-   * to use.
+   *
+   * @param addr                        the address to connect to.
+   * @param channelFactory              the factory to use to create a new Netty Channel.
+   * @param nettyClientBootstrapOptions map of Netty ClientBootstrap options to use.
    * @throws IOException if an error occurs connecting to the given address.
    */
   public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory,
@@ -224,6 +247,7 @@ public class NettyTransceiver extends Transceiver {
   /**
    * Creates a Netty ChannelUpstreamHandler for handling events on the
    * Netty client channel.
+   *
    * @return the ChannelUpstreamHandler to use.
    */
   protected ChannelUpstreamHandler createNettyClientAvroHandler() {
@@ -232,8 +256,8 @@ public class NettyTransceiver extends Transceiver {
 
   /**
    * Creates the default options map for the Netty ClientBootstrap.
-   * @param connectTimeoutMillis connection timeout in milliseconds, or null
-   * if no timeout is desired.
+   *
+   * @param connectTimeoutMillis connection timeout in milliseconds, or null if no timeout is desired.
    * @return the map of Netty bootstrap options.
    */
   protected static Map<String, Object> buildDefaultBootstrapOptions(
@@ -423,6 +447,7 @@ public class NettyTransceiver extends Transceiver {
   /**
    * Closes this transceiver and disconnects from the remote peer.
    * Cancels all pending RPCs and sends an IOException to all pending callbacks.
+   *
    * @param awaitCompletion if true, will block until the close has completed.
    */
   public void close(boolean awaitCompletion) {
@@ -555,11 +580,15 @@ public class NettyTransceiver extends Transceiver {
    * a {@link Callback} if an error occurs while writing to the channel.
    */
   protected class WriteFutureListener implements ChannelFutureListener {
+    /**
+     * The Callback.
+     */
     protected final Callback<List<ByteBuffer>> callback;
 
     /**
      * Creates a WriteFutureListener that notifies the given callback
      * if an error occurs writing data to the channel.
+     *
      * @param callback the callback to notify, or null to skip notification.
      */
     public WriteFutureListener(Callback<List<ByteBuffer>> callback) {
@@ -633,9 +662,8 @@ public class NettyTransceiver extends Transceiver {
     /**
      * Creates a NettyTransceiverThreadFactory that creates threads with the
      * specified name.
-     * @param prefix the name prefix to use for all threads created by this
-     * ThreadFactory.  A unique ID will be appended to this prefix to form the
-     * final thread name.
+     *
+     * @param prefix the name prefix to use for all threads created by this ThreadFactory.  A unique ID will be appended to this prefix to form the final thread name.
      */
     public NettyTransceiverThreadFactory(String prefix) {
       this.prefix = prefix;

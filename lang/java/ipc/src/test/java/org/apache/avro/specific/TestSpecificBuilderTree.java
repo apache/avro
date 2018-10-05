@@ -29,6 +29,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+/**
+ * The type Test specific builder tree.
+ */
 public class TestSpecificBuilderTree {
 
   private Request.Builder createPartialBuilder() {
@@ -70,6 +73,9 @@ public class TestSpecificBuilderTree {
     return requestBuilder;
   }
 
+  /**
+   * Fail on incomplete tree.
+   */
   @Test(expected = AvroMissingFieldException.class)
   public void failOnIncompleteTree() {
     try {
@@ -82,6 +88,9 @@ public class TestSpecificBuilderTree {
     fail("Should NEVER get here");
   }
 
+  /**
+   * Copy builder.
+   */
   @Test
   public void copyBuilder() {
     Request.Builder requestBuilder1 = createPartialBuilder();
@@ -125,6 +134,9 @@ public class TestSpecificBuilderTree {
     assertEquals("Bar",             request2.getHttpRequest().getURI().getParameters().get(0).getValue());
   }
 
+  /**
+   * Create builder from instance.
+   */
   @Test
   public void createBuilderFromInstance(){
     Request.Builder requestBuilder1 = createPartialBuilder();
@@ -190,6 +202,9 @@ public class TestSpecificBuilderTree {
     return requestBuilder;
   }
 
+  /**
+   * Last one wins setter.
+   */
   @Test
   public void lastOneWins_Setter() {
     Request.Builder requestBuilder = createLastOneTestsBuilder();
@@ -226,6 +241,9 @@ public class TestSpecificBuilderTree {
     assertEquals("/login.php",      request.getHttpRequest().getURI().getPath());
   }
 
+  /**
+   * Last one wins builder.
+   */
   @Test
   public void lastOneWins_Builder() {
     Request.Builder requestBuilder = createLastOneTestsBuilder();
@@ -263,6 +281,9 @@ public class TestSpecificBuilderTree {
     assertEquals("/index.html",     request.getHttpRequest().getURI().getPath());
   }
 
+  /**
+   * Copy builder with nullables.
+   */
   @Test
   public void copyBuilderWithNullables() {
     RecordWithNullables.Builder builder = RecordWithNullables.newBuilder();
@@ -288,6 +309,9 @@ public class TestSpecificBuilderTree {
     builderCopy.getNullableRecordBuilder();
   }
 
+  /**
+   * Copy builder with nullables and set to null.
+   */
   @Test
   public void copyBuilderWithNullablesAndSetToNull() {
     // Create builder with all values default to null, yet unset.
@@ -340,6 +364,9 @@ public class TestSpecificBuilderTree {
     assertTrue(builder.hasNullableArray ());
   }
 
+  /**
+   * Gets builder for record with null record.
+   */
   @Test
   public void getBuilderForRecordWithNullRecord() {
     // Create a record with all nullable fields set to the default value : null
@@ -352,12 +379,18 @@ public class TestSpecificBuilderTree {
     builder.getNullableRecordBuilder();
   }
 
+  /**
+   * Gets builder for null record.
+   */
   @Test
   public void getBuilderForNullRecord() {
     // In the past this caused an NPE
     RecordWithNullables.newBuilder((RecordWithNullables)null);
   }
 
+  /**
+   * Gets builder for null builder.
+   */
   @Test
   public void getBuilderForNullBuilder() {
     // In the past this caused an NPE

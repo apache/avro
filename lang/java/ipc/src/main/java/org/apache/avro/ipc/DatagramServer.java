@@ -27,8 +27,10 @@ import java.nio.channels.DatagramChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A datagram-based server implementation. This uses a simple, non-standard
- * wire protocol and is not intended for production services. */
+/**
+ * A datagram-based server implementation. This uses a simple, non-standard
+ * wire protocol and is not intended for production services.
+ */
 public class DatagramServer extends Thread implements Server {
   private static final Logger LOG =
     LoggerFactory.getLogger(DatagramServer.class);
@@ -37,6 +39,13 @@ public class DatagramServer extends Thread implements Server {
   private final DatagramChannel channel;
   private final Transceiver transceiver;
 
+  /**
+   * Instantiates a new Datagram server.
+   *
+   * @param responder the responder
+   * @param addr      the addr
+   * @throws IOException the io exception
+   */
   public DatagramServer(Responder responder, SocketAddress addr)
     throws IOException {
     String name = "DatagramServer on "+addr;
@@ -69,6 +78,12 @@ public class DatagramServer extends Thread implements Server {
 
   public void close() { this.interrupt(); }
 
+  /**
+   * The entry point of application.
+   *
+   * @param arg the input arguments
+   * @throws Exception the exception
+   */
   public static void main(String[] arg) throws Exception {
     DatagramServer server = new DatagramServer(null, new InetSocketAddress(0));
     server.start();

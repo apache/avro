@@ -46,12 +46,17 @@ public class LogicalTypes {
   }
 
   /**
-   * Returns the {@link LogicalType} from the schema, if one is present.
+   * @param schema The schema
+   * @return The {@link LogicalType} from the schema, if one is present.
    */
   public static LogicalType fromSchema(Schema schema) {
     return fromSchemaImpl(schema, true);
   }
 
+  /**
+   * @param schema The schema
+   * @return The {@link LogicalType} from the schema, if one is present.
+   */
   public static LogicalType fromSchemaIgnoreInvalid(Schema schema) {
     return fromSchemaImpl(schema, false);
   }
@@ -108,12 +113,19 @@ public class LogicalTypes {
   private static final String TIMESTAMP_MILLIS = "timestamp-millis";
   private static final String TIMESTAMP_MICROS = "timestamp-micros";
 
-  /** Create a Decimal LogicalType with the given precision and scale 0 */
+  /**
+   * @param precision The precision of the decimal
+   * @return Decimal LogicalType with the given precision and scale 0
+   */
   public static Decimal decimal(int precision) {
     return decimal(precision, 0);
   }
 
-  /** Create a Decimal LogicalType with the given precision and scale */
+  /**
+   * @param precision The precision of the decimal
+   * @param scale The scale of the param
+   * @return Decimal LogicalType with the given precision and scale
+   */
   public static Decimal decimal(int precision, int scale) {
     return new Decimal(precision, scale);
   }

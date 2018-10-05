@@ -45,6 +45,9 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Test;
 
+/**
+ * The type Test cat tool.
+ */
 public class TestCatTool {
   private static final int ROWS_IN_INPUT_FILES = 100000;
   private static final int OFFSET = 1000;
@@ -137,6 +140,11 @@ public class TestCatTool {
     return rowcount;
   }
 
+  /**
+   * Test cat.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testCat() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -197,6 +205,11 @@ public class TestCatTool {
   }
 
 
+  /**
+   * Test limit out of bounds.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testLimitOutOfBounds() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -220,6 +233,11 @@ public class TestCatTool {
     assertEquals(ROWS_IN_INPUT_FILES - OFFSET, numRowsInFile(output));
   }
 
+  /**
+   * Test samplerate accuracy.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testSamplerateAccuracy() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -246,6 +264,11 @@ public class TestCatTool {
     assertTrue("", (ROWS_IN_INPUT_FILES - OFFSET)*SAMPLERATE - numRowsInFile(output) > -2);
   }
 
+  /**
+   * Test off set accuracy.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testOffSetAccuracy() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -271,6 +294,11 @@ public class TestCatTool {
       OFFSET, getFirstIntDatum(output));
   }
 
+  /**
+   * Test offset bigger than input.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testOffsetBiggerThanInput() throws Exception{
     Map<String, String> metadata = new HashMap<>();
@@ -294,6 +322,11 @@ public class TestCatTool {
       0, numRowsInFile(output));
   }
 
+  /**
+   * Test samplerate smaller than input.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testSamplerateSmallerThanInput() throws Exception{
     Map<String, String> metadata = new HashMap<>();
@@ -320,6 +353,11 @@ public class TestCatTool {
   }
 
 
+  /**
+   * Test different schemas fail.
+   *
+   * @throws Exception the exception
+   */
   @Test(expected = IOException.class)
   public void testDifferentSchemasFail() throws Exception {
     Map<String, String> metadata = new HashMap<>();
@@ -342,6 +380,11 @@ public class TestCatTool {
       args);
   }
 
+  /**
+   * Test helpful message when no args given.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testHelpfulMessageWhenNoArgsGiven() throws Exception {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream(1024);

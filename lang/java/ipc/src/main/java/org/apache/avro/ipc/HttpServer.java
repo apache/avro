@@ -31,26 +31,50 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-/** An HTTP-based RPC {@link Server}. */
+/**
+ * An HTTP-based RPC {@link Server}.
+ */
 public class HttpServer implements Server {
   private org.eclipse.jetty.server.Server server;
 
-  /** Constructs a server to run on the named port. */
+  /**
+   * Constructs a server to run on the named port.  @param responder the responder
+   *
+   * @param port the port
+   * @throws IOException the io exception
+   */
   public HttpServer(Responder responder, int port) throws IOException {
     this(new ResponderServlet(responder), null, port);
   }
 
-  /** Constructs a server to run on the named port. */
+  /**
+   * Constructs a server to run on the named port.  @param servlet the servlet
+   *
+   * @param port the port
+   * @throws IOException the io exception
+   */
   public HttpServer(ResponderServlet servlet, int port) throws IOException {
     this(servlet, null, port);
   }
 
-  /** Constructs a server to run on the named port on the specified address. */
+  /**
+   * Constructs a server to run on the named port on the specified address.  @param responder the responder
+   *
+   * @param bindAddress the bind address
+   * @param port        the port
+   * @throws IOException the io exception
+   */
   public HttpServer(Responder responder, String bindAddress, int port) throws IOException {
     this(new ResponderServlet(responder), bindAddress, port);
   }
 
-  /** Constructs a server to run on the named port on the specified address. */
+  /**
+   * Constructs a server to run on the named port on the specified address.  @param servlet the servlet
+   *
+   * @param bindAddress the bind address
+   * @param port        the port
+   * @throws IOException the io exception
+   */
   public HttpServer(ResponderServlet servlet, String bindAddress, int port) throws IOException {
     this.server = new org.eclipse.jetty.server.Server();
     ServerConnector connector = new ServerConnector(this.server);
@@ -69,12 +93,26 @@ public class HttpServer implements Server {
     server.setHandler(sch);
   }
 
-  /** Constructs a server to run with the given ConnectionFactory on the given address/port. */
+  /**
+   * Constructs a server to run with the given ConnectionFactory on the given address/port.  @param responder the responder
+   *
+   * @param connectionFactory the connection factory
+   * @param bindAddress       the bind address
+   * @param port              the port
+   * @throws IOException the io exception
+   */
   public HttpServer(Responder responder, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
     this(new ResponderServlet(responder), connectionFactory, bindAddress, port);
   }
 
-  /** Constructs a server to run with the given ConnectionFactory on the given address/port. */
+  /**
+   * Constructs a server to run with the given ConnectionFactory on the given address/port.  @param servlet the servlet
+   *
+   * @param connectionFactory the connection factory
+   * @param bindAddress       the bind address
+   * @param port              the port
+   * @throws IOException the io exception
+   */
   public HttpServer(ResponderServlet servlet, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
     this.server = new org.eclipse.jetty.server.Server();
     HttpConfiguration httpConfig = new HttpConfiguration();
@@ -94,7 +132,10 @@ public class HttpServer implements Server {
   /**
    * Constructs a server to run with the given connector.
    *
-   *  @deprecated - use the Constructors that take a ConnectionFactory
+   * @param servlet   the servlet
+   * @param connector the connector
+   * @throws IOException the io exception
+   * @deprecated - use the Constructors that take a ConnectionFactory
    */
   @Deprecated
   public HttpServer(ResponderServlet servlet, Connector connector) throws IOException {
@@ -106,16 +147,25 @@ public class HttpServer implements Server {
     server.setHandler(handler);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
   }
+
   /**
    * Constructs a server to run with the given connector.
    *
-   *  @deprecated - use the Constructors that take a ConnectionFactory
+   * @param responder the responder
+   * @param connector the connector
+   * @throws IOException the io exception
+   * @deprecated - use the Constructors that take a ConnectionFactory
    */
   @Deprecated
   public HttpServer(Responder responder, Connector connector) throws IOException {
     this(new ResponderServlet(responder), connector);
   }
 
+  /**
+   * Add connector.
+   *
+   * @param connector the connector
+   */
   public void addConnector(Connector connector) {
     server.addConnector(connector);
   }

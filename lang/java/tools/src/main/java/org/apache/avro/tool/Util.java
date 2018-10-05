@@ -47,14 +47,19 @@ import joptsimple.OptionSet;
 import joptsimple.OptionParser;
 import joptsimple.OptionSpec;
 
-/** Static utility methods for tools. */
+/**
+ * Static utility methods for tools.
+ */
 class Util {
   /**
    * Returns stdin if filename is "-", else opens the File in the owning filesystem
    * and returns an InputStream for it.
    * Relative paths will be opened in the default filesystem.
+   *
    * @param filename The filename to be opened
-   * @throws IOException
+   * @param stdin    the stdin
+   * @return the buffered input stream
+   * @throws IOException the io exception
    */
   static BufferedInputStream fileOrStdin(String filename, InputStream stdin)
       throws IOException {
@@ -67,8 +72,11 @@ class Util {
    * Returns stdout if filename is "-", else opens the file from the owning filesystem
    * and returns an OutputStream for it.
    * Relative paths will be opened in the default filesystem.
+   *
    * @param filename The filename to be opened
-   * @throws IOException
+   * @param stdout   the stdout
+   * @return the buffered output stream
+   * @throws IOException the io exception
    */
   static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout)
       throws IOException {
@@ -80,8 +88,10 @@ class Util {
   /**
    * Returns an InputStream for the file using the owning filesystem,
    * or the default if none is given.
+   *
    * @param filename The filename to be opened
-   * @throws IOException
+   * @return the input stream
+   * @throws IOException the io exception
    */
   static InputStream openFromFS(String filename)
       throws IOException {
@@ -92,8 +102,10 @@ class Util {
   /**
    * Returns an InputStream for the file using the owning filesystem,
    * or the default if none is given.
+   *
    * @param filename The filename to be opened
-   * @throws IOException
+   * @return the input stream
+   * @throws IOException the io exception
    */
   static InputStream openFromFS(Path filename)
       throws IOException {
@@ -103,8 +115,10 @@ class Util {
   /**
    * Returns a seekable FsInput using the owning filesystem,
    * or the default if none is given.
+   *
    * @param filename The filename to be opened
-   * @throws IOException
+   * @return the fs input
+   * @throws IOException the io exception
    */
   static FsInput openSeekableFromFS(String filename)
       throws IOException {
@@ -114,9 +128,10 @@ class Util {
   /**
    * Opens the file for writing in the owning filesystem,
    * or the default if none is given.
+   *
    * @param filename The filename to be opened.
    * @return An OutputStream to the specified file.
-   * @throws IOException
+   * @throws IOException the io exception
    */
   static OutputStream createFromFS(String filename)
       throws IOException {
@@ -127,6 +142,7 @@ class Util {
   /**
    * Closes the inputstream created from {@link Util.fileOrStdin}
    * unless it is System.in.
+   *
    * @param in The inputstream to be closed.
    */
   static void close(InputStream in) {
@@ -142,6 +158,7 @@ class Util {
   /**
    * Closes the outputstream created from {@link Util.fileOrStdout}
    * unless it is System.out.
+   *
    * @param out The outputStream to be closed.
    */
   static void close(OutputStream out) {
@@ -156,9 +173,10 @@ class Util {
 
   /**
    * Parses a schema from the specified file.
+   *
    * @param filename The file name to parse
    * @return The parsed schema
-   * @throws IOException
+   * @throws IOException the io exception
    */
   static Schema parseSchemaFromFS(String filename) throws IOException {
     InputStream stream = openFromFS(filename);
@@ -175,11 +193,12 @@ class Util {
    * this directory. Only files inside that directory are included, no subdirectories or files
    * in subdirectories will be added.
    * If pathname is a glob pattern, all files matching the pattern are included.
-   *
+   * <p>
    * The List is sorted alphabetically.
+   *
    * @param fileOrDirName filename, directoryname or a glob pattern
    * @return A Path List
-   * @throws IOException
+   * @throws IOException the io exception
    */
   static List<Path> getFiles(String fileOrDirName) throws IOException {
     List<Path> pathList = new ArrayList<>();
@@ -211,11 +230,12 @@ class Util {
   /**
    * Concatenate the result of {@link #getFiles(String)} applied to all file or directory names.
    * The list is sorted alphabetically and contains no subdirectories or files within those.
-   *
+   * <p>
    * The list is sorted alphabetically.
+   *
    * @param fileOrDirNames A list of filenames, directorynames or glob patterns
    * @return A list of Paths, one for each file
-   * @throws IOException
+   * @throws IOException the io exception
    */
   static List<Path> getFiles(List<String> fileOrDirNames)
       throws IOException {
@@ -229,9 +249,14 @@ class Util {
 
   /**
    * Converts a String JSON object into a generic datum.
-   *
+   * <p>
    * This is inefficient (creates extra objects), so should be used
    * sparingly.
+   *
+   * @param schema   the schema
+   * @param jsonData the json data
+   * @return the object
+   * @throws IOException the io exception
    */
   static Object jsonToGenericDatum(Schema schema, String jsonData)
       throws IOException {
@@ -241,7 +266,13 @@ class Util {
     return datum;
   }
 
-  /** Reads and returns the first datum in a data file. */
+  /**
+   * Reads and returns the first datum in a data file.  @param schema the schema
+   *
+   * @param file the file
+   * @return the object
+   * @throws IOException the io exception
+   */
   static Object datumFromFile(Schema schema, String file) throws IOException {
     DataFileReader<Object> in =
         new DataFileReader<>(new File(file),
@@ -253,6 +284,12 @@ class Util {
     }
   }
 
+  /**
+   * Compression codec option option spec.
+   *
+   * @param optParser the opt parser
+   * @return the option spec
+   */
   static OptionSpec<String> compressionCodecOption(OptionParser optParser) {
     return optParser
       .accepts("codec", "Compression codec")
@@ -261,6 +298,12 @@ class Util {
       .defaultsTo("null");
 }
 
+  /**
+   * Compression level option option spec.
+   *
+   * @param optParser the opt parser
+   * @return the option spec
+   */
   static OptionSpec<Integer> compressionLevelOption(OptionParser optParser) {
     return optParser
       .accepts("level", "Compression level (only applies to deflate and xz)")
@@ -269,10 +312,27 @@ class Util {
       .defaultsTo(Deflater.DEFAULT_COMPRESSION);
   }
 
+  /**
+   * Codec factory codec factory.
+   *
+   * @param opts  the opts
+   * @param codec the codec
+   * @param level the level
+   * @return the codec factory
+   */
   static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level) {
     return codecFactory(opts, codec, level, DEFLATE_CODEC);
   }
 
+  /**
+   * Codec factory codec factory.
+   *
+   * @param opts         the opts
+   * @param codec        the codec
+   * @param level        the level
+   * @param defaultCodec the default codec
+   * @return the codec factory
+   */
   static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level, String defaultCodec) {
       String codecName = opts.hasArgument(codec)
         ? codec.value(opts)

@@ -21,7 +21,7 @@ package org.apache.avro;
 /**
  * <p>
  * A SchemaValidator has one method, which validates that a {@link Schema} is
- * <b>compatible<b/> with the other schemas provided.
+ * <b>compatible</b> with the other schemas provided.
  * </p>
  * <p>
  * What makes one Schema compatible with another is not part of the interface

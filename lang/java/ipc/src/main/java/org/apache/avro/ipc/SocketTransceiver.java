@@ -31,8 +31,10 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.avro.Protocol;
 
-/** A socket-based {@link Transceiver} implementation.  This uses a simple,
+/**
+ * A socket-based {@link Transceiver} implementation.  This uses a simple,
  * non-standard wire protocol and is not intended for production services.
+ *
  * @deprecated use {@link SaslSocketTransceiver} instead.
  */
 public class SocketTransceiver extends Transceiver {
@@ -44,10 +46,22 @@ public class SocketTransceiver extends Transceiver {
 
   private Protocol remote;
 
+  /**
+   * Instantiates a new Socket transceiver.
+   *
+   * @param address the address
+   * @throws IOException the io exception
+   */
   public SocketTransceiver(SocketAddress address) throws IOException {
     this(SocketChannel.open(address));
   }
 
+  /**
+   * Instantiates a new Socket transceiver.
+   *
+   * @param channel the channel
+   * @throws IOException the io exception
+   */
   public SocketTransceiver(SocketChannel channel) throws IOException {
     this.channel = channel;
     this.channel.socket().setTcpNoDelay(true);

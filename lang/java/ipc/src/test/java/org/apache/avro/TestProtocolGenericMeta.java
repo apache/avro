@@ -25,6 +25,9 @@ import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.generic.GenericRequestor;
 import org.junit.Before;
 
+/**
+ * The type Test protocol generic meta.
+ */
 public class TestProtocolGenericMeta extends TestProtocolGeneric {
 
   @Before @Override

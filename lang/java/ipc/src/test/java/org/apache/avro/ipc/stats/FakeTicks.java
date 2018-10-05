@@ -19,8 +19,13 @@ package org.apache.avro.ipc.stats;
 
 import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 
-/** Implements Ticks with manual time-winding. */
+/**
+ * Implements Ticks with manual time-winding.
+ */
 class FakeTicks implements Ticks {
+  /**
+   * The Time.
+   */
   long time = 0;
 
   @Override
@@ -28,6 +33,11 @@ class FakeTicks implements Ticks {
     return time;
   }
 
+  /**
+   * Pass time.
+   *
+   * @param nanos the nanos
+   */
   public void passTime(long nanos) {
     time += nanos;
   }

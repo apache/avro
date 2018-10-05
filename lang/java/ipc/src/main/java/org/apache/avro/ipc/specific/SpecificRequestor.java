@@ -40,26 +40,61 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
-/** {@link org.apache.avro.ipc.Requestor Requestor} for generated interfaces. */
+/**
+ * {@link org.apache.avro.ipc.Requestor Requestor} for generated interfaces.
+ */
 public class SpecificRequestor extends Requestor implements InvocationHandler {
+  /**
+   * The Data.
+   */
   SpecificData data;
 
+  /**
+   * Instantiates a new Specific requestor.
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @throws IOException the io exception
+   */
   public SpecificRequestor(Class<?> iface, Transceiver transceiver)
     throws IOException {
     this(iface, transceiver, new SpecificData(iface.getClassLoader()));
   }
 
+  /**
+   * Instantiates a new Specific requestor.
+   *
+   * @param protocol    the protocol
+   * @param transceiver the transceiver
+   * @throws IOException the io exception
+   */
   protected SpecificRequestor(Protocol protocol, Transceiver transceiver)
     throws IOException {
     this(protocol, transceiver, SpecificData.get());
   }
 
+  /**
+   * Instantiates a new Specific requestor.
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @param data        the data
+   * @throws IOException the io exception
+   */
   public SpecificRequestor(Class<?> iface, Transceiver transceiver,
                            SpecificData data)
     throws IOException {
     this(data.getProtocol(iface), transceiver, data);
   }
 
+  /**
+   * Instantiates a new Specific requestor.
+   *
+   * @param protocol    the protocol
+   * @param transceiver the transceiver
+   * @param data        the data
+   * @throws IOException the io exception
+   */
   public SpecificRequestor(Protocol protocol, Transceiver transceiver,
                            SpecificData data)
     throws IOException {
@@ -67,6 +102,11 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     this.data = data;
   }
 
+  /**
+   * Gets specific data.
+   *
+   * @return the specific data
+   */
   public SpecificData getSpecificData() { return data; }
 
   @Override
@@ -136,15 +176,34 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     }
   }
 
+  /**
+   * Gets datum writer.
+   *
+   * @param schema the schema
+   * @return the datum writer
+   */
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
     return new SpecificDatumWriter<>(schema, data);
   }
 
+  /**
+   * Gets datum reader.
+   *
+   * @param schema the schema
+   * @return the datum reader
+   */
   @Deprecated                                     // for compatibility in 1.5
   protected DatumReader<Object> getDatumReader(Schema schema) {
     return getDatumReader(schema, schema);
   }
 
+  /**
+   * Gets datum reader.
+   *
+   * @param writer the writer
+   * @param reader the reader
+   * @return the datum reader
+   */
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
     return new SpecificDatumReader<>(writer, reader, data);
   }
@@ -173,14 +232,29 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
     return new AvroRuntimeException(value.toString());
   }
 
-  /** Create a proxy instance whose methods invoke RPCs. */
+  /**
+   * Create a proxy instance whose methods invoke RPCs.  @param <T>  the type parameter
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @return the client
+   * @throws IOException the io exception
+   */
   public static  <T> T getClient(Class<T> iface, Transceiver transceiver)
     throws IOException {
     return getClient(iface, transceiver,
                      new SpecificData(iface.getClassLoader()));
   }
 
-  /** Create a proxy instance whose methods invoke RPCs. */
+  /**
+   * Create a proxy instance whose methods invoke RPCs.  @param <T>  the type parameter
+   *
+   * @param iface       the iface
+   * @param transceiver the transceiver
+   * @param data        the data
+   * @return the client
+   * @throws IOException the io exception
+   */
   @SuppressWarnings("unchecked")
   public static  <T> T getClient(Class<T> iface, Transceiver transceiver,
                                  SpecificData data)
@@ -192,7 +266,14 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
        new SpecificRequestor(protocol, transceiver, data));
   }
 
-  /** Create a proxy instance whose methods invoke RPCs. */
+  /**
+   * Create a proxy instance whose methods invoke RPCs.  @param <T>  the type parameter
+   *
+   * @param iface     the iface
+   * @param requestor the requestor
+   * @return the client
+   * @throws IOException the io exception
+   */
   @SuppressWarnings("unchecked")
   public static <T> T getClient(Class<T> iface, SpecificRequestor requestor)
     throws IOException {
@@ -200,7 +281,12 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
                                   new Class[] { iface }, requestor);
   }
 
-  /** Return the remote protocol for a proxy. */
+  /**
+   * Return the remote protocol for a proxy.  @param proxy the proxy
+   *
+   * @return the remote
+   * @throws IOException the io exception
+   */
   public static Protocol getRemote(Object proxy) throws IOException {
     return ((Requestor)Proxy.getInvocationHandler(proxy)).getRemote();
 

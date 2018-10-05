@@ -40,7 +40,6 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
  * A Tool for compiling avro protocols or schemas to Java classes using the Avro
  * SpecificCompiler.
  */
-
 public class SpecificCompilerTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err,

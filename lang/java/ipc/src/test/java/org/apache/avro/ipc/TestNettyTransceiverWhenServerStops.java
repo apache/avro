@@ -30,7 +30,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.fail;
 
+/**
+ * The type Test netty transceiver when server stops.
+ */
 public class TestNettyTransceiverWhenServerStops {
+  /**
+   * Test netty transceiver when server stops.
+   *
+   * @throws Exception the exception
+   */
 //  @Test                                           // disable flakey test!
     public void testNettyTransceiverWhenServerStops() throws Exception {
     Mail mailService = new TestNettyServer.MailImpl();

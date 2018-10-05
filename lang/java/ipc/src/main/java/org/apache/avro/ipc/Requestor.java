@@ -48,7 +48,9 @@ import org.apache.avro.util.ByteBufferOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Base class for the client side of a protocol interaction. */
+/**
+ * Base class for the client side of a protocol interaction.
+ */
 public abstract class Requestor {
   private static final Logger LOG = LoggerFactory.getLogger(Requestor.class);
 
@@ -65,11 +67,32 @@ public abstract class Requestor {
   private final Transceiver transceiver;
   private final ReentrantLock handshakeLock = new ReentrantLock();
 
+  /**
+   * The Rpc meta plugins.
+   */
   protected final List<RPCPlugin> rpcMetaPlugins;
 
+  /**
+   * Gets local.
+   *
+   * @return the local
+   */
   public Protocol getLocal() { return local; }
+
+  /**
+   * Gets transceiver.
+   *
+   * @return the transceiver
+   */
   public Transceiver getTransceiver() { return transceiver; }
 
+  /**
+   * Instantiates a new Requestor.
+   *
+   * @param local       the local
+   * @param transceiver the transceiver
+   * @throws IOException the io exception
+   */
   protected Requestor(Protocol local, Transceiver transceiver)
     throws IOException {
     this.local = local;
@@ -81,6 +104,7 @@ public abstract class Requestor {
   /**
    * Adds a new plugin to manipulate RPC metadata.  Plugins
    * are executed in the order that they are added.
+   *
    * @param plugin a plugin that will manipulate RPC metadata
    */
   public void addRPCPlugin(RPCPlugin plugin) {
@@ -89,7 +113,13 @@ public abstract class Requestor {
 
   private static final EncoderFactory ENCODER_FACTORY = new EncoderFactory();
 
-  /** Writes a request message and reads a response or error message. */
+  /**
+   * Writes a request message and reads a response or error message.  @param messageName the message name
+   *
+   * @param request the request
+   * @return the object
+   * @throws Exception the exception
+   */
   public Object request(String messageName, Object request)
     throws Exception {
     // Initialize request
@@ -117,11 +147,11 @@ public abstract class Requestor {
    * Writes a request message and returns the result through a Callback.
    * Clients can also use a Future interface by creating a new CallFuture<T>,
    * passing it in as the Callback parameter, and then waiting on that Future.
-   * @param <T> the return type of the message.
+   *
+   * @param <T>         the return type of the message.
    * @param messageName the name of the message to invoke.
-   * @param request the request data to send.
-   * @param callback the callback which will be invoked when the response is returned
-   * or an error occurs.
+   * @param request     the request data to send.
+   * @param callback    the callback which will be invoked when the response is returned or an error occurs.
    * @throws Exception if an error occurs sending the message.
    */
   public <T> void request(String messageName, Object request, Callback<T> callback)
@@ -129,7 +159,13 @@ public abstract class Requestor {
     request(new Request(messageName, request, new RPCContext()), callback);
   }
 
-  /** Writes a request message and returns the result through a Callback. */
+  /**
+   * Writes a request message and returns the result through a Callback.  @param <T>  the type parameter
+   *
+   * @param request  the request
+   * @param callback the callback
+   * @throws Exception the exception
+   */
   <T> void request(Request request, Callback<T> callback)
     throws Exception {
     Transceiver t = getTransceiver();
@@ -264,7 +300,11 @@ public abstract class Requestor {
     REMOTE_PROTOCOLS.putIfAbsent(remoteHash, remote);
   }
 
-  /** Return the remote protocol.  Force a handshake if required. */
+  /**
+   * Return the remote protocol.  Force a handshake if required.  @return the remote
+   *
+   * @throws IOException the io exception
+   */
   public Protocol getRemote() throws IOException {
     if (remote != null) return remote;            // already have it
     MD5 remoteHash = REMOTE_HASHES.get(transceiver.getRemoteName());
@@ -294,30 +334,68 @@ public abstract class Requestor {
   }
 
 
-  /** Writes a request message. */
+  /**
+   * Writes a request message.  @param schema the schema
+   *
+   * @param request the request
+   * @param out     the out
+   * @throws IOException the io exception
+   */
   public abstract void writeRequest(Schema schema, Object request,
                                     Encoder out) throws IOException;
 
+  /**
+   * Read response object.
+   *
+   * @param schema the schema
+   * @param in     the in
+   * @return the object
+   * @throws IOException the io exception
+   */
   @Deprecated                                     // for compatibility in 1.5
   public Object readResponse(Schema schema, Decoder in) throws IOException {
     return readResponse(schema, schema, in);
   }
 
-  /** Reads a response message. */
+  /**
+   * Reads a response message.  @param writer the writer
+   *
+   * @param reader the reader
+   * @param in     the in
+   * @return the object
+   * @throws IOException the io exception
+   */
   public abstract Object readResponse(Schema writer, Schema reader, Decoder in)
     throws IOException;
 
+  /**
+   * Read error object.
+   *
+   * @param schema the schema
+   * @param in     the in
+   * @return the object
+   * @throws IOException the io exception
+   */
   @Deprecated                                     // for compatibility in 1.5
   public Object readError(Schema schema, Decoder in) throws IOException {
     return readError(schema, schema, in);
   }
 
-  /** Reads an error message. */
+  /**
+   * Reads an error message.  @param writer the writer
+   *
+   * @param reader the reader
+   * @param in     the in
+   * @return the exception
+   * @throws IOException the io exception
+   */
   public abstract Exception readError(Schema writer, Schema reader, Decoder in)
     throws IOException;
 
   /**
    * Handles callbacks from transceiver invocations.
+   *
+   * @param <T> the type parameter
    */
   protected class TransceiverCallback<T> implements Callback<List<ByteBuffer>> {
     private final Request request;
@@ -325,7 +403,8 @@ public abstract class Requestor {
 
     /**
      * Creates a TransceiverCallback.
-     * @param request the request to set.
+     *
+     * @param request  the request to set.
      * @param callback the callback to set.
      */
     public TransceiverCallback(Request request, Callback<T> callback) {
@@ -390,9 +469,10 @@ public abstract class Requestor {
 
     /**
      * Creates a Request.
+     *
      * @param messageName the name of the message to invoke.
-     * @param request the request data to send.
-     * @param context the RPC context to use.
+     * @param request     the request data to send.
+     * @param context     the RPC context to use.
      */
     public Request(String messageName, Object request, RPCContext context) {
       this(messageName, request, context, null);
@@ -400,10 +480,11 @@ public abstract class Requestor {
 
     /**
      * Creates a Request.
+     *
      * @param messageName the name of the message to invoke.
-     * @param request the request data to send.
-     * @param context the RPC context to use.
-     * @param encoder the BinaryEncoder to use to serialize the request.
+     * @param request     the request data to send.
+     * @param context     the RPC context to use.
+     * @param encoder     the BinaryEncoder to use to serialize the request.
      */
     public Request(String messageName, Object request, RPCContext context,
                    BinaryEncoder encoder) {
@@ -416,6 +497,7 @@ public abstract class Requestor {
 
     /**
      * Copy constructor.
+     *
      * @param other Request from which to copy fields.
      */
     public Request(Request other) {
@@ -427,6 +509,7 @@ public abstract class Requestor {
 
     /**
      * Gets the message name.
+     *
      * @return the message name.
      */
     public String getMessageName() {
@@ -435,6 +518,7 @@ public abstract class Requestor {
 
     /**
      * Gets the RPC context.
+     *
      * @return the RPC context.
      */
     public RPCContext getContext() {
@@ -443,6 +527,7 @@ public abstract class Requestor {
 
     /**
      * Gets the Message associated with this request.
+     *
      * @return this request's message.
      */
     public Message getMessage() {
@@ -457,6 +542,7 @@ public abstract class Requestor {
 
     /**
      * Gets the request data, generating it first if necessary.
+     *
      * @return the request data.
      * @throws Exception if an error occurs generating the request data.
      */
@@ -503,6 +589,7 @@ public abstract class Requestor {
 
     /**
      * Creates a Response.
+     *
      * @param request the Request associated with this response.
      */
     public Response(Request request) {
@@ -511,8 +598,9 @@ public abstract class Requestor {
 
     /**
      * Creates a Creates a Response.
+     *
      * @param request the Request associated with this response.
-     * @param in the BinaryDecoder to use to deserialize the response.
+     * @param in      the BinaryDecoder to use to deserialize the response.
      */
     public Response(Request request, BinaryDecoder in) {
       this.request = request;
@@ -521,6 +609,7 @@ public abstract class Requestor {
 
     /**
      * Gets the RPC response, reading/deserializing it first if necessary.
+     *
      * @return the RPC response.
      * @throws Exception if an error occurs reading/deserializing the response.
      */

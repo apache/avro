@@ -35,7 +35,9 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 
-/** Tool to alter the codec of an Avro data file. */
+/**
+ * Tool to alter the codec of an Avro data file.
+ */
 public class RecodecTool implements Tool {
   @Override
   public int run(InputStream in, PrintStream out, PrintStream err,

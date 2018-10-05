@@ -34,7 +34,15 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * The type Test recodec tool.
+ */
 public class TestRecodecTool {
+  /**
+   * Test recodec.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRecodec() throws Exception {
     String metaKey = "myMetaKey";

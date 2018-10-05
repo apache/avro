@@ -35,7 +35,9 @@ import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 
-/** Converts an input file from Avro binary into JSON. */
+/**
+ * Converts an input file from Avro binary into JSON.
+ */
 public class BinaryFragmentToJsonTool implements Tool {
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,
