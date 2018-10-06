@@ -21,7 +21,7 @@ cd `dirname "$0"`/../../../..   # connect to root
 
 VERSION=`cat share/VERSION.txt`
 
-#set -x                          # echo commands
+set -x                          # echo commands
 
 java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
 java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
@@ -29,21 +29,25 @@ java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive
 py_client="python lang/py/build/src/avro/tool.py rpcsend"
 py_server="python lang/py/build/src/avro/tool.py rpcreceive"
 
-ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
-ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
+#ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
+#ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
 
 export PYTHONPATH=lang/py/build/src      # path to avro Python module
 
-clients=("$java_client" "$py_client" "$ruby_client")
-servers=("$java_server" "$py_server" "$ruby_server")
+#clients=("$java_client" "$py_client" "$ruby_client")
+#servers=("$java_server" "$py_server" "$ruby_server")
+clients=("$java_client" "$py_client")
+servers=("$java_server" "$py_server")
 
 proto=share/test/schemas/simple.avpr
 
 portfile=/tmp/interop_$$
 
 function cleanup() {
-  rm -rf $portfile
-  for job in `jobs -p` ; do kill $job; done
+  rm -rf "$portfile"
+  for job in `jobs -p` ; do
+    kill $(jobs -p) 2>/dev/null || true;
+  done
 }
 
 trap 'cleanup' EXIT
@@ -58,9 +62,8 @@ do
       echo TEST: $c
       for client in "${clients[@]}"
       do
-        rm -rf $portfile
-        $server http://127.0.0.1:0/ $proto $msg -file $c/response.avro \
-            > $portfile &
+        rm -rf "$portfile"
+        $server http://127.0.0.1:0/ $proto $msg -file $c/response.avro > $portfile &
         count=0
         while [ ! -s $portfile ]
         do
@@ -79,5 +82,3 @@ do
     done
     done
 done
-
-echo RPC INTEROP TESTS PASS

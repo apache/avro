@@ -32,14 +32,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
-import org.junit.BeforeClass;
-import org.junit.AfterClass;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 
 @SuppressWarnings("deprecation")
 public class TestTextFileTools {
@@ -47,16 +45,18 @@ public class TestTextFileTools {
     Integer.parseInt(System.getProperty("test.count", "10"));
 
   private static final byte[] LINE_SEP = System.getProperty("line.separator").getBytes();
-  static File linesFile;
-  static ByteBuffer[] lines;
+  private static File linesFile;
+  private static ByteBuffer[] lines;
   static Schema schema;
-  static File schemaFile;
+
+  @ClassRule
+  public static TemporaryFolder DIR = new TemporaryFolder();
 
   @BeforeClass
   public static void writeRandomFile() throws IOException {
     schema = Schema.create(Type.BYTES);
     lines = new ByteBuffer[COUNT];
-    linesFile = AvroTestUtil.tempFile(TestTextFileTools.class, "random.lines");
+    linesFile = new File(DIR.getRoot(), "random.lines");
 
     OutputStream out =
       new BufferedOutputStream(new FileOutputStream(linesFile));
@@ -78,10 +78,9 @@ public class TestTextFileTools {
   }
 
   private void fromText(String name, String... args) throws Exception {
-    File avroFile = AvroTestUtil.tempFile(getClass(), name + ".avro");
+    File avroFile = new File(DIR.getRoot(), name + ".avro");
 
-    ArrayList<String> arglist = new ArrayList<>();
-    arglist.addAll(Arrays.asList(args));
+    ArrayList<String> arglist = new ArrayList<>(Arrays.asList(args));
     arglist.add(linesFile.toString());
     arglist.add(avroFile.toString());
 
@@ -114,8 +113,8 @@ public class TestTextFileTools {
   }
 
   private static void toText(String name) throws Exception {
-    File avroFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".avro");
-    File outFile = AvroTestUtil.tempFile(TestTextFileTools.class, name + ".lines");
+    File avroFile = new File(DIR.getRoot(), name + ".avro");
+    File outFile = new File(DIR.getRoot(), name + ".lines");
 
     ArrayList<String> arglist = new ArrayList<>();
     arglist.add(avroFile.toString());
@@ -124,16 +123,14 @@ public class TestTextFileTools {
     new ToTextTool().run(null, null, null, arglist);
 
     // Read it back, and make sure it's valid.
-    InputStream orig = new BufferedInputStream(new FileInputStream(linesFile));
-    InputStream after = new BufferedInputStream(new FileInputStream(outFile));
-
-    int b;
-    while ((b = orig.read()) != -1)
-      assertEquals(b, after.read());
-    assertEquals(-1, after.read());
-
-    orig.close();
-    after.close();
+    try(InputStream orig = new BufferedInputStream(new FileInputStream(linesFile))) {
+      try (InputStream after = new BufferedInputStream(new FileInputStream(outFile))) {
+        int b;
+        while ((b = orig.read()) != -1) {
+          assertEquals(b, after.read());
+        }
+        assertEquals(-1, after.read());
+      }
+    }
   }
-
 }

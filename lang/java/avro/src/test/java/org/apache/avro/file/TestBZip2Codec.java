@@ -17,11 +17,12 @@
  */
 package org.apache.avro.file;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.junit.Test;
-import static org.junit.Assert.assertTrue;
 
 public class TestBZip2Codec {
 

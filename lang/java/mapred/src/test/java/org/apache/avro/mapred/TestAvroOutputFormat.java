@@ -21,8 +21,7 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestAvroOutputFormat {
   @Test
@@ -32,23 +31,23 @@ public class TestAvroOutputFormat {
     AvroOutputFormat.setSyncInterval(jobConf, newSyncInterval);
 
     assertEquals(newSyncInterval, jobConf.getInt(
-        AvroOutputFormat.SYNC_INTERVAL_KEY, -1));
+            AvroOutputFormat.SYNC_INTERVAL_KEY, -1));
   }
 
   @Test
   public void testNoCodec() {
     JobConf job = new JobConf();
-    assertTrue(AvroOutputFormat.getCodecFactory(job) == null);
+    assertNull(AvroOutputFormat.getCodecFactory(job));
 
     job = new JobConf();
     job.set("mapred.output.compress", "false");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.BZip2Codec");
-    assertTrue(AvroOutputFormat.getCodecFactory(job) == null);
+    assertNull(AvroOutputFormat.getCodecFactory(job));
 
     job = new JobConf();
     job.set("mapred.output.compress", "false");
     job.set(AvroJob.OUTPUT_CODEC, "bzip2");
-    assertTrue(AvroOutputFormat.getCodecFactory(job) == null);
+    assertNull(AvroOutputFormat.getCodecFactory(job));
   }
 
   @Test
@@ -59,8 +58,8 @@ public class TestAvroOutputFormat {
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.BZip2Codec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroBZip2Codec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroBZip2Codec.getClass());
   }
 
   @Test
@@ -71,8 +70,8 @@ public class TestAvroOutputFormat {
     job.set("mapred.output.compress", "true");
     job.set(AvroJob.OUTPUT_CODEC, "bzip2");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroBZip2Codec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroBZip2Codec.getClass());
   }
 
   @Test
@@ -83,8 +82,8 @@ public class TestAvroOutputFormat {
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.DeflateCodec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroDeflateCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroDeflateCodec.getClass());
   }
 
   @Test
@@ -95,8 +94,8 @@ public class TestAvroOutputFormat {
     job.set("mapred.output.compress", "true");
     job.set(AvroJob.OUTPUT_CODEC, "deflate");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroDeflateCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroDeflateCodec.getClass());
   }
 
   @Test
@@ -107,8 +106,8 @@ public class TestAvroOutputFormat {
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroSnappyCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroSnappyCodec.getClass());
   }
 
   @Test
@@ -119,8 +118,8 @@ public class TestAvroOutputFormat {
     job.set("mapred.output.compress", "true");
     job.set(AvroJob.OUTPUT_CODEC, "snappy");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroSnappyCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroSnappyCodec.getClass());
   }
 
   @Test
@@ -131,9 +130,7 @@ public class TestAvroOutputFormat {
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.GZipCodec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroDeflateCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroDeflateCodec.getClass());
   }
-
-
 }
