@@ -38,6 +38,8 @@ do
   case "$target" in
 
     test)
+      java -version
+
       # run lang-specific tests
       (cd lang/java; ./build.sh test)
       # install java artifacts required by other builds and interop tests
