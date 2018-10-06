@@ -60,8 +60,7 @@ case "$target" in
     ;;
 
   interop-data-test)
-    #(cd avro/; mvn -B -P interop-data-test)
-    echo "Not (yet) implemented"
+    mvn -B -P interop-data-test
     ;;
 
   *)
@@ -69,5 +68,3 @@ case "$target" in
 esac
 
 done
-
-exit 0

@@ -68,6 +68,3 @@ case "$1" in
      *)
        echo "Usage: $0 {interop-data-generate|test-interop|test|dist|clean}"
 esac
-
-
-exit 0

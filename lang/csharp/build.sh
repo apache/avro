@@ -70,5 +70,3 @@ case "$1" in
     echo "Usage: $0 {test|clean|dist|perf}"
     exit 1
 esac
-
-exit 0

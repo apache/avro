@@ -26,12 +26,6 @@ function usage {
   exit 1
 }
 
-headline(){
-  echo -e "\e[1;34m#################################################################"
-  echo -e "##### $1 \e[1;37m"
-  echo -e "\e[1;34m#################################################################\e[0m"
-}
-
 if [ $# -eq 0 ]
 then
   usage
@@ -54,7 +48,7 @@ do
       do
         for lang in `pwd`/lang/*/
         do
-          headline "Run ${buildstep} for $lang"
+          headline "##### Run ${buildstep} for $lang"
 
           if [[ "$lang" = *"c++"* ]]; then
             # The current cpp tests are failing:
@@ -250,5 +244,3 @@ UserSpecificDocker
   esac
 
 done
-
-exit 0

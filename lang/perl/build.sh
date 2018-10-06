@@ -69,5 +69,3 @@ case "$target" in
 esac
 
 done
-
-exit 0

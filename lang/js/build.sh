@@ -47,5 +47,3 @@ case "$1" in
     echo "Usage: $0 {test|dist|clean|interop-data-generate|interop-data-test}" >&2
     exit 1
 esac
-
-exit 0
