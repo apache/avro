@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <boost/algorithm/string/replace.hpp>
 #include <sstream>
 
 #include "Compiler.hh"
@@ -100,6 +101,13 @@ static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
     throw Exception(boost::format("Unknown type: %1%") % n.fullname());
 }
 
+/** Returns "true" if the field is in the container */
+// e.g.: can be false for non-mandatory fields
+bool containsField(const Object& m, const string& fieldName) {
+  Object::const_iterator it = m.find(fieldName);
+  return it != m.end();
+}
+
 const json::Object::const_iterator findField(const Entity& e,
     const Object& m, const string& fieldName)
 {
@@ -142,6 +150,19 @@ const int64_t getLongField(const Entity& e, const Object& m,
     Object::const_iterator it = findField(e, m, fieldName);
     ensureType<int64_t>(it->second, fieldName);
     return it->second.longValue();
+}
+
+// Unescape double quotes (") for de-serialization.  This method complements the
+// method NodeImpl::escape() which is used for serialization.
+static void unescape(std::string& s) {
+  boost::replace_all(s, "\\\"", "\"");
+}
+
+const std::string getDocField(const Entity& e, const Object& m)
+{
+  std::string doc = getStringField(e, m, "doc");
+  unescape(doc);
+  return doc;
 }
 
 struct Field {
@@ -314,16 +335,20 @@ static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
     Object::const_iterator it = findField(e, m, "type");
     map<string, Entity>::const_iterator it2 = m.find("default");
     NodePtr node = makeNode(it->second, st, ns);
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
     GenericDatum d = (it2 == m.end()) ? GenericDatum() :
         makeGenericDatum(node, it2->second, st);
     return Field(n, node, d);
 }
 
-static NodePtr makeRecordNode(const Entity& e,
-    const Name& name, const Object& m, SymbolTable& st, const string& ns)
-{
+// Extended makeRecordNode (with doc).
+static NodePtr makeRecordNode(const Entity& e, const Name& name,
+                              const std::string* doc, const Object& m,
+                              SymbolTable& st, const std::string& ns) {
     const Array& v = getArrayField(e, m, "fields");
-    concepts::MultiAttribute<string> fieldNames;
+    concepts::MultiAttribute<std::string> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
     vector<GenericDatum> defaultValues;
 
@@ -333,8 +358,15 @@ static NodePtr makeRecordNode(const Entity& e,
         fieldValues.add(f.schema);
         defaultValues.push_back(f.defaultValue);
     }
-    return NodePtr(new NodeRecord(asSingleAttribute(name),
-        fieldValues, fieldNames, defaultValues));
+    NodeRecord* node;
+    if (doc == nullptr) {
+        node = new NodeRecord(asSingleAttribute(name), fieldValues, fieldNames,
+                              defaultValues);
+    } else {
+        node = new NodeRecord(asSingleAttribute(name), asSingleAttribute(*doc),
+                              fieldValues, fieldNames, defaultValues);
+    }
+    return NodePtr(node);
 }
 
 static NodePtr makeEnumNode(const Entity& e,
@@ -349,7 +381,11 @@ static NodePtr makeEnumNode(const Entity& e,
         }
         symbols.add(it->stringValue());
     }
-    return NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
+    NodePtr node = NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static NodePtr makeFixedNode(const Entity& e,
@@ -360,16 +396,24 @@ static NodePtr makeFixedNode(const Entity& e,
         throw Exception(boost::format("Size for fixed is not positive: ") %
             e.toString());
     }
-    return NodePtr(new NodeFixed(asSingleAttribute(name),
-        asSingleAttribute(v)));
+    NodePtr node =
+        NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(v)));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static NodePtr makeArrayNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
     Object::const_iterator it = findField(e, m, "items");
-    return NodePtr(new NodeArray(asSingleAttribute(
-        makeNode(it->second, st, ns))));
+    NodePtr node = NodePtr(new NodeArray(
+        asSingleAttribute(makeNode(it->second, st, ns, hasNamespace))));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static NodePtr makeMapNode(const Entity& e, const Object& m,
@@ -377,8 +421,12 @@ static NodePtr makeMapNode(const Entity& e, const Object& m,
 {
     Object::const_iterator it = findField(e, m, "values");
 
-    return NodePtr(new NodeMap(asSingleAttribute(
-        makeNode(it->second, st, ns))));
+    NodePtr node = NodePtr(new NodeMap(
+        asSingleAttribute(makeNode(it->second, st, ns, hasNamespace))));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static Name getName(const Entity& e, const Object& m, const string& ns)
@@ -416,9 +464,21 @@ static NodePtr makeNode(const Entity& e, const Object& m,
         if (type == "record" || type == "error") {
             result = NodePtr(new NodeRecord());
             st[nm] = result;
-            NodePtr r = makeRecordNode(e, nm, m, st, nm.ns());
-            (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
-                *boost::dynamic_pointer_cast<NodeRecord>(result));
+            // Get field doc
+            if (containsField(m, "doc")) {
+                std::string doc = getDocField(e, m);
+
+                NodePtr r = makeRecordNode(e, nm, &doc, m, st, nm.ns(),
+                                           nm.hasNamespace());
+                (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
+                    *boost::dynamic_pointer_cast<NodeRecord>(result));
+            } else {  // No doc
+                NodePtr r =
+                    makeRecordNode(e, nm, nullptr, m, st, nm.ns(),
+                                   nm.hasNamespace());
+                (boost::dynamic_pointer_cast<NodeRecord>(r))
+                    ->swap(*boost::dynamic_pointer_cast<NodeRecord>(result));
+            }
         } else {
             result = (type == "enum") ? makeEnumNode(e, nm, m) :
                 makeFixedNode(e, nm, m);

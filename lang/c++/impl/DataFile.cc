@@ -99,7 +99,7 @@ DataFileWriterBase::DataFileWriterBase(const char* filename,
     } else {
       throw Exception(boost::format("Unknown codec: %1%") % codec);
     }
-    setMetadata(AVRO_SCHEMA_KEY, toString(schema));
+    setMetadata(AVRO_SCHEMA_KEY, schema.toJson(false));
 
     writeHeader();
     encoderPtr_->init(*buffer_);
@@ -266,7 +266,7 @@ void DataFileReaderBase::init()
 void DataFileReaderBase::init(const ValidSchema& readerSchema)
 {
     readerSchema_ = readerSchema;
-    dataDecoder_  = (toString(readerSchema_) != toString(dataSchema_)) ?
+    dataDecoder_  = (readerSchema_.toJson(true) != dataSchema_.toJson(true)) ?
         resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) :
         binaryDecoder();
     readDataBlock();

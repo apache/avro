@@ -32,10 +32,10 @@
 namespace avro {
 
 /// Implementation details for Node.  NodeImpl represents all the avro types,
-/// whose properties are enabled are disabled by selecting concept classes.
+/// whose properties are enabled and disabled by selecting concept classes.
 
-template 
-< 
+template
+<
     class NameConcept,
     class LeavesConcept,
     class LeafNamesConcept,
@@ -49,25 +49,43 @@ class NodeImpl : public Node
     NodeImpl(Type type) :
         Node(type),
         nameAttribute_(),
+        docAttribute_(),
         leafAttributes_(),
         leafNameAttributes_(),
         sizeAttribute_()
     { }
 
-    NodeImpl(Type type, 
-             const NameConcept &name, 
-             const LeavesConcept &leaves, 
+    NodeImpl(Type type,
+             const NameConcept &name,
+             const LeavesConcept &leaves,
              const LeafNamesConcept &leafNames,
              const SizeConcept &size) :
         Node(type),
         nameAttribute_(name),
+        docAttribute_(),
         leafAttributes_(leaves),
         leafNameAttributes_(leafNames),
         sizeAttribute_(size)
     { }
 
+    // Ctor with "doc"
+    NodeImpl(Type type,
+             const NameConcept &name,
+             const concepts::SingleAttribute<std::string> &doc,
+             const LeavesConcept &leaves,
+             const LeafNamesConcept &leafNames,
+             const SizeConcept &size) :
+        Node(type),
+        nameAttribute_(name),
+        docAttribute_(doc),
+        leafAttributes_(leaves),
+        leafNameAttributes_(leafNames),
+        sizeAttribute_(size)
+    {}
+
     void swap(NodeImpl& impl) {
         std::swap(nameAttribute_, impl.nameAttribute_);
+        std::swap(docAttribute_, impl.docAttribute_);
         std::swap(leafAttributes_, impl.leafAttributes_);
         std::swap(leafNameAttributes_, impl.leafNameAttributes_);
         std::swap(sizeAttribute_, impl.sizeAttribute_);
@@ -75,18 +93,27 @@ class NodeImpl : public Node
     }
 
     bool hasName() const {
+        // e.g.: true for single and multiattributes, false for noattributes.
         return NameConcept::hasAttribute;
     }
 
     void doSetName(const Name &name) {
         nameAttribute_.add(name);
     }
-    
+
     const Name &name() const {
         return nameAttribute_.get();
     }
 
-    void doAddLeaf(const NodePtr &newLeaf) { 
+    void doSetDoc(const std::string &doc) {
+      docAttribute_.add(doc);
+    }
+
+    const std::string &getDoc() const {
+      return docAttribute_.get();
+    }
+
+    void doAddLeaf(const NodePtr &newLeaf) {
         leafAttributes_.add(newLeaf);
     }
 
@@ -94,11 +121,11 @@ class NodeImpl : public Node
         return leafAttributes_.size();
     }
 
-    const NodePtr &leafAt(int index) const { 
+    const NodePtr &leafAt(int index) const {
         return leafAttributes_.get(index);
     }
 
-    void doAddName(const std::string &name) { 
+    void doAddName(const std::string &name) {
         if (! nameIndex_.add(name, leafNameAttributes_.size())) {
             throw Exception(boost::format("Cannot add duplicate name: %1%") % name);
         }
@@ -109,7 +136,7 @@ class NodeImpl : public Node
         return leafNameAttributes_.size();
     }
 
-    const std::string &nameAt(int index) const { 
+    const std::string &nameAt(int index) const {
         return leafNameAttributes_.get(index);
     }
 
@@ -130,12 +157,12 @@ class NodeImpl : public Node
     void printBasicInfo(std::ostream &os) const;
 
     void setLeafToSymbolic(int index, const NodePtr &node);
-   
+
     SchemaResolution furtherResolution(const Node &reader) const {
         SchemaResolution match = RESOLVE_NO_MATCH;
 
         if (reader.type() == AVRO_SYMBOLIC) {
-    
+
             // resolve the symbolic type, and check again
             const NodePtr &node = reader.leafAt(0);
             match = resolve(*node);
@@ -145,7 +172,7 @@ class NodeImpl : public Node
             // in this case, need to see if there is an exact match for the
             // writer's type, or if not, the first one that can be promoted to a
             // match
-        
+
             for(size_t i= 0; i < reader.leaves(); ++i)  {
 
                 const NodePtr &node = reader.leafAt(i);
@@ -157,7 +184,7 @@ class NodeImpl : public Node
                     break;
                 }
 
-                // thisMatch is either no match, or promotable, this will set match to 
+                // thisMatch is either no match, or promotable, this will set match to
                 // promotable if it hasn't been set already
                 if (match == RESOLVE_NO_MATCH) {
                     match = thisMatch;
@@ -169,6 +196,10 @@ class NodeImpl : public Node
     }
 
     NameConcept nameAttribute_;
+
+    // Rem: NameConcept type is HasName (= SingleAttribute<Name>), we use std::string instead
+    concepts::SingleAttribute<std::string> docAttribute_; /** Doc used to compare schemas */
+
     LeavesConcept leafAttributes_;
     LeafNamesConcept leafNameAttributes_;
     SizeConcept sizeAttribute_;
@@ -177,6 +208,8 @@ class NodeImpl : public Node
 
 typedef concepts::NoAttribute<Name>     NoName;
 typedef concepts::SingleAttribute<Name> HasName;
+
+typedef concepts::SingleAttribute<std::string> HasDoc;
 
 typedef concepts::NoAttribute<NodePtr>      NoLeaves;
 typedef concepts::SingleAttribute<NodePtr>  SingleLeaf;
@@ -265,15 +298,29 @@ class AVRO_DECL NodeSymbolic : public NodeImplSymbolic
 class AVRO_DECL NodeRecord : public NodeImplRecord {
     std::vector<GenericDatum> defaultValues;
 public:
-    NodeRecord() : NodeImplRecord(AVRO_RECORD) { } 
+    NodeRecord() : NodeImplRecord(AVRO_RECORD) { }
     NodeRecord(const HasName &name, const MultiLeaves &fields,
         const LeafNames &fieldsNames,
         const std::vector<GenericDatum>& dv) :
         NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize()),
-        defaultValues(dv) { 
+        defaultValues(dv) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                 throw Exception(boost::format(
+                    "Cannot add duplicate name: %1%") %
+                    leafNameAttributes_.get(i));
+            }
+        }
+    }
+
+    NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
+        const LeafNames &fieldsNames,
+        const std::vector<GenericDatum>& dv) :
+        NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, NoSize()),
+        defaultValues(dv) {
+        for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
+            if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
+                throwException(boost::format(
                     "Cannot add duplicate name: %1%") %
                     leafNameAttributes_.get(i));
             }
@@ -290,7 +337,7 @@ public:
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
-        return ((nameAttribute_.size() == 1) && 
+        return ((nameAttribute_.size() == 1) &&
             (leafAttributes_.size() == leafNameAttributes_.size()));
     }
 
@@ -304,27 +351,27 @@ class AVRO_DECL NodeEnum : public NodeImplEnum
   public:
 
     NodeEnum() :
-        NodeImplEnum(AVRO_ENUM) 
+        NodeImplEnum(AVRO_ENUM)
     { }
 
     NodeEnum(const HasName &name, const LeafNames &symbols) :
         NodeImplEnum(AVRO_ENUM, name, NoLeaves(), symbols, NoSize())
-    { 
+    {
         for(size_t i=0; i < leafNameAttributes_.size(); ++i) {
             if(!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                  throw Exception(boost::format("Cannot add duplicate name: %1%") % leafNameAttributes_.get(i));
             }
         }
     }
-        
+
     SchemaResolution resolve(const Node &reader)  const;
 
     void printJson(std::ostream &os, int depth) const;
 
     bool isValid() const {
         return (
-                (nameAttribute_.size() == 1) && 
-                (leafNameAttributes_.size() > 0) 
+                (nameAttribute_.size() == 1) &&
+                (leafNameAttributes_.size() > 0)
                );
     }
 };
@@ -356,14 +403,14 @@ class AVRO_DECL NodeMap : public NodeImplMap
 
     NodeMap() :
         NodeImplMap(AVRO_MAP)
-    { 
+    {
          NodePtr key(new NodePrimitive(AVRO_STRING));
          doAddLeaf(key);
     }
 
     explicit NodeMap(const SingleLeaf &values) :
         NodeImplMap(AVRO_MAP, NoName(), values, NoLeafNames(), NoSize())
-    { 
+    {
         // need to add the key for the map too
         NodePtr key(new NodePrimitive(AVRO_STRING));
         doAddLeaf(key);
@@ -473,19 +520,19 @@ class AVRO_DECL NodeFixed : public NodeImplFixed
 
     bool isValid() const {
         return (
-                (nameAttribute_.size() == 1) && 
-                (sizeAttribute_.size() == 1) 
+                (nameAttribute_.size() == 1) &&
+                (sizeAttribute_.size() == 1)
                );
     }
 };
 
 template < class A, class B, class C, class D >
-inline void 
+inline void
 NodeImpl<A,B,C,D>::setLeafToSymbolic(int index, const NodePtr &node)
 {
     if(!B::hasAttribute) {
         throw Exception("Cannot change leaf node for nonexistent leaf");
-    } 
+    }
 
     NodePtr &replaceNode = const_cast<NodePtr &>(leafAttributes_.get(index));
     if(replaceNode->name() != node->name()) {
@@ -501,7 +548,7 @@ NodeImpl<A,B,C,D>::setLeafToSymbolic(int index, const NodePtr &node)
 }
 
 template < class A, class B, class C, class D >
-inline void 
+inline void
 NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
 {
     os << type();
@@ -529,7 +576,7 @@ NodeImpl<A,B,C,D>::printBasicInfo(std::ostream &os) const
 }
 
 
-inline NodePtr resolveSymbol(const NodePtr &node) 
+inline NodePtr resolveSymbol(const NodePtr &node)
 {
     if(node->type() != AVRO_SYMBOLIC) {
         throw Exception("Only symbolic nodes may be resolved");

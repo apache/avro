@@ -51,6 +51,15 @@ RecordSchema::addField(const std::string &name, const Schema &fieldSchema)
     node_->addLeaf(fieldSchema.root());
 }
 
+std::string RecordSchema::getDoc() const
+{
+    return node_->getDoc();
+}
+void RecordSchema::setDoc(const std::string& doc)
+{
+    node_->setDoc(doc);
+}
+
 EnumSchema::EnumSchema(const std::string &name) :
     Schema(new NodeEnum)
 {

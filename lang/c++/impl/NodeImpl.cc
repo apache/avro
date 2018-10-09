@@ -21,7 +21,7 @@
 
 namespace avro {
 
-SchemaResolution 
+SchemaResolution
 NodePrimitive::resolve(const Node &reader) const
 {
     if(type() == reader.type()) {
@@ -32,17 +32,17 @@ NodePrimitive::resolve(const Node &reader) const
 
       case AVRO_INT:
 
-        if( reader.type() == AVRO_LONG ) { 
+        if( reader.type() == AVRO_LONG ) {
             return RESOLVE_PROMOTABLE_TO_LONG;
-        }   
+        }
 
         // fall-through intentional
 
       case AVRO_LONG:
- 
+
         if (reader.type() == AVRO_FLOAT) {
             return RESOLVE_PROMOTABLE_TO_FLOAT;
-        }   
+        }
 
         // fall-through intentional
 
@@ -50,16 +50,16 @@ NodePrimitive::resolve(const Node &reader) const
 
         if (reader.type() == AVRO_DOUBLE) {
             return RESOLVE_PROMOTABLE_TO_DOUBLE;
-        }   
+        }
 
       default:
         break;
-    }   
+    }
 
     return furtherResolution(reader);
 }
 
-SchemaResolution 
+SchemaResolution
 NodeRecord::resolve(const Node &reader) const
 {
     if(reader.type() == AVRO_RECORD) {
@@ -70,7 +70,7 @@ NodeRecord::resolve(const Node &reader) const
     return furtherResolution(reader);
 }
 
-SchemaResolution 
+SchemaResolution
 NodeEnum::resolve(const Node &reader) const
 {
     if(reader.type() == AVRO_ENUM) {
@@ -79,7 +79,7 @@ NodeEnum::resolve(const Node &reader) const
     return furtherResolution(reader);
 }
 
-SchemaResolution 
+SchemaResolution
 NodeArray::resolve(const Node &reader) const
 {
     if(reader.type() == AVRO_ARRAY) {
@@ -89,7 +89,7 @@ NodeArray::resolve(const Node &reader) const
     return furtherResolution(reader);
 }
 
-SchemaResolution 
+SchemaResolution
 NodeMap::resolve(const Node &reader) const
 {
     if(reader.type() == AVRO_MAP) {
@@ -100,7 +100,7 @@ NodeMap::resolve(const Node &reader) const
 }
 
 SchemaResolution
-NodeUnion::resolve(const Node &reader) const 
+NodeUnion::resolve(const Node &reader) const
 {
 
     // If the writer is union, resolution only needs to occur when the selected
@@ -109,7 +109,7 @@ NodeUnion::resolve(const Node &reader) const
     // In this case, this function returns if there is a possible match given
     // any writer type, so just search type by type returning the best match
     // found.
-    
+
     SchemaResolution match = RESOLVE_NO_MATCH;
     for(size_t i=0; i < leaves(); ++i) {
         const NodePtr &node = leafAt(i);
@@ -125,32 +125,32 @@ NodeUnion::resolve(const Node &reader) const
     return match;
 }
 
-SchemaResolution 
+SchemaResolution
 NodeFixed::resolve(const Node &reader) const
 {
     if(reader.type() == AVRO_FIXED) {
         return (
                 (reader.fixedSize() == fixedSize()) &&
-                (reader.name() == name()) 
-            ) ? 
+                (reader.name() == name())
+            ) ?
             RESOLVE_MATCH : RESOLVE_NO_MATCH;
     }
     return furtherResolution(reader);
 }
 
-SchemaResolution 
+SchemaResolution
 NodeSymbolic::resolve(const Node &reader) const
 {
     const NodePtr &node = leafAt(0);
     return node->resolve(reader);
 }
 
-// Wrap an indentation in a struct for ostream operator<< 
-struct indent { 
+// Wrap an indentation in a struct for ostream operator<<
+struct indent {
     indent(int depth) :
         d(depth)
     { }
-    int d; 
+    int d;
 };
 
 /// ostream operator for indent
@@ -158,21 +158,27 @@ std::ostream& operator <<(std::ostream &os, indent x)
 {
     static const std::string spaces("    ");
     while(x.d--) {
-        os << spaces; 
+        os << spaces;
     }
     return os;
 }
 
-void 
+void
 NodePrimitive::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << type() << '\"';
+    if (getDoc().size()) {
+        os << ",\n" << indent(depth) << "\"doc\": \"" << getDoc() << "\"";
+    }
 }
 
-void 
+void
 NodeSymbolic::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << nameAttribute_.get() << '\"';
+    if (getDoc().size()) {
+        os << ",\n" << indent(depth) << "\"doc\": \"" << getDoc() << "\"";
+    }
 }
 
 static void printName(std::ostream& os, const Name& n, int depth)
@@ -183,12 +189,15 @@ static void printName(std::ostream& os, const Name& n, int depth)
     os << indent(depth) << "\"name\": \"" << n.simpleName() << "\",\n";
 }
 
-void 
+void
 NodeRecord::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
     printName(os, nameAttribute_.get(), depth);
+    if (getDoc().size()) {
+        os << indent(depth) << "\"doc\": \"" << getDoc() << "\",\n";
+    }
     os << indent(depth) << "\"fields\": [";
 
     int fields = leafAttributes_.size();
@@ -208,11 +217,14 @@ NodeRecord::printJson(std::ostream &os, int depth) const
     os << indent(--depth) << '}';
 }
 
-void 
+void
 NodeEnum::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
+    if (getDoc().size()) {
+        os << indent(depth) << "\"doc\": \"" << getDoc() << "\",\n";
+    }
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
@@ -229,29 +241,35 @@ NodeEnum::printJson(std::ostream &os, int depth) const
     os << indent(--depth) << '}';
 }
 
-void 
+void
 NodeArray::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(depth+1) << "\"type\": \"array\",\n";
+    if (getDoc().size()) {
+        os << indent(depth+1) << "\"doc\": \"" << getDoc() << "\",\n";
+    }
     os << indent(depth+1) <<  "\"items\": ";
     leafAttributes_.get()->printJson(os, depth+1);
     os << '\n';
     os << indent(depth) << '}';
 }
 
-void 
+void
 NodeMap::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(depth+1) <<"\"type\": \"map\",\n";
+    if (getDoc().size()) {
+        os << indent(depth+1) << "\"doc\": \"" << getDoc() << "\",\n";
+    }
     os << indent(depth+1) << "\"values\": ";
     leafAttributes_.get(1)->printJson(os, depth+1);
     os << '\n';
     os << indent(depth) << '}';
 }
 
-void 
+void
 NodeUnion::printJson(std::ostream &os, int depth) const
 {
     os << "[\n";
@@ -268,11 +286,14 @@ NodeUnion::printJson(std::ostream &os, int depth) const
     os << indent(--depth) << ']';
 }
 
-void 
+void
 NodeFixed::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
+    if (getDoc().size()) {
+        os << indent(depth) << "\"doc\": \"" << getDoc() << "\",\n";
+    }
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"size\": " << sizeAttribute_.get() << "\n";
     os << indent(--depth) << '}';

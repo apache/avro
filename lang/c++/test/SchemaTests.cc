@@ -47,42 +47,42 @@ const char* basicSchemas[] = {
     "{ \"type\": \"string\" }",
 
     // Record
-    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": []}",
-    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f\",\"type\": \"long\"}]}",
-    "{\"type\": \"record\",\"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\",\"type\": \"long\"},"
-        "{\"name\": \"f2\", \"type\": \"int\"}]}",
-    "{\"type\": \"error\",\"name\": \"Test\",\"fields\": "
-        "[{\"name\": \"f1\",\"type\": \"long\"},"
-        "{\"name\": \"f2\", \"type\": \"int\"}]}",
+    "{\"type\":\"record\",\"name\":\"Test\",\"doc\":\"Doc_string\",\"fields\":[]}",
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f\",\"type\":\"long\"}]}",
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f1\",\"type\":\"long\",\"doc\":\"field_doc\"},"
+        "{\"name\":\"f2\",\"type\":\"int\"}]}",
+    "{\"type\":\"error\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f1\",\"type\":\"long\"},"
+        "{\"name\":\"f2\",\"type\":\"int\"}]}",
 
     // Recursive.
     "{\"type\":\"record\",\"name\":\"LongList\","
-        "\"fields\":[{\"name\":\"value\",\"type\":\"long\"},"
+        "\"fields\":[{\"name\":\"value\",\"type\":\"long\",\"doc\":\"recursive_doc\"},"
         "{\"name\":\"next\",\"type\":[\"LongList\",\"null\"]}]}",
     // Enum
-    "{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}",
+    "{\"type\":\"enum\",\"doc\":\"enum_doc\",\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}",
 
     // Array
-    "{\"type\": \"array\", \"items\": \"long\"}",
-    "{\"type\": \"array\",\"items\": {\"type\": \"enum\", "
-        "\"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}}",
+    "{\"type\":\"array\",\"doc\":\"array_doc\",\"items\":\"long\"}",
+    "{\"type\":\"array\",\"items\":{\"type\":\"enum\","
+        "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
 
     // Map
-    "{\"type\": \"map\", \"values\": \"long\"}",
-    "{\"type\": \"map\",\"values\": {\"type\": \"enum\", "
-        "\"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}}",
+    "{\"type\":\"map\",\"doc\":\"map_doc\",\"values\":\"long\"}",
+    "{\"type\":\"map\",\"values\":{\"type\":\"enum\", "
+        "\"name\":\"Test\",\"symbols\":[\"A\",\"B\"]}}",
 
     // Union
-    "[\"string\", \"null\", \"long\"]",
+    "[\"string\",\"null\",\"long\"]",
 
     // Fixed
-    "{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}",
-    "{\"type\": \"fixed\", \"name\": \"MyFixed\", "
-        "\"namespace\": \"org.apache.hadoop.avro\", \"size\": 1}",
-    "{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}",
-    "{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}",
+    "{\"type\":\"fixed\",\"doc\":\"fixed_doc\",\"name\":\"Test\",\"size\":1}",
+    "{\"type\":\"fixed\",\"name\":\"MyFixed\","
+        "\"namespace\":\"org.apache.hadoop.avro\",\"size\":1}",
+    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
+    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
 
     // Extra attributes (should be ignored)
     "{\"type\": \"null\", \"extra attribute\": \"should be ignored\"}",
@@ -135,7 +135,7 @@ const char* basicSchemaErrors[] = {
     // Duplicate type
     "[{\"type\": \"array\", \"items\": \"long\"}, "
         "{\"type\": \"array\", \"items\": \"string\"}]",
-        
+
     // Fixed
     // No size
     "{\"type\": \"fixed\", \"name\": \"Missing size\"}",
@@ -166,7 +166,7 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":"
         "[{\"name\":\"f1\",\"type\":\"long\"},"
         "{\"name\":\"f2\",\"type\":\"int\"}]}",
-/* Avro-C++ cannot do a round-trip on error schemas. 
+/* Avro-C++ cannot do a round-trip on error schemas.
  * "{\"type\":\"error\",\"name\":\"Test\",\"fields\":"
  *       "[{\"name\":\"f1\",\"type\":\"long\"},"
  *       "{\"name\":\"f2\",\"type\":\"int\"}]}"
@@ -199,7 +199,32 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}"
 };
 
+const char* schemasTocompact[] = {
+    // Schema without any whitespace
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
 
+    // Schema with whitespaces outside of field names/values only.
+    "{\"type\":   \"record\",\n   \n\"name\":\"Test\", \t\t\"fields\":[]}\n \n",
+
+    // Schema with whitespaces both inside and outside of field names/values.
+    "{\"type\":   \"record\",  \"name\":               \"ComplexInteger\"\n, "
+    "\"doc\": \"record_doc \n \t\", "
+    "\"fields\": ["
+        "{\"name\":   \"re1\", \"type\":               \"long\", "
+        "\"doc\":   \"A \\\"quoted doc\\\"\"      },                 "
+        "{\"name\":  \"re2\", \"type\":   \"long\", \n\t"
+        "\"doc\": \"extra slashes\\\\\\\\\"}"
+    "]}"};
+
+const char* compactSchemas[] = {
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
+    "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
+    "{\"type\":\"record\",\"name\":\"ComplexInteger\","
+    "\"doc\":\"record_doc \n \t\","
+    "\"fields\":["
+        "{\"name\":\"re1\",\"type\":\"long\",\"doc\":\"A \\\"quoted doc\\\"\"},"
+        "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\"}"
+    "]}"};
 
 static void testBasic(const char* schema)
 {
@@ -219,17 +244,36 @@ static void testCompile(const char* schema)
     compileJsonSchemaFromString(std::string(schema));
 }
 
-// Test that the JSON output from a valid schema matches the JSON that was 
+// Test that the JSON output from a valid schema matches the JSON that was
 // used to construct it, apart from whitespace changes.
 static void testRoundTrip(const char* schema)
 {
     BOOST_TEST_CHECKPOINT(schema);
-    avro::ValidSchema compiledSchema = compileJsonSchemaFromString(std::string(schema));
+    avro::ValidSchema compiledSchema =
+        compileJsonSchemaFromString(std::string(schema));
     std::ostringstream os;
     compiledSchema.toJson(os);
     std::string result = os.str();
     result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
     BOOST_CHECK(result == std::string(schema));
+    // Verify that the compact schema from toJson has the same content as the
+    // cleaned schema.
+    std::string result2 = compiledSchema.toJson(false);
+    BOOST_CHECK(result2 == cleanedSchema);
+}
+
+static void testCompactSchemas()
+{
+  for (int i = 0; i < sizeof(schemasTocompact)/ sizeof(schemasTocompact[0]); i++)
+  {
+    const char* schema = schemasTocompact[i];
+    BOOST_TEST_CHECKPOINT(schema);
+    avro::ValidSchema compiledSchema =
+        compileJsonSchemaFromString(std::string(schema));
+
+    std::string result = compiledSchema.toJson(false);
+    BOOST_CHECK_EQUAL(result, compactSchemas[i]);
+  }
 }
 
 }
@@ -239,10 +283,10 @@ static void testRoundTrip(const char* schema)
 
 #define ADD_PARAM_TEST(ts, func, data) \
     ts->add(BOOST_PARAM_TEST_CASE(&func, data, ENDOF(data)))
-    
+
 
 boost::unit_test::test_suite*
-init_unit_test_suite(int argc, char* argv[]) 
+init_unit_test_suite(int argc, char* argv[])
 {
     using namespace boost::unit_test;
 
@@ -252,5 +296,6 @@ init_unit_test_suite(int argc, char* argv[])
         avro::schema::basicSchemaErrors);
     ADD_PARAM_TEST(ts, avro::schema::testCompile, avro::schema::basicSchemas);
     ADD_PARAM_TEST(ts, avro::schema::testRoundTrip, avro::schema::roundTripSchemas);
+    ts->add(BOOST_TEST_CASE(&avro::schema::testCompactSchemas));
     return ts;
 }
