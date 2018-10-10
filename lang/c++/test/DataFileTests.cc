@@ -594,12 +594,12 @@ public:
     void testSchemaReadWriteWithDoc() {
         uint32_t a=42;
         {
-          avro::DataFileWriter<uint32_t> df(filename.c_str(), writerSchema);
+          avro::DataFileWriter<uint32_t> df(filename, writerSchema);
           df.write(a);
         }
 
         {
-          avro::DataFileReader<uint32_t> df(filename.c_str());
+          avro::DataFileReader<uint32_t> df(filename);
           uint32_t b;
           df.read(b);
           BOOST_CHECK_EQUAL(b, a);
@@ -719,7 +719,7 @@ init_unit_test_suite(int argc, char *argv[])
     }
     {
         test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test12.df");
-        shared_ptr<DataFileTest> t(new DataFileTest("test12.df", sch, sch));
+        shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));

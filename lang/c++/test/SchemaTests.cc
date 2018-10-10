@@ -257,9 +257,9 @@ static void testRoundTrip(const char* schema)
     result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
     BOOST_CHECK(result == std::string(schema));
     // Verify that the compact schema from toJson has the same content as the
-    // cleaned schema.
+    // schema.
     std::string result2 = compiledSchema.toJson(false);
-    BOOST_CHECK(result2 == cleanedSchema);
+    BOOST_CHECK(result2 == std::string(schema));
 }
 
 static void testCompactSchemas()
