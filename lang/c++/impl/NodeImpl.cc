@@ -24,9 +24,46 @@
 namespace avro {
 
 namespace {
-// Escape double quotes (") for serialization.
-std::string escape(std::string s) {
-  boost::replace_all(s, "\"", "\\\"");
+// Escape string for serialization.
+std::string escape(const std::string &unescaped) {
+  std::string s;
+  s.reserve(unescaped.length());
+  for (auto c : unescaped) {
+    switch (c) {
+      case '\\':
+      case '"':
+      case '/':
+        s += '\\';
+        s += c;
+        break;
+      case '\b':
+        s += '\\';
+        s += 'b';
+        break;
+      case '\f':
+        s += '\f';
+        break;
+      case '\n':
+        s += '\\';
+        s += 'n';
+        break;
+      case '\r':
+        s += '\\';
+        s += 'r';
+        break;
+      case '\t':
+        s += '\\';
+        s += 't';
+        break;
+      default:
+        if (!std::iscntrl(c, std::locale::classic())) {
+          s += c;
+          continue;
+        }
+        s += intToHex(static_cast<unsigned int>(c));
+        break;
+    }
+  }
   return s;
 }
 
@@ -42,7 +79,7 @@ struct indent {
 std::ostream& operator <<(std::ostream &os, indent x)
 {
     static const std::string spaces("    ");
-    while(x.d--) {
+    while (x.d--) {
         os << spaces;
     }
     return os;
@@ -55,7 +92,7 @@ const int kByteStringSize = 6;
 SchemaResolution
 NodePrimitive::resolve(const Node &reader) const
 {
-    if(type() == reader.type()) {
+    if (type() == reader.type()) {
         return RESOLVE_MATCH;
     }
 
@@ -63,7 +100,7 @@ NodePrimitive::resolve(const Node &reader) const
 
       case AVRO_INT:
 
-        if( reader.type() == AVRO_LONG ) {
+        if ( reader.type() == AVRO_LONG ) {
             return RESOLVE_PROMOTABLE_TO_LONG;
         }
 
@@ -93,8 +130,8 @@ NodePrimitive::resolve(const Node &reader) const
 SchemaResolution
 NodeRecord::resolve(const Node &reader) const
 {
-    if(reader.type() == AVRO_RECORD) {
-        if(name() == reader.name()) {
+    if (reader.type() == AVRO_RECORD) {
+        if (name() == reader.name()) {
             return RESOLVE_MATCH;
         }
     }
@@ -104,7 +141,7 @@ NodeRecord::resolve(const Node &reader) const
 SchemaResolution
 NodeEnum::resolve(const Node &reader) const
 {
-    if(reader.type() == AVRO_ENUM) {
+    if (reader.type() == AVRO_ENUM) {
         return (name() == reader.name()) ? RESOLVE_MATCH : RESOLVE_NO_MATCH;
     }
     return furtherResolution(reader);
@@ -113,7 +150,7 @@ NodeEnum::resolve(const Node &reader) const
 SchemaResolution
 NodeArray::resolve(const Node &reader) const
 {
-    if(reader.type() == AVRO_ARRAY) {
+    if (reader.type() == AVRO_ARRAY) {
         const NodePtr &arrayType = leafAt(0);
         return arrayType->resolve(*reader.leafAt(0));
     }
@@ -123,7 +160,7 @@ NodeArray::resolve(const Node &reader) const
 SchemaResolution
 NodeMap::resolve(const Node &reader) const
 {
-    if(reader.type() == AVRO_MAP) {
+    if (reader.type() == AVRO_MAP) {
         const NodePtr &mapType = leafAt(1);
         return mapType->resolve(*reader.leafAt(1));
     }
@@ -142,14 +179,14 @@ NodeUnion::resolve(const Node &reader) const
     // found.
 
     SchemaResolution match = RESOLVE_NO_MATCH;
-    for(size_t i=0; i < leaves(); ++i) {
+    for (size_t i=0; i < leaves(); ++i) {
         const NodePtr &node = leafAt(i);
         SchemaResolution thisMatch = node->resolve(reader);
-        if(thisMatch == RESOLVE_MATCH) {
+        if (thisMatch == RESOLVE_MATCH) {
             match = thisMatch;
             break;
         }
-        if(match == RESOLVE_NO_MATCH) {
+        if (match == RESOLVE_NO_MATCH) {
             match = thisMatch;
         }
     }
@@ -159,7 +196,7 @@ NodeUnion::resolve(const Node &reader) const
 SchemaResolution
 NodeFixed::resolve(const Node &reader) const
 {
-    if(reader.type() == AVRO_FIXED) {
+    if (reader.type() == AVRO_FIXED) {
         return (
                 (reader.fixedSize() == fixedSize()) &&
                 (reader.name() == name())
@@ -208,8 +245,8 @@ NodeRecord::printJson(std::ostream &os, int depth) const
     ++depth;
     // Serialize "default" field:
     assert(defaultValues.empty() || (defaultValues.size() == fields));
-    for(int i = 0; i < fields; ++i) {
-        if(i > 0) {
+    for (int i = 0; i < fields; ++i) {
+        if (i > 0) {
             os << ',';
         }
         os << '\n' << indent(depth) << "{\n";
@@ -396,8 +433,8 @@ NodeEnum::printJson(std::ostream &os, int depth) const
 
     int names = leafNameAttributes_.size();
     ++depth;
-    for(int i = 0; i < names; ++i) {
-        if(i > 0) {
+    for (int i = 0; i < names; ++i) {
+        if (i > 0) {
             os << ",\n";
         }
         os << indent(depth) << '\"' << leafNameAttributes_.get(i) << '\"';
@@ -435,8 +472,8 @@ NodeUnion::printJson(std::ostream &os, int depth) const
     os << "[\n";
     int fields = leafAttributes_.size();
     ++depth;
-    for(int i = 0; i < fields; ++i) {
-        if(i > 0) {
+    for (int i = 0; i < fields; ++i) {
+        if (i > 0) {
             os << ",\n";
         }
         os << indent(depth);
