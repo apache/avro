@@ -409,7 +409,7 @@ static NodePtr makeArrayNode(const Entity& e, const Object& m,
 {
     Object::const_iterator it = findField(e, m, "items");
     NodePtr node = NodePtr(new NodeArray(
-        asSingleAttribute(makeNode(it->second, st, ns, hasNamespace))));
+        asSingleAttribute(makeNode(it->second, st, ns))));
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
@@ -422,7 +422,7 @@ static NodePtr makeMapNode(const Entity& e, const Object& m,
     Object::const_iterator it = findField(e, m, "values");
 
     NodePtr node = NodePtr(new NodeMap(
-        asSingleAttribute(makeNode(it->second, st, ns, hasNamespace))));
+        asSingleAttribute(makeNode(it->second, st, ns))));
     if (containsField(m, "doc")) {
         node->setDoc(getDocField(e, m));
     }
@@ -468,14 +468,12 @@ static NodePtr makeNode(const Entity& e, const Object& m,
             if (containsField(m, "doc")) {
                 std::string doc = getDocField(e, m);
 
-                NodePtr r = makeRecordNode(e, nm, &doc, m, st, nm.ns(),
-                                           nm.hasNamespace());
+                NodePtr r = makeRecordNode(e, nm, &doc, m, st, nm.ns());
                 (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
                     *boost::dynamic_pointer_cast<NodeRecord>(result));
             } else {  // No doc
                 NodePtr r =
-                    makeRecordNode(e, nm, nullptr, m, st, nm.ns(),
-                                   nm.hasNamespace());
+                    makeRecordNode(e, nm, nullptr, m, st, nm.ns());
                 (boost::dynamic_pointer_cast<NodeRecord>(r))
                     ->swap(*boost::dynamic_pointer_cast<NodeRecord>(result));
             }

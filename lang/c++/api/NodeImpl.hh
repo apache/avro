@@ -320,7 +320,7 @@ public:
         defaultValues(dv) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-                throwException(boost::format(
+                throw Exception(boost::format(
                     "Cannot add duplicate name: %1%") %
                     leafNameAttributes_.get(i));
             }
