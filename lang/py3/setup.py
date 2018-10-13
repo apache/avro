@@ -20,6 +20,7 @@
 
 import os
 import shutil
+import stat
 import sys
 
 from setuptools import setup
@@ -93,10 +94,9 @@ def SetupSources():
   )
 
   # Make sure the avro shell script is executable:
-  os.chmod(
-      path=os.path.join(py3_dir, 'scripts', 'avro'),
-      mode=0o777,
-  )
+  script = os.path.join(py3_dir, 'scripts', 'avro')
+  os.chmod(script,
+           stat.S_IMODE(os.stat(script).st_mode) | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def ReadVersion():
@@ -110,9 +110,6 @@ def ReadVersion():
 
 
 def Main():
-  assert (sys.version_info[0] >= 3), \
-      ('Python version >= 3 required, got %r' % sys.version_info)
-
   if not RunsFromSourceDist():
     SetupSources()
 
@@ -145,6 +142,11 @@ def Main():
       license = 'Apache License 2.0',
       keywords = 'avro serialization rpc',
       url = 'http://avro.apache.org/',
+      classifiers=[
+          'License :: OSI Approved :: Apache Software License',
+          'Programming Language :: Python :: 3 :: Only',
+      ],
+      python_requires='>=3',
   )
 
 
