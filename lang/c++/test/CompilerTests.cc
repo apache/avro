@@ -47,7 +47,8 @@ void testEmptyBytesDefault()
     \"fields\": [\n\
         {\n\
             \"name\": \"testbytes\",\n\
-            \"type\": \"bytes\"\n\
+            \"type\": \"bytes\",\n\
+            \"default\": \"\"\n\
         }\n\
     ]\n\
 }\n\

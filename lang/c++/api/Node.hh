@@ -77,7 +77,7 @@ std::ostream& operator << (std::ostream& os, const Name& n) {
 /// The user does not use the Node object directly, they interface with Schema
 /// objects.
 ///
-/// The Node object uses reference-counted pointers.  This is so that schemas 
+/// The Node object uses reference-counted pointers.  This is so that schemas
 /// may be reused in other other schemas, without needing to worry about memory
 /// deallocation for nodes that are added to multiple schema parse trees.
 ///
@@ -151,6 +151,11 @@ class AVRO_DECL Node : private boost::noncopyable
     virtual void printBasicInfo(std::ostream &os) const = 0;
 
     virtual void setLeafToSymbolic(int index, const NodePtr &node) = 0;
+
+    // Serialize the default value GenericDatum g for the node contained
+    // in a record node.
+    virtual void printDefaultToJson(const GenericDatum& g, std::ostream &os,
+                                    int depth) const = 0;
 
   protected:
 
