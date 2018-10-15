@@ -280,7 +280,7 @@
                 <exclude>**/*.iml</exclude>
                 <exclude>lang/csharp/Avro.sln</exclude> <!-- visual studio -->
                 <!-- build-related files -->
-                <exclude>BUILD.txt</exclude>
+                <exclude>BUILD.md</exclude>
                 <exclude>**/VERSION.txt</exclude>
                 <exclude>**/dependency-reduced-pom.xml</exclude>
                 <exclude>lang/perl/.shipit</exclude>
