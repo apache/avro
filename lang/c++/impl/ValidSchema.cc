@@ -120,7 +120,7 @@ ValidSchema::toJson(std::ostream &os) const
     os << '\n';
 }
 
-std::string
+string
 ValidSchema::toJson(bool prettyPrint) const
 {
     ostringstream oss;
@@ -130,7 +130,7 @@ ValidSchema::toJson(bool prettyPrint) const
     }
 
     // Compact the formatted schema.
-    std::string schema = oss.str();
+    string schema = oss.str();
     compactSchema(&schema);
     return schema;
 }
@@ -148,7 +148,7 @@ ValidSchema::toFlatList(std::ostream &os) const
  * the quoted value is in UTF-8 format. Note that this method is not responsible
  * for validating the schema.
  */
-void ValidSchema::compactSchema(std::string* schema) {
+void ValidSchema::compactSchema(string* schema) {
     bool insideQuote = false;
     size_t newPos = 0;
     char *data = const_cast<char *>(schema->data());

@@ -43,7 +43,7 @@ typedef map<Name, NodePtr> SymbolTable;
 
 // #define DEBUG_VERBOSE
 
-static NodePtr makePrimitive(const std::string& t)
+static NodePtr makePrimitive(const string& t)
 {
     if (t == "null") {
         return NodePtr(new NodePrimitive(AVRO_NULL));
@@ -86,7 +86,7 @@ static Name getName(const string& name, const string& ns)
     return (isFullName(name)) ? Name(name) : Name(name, ns);
 }
 
-static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
+static NodePtr makeNode(const string& t, SymbolTable& st, const string& ns)
 {
     NodePtr result = makePrimitive(t);
     if (result) {
@@ -154,15 +154,15 @@ const int64_t getLongField(const Entity& e, const Object& m,
 
 // Unescape double quotes (") for de-serialization.  This method complements the
 // method NodeImpl::escape() which is used for serialization.
-static void unescape(std::string& s) {
-  boost::replace_all(s, "\\\"", "\"");
+static void unescape(string& s) {
+    boost::replace_all(s, "\\\"", "\"");
 }
 
-const std::string getDocField(const Entity& e, const Object& m)
+const string getDocField(const Entity& e, const Object& m)
 {
-  std::string doc = getStringField(e, m, "doc");
-  unescape(doc);
-  return doc;
+    string doc = getStringField(e, m, "doc");
+    unescape(doc);
+    return doc;
 }
 
 struct Field {
@@ -183,7 +183,7 @@ static void assertType(const Entity& e, EntityType et)
     }
 }
 
-static vector<uint8_t> toBin(const std::string& s)
+static vector<uint8_t> toBin(const string& s)
 {
     vector<uint8_t> result(s.size());
     if (s.size() > 0) {
@@ -345,10 +345,10 @@ static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
 
 // Extended makeRecordNode (with doc).
 static NodePtr makeRecordNode(const Entity& e, const Name& name,
-                              const std::string* doc, const Object& m,
-                              SymbolTable& st, const std::string& ns) {
+                              const string* doc, const Object& m,
+                              SymbolTable& st, const string& ns) {
     const Array& v = getArrayField(e, m, "fields");
-    concepts::MultiAttribute<std::string> fieldNames;
+    concepts::MultiAttribute<string> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
     vector<GenericDatum> defaultValues;
 
@@ -466,7 +466,7 @@ static NodePtr makeNode(const Entity& e, const Object& m,
             st[nm] = result;
             // Get field doc
             if (containsField(m, "doc")) {
-                std::string doc = getDocField(e, m);
+                string doc = getDocField(e, m);
 
                 NodePtr r = makeRecordNode(e, nm, &doc, m, st, nm.ns());
                 (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
@@ -541,7 +541,7 @@ AVRO_DECL ValidSchema compileJsonSchemaFromString(const char* input)
         ::strlen(input));
 }
 
-AVRO_DECL ValidSchema compileJsonSchemaFromString(const std::string& input)
+AVRO_DECL ValidSchema compileJsonSchemaFromString(const string& input)
 {
     return compileJsonSchemaFromMemory(
         reinterpret_cast<const uint8_t*>(&input[0]), input.size());
@@ -562,7 +562,7 @@ AVRO_DECL void compileJsonSchema(std::istream &is, ValidSchema &schema)
     schema = compile(is);
 }
 
-AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error)
+AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema, string &error)
 {
     try {
         compileJsonSchema(is, schema);
