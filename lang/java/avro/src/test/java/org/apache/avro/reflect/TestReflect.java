@@ -284,6 +284,34 @@ public class TestReflect {
     }
   }
 
+  public static class R6_1 {}
+
+  public static class R7_1 extends R6_1 {
+    public int value;
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof R7_1)) return false;
+      return this.value == ((R7_1)o).value;
+    }
+  }
+  public static class R8_1 extends R6_1 {
+    public float value;
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof R8_1)) return false;
+      return this.value == ((R8_1)o).value;
+    }
+  }
+
+  public static class R9_1 {
+    public R6_1[] r6_1s;
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof R9_1)) return false;
+      return Arrays.equals(this.r6_1s, ((R9_1)o).r6_1s);
+    }
+  }
+
   @Test public void testR6() throws Exception {
     R7 r7 = new R7();
     r7.value = 1;
@@ -294,6 +322,21 @@ public class TestReflect {
     R9 r9 = new R9();
     r9.r6s = new R6[] {r7, r8};
     checkReadWrite(r9, ReflectData.get().getSchema(R9.class));
+  }
+
+  @Test public void testUnionSubTypesWithoutAnnotations() throws Exception {
+    Class[] unionTypes = new Class[]{R7_1.class, R8_1.class};
+    ReflectData.get().addUnionTypes(R6_1.class, unionTypes);
+
+    R7_1 r7_1 = new R7_1();
+    r7_1.value = 101;
+    checkReadWrite(r7_1, ReflectData.get().getSchema(R6_1.class));
+    R8_1 r8_1 = new R8_1();
+    r8_1.value = 102;
+    checkReadWrite(r8_1, ReflectData.get().getSchema(R6_1.class));
+    R9_1 r9_1 = new R9_1();
+    r9_1.r6_1s = new R6_1[] {r7_1, r8_1};
+    checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
   }
 
   // test union annotation on methods and parameters
