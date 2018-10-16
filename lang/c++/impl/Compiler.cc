@@ -393,7 +393,7 @@ static NodePtr makeFixedNode(const Entity& e,
 {
     int v = static_cast<int>(getLongField(e, m, "size"));
     if (v <= 0) {
-        throw Exception(boost::format("Size for fixed is not positive: ") %
+        throw Exception(boost::format("Size for fixed is not positive: %1%") %
             e.toString());
     }
     NodePtr node =

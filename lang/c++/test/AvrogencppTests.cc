@@ -136,9 +136,14 @@ void checkRecord(const T1& r1, const T2& r2)
 
 void checkDefaultValues(const testgen_r::RootRecord& r)
 {
-    BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "sval");
+    BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "\"sval\"");
     BOOST_CHECK_EQUAL(r.withDefaultValue.i1, 99);
     BOOST_CHECK_CLOSE(r.withDefaultValue.d1, 5.67, 1e-10);
+    BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[0], 2);
+    BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[1], 3);
+    BOOST_CHECK_EQUAL(r.myfixedwithDefaultValue.get_val()[0], 0x01);
+    BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[0], 0xff);
+    BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[1], 0xaa);
 }
 
 
@@ -198,6 +203,24 @@ void testResolution()
     checkRecord(t3, t1);
     checkDefaultValues(t3);
 
+    // Test serialization of default values.
+    // Serialize to string then compile from string.
+    std::ostringstream oss;
+    s_r.toJson(oss);
+    ValidSchema s_rs = avro::compileJsonSchemaFromString(oss.str());
+
+    auto_ptr<InputStream> is2 = memoryInputStream(*os);
+    dd->init(*is2);
+    rd = resolvingDecoder(s_w, s_rs, dd);
+    testgen_r::RootRecord t4;
+    avro::decode(*rd, t4);
+    checkDefaultValues(t4);
+
+    std::ostringstream oss_r;
+    std::ostringstream oss_rs;
+    s_r.toJson(oss_r);
+    s_rs.toJson(oss_rs);
+    BOOST_CHECK_EQUAL(oss_r.str(), oss_rs.str());
 }
 
 void testNamespace()
