@@ -25,6 +25,8 @@ import java.io.IOException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
 
 /** Base class for generated record classes. */
 public abstract class SpecificRecordBase
@@ -89,5 +91,20 @@ public abstract class SpecificRecordBase
     throws IOException {
     new SpecificDatumReader(getSchema())
       .read(this, SpecificData.getDecoder(in));
+  }
+
+  /** Returns true iff an instance supports the {@link #encode} and
+    * {@link #decode} operations.  Should only be used by
+    * <code>SpecificDatumReader/Writer</code> to selectively use
+    * {@link #encode} and {@link #decode} to optimize the (de)serialization of
+    * values. */
+  public boolean hasCustomCoders() { return false; }
+
+  public void encode(Encoder out) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  public void decode(Decoder in) throws IOException {
+    throw new UnsupportedOperationException();
   }
 }
