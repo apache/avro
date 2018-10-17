@@ -195,6 +195,21 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire-plugin.version}</version>
+          <executions>
+            <execution>
+              <id>test-with-custom-coders</id>
+              <phase>test</phase>
+              <goals>
+                <goal>test</goal>
+              </goals>
+              <configuration>
+                <systemPropertyVariables>
+                  <org.apache.avro.specific.use_custom_coders>true</org.apache.avro.specific.use_custom_coders>
+                  <test.dir>${project.basedir}/target/</test.dir>
+                </systemPropertyVariables>
+              </configuration>
+            </execution>
+          </executions>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
