@@ -515,19 +515,30 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
   }
 
-  @Override protected void customDecode(org.apache.avro.io.Decoder in)
+  @Override protected void customDecode(org.apache.avro.io.ResolvingDecoder in)
     throws java.io.IOException
   {
+    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrder();
+    for (int i = 0; i < $schema.getFields().size(); i++) {
+      switch (fieldOrder[i].pos()) {
+#set ($fieldno = 0)
 #set ($nv = 0)## Counter to ensure unique var-names
 #set ($maxnv = 0)## Holds high-water mark during recursion
 #foreach ($field in $schema.getFields())
+      case $fieldno:
 #set ($n = $this.mangle($field.name(), $schema.isError()))
 #set ($s = $field.schema())
 #set ($rs = "SCHEMA$.getField(""${n}"").schema()")
-#decodeVar(0 "this.${n}" $s $rs)
+#decodeVar(4 "this.${n}" $s $rs)
+        break;
 
 #set ($nv = $maxnv)
+#set ($fieldno = $fieldno + 1)
 #end
+      default:
+        throw new java.io.IOException("Corrupt ResolvingDecoder.");
+      }
+    }
   }
 #end
 }

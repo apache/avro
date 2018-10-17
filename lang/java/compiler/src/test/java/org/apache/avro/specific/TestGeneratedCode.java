@@ -86,7 +86,8 @@ public class TestGeneratedCode {
     DatumReader<FullRecordV1> r = (DatumReader<FullRecordV1>)MODEL.createDatumReader(V2S, V1S);
     FullRecordV1 dst = r.read(null, d);
 
-    Assert.assertEquals(src, dst);
+    FullRecordV1 expected = new FullRecordV1(true, 87231, 731L, 54.2832F, 38.0, null,
+                                             "Hello, world!");
+    Assert.assertEquals(expected, dst);
   }
 }
-

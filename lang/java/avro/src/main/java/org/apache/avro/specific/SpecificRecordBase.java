@@ -25,7 +25,7 @@ import java.io.IOException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.Decoder;
+import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.io.Encoder;
 
 /** Base class for generated record classes. */
@@ -104,7 +104,7 @@ public abstract class SpecificRecordBase
     throw new UnsupportedOperationException();
   }
 
-  protected void customDecode(Decoder in) throws IOException {
+  protected void customDecode(ResolvingDecoder in) throws IOException {
     throw new UnsupportedOperationException();
   }
 }
