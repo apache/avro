@@ -83,12 +83,12 @@ public abstract class CodecFactory {
   public static final int DEFAULT_XZ_LEVEL = LZMA2Options.PRESET_DEFAULT;
 
   static {
-    addCodec("null", nullCodec());
-    addCodec("deflate", deflateCodec(DEFAULT_DEFLATE_LEVEL));
-    addCodec("snappy", snappyCodec());
-    addCodec("bzip2", bzip2Codec());
-    addCodec("xz", xzCodec(DEFAULT_XZ_LEVEL));
-    addCodec("zstandard", zstandardCodec());
+    addCodec(DataFileConstants.NULL_CODEC, nullCodec());
+    addCodec(DataFileConstants.DEFLATE_CODEC, deflateCodec(DEFAULT_DEFLATE_LEVEL));
+    addCodec(DataFileConstants.SNAPPY_CODEC, snappyCodec());
+    addCodec(DataFileConstants.BZIP2_CODEC, bzip2Codec());
+    addCodec(DataFileConstants.XZ_CODEC, xzCodec(DEFAULT_XZ_LEVEL));
+    addCodec(DataFileConstants.ZSTANDARD_CODEC, zstandardCodec());
   }
 
   /** Maps a codec name into a CodecFactory.
