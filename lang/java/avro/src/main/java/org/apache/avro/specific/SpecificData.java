@@ -130,8 +130,7 @@ public class SpecificData extends GenericData {
     * using the system property
     * <code>org.apache.avro.specific.use_custom_coders</code>, and can
     * be set dynamically by {@link useCustomCoders}.  See <a
-    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating
-    * faster+code"Getting started with Java</a> for more about this
+    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code"Getting started with Java</a> for more about this
     * feature flag. */
   public boolean useCustomCoders() { return useCustomCoderFlag; }
 

@@ -320,7 +320,7 @@ $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain
         </source>
       </section>
       <section>
-        <title>Beta feature: Faster code generation</title>
+        <title>Beta feature: Generating faster code</title>
         <p>
           In this release we have introduced a new approach to
           generating code that speeds up decoding of objects by more
