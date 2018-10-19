@@ -106,9 +106,9 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     throws IOException {
     SpecificData data = getSpecificData();
     if (data.useCustomCoders()) {
-      Object r = data.newRecord(old, expected);
-      if (r instanceof SpecificRecordBase) {
-        SpecificRecordBase d = (SpecificRecordBase) r;
+      old = data.newRecord(old, expected);
+      if (old instanceof SpecificRecordBase) {
+        SpecificRecordBase d = (SpecificRecordBase) old;
         if (d.hasCustomCoders()) {
           d.customDecode(in);
           return d;
