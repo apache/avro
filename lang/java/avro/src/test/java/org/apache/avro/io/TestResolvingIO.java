@@ -96,7 +96,8 @@ public class TestResolvingIO {
       break;
     }
     Decoder vi = new ResolvingDecoder(wsc, rsc, bvi);
-    TestValidatingIO.check(vi, calls, values, skipLevel);
+    String msg = "Error in resolving case: w="+wsc+", r="+rsc;
+    TestValidatingIO.check(msg, vi, calls, values, skipLevel);
   }
 
   @Parameterized.Parameters
