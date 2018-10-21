@@ -17,9 +17,38 @@
  */
 
 
+#include <sstream>
+#include <iomanip>
 #include "NodeImpl.hh"
 
 namespace avro {
+
+namespace {
+
+std::string escape_json(const std::string &s) {
+    std::ostringstream o;
+    for (auto c = s.cbegin(); c != s.cend(); c++) {
+        switch (*c) {
+        case '"': o << "\\\""; break;
+        case '\\': o << "\\\\"; break;
+        case '\b': o << "\\b"; break;
+        case '\f': o << "\\f"; break;
+        case '\n': o << "\\n"; break;
+        case '\r': o << "\\r"; break;
+        case '\t': o << "\\t"; break;
+        default:
+            if ('\x00' <= *c && *c <= '\x1f') {
+                o << "\\u"
+                  << std::hex << std::setw(4) << std::setfill('0') << (int)*c;
+            } else {
+                o << *c;
+            }
+        }
+    }
+    return o.str();
+}
+
+}  // namespace
 
 SchemaResolution
 NodePrimitive::resolve(const Node &reader) const
@@ -168,7 +197,8 @@ NodePrimitive::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << type() << '\"';
     if (getDoc().size()) {
-        os << ",\n" << indent(depth) << "\"doc\": \"" << getDoc() << "\"";
+        os << ",\n" << indent(depth) << "\"doc\": \""
+           << escape_json(getDoc()) << "\"";
     }
 }
 
@@ -177,7 +207,8 @@ NodeSymbolic::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << nameAttribute_.get() << '\"';
     if (getDoc().size()) {
-        os << ",\n" << indent(depth) << "\"doc\": \"" << getDoc() << "\"";
+        os << ",\n" << indent(depth) << "\"doc\": \""
+           << escape_json(getDoc()) << "\"";
     }
 }
 
@@ -196,7 +227,8 @@ NodeRecord::printJson(std::ostream &os, int depth) const
     os << indent(++depth) << "\"type\": \"record\",\n";
     printName(os, nameAttribute_.get(), depth);
     if (getDoc().size()) {
-        os << indent(depth) << "\"doc\": \"" << getDoc() << "\",\n";
+        os << indent(depth) << "\"doc\": \""
+           << escape_json(getDoc()) << "\",\n";
     }
     os << indent(depth) << "\"fields\": [";
 
@@ -223,7 +255,8 @@ NodeEnum::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
     if (getDoc().size()) {
-        os << indent(depth) << "\"doc\": \"" << getDoc() << "\",\n";
+        os << indent(depth) << "\"doc\": \""
+           << escape_json(getDoc()) << "\",\n";
     }
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
@@ -247,7 +280,8 @@ NodeArray::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(depth+1) << "\"type\": \"array\",\n";
     if (getDoc().size()) {
-        os << indent(depth+1) << "\"doc\": \"" << getDoc() << "\",\n";
+        os << indent(depth+1) << "\"doc\": \""
+           << escape_json(getDoc()) << "\",\n";
     }
     os << indent(depth+1) <<  "\"items\": ";
     leafAttributes_.get()->printJson(os, depth+1);
@@ -261,7 +295,8 @@ NodeMap::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(depth+1) <<"\"type\": \"map\",\n";
     if (getDoc().size()) {
-        os << indent(depth+1) << "\"doc\": \"" << getDoc() << "\",\n";
+        os << indent(depth+1) << "\"doc\": \""
+           << escape_json(getDoc()) << "\",\n";
     }
     os << indent(depth+1) << "\"values\": ";
     leafAttributes_.get(1)->printJson(os, depth+1);
@@ -292,7 +327,8 @@ NodeFixed::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
     if (getDoc().size()) {
-        os << indent(depth) << "\"doc\": \"" << getDoc() << "\",\n";
+        os << indent(depth) << "\"doc\": \""
+           << escape_json(getDoc()) << "\",\n";
     }
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"size\": " << sizeAttribute_.get() << "\n";
