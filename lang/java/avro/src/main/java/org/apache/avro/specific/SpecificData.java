@@ -267,6 +267,7 @@ public class SpecificData extends GenericData {
         return Schema.createMap(createSchema(value, names));
       } else {
         return createSchema(raw, names);
+        //return createSchema(ptype, names);
       }
     } else if (type instanceof Class) {               // class
       Class c = (Class)type;

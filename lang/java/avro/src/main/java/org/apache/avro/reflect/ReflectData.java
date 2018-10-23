@@ -522,6 +522,22 @@ public class ReflectData extends SpecificData {
         Schema schema = Schema.createArray(createSchema(params[0], names));
         schema.addProp(CLASS_PROP, raw.getName());
         return schema;
+      } else if(params.length == 2){
+        Schema keySchema = createSchema(params[0], names);
+        Schema valueSchema = createSchema(params[1], names);
+        Schema.Field keyField =
+          new Schema.Field(NS_MAP_KEY, keySchema, null, null);
+        Schema.Field valueField =
+          new Schema.Field(NS_MAP_VALUE, valueSchema, null, null);
+        //String name = getNameForNonStringMapRecord(params[0], params[1],
+        //keySchema, valueSchema);
+        //Schema elementSchema = Schema.createRecord(name, null, null, false);
+        Schema elementSchema = Schema.createRecord(raw.getSimpleName(), null,
+          raw.getPackage().getName(), false);
+        elementSchema.setFields(Arrays.asList(keyField, valueField));
+        elementSchema.addProp(CLASS_PROP, raw.getName());
+
+        return elementSchema;
       }
     } else if ((type == Byte.class) || (type == Byte.TYPE)) {
       Schema result = Schema.create(Schema.Type.INT);
