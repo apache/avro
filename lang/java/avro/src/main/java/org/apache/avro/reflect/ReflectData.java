@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -522,6 +523,16 @@ public class ReflectData extends SpecificData {
         Schema schema = Schema.createArray(createSchema(params[0], names));
         schema.addProp(CLASS_PROP, raw.getName());
         return schema;
+      } else if(params.length == 1 && !(params[0] instanceof WildcardType)) {
+        Schema valueSchema = createSchema(params[0], names);
+        Schema.Field valueField =
+          new Schema.Field(NS_MAP_VALUE, valueSchema, null, null);
+        Schema elementSchema = Schema.createRecord(raw.getSimpleName(), null,
+          raw.getPackage().getName(), false);
+        elementSchema.setFields(Collections.singletonList(valueField));
+        elementSchema.addProp(CLASS_PROP, raw.getName());
+
+        return elementSchema;
       } else if(params.length == 2){
         Schema keySchema = createSchema(params[0], names);
         Schema valueSchema = createSchema(params[1], names);
