@@ -25,6 +25,8 @@
 
 namespace avro {
 
+namespace {
+
 // Escape string for serialization.
 std::string escape(const std::string &unescaped) {
   std::string s;
@@ -89,7 +91,6 @@ std::ostream& operator <<(std::ostream &os, indent x)
 } // anonymous namespace
 
 const int kByteStringSize = 6;
->>>>>>> origin/AVRO-1256
 
 SchemaResolution
 NodePrimitive::resolve(const Node &reader) const
@@ -213,24 +214,6 @@ NodeSymbolic::resolve(const Node &reader) const
 {
     const NodePtr &node = leafAt(0);
     return node->resolve(reader);
-}
-
-// Wrap an indentation in a struct for ostream operator<<
-struct indent {
-    indent(int depth) :
-        d(depth)
-    { }
-    int d;
-};
-
-/// ostream operator for indent
-std::ostream& operator <<(std::ostream &os, indent x)
-{
-    static const std::string spaces("    ");
-    while(x.d--) {
-        os << spaces;
-    }
-    return os;
 }
 
 void
