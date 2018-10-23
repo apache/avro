@@ -322,7 +322,7 @@ public:
 
     NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
         const LeafNames &fieldsNames,
-        const std::vector<GenericDatum>& dv) :
+        const std::vector<GenericDatum> &dv) :
         NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, NoSize()),
         defaultValues(dv) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {

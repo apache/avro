@@ -66,7 +66,7 @@ static NodePtr makePrimitive(const string& t)
     }
 }
 
-static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string& ns);
+static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string &ns);
 
 template <typename T>
 concepts::SingleAttribute<T> asSingleAttribute(const T& t)
@@ -76,17 +76,17 @@ concepts::SingleAttribute<T> asSingleAttribute(const T& t)
     return n;
 }
 
-static bool isFullName(const string& s)
+static bool isFullName(const string &s)
 {
     return s.find('.') != string::npos;
 }
 
-static Name getName(const string& name, const string& ns)
+static Name getName(const string &name, const string &ns)
 {
     return (isFullName(name)) ? Name(name) : Name(name, ns);
 }
 
-static NodePtr makeNode(const string& t, SymbolTable& st, const string& ns)
+static NodePtr makeNode(const string &t, SymbolTable &st, const string &ns)
 {
     NodePtr result = makePrimitive(t);
     if (result) {
@@ -103,13 +103,13 @@ static NodePtr makeNode(const string& t, SymbolTable& st, const string& ns)
 
 /** Returns "true" if the field is in the container */
 // e.g.: can be false for non-mandatory fields
-bool containsField(const Object& m, const string& fieldName) {
+bool containsField(const Object &m, const string &fieldName) {
   Object::const_iterator it = m.find(fieldName);
   return it != m.end();
 }
 
-const json::Object::const_iterator findField(const Entity& e,
-    const Object& m, const string& fieldName)
+const json::Object::const_iterator findField(const Entity &e,
+    const Object &m, const string &fieldName)
 {
     Object::const_iterator it = m.find(fieldName);
     if (it == m.end()) {
@@ -120,7 +120,7 @@ const json::Object::const_iterator findField(const Entity& e,
     }
 }
 
-template <typename T> void ensureType(const Entity& e, const string& name)
+template <typename T> void ensureType(const Entity &e, const string &name)
 {
     if (e.type() != json::type_traits<T>::type()) {
         throw Exception(boost::format("Json field \"%1%\" is not a %2%: %3%") %
@@ -128,8 +128,8 @@ template <typename T> void ensureType(const Entity& e, const string& name)
     }
 }
 
-const string& getStringField(const Entity& e, const Object& m,
-                             const string& fieldName)
+const string& getStringField(const Entity &e, const Object &m,
+                             const string &fieldName)
 {
     Object::const_iterator it = findField(e, m, fieldName);
     ensureType<string>(it->second, fieldName);

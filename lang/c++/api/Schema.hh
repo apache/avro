@@ -105,7 +105,7 @@ public:
     void addField(const std::string &name, const Schema &fieldSchema);
 
     std::string getDoc() const;
-    void setDoc(const std::string&);
+    void setDoc(const std::string &);
 };
 
 class AVRO_DECL EnumSchema : public Schema {
