@@ -125,14 +125,10 @@ ValidSchema::toJson(bool prettyPrint) const
 {
     ostringstream oss;
     toJson(oss);
-    if (prettyPrint) {
-        return oss.str();
+    if (!prettyPrint) {
+        return compactSchema(oss.str());
     }
-
-    // Compact the formatted schema.
-    string schema = oss.str();
-    compactSchema(&schema);
-    return schema;
+    return oss.str();
 }
 
 void
@@ -142,18 +138,18 @@ ValidSchema::toFlatList(std::ostream &os) const
 }
 
 /*
- * compactSchema compacts a formatted string representation of a ValidSchema
- * object by removing the whitespaces outside of the quoted field names and
- * values. The schema string is modified in-place. It can handle the cases where
- * the quoted value is in UTF-8 format. Note that this method is not responsible
- * for validating the schema.
+ * compactSchema compacts and returns a formatted string representation
+ * of a ValidSchema object by removing the whitespaces outside of the quoted
+ * field names and values. It can handle the cases where the quoted value is
+ * in UTF-8 format. Note that this method is not responsible for validating
+ * the schema.
  */
-void ValidSchema::compactSchema(string* schema) {
+string ValidSchema::compactSchema(const string& schema) {
     bool insideQuote = false;
     size_t newPos = 0;
-    char *data = const_cast<char *>(schema->data());
+    string data(schema.data());
 
-    for (int currentPos = 0; currentPos < schema->size(); currentPos++) {
+    for (size_t currentPos = 0; currentPos < schema.size(); currentPos++) {
         if (!insideQuote && std::isspace(data[currentPos])) {
             // Skip the white spaces outside quotes.
             continue;
@@ -186,9 +182,10 @@ void ValidSchema::compactSchema(string* schema) {
         throw Exception("Schema is not well formed with mismatched quotes");
     }
 
-    if (newPos < schema->size()) {
-        schema->resize(newPos);
+    if (newPos < schema.size()) {
+        data.resize(newPos);
     }
+    return data;
 }
 
 } // namespace avro

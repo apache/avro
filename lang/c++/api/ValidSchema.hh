@@ -58,7 +58,7 @@ public:
     NodePtr root_;
 
   private:
-    static void compactSchema(std::string* schema);
+    static std::string compactSchema(const std::string& schema);
 };
 
 } // namespace avro
