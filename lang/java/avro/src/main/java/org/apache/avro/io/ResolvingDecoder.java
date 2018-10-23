@@ -116,9 +116,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * the above loop will always be correct.
    *
    * Throws a runtime exception if we're not just about to read the
-   * field of a record.  Also, this method will consume the field
-   * information, and thus may only be called <em>once</em> before
-   * reading the field value.  (However, if the client knows the
+   * first field of a record.  (If the client knows the
    * order of incoming fields, then the client does <em>not</em>
    * need to call this method but rather can just start reading the
    * field values.)

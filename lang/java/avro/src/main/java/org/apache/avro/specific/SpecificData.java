@@ -122,6 +122,22 @@ public class SpecificData extends GenericData {
   /** Return the singleton instance. */
   public static SpecificData get() { return INSTANCE; }
 
+  private boolean useCustomCoderFlag
+    = Boolean.parseBoolean(System.getProperty("org.apache.avro.specific.use_custom_coders","false"));
+
+  /** Retrieve the current value of the custom-coders feature flag.
+    * Defaults to <code>true</code>, but this default can be overriden
+    * using the system property
+    * <code>org.apache.avro.specific.use_custom_coders</code>, and can
+    * be set dynamically by {@link useCustomCoders}.  See <a
+    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code"Getting started with Java</a> for more about this
+    * feature flag. */
+  public boolean useCustomCoders() { return useCustomCoderFlag; }
+
+  /** Dynamically set the value of the custom-coder feature flag.
+   *  See {@link useCustomCoders}. */
+  public void setCustomCoders(boolean flag) { useCustomCoderFlag = flag; }
+
   @Override
   protected boolean isEnum(Object datum) {
     return datum instanceof Enum || super.isEnum(datum);
