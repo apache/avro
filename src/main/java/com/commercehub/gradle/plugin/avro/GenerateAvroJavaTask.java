@@ -100,8 +100,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     @Optional
-    @InputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @Input
     public String getTemplateDirectory() {
         return templateDirectory;
     }

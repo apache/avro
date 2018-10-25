@@ -2,7 +2,7 @@
 
 ## Unreleased
 * Upgrade Spock from 1.0 to 1.2
-* Add tests for pending support for the Gradle [Build Cache](https://docs.gradle.org/current/userguide/build_cache.html)
+* Added support for the Gradle [Build Cache](https://docs.gradle.org/current/userguide/build_cache.html) (#48); contribution from [dcabasson](https://github.com/dcabasson)
 
 ## 0.15.1
 * Fix "Boolean configuration cannot be set with boolean values from Kotlin DSL" (#60)

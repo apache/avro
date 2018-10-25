@@ -24,7 +24,6 @@ import org.gradle.api.tasks.SourceTask;
 
 import java.io.File;
 
-import static org.gradle.api.tasks.PathSensitivity.NAME_ONLY;
 import static org.gradle.api.tasks.PathSensitivity.RELATIVE;
 
 class OutputDirTask extends SourceTask {
@@ -35,7 +34,7 @@ class OutputDirTask extends SourceTask {
         getOutputs().dir(outputDir);
     }
 
-    @PathSensitive(value=RELATIVE)
+    @PathSensitive(value = RELATIVE)
     public FileTree getSource() {
         return super.getSource();
     }

@@ -20,6 +20,7 @@ import org.apache.avro.Schema;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -29,10 +30,11 @@ import java.util.regex.Pattern;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
 
+@CacheableTask
 public class GenerateAvroSchemaTask extends OutputDirTask {
     @TaskAction
     protected void process() {
-        getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
+        getLogger().info("Found {} files", getSource().getFiles().size());
         failOnUnsupportedFiles();
         processFiles();
     }

@@ -17,7 +17,6 @@ package com.commercehub.gradle.plugin.avro
 
 import org.gradle.util.GradleVersion
 import spock.lang.IgnoreIf
-import spock.lang.PendingFeature
 
 import static org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 
@@ -33,7 +32,6 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         addAvroDependency()
     }
 
-    @PendingFeature
     def "supports build cache for schema/protocol java source generation"() {
         given: "a project is built once with build cache enabled"
         copyResource("user.avsc", avroDir)
@@ -56,7 +54,6 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         projectFile(buildOutputClassPath("org/apache/avro/test/Mail.class")).file
     }
 
-    @PendingFeature
     def "supports build cache for IDL to protocol conversion"() {
         given: "a project is built once with build cache enabled"
         copyResource("interop.avdl", avroDir)
@@ -77,7 +74,6 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
     }
 
-    @PendingFeature
     def "supports build cache for protocol to schema conversion"() {
         given: "a project is built once with build cache enabled"
         copyResource("mail.avpr", avroDir)
