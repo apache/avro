@@ -1352,6 +1352,11 @@ public abstract class Schema extends JsonProperties {
         if (valuesNode == null)
           throw new SchemaParseException("Map has no values type: "+schema);
         result = new MapSchema(parse(valuesNode, names));
+      } else if (type.equals("param")) {
+        JsonNode valuesNode = schema.get("values");
+        if (valuesNode == null)
+          throw new SchemaParseException("Params has no values type: "+schema);
+        result = new ParamSchema(parse(valuesNode, names));
       } else if (type.equals("fixed")) {          // fixed
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.avro.Schema.Parser;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
@@ -188,6 +189,19 @@ public class TestParamTypes {
 
     TestPair2 testPair2_DeSerialized = datumReader.read(null, decoder);
     assertNotNull(testPair2_DeSerialized);
+  }
+
+  @Test
+  public void shouldGenAndParseSchema() {
+    ReflectData reflectData = new ReflectData.AllowNull();
+    Schema schema = reflectData.getSchema(TestPair2.class);
+    assertNotNull(schema);
+    String schemaJson = schema.toString();
+    assertNotNull(schemaJson);
+
+    Schema parsedSchema = new Parser().parse(schemaJson);
+    assertNotNull(parsedSchema);
+    assertEquals(schema, parsedSchema);
   }
 
   @Test
