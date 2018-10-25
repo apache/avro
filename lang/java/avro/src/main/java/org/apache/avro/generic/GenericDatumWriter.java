@@ -119,6 +119,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       case ENUM:   writeEnum(schema, datum, out);   break;
       case ARRAY:  writeArray(schema, datum, out);  break;
       case MAP:    writeMap(schema, datum, out);    break;
+      case PARAM:  writeParam(schema, datum, out);   break;
       case UNION:
         int index = resolveUnion(schema, datum);
         out.writeIndex(index);
@@ -239,6 +240,14 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw new ConcurrentModificationException("Size of map written was " +
           size + ", but number of entries written was " + actualSize + ". ");
     }
+  }
+
+  /** Called to write a map.  May be overridden for alternate map
+   * representations.*/
+  protected void writeParam(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    Schema value = schema.getValueType();
+    writeRecord(value, datum, out);
   }
 
   /** Called by the default implementation of {@link #writeMap} to get the size

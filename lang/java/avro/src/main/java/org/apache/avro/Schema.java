@@ -93,7 +93,7 @@ public abstract class Schema extends JsonProperties {
   /** The type of a schema. */
   public enum Type {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES,
-      INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+      INT, LONG, FLOAT, DOUBLE, BOOLEAN, PARAM, NULL;
     private String name;
     private Type() { this.name = this.name().toLowerCase(Locale.ENGLISH); }
     public String getName() { return name; }
@@ -183,6 +183,11 @@ public abstract class Schema extends JsonProperties {
   /** Create a map schema. */
   public static Schema createMap(Schema valueType) {
     return new MapSchema(valueType);
+  }
+
+  /** Create a param schema. */
+  public static Schema createParam(Schema valueType) {
+    return new ParamSchema(valueType);
   }
 
   /** Create a union schema. */
@@ -830,6 +835,34 @@ public abstract class Schema extends JsonProperties {
     void toJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       gen.writeStringField("type", "map");
+      gen.writeFieldName("values");
+      valueType.toJson(names, gen);
+      writeProps(gen);
+      gen.writeEndObject();
+    }
+  }
+
+  private static class ParamSchema extends Schema {
+    private final Schema valueType;
+    public ParamSchema(Schema valueType) {
+      super(Type.PARAM);
+      this.valueType = valueType;
+    }
+    public Schema getValueType() { return valueType; }
+    public boolean equals(Object o) {
+      if (o == this) return true;
+      if (!(o instanceof ParamSchema)) return false;
+      ParamSchema that = (ParamSchema) o;
+      return equalCachedHash(that)
+        && valueType.equals(that.valueType)
+        && props.equals(that.props);
+    }
+    @Override int computeHash() {
+      return super.computeHash() + valueType.computeHash();
+    }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeStartObject();
+      gen.writeStringField("type", "param");
       gen.writeFieldName("values");
       valueType.toJson(names, gen);
       writeProps(gen);

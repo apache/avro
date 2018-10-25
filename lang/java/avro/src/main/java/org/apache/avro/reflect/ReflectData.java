@@ -177,6 +177,7 @@ public class ReflectData extends SpecificData {
     if (datum instanceof Collection) return false;
     if (datum instanceof Map) return false;
     if (datum instanceof GenericFixed) return false;
+    if (parameterisedTypes.contains(datum.getClass())) return false;
     return getSchema(datum.getClass()).getType() == Schema.Type.RECORD;
   }
 
@@ -532,7 +533,9 @@ public class ReflectData extends SpecificData {
         elementSchema.setFields(Collections.singletonList(valueField));
         elementSchema.addProp(CLASS_PROP, raw.getName());
 
-        return elementSchema;
+        parameterisedTypes.add(raw);
+        return Schema.createParam(elementSchema);
+        //return elementSchema;
       } else if(params.length == 2){
         Schema keySchema = createSchema(params[0], names);
         Schema valueSchema = createSchema(params[1], names);
@@ -547,8 +550,9 @@ public class ReflectData extends SpecificData {
           raw.getPackage().getName(), false);
         elementSchema.setFields(Arrays.asList(keyField, valueField));
         elementSchema.addProp(CLASS_PROP, raw.getName());
-
-        return elementSchema;
+        parameterisedTypes.add(raw);
+        return Schema.createParam(elementSchema);
+        //return elementSchema;
       }
     } else if ((type == Byte.class) || (type == Byte.TYPE)) {
       Schema result = Schema.create(Schema.Type.INT);

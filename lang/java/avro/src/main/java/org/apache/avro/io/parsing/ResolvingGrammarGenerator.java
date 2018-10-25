@@ -114,6 +114,9 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
                 generate(writer.getValueType(),
                 reader.getValueType(), seen), Symbol.STRING),
             Symbol.MAP_START);
+        case PARAM:
+          return resolveRecords(writer.getValueType(), reader.getValueType(), seen);
+
       case RECORD:
         return resolveRecords(writer, reader, seen);
       case UNION:

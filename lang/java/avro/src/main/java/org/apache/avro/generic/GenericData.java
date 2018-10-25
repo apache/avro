@@ -25,12 +25,14 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Set;
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -107,6 +109,8 @@ public class GenericData {
 
   private Map<Class<?>, Class[]> classUnionTypes = new HashMap<Class<?>, Class[]>();
 
+  protected Set<Class<?>> parameterisedTypes = new HashSet<Class<?>>();
+
   /**
    * Registers the given conversion to be used when reading and writing with
    * this data model.
@@ -124,6 +128,10 @@ public class GenericData {
       conversions.put(conversion.getLogicalTypeName(), conversion);
       conversionsByClass.put(type, conversions);
     }
+  }
+
+  public void addParameterisedType(Class<?> clazz) {
+    parameterisedTypes.add(clazz);
   }
 
   /**
@@ -752,7 +760,8 @@ public class GenericData {
       }
     }
 
-    Integer i = union.getIndexNamed(getSchemaName(datum));
+    String schemaName = getSchemaName(datum);
+    Integer i = union.getIndexNamed(schemaName);
     if (i != null)
       return i;
     throw new UnresolvedUnionException(union, datum);
@@ -771,6 +780,8 @@ public class GenericData {
       return Type.ARRAY.getName();
     if (isMap(datum))
       return Type.MAP.getName();
+    if (isParameterisedType(datum))
+      return Type.PARAM.getName();
     if (isFixed(datum))
       return getFixedSchema(datum).getFullName();
     if (isString(datum))
@@ -858,6 +869,10 @@ public class GenericData {
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
+  }
+
+  protected boolean isParameterisedType(Object datum) {
+    return parameterisedTypes.contains(datum.getClass());
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/
