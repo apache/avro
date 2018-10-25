@@ -109,7 +109,7 @@ public class GenericData {
 
   private Map<Class<?>, Class[]> classUnionTypes = new HashMap<Class<?>, Class[]>();
 
-  protected Set<Class<?>> parameterisedTypes = new HashSet<Class<?>>();
+  protected final Set<Class<?>> parameterisedTypes = new HashSet<Class<?>>();
 
   /**
    * Registers the given conversion to be used when reading and writing with

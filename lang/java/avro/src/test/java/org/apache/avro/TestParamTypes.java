@@ -166,7 +166,6 @@ public class TestParamTypes {
     TestPair2 testPair2 = new TestPair2(pair);
 
     ReflectData reflectData = new ReflectData.AllowNull();
-    //ReflectData reflectData = new ReflectData();
     Schema schema = reflectData.getSchema(TestPair2.class);
     assertNotNull(schema);
     String schemaJson = schema.toString();
@@ -192,7 +191,7 @@ public class TestParamTypes {
   }
 
   @Test
-  public void shouldGenAndParseSchema() {
+  public void shouldGenerateAndParseSchema() {
     ReflectData reflectData = new ReflectData.AllowNull();
     Schema schema = reflectData.getSchema(TestPair2.class);
     assertNotNull(schema);
@@ -214,7 +213,6 @@ public class TestParamTypes {
     TestMap2 testMap2 = new TestMap2(sampleMap);
 
     ReflectData reflectData = new ReflectData.AllowNull();
-    //ReflectData reflectData = new ReflectData();
     Schema schema = reflectData.getSchema(TestMap2.class);
     assertNotNull(schema);
     String schemaJson = schema.toString();

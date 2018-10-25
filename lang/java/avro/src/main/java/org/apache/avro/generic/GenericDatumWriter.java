@@ -242,8 +242,6 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     }
   }
 
-  /** Called to write a map.  May be overridden for alternate map
-   * representations.*/
   protected void writeParam(Schema schema, Object datum, Encoder out)
     throws IOException {
     Schema value = schema.getValueType();

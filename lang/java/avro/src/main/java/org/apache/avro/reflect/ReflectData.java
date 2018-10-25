@@ -428,6 +428,7 @@ public class ReflectData extends SpecificData {
   static final int NS_MAP_KEY_INDEX = 0;      // index of key field
   static final String NS_MAP_VALUE = "value"; // name of value field
   static final int NS_MAP_VALUE_INDEX = 1;    // index of value field
+  static final String NS_PARAM_VALUE = "value"; // name of param value field
 
   /*
    * Non-string map-keys need special handling and we convert it to an
@@ -524,35 +525,34 @@ public class ReflectData extends SpecificData {
         Schema schema = Schema.createArray(createSchema(params[0], names));
         schema.addProp(CLASS_PROP, raw.getName());
         return schema;
-      } else if(params.length == 1 && !(params[0] instanceof WildcardType)) {
-        Schema valueSchema = createSchema(params[0], names);
-        Schema.Field valueField =
-          new Schema.Field(NS_MAP_VALUE, valueSchema, null, null);
-        Schema elementSchema = Schema.createRecord(raw.getSimpleName(), null,
-          raw.getPackage().getName(), false);
-        elementSchema.setFields(Collections.singletonList(valueField));
-        elementSchema.addProp(CLASS_PROP, raw.getName());
-
-        parameterisedTypes.add(raw);
-        return Schema.createParam(elementSchema);
-        //return elementSchema;
-      } else if(params.length == 2){
-        Schema keySchema = createSchema(params[0], names);
-        Schema valueSchema = createSchema(params[1], names);
-        Schema.Field keyField =
-          new Schema.Field(NS_MAP_KEY, keySchema, null, null);
-        Schema.Field valueField =
-          new Schema.Field(NS_MAP_VALUE, valueSchema, null, null);
-        //String name = getNameForNonStringMapRecord(params[0], params[1],
-        //keySchema, valueSchema);
-        //Schema elementSchema = Schema.createRecord(name, null, null, false);
-        Schema elementSchema = Schema.createRecord(raw.getSimpleName(), null,
-          raw.getPackage().getName(), false);
-        elementSchema.setFields(Arrays.asList(keyField, valueField));
-        elementSchema.addProp(CLASS_PROP, raw.getName());
-        parameterisedTypes.add(raw);
-        return Schema.createParam(elementSchema);
-        //return elementSchema;
+      } else if(params.length > 0) {
+        boolean hasWildCardParams = false;
+        for (Type param1 : params) {
+          if (param1 instanceof WildcardType) {
+            hasWildCardParams = true;
+            break;
+          }
+        }
+        if(!hasWildCardParams) {
+          parameterisedTypes.add(raw);
+          Field[] declaredFields = raw.getDeclaredFields();
+          if(declaredFields.length != params.length) {
+            throw new AvroTypeException("Declared fields size and type params size are not equal");
+          }
+          List<Schema.Field> fields = new ArrayList<Schema.Field>();
+          for (int i = 0; i < params.length; i++) {
+            Type param = params[i];
+            String fieldName = declaredFields[i].getName();
+            Schema schema = createSchema(param, names);
+            Schema.Field field = new Schema.Field(fieldName, schema, null, null);
+            fields.add(field);
+          }
+          Schema paramSchema = Schema.createRecord(raw.getSimpleName(), null,
+            raw.getPackage().getName(), false);
+          paramSchema.setFields(fields);
+          paramSchema.addProp(CLASS_PROP, raw.getName());
+          return Schema.createParam(paramSchema);
+        }
       }
     } else if ((type == Byte.class) || (type == Byte.TYPE)) {
       Schema result = Schema.create(Schema.Type.INT);
