@@ -1,8 +1,10 @@
 # Change Log
 
 ## Unreleased
-* Upgrade Spock from 1.0 to 1.2
+* Built using Gradle 4.10.2
+* Updated compatibility testing through Gradle 4.10.2
 * Added support for the Gradle [Build Cache](https://docs.gradle.org/current/userguide/build_cache.html) (#48); contribution from [dcabasson](https://github.com/dcabasson)
+* Upgrade Spock from 1.0 to 1.2
 * Update plugin publishing mode to address Gradle 5.0 deprecation warning
 
 ## 0.15.1
