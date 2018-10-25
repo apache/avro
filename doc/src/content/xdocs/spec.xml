@@ -172,6 +172,13 @@
 	    be unique; duplicates are prohibited.  Every symbol must
 	    match the regular expression <code>[A-Za-z_][A-Za-z0-9_]*</code>
 	    (the same requirement as for <a href="#names">names</a>).</li>
+	    <li><code>default:</code> A default value for this
+	      enumeration, used during resolution when the reader
+	      encounters a symbol from the writer that isn't defined
+	      in the reader's schema.  See documentation for record
+	      default for syntax and constraints on default values.
+	      See documentation on schema resolution for how this gets
+	      used.</li>
 	  </ul>
 	  <p>For example, playing card suits might be defined with:</p>
 	  <source>
@@ -1139,7 +1146,8 @@
 
         <li><strong>if both are enums:</strong>
           <p>if the writer's symbol is not present in the reader's
-            enum, then an error is signalled.</p>
+            enum and the reader has a <code>default</code> value, then
+            that value is used, otherwise an error is signalled.</p>
         </li>
 
         <li><strong>if both are arrays:</strong>
