@@ -540,14 +540,19 @@ public class ReflectData extends SpecificData {
             throw new AvroTypeException("Declared fields size and type params size are not equal");
           }
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
+          StringBuilder recordNameBuilder = new StringBuilder(raw.getSimpleName());
           for (int i = 0; i < params.length; i++) {
             Type param = params[i];
+            recordNameBuilder.append(((Class) param).getSimpleName());
             String fieldName = declaredFields[i].getName();
             Schema schema = createSchema(param, names);
             Schema.Field field = new Schema.Field(fieldName, schema, null, null);
             fields.add(field);
           }
-          Schema paramSchema = Schema.createRecord(raw.getSimpleName(), null,
+          String recordName = recordNameBuilder.toString();
+          String fpString = getFingerPrintStr(recordName);
+          recordName = recordName + fpString;
+          Schema paramSchema = Schema.createRecord(recordName, null,
             raw.getPackage().getName(), false);
           paramSchema.setFields(fields);
           paramSchema.addProp(CLASS_PROP, raw.getName());
@@ -682,6 +687,18 @@ public class ReflectData extends SpecificData {
       return schema;
     }
     return super.createSchema(type, names);
+  }
+
+  private String getFingerPrintStr(String recordName) {
+    try {
+      long fingerprint = SchemaNormalization.fingerprint64(recordName.getBytes("UTF-8"));
+      if (fingerprint < 0)
+        fingerprint = -fingerprint;  // ignore sign
+      return Long.toString(fingerprint, 16);
+    } catch (UnsupportedEncodingException e) {
+      throw new AvroRuntimeException("Unable to generate fingerprint for recordName: " +
+        recordName, e);
+    }
   }
 
   @Override protected boolean isStringable(Class<?> c) {

@@ -89,21 +89,43 @@ public class TestParamTypes {
 
   private static class TestPair2 {
 
-    private Pair<Integer, String> value;
+    private Pair<Integer, String> value1;
+    private Pair<Long, Double> value2;
+    private Pair<Long, Double> value3;
 
-    public TestPair2(Pair<Integer, String> value) {
-      this.value = value;
+    public TestPair2(Pair<Integer, String> value1,
+      Pair<Long, Double> value2,
+      Pair<Long, Double> value3) {
+      this.value1 = value1;
+      this.value2 = value2;
+      this.value3 = value3;
     }
 
     public TestPair2() {
     }
 
-    public Pair<Integer, String> getValue() {
-      return value;
+    public Pair<Integer, String> getValue1() {
+      return value1;
     }
 
-    public void setValue(Pair<Integer, String> value) {
-      this.value = value;
+    public void setValue1(Pair<Integer, String> value1) {
+      this.value1 = value1;
+    }
+
+    public Pair<Long, Double> getValue2() {
+      return value2;
+    }
+
+    public void setValue2(Pair<Long, Double> value2) {
+      this.value2 = value2;
+    }
+
+    public Pair<Long, Double> getValue3() {
+      return value3;
+    }
+
+    public void setValue3(Pair<Long, Double> value3) {
+      this.value3 = value3;
     }
 
     @Override
@@ -115,12 +137,14 @@ public class TestParamTypes {
         return false;
       }
       TestPair2 testPair2 = (TestPair2) o;
-      return Objects.equals(getValue(), testPair2.getValue());
+      return Objects.equals(getValue1(), testPair2.getValue1()) &&
+        Objects.equals(getValue2(), testPair2.getValue2()) &&
+        Objects.equals(getValue3(), testPair2.getValue3());
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(getValue());
+      return Objects.hash(getValue1(), getValue2(), getValue3());
     }
   }
 
@@ -160,10 +184,18 @@ public class TestParamTypes {
 
   @Test
   public void shouldTest_Pair() throws IOException {
-    Pair<Integer, String> pair = new Pair<Integer, String>();
-    pair.setKey(102);
-    pair.setValue("one_not_two");
-    TestPair2 testPair2 = new TestPair2(pair);
+    Pair<Integer, String> pair1 = new Pair<Integer, String>();
+    pair1.setKey(102);
+    pair1.setValue("one_not_two");
+
+    Pair<Long, Double> pair2 = new Pair<Long, Double>();
+    pair2.setKey(1001L);
+    pair2.setValue(1001.00);
+
+    Pair<Long, Double> pair3 = new Pair<Long, Double>();
+    pair3.setKey(2001L);
+    pair3.setValue(2001.00);
+    TestPair2 testPair2 = new TestPair2(pair1, pair2, pair3);
 
     ReflectData reflectData = new ReflectData.AllowNull();
     Schema schema = reflectData.getSchema(TestPair2.class);

@@ -1159,11 +1159,7 @@ public abstract class Schema extends JsonProperties {
     @Override
     public Schema put(Name name, Schema schema) {
       if (containsKey(name)) {
-        //throw new SchemaParseException("Can't redefine: "+name);
-        int randomInt = Math.abs(new Random().nextInt());
-        String newNameStr = name.name + randomInt;
-        Name newName = new Name(newNameStr, name.space);
-        return super.put(newName, schema);
+        throw new SchemaParseException("Can't redefine: "+name);
       } else {
         return super.put(name, schema);
       }
