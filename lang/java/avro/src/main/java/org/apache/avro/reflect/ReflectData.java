@@ -696,8 +696,8 @@ public class ReflectData extends SpecificData {
         fingerprint = -fingerprint;  // ignore sign
       return Long.toString(fingerprint, 16);
     } catch (UnsupportedEncodingException e) {
-      throw new AvroRuntimeException("Unable to generate fingerprint for recordName: " +
-        recordName, e);
+      throw new AvroRuntimeException("Unable to generate fingerprint"
+        + " for recordName: " + recordName, e);
     }
   }
 
