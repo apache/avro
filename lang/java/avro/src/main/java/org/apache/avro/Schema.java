@@ -34,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.avro.util.internal.JacksonUtils;
@@ -1124,9 +1125,15 @@ public abstract class Schema extends JsonProperties {
     }
     @Override
     public Schema put(Name name, Schema schema) {
-      if (containsKey(name))
-        throw new SchemaParseException("Can't redefine: "+name);
-      return super.put(name, schema);
+      if (containsKey(name)) {
+        //throw new SchemaParseException("Can't redefine: "+name);
+        int randomInt = Math.abs(new Random().nextInt());
+        String newNameStr = name.name + randomInt;
+        Name newName = new Name(newNameStr, name.space);
+        return super.put(newName, schema);
+      } else {
+        return super.put(name, schema);
+      }
     }
   }
 
