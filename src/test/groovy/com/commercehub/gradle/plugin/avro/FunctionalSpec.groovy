@@ -41,7 +41,7 @@ abstract class FunctionalSpec extends Specification {
         println "Testing using Avro version ${avroVersion}."
         println "Testing using Gradle version ${gradleVersion}."
 
-        buildFile = testProjectDir.newFile('build.gradle')
+        buildFile = testProjectDir.newFile("build.gradle")
         avroDir = testProjectDir.newFolder("src", "main", "avro")
         avroSubDir = testProjectDir.newFolder("src", "main", "avro", "foo")
 
@@ -72,7 +72,7 @@ abstract class FunctionalSpec extends Specification {
         applyPlugin("com.commercehub.gradle.plugin.avro-base")
     }
 
-    private void applyPlugin(String pluginId) {
+    protected void applyPlugin(String pluginId) {
         buildFile << "apply plugin: \"${pluginId}\"\n"
     }
 
@@ -82,6 +82,10 @@ abstract class FunctionalSpec extends Specification {
 
     protected void addAvroDependency() {
         addDependency("org.apache.avro:avro:${avroVersion}")
+    }
+
+    protected void addAvroIpcDependency() {
+        addDependency("org.apache.avro:avro-ipc:${avroVersion}")
     }
 
     protected void copyResource(String name, File targetFolder) {

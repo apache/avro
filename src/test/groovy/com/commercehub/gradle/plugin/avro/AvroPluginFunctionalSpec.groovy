@@ -39,9 +39,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
 
     def "can generate and compile java files from json protocol"() {
         given:
-        buildFile << """
-            dependencies { compile "org.apache.avro:avro-ipc:${avroVersion}" }
-        """
+        addAvroIpcDependency()
         copyResource("mail.avpr", avroDir)
 
         when:
@@ -87,9 +85,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
 
     def "supports json protocol files in subdirectories"() {
         given:
-        buildFile << """
-            dependencies { compile "org.apache.avro:avro-ipc:${avroVersion}" }
-        """
+        addAvroIpcDependency()
         copyResource("mail.avpr", avroSubDir)
 
         when:

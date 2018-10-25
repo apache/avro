@@ -20,13 +20,11 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 class IntellijFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
+        applyPlugin("idea")
     }
 
     def "generated intellij project files include source directories for generated source"() {
         given:
-        buildFile << """
-            apply plugin: "idea"
-        """
         copyResource("user.avsc", avroDir)
         testProjectDir.newFolder("src", "main", "java")
         testProjectDir.newFolder("src", "test", "java")
@@ -49,10 +47,6 @@ class IntellijFunctionalSpec extends FunctionalSpec {
     }
 
     def "generated output directories are created by default"() {
-        given:
-        buildFile << """
-            apply plugin: "idea"
-        """
         when:
         def result = run("idea")
 
@@ -65,7 +59,6 @@ class IntellijFunctionalSpec extends FunctionalSpec {
     def "overriding task's outputDir doesn't result in default directory still being created"() {
         given:
         buildFile << """
-            apply plugin: "idea"
             generateAvroJava {
                 outputDir = file("build/generatedMainAvro")
             }
