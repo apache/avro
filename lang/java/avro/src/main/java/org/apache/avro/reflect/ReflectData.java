@@ -536,9 +536,6 @@ public class ReflectData extends SpecificData {
         if(!hasWildCardParams) {
           parameterisedTypes.add(raw);
           Field[] declaredFields = raw.getDeclaredFields();
-          if(declaredFields.length != params.length) {
-            throw new AvroTypeException("Declared fields size and type params size are not equal");
-          }
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
           StringBuilder recordNameBuilder = new StringBuilder(raw.getSimpleName());
           for (int i = 0; i < params.length; i++) {
