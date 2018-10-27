@@ -161,7 +161,20 @@ public class SpecificData extends GenericData {
         try {
           c = ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
-          c = NO_CLASS;
+          //handle parameterised types
+          String className = schema.getProp(CLASS_PROP);
+          if(className != null) {
+            try {
+              Class<?> clazz = ClassUtils.forName(getClassLoader(), className);
+              if(parameterisedTypes.contains(clazz)) {
+                c = clazz;
+              } else {
+                c = NO_CLASS;
+              }
+            } catch (ClassNotFoundException ignored) {
+              c = NO_CLASS;
+            }
+          }
         }
         classCache.put(name, c);
       }

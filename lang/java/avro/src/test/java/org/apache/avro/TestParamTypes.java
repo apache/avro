@@ -148,20 +148,68 @@ public class TestParamTypes {
     }
   }
 
+  private static class TestMap1 {
+
+    private Map<Integer, String> value1;
+
+    public TestMap1(Map<Integer, String> value1) {
+      this.value1 = value1;
+    }
+
+    public Map<Integer, String> getValue1() {
+      return value1;
+    }
+
+    public void setValue1(Map<Integer, String> value1) {
+      this.value1 = value1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      TestMap1 testMap1 = (TestMap1) o;
+      return Objects.equals(getValue1(), testMap1.getValue1());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getValue1());
+    }
+  }
+
   private static class TestMap2 {
 
-    private Map<Integer, String> value;
+    private Map<Integer, String> value1;
+    private Map<Integer, String> value2;
 
-    public TestMap2(Map<Integer, String> value) {
-      this.value = value;
+    public TestMap2(Map<Integer, String> value1,
+      Map<Integer, String> value2) {
+      this.value1 = value1;
+      this.value2 = value2;
     }
 
-    public Map<Integer, String> getValue() {
-      return value;
+    public TestMap2() {
     }
 
-    public void setValue(Map<Integer, String> value) {
-      this.value = value;
+    public Map<Integer, String> getValue1() {
+      return value1;
+    }
+
+    public void setValue1(Map<Integer, String> value1) {
+      this.value1 = value1;
+    }
+
+    public Map<Integer, String> getValue2() {
+      return value2;
+    }
+
+    public void setValue2(Map<Integer, String> value2) {
+      this.value2 = value2;
     }
 
     @Override
@@ -173,12 +221,13 @@ public class TestParamTypes {
         return false;
       }
       TestMap2 testMap2 = (TestMap2) o;
-      return Objects.equals(getValue(), testMap2.getValue());
+      return Objects.equals(getValue1(), testMap2.getValue1()) &&
+        Objects.equals(getValue2(), testMap2.getValue2());
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(getValue());
+      return Objects.hash(getValue1(), getValue2());
     }
   }
 
@@ -220,6 +269,9 @@ public class TestParamTypes {
 
     TestPair2 testPair2_DeSerialized = datumReader.read(null, decoder);
     assertNotNull(testPair2_DeSerialized);
+
+    Pair<Integer, String> value1 = testPair2_DeSerialized.getValue1();
+    assertEquals(value1.getClass(), Pair.class);
   }
 
   @Test
@@ -236,13 +288,49 @@ public class TestParamTypes {
   }
 
   @Test
-  public void shouldTest_Map() throws IOException {
-    Map<Integer, String> sampleMap = new HashMap<Integer, String>();
-    sampleMap.put(1, "one");
-    sampleMap.put(2, "two");
-    assertEquals(2, sampleMap.size());
+  public void shouldTest_Map1() throws IOException {
+    Map<Integer, String> map1 = new HashMap<Integer, String>();
+    map1.put(1, "one");
+    map1.put(2, "two");
 
-    TestMap2 testMap2 = new TestMap2(sampleMap);
+    TestMap1 testMap1 = new TestMap1(map1);
+
+    ReflectData reflectData = new ReflectData.AllowNull();
+    Schema schema = reflectData.getSchema(TestMap1.class);
+    assertNotNull(schema);
+    String schemaJson = schema.toString();
+    assertNotNull(schemaJson);
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+    DatumWriter<TestMap1> datumWriter = new ReflectDatumWriter<TestMap1>(schema, reflectData);
+    datumWriter.write(testMap1, encoder);
+
+    encoder.flush();
+    outputStream.close();
+    byte[] bytes = outputStream.toByteArray();
+    assertNotNull(bytes);
+
+    DatumReader<TestMap1> datumReader = new ReflectDatumReader<TestMap1>(schema, schema,
+      reflectData);
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+
+    TestMap1 testMap_deSerialized = datumReader.read(null, decoder);
+    assertNotNull(testMap_deSerialized);
+  }
+
+  @Test
+  public void shouldTest_Map2() throws IOException {
+    HashMap<Integer, String> map1 = new HashMap<Integer, String>();
+    map1.put(1, "one");
+    map1.put(2, "two");
+
+    Map<Integer, String> map2 = new HashMap<Integer, String>();
+    map1.put(11, "eleven");
+    map1.put(12, "twelve");
+
+    TestMap2 testMap2 = new TestMap2(map1, map2);
 
     ReflectData reflectData = new ReflectData.AllowNull();
     Schema schema = reflectData.getSchema(TestMap2.class);
@@ -259,5 +347,13 @@ public class TestParamTypes {
     outputStream.close();
     byte[] bytes = outputStream.toByteArray();
     assertNotNull(bytes);
+
+    DatumReader<TestMap2> datumReader = new ReflectDatumReader<TestMap2>(schema, schema,
+      reflectData);
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+
+    TestMap2 testMap_deSerialized = datumReader.read(null, decoder);
+    assertNotNull(testMap_deSerialized);
   }
 }

@@ -871,8 +871,8 @@ public class GenericData {
     return datum instanceof Map;
   }
 
-  protected boolean isParameterisedType(Object datum) {
-    return parameterisedTypes.contains(datum.getClass());
+  public boolean isParameterisedType(Object datum) {
+    return (datum != null) && parameterisedTypes.contains(datum.getClass());
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/

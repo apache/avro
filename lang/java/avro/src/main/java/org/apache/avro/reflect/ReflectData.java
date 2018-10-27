@@ -495,6 +495,13 @@ public class ReflectData extends SpecificData {
     return false;
   }
 
+  static boolean isParamSchema(Schema s) {
+    if (s != null && s.getType() == Schema.Type.PARAM) {
+      return true;
+    }
+    return false;
+  }
+
   @Override
   protected Schema createSchema(Type type, Map<String,Schema> names) {
     if (type instanceof GenericArrayType) {                  // generic array
@@ -535,20 +542,25 @@ public class ReflectData extends SpecificData {
         }
         if(!hasWildCardParams) {
           parameterisedTypes.add(raw);
-          Field[] declaredFields = raw.getDeclaredFields();
+
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
+          List<String> fieldNames = new ArrayList<String>();
+          Field[] cachedFields = getCachedFields(raw);
+          for (Field field : cachedFields) {
+            if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0) {
+              fieldNames.add(field.getName());
+            }
+          }
           StringBuilder recordNameBuilder = new StringBuilder(raw.getSimpleName());
           for (int i = 0; i < params.length; i++) {
             Type param = params[i];
             recordNameBuilder.append(((Class) param).getSimpleName());
-            String fieldName = declaredFields[i].getName();
+            String fieldName = fieldNames.get(i);
             Schema schema = createSchema(param, names);
             Schema.Field field = new Schema.Field(fieldName, schema, null, null);
             fields.add(field);
           }
           String recordName = recordNameBuilder.toString();
-          String fpString = getFingerPrintStr(recordName);
-          recordName = recordName + fpString;
           Schema paramSchema = Schema.createRecord(recordName, null,
             raw.getPackage().getName(), false);
           paramSchema.setFields(fields);
