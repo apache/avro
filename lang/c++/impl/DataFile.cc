@@ -90,12 +90,12 @@ DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& 
 
 DataFileWriterBase::DataFileWriterBase(std::auto_ptr<OutputStream> outputStream,
     const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(nullptr),
+    filename_(NULL),
     schema_(schema),
     encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
     codec_(codec),
-    stream_(std::move(outputStream)),
+    stream_(outputStream),
     buffer_(memoryOutputStream()),
     sync_(makeSync()),
     objectCount_(0)
@@ -281,7 +281,7 @@ DataFileReaderBase::DataFileReaderBase(const char* filename) :
 }
 
 DataFileReaderBase::DataFileReaderBase(std::auto_ptr<InputStream> inputStream) :
-    filename_(nullptr), stream_(inputStream),
+    filename_(NULL), stream_(inputStream),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
@@ -527,25 +527,27 @@ void DataFileReaderBase::readHeader()
     blockStart_ = stream_->byteCount();
 }
 
-void DataFileReaderBase::seek(int64_t position) {
-    if (!eof_) {
-        dataDecoder_->init(*dataStream_);
-        drain(*dataStream_);
+void DataFileReaderBase::doSeek(int64_t position) {
+    if (SeekableInputStream *ss = dynamic_cast<SeekableInputStream *>(stream_.get())) {
+        if (!eof_) {
+            dataDecoder_->init(*dataStream_);
+            drain(*dataStream_);
+        }
+        decoder_->init(*stream_);
+        ss->seek(position);
+        eof_ = false;
+    } else {
+        throw Exception("seek not supported on non-SeekableInputStream");
     }
-    decoder_->init(*stream_);
-    stream_->seek(position);
-    eof_ = false;
+}
+
+void DataFileReaderBase::seek(int64_t position) {
+    doSeek(position);
     readDataBlock();
 }
 
 void DataFileReaderBase::sync(int64_t position) {
-    if (!eof_) {
-        dataDecoder_->init(*dataStream_);
-        drain(*dataStream_);
-    }
-    decoder_->init(*stream_);
-    stream_->seek(position);
-    eof_ = false;
+    doSeek(position);
     DataFileSync sync_buffer;
     const uint8_t *p = 0;
     size_t n = 0;
