@@ -183,7 +183,7 @@ public:
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
-    const std::auto_ptr<SeekableInputStream> stream_;
+    const std::auto_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
@@ -207,6 +207,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     void readHeader();
 
     bool readDataBlock();
+    void doSeek(int64_t position);
 public:
     /**
      * Returns the current decoder for this reader.

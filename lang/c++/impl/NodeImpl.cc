@@ -28,7 +28,8 @@ namespace {
 std::string escape(const std::string &unescaped) {
   std::string s;
   s.reserve(unescaped.length());
-  for (auto c : unescaped) {
+  for (std::string::const_iterator it = unescaped.begin(); it != unescaped.end(); ++it) {
+    char c = *it;
     switch (c) {
       case '\\':
       case '"':
@@ -289,10 +290,10 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
       os << g.value<int64_t>();
       break;
     case AVRO_FLOAT:
-      os << std::to_string(g.value<float>());
+      os << g.value<float>();
       break;
     case AVRO_DOUBLE:
-      os << std::to_string(g.value<double>());
+      os << g.value<double>();
       break;
     case AVRO_STRING:
       os << "\"" << escape(g.value<std::string>()) << "\"";
