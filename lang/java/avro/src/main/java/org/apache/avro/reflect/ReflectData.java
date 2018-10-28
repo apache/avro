@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -541,23 +542,31 @@ public class ReflectData extends SpecificData {
           }
         }
         if(!hasWildCardParams) {
-          parameterisedTypes.add(raw);
+          //add raw type to parameterized type list
+          addParameterisedType(raw);
+          //build a recordName that is unique including just the param types
+          StringBuilder recordNameBuilder = new StringBuilder(raw.getSimpleName());
+          Map<String, Type> typeParamMap = new HashMap<String, Type>();
+          TypeVariable[] typeParameters = raw.getTypeParameters();
+          for (int i = 0; i < typeParameters.length; i++) {
+            TypeVariable typeVariable = typeParameters[i];
+            typeParamMap.put(typeVariable.getName(), params[i]);
+            recordNameBuilder.append(((Class) params[i]).getSimpleName());
+          }
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
-          List<String> fieldNames = new ArrayList<String>();
           Field[] cachedFields = getCachedFields(raw);
           for (Field field : cachedFields) {
             if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0) {
-              fieldNames.add(field.getName());
+              Type fieldGenericType = field.getGenericType();
+              Type fieldType = fieldGenericType;
+              if(fieldGenericType instanceof TypeVariable) {
+                fieldType = typeParamMap.get(fieldGenericType.toString());
+              }
+              String fieldName = field.getName();
+              Schema schema = createSchema(fieldType, names);
+              Schema.Field schemaField = new Schema.Field(fieldName, schema, null, null);
+              fields.add(schemaField);
             }
-          }
-          StringBuilder recordNameBuilder = new StringBuilder(raw.getSimpleName());
-          for (int i = 0; i < params.length; i++) {
-            Type param = params[i];
-            recordNameBuilder.append(((Class) param).getSimpleName());
-            String fieldName = fieldNames.get(i);
-            Schema schema = createSchema(param, names);
-            Schema.Field field = new Schema.Field(fieldName, schema, null, null);
-            fields.add(field);
           }
           String recordName = recordNameBuilder.toString();
           Schema paramSchema = Schema.createRecord(recordName, null,

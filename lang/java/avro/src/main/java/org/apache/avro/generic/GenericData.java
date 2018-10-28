@@ -130,7 +130,7 @@ public class GenericData {
     }
   }
 
-  public void addParameterisedType(Class<?> clazz) {
+  protected void addParameterisedType(Class<?> clazz) {
     parameterisedTypes.add(clazz);
   }
 

@@ -89,6 +89,64 @@ public class TestParamTypes {
     }
   }
 
+  private static class Pair2<K, V> {
+
+    private int id;
+    private K key;
+    private V value;
+
+    public Pair2(int id, K key, V value) {
+      this.id = id;
+      this.key = key;
+      this.value = value;
+    }
+
+    private Pair2() {
+    }
+
+    public int getId() {
+      return id;
+    }
+
+    public void setId(int id) {
+      this.id = id;
+    }
+
+    public K getKey() {
+      return key;
+    }
+
+    public void setKey(K key) {
+      this.key = key;
+    }
+
+    public V getValue() {
+      return value;
+    }
+
+    public void setValue(V value) {
+      this.value = value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Pair2<?, ?> pair2 = (Pair2<?, ?>) o;
+      return getId() == pair2.getId() &&
+        Objects.equals(getKey(), pair2.getKey()) &&
+        Objects.equals(getValue(), pair2.getValue());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getId(), getKey(), getValue());
+    }
+  }
 
   private static class TestPair2 {
 
@@ -148,6 +206,67 @@ public class TestParamTypes {
     @Override
     public int hashCode() {
       return Objects.hash(getValue1(), getValue2(), getValue3());
+    }
+  }
+
+  private static class TestPair3 {
+
+    private Integer id;
+    private Pair2<Long, Double> value2;
+    private Pair2<Long, Double> value3;
+
+    public TestPair3(Integer id,
+      Pair2<Long, Double> value2,
+      Pair2<Long, Double> value3) {
+      this.id = id;
+      this.value2 = value2;
+      this.value3 = value3;
+    }
+
+    public TestPair3() {
+    }
+
+    public Integer getId() {
+      return id;
+    }
+
+    public void setId(Integer id) {
+      this.id = id;
+    }
+
+    public Pair2<Long, Double> getValue2() {
+      return value2;
+    }
+
+    public void setValue2(Pair2<Long, Double> value2) {
+      this.value2 = value2;
+    }
+
+    public Pair2<Long, Double> getValue3() {
+      return value3;
+    }
+
+    public void setValue3(Pair2<Long, Double> value3) {
+      this.value3 = value3;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      TestPair3 testPair3 = (TestPair3) o;
+      return Objects.equals(getId(), testPair3.getId()) &&
+        Objects.equals(getValue2(), testPair3.getValue2()) &&
+        Objects.equals(getValue3(), testPair3.getValue3());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getId(), getValue2(), getValue3());
     }
   }
 
@@ -295,6 +414,48 @@ public class TestParamTypes {
 
     Pair<Integer, String> value1 = testPair2_DeSerialized.getValue1();
     assertEquals(value1.getClass(), Pair.class);
+  }
+
+  @Test
+  public void shouldTest_Pair_WithGenericAndNormalTypes() throws IOException {
+    Pair2<Long, Double> pair2_1 = new Pair2<Long, Double>();
+    pair2_1.setId(5001);
+    pair2_1.setKey(1001L);
+    pair2_1.setValue(1001.00);
+
+    Pair2<Long, Double> pair2_2 = new Pair2<Long, Double>();
+    pair2_2.setId(5002);
+    pair2_2.setKey(2001L);
+    pair2_2.setValue(2001.00);
+    TestPair3 testPair3 = new TestPair3(145, pair2_1, pair2_2);
+
+    ReflectData reflectData = new ReflectData.AllowNull();
+    Schema schema = reflectData.getSchema(TestPair3.class);
+    assertNotNull(schema);
+    String schemaJson = schema.toString();
+    assertNotNull(schemaJson);
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+    DatumWriter<TestPair3> datumWriter = new ReflectDatumWriter<TestPair3>(schema, reflectData);
+    datumWriter.write(testPair3, encoder);
+
+    encoder.flush();
+    outputStream.close();
+    byte[] bytes = outputStream.toByteArray();
+    assertNotNull(bytes);
+
+    DatumReader<TestPair3> datumReader = new ReflectDatumReader<TestPair3>(schema, schema,
+      reflectData);
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+
+    TestPair3 testPair3_DeSerialized = datumReader.read(null, decoder);
+    assertNotNull(testPair3_DeSerialized);
+
+    assertEquals(testPair3.getId(), testPair3_DeSerialized.getId());
+    Pair2<Long, Double> value2 = testPair3_DeSerialized.getValue2();
+    assertEquals(value2.getClass(), Pair2.class);
   }
 
   @Test
