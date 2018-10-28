@@ -178,6 +178,7 @@ public class SpecificData extends GenericData {
       return c == NO_CLASS ? null : c;
     case ARRAY:   return List.class;
     case MAP:     return Map.class;
+    case PARAM:   return getClass(schema.getValueType());
     case UNION:
       List<Schema> types = schema.getTypes();     // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
@@ -377,6 +378,13 @@ public class SpecificData extends GenericData {
     Class c = getClass(schema);
     if (c == null) return super.newRecord(old, schema); // punt to generic
     return (c.isInstance(old) ? old : newInstance(c, schema));
+  }
+
+  @Override
+  public Object newParam(Schema schema, Object record) {
+    Class c = getClass(schema);
+    if (c == null) return super.newParam(schema, record);
+    return (c.isInstance(record) ? record : newInstance(c, schema));
   }
 
   /** Tag interface that indicates that a class has a one-argument constructor

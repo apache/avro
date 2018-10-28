@@ -255,6 +255,64 @@ public class GenericData {
     }
   }
 
+  public static class Param implements Comparable<Param>, GenericContainer {
+    private final Schema schema;
+    private Object record;
+    public Param(Schema schema) {
+      if (schema == null || !Type.PARAM.equals(schema.getType()))
+        throw new AvroRuntimeException("Not a param schema: "+schema);
+      this.schema = schema;
+    }
+
+    public Param(Schema schema, Object record) {
+      this(schema);
+      this.record = record;
+    }
+
+    public void setRecord(Record record) {
+      this.record = record;
+    }
+
+    public Object getRecord() {
+      return record;
+    }
+
+    @Override
+    public int compareTo(Param that) {
+      return GenericData.get().compare(this, that, schema);
+    }
+
+    @Override
+    public Schema getSchema() {
+      return schema;
+    }
+
+    @Override
+    public int hashCode() {
+      return GenericData.get().hashCode(this, schema);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Param param = (Param) o;
+      return getSchema().equals(param.getSchema());
+    }
+
+    @Override
+    public String toString() {
+      if(record != null)
+        return record.toString();
+      else
+        return GenericData.get().toString(schema);
+    }
+  }
+
   /** Default implementation of an array. */
   @SuppressWarnings(value="unchecked")
   public static class Array<T> extends AbstractList<T>
@@ -1229,4 +1287,7 @@ public class GenericData {
     return new GenericData.Record(schema);
   }
 
+  public Object newParam(Schema schema, Object record) {
+    return new GenericData.Param(schema, record);
+  }
 }

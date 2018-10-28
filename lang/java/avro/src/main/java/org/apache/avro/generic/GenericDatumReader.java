@@ -176,7 +176,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case ENUM:    return readEnum(expected, in);
     case ARRAY:   return readArray(old, expected, in);
     case MAP:     return readMap(old, expected, in);
-    case PARAM:   return readRecord(old, expected.getValueType(), in);
+    case PARAM:   return readParam(old, expected, in);
     case UNION:   return read(old, expected.getTypes().get(in.readIndex()), in);
     case FIXED:   return readFixed(old, expected, in);
     case STRING:  return readString(old, expected, in);
@@ -189,6 +189,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
     case NULL:    in.readNull(); return null;
     default: throw new AvroRuntimeException("Unknown type: " + expected);
     }
+  }
+
+  private Object readParam(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    Schema schema = expected.getValueType();
+    Object record = readRecord(old, schema, in);
+    return data.newParam(expected, record);
   }
 
   /**

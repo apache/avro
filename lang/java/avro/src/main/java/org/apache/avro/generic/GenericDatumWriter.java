@@ -31,6 +31,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData.Param;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -245,7 +246,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   protected void writeParam(Schema schema, Object datum, Encoder out)
     throws IOException {
     Schema value = schema.getValueType();
-    writeRecord(value, datum, out);
+    Object reqDatum = datum;
+    if(datum instanceof GenericData.Param) {
+      Param paramDatum = (Param) datum;
+      reqDatum = paramDatum.getRecord();
+    }
+    writeRecord(value, reqDatum, out);
   }
 
   /** Called by the default implementation of {@link #writeMap} to get the size
