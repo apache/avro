@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.avro.Schema.Parser;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericData.EnumSymbol;
+import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumReader;
@@ -232,6 +235,26 @@ public class TestParamTypes {
   }
 
   @Test
+  public void shouldParseRecordToParamSchema() {
+//    Schema rootSchema = new Schema.Parser().parse(
+//      "[\"null\",{\"type\":\"param\",\"values\":{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}}]");
+
+    Schema rootSchema = new Schema.Parser().parse(
+      "[\"null\",{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}]");
+    GenericData data = ReflectData.AllowNull.get();
+
+    Schema schema = new Parser().parse(
+      "{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}");
+    Record record = new Record(schema);
+
+    Schema enumSchema = new Parser().parse(
+      "{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}}");
+    record.put("key", new EnumSymbol(enumSchema, "ABSOLUTE"));
+    record.put("value", 135L);
+    assertEquals(1, data.resolveUnion(rootSchema, record));
+  }
+
+  @Test
   public void shouldTest_Pair() throws IOException {
     Pair<Integer, String> pair1 = new Pair<Integer, String>();
     pair1.setKey(102);
@@ -355,5 +378,12 @@ public class TestParamTypes {
 
     TestMap2 testMap_deSerialized = datumReader.read(null, decoder);
     assertNotNull(testMap_deSerialized);
+  }
+
+  @Test
+  public void shouldDeserialize_ParamType_Generic() {
+    String schemaJson = "{\"type\":\"record\",\"name\":\"CancellationCharge\",\"namespace\":\"com.phonepe.services.models.ticketing.commons\",\"fields\":[{\"name\":\"cancellationCharge\",\"type\":[\"null\",{\"type\":\"param\",\"values\":{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}}],\"default\":null},{\"name\":\"cancellationInterval\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"AbsoluteTimeInterval\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"from\",\"type\":\"long\"},{\"name\":\"to\",\"type\":\"long\"},{\"name\":\"type\",\"type\":[\"null\",\"MetricType\"],\"default\":null}]},{\"type\":\"record\",\"name\":\"RelativeTimeInterval\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"from\",\"type\":[\"null\",{\"type\":\"param\",\"values\":{\"type\":\"record\",\"name\":\"PairTimeUnitInteger\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"TimeUnit\",\"namespace\":\"java.util.concurrent\",\"symbols\":[\"NANOSECONDS\",\"MICROSECONDS\",\"MILLISECONDS\",\"SECONDS\",\"MINUTES\",\"HOURS\",\"DAYS\"]}},{\"name\":\"value\",\"type\":\"int\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}}],\"default\":null},{\"name\":\"to\",\"type\":[\"null\",{\"type\":\"param\",\"values\":\"PairTimeUnitInteger\"}],\"default\":null},{\"name\":\"type\",\"type\":[\"null\",\"MetricType\"],\"default\":null}]}],\"default\":null},{\"name\":\"cancellationIntervalTag\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"cancellationChargeTag\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"cancellationChargeTagApplicable\",\"type\":\"boolean\"},{\"name\":\"cancellationIntervalTagApplicable\",\"type\":\"boolean\"}]}";
+
+    String data = "{\"cancellationCharge\": {\"key\": \"PERCENTAGE\", \"value\": 100}, \"cancellationInterval\": {\"from\": {\"key\": HOURS, \"value\": 4}, \"to\": {\"key\": HOURS, \"value\": 0}, \"type\": \"RELATIVE\"}, \"cancellationIntervalTag\": null, \"cancellationChargeTag\": null, \"cancellationChargeTagApplicable\": false, \"cancellationIntervalTagApplicable\": false}";
   }
 }

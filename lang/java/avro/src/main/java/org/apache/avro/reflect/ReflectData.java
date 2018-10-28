@@ -177,7 +177,7 @@ public class ReflectData extends SpecificData {
     if (datum instanceof Collection) return false;
     if (datum instanceof Map) return false;
     if (datum instanceof GenericFixed) return false;
-    if (parameterisedTypes.contains(datum.getClass())) return false;
+    if (isParameterisedType(datum)) return false;
     return getSchema(datum.getClass()).getType() == Schema.Type.RECORD;
   }
 
@@ -542,7 +542,6 @@ public class ReflectData extends SpecificData {
         }
         if(!hasWildCardParams) {
           parameterisedTypes.add(raw);
-
           List<Schema.Field> fields = new ArrayList<Schema.Field>();
           List<String> fieldNames = new ArrayList<String>();
           Field[] cachedFields = getCachedFields(raw);

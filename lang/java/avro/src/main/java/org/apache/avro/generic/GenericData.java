@@ -107,7 +107,7 @@ public class GenericData {
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
       new IdentityHashMap<Class<?>, Map<String, Conversion<?>>>();
 
-  private Map<Class<?>, Class[]> classUnionTypes = new HashMap<Class<?>, Class[]>();
+  private final Map<Class<?>, Class[]> classUnionTypes = new HashMap<Class<?>, Class[]>();
 
   protected final Set<Class<?>> parameterisedTypes = new HashSet<Class<?>>();
 
@@ -869,6 +869,10 @@ public class GenericData {
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
+  }
+
+  protected boolean isParameterisedType(Class<?> clazz) {
+    return (clazz != null) && parameterisedTypes.contains(clazz);
   }
 
   public boolean isParameterisedType(Object datum) {
