@@ -130,6 +130,19 @@ public class ResolvingDecoder extends ValidatingDecoder {
   }
 
   /**
+   * Same as {@link readFieldOrder} except that it returns
+   * <tt>null</tt> if there was no reordering of fields, i.e., if the
+   * correct thing for the reader to do is to read (all) of its fields
+   * in the order specified by its own schema (useful for
+   * optimizations).
+   */
+  public final Schema.Field[] readFieldOrderIfDiff() throws IOException {
+    Symbol.FieldOrderAction top
+      = (Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION);
+    return (top.noReorder ? null : top.fields);
+  }
+
+  /**
    * Consume any more data that has been written by the writer but not
    * needed by the reader so that the the underlying decoder is in proper
    * shape for the next record. This situation happens when, for example,
@@ -252,6 +265,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     parser.advance(Symbol.ENUM);
     Symbol.EnumAdjustAction top = (Symbol.EnumAdjustAction) parser.popSymbol();
     int n = in.readEnum();
+    if (top.noAdjustments) return n;
     Object o = top.adjustments[n];
     if (o instanceof Integer) {
       return ((Integer) o).intValue();
@@ -263,9 +277,17 @@ public class ResolvingDecoder extends ValidatingDecoder {
   @Override
   public int readIndex() throws IOException {
     parser.advance(Symbol.UNION);
-    Symbol.UnionAdjustAction top = (Symbol.UnionAdjustAction) parser.popSymbol();
-    parser.pushSymbol(top.symToParse);
-    return top.rindex;
+    Symbol top = parser.popSymbol();
+    int result;
+    if (top instanceof Symbol.UnionAdjustAction) {
+      result = ((Symbol.UnionAdjustAction) top).rindex;
+      top = ((Symbol.UnionAdjustAction) top).symToParse;
+    } else {
+      result = in.readIndex();
+      top = ((Symbol.Alternative) top).getSymbol(result);
+    }
+    parser.pushSymbol(top);
+    return result;
   }
 
   @Override

@@ -50,9 +50,7 @@ public class SymbolTest {
   @Test
   public void testSomeMethod() throws IOException {
     Schema schema = new Schema.Parser().parse(SCHEMA);
-
-    Symbol root = Symbol.root(new ResolvingGrammarGenerator()
-        .generate(schema, schema, new HashMap<>()));
+    Symbol root = new ResolvingGrammarGenerator().generate(schema, schema);
     validateNonNull(root, new HashSet<>());
   }
 
