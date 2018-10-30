@@ -22,8 +22,12 @@ import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
@@ -97,6 +101,10 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
       }
       if (collectionClass.isAssignableFrom(ArrayList.class))
         return new ArrayList<Object>();
+      if (collectionClass.isAssignableFrom(HashSet.class))
+        return new HashSet<Object>();
+      if (collectionClass.isAssignableFrom(HashMap.class))
+        return new HashMap<Object, Object>();
       return SpecificData.newInstance(collectionClass, schema);
     }
 

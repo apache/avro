@@ -22,8 +22,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.avro.Schema.Parser;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
@@ -39,6 +42,7 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectData.AllowNull;
 import org.apache.avro.reflect.ReflectDatumReader;
+import org.apache.avro.reflect.ReflectDatumWriter;
 import org.junit.Test;
 
 public class TestParamTypes {
@@ -469,7 +473,7 @@ public class TestParamTypes {
       } else {
         encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
       }
-      DatumWriter<T> datumWriter = new GenericDatumWriter<T>(schema, reflectData);
+      DatumWriter<T> datumWriter = new ReflectDatumWriter<T>(schema, reflectData);
       datumWriter.write(object, encoder);
 
       encoder.flush();
@@ -539,6 +543,7 @@ public class TestParamTypes {
 
   @Test
   public void shouldTest_Map1() throws IOException {
+    //Map<Integer, String> map1 = new ConcurrentHashMap<Integer, String>();
     Map<Integer, String> map1 = new HashMap<Integer, String>();
     map1.put(1, "one");
     map1.put(2, "two");
@@ -583,5 +588,60 @@ public class TestParamTypes {
 
     TestMap2 testMap_deSerialized = serDe.deserialize(bytes, schema);
     assertNotNull(testMap_deSerialized);
+  }
+
+  private static class TestSet {
+
+    private Set<String> data1;
+
+    public TestSet(Set<String> data1) {
+      this.data1 = data1;
+    }
+
+    public TestSet() {
+    }
+
+    public Set<String> getData1() {
+      return data1;
+    }
+
+    public void setData1(Set<String> data1) {
+      this.data1 = data1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      TestSet testSet = (TestSet) o;
+      return Objects.equals(getData1(), testSet.getData1());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getData1());
+    }
+  }
+
+  @Test
+  public void shouldSerDe_JavaSets() throws IOException {
+    Set<String> setData = new HashSet<String>();
+    setData.add("one");
+    setData.add("two");
+    TestSet testSet = new TestSet(setData);
+
+    AllowNull reflectData = new AllowNull();
+    Schema schema = reflectData.getSchema(TestSet.class);
+
+    SerDe<TestSet> serDe = new SerDe<TestSet>(reflectData);
+    byte[] bytes = serDe.serialize(testSet, schema);
+    assertNotNull(bytes);
+
+    TestSet testSet_DeSerialized = serDe.deserialize(bytes, schema);
+    assertNotNull(testSet_DeSerialized);
   }
 }
