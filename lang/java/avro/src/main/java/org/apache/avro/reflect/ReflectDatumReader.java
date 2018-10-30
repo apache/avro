@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
@@ -99,6 +97,9 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
         ((Collection<?>)old).clear();
         return old;
       }
+
+      //TODO: not sure if the below code handles different types of collections/map
+      //and concurrent types correctly
       if (collectionClass.isAssignableFrom(ArrayList.class))
         return new ArrayList<Object>();
       if (collectionClass.isAssignableFrom(HashSet.class))
