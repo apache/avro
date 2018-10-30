@@ -29,16 +29,16 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericData.Param;
 import org.apache.avro.generic.GenericData.Record;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectData.AllowNull;
 import org.apache.avro.reflect.ReflectDatumReader;
-import org.apache.avro.reflect.ReflectDatumWriter;
 import org.junit.Test;
 
 public class TestParamTypes {
@@ -276,6 +276,9 @@ public class TestParamTypes {
 
     private Map<Integer, String> value1;
 
+    public TestMap1() {
+    }
+
     public TestMap1(Map<Integer, String> value1) {
       this.value1 = value1;
     }
@@ -363,9 +366,6 @@ public class TestParamTypes {
     Schema rootParamSchema = new Schema.Parser().parse(
       "{\"type\":\"param\",\"values\":{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}}");
 
-//    Schema rootSchema = new Schema.Parser().parse(
-//      "[\"null\",{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}]");
-
     GenericData data = ReflectData.AllowNull.get();
     Schema schema = new Parser().parse(
       "{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}");
@@ -380,12 +380,52 @@ public class TestParamTypes {
     assertEquals(1, data.resolveUnion(rootSchema, param));
 
     AllowNull reflectData = new AllowNull();
-    byte[] bytes = serialize(param, rootSchema, reflectData);
+    SerDe<Param> serDe = new SerDe<Param>(reflectData, SerDeType.json);
+    byte[] bytes = serDe.serialize(param, rootSchema);
     assertNotNull(bytes);
   }
 
   @Test
   public void shouldTest_Pair() throws IOException {
+    TestPair2 testPair2 = getTestPair2();
+
+    ReflectData.AllowNull reflectData = new ReflectData.AllowNull();
+    Schema schema = reflectData.getSchema(TestPair2.class);
+    assertNotNull(schema);
+    String schemaJson = schema.toString();
+    assertNotNull(schemaJson);
+
+    SerDe<TestPair2> serDe = new SerDe<TestPair2>(reflectData);
+    byte[] bytes = serDe.serialize(testPair2, schema);
+    assertNotNull(bytes);
+
+    TestPair2 testPair2_DeSerialized = serDe.deserialize(bytes, schema);
+    assertNotNull(testPair2_DeSerialized);
+
+    Pair<Integer, String> value1 = testPair2_DeSerialized.getValue1();
+    assertEquals(value1.getClass(), Pair.class);
+  }
+
+  @Test
+  public void shouldTest_Pair_JsonSerDe() throws IOException {
+    TestPair2 testPair2 = getTestPair2();
+
+    ReflectData.AllowNull reflectData = new ReflectData.AllowNull();
+    Schema schema = reflectData.getSchema(TestPair2.class);
+    assertNotNull(schema);
+    String schemaJson = schema.toString();
+    assertNotNull(schemaJson);
+
+    SerDe<TestPair2> jsonSerDe = new SerDe<TestPair2>(reflectData, SerDeType.json);
+    byte[] jsonBytes = jsonSerDe.serialize(testPair2, schema);
+    assertNotNull(jsonBytes);
+    System.out.println(new String(jsonBytes));
+
+    TestPair2 testPair2_DeSerialized = jsonSerDe.deserialize(jsonBytes, schema);
+    assertNotNull(testPair2_DeSerialized);
+  }
+
+  private TestPair2 getTestPair2() {
     Pair<Integer, String> pair1 = new Pair<Integer, String>();
     pair1.setKey(102);
     pair1.setValue("one_not_two");
@@ -397,44 +437,59 @@ public class TestParamTypes {
     Pair<Long, Double> pair3 = new Pair<Long, Double>();
     pair3.setKey(2001L);
     pair3.setValue(2001.00);
-    TestPair2 testPair2 = new TestPair2(pair1, pair2, pair3);
 
-    ReflectData reflectData = new ReflectData.AllowNull();
-    Schema schema = reflectData.getSchema(TestPair2.class);
-    assertNotNull(schema);
-    String schemaJson = schema.toString();
-    assertNotNull(schemaJson);
-
-    byte[] bytes = serialize(testPair2, schema, reflectData);
-    assertNotNull(bytes);
-
-    TestPair2 testPair2_DeSerialized = deserialize(bytes, schema, reflectData);
-    assertNotNull(testPair2_DeSerialized);
-
-    Pair<Integer, String> value1 = testPair2_DeSerialized.getValue1();
-    assertEquals(value1.getClass(), Pair.class);
+    return new TestPair2(pair1, pair2, pair3);
   }
 
-  private <T> byte[] serialize(T object, Schema schema, ReflectData reflectData)
-    throws IOException {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
-    DatumWriter<T> datumWriter = new ReflectDatumWriter<T>(schema, reflectData);
-    datumWriter.write(object, encoder);
 
-    encoder.flush();
-    outputStream.close();
-    return outputStream.toByteArray();
+  private enum SerDeType {
+    json, avro
   }
 
-  private <T> T deserialize(byte[] bytes, Schema schema, ReflectData reflectData)
-    throws IOException {
-    DatumReader<T> datumReader = new ReflectDatumReader<T>(schema, schema,
-      reflectData);
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+  private class SerDe<T> {
 
-    return datumReader.read(null, decoder);
+    private final ReflectData reflectData;
+    private final SerDeType serDeType;
+
+    SerDe(ReflectData reflectData) {
+      this.reflectData = reflectData;
+      this.serDeType = SerDeType.avro;
+    }
+
+    SerDe(ReflectData reflectData, SerDeType serDeType) {
+      this.reflectData = reflectData;
+      this.serDeType = serDeType;
+    }
+
+    byte[] serialize(T object, Schema schema) throws IOException {
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      Encoder encoder;
+      if (SerDeType.json.equals(serDeType)) {
+        encoder = EncoderFactory.get().jsonEncoder(schema, outputStream);
+      } else {
+        encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+      }
+      DatumWriter<T> datumWriter = new GenericDatumWriter<T>(schema, reflectData);
+      datumWriter.write(object, encoder);
+
+      encoder.flush();
+      outputStream.close();
+      return outputStream.toByteArray();
+    }
+
+    T deserialize(byte[] bytes, Schema schema) throws IOException {
+      DatumReader<T> datumReader = new ReflectDatumReader<T>(schema, schema,
+        reflectData);
+      ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+      Decoder decoder;
+      if (SerDeType.json.equals(serDeType)) {
+        decoder = DecoderFactory.get().jsonDecoder(schema, inputStream);
+      } else {
+        decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+      }
+
+      return datumReader.read(null, decoder);
+    }
   }
 
   @Test
@@ -451,15 +506,17 @@ public class TestParamTypes {
     TestPair3 testPair3 = new TestPair3(145, pair2_1, pair2_2);
 
     ReflectData reflectData = new ReflectData.AllowNull();
+
     Schema schema = reflectData.getSchema(TestPair3.class);
     assertNotNull(schema);
     String schemaJson = schema.toString();
     assertNotNull(schemaJson);
 
-    byte[] bytes = serialize(testPair3, schema, reflectData);
+    SerDe<TestPair3> serDe = new SerDe<TestPair3>(reflectData);
+    byte[] bytes = serDe.serialize(testPair3, schema);
     assertNotNull(bytes);
 
-    TestPair3 testPair3_DeSerialized = deserialize(bytes, schema, reflectData);
+    TestPair3 testPair3_DeSerialized = serDe.deserialize(bytes, schema);
     assertNotNull(testPair3_DeSerialized);
 
     assertEquals(testPair3.getId(), testPair3_DeSerialized.getId());
@@ -494,22 +551,11 @@ public class TestParamTypes {
     String schemaJson = schema.toString();
     assertNotNull(schemaJson);
 
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
-    DatumWriter<TestMap1> datumWriter = new ReflectDatumWriter<TestMap1>(schema, reflectData);
-    datumWriter.write(testMap1, encoder);
-
-    encoder.flush();
-    outputStream.close();
-    byte[] bytes = outputStream.toByteArray();
+    SerDe<TestMap1> serDe = new SerDe<TestMap1>(reflectData);
+    byte[] bytes = serDe.serialize(testMap1, schema);
     assertNotNull(bytes);
 
-    DatumReader<TestMap1> datumReader = new ReflectDatumReader<TestMap1>(schema, schema,
-      reflectData);
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
-
-    TestMap1 testMap_deSerialized = datumReader.read(null, decoder);
+    TestMap1 testMap_deSerialized = serDe.deserialize(bytes, schema);
     assertNotNull(testMap_deSerialized);
   }
 
@@ -531,29 +577,11 @@ public class TestParamTypes {
     String schemaJson = schema.toString();
     assertNotNull(schemaJson);
 
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
-    DatumWriter<TestMap2> datumWriter = new ReflectDatumWriter<TestMap2>(schema, reflectData);
-    datumWriter.write(testMap2, encoder);
-
-    encoder.flush();
-    outputStream.close();
-    byte[] bytes = outputStream.toByteArray();
+    SerDe<TestMap2> serDe = new SerDe<TestMap2>(reflectData);
+    byte[] bytes = serDe.serialize(testMap2, schema);
     assertNotNull(bytes);
 
-    DatumReader<TestMap2> datumReader = new ReflectDatumReader<TestMap2>(schema, schema,
-      reflectData);
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputStream, null);
-
-    TestMap2 testMap_deSerialized = datumReader.read(null, decoder);
+    TestMap2 testMap_deSerialized = serDe.deserialize(bytes, schema);
     assertNotNull(testMap_deSerialized);
-  }
-
-  @Test
-  public void shouldDeserialize_ParamType_Generic() {
-    String schemaJson = "{\"type\":\"record\",\"name\":\"CancellationCharge\",\"namespace\":\"com.phonepe.services.models.ticketing.commons\",\"fields\":[{\"name\":\"cancellationCharge\",\"type\":[\"null\",{\"type\":\"param\",\"values\":{\"type\":\"record\",\"name\":\"PairMetricTypeLong\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"MetricType\",\"symbols\":[\"ABSOLUTE\",\"PERCENTAGE\",\"RELATIVE\"]}},{\"name\":\"value\",\"type\":\"long\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}}],\"default\":null},{\"name\":\"cancellationInterval\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"AbsoluteTimeInterval\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"from\",\"type\":\"long\"},{\"name\":\"to\",\"type\":\"long\"},{\"name\":\"type\",\"type\":[\"null\",\"MetricType\"],\"default\":null}]},{\"type\":\"record\",\"name\":\"RelativeTimeInterval\",\"namespace\":\"com.phonepe.services.models.commons\",\"fields\":[{\"name\":\"from\",\"type\":[\"null\",{\"type\":\"param\",\"values\":{\"type\":\"record\",\"name\":\"PairTimeUnitInteger\",\"fields\":[{\"name\":\"key\",\"type\":{\"type\":\"enum\",\"name\":\"TimeUnit\",\"namespace\":\"java.util.concurrent\",\"symbols\":[\"NANOSECONDS\",\"MICROSECONDS\",\"MILLISECONDS\",\"SECONDS\",\"MINUTES\",\"HOURS\",\"DAYS\"]}},{\"name\":\"value\",\"type\":\"int\"}],\"java-class\":\"com.phonepe.services.models.commons.Pair\"}}],\"default\":null},{\"name\":\"to\",\"type\":[\"null\",{\"type\":\"param\",\"values\":\"PairTimeUnitInteger\"}],\"default\":null},{\"name\":\"type\",\"type\":[\"null\",\"MetricType\"],\"default\":null}]}],\"default\":null},{\"name\":\"cancellationIntervalTag\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"cancellationChargeTag\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"cancellationChargeTagApplicable\",\"type\":\"boolean\"},{\"name\":\"cancellationIntervalTagApplicable\",\"type\":\"boolean\"}]}";
-
-    String data = "{\"cancellationCharge\": {\"key\": \"PERCENTAGE\", \"value\": 100}, \"cancellationInterval\": {\"from\": {\"key\": HOURS, \"value\": 4}, \"to\": {\"key\": HOURS, \"value\": 0}, \"type\": \"RELATIVE\"}, \"cancellationIntervalTag\": null, \"cancellationChargeTag\": null, \"cancellationChargeTagApplicable\": false, \"cancellationIntervalTagApplicable\": false}";
   }
 }
