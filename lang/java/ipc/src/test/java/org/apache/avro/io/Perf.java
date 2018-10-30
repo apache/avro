@@ -19,6 +19,8 @@ package org.apache.avro.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -132,10 +134,18 @@ public class Perf {
     new TestDescriptor(ReflectNestedLargeFloatArrayTest.class, "-REFnlf").add(REFLECT);
     new TestDescriptor(ReflectNestedLargeFloatArrayBlockedTest.class, "-REFnlfb").add(REFLECT);
   }
+  private static final int NAME_FIELD = 0;
+  private static final int TIME_FIELD = 1;
+  private static final int BYTES_PS_FIELD = 2;
+  private static final int ENTRIES_PS_FIELD = 3;
+  private static final int BYTES_PC_FIELD = 4;
+  private static final int MAX_FIELD = 4;
 
   private static void usage() {
-    StringBuilder usage = new StringBuilder("Usage: Perf { -nowrite | -noread | ");
+    StringBuilder usage = new StringBuilder("Usage: Perf [-o <file>] [-c <spec>] { -nowrite | -noread | ");
     StringBuilder details = new StringBuilder();
+    details.append(" -o file   (send output to a file)\n");
+    details.append(" -c [n][t][e][b][c] (format as no-header CSV; include Name, Time, Entries/sec, Bytes/sec, and/or bytes/Cycle; no spec=all fields)\n");
     details.append(" -nowrite   (do not execute write tests)\n");
     details.append(" -noread   (do not execute write tests)\n");
     for (Map.Entry<String, List<TestDescriptor>> entry : BATCHES.entrySet()) {
@@ -159,7 +169,12 @@ public class Perf {
     List<Test> tests = new ArrayList<>();
     boolean writeTests = true;
     boolean readTests = true;
-    for (String a : args) {
+    String outputfilename = null;
+    PrintStream out = System.out;
+    boolean[] csvFormat = null;
+
+    for (int i = 0; i < args.length; i++) {
+      String a = args[i];
       TestDescriptor t = ALL_TESTS.get(a);
       if (null != t) {
         tests.add(t.test.newInstance());
@@ -169,6 +184,30 @@ public class Perf {
       if (null != lt) {
         for (TestDescriptor td : lt) {
           tests.add(td.test.newInstance());
+        }
+        continue;
+      }
+      if (i < args.length-1 && "-o".equals(a)) {
+        outputfilename = args[++i];
+        out = new PrintStream(new FileOutputStream(outputfilename));
+        continue;
+      }
+      if ("-c".equals(a)) {
+        if (i == args.length-1 || args[i+1].startsWith("-"))
+          csvFormat = new boolean[] { true, true, true, true, true };
+        else {
+          csvFormat = new boolean[5];
+          for (char c : args[++i].toCharArray())
+            switch (c) {
+            case 'n': csvFormat[NAME_FIELD] = true; break;
+            case 't': csvFormat[TIME_FIELD] = true; break;
+            case 'e': csvFormat[BYTES_PS_FIELD] = true; break;
+            case 'b': csvFormat[ENTRIES_PS_FIELD] = true; break;
+            case 'c': csvFormat[BYTES_PC_FIELD] = true; break;
+            default:
+              usage();
+              System.exit(1);
+            }
         }
         continue;
       }
@@ -192,6 +231,8 @@ public class Perf {
     }
     System.out.println("Executing tests: \n" + tests +  "\n readTests:" +
         readTests + "\n writeTests:" + writeTests + "\n cycles=" + CYCLES);
+    if (out != System.out) System.out.println(" Writing to: " + outputfilename);
+    if (csvFormat != null) System.out.println(" in CSV format.");
 
     for (int k = 0; k < tests.size(); k++) {
       Test t = tests.get(k);
@@ -211,7 +252,7 @@ public class Perf {
       }
     }
 
-    printHeader();
+    if (csvFormat == null) printHeader();
 
     for (int k = 0; k < tests.size(); k++) {
       Test t = tests.get(k);
@@ -236,14 +277,14 @@ public class Perf {
         for (int i = 0; i < t.cycles; i++) {
           s += t.readTest();
         }
-        printResult(s, t, t.name + "Read");
+        printResult(out, csvFormat, s, t, t.name + "Read");
       }
       s = 0;
       if (t.isWriteTest() && writeTests) {
         for (int i = 0; i < t.cycles; i++) {
           s += t.writeTest();
         }
-        printResult(s, t, t.name + "Write");
+        printResult(out, csvFormat, s, t, t.name + "Write");
       }
       t.reset();
     }
@@ -256,15 +297,32 @@ public class Perf {
     System.out.println(header.toString());
   }
 
-  private static final void printResult(long s, Test t, String name) {
+  private static final void printResult(PrintStream o, boolean[] csv,
+                                        long s, Test t, String name)
+  {
     s /= 1000;
     double entries = (t.cycles * (double) t.count);
     double bytes = t.cycles * (double) t.encodedSize;
     StringBuilder result = new StringBuilder();
-    result.append(String.format("%42s: %6d ms  ", name, (s/1000)));
-    result.append(String.format("%10.3f   %11.3f   %11d",
-        (entries / s), (bytes/ s),  t.encodedSize));
-    System.out.println(result.toString());
+    if (csv != null) {
+      boolean commaneeded = false;
+      for (int i = 0; i <= MAX_FIELD; i++) {
+        if (commaneeded) result.append(",");
+        else commaneeded = true;
+        switch (i) {
+        case NAME_FIELD: result.append(name); break;
+        case TIME_FIELD: result.append(String.format("%d", (s/1000))); break;
+        case BYTES_PS_FIELD: result.append(String.format("%.3f", (entries / s))); break;
+        case ENTRIES_PS_FIELD: result.append(String.format(".3%f", (bytes / s))); break;
+        case BYTES_PC_FIELD: result.append(String.format("%d", t.encodedSize)); break;
+        }
+      }
+    } else {
+      result.append(String.format("%42s: %6d ms  ", name, (s/1000)));
+      result.append(String.format("%10.3f   %11.3f   %11d",
+                                  (entries / s), (bytes/ s),  t.encodedSize));
+    }
+    o.println(result.toString());
   }
 
   private abstract static class Test {
