@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -100,7 +100,7 @@ namespace Avro.File
             // verify magic header
             byte[] magic = new byte[DataFileConstants.Magic.Length];
             inStream.Seek(0, SeekOrigin.Begin);
-            for (int c = 0; c < magic.Length; c = inStream.Read(magic, c, magic.Length - c)) { }
+            for (int c = 0; c < magic.Length; c += inStream.Read(magic, c, magic.Length - c)) { }
             inStream.Seek(0, SeekOrigin.Begin);
 
             if (magic.SequenceEqual(DataFileConstants.Magic))   // current format
