@@ -41,6 +41,7 @@
       com.thoughtworks.paranamer,
       org.codehaus.jackson*,
       org.xerial.snappy;resolution:=optional,
+      sun.misc;resolution:=optional,
       *
     </osgi.import>
     <osgi.export>org.apache.avro*;version="${project.version}"</osgi.export>
