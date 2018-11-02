@@ -39,7 +39,7 @@
     <!-- version properties for dependencies -->
 
     <hadoop2.version>2.7.3</hadoop2.version>
-    <jackson.version>1.9.13</jackson.version>
+    <jackson.version>2.9.7</jackson.version>
     <jetty.version>9.4.12.v20180830</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.12</junit.version>
@@ -413,13 +413,13 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-core-asl</artifactId>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
         <version>${jackson.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.codehaus.jackson</groupId>
-        <artifactId>jackson-mapper-asl</artifactId>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
         <version>${jackson.version}</version>
       </dependency>
       <dependency>

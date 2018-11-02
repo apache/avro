@@ -40,7 +40,7 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.Jsr310TimeConversions;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.specific.SpecificData;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -641,7 +641,7 @@ public class SpecificCompiler {
       throw new IllegalArgumentException("Can't check string-type of non-string/map type: " + s);
     }
     JsonNode override = s.getJsonProp(prop);
-    if (override != null) return override.getTextValue();
+    if (override != null) return override.textValue();
     switch (stringType) {
     case String:        return "java.lang.String";
     case Utf8:          return "org.apache.avro.util.Utf8";
@@ -818,12 +818,12 @@ public class SpecificCompiler {
     if (value == null)
       return new String[0];
     if (value.isTextual())
-      return new String[] { value.getTextValue() };
+      return new String[] { value.textValue() };
     if (value.isArray()) {
       int i = 0;
       String[] result = new String[value.size()];
       for (JsonNode v : value)
-        result[i++] = v.getTextValue();
+        result[i++] = v.textValue();
       return result;
     }
     return new String[0];

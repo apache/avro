@@ -52,8 +52,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.util.Utf8;
 
-import org.codehaus.jackson.JsonNode;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.MapMaker;
 
 /** Utilities for generic Java data. See {@link GenericRecordBuilder} for a convenient

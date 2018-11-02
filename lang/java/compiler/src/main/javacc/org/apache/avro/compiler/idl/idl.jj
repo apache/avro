@@ -74,8 +74,8 @@ import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.*;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
@@ -132,7 +132,7 @@ public class Idl implements Closeable {
                              Token token) throws ParseException {
     JsonNode value = props.get(key);
     if (value.isTextual())
-      return value.getTextValue();
+      return value.textValue();
     throw error(key+" property must be textual: "+value, token);
   }
 
@@ -144,7 +144,7 @@ public class Idl implements Closeable {
     List<String> values = new ArrayList<String>();
     for (JsonNode n : value)
       if (n.isTextual())
-        values.add(n.getTextValue());
+        values.add(n.textValue());
       else
         throw error(key+" values must be textual: "+n, token);
     return values;
