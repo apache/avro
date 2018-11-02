@@ -52,8 +52,10 @@ import org.apache.avro.util.Utf8;
  * Avro encoding and decoding.
  */
 public class Perf {
-  private static final int COUNT = 250000; // needs to be a multiple of 4
-  private static final int CYCLES = 800;
+  private static final int COUNT // needs to be a multiple of 4
+    = Integer.parseInt(System.getProperty("org.apache.avro.io.perf.count","250000"));
+  private static final int CYCLES
+    = Integer.parseInt(System.getProperty("org.apache.avro.io.perf.cycles","800"));
 
   /**
    * Use a fixed value seed for random number generation
@@ -166,6 +168,11 @@ public class Perf {
   }
 
   public static void main(String[] args) throws Exception {
+    if (0 != (COUNT % 4)) {
+      System.out.println("Property 'org.apache.avro.io.perf.count' must be a multiple of 4.");
+      System.exit(1);
+    }
+
     List<Test> tests = new ArrayList<>();
     boolean writeTests = true;
     boolean readTests = true;
