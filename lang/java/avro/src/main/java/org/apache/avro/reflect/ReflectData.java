@@ -38,13 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.collect.MapMaker;
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -611,15 +610,15 @@ public class ReflectData extends SpecificData {
               Schema fieldSchema = createFieldSchema(field, names);
               AvroDefault defaultAnnotation
                 = field.getAnnotation(AvroDefault.class);
-              JsonNode defaultValue = (defaultAnnotation == null)
+              Object defaultValue = (defaultAnnotation == null)
                 ? null
-                : Schema.parseJson(defaultAnnotation.value());
+                : Schema.parseJsonToObject(defaultAnnotation.value());
 
               if (defaultValue == null
                   && fieldSchema.getType() == Schema.Type.UNION) {
                 Schema defaultType = fieldSchema.getTypes().get(0);
                 if (defaultType.getType() == Schema.Type.NULL) {
-                  defaultValue = NullNode.getInstance();
+                  defaultValue = JsonProperties.NULL_VALUE;
                 }
               }
               AvroName annotatedName = field.getAnnotation(AvroName.class);       // Rename fields

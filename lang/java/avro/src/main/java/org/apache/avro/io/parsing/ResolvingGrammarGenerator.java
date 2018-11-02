@@ -30,6 +30,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.ResolvingGrammarGeneratorAccessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -38,6 +40,16 @@ import com.fasterxml.jackson.databind.JsonNode;
  * schemas.
  */
 public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
+
+  static {
+    Accessor.setAccessor(new ResolvingGrammarGeneratorAccessor() {
+      @Override
+      protected void encode(Encoder e, Schema s, JsonNode n) throws IOException {
+        ResolvingGrammarGenerator.encode(e, s, n);
+      }
+    });
+  }
+
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
@@ -235,7 +247,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       for (Field rf : rfields) {
         String fname = rf.name();
         if (writer.getField(fname) == null) {
-          if (rf.defaultValue() == null) {
+          if (rf.defaultVal() == null) {
             result = Symbol.error("Found " + writer.getFullName()
                                   + ", expecting " + reader.getFullName()
                                   + ", missing required field " + fname);
@@ -283,7 +295,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         String fname = rf.name();
         Field wf = writer.getField(fname);
         if (wf == null) {
-          byte[] bb = getBinary(rf.schema(), rf.defaultValue());
+          byte[] bb = getBinary(rf.schema(), Accessor.defaultValue(rf));
           production[--count] = Symbol.defaultStartAction(bb);
           production[--count] = generate(rf.schema(), rf.schema(), seen);
           production[--count] = Symbol.DEFAULT_END_ACTION;
@@ -317,10 +329,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.
    * @throws IOException
-   * @deprecated internal method
    */
-  @Deprecated
-  public static void encode(Encoder e, Schema s, JsonNode n)
+  static void encode(Encoder e, Schema s, JsonNode n)
     throws IOException {
     switch (s.getType()) {
     case RECORD:
@@ -328,7 +338,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         String name = f.name();
         JsonNode v = n.get(name);
         if (v == null) {
-          v = f.defaultValue();
+          v = Accessor.defaultValue(f);
         }
         if (v == null) {
           throw new AvroTypeException("No default value for: " + name);

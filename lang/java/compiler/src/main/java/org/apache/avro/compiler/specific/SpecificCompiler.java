@@ -40,7 +40,6 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.Jsr310TimeConversions;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.specific.SpecificData;
-import com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -545,9 +544,9 @@ public class SpecificCompiler {
     Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
     Map<Schema,Schema> types = new LinkedHashMap<>();
 
-    // Copy properties
-    for (Map.Entry<String,JsonNode> prop : p.getJsonProps().entrySet())
-      newP.addProp(prop.getKey(), prop.getValue());   // copy props
+    for (Map.Entry<String, Object> a : p.getObjectProps().entrySet()) {
+      newP.addProp(a.getKey(), a.getValue());
+    }
 
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<>();
@@ -559,9 +558,9 @@ public class SpecificCompiler {
     Map<String,Message> newM = newP.getMessages();
     for (Message m : p.getMessages().values())
       newM.put(m.getName(), m.isOneWay()
-               ? newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
+               ? newP.createMessage(m,
                                     addStringType(m.getRequest(), types))
-               : newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
+               : newP.createMessage(m,
                                     addStringType(m.getRequest(), types),
                                     addStringType(m.getResponse(), types),
                                     addStringType(m.getErrors(), types)));
@@ -592,12 +591,7 @@ public class SpecificCompiler {
       List<Field> newFields = new ArrayList<>();
       for (Field f : s.getFields()) {
         Schema fSchema = addStringType(f.schema(), seen);
-        Field newF =
-          new Field(f.name(), fSchema, f.doc(), f.defaultValue(), f.order());
-        for (Map.Entry<String,JsonNode> p : f.getJsonProps().entrySet())
-          newF.addProp(p.getKey(), p.getValue()); // copy props
-        for (String a : f.aliases())
-          newF.addAlias(a);                       // copy aliases
+        Field newF = new Field(f, fSchema);
         newFields.add(newF);
       }
       result.setFields(newFields);
@@ -618,8 +612,7 @@ public class SpecificCompiler {
       result = Schema.createUnion(types);
       break;
     }
-    for (Map.Entry<String,JsonNode> p : s.getJsonProps().entrySet())
-      result.addProp(p.getKey(), p.getValue());   // copy props
+    result.addAllProps(s);
     seen.put(s, result);
     return result;
   }
@@ -640,14 +633,17 @@ public class SpecificCompiler {
     default:
       throw new IllegalArgumentException("Can't check string-type of non-string/map type: " + s);
     }
-    JsonNode override = s.getJsonProp(prop);
-    if (override != null) return override.textValue();
+    return getStringType(s.getObjectProp(prop));
+  }
+  private String getStringType(Object overrideClassProperty) {
+    if (overrideClassProperty != null)
+      return overrideClassProperty.toString();
     switch (stringType) {
     case String:        return "java.lang.String";
     case Utf8:          return "org.apache.avro.util.Utf8";
     case CharSequence:  return "java.lang.CharSequence";
     default: throw new RuntimeException("Unknown string type: "+stringType);
-   }
+    }
   }
 
   /** Utility for template use.  Returns true iff a STRING-schema or
@@ -685,14 +681,15 @@ public class SpecificCompiler {
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
       return "java.util.Map<"
-        + getStringType(schema)+ "," + javaType(schema.getValueType()) + ">";
+        + getStringType(schema.getObjectProp(SpecificData.KEY_CLASS_PROP))+","
+        + javaType(schema.getValueType()) + ">";
     case UNION:
       List<Schema> types = schema.getTypes(); // elide unions with null
       if ((types.size() == 2) && types.contains(NULL_SCHEMA))
         return javaType(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
     case STRING:
-      return getStringType(schema);
+      return getStringType(schema.getObjectProp(SpecificData.CLASS_PROP));
     case BYTES:   return "java.nio.ByteBuffer";
     case INT:     return "java.lang.Integer";
     case LONG:    return "java.lang.Long";
@@ -814,17 +811,17 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java annotations for a schema. */
   public String[] javaAnnotations(JsonProperties props) {
-    JsonNode value = props.getJsonProp("javaAnnotation");
+    Object value = props.getObjectProp("javaAnnotation");
     if (value == null)
       return new String[0];
-    if (value.isTextual())
-      return new String[] { value.textValue() };
-    if (value.isArray()) {
-      int i = 0;
-      String[] result = new String[value.size()];
-      for (JsonNode v : value)
-        result[i++] = v.textValue();
-      return result;
+    if (value instanceof String)
+      return new String[] { value.toString() };
+    if (value instanceof List) {
+      List<?> list = (List<?>) value;
+      List<String> annots = new ArrayList<String>();
+      for (Object o : list)
+        annots.add(o.toString());
+      return annots.toArray(new String[annots.size()]);
     }
     return new String[0];
   }

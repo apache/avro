@@ -36,6 +36,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -136,7 +138,7 @@ public abstract class Schema extends JsonProperties {
 
   int hashCode = NO_HASHCODE;
 
-  @Override public void addProp(String name, JsonNode value) {
+  @Override void addProp(String name, JsonNode value) {
     super.addProp(name, value);
     hashCode = NO_HASHCODE;
   }
@@ -392,6 +394,25 @@ public abstract class Schema extends JsonProperties {
   /** A field within a record. */
   public static class Field extends JsonProperties {
 
+    static {
+      Accessor.setAccessor(new FieldAccessor() {
+        @Override
+        protected JsonNode defaultValue(Field field) {
+          return field.defaultValue();
+        }
+
+        @Override
+        protected Field createField(String name, Schema schema, String doc, JsonNode defaultValue) {
+          return new Field(name, schema, doc, defaultValue);
+        }
+
+        @Override
+        protected Field createField(String name, Schema schema, String doc, JsonNode defaultValue, boolean validate, Order order) {
+          return new Field(name, schema, doc, defaultValue, validate, order);
+        }
+      });
+    }
+
     /** How values of this field should be ordered when sorting records. */
     public enum Order {
       ASCENDING, DESCENDING, IGNORE;
@@ -407,12 +428,11 @@ public abstract class Schema extends JsonProperties {
     private final Order order;
     private Set<String> aliases;
 
-    /** @deprecated use {@link #Field(String, Schema, String, Object)} */
-    @Deprecated
-    public Field(String name, Schema schema, String doc,
+    Field(String name, Schema schema, String doc,
         JsonNode defaultValue) {
       this(name, schema, doc, defaultValue, Order.ASCENDING);
     }
+
     /** @deprecated use {@link #Field(String, Schema, String, Object, Order)} */
     @Deprecated
     public Field(String name, Schema schema, String doc,
@@ -429,6 +449,18 @@ public abstract class Schema extends JsonProperties {
         ? validateDefault(name, schema, defaultValue)
         : defaultValue;
       this.order = order;
+    }
+
+    /**
+     * Constructs a new Field instance with the same {@code name}, {@code doc}, {@code defaultValue}, and {@code order}
+     * as {@code field} has with changing the schema to the specified one. It also copies all the {@code props} and
+     * {@code aliases}.
+     */
+    public Field(Field field, Schema schema) {
+      this(field.name, schema, field.doc, field.defaultValue, field.order);
+      props.putAll(field.props);
+      if (field.aliases != null)
+        aliases = new LinkedHashSet<String>(field.aliases);
     }
     /**
      * @param defaultValue the default value for this field specified using the mapping
@@ -453,8 +485,7 @@ public abstract class Schema extends JsonProperties {
     public Schema schema() { return schema; }
     /** Field's documentation within the record, if set. May return null. */
     public String doc() { return doc; }
-    /** @deprecated use {@link #defaultVal() } */
-    @Deprecated public JsonNode defaultValue() { return defaultValue; }
+    JsonNode defaultValue() { return defaultValue; }
     /**
      * @return the default value for this field specified using the mapping
      *  in {@link JsonProperties}
@@ -1080,8 +1111,7 @@ public abstract class Schema extends JsonProperties {
    * The contents of <tt>file</tt> is expected to be in UTF-8 format.
    * @param file  The file to read the schema from.
    * @return  The freshly built Schema.
-   * @throws IOException if there was trouble reading the contents
-   * @throws JsonParseException if the contents are invalid
+   * @throws IOException if there was trouble reading the contents or they are invalid
    * @deprecated use {@link Schema.Parser} instead.
    */
   public static Schema parse(File file) throws IOException {
@@ -1093,8 +1123,7 @@ public abstract class Schema extends JsonProperties {
    * The contents of <tt>in</tt> is expected to be in UTF-8 format.
    * @param in  The input stream to read the schema from.
    * @return  The freshly built Schema.
-   * @throws IOException if there was trouble reading the contents
-   * @throws JsonParseException if the contents are invalid
+   * @throws IOException if there was trouble reading the contents or they are invalid
    * @deprecated use {@link Schema.Parser} instead.
    */
   public static Schema parse(InputStream in) throws IOException {
@@ -1428,12 +1457,7 @@ public abstract class Schema extends JsonProperties {
     return jsonNode != null ? jsonNode.textValue() : null;
   }
 
-  /**
-   * Parses a string as Json.
-   * @deprecated use {@link org.apache.avro.data.Json#parseJson(String)}
-   */
-  @Deprecated
-  public static JsonNode parseJson(String s) {
+  static JsonNode parseJson(String s) {
     try {
       return MAPPER.readTree(FACTORY.createJsonParser(new StringReader(s)));
     } catch (JsonParseException e) {
@@ -1441,6 +1465,13 @@ public abstract class Schema extends JsonProperties {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Parses the specified json string to an object.
+   */
+  public static Object parseJsonToObject(String s) {
+    return JacksonUtils.toObject(parseJson(s));
   }
 
   /** Rewrite a writer's schema using the aliases from a reader's schema.  This

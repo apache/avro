@@ -231,6 +231,15 @@ public class Protocol extends JsonProperties {
     super(PROTOCOL_RESERVED);
   }
 
+  /**
+   * Constructs a similar Protocol instance with the same {@code name}, {@code doc}, and {@code namespace} as {code p}
+   * has. It also copies all the {@code props}.
+   */
+  public Protocol(Protocol p) {
+    this(p.getName(), p.getDoc(), p.getNamespace());
+    props.putAll(p.props);
+  }
+
   public Protocol(String name, String doc, String namespace) {
     super(PROTOCOL_RESERVED);
     this.name = name;
@@ -271,6 +280,12 @@ public class Protocol extends JsonProperties {
   public Message createMessage(String name, String doc, Schema request) {
     return createMessage(name, doc, new LinkedHashMap<String,String>(),request);
   }
+
+  /** Create a one-way message using the {@code name}, {@code doc}, and {@code props} of {@code m}. */
+  public Message createMessage(Message m, Schema request) {
+    return createMessage(m.getName(), m.getDoc(), m.getJsonProps(), request);
+  }
+
   /** Create a one-way message. */
   public <T> Message createMessage(String name, String doc,
                                    Map<String,T> propMap, Schema request) {
@@ -284,6 +299,12 @@ public class Protocol extends JsonProperties {
     return createMessage(name, doc, new LinkedHashMap<String,String>(),
                          request, response, errors);
   }
+
+  /** Create a two-way message using the {@code name}, {@code doc}, and {@code props} of {@code m}. */
+  public Message createMessage(Message m, Schema request, Schema response, Schema errors) {
+    return createMessage(m.getName(), m.getDoc(), m.getJsonProps(), request, response, errors);
+  }
+
   /** Create a two-way message. */
   public <T> Message createMessage(String name, String doc,
                                    Map<String,T> propMap, Schema request,
