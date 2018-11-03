@@ -141,13 +141,14 @@ public class Perf {
   private static final int BYTES_PS_FIELD = 2;
   private static final int ENTRIES_PS_FIELD = 3;
   private static final int BYTES_PC_FIELD = 4;
-  private static final int MAX_FIELD = 4;
+  private static final int MIN_TIME_FIELD = 5;
+  private static final int MAX_FIELD_TAG = 5;
 
   private static void usage() {
     StringBuilder usage = new StringBuilder("Usage: Perf [-o <file>] [-c <spec>] { -nowrite | -noread | ");
     StringBuilder details = new StringBuilder();
     details.append(" -o file   (send output to a file)\n");
-    details.append(" -c [n][t][e][b][c] (format as no-header CSV; include Name, Time, Entries/sec, Bytes/sec, and/or bytes/Cycle; no spec=all fields)\n");
+    details.append(" -c [n][t][e][b][c][m] (format as no-header CSV; include Name, Time, Entries/sec, Bytes/sec, bytes/Cycle, and/or min time/op; no spec=all fields)\n");
     details.append(" -nowrite   (do not execute write tests)\n");
     details.append(" -noread   (do not execute write tests)\n");
     for (Map.Entry<String, List<TestDescriptor>> entry : BATCHES.entrySet()) {
@@ -179,6 +180,7 @@ public class Perf {
     String outputfilename = null;
     PrintStream out = System.out;
     boolean[] csvFormat = null;
+    String csvFormatString = null;
 
     for (int i = 0; i < args.length; i++) {
       String a = args[i];
@@ -200,17 +202,20 @@ public class Perf {
         continue;
       }
       if ("-c".equals(a)) {
-        if (i == args.length-1 || args[i+1].startsWith("-"))
-          csvFormat = new boolean[] { true, true, true, true, true };
-        else {
-          csvFormat = new boolean[5];
-          for (char c : args[++i].toCharArray())
+        if (i == args.length-1 || args[i+1].startsWith("-")) {
+          csvFormatString = "ntebcm"; // For diagnostics
+          csvFormat = new boolean[] { true, true, true, true, true, true };
+        } else {
+          csvFormatString = args[++i];
+          csvFormat = new boolean[MAX_FIELD_TAG+1];
+          for (char c : csvFormatString.toCharArray())
             switch (c) {
             case 'n': csvFormat[NAME_FIELD] = true; break;
             case 't': csvFormat[TIME_FIELD] = true; break;
             case 'e': csvFormat[BYTES_PS_FIELD] = true; break;
             case 'b': csvFormat[ENTRIES_PS_FIELD] = true; break;
             case 'c': csvFormat[BYTES_PC_FIELD] = true; break;
+            case 'm': csvFormat[MIN_TIME_FIELD] = true; break;
             default:
               usage();
               System.exit(1);
@@ -237,9 +242,12 @@ public class Perf {
       }
     }
     System.out.println("Executing tests: \n" + tests +  "\n readTests:" +
-        readTests + "\n writeTests:" + writeTests + "\n cycles=" + CYCLES);
+        readTests + "\n writeTests:" + writeTests + "\n cycles=" + CYCLES +
+        "\n count=" + (COUNT / 1000) + "K");
     if (out != System.out) System.out.println(" Writing to: " + outputfilename);
-    if (csvFormat != null) System.out.println(" in CSV format.");
+    if (csvFormat != null) System.out.println(" CSV format: " + csvFormatString);
+
+    TestResult tr = new TestResult();
 
     for (int k = 0; k < tests.size(); k++) {
       Test t = tests.get(k);
@@ -275,25 +283,38 @@ public class Perf {
           t.writeTest();
         }
       }
-      t.reset();
+
       // test
-      long s = 0;
       System.gc();
-      t.init();
       if (t.isReadTest() && readTests) {
+        tr.reset();
         for (int i = 0; i < t.cycles; i++) {
-          s += t.readTest();
+          tr.update(t.readTest());
         }
-        printResult(out, csvFormat, s, t, t.name + "Read");
+        printResult(out, csvFormat, tr, t, t.name + "Read");
       }
-      s = 0;
       if (t.isWriteTest() && writeTests) {
+        tr.reset();
         for (int i = 0; i < t.cycles; i++) {
-          s += t.writeTest();
+          tr.update(t.writeTest());
         }
-        printResult(out, csvFormat, s, t, t.name + "Write");
+        printResult(out, csvFormat, tr, t, t.name + "Write");
       }
       t.reset();
+    }
+  }
+
+  private static class TestResult {
+    public long totalTime;
+    public long minTime;
+    public void reset() {
+      totalTime = 0L;
+      minTime = Long.MAX_VALUE;
+    }
+    public long update(long t) {
+      totalTime += t;
+      minTime = Math.min(t, minTime);
+      return t;
     }
   }
 
@@ -305,23 +326,25 @@ public class Perf {
   }
 
   private static final void printResult(PrintStream o, boolean[] csv,
-                                        long s, Test t, String name)
+                                        TestResult tr, Test t, String name)
   {
-    s /= 1000;
+    long s = tr.totalTime / 1000;
     double entries = (t.cycles * (double) t.count);
     double bytes = t.cycles * (double) t.encodedSize;
     StringBuilder result = new StringBuilder();
     if (csv != null) {
       boolean commaneeded = false;
-      for (int i = 0; i <= MAX_FIELD; i++) {
+      for (int i = 0; i <= MAX_FIELD_TAG; i++) {
+        if (! csv[i]) continue;
         if (commaneeded) result.append(",");
         else commaneeded = true;
         switch (i) {
         case NAME_FIELD: result.append(name); break;
         case TIME_FIELD: result.append(String.format("%d", (s/1000))); break;
         case BYTES_PS_FIELD: result.append(String.format("%.3f", (entries / s))); break;
-        case ENTRIES_PS_FIELD: result.append(String.format(".3%f", (bytes / s))); break;
+        case ENTRIES_PS_FIELD: result.append(String.format("%.3f", (bytes / s))); break;
         case BYTES_PC_FIELD: result.append(String.format("%d", t.encodedSize)); break;
+        case MIN_TIME_FIELD: result.append(String.format("%d", tr.minTime)); break;
         }
       }
     } else {
@@ -400,16 +423,16 @@ public class Perf {
 
     @Override
     public final long readTest() throws IOException {
-      long t = System.nanoTime();
       Decoder d = getDecoder();
+      long t = System.nanoTime();
       readInternal(d);
       return (System.nanoTime() - t);
     }
 
     @Override
     public final long writeTest() throws IOException {
-      long t = System.nanoTime();
       Encoder e = getEncoder();
+      long t = System.nanoTime();
       writeInternal(e);
       e.flush();
       return (System.nanoTime() - t);
@@ -428,8 +451,8 @@ public class Perf {
     }
 
     protected Encoder newEncoder(ByteArrayOutputStream out) throws IOException {
-      Encoder e = encoder_factory.binaryEncoder(out, null);
-//    Encoder e = encoder_factory.directBinaryEncoder(out, null);
+//    Encoder e = encoder_factory.binaryEncoder(out, null);
+      Encoder e = encoder_factory.directBinaryEncoder(out, null);
 //    Encoder e = encoder_factory.blockingBinaryEncoder(out, null);
 //    Encoder e = new LegacyBinaryEncoder(out);
       return e;
@@ -1419,17 +1442,12 @@ public class Perf {
     protected final SpecificDatumReader<T> reader;
     protected final SpecificDatumWriter<T> writer;
     private Object[] sourceData;
+    private T reuse;
 
     protected SpecificTest(String name, String writerSchema) throws IOException {
       super(name, writerSchema, 48);
       reader = newReader();
       writer = newWriter();
-    }
-    protected SpecificDatumReader<T> getReader() {
-      return reader;
-    }
-    protected SpecificDatumWriter<T> getWriter() {
-      return writer;
     }
     protected SpecificDatumReader<T> newReader() {
       return new SpecificDatumReader<>(schema);
@@ -1444,6 +1462,7 @@ public class Perf {
       for (int i = 0; i < sourceData.length; i++) {
         sourceData[i] = genSingleRecord(r);
       }
+      reuse = genSingleRecord(r);
     }
 
     protected abstract T genSingleRecord(Random r);
@@ -1451,7 +1470,7 @@ public class Perf {
     @Override
     void readInternal(Decoder d) throws IOException {
       for (int i = 0; i < count; i++) {
-        getReader().read(null, d);
+        reader.read(reuse, d);
       }
     }
     @Override
@@ -1459,7 +1478,7 @@ public class Perf {
       for (int i = 0; i < sourceData.length; i++) {
         @SuppressWarnings("unchecked")
         T rec = (T) sourceData[i];
-        getWriter().write(rec, e);
+        writer.write(rec, e);
       }
     }
     @Override
