@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- mode: python -*-
 # -*- coding: utf-8 -*-
 
@@ -17,6 +17,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+Provide the code necessary for packaging and installing avro-python3.
+
+The avro-python3 software is designed for Python 3, but this file and the packaging software supports Python 2.7.
+
+https://pypi.org/project/avro-python3/
+"""
+
 
 import os
 import shutil
@@ -142,11 +151,16 @@ def Main():
       license = 'Apache License 2.0',
       keywords = 'avro serialization rpc',
       url = 'http://avro.apache.org/',
-      classifiers=[
+      classifiers=(
           'License :: OSI Approved :: Apache Software License',
           'Programming Language :: Python :: 3 :: Only',
-      ],
-      python_requires='>=3',
+          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+      ),
+      python_requires='>=3.4',
   )
 
 
