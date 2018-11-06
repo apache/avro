@@ -40,6 +40,8 @@ import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,8 +105,8 @@ public class TestSpecificLogicalTypes {
         3019.34,
         null,
         java.time.LocalDate.now(),
-        java.time.LocalTime.now(),
-        java.time.Instant.now(),
+        java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
+        java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
         new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
@@ -160,8 +162,8 @@ public class TestSpecificLogicalTypes {
             3019.34,
             null,
             java.time.LocalDate.now(),
-            java.time.LocalTime.now(),
-            java.time.Instant.now(),
+            java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
+            java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
             new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 

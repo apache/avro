@@ -25,8 +25,8 @@ import java.util.Stack;
 import java.util.Collection;
 import java.util.Arrays;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParser;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

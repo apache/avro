@@ -40,7 +40,6 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.Jsr310TimeConversions;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.specific.SpecificData;
-import org.codehaus.jackson.JsonNode;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
@@ -545,9 +544,9 @@ public class SpecificCompiler {
     Protocol newP = new Protocol(p.getName(), p.getDoc(), p.getNamespace());
     Map<Schema,Schema> types = new LinkedHashMap<>();
 
-    // Copy properties
-    for (Map.Entry<String,JsonNode> prop : p.getJsonProps().entrySet())
-      newP.addProp(prop.getKey(), prop.getValue());   // copy props
+    for (Map.Entry<String, Object> a : p.getObjectProps().entrySet()) {
+      newP.addProp(a.getKey(), a.getValue());
+    }
 
     // annotate types
     Collection<Schema> namedTypes = new LinkedHashSet<>();
@@ -559,9 +558,9 @@ public class SpecificCompiler {
     Map<String,Message> newM = newP.getMessages();
     for (Message m : p.getMessages().values())
       newM.put(m.getName(), m.isOneWay()
-               ? newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
+               ? newP.createMessage(m,
                                     addStringType(m.getRequest(), types))
-               : newP.createMessage(m.getName(), m.getDoc(), m.getJsonProps(),
+               : newP.createMessage(m,
                                     addStringType(m.getRequest(), types),
                                     addStringType(m.getResponse(), types),
                                     addStringType(m.getErrors(), types)));
@@ -592,12 +591,7 @@ public class SpecificCompiler {
       List<Field> newFields = new ArrayList<>();
       for (Field f : s.getFields()) {
         Schema fSchema = addStringType(f.schema(), seen);
-        Field newF =
-          new Field(f.name(), fSchema, f.doc(), f.defaultValue(), f.order());
-        for (Map.Entry<String,JsonNode> p : f.getJsonProps().entrySet())
-          newF.addProp(p.getKey(), p.getValue()); // copy props
-        for (String a : f.aliases())
-          newF.addAlias(a);                       // copy aliases
+        Field newF = new Field(f, fSchema);
         newFields.add(newF);
       }
       result.setFields(newFields);
@@ -618,21 +612,49 @@ public class SpecificCompiler {
       result = Schema.createUnion(types);
       break;
     }
-    for (Map.Entry<String,JsonNode> p : s.getJsonProps().entrySet())
-      result.addProp(p.getKey(), p.getValue());   // copy props
+    result.addAllProps(s);
     seen.put(s, result);
     return result;
   }
 
-  private String getStringType(JsonNode overrideClassProperty) {
+  /** Utility for template use (and also internal use).  Returns
+    * a string giving the FQN of the Java type to be used for a string
+    * schema or for the key of a map schema.  (It's an error to call
+    * this on a schema other than a string or map.) */
+  public String getStringType(Schema s) {
+    String prop;
+    switch (s.getType()) {
+    case MAP:
+      prop = SpecificData.KEY_CLASS_PROP;
+      break;
+    case STRING:
+      prop = SpecificData.CLASS_PROP;
+      break;
+    default:
+      throw new IllegalArgumentException("Can't check string-type of non-string/map type: " + s);
+    }
+    return getStringType(s.getObjectProp(prop));
+  }
+  private String getStringType(Object overrideClassProperty) {
     if (overrideClassProperty != null)
-      return overrideClassProperty.getTextValue();
+      return overrideClassProperty.toString();
     switch (stringType) {
     case String:        return "java.lang.String";
     case Utf8:          return "org.apache.avro.util.Utf8";
     case CharSequence:  return "java.lang.CharSequence";
     default: throw new RuntimeException("Unknown string type: "+stringType);
-   }
+    }
+  }
+
+  /** Utility for template use.  Returns true iff a STRING-schema or
+    * the key of a MAP-schema is what SpecificData defines as
+    * "stringable" (which means we need to call toString on it before
+    * before writing it). */
+  public boolean isStringable(Schema schema) {
+    String t = getStringType(schema);
+    return ! (t.equals("java.lang.String")
+              || t.equals("java.lang.CharSequence")
+              || t.equals("org.apache.avro.util.Utf8"));
   }
 
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
@@ -659,7 +681,7 @@ public class SpecificCompiler {
       return "java.util.List<" + javaType(schema.getElementType()) + ">";
     case MAP:
       return "java.util.Map<"
-        + getStringType(schema.getJsonProp(SpecificData.KEY_CLASS_PROP))+","
+        + getStringType(schema.getObjectProp(SpecificData.KEY_CLASS_PROP))+","
         + javaType(schema.getValueType()) + ">";
     case UNION:
       List<Schema> types = schema.getTypes(); // elide unions with null
@@ -667,7 +689,7 @@ public class SpecificCompiler {
         return javaType(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
       return "java.lang.Object";
     case STRING:
-      return getStringType(schema.getJsonProp(SpecificData.CLASS_PROP));
+      return getStringType(schema.getObjectProp(SpecificData.CLASS_PROP));
     case BYTES:   return "java.nio.ByteBuffer";
     case INT:     return "java.lang.Integer";
     case LONG:    return "java.lang.Long";
@@ -708,6 +730,58 @@ public class SpecificCompiler {
     }
   }
 
+
+  /** Utility for template use.  Return a string with a given number
+    * of spaces to be used for indentation purposes. */
+  public String indent(int n) {
+    return new String(new char[n]).replace('\0', ' ');
+  }
+
+  /** Utility for template use.  For a two-branch union type with
+    * one null branch, returns the index of the null branch.  It's an
+    * error to use on anything other than a two-branch union with on
+    * null branch. */
+  public int getNonNullIndex(Schema s) {
+    if (s.getType() != Schema.Type.UNION
+        || s.getTypes().size() != 2
+        || ! s.getTypes().contains(NULL_SCHEMA))
+      throw new IllegalArgumentException("Can only be used on 2-branch union with a null branch: " + s);
+    return (s.getTypes().get(0).equals(NULL_SCHEMA) ? 1 : 0);
+  }
+
+  /** Utility for template use.  Returns true if the encode/decode
+    * logic in record.vm can handle the schema being presented. */
+  public boolean isCustomCodable(Schema schema) {
+    if (schema.isError()) return false;
+    return isCustomCodable(schema, new HashSet<Schema>());
+  }
+
+  private boolean isCustomCodable(Schema schema, Set<Schema> seen) {
+    if (! seen.add(schema)) return true;
+    if (schema.getLogicalType() != null) return false;
+    boolean result = true;
+    switch (schema.getType()) {
+    case RECORD:
+      for (Schema.Field f : schema.getFields())
+        result &= isCustomCodable(f.schema(), seen);
+      break;
+    case MAP:
+      result = isCustomCodable(schema.getValueType(), seen);
+      break;
+    case ARRAY:
+      result = isCustomCodable(schema.getElementType(), seen);
+      break;
+    case UNION:
+      List<Schema> types = schema.getTypes();
+      // Only know how to handle "nulling" unions for now
+      if (types.size() != 2 || ! types.contains(NULL_SCHEMA)) return false;
+      for (Schema s : types) result &= isCustomCodable(s, seen);
+      break;
+    default:
+    }
+    return result;
+  }
+
   public boolean hasLogicalTypeField(Schema schema) {
     for (Schema.Field field : schema.getFields()) {
       if (field.schema().getLogicalType() != null) {
@@ -737,17 +811,17 @@ public class SpecificCompiler {
 
   /** Utility for template use.  Returns the java annotations for a schema. */
   public String[] javaAnnotations(JsonProperties props) {
-    JsonNode value = props.getJsonProp("javaAnnotation");
+    Object value = props.getObjectProp("javaAnnotation");
     if (value == null)
       return new String[0];
-    if (value.isTextual())
-      return new String[] { value.getTextValue() };
-    if (value.isArray()) {
-      int i = 0;
-      String[] result = new String[value.size()];
-      for (JsonNode v : value)
-        result[i++] = v.getTextValue();
-      return result;
+    if (value instanceof String)
+      return new String[] { value.toString() };
+    if (value instanceof List) {
+      List<?> list = (List<?>) value;
+      List<String> annots = new ArrayList<String>();
+      for (Object o : list)
+        annots.add(o.toString());
+      return annots.toArray(new String[annots.size()]);
     }
     return new String[0];
   }

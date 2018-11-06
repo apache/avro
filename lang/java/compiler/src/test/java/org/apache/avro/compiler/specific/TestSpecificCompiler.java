@@ -81,7 +81,7 @@ public class TestSpecificCompiler {
   }
 
   @After
-  public void tearDow() {
+  public void tearDown() {
     if (this.outputFile != null) {
       this.outputFile.delete();
     }
@@ -621,9 +621,5 @@ public class TestSpecificCompiler {
         "DECIMAL_CONVERSION", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(uuidSchema));
-  }
-
-  public void testToFromByteBuffer() {
-
   }
 }

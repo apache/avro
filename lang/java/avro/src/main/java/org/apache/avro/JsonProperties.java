@@ -20,13 +20,18 @@ package org.apache.avro;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.io.IOException;
 
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.JsonPropertiesAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.node.TextNode;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+
 
 /**
  * Base class for objects that have JSON-valued properties. Avro and JSON values are
@@ -108,6 +113,16 @@ import org.codehaus.jackson.node.TextNode;
  * @see org.apache.avro.data.Json
  */
 public abstract class JsonProperties {
+
+  static {
+    Accessor.setAccessor(new JsonPropertiesAccessor() {
+      @Override
+      protected void addProp(JsonProperties props, String name, JsonNode value) {
+        props.addProp(name, value);
+      }
+    });
+  }
+
   public static class Null {
     private Null() {}
   }
@@ -128,16 +143,14 @@ public abstract class JsonProperties {
    */
   public String getProp(String name) {
     JsonNode value = getJsonProp(name);
-    return value != null && value.isTextual() ? value.getTextValue() : null;
+    return value != null && value.isTextual() ? value.textValue() : null;
   }
 
   /**
    * Returns the value of the named property in this schema.
    * Returns <tt>null</tt> if there is no property with that name.
-   * @deprecated use {@link #getObjectProp(String)}
    */
-  @Deprecated
-  public synchronized JsonNode getJsonProp(String name) {
+  synchronized JsonNode getJsonProp(String name) {
     return props.get(name);
   }
 
@@ -162,18 +175,7 @@ public abstract class JsonProperties {
     addProp(name, TextNode.valueOf(value));
   }
 
-  /**
-   * Adds a property with the given name <tt>name</tt> and
-   * value <tt>value</tt>. Neither <tt>name</tt> nor <tt>value</tt> can be
-   * <tt>null</tt>. It is illegal to add a property if another with
-   * the same name but different value already exists in this schema.
-   *
-   * @param name The name of the property to add
-   * @param value The value for the property to add
-   * @deprecated use {@link #addProp(String, Object)}
-   */
-  @Deprecated
-  public synchronized void addProp(String name, JsonNode value) {
+  synchronized void addProp(String name, JsonNode value) {
     if (reserved.contains(name))
       throw new AvroRuntimeException("Can't set reserved property: " + name);
 
@@ -191,12 +193,22 @@ public abstract class JsonProperties {
     addProp(name, JacksonUtils.toJsonNode(value));
   }
 
+  /**
+   * Adds all the props from the specified json properties.
+   *
+   * @see #getObjectProps()
+   */
+  public void addAllProps(JsonProperties properties) {
+    for (Entry<String, JsonNode> entry : properties.getJsonProps().entrySet())
+      addProp(entry.getKey(), entry.getValue());
+  }
+
   /** Return the defined properties that have string values. */
   @Deprecated public Map<String,String> getProps() {
     Map<String,String> result = new LinkedHashMap<>();
     for (Map.Entry<String,JsonNode> e : props.entrySet())
       if (e.getValue().isTextual())
-        result.put(e.getKey(), e.getValue().getTextValue());
+        result.put(e.getKey(), e.getValue().textValue());
     return result;
   }
 
@@ -209,11 +221,10 @@ public abstract class JsonProperties {
   }
 
   /**
-   * Return the defined properties as an unmodifiable Map.
+   * Return the defined properties as an unmodifieable Map.
    * @deprecated use {@link #getObjectProps()}
    */
-  @Deprecated
-  public Map<String,JsonNode> getJsonProps() {
+  Map<String,JsonNode> getJsonProps() {
     return Collections.unmodifiableMap(props);
   }
 
