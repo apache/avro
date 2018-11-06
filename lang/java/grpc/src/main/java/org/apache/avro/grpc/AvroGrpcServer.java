@@ -18,8 +18,6 @@
 
 package org.apache.avro.grpc;
 
-import com.google.common.base.Throwables;
-
 import org.apache.avro.Protocol;
 
 import java.lang.reflect.InvocationTargetException;
@@ -113,7 +111,11 @@ public abstract class AvroGrpcServer {
       try {
         getMethod().invoke(getServiceImpl(), request);
       } catch (Exception e) {
-        LOG.log(Level.WARNING, "Error processing one-way rpc", Throwables.getRootCause(e));
+        Throwable cause = e;
+        while (cause.getCause() != null && cause != cause.getCause()) {
+          cause = cause.getCause();
+        }
+        LOG.log(Level.WARNING, "Error processing one-way rpc", cause);
       }
     }
   }

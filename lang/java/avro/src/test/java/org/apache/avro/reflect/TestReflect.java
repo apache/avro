@@ -326,7 +326,7 @@ public class TestReflect {
     r9_1.value = r8;
     checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
   }
-  
+
   // test union annotation on methods and parameters
   public static interface P0 {
     @Union({Void.class,String.class})
@@ -581,7 +581,7 @@ public class TestReflect {
     check(o.getClass(), schemaJson);
   }
 
-  private void check(Type type, String schemaJson) {
+  private void check(java.lang.reflect.Type type, String schemaJson) {
     assertEquals(schemaJson, ReflectData.get().getSchema(type).toString());
   }
 

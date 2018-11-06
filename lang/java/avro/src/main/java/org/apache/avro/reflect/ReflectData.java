@@ -36,9 +36,9 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.collect.MapMaker;
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -234,14 +234,23 @@ public class ReflectData extends SpecificData {
     }
   }
 
-  static final ConcurrentHashMap<Class<?>, ClassAccessorData>
-    ACCESSOR_CACHE = new ConcurrentHashMap<>();
+  static final ClassValue<ClassAccessorData>
+    ACCESSOR_CACHE = new ClassValue<ClassAccessorData>() {
+      @Override
+      protected ClassAccessorData computeValue(Class<?> c) {
+        if (!IndexedRecord.class.isAssignableFrom(c)){
+          return new ClassAccessorData(c);
+        }
+        return null;
+      }
+  };
 
   static class ClassAccessorData {
     private final Class<?> clazz;
     private final Map<String, FieldAccessor> byName =
         new HashMap<>();
-    final Map<Schema, FieldAccessor[]> bySchema = new MapMaker().weakKeys().makeMap();
+    //getAccessorsFor is already synchronized, no need to wrap
+    final Map<Schema, FieldAccessor[]> bySchema = new WeakHashMap<>();
 
     private ClassAccessorData(Class<?> c) {
       clazz = c;
@@ -262,6 +271,7 @@ public class ReflectData extends SpecificData {
      * index of the given schema.
      */
     private synchronized FieldAccessor[] getAccessorsFor(Schema schema) {
+      //if synchronized is removed from this method, adjust bySchema appropriately
       FieldAccessor[] result = bySchema.get(schema);
       if (result == null) {
         result = createAccessorsFor(schema);
@@ -290,15 +300,7 @@ public class ReflectData extends SpecificData {
   }
 
   private ClassAccessorData getClassAccessorData(Class<?> c) {
-    ClassAccessorData data = ACCESSOR_CACHE.get(c);
-    if(data == null && !IndexedRecord.class.isAssignableFrom(c)){
-      ClassAccessorData newData = new ClassAccessorData(c);
-      data = ACCESSOR_CACHE.putIfAbsent(c, newData);
-      if (null == data) {
-        data = newData;
-      }
-    }
-    return data;
+    return ACCESSOR_CACHE.get(c);
   }
 
   private FieldAccessor[] getFieldAccessors(Class<?> c, Schema s) {

@@ -17,13 +17,13 @@
  */
 package org.apache.avro.compiler.idl;
 
-import com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;

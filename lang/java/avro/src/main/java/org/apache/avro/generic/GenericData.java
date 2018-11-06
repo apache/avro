@@ -24,12 +24,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
@@ -53,8 +55,6 @@ import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
-import com.google.common.collect.MapMaker;
 
 /** Utilities for generic Java data. See {@link GenericRecordBuilder} for a convenient
  * way to build {@link GenericRecord} instances.
@@ -984,7 +984,7 @@ public class GenericData {
   }
 
   private final Map<Field, Object> defaultValueCache
-    = new MapMaker().weakKeys().makeMap();
+    = Collections.synchronizedMap(new WeakHashMap<>());
 
   /**
    * Gets the default value of the given field, if any.
@@ -992,7 +992,7 @@ public class GenericData {
    * @return the default value associated with the given field,
    * or null if none is specified in the schema.
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({ "unchecked" })
   public Object getDefaultValue(Field field) {
     JsonNode json = Accessor.defaultValue(field);
     if (json == null)
@@ -1021,6 +1021,9 @@ public class GenericData {
         defaultValue =
           createDatumReader(field.schema()).read(null, decoder);
 
+        // this MAY result in two threads creating the same defaultValue
+        // and calling put.  The last thread will win.  However,
+        // that's not an issue.
         defaultValueCache.put(field, defaultValue);
       } catch (IOException e) {
         throw new AvroRuntimeException(e);
