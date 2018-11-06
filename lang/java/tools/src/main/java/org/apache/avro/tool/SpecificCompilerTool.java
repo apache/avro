@@ -47,7 +47,7 @@ public class SpecificCompilerTool implements Tool {
       List<String> args) throws Exception {
     if (args.size() < 3) {
       System.err
-          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-dateTimeLogicalTypeImpl <dateTimeType>] (schema|protocol) input... outputdir");
+          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-dateTimeLogicalTypeImpl <dateTimeType>] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
       System.err
           .println(" input - input files or directories");
       System.err
@@ -59,6 +59,7 @@ public class SpecificCompilerTool implements Tool {
           "decimal type instead of java.nio.ByteBuffer");
       System.err.println(" -dateTimeLogicalTypeImpl [joda|jsr310] - use either " +
           "Joda time classes (default) or Java 8 native date/time classes (JSR 310)");
+      System.err.println(" -templateDir - directory with custom Velocity templates");
       return 1;
     }
 
@@ -66,6 +67,7 @@ public class SpecificCompilerTool implements Tool {
     boolean useLogicalDecimal = false;
     Optional<DateTimeLogicalTypeImplementation> dateTimeLogicalTypeImplementation = Optional.empty();
     Optional<String> encoding = Optional.empty();
+    Optional<String> templateDir = Optional.empty();
 
     int arg = 0;
 
@@ -96,6 +98,13 @@ public class SpecificCompilerTool implements Tool {
       arg++;
     }
 
+    if ("-templateDir".equals(args.get(arg))) {
+      arg++;
+      templateDir = Optional.of(args.get(arg));
+      arg++;
+    }
+
+
     String method = args.get(arg);
     List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
@@ -110,14 +119,14 @@ public class SpecificCompilerTool implements Tool {
         Schema schema = parser.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(schema,
           dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
+        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(protocol,
           dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
+        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
       }
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
@@ -130,9 +139,11 @@ public class SpecificCompilerTool implements Tool {
                                Optional<String> encoding,
                                StringType stringType,
                                boolean enableDecimalLogicalType,
+                               Optional<String> templateDir,
                                File src,
                                File output) throws IOException {
     compiler.setStringType(stringType);
+    templateDir.ifPresent(compiler::setTemplateDir);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     encoding.ifPresent(compiler::setOutputCharacterEncoding);
     compiler.compileToDestination(src, output);
