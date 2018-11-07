@@ -216,7 +216,6 @@
               <configuration>
                 <systemPropertyVariables>
                   <org.apache.avro.fastread>true</org.apache.avro.fastread>
-                  <test.dir>${project.basedir}/target/</test.dir>
                 </systemPropertyVariables>
               </configuration>
             </execution>
