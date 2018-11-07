@@ -17,6 +17,12 @@
  */
 package org.apache.avro.specific;
 
+import static org.junit.Assert.assertEquals;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.TimeConversions;
@@ -26,11 +32,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.junit.Test;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestSpecificToFromByteArray {
   @Test

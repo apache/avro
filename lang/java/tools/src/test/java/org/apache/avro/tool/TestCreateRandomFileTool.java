@@ -41,8 +41,7 @@ import static org.junit.Assert.assertTrue;
 
 public class TestCreateRandomFileTool {
   private static final String COUNT = System.getProperty("test.count", "200");
-  private static final File DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
+  private static final File DIR = new File("/tmp");
   private static final File OUT_FILE = new File(DIR, "random.avro");
   private static final File SCHEMA_FILE =
     new File("../../../share/test/schemas/weather.avsc");

@@ -18,22 +18,14 @@
 
 package org.apache.avro.data;
 
+import java.time.*;
+
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.avro.data.Jsr310TimeConversions.DateConversion;
-import org.apache.avro.data.Jsr310TimeConversions.TimeMillisConversion;
-import org.apache.avro.data.Jsr310TimeConversions.TimeMicrosConversion;
-import org.apache.avro.data.Jsr310TimeConversions.TimestampMicrosConversion;
-import org.apache.avro.data.Jsr310TimeConversions.TimestampMillisConversion;
+import org.apache.avro.data.Jsr310TimeConversions.*;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
-import java.time.ZoneOffset;
 
 public class TestJsr310TimeConversions {
 

@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/apache/avro.svg?branch=master)](https://travis-ci.org/apache/avro)
+
+# Apache Avro™
+
 Apache Avro™ is a data serialization system.
 
 Learn more about Avro, please visit our website at:

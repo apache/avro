@@ -27,8 +27,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
 # Install dependencies from packages
-RUN apt-get update && \
-  apt-get install --no-install-recommends -y \
+RUN apt-get -qq update && \
+  apt-get -qq install --no-install-recommends -y \
     ant \
     asciidoc \
     bison \
@@ -64,7 +64,7 @@ RUN apt-get update && \
     ruby-dev \
     source-highlight \
     subversion && \
-  apt-get clean && \
+  apt-get -qq clean && \
   rm -rf /var/lib/apt/lists/*
 
 # Install Forrest in /usr/local/apache-forrest

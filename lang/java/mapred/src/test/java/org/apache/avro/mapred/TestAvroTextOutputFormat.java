@@ -35,15 +35,19 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.RecordWriter;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestAvroTextOutputFormat {
+  @Rule
+  public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   private static final String UTF8 = "UTF-8";
 
   @Test
   public void testAvroTextRecordWriter() throws Exception {
-    File file = new File(System.getProperty("test.dir", "."), "writer");
+    File file = new File(tmpFolder.getRoot().getPath(), "writer");
     Schema schema = Schema.create(Schema.Type.BYTES);
     DatumWriter<ByteBuffer> datumWriter =
       new GenericDatumWriter<>(schema);

@@ -52,6 +52,7 @@ import org.junit.rules.TemporaryFolder;
 public class TestAvroMultipleOutputsSyncable {
   @Rule
   public TemporaryFolder tmpFolder = new TemporaryFolder();
+
   public static final Schema STATS_SCHEMA =
       Schema.parse("{\"name\":\"stats\",\"type\":\"record\","
           + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"},"
@@ -117,13 +118,13 @@ public class TestAvroMultipleOutputsSyncable {
         sum += count.get();
       }
       record.put("name", new Utf8(line.toString()));
-      record.put("count", new Integer(sum));
+      record.put("count", sum);
       mStats.datum(record);
       context.write(mStats, NullWritable.get());
       amos.sync("myavro","myavro");
       amos.write("myavro",mStats,NullWritable.get());
       record2.put("name1", new Utf8(line.toString()));
-      record2.put("count1", new Integer(sum));
+      record2.put("count1", sum);
       mStats.datum(record2);
       amos.write(mStats, NullWritable.get(), STATS_SCHEMA_2, null, "testnewwrite2");
       amos.sync("myavro1","myavro1");
@@ -206,8 +207,7 @@ public class TestAvroMultipleOutputsSyncable {
     AvroMultipleOutputs.addNamedOutput(job,"myavro",AvroKeyOutputFormat.class,STATS_SCHEMA,null);
     AvroMultipleOutputs.addNamedOutput(job,"myavro1", AvroKeyOutputFormat.class, STATS_SCHEMA_2);
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    String dir = System.getProperty("test.dir", ".") + "/mapred";
-    Path outputPath = new Path(dir + "/out");
+    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out");
     outputPath.getFileSystem(job.getConfiguration()).delete(outputPath);
     FileOutputFormat.setOutputPath(job, outputPath);
 
@@ -310,8 +310,7 @@ public class TestAvroMultipleOutputsSyncable {
     AvroJob.setOutputKeySchema(job, TextStats.SCHEMA$);
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
-    String dir = System.getProperty("test.dir", ".") + "/mapred";
-    Path outputPath = new Path(dir + "/out-specific");
+    Path outputPath = new Path(tmpFolder.getRoot().getPath() + "/out-specific");
     outputPath.getFileSystem(job.getConfiguration()).delete(outputPath);
     FileOutputFormat.setOutputPath(job, outputPath);
 

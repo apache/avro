@@ -18,6 +18,7 @@
 package org.apache.avro.reflect;
 
 import java.util.Arrays;
+
 import org.apache.avro.Schema;
 import org.junit.Assert;
 import org.junit.Test;

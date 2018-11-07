@@ -204,7 +204,6 @@
               <configuration>
                 <systemPropertyVariables>
                   <org.apache.avro.specific.use_custom_coders>true</org.apache.avro.specific.use_custom_coders>
-                  <test.dir>${project.basedir}/target/</test.dir>
                 </systemPropertyVariables>
               </configuration>
             </execution>
@@ -236,9 +235,6 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <failIfNoTests>false</failIfNoTests>
             <argLine>-Xmx1000m</argLine>
-            <systemPropertyVariables>
-              <test.dir>${project.basedir}/target/</test.dir>
-            </systemPropertyVariables>
           </configuration>
         </plugin>
         <plugin>
@@ -393,7 +389,6 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <systemPropertyVariables>
-                <test.dir>${project.basedir}/target/</test.dir>
                 <!-- avro-mapred will fail in tests on mac without this -->
                 <java.security.krb5.realm>OX.AC.UK</java.security.krb5.realm>
                 <java.security.krb5.kdc>kdc0.ox.ac.uk:kdc1.ox.ac.uk</java.security.krb5.kdc>

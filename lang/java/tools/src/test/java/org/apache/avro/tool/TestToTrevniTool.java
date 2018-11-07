@@ -35,8 +35,7 @@ import static org.junit.Assert.assertEquals;
 public class TestToTrevniTool {
   private static final int COUNT =
     Integer.parseInt(System.getProperty("test.count", "200"));
-  private static final File DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
+  private static final File DIR = new File("/tmp");
   private static final File AVRO_FILE = new File(DIR, "random.avro");
   private static final File TREVNI_FILE = new File(DIR, "random.trv");
   private static final File SCHEMA_FILE =

@@ -19,6 +19,11 @@
 
 package org.apache.avro.message;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -31,10 +36,6 @@ import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.GenericRecordBuilder;
 import org.junit.Assert;
 import org.junit.Test;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 
 public class TestBinaryMessageEncoding {
   public static final Schema SCHEMA_V1 = SchemaBuilder.record("TestRecord")

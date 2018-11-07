@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.CodecFactory;
@@ -43,9 +42,19 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 
 public class TestCatTool {
+
+  @Rule
+  public TestName name = new TestName();
+
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
   private static final int ROWS_IN_INPUT_FILES = 100000;
   private static final int OFFSET = 1000;
   private static final int LIMIT_WITHIN_INPUT_BOUNDS = 100;
@@ -69,7 +78,7 @@ public class TestCatTool {
 
 
   private GenericRecord aDatum(Type ofType, int forRow) {
-    GenericRecord record = null;
+    GenericRecord record;
     switch (ofType) {
       case STRING:
         record = new GenericData.Record(STRINGSCHEMA);
@@ -85,7 +94,7 @@ public class TestCatTool {
   }
 
   private File generateData(String file, Type type, Map<String, String> metadata, CodecFactory codec) throws Exception {
-    File inputFile = AvroTestUtil.tempFile(getClass(), file);
+    File inputFile = new File(DIR.getRoot(), file);
     inputFile.deleteOnExit();
 
     Schema schema = null;
@@ -146,7 +155,7 @@ public class TestCatTool {
     File input2 = generateData("input2.avro", Type.INT, metadata, SNAPPY);
     File input3 = generateData("input3.avro", Type.INT, metadata, DEFLATE);
 
-    File output = AvroTestUtil.tempFile(getClass(), "out/default-output.avro");
+    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
     output.deleteOnExit();
 
 //    file input
@@ -203,7 +212,7 @@ public class TestCatTool {
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = AvroTestUtil.tempFile(getClass(), "out/default-output.avro");
+    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(
@@ -226,7 +235,7 @@ public class TestCatTool {
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = AvroTestUtil.tempFile(getClass(), "out/default-output.avro");
+    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String>args = asList(
@@ -252,7 +261,7 @@ public class TestCatTool {
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = AvroTestUtil.tempFile(getClass(), "out/default-output.avro");
+    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(
@@ -277,7 +286,7 @@ public class TestCatTool {
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = AvroTestUtil.tempFile(getClass(), "out/default-output.avro");
+    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(
@@ -300,14 +309,14 @@ public class TestCatTool {
     metadata.put("myMetaKey", "myMetaValue");
 
     File input1 = generateData("input1.avro", Type.INT, metadata, DEFLATE);
-    File output = AvroTestUtil.tempFile(getClass(), "out/default-output.avro");
+    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(
       input1.getAbsolutePath(),
       output.getAbsolutePath(),
-      "--offset=" +  new Integer(OFFSET).toString(),
-      "--samplerate=" + new Double(SAMPLERATE_TOO_SMALL).toString());
+      "--offset=" + Integer.toString(OFFSET),
+      "--samplerate=" + Double.toString(SAMPLERATE_TOO_SMALL));
     int returnCode = new CatTool().run(
       System.in,
       System.out,
@@ -328,7 +337,7 @@ public class TestCatTool {
     File input1 = generateData("input1.avro", Type.STRING, metadata, DEFLATE);
     File input2 = generateData("input2.avro", Type.INT, metadata, DEFLATE);
 
-    File output = AvroTestUtil.tempFile(getClass(), "out/default-output.avro");
+    File output = new File(DIR.getRoot(), name.getMethodName() + ".avro");
     output.deleteOnExit();
 
     List<String> args = asList(
@@ -345,13 +354,14 @@ public class TestCatTool {
   @Test
   public void testHelpfulMessageWhenNoArgsGiven() throws Exception {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream(1024);
-    PrintStream out = new PrintStream(buffer);
-    int returnCode = new CatTool().run(
-      System.in,
-      out,
-      System.err,
-      Collections.emptyList());
-    out.close(); // flushes too
+    int returnCode;
+    try(PrintStream out = new PrintStream(buffer)) {
+      returnCode = new CatTool().run(
+              System.in,
+              out,
+              System.err,
+              Collections.emptyList());
+    }
 
     assertEquals(0, returnCode);
     assertTrue(
