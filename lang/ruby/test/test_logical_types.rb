@@ -24,7 +24,9 @@ class TestLogicalTypes < Test::Unit::TestCase
     SCHEMA
 
     assert_equal 'date', schema.logical_type
-    assert_encode_and_decode Date.today, schema
+    today = Date.today
+    assert_encode_and_decode today, schema
+    assert_preencoded Avro::LogicalTypes::IntDate.encode(today), schema, today
   end
 
   def test_int_date_conversion
@@ -45,10 +47,11 @@ class TestLogicalTypes < Test::Unit::TestCase
     SCHEMA
 
     # The Time.at format is (seconds, microseconds) since Epoch.
-    datum = Time.at(628232400, 12000)
+    time = Time.at(628232400, 12000)
 
     assert_equal 'timestamp-millis', schema.logical_type
-    assert_encode_and_decode datum, schema
+    assert_encode_and_decode time, schema
+    assert_preencoded Avro::LogicalTypes::TimestampMillis.encode(time), schema, time.utc
   end
 
   def test_timestamp_millis_long_conversion
@@ -69,10 +72,11 @@ class TestLogicalTypes < Test::Unit::TestCase
     SCHEMA
 
     # The Time.at format is (seconds, microseconds) since Epoch.
-    datum = Time.at(628232400, 12345)
+    time = Time.at(628232400, 12345)
 
     assert_equal 'timestamp-micros', schema.logical_type
-    assert_encode_and_decode datum, schema
+    assert_encode_and_decode time, schema
+    assert_preencoded Avro::LogicalTypes::TimestampMicros.encode(time), schema, time.utc
   end
 
   def test_timestamp_micros_long_conversion
@@ -107,5 +111,10 @@ class TestLogicalTypes < Test::Unit::TestCase
   def assert_encode_and_decode(datum, schema)
     encoded = encode(datum, schema)
     assert_equal datum, decode(encoded, schema)
+  end
+
+  def assert_preencoded(datum, schema, decoded)
+    encoded = encode(datum, schema)
+    assert_equal decoded, decode(encoded, schema)
   end
 end

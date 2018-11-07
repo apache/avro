@@ -23,6 +23,8 @@ module Avro
       EPOCH_START = Date.new(1970, 1, 1)
 
       def self.encode(date)
+        return date.to_i if date.is_a?(Numeric)
+
         (date - EPOCH_START).to_i
       end
 
@@ -33,6 +35,8 @@ module Avro
 
     module TimestampMillis
       def self.encode(value)
+        return value.to_i if value.is_a?(Numeric)
+
         time = value.to_time
         time.to_i * 1000 + time.usec / 1000
       end
@@ -45,6 +49,8 @@ module Avro
 
     module TimestampMicros
       def self.encode(value)
+        return value.to_i if value.is_a?(Numeric)
+
         time = value.to_time
         time.to_i * 1000_000 + time.usec
       end
@@ -78,7 +84,7 @@ module Avro
     def self.type_adapter(type, logical_type)
       return unless logical_type
 
-      TYPES.fetch(type, {}).fetch(logical_type, Identity)
+      TYPES.fetch(type, {}.freeze).fetch(logical_type, Identity)
     end
   end
 end
