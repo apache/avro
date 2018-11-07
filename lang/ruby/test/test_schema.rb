@@ -132,6 +132,21 @@ class TestSchema < Test::Unit::TestCase
     }, schema.to_avro)
   end
 
+  def test_to_avro_includes_logical_type
+    schema = Avro::Schema.parse <<-SCHEMA
+      {"type": "record", "name": "has_logical", "fields": [
+        {"name": "dt", "type": {"type": "int", "logicalType": "date"}}]
+      }
+    SCHEMA
+
+    assert_equal schema.to_avro, {
+      'type' => 'record', 'name' => 'has_logical',
+      'fields' => [
+        {'name' => 'dt', 'type' => {'type' => 'int', 'logicalType' => 'date'}}
+      ]
+    }
+  end
+
   def test_unknown_named_type
     error = assert_raise Avro::UnknownSchemaError do
       Avro::Schema.parse <<-SCHEMA
