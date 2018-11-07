@@ -34,14 +34,9 @@ import sys
 
 from setuptools import setup
 
-
 VERSION_FILE_NAME = 'VERSION.txt'
 LICENSE_FILE_NAME = 'LICENSE'
 NOTICE_FILE_NAME = 'NOTICE'
-
-# The following prevents distutils from using hardlinks (which may not always be
-# available, e.g. on a Docker volume). See http://bugs.python.org/issue8876
-del os.link
 
 def RunsFromSourceDist():
   """Tests whether setup.py is invoked from a source distribution.
@@ -101,11 +96,6 @@ def SetupSources():
       src=avsc_file_path,
       dst=os.path.join(py3_dir, 'avro', 'tests', 'interop.avsc'),
   )
-
-  # Make sure the avro shell script is executable:
-  script = os.path.join(py3_dir, 'scripts', 'avro')
-  os.chmod(script,
-           stat.S_IMODE(os.stat(script).st_mode) | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def ReadVersion():
