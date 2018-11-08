@@ -26,7 +26,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.avro.InvalidAvroMagicException;
 import org.apache.avro.Schema;
+import org.apache.avro.UnknownAvroCodecException;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
@@ -68,7 +70,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     byte[] magic = new byte[4];
     in.read(magic);
     if (!Arrays.equals(MAGIC, magic))
-      throw new IOException("Not a data file.");
+      throw new InvalidAvroMagicException("Not a data file.");
 
     long length = in.length();
     in.seek(length-4);
@@ -91,7 +93,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     this.count = getMetaLong(COUNT);
     String codec = getMetaString(CODEC);
     if (codec != null && ! codec.equals(NULL_CODEC)) {
-      throw new IOException("Unknown codec: " + codec);
+      throw new UnknownAvroCodecException("Unknown codec: " + codec);
     }
     this.schema = Schema.parse(getMetaString(SCHEMA));
     this.reader = reader;

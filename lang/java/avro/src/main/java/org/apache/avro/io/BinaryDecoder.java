@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.util.Utf8;
 
 /** An {@link Decoder} for binary-format data.
@@ -151,7 +152,7 @@ public class BinaryDecoder extends Decoder {
             b = buf[pos + len++] & 0xff;
             n ^= (b & 0x7f) << 28;
             if (b > 0x7f) {
-              throw new IOException("Invalid int encoding");
+              throw new InvalidNumberEncodingException("Invalid int encoding");
             }
           }
         }
@@ -223,7 +224,7 @@ public class BinaryDecoder extends Decoder {
               b = buf[pos + len++] & 0xff;
               l ^= (b & 0x7fL) << 63;
               if (b > 0x7f) {
-                throw new IOException("Invalid long encoding");
+                throw new InvalidNumberEncodingException("Invalid long encoding");
               }
             }
           }
