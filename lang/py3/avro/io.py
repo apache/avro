@@ -80,7 +80,10 @@ class TermColors:
 class AvroPrimitiveTypeException(schema.AvroException):
   def __init__(self, details, expected_schema, datum):
     pretty_datum = pformat(datum, indent=1, width=1)
-    fail_msg = f'{details}, but as value we got {TermColors.RED}{pretty_datum}{TermColors.ENDC}\n'
+    fail_msg = '{details}, but as value we got {red}{pretty_datum}{end}\n'.format(
+      details=details, red=TermColors.RED, pretty_datum=pretty_datum,
+      end=TermColors.ENDC
+    )
     schema.AvroException.__init__(self, fail_msg)
 
 
@@ -89,11 +92,16 @@ class AvroTypeException(schema.AvroException):
   def __init__(self, expected_schema, datum, details=[]):
     pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
     pretty_datum = pformat(datum, indent=1, width=1)
-    fail_msg = "The datum is not an example of the schema"
-    fail_msg += f"\n\nDatum:\n{TermColors.RED}{pretty_datum}{TermColors.ENDC}"
-    fail_msg += f"\n\nSchema:\n{TermColors.GREEN}{pretty_expected}{TermColors.ENDC}\n"
+    fail_msg = 'The datum is not an example of the schema'
+    fail_msg += '\n\nDatum:\n{red}{pretty_datum}{end}'.format(
+      red=TermColors.RED, pretty_datum=pretty_datum, end=TermColors.ENDC
+    )
+    fail_msg += '\n\nSchema:\n{green}{pretty_expected}{end}\n'.format(
+      green=TermColors.GREEN, pretty_expected=pretty_expected,
+      end=TermColors.ENDC
+    )
     for d in details:
-      fail_msg += f"\n{d}"
+      fail_msg += "\n{}".format(d)
     schema.AvroException.__init__(self, fail_msg)
 
 
@@ -114,15 +122,17 @@ def validate_datum_type(datum, expected_types, expected_schema):
   if None in expected_types:
     if datum is not None:
       raise AvroPrimitiveTypeException(
-        f'datum should be {TermColors.BLUE}None{TermColors.ENDC}',
+        'datum should be {}None{}'.format(TermColors.BLUE, TermColors.ENDC),
         expected_schema, datum
       )
   elif not isinstance(datum, expected_types):
-    expected_types_names = f'{TermColors.ENDC} nor {TermColors.BLUE}'.join(
+    expected_types_names = '{} nor {}'.format(TermColors.ENDC, TermColors.BLUE).join(
       [t.__name__ for t in expected_types]
     )
     raise AvroPrimitiveTypeException(
-      f'datum should be {TermColors.BLUE}{expected_types_names}{TermColors.ENDC} type',
+      'datum should be {blue}{expected}{end} type'.format(
+        blue=TermColors.BLUE, expected=expected_types_names, end=TermColors.ENDC
+      ),
       expected_schema, datum
     )
 
@@ -155,14 +165,18 @@ def validate(expected_schema, datum):
     validate_datum_type(datum, (int,), expected_schema)
     if not (INT_MIN_VALUE <= datum <= INT_MAX_VALUE):
       raise AvroPrimitiveTypeException(
-        f'datum should be within int range ({INT_MIN_VALUE}, {INT_MAX_VALUE})',
+        'datum should be within int range ({}, {})'.format(
+          INT_MIN_VALUE, INT_MAX_VALUE
+        ),
         expected_schema, datum
       )
   elif schema_type == 'long':
     validate_datum_type(datum, (int,), expected_schema)
     if not (LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE):
       raise AvroPrimitiveTypeException(
-        f'datum should be within int range ({LONG_MIN_VALUE}, {LONG_MAX_VALUE})',
+        'datum should be within int range ({}, {})'.format(
+          LONG_MIN_VALUE, LONG_MAX_VALUE
+        ),
         expected_schema, datum
       )
   elif schema_type in ['float', 'double']:
@@ -171,13 +185,13 @@ def validate(expected_schema, datum):
     validate_datum_type(datum, (bytes,), expected_schema)
     if not len(datum) == expected_schema.size:
       raise AvroPrimitiveTypeException(
-        f'should have expected size: {expected_schema.size}',
+        'should have expected size: {}'.format(expected_schema.size),
         expected_schema, datum
       )
   elif schema_type == 'enum':
     if datum not in expected_schema.symbols:
       raise AvroPrimitiveTypeException(
-        f'datum should be one of symbols: {expected_schema.symbols}',
+        'datum should be one of symbols: {}'.format(expected_schema.symbols),
         expected_schema, datum
       )
   elif schema_type == 'array':
@@ -208,8 +222,11 @@ def validate(expected_schema, datum):
     if not union_success:
       union_branches = [schema.type for schema in expected_schema.schemas]
       error_aggregate.append(
-        f'datum should be one of following: ' \
-        f'{TermColors.BLUE}{union_branches}{TermColors.ENDC}'
+        'datum should be one of following: ' \
+        '{blue}{union_branches}{end}'.format(
+          blue=TermColors.BLUE, union_branches=union_branches,
+          end=TermColors.ENDC
+        )
       )
 
   elif schema_type in ['record', 'error', 'request']:
@@ -218,7 +235,12 @@ def validate(expected_schema, datum):
       try:
         validate(field.type, datum.get(field.name))
       except AvroPrimitiveTypeException as e:
-        error_aggregate.append(f'Field {TermColors.GREEN}"{field.name}"{TermColors.ENDC} {e}')
+        error_aggregate.append(
+          'Field {green}"{field_name}"{end} {exception}'.format(
+            green=TermColors.GREEN, field_name=field.name, end=TermColors.ENDC,
+            exception=e
+          )
+        )
   else:
     raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
 
