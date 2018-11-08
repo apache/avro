@@ -37,7 +37,7 @@ import org.apache.avro.util.Utf8;
  * clients handle fields that appear to be coming out of order, this class
  * defines the method {@link #readFieldOrder}.
  *
- * <p>See the <a href="doc-files/parsing.html">parser documentation</a> for
+ * <p>See the <a href="parsing/doc-files/parsing.html">parser documentation</a> for
  *  information on how this works.
  */
 public class ResolvingDecoder extends ValidatingDecoder {
