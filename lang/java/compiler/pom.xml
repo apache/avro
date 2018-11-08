@@ -38,7 +38,7 @@
     <osgi.import>
       !org.apache.avro.compiler*,
       org.apache.avro*;version="${project.version}",
-      org.apache.commons.lang*,
+      org.apache.commons.lang3*,
       org.apache.commons.velocity*,
       org.apache.ant*,
       *
@@ -185,8 +185,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
       <version>${commons-lang.version}</version>
     </dependency>
     <dependency>
