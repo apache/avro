@@ -353,7 +353,6 @@ public class TestGenericData {
     r.put(fileMapField.name(), filePair);
 
     String json = r.toString();
-    System.out.println(json);
     JsonFactory factory = new JsonFactory();
     JsonParser parser = factory.createJsonParser(json);
     ObjectMapper mapper = new ObjectMapper();
