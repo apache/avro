@@ -72,7 +72,7 @@ public class GenericData {
   protected static final String STRING_TYPE_STRING = "String";
 
   private boolean fastReaderEnabled = Boolean.parseBoolean( System.getProperty("org.apache.avro.fastread", "false" ) );
-  private FastReader fastReader = new FastReader( this );
+  private ThreadLocal<FastReader> fastReader = ThreadLocal.withInitial( ()->new FastReader( this ) );
 
   private final ClassLoader classLoader;
 
@@ -112,7 +112,7 @@ public class GenericData {
   }
 
   public FastReader getFastReader() {
-    return this.fastReader;
+    return this.fastReader.get();
   }
 
   private Map<String, Conversion<?>> conversions =

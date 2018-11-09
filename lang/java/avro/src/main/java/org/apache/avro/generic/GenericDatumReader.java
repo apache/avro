@@ -18,14 +18,13 @@
 package org.apache.avro.generic;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Collection;
-import java.nio.ByteBuffer;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
@@ -36,6 +35,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.ResolvingDecoder;
+import org.apache.avro.io.fastreader.FastReader;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.WeakIdentityHashMap;
 
@@ -44,6 +44,9 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private final GenericData data;
   private Schema actual;
   private Schema expected;
+
+  private DatumReader<D> fastDatumReader = null;
+  private FastReader     creatorFastReader = null;
 
   private ResolvingDecoder creatorResolver = null;
   private final Thread creator;
@@ -86,6 +89,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       expected = actual;
     }
     creatorResolver = null;
+    fastDatumReader = null;
   }
 
   /** Get the reader's schema. */
@@ -95,6 +99,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   public void setExpected(Schema reader) {
     this.expected = reader;
     creatorResolver = null;
+    fastDatumReader = null;
   }
 
   private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
@@ -142,7 +147,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
     if ( data.isFastReaderEnabled() ) {
-      return (D) data.getFastReader().createDatumReader(actual, expected ).read(reuse, in);
+      return (D) getFastDatumReader().read(reuse, in);
     }
     else {
       ResolvingDecoder resolver = getResolver(actual, expected);
@@ -151,6 +156,27 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       resolver.drain();
       return result;
     }
+  }
+
+
+  private DatumReader<D> getFastDatumReader() {
+    if ( fastDatumReader == null ) {
+      fastDatumReader = getFastReader().createDatumReader( actual, expected );
+    }
+    return fastDatumReader;
+  }
+
+  private FastReader getFastReader() {
+    Thread currThread = Thread.currentThread();
+    if (currThread == creator && creatorFastReader != null) {
+      return creatorFastReader;
+    }
+
+    FastReader reader = data.getFastReader();
+    if ( currThread == creator ) {
+      this.creatorFastReader = reader;
+    }
+    return reader;
   }
 
   /** Called to read data.*/
