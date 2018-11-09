@@ -82,7 +82,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     if (isValidValue(field, value)) {
       return;
     }
-    else if (field.defaultValue() != null) {
+    else if (field.defaultVal() != null) {
       return;
     }
     else {

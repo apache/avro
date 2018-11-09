@@ -5,7 +5,9 @@
  */
 package avro.examples.baseball;
 
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
@@ -473,4 +475,70 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+  @Override protected boolean hasCustomCoders() { return true; }
+
+  @Override protected void customEncode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+    out.writeInt(this.number);
+
+    out.writeString(this.first_name);
+
+    out.writeString(this.last_name);
+
+    long size0 = this.position.size();
+    out.writeArrayStart();
+    out.setItemCount(size0);
+    long actualSize0 = 0;
+    for (avro.examples.baseball.Position e0: this.position) {
+      actualSize0++;
+      out.startItem();
+      out.writeEnum(e0.ordinal());
+    }
+    out.writeArrayEnd();
+    if (actualSize0 != size0)
+      throw new java.util.ConcurrentModificationException("Array-size written was " + size0 + ", but element count was " + actualSize0 + ".");
+
+  }
+
+  @Override protected void customDecode(org.apache.avro.io.ResolvingDecoder in)
+    throws java.io.IOException
+  {
+    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrder();
+    for (int i = 0; i < 4; i++) {
+      switch (fieldOrder[i].pos()) {
+      case 0:
+        this.number = in.readInt();
+        break;
+
+      case 1:
+        this.first_name = in.readString(this.first_name instanceof Utf8 ? (Utf8)this.first_name : null);
+        break;
+
+      case 2:
+        this.last_name = in.readString(this.last_name instanceof Utf8 ? (Utf8)this.last_name : null);
+        break;
+
+      case 3:
+        long size0 = in.readArrayStart();
+        java.util.List<avro.examples.baseball.Position> a0 = this.position;
+        if (a0 == null) {
+          a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
+          this.position = a0;
+        } else a0.clear();
+        SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
+        for ( ; 0 < size0; size0 = in.arrayNext()) {
+          for ( ; size0 != 0; size0--) {
+            avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
+            e0 = avro.examples.baseball.Position.values()[in.readEnum()];
+            a0.add(e0);
+          }
+        }
+        break;
+
+      default:
+        throw new java.io.IOException("Corrupt ResolvingDecoder.");
+      }
+    }
+  }
 }

@@ -72,6 +72,19 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   }
 
   @Override
+  protected void writeRecord(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    if (datum instanceof SpecificRecordBase && this.getSpecificData().useCustomCoders()) {
+      SpecificRecordBase d = (SpecificRecordBase) datum;
+      if (d.hasCustomCoders()) {
+        d.customEncode(out);
+        return;
+      }
+    }
+    super.writeRecord(schema, datum, out);
+  }
+
+  @Override
   protected void writeField(Object datum, Schema.Field f, Encoder out,
                             Object state) throws IOException {
     if (datum instanceof SpecificRecordBase) {

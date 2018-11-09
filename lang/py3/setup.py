@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- mode: python -*-
 # -*- coding: utf-8 -*-
 
@@ -18,20 +18,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Provide the code necessary for packaging and installing avro-python3.
+
+The avro-python3 software is designed for Python 3, but this file and the packaging software supports Python 2.7.
+
+https://pypi.org/project/avro-python3/
+"""
+
+
 import os
 import shutil
+import stat
 import sys
 
 from setuptools import setup
 
-
 VERSION_FILE_NAME = 'VERSION.txt'
 LICENSE_FILE_NAME = 'LICENSE'
 NOTICE_FILE_NAME = 'NOTICE'
-
-# The following prevents distutils from using hardlinks (which may not always be
-# available, e.g. on a Docker volume). See http://bugs.python.org/issue8876
-del os.link
 
 def RunsFromSourceDist():
   """Tests whether setup.py is invoked from a source distribution.
@@ -92,12 +97,6 @@ def SetupSources():
       dst=os.path.join(py3_dir, 'avro', 'tests', 'interop.avsc'),
   )
 
-  # Make sure the avro shell script is executable:
-  os.chmod(
-      path=os.path.join(py3_dir, 'scripts', 'avro'),
-      mode=0o777,
-  )
-
 
 def ReadVersion():
   """Returns: the content of the Avro version file."""
@@ -110,9 +109,6 @@ def ReadVersion():
 
 
 def Main():
-  assert (sys.version_info[0] >= 3), \
-      ('Python version >= 3 required, got %r' % sys.version_info)
-
   if not RunsFromSourceDist():
     SetupSources()
 
@@ -145,6 +141,16 @@ def Main():
       license = 'Apache License 2.0',
       keywords = 'avro serialization rpc',
       url = 'http://avro.apache.org/',
+      classifiers=(
+          'License :: OSI Approved :: Apache Software License',
+          'Programming Language :: Python :: 3 :: Only',
+          'Programming Language :: Python :: 3.4',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+      ),
+      python_requires='>=3.4',
   )
 
 

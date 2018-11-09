@@ -18,12 +18,11 @@
 package org.apache.avro;
 
 import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.A_DINT_B_DFIXED_4_BYTES_RECORD1;
-import static org.apache.avro.TestSchemas.A_DINT_B_DFIXED_8_BYTES_RECORD1;
-import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
-import static org.apache.avro.TestSchemas.FIXED_8_BYTES;
+import static org.apache.avro.TestSchemas.*;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;

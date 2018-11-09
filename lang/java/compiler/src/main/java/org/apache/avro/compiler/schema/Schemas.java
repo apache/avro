@@ -17,9 +17,6 @@
  */
 package org.apache.avro.compiler.schema;
 
-import com.google.common.base.Function;
-import com.google.common.base.Supplier;
-import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
@@ -27,6 +24,8 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
@@ -141,13 +140,10 @@ public final class Schemas {
               visited.put(schema, schema);
               break;
             case RECORD:
-              terminate = visitNonTerminal(visitor, schema, dq,
-                  Lists.transform(Lists.reverse(schema.getFields()), new Function<Field, Schema>() {
-                    @Override
-                    public Schema apply(Field f) {
-                      return f.schema();
-                    }
-                  }));
+              Iterator<Schema> reverseSchemas = schema.getFields().stream().map(Field::schema)
+                  .collect(Collectors.toCollection(ArrayDeque::new))
+                  .descendingIterator();
+              terminate = visitNonTerminal(visitor, schema, dq, () -> reverseSchemas);
               visited.put(schema, schema);
               break;
             case UNION:

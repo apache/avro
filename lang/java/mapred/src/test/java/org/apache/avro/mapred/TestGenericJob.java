@@ -20,8 +20,10 @@ package org.apache.avro.mapred;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.Schema;
@@ -49,12 +51,14 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 @SuppressWarnings("deprecation")
 public class TestGenericJob {
-  private static final String dir =
-    System.getProperty("test.dir", ".") + "target/testGenericJob";
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
 
   private static Schema createSchema() {
     List<Field> fields = new ArrayList<>();
@@ -80,25 +84,19 @@ public class TestGenericJob {
   private static Schema createInnerSchema(String name) {
     Schema innerrecord = Schema.createRecord(name, "", "", false);
     innerrecord.setFields
-      (Arrays.asList(new Field(name, Schema.create(Type.LONG), "", 0L)));
+      (Collections.singletonList(new Field(name, Schema.create(Type.LONG), "", 0L)));
     return innerrecord;
   }
 
   @Before
     public void setup() throws IOException {
     // needed to satisfy the framework only - input ignored in mapper
-    File indir = new File(dir);
-    indir.mkdirs();
+    String dir = DIR.getRoot().getPath();
     File infile = new File(dir + "/in");
     RandomAccessFile file = new RandomAccessFile(infile, "rw");
     // add some data so framework actually calls our mapper
     file.writeChars("aa bb cc\ndd ee ff\n");
     file.close();
-  }
-
-  @After
-    public void tearDown() throws IOException {
-    FileUtil.fullyDelete(new File(dir));
   }
 
   static class AvroTestConverter
@@ -128,11 +126,11 @@ public class TestGenericJob {
   @Test
     public void testJob() throws Exception {
     JobConf job = new JobConf();
-    Path outputPath = new Path(dir + "/out");
+    Path outputPath = new Path(DIR.getRoot().getPath() + "/out");
     outputPath.getFileSystem(job).delete(outputPath);
 
     job.setInputFormat(TextInputFormat.class);
-    FileInputFormat.setInputPaths(job, dir + "/in");
+    FileInputFormat.setInputPaths(job, DIR.getRoot().getPath() + "/in");
 
     job.setMapperClass(AvroTestConverter.class);
     job.setNumReduceTasks(0);

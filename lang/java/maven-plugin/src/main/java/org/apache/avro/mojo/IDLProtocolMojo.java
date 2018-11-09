@@ -97,6 +97,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       for (String customConversion : customConversions) {
         compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
       }
+      compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
       compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);

@@ -66,7 +66,7 @@ public class TestWeather {
     JobConf job = new JobConf();
     String inDir = System.getProperty("share.dir","../../../share")+"/test/data";
     Path input = new Path(inDir+"/weather.avro");
-    Path output = new Path(System.getProperty("test.dir","target/test")+"/weather-ident");
+    Path output = new Path("target/test/weather-ident");
 
     output.getFileSystem(job).delete(output);
 
@@ -141,9 +141,9 @@ public class TestWeather {
   @SuppressWarnings("deprecation")
   public void testSort() throws Exception {
     JobConf job = new JobConf();
-    String inDir = System.getProperty("share.dir","../../../share")+"/test/data";
+    String inDir = "../../../share/test/data";
     Path input = new Path(inDir+"/weather.avro");
-    Path output = new Path(System.getProperty("test.dir","target/test")+"/weather-sort");
+    Path output = new Path("target/test/weather-sort");
 
     output.getFileSystem(job).delete(output);
 

@@ -19,21 +19,17 @@ package org.apache.avro.tool;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * Tests both {@link JsonToBinaryFragmentTool}
@@ -42,10 +38,11 @@ import org.junit.Test;
 public class TestJsonToFromBinaryFragmentTools {
   private static final String STRING_SCHEMA = Schema.create(Type.STRING).toString();
   private static final String UTF8 = "utf-8";
-  private static final String AVRO =
-    "ZLong string implies readable length encoding.";
-  private static final String JSON =
-    "\"Long string implies readable length encoding.\"\n";
+  private static final String AVRO = "ZLong string implies readable length encoding.";
+  private static final String JSON = "\"Long string implies readable length encoding.\"\n";
+
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
 
   @Test
   public void testBinaryToJson() throws Exception {
@@ -79,23 +76,22 @@ public class TestJsonToFromBinaryFragmentTools {
 
   @Test
   public void testBinaryToJsonSchemaFile() throws Exception {
-    binaryToJson(AVRO, JSON, "--schema-file", schemaFile());
+    binaryToJson(AVRO, JSON, "--schema-file", schemaFile(DIR.getRoot()));
   }
 
   @Test
     public void testJsonToBinarySchemaFile() throws Exception {
-    jsonToBinary(JSON, AVRO, "--schema-file", schemaFile());
+    jsonToBinary(JSON, AVRO, "--schema-file", schemaFile(DIR.getRoot()));
   }
 
   private void binaryToJson(String avro, String json, String... options) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(new BufferedOutputStream(baos));
 
-    List<String> args = new ArrayList<>();
-    args.addAll(Arrays.asList(options));
+    List<String> args = new ArrayList<>(Arrays.asList(options));
     args.add("-");
     new BinaryFragmentToJsonTool().run(
-        new ByteArrayInputStream(avro.getBytes(UTF8)), // stdin
+        new ByteArrayInputStream(avro.getBytes(StandardCharsets.UTF_8)), // stdin
         p, // stdout
         null, // stderr
         args);
@@ -107,22 +103,21 @@ public class TestJsonToFromBinaryFragmentTools {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(new BufferedOutputStream(baos));
 
-    List<String> args = new ArrayList<>();
-    args.addAll(Arrays.asList(options));
+    List<String> args = new ArrayList<>(Arrays.asList(options));
     args.add("-");
     new JsonToBinaryFragmentTool().run(
-        new ByteArrayInputStream(json.getBytes(UTF8)), // stdin
+        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)), // stdin
         p, // stdout
         null, // stderr
         args);
     assertEquals(avro, baos.toString(UTF8));
   }
 
-  private static String schemaFile() throws IOException {
-    File schemaFile = AvroTestUtil.tempFile(TestJsonToFromBinaryFragmentTools.class, "String.avsc");
-    FileWriter fw = new FileWriter(schemaFile);
-    fw.append(STRING_SCHEMA);
-    fw.close();
+  private static String schemaFile(File dir) throws IOException {
+    File schemaFile = new File(dir, "String.avsc");
+    try(FileWriter fw = new FileWriter(schemaFile)) {
+      fw.append(STRING_SCHEMA);
+    }
     return schemaFile.toString();
   }
 }

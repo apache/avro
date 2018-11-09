@@ -17,27 +17,19 @@
  */
 package org.apache.avro;
 
+import static org.apache.avro.TestSchemas.*;
+import static org.junit.Assert.assertEquals;
+
+import java.io.ByteArrayOutputStream;
+
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Decoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
-import java.io.ByteArrayOutputStream;
-
-import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.*;
-import static org.junit.Assert.assertEquals;
 
 public class TestSchemaCompatibilityEnumDefaults {
   @Rule

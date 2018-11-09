@@ -17,7 +17,7 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,9 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -41,8 +43,11 @@ public class TestDataFileConcat {
   private static final Logger LOG =
     LoggerFactory.getLogger(TestDataFileConcat.class);
 
-  CodecFactory codec = null;
-  CodecFactory codec2 = null;
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
+  CodecFactory codec;
+  CodecFactory codec2;
   boolean recompress;
   public TestDataFileConcat(CodecFactory codec, CodecFactory codec2, Boolean recompress) {
     this.codec = codec;
@@ -80,8 +85,7 @@ public class TestDataFileConcat {
     Integer.parseInt(System.getProperty("test.count", "200"));
   private static final boolean VALIDATE =
     !"false".equals(System.getProperty("test.validate", "true"));
-  private static final File DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
+
   private static final long SEED = System.currentTimeMillis();
 
   private static final String SCHEMA_JSON =
@@ -93,7 +97,7 @@ public class TestDataFileConcat {
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   private File makeFile(String name) {
-    return new File(DIR, "test-" + name + ".avro");
+    return new File(DIR.getRoot().getPath(), "test-" + name + ".avro");
   }
 
   @Test

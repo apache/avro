@@ -18,12 +18,7 @@
 
 package org.apache.avro.mapred;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
-
 import junit.framework.Assert;
-
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,12 +26,20 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TestAvroInputFormat {
 
-  private static final String TEST_DIR = System.getProperty("test.dir", ".") +
-      File.separator + TestAvroInputFormat.class.getName();
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
   private JobConf conf;
   private FileSystem fs;
   private Path inputDir;
@@ -45,9 +48,8 @@ public class TestAvroInputFormat {
   public void setUp() throws Exception {
     conf = new JobConf();
     fs = FileSystem.getLocal(conf);
-    inputDir = new Path(TEST_DIR);
+    inputDir = new Path(DIR.getRoot().getPath());
   }
-
 
   @After
   public void tearDown() throws Exception {
@@ -64,7 +66,6 @@ public class TestAvroInputFormat {
     fs.create(textFile).close();
 
     FileInputFormat.setInputPaths(conf, inputDir);
-
 
     AvroInputFormat inputFormat = new AvroInputFormat();
     FileStatus[] statuses = inputFormat.listStatus(conf);

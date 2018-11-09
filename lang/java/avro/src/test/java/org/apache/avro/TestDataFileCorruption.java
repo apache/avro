@@ -17,10 +17,13 @@
  */
 package org.apache.avro;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.file.DataFileReader;
@@ -30,14 +33,9 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
-
 public class TestDataFileCorruption {
 
-  private static final File DIR
-      = new File(System.getProperty("test.dir", "/tmp"));
+  private static final File DIR = new File( "/tmp");
 
   private File makeFile(String name) {
     return new File(DIR, "test-" + name + ".avro");

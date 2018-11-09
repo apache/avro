@@ -85,6 +85,11 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
      */
     void sync();
 
+    /**
+     * Shared constructor portion since we aren't using C++11
+     */
+    void init(const ValidSchema &schema, size_t syncInterval, const Codec &codec);
+
 public:
     /**
      * Returns the current encoder for this writer.
@@ -108,6 +113,8 @@ public:
      */
     DataFileWriterBase(const char* filename, const ValidSchema& schema,
         size_t syncInterval, Codec codec = NULL_CODEC);
+    DataFileWriterBase(std::auto_ptr<OutputStream> outputStream,
+                       const ValidSchema& schema, size_t syncInterval, Codec codec);
 
     ~DataFileWriterBase();
     /**
@@ -141,6 +148,10 @@ public:
         size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
         base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) { }
 
+    DataFileWriter(std::auto_ptr<OutputStream> outputStream, const ValidSchema& schema,
+        size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
+        base_(new DataFileWriterBase(outputStream, schema, syncInterval, codec)) { }
+
     /**
      * Writes the given piece of data into the file.
      */
@@ -172,7 +183,7 @@ public:
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
-    const std::auto_ptr<SeekableInputStream> stream_;
+    const std::auto_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
@@ -196,6 +207,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     void readHeader();
 
     bool readDataBlock();
+    void doSeek(int64_t position);
 public:
     /**
      * Returns the current decoder for this reader.
@@ -219,6 +231,8 @@ public:
      * the DataFileReaderBase object.
      */
     DataFileReaderBase(const char* filename);
+
+    DataFileReaderBase(std::auto_ptr<InputStream> inputStream);
 
     /**
      * Initializes the reader so that the reader and writer schemas
@@ -290,6 +304,11 @@ public:
         base_->init(readerSchema);
     }
 
+    DataFileReader(std::auto_ptr<InputStream> inputStream, const ValidSchema& readerSchema) :
+        base_(new DataFileReaderBase(inputStream)) {
+        base_->init(readerSchema);
+    }
+
     /**
      * Constructs the reader for the given file and the reader is
      * expected to use the schema that is used with data.
@@ -299,6 +318,10 @@ public:
         base_->init();
     }
 
+    DataFileReader(std::auto_ptr<InputStream> inputStream) :
+        base_(new DataFileReaderBase(inputStream)) {
+        base_->init();
+    }
 
     /**
      * Constructs a reader using the reader base. This form of constructor

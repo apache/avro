@@ -21,6 +21,7 @@ package org.apache.avro;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;

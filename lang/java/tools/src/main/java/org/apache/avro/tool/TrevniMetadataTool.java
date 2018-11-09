@@ -28,10 +28,10 @@ import org.apache.trevni.ColumnFileReader;
 import org.apache.trevni.MetaData;
 import org.apache.trevni.ColumnMetaData;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 
 /** Tool to print Trevni file metadata as JSON. */
 public class TrevniMetadataTool implements Tool {

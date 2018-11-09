@@ -20,14 +20,9 @@ package org.apache.avro;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.fasterxml.jackson.databind.node.NullNode;
 import org.apache.avro.Schema.Field.Order;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
@@ -35,14 +30,15 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecordBuilder;
-import org.codehaus.jackson.node.NullNode;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestSchemaBuilder {
 
-  private static final File DIR = new File(System.getProperty("test.dir", "/tmp"));
-  private static final File FILE = new File(DIR, "test.avro");
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
 
   @Test
   public void testRecord() {
@@ -984,12 +980,14 @@ public class TestSchemaBuilder {
     Assert.assertEquals(13, rec2.get("nullableIntWithDefault"));
 
     // write to file
-    DataFileWriter<Object> writer =
-        new DataFileWriter<>(new GenericDatumWriter<>());
-    writer.create(writeSchema, FILE);
-    writer.append(rec1);
-    writer.append(rec2);
-    writer.close();
+
+    File file = new File(DIR.getRoot().getPath(), "testDefaults.avro");
+
+    try(DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      writer.create(writeSchema, file);
+      writer.append(rec1);
+      writer.append(rec2);
+    }
 
     Schema readSchema = SchemaBuilder.record("r").fields()
         .name("requiredInt").type().intType().noDefault()
@@ -1000,21 +998,21 @@ public class TestSchemaBuilder {
         .endRecord();
 
     DataFileReader<GenericData.Record> reader =
-        new DataFileReader<>(FILE,
+        new DataFileReader<>(file,
             new GenericDatumReader<>(writeSchema, readSchema));
 
     GenericData.Record rec1read = reader.iterator().next();
     Assert.assertEquals(1, rec1read.get("requiredInt"));
-    Assert.assertEquals(null, rec1read.get("optionalInt"));
+    Assert.assertNull(rec1read.get("optionalInt"));
     Assert.assertEquals(3, rec1read.get("nullableIntWithDefault"));
-    Assert.assertEquals(null, rec1read.get("newOptionalInt"));
+    Assert.assertNull(rec1read.get("newOptionalInt"));
     Assert.assertEquals(5, rec1read.get("newNullableIntWithDefault"));
 
     GenericData.Record rec2read = reader.iterator().next();
     Assert.assertEquals(1, rec2read.get("requiredInt"));
     Assert.assertEquals(2, rec2read.get("optionalInt"));
     Assert.assertEquals(13, rec2read.get("nullableIntWithDefault"));
-    Assert.assertEquals(null, rec2read.get("newOptionalInt"));
+    Assert.assertNull(rec2read.get("newOptionalInt"));
     Assert.assertEquals(5, rec2read.get("newNullableIntWithDefault"));
   }
 

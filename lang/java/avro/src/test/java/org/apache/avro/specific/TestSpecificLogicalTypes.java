@@ -17,6 +17,20 @@
  */
 package org.apache.avro.specific;
 
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static org.hamcrest.Matchers.*;
+
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
@@ -37,19 +51,6 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.time.format.DateTimeFormatter.ISO_INSTANT;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
-import static org.hamcrest.Matchers.comparesEqualTo;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 
 /**
  * This tests compatibility between classes generated before and after
@@ -68,6 +69,21 @@ import static org.hamcrest.Matchers.not;
  * two versions.
  */
 public class TestSpecificLogicalTypes {
+
+  // Override the default ISO_LOCAL_TIME to make sure that there are
+  // trailing zero's in the format:
+  // Expected: is "22:07:33.880"
+  //     but: was "22:07:33.88"
+  private static final DateTimeFormatter ISO_LOCAL_TIME = new DateTimeFormatterBuilder()
+          .appendValue(ChronoField.HOUR_OF_DAY, 2)
+          .appendLiteral(':')
+          .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+          .optionalStart()
+          .appendLiteral(':')
+          .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+          .optionalStart()
+          .appendFraction(ChronoField.NANO_OF_SECOND, 3, 3, true)
+          .toFormatter();
 
   @Rule
   public final TemporaryFolder temp = new TemporaryFolder();
@@ -103,8 +119,8 @@ public class TestSpecificLogicalTypes {
         3019.34,
         null,
         java.time.LocalDate.now(),
-        java.time.LocalTime.now(),
-        java.time.Instant.now(),
+        java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
+        java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
         new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
@@ -160,8 +176,8 @@ public class TestSpecificLogicalTypes {
             3019.34,
             null,
             java.time.LocalDate.now(),
-            java.time.LocalTime.now(),
-            java.time.Instant.now(),
+            java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
+            java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
             new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 

@@ -18,11 +18,10 @@
 package org.apache.avro.io;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericDatumReader;
-
-import org.junit.Test;
+import org.apache.avro.generic.GenericRecord;
 import org.junit.Assert;
+import org.junit.Test;
 
 public class TestJsonDecoder {
 

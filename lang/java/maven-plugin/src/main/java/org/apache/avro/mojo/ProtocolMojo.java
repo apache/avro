@@ -76,6 +76,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
     } catch (ClassNotFoundException e) {
       throw new IOException(e);
     }
+    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
     compiler.compileToDestination(src, outputDirectory);
   }
 

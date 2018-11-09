@@ -18,10 +18,10 @@
 
 package org.apache.avro.file.codec;
 
-import org.apache.avro.file.Codec;
-
 import java.io.IOException;
-import java.nio.*;
+import java.nio.ByteBuffer;
+
+import org.apache.avro.file.Codec;
 
 /**
  * Simple Custom Codec to validate making Codec Public

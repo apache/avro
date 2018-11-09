@@ -19,10 +19,10 @@
 
 package org.apache.avro.message;
 
-import com.google.common.collect.MapMaker;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Interface for classes that can provide avro schemas by fingerprint.
@@ -42,7 +42,7 @@ public interface SchemaStore {
    * This class is thread-safe.
    */
   class Cache implements SchemaStore {
-    private final Map<Long, Schema> schemas = new MapMaker().makeMap();
+    private final Map<Long, Schema> schemas = new ConcurrentHashMap<>();
 
     /**
      * Adds a schema to this cache that can be retrieved using its AVRO-CRC-64

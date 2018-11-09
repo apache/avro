@@ -17,12 +17,12 @@
  */
 package org.apache.avro.util;
 
+import static junit.framework.Assert.assertSame;
+import static org.junit.Assert.assertEquals;
+
 import java.io.UnsupportedEncodingException;
 
 import org.junit.Test;
-
-import static junit.framework.Assert.assertSame;
-import static org.junit.Assert.assertEquals;
 
 public class TestUtf8 {
   @Test public void testByteConstructor() throws Exception {

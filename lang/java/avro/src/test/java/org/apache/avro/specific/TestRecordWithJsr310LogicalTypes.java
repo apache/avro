@@ -5,8 +5,8 @@
  */
 package org.apache.avro.specific;
 
-import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
+import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
 
 @SuppressWarnings("all")

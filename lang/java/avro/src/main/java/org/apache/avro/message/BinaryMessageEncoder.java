@@ -19,7 +19,6 @@
 
 package org.apache.avro.message;
 
-import com.google.common.primitives.Bytes;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
@@ -113,7 +112,11 @@ public class BinaryMessageEncoder<D> implements MessageEncoder<D> {
       try {
         byte[] fp = SchemaNormalization
             .parsingFingerprint("CRC-64-AVRO", schema);
-        return Bytes.concat(V1_HEADER, fp);
+
+        byte[] ret = new byte[V1_HEADER.length + fp.length];
+        System.arraycopy(V1_HEADER, 0, ret, 0, V1_HEADER.length);
+        System.arraycopy(fp, 0, ret, V1_HEADER.length, fp.length);
+        return ret;
       } catch (NoSuchAlgorithmException e) {
         throw new AvroRuntimeException(e);
       }
