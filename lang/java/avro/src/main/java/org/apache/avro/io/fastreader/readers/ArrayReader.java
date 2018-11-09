@@ -29,7 +29,9 @@ public class ArrayReader<D> implements FieldReader<List<D>> {
   private final Schema schema;
 
   public static <D> ArrayReader<D> of( FieldReader<D> elementReader, Schema schema ) {
-    return elementReader.canReuse() ? new ReusingArrayReader<>( elementReader, schema ) : new ArrayReader<>( elementReader, schema );
+    // there is a big in ReusingArrayReader() that needs to be addressed. until then, only use ArrayReader
+    // return elementReader.canReuse() ? new ReusingArrayReader<>( elementReader, schema ) : new ArrayReader<>( elementReader, schema );
+    return new ArrayReader<>( elementReader, schema );
   }
 
   public ArrayReader(FieldReader<D> elementReader, Schema schema ) {

@@ -67,7 +67,6 @@ public class RecordReader<D extends IndexedRecord> implements FieldReader<D> {
 
   @Override
   public D read(D reuse, Decoder decoder) throws IOException {
-    try {
       D object = reuse != null ? reuse : supplier.get();
       for (ExecutionStep thisStep : readSteps) {
         thisStep.execute(object, decoder);
@@ -76,9 +75,6 @@ public class RecordReader<D extends IndexedRecord> implements FieldReader<D> {
         thisStep.execute(object, decoder);
       }
       return object;
-    } catch (Exception e) {
-      throw new IOException(e);
-    }
   }
 
   @Override

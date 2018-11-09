@@ -103,6 +103,11 @@ public class ReflectData extends SpecificData {
   /** Return the singleton instance. */
   public static ReflectData get() { return INSTANCE; }
 
+  @Override
+  public boolean isFastReaderEnabled() {
+    return false;
+  }
+
   /** Cause a class to be treated as though it had an {@link Stringable}
    ** annotation. */
   public ReflectData addStringable(Class c) {
@@ -365,6 +370,7 @@ public class ReflectData extends SpecificData {
    * It returns false for non-string-maps because Avro writes out such maps
    * as an array of records. Even their JSON representation is an array.
    */
+  @Override
   protected boolean isMap(Object datum) {
     return (datum instanceof Map) && !isNonStringMap(datum);
   }

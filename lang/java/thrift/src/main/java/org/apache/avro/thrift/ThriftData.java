@@ -60,6 +60,11 @@ public class ThriftData extends GenericData {
   public static ThriftData get() { return INSTANCE; }
 
   @Override
+  public boolean isFastReaderEnabled() {
+    return false;
+  }
+
+  @Override
   public DatumReader createDatumReader(Schema schema) {
     return new ThriftDatumReader(schema, schema, this);
   }

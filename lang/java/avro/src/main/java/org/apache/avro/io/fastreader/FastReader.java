@@ -187,7 +187,7 @@ public class FastReader {
           }
           readSteps[writerPos] = new FieldSetter<>(readerField.pos(), fieldReader);
         } else {
-          defaultingSteps.add(getDefaultingStep(readerField));
+          defaultingSteps.add(getDefaultingStep(readerSchema, writerSchema, readerField));
         }
       }
 
@@ -213,13 +213,12 @@ public class FastReader {
   }
 
 
-  private ExecutionStep getDefaultingStep(Schema.Field field) {
+  private ExecutionStep getDefaultingStep(Schema readerSchema, Schema writerSchema, Schema.Field field) {
     try {
       Object defaultValue = data.getDefaultValue(field);
       return new FieldDefaulter(field.pos(), defaultValue);
     } catch (AvroMissingFieldException e) {
-      return getFailureReaderOrFail("Schemas not compatible. Reader field " + field.name()
-          + " not found and no default available.");
+      return getFailureReaderOrFail("Found " + writerSchema.getFullName() + ", expecting " + readerSchema.getFullName() + ", missing required field " + field.name() );
     }
   }
 
@@ -235,9 +234,11 @@ public class FastReader {
   @SuppressWarnings("unchecked")
   private <D extends IndexedRecord> RecordReader<D> getRecordReaderFromCache(Schema readerSchema,
       Schema writerSchema) {
-    Map<Schema, RecordReader<?>> writerMap =
+    synchronized ( readerCache ) {
+      Map<Schema, RecordReader<?>> writerMap =
         readerCache.computeIfAbsent(readerSchema, k -> new WeakIdentityHashMap<>());
-    return (RecordReader<D>) writerMap.computeIfAbsent(writerSchema, k -> new RecordReader<>());
+      return (RecordReader<D>) writerMap.computeIfAbsent(writerSchema, k -> new RecordReader<>());
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -433,8 +434,7 @@ public class FastReader {
     for (Schema thisWriterSchema : writerTypes) {
       Schema thisReaderSchema = findUnionType(thisWriterSchema, readerTypes);
       if (thisReaderSchema == null) {
-        unionReaders[i++] = getFailureReaderOrFail("Encountered incompatible type "
-            + thisWriterSchema.getName() + " for reader union " + getUnionDescriptor(readerSchema));
+        unionReaders[i++] = getFailureReaderOrFail("Found " + thisWriterSchema.getType().getName().toLowerCase() + ", expecting " + getUnionDescriptor(readerSchema));
       } else {
         unionReaders[i++] = getReaderFor(thisReaderSchema, thisWriterSchema);
       }
@@ -445,6 +445,11 @@ public class FastReader {
 
 
   private String getUnionDescriptor(Schema schema) {
+    List<Schema> types = schema.getTypes();
+    if ( types.size() == 1 ) {
+      return schema.getTypes().get(0).getName().toLowerCase();
+    }
+
     return "[" + schema.getTypes().stream().map( Schema::getName ).collect( Collectors.joining(",") ) + "]";
   }
 
@@ -583,8 +588,7 @@ public class FastReader {
   }
 
   private FailureReader getSchemaMismatchError(Schema readerSchema, Schema writerSchema) {
-    return getFailureReaderOrFail("Reader and writer schemas do not match. Expected "
-        + readerSchema.getType() + " but writer supplied " + writerSchema.getType());
+    return getFailureReaderOrFail( "Found " + writerSchema.getType() + ", expecting " + readerSchema.getType() );
   }
 
   private FailureReader getFailureReaderOrFail(String message) {

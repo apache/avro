@@ -441,12 +441,7 @@ public class GenericData {
 
   /** Returns a {@link DatumReader} for this kind of data. */
   public DatumReader createDatumReader(Schema writer, Schema reader) {
-    if ( isFastReaderEnabled() ) {
-      return getFastReader().createReconfigurableDatumReader( writer, reader );
-    }
-    else {
-      return new GenericDatumReader( writer, reader, this );
-    }
+  return new GenericDatumReader( writer, reader, this );
   }
 
   /** Returns a {@link DatumWriter} for this kind of data. */

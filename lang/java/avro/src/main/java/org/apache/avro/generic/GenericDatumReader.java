@@ -100,6 +100,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
     RESOLVER_CACHE =
     new ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>() {
+    @Override
     protected Map<Schema,Map<Schema,ResolvingDecoder>> initialValue() {
       return new WeakIdentityHashMap<>();
     }
@@ -140,11 +141,16 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @Override
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
-    ResolvingDecoder resolver = getResolver(actual, expected);
-    resolver.configure(in);
-    D result = (D) read(reuse, expected, resolver);
-    resolver.drain();
-    return result;
+    if ( data.isFastReaderEnabled() ) {
+      return (D) data.getFastReader().createDatumReader(actual, expected ).read(reuse, in);
+    }
+    else {
+      ResolvingDecoder resolver = getResolver(actual, expected);
+      resolver.configure(in);
+      D result = (D) read(reuse, expected, resolver);
+      resolver.drain();
+      return result;
+    }
   }
 
   /** Called to read data.*/
@@ -536,7 +542,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       }
       break;
     case UNION:
-      skip(schema.getTypes().get((int)in.readIndex()), in);
+      skip(schema.getTypes().get(in.readIndex()), in);
       break;
     case FIXED:
       in.skipFixed(schema.getFixedSize());

@@ -18,6 +18,7 @@
 package org.apache.avro.io.fastreader.readers;
 
 import java.io.IOException;
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.Decoder;
 
@@ -37,11 +38,7 @@ public class EnumReader implements FieldReader<Object> {
     Object resultObject = enumObjects[index];
 
     if (resultObject == null) {
-      throw new IOException(
-          "Non-compatible value '"
-              + writerSchema.getEnumSymbols().get(index)
-              + "' found in enum "
-              + writerSchema.getName());
+      throw new AvroTypeException( "No match for " + writerSchema.getEnumSymbols().get(index) );
     }
 
     return resultObject;

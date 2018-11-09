@@ -131,7 +131,7 @@ public class TestSchemaCompatibilityEnumDefaults {
     Decoder decoder = DecoderFactory.get().resolvingDecoder(
       writerSchema, readerSchema,
       DecoderFactory.get().binaryDecoder(bytes, null));
-    DatumReader<Object> datumReader = new GenericDatumReader<>(readerSchema);
+    DatumReader<Object> datumReader = GenericData.get().createDatumReader(readerSchema);
     return (GenericRecord)datumReader.read(null, decoder);
   }
 

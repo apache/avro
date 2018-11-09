@@ -18,6 +18,7 @@
 package org.apache.avro.io.fastreader.readers;
 
 import java.io.IOException;
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.fastreader.steps.ExecutionStep;
@@ -36,16 +37,16 @@ public class FailureReader implements FieldReader<Object>, ExecutionStep {
 
   @Override
   public Object read(Object reuse, Decoder decoder) throws IOException {
-    throw new IOException(errorMessage);
+    throw new AvroTypeException(errorMessage);
   }
 
   @Override
   public void skip(Decoder decoder) throws IOException {
-    throw new IOException(errorMessage);
+    throw new AvroTypeException(errorMessage);
   }
 
   @Override
   public void execute(IndexedRecord record, Decoder decoder) throws IOException {
-    throw new IOException(errorMessage);
+    throw new AvroTypeException(errorMessage);
   }
 }

@@ -64,6 +64,11 @@ public class ProtobufData extends GenericData {
   public static ProtobufData get() { return INSTANCE; }
 
   @Override
+  public boolean isFastReaderEnabled() {
+    return false;
+  }
+
+  @Override
   public DatumReader createDatumReader(Schema schema) {
     return new ProtobufDatumReader(schema, schema, this);
   }
@@ -193,6 +198,7 @@ public class ProtobufData extends GenericData {
 
   private static final ThreadLocal<Map<Descriptor,Schema>> SEEN
     = new ThreadLocal<Map<Descriptor,Schema>>() {
+    @Override
     protected Map<Descriptor,Schema> initialValue() {
       return new IdentityHashMap<>();
     }
