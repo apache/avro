@@ -287,13 +287,53 @@ public class SpecificCompiler {
       classnameToConversion.put(conversion.getConvertedType().getCanonicalName(), conversion);
     }
     Collection<String> result = new HashSet<>();
-    for (Field field : schema.getFields()) {
-      final String className = javaType(field.schema());
+    for (String className : getClassNamesOfPrimitiveFields(schema)) {
       if (classnameToConversion.containsKey(className)) {
         result.add(classnameToConversion.get(className).getClass().getCanonicalName());
       }
     }
     return result;
+  }
+
+  private Set<String> getClassNamesOfPrimitiveFields(Schema schema) {
+    Set<String> result = new HashSet<>();
+    getClassNamesOfPrimitiveFields(schema, result, new HashSet<>());
+    return result;
+  }
+
+  private void getClassNamesOfPrimitiveFields(Schema schema, Set<String> result, Set<Schema> seenSchemas) {
+    if (seenSchemas.contains(schema)) {
+      return;
+    }
+    seenSchemas.add(schema);
+    switch (schema.getType()) {
+      case RECORD:
+        for (Schema.Field field : schema.getFields()) {
+          getClassNamesOfPrimitiveFields(field.schema(), result, seenSchemas);
+        }
+        break;
+      case MAP:
+        getClassNamesOfPrimitiveFields(schema.getValueType(), result, seenSchemas);
+        break;
+      case ARRAY:
+        getClassNamesOfPrimitiveFields(schema.getElementType(), result, seenSchemas);
+        break;
+      case UNION:
+        for (Schema s : schema.getTypes())
+          getClassNamesOfPrimitiveFields(s, result, seenSchemas);
+        break;
+      case ENUM:
+      case FIXED:
+      case NULL:
+        break;
+      case STRING: case BYTES:
+      case INT: case LONG:
+      case FLOAT: case DOUBLE:
+      case BOOLEAN:
+        result.add(javaType(schema));
+        break;
+      default: throw new RuntimeException("Unknown type: "+schema);
+    }
   }
 
   private static String logChuteName = null;

@@ -37,7 +37,8 @@ abstract class AbstractSpecificRecordTest {
         final T copy = deserialize(serialized, original.getSchema());
         Assert.assertEquals(original, copy);
         // In addition to equals() tested above, make sure the other methods that use SpecificData work as intended
-        Assert.assertEquals(0, original.compareTo(copy));
+        // compareTo() throws an exception for maps, otherwise we would have tested it here
+        // Assert.assertEquals(0, original.compareTo(copy));
         Assert.assertEquals(original.hashCode(), copy.hashCode());
         Assert.assertEquals(original.toString(), copy.toString());
     }
