@@ -21,8 +21,8 @@
 import binascii
 import io
 import logging
-import sys
 import unittest
+from unittest.mock import patch
 
 from avro import io as avro_io
 from avro import schema
@@ -188,7 +188,14 @@ def check_skip_number(number_type):
 
 # ------------------------------------------------------------------------------
 
+class MockedColors:
+  GREEN = ''
+  BLUE = ''
+  RED = ''
+  ENDC = ''
 
+
+@patch('avro.io.TermColors', MockedColors)
 class TestIO(unittest.TestCase):
   #
   # BASIC FUNCTIONALITY
@@ -234,9 +241,7 @@ class TestIO(unittest.TestCase):
     ["int", "null"]
     """
     datum = "there should not be a string here"
-
-    expected_regex = "datum should be one of following: "\
-                     "\\033\[94m\['int', 'null'\]\\033\[0m"
+    expected_regex = "datum should be one of following: \['int', 'null']"
 
     with self.assertRaisesRegex(avro_io.AvroTypeException, expected_regex):
       avro_io.validate(schema.Parse(example_schema), datum)
@@ -245,8 +250,8 @@ class TestIO(unittest.TestCase):
     example_schema = '{"type": "int"}'
     datum = "aaa"
 
-    expected_regex = "datum should be \\033\[94mint\\033\[0m type," \
-                     " but as value we got \\033\[91m'aaa'\\033\[0m"
+    expected_regex = "datum should be int type," \
+                     " but as value we got 'aaa'"
 
     with self.assertRaisesRegex(avro_io.AvroPrimitiveTypeException, expected_regex):
       avro_io.validate(schema.Parse(example_schema), datum)
@@ -264,8 +269,8 @@ class TestIO(unittest.TestCase):
     """
     datum = {"field1": {"field2": "11", "field3": []}}
 
-    expected_regex = 'Field \\033\[92m"field1"\\033\[0m' \
-                     ' datum should be \\033\[94mlist\\033\[0m type'
+    expected_regex = 'Field "field1"' \
+                     ' datum should be list type'
 
     with self.assertRaisesRegex(avro_io.AvroTypeException, expected_regex):
       avro_io.validate(schema.Parse(example_schema), datum)
