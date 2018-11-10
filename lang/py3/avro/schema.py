@@ -184,18 +184,6 @@ class Schema(object, metaclass=abc.ABCMeta):
       self._props.update(other_props)
 
   @property
-  def name(self):
-    """Returns: the simple name of this schema."""
-    return self._props['name']
-
-  @property
-  def fullname(self):
-    """Returns: the fully qualified name of this schema."""
-    # By default, the full name is the simple name.
-    # Named schemas override this behavior to include the namespace.
-    return self.name
-
-  @property
   def namespace(self):
     """Returns: the namespace this schema belongs to, if any, or None."""
     return self._props.get('namespace', None)
@@ -624,6 +612,12 @@ class PrimitiveSchema(Schema):
     """Returns: the simple name of this schema."""
     # The name of a primitive type is the type itself.
     return self.type
+
+  @property
+  def fullname(self):
+    """Returns: the fully qualified name of this schema."""
+    # The full name is the simple name for primitive schema.
+    return self.name
 
   def to_json(self, names=None):
     if len(self.props) == 1:
