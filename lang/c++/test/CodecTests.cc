@@ -1425,8 +1425,7 @@ static const TestData4 data4BinaryOnly[] = {
 // helper functions leads to names which compose 'testFunc', 'Factory', and
 // 'data'.
 template <typename Test, typename Data>
-Test testWithData(const Test &test, const Data &data) {
-    boost::ignore_unused(data);
+Test testWithData(const Test &test, const Data &) {
     return test;
 }
 #define ADD_TESTS(testSuite, Factory, testFunc, data) \
