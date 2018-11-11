@@ -50,7 +50,7 @@ do
       (cd lang/py; ./build.sh test)
       (cd lang/py3; ./build.sh test)
       (cd lang/c; ./build.sh test)
-      #(cd lang/c++; ./build.sh test)
+      (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh test)
       (cd lang/ruby; ./build.sh test)
