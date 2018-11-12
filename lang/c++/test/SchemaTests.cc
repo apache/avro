@@ -199,7 +199,7 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}"
 };
 
-const char* schemasTocompact[] = {
+const char* schemasToCompact[] = {
     // Schema without any whitespace
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
 
@@ -208,7 +208,7 @@ const char* schemasTocompact[] = {
 
     // Schema with whitespaces both inside and outside of field names/values.
     "{\"type\":   \"record\",  \"name\":               \"ComplexInteger\"\n, "
-    "\"doc\": \"record_doc \n \t\", "
+    "\"doc\": \"record_doc °C \u00f8 \u001f \\n \n \t\", "
     "\"fields\": ["
         "{\"name\":   \"re1\", \"type\":               \"long\", "
         "\"doc\":   \"A \\\"quoted doc\\\"\"      },                 "
@@ -220,10 +220,10 @@ const char* compactSchemas[] = {
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
     "{\"type\":\"record\",\"name\":\"Test\",\"fields\":[]}",
     "{\"type\":\"record\",\"name\":\"ComplexInteger\","
-    "\"doc\":\"record_doc \n \t\","
+    "\"doc\":\"record_doc °C \u00f8 \\u001f \\n \\n \\t\","
     "\"fields\":["
         "{\"name\":\"re1\",\"type\":\"long\",\"doc\":\"A \\\"quoted doc\\\"\"},"
-        "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\"}"
+        "{\"name\":\"re2\",\"type\":\"long\",\"doc\":\"extra slashes\\\\\\\\\"}"
     "]}"};
 
 static void testBasic(const char* schema)
@@ -264,9 +264,9 @@ static void testRoundTrip(const char* schema)
 
 static void testCompactSchemas()
 {
-  for (int i = 0; i < sizeof(schemasTocompact)/ sizeof(schemasTocompact[0]); i++)
+  for (size_t i = 0; i < sizeof(schemasToCompact)/ sizeof(schemasToCompact[0]); i++)
   {
-    const char* schema = schemasTocompact[i];
+    const char* schema = schemasToCompact[i];
     BOOST_TEST_CHECKPOINT(schema);
     avro::ValidSchema compiledSchema =
         compileJsonSchemaFromString(std::string(schema));

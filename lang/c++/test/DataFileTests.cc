@@ -611,7 +611,7 @@ public:
           BOOST_CHECK_EQUAL(root->leafAt(2)->getDoc(), "");
           BOOST_CHECK_EQUAL(root->leafAt(3)->getDoc(), "A_\"quoted_doc\"");
           BOOST_CHECK_EQUAL(root->leafAt(4)->getDoc(), "doc with\nspaces");
-          BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\");
+          BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
         }
     }
 };
