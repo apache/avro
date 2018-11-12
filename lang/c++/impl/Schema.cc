@@ -78,7 +78,19 @@ ArraySchema::ArraySchema(const Schema &itemsSchema) :
     node_->addLeaf(itemsSchema.root());
 }
 
+ArraySchema::ArraySchema(const ArraySchema &itemsSchema) :
+    Schema(new NodeArray)
+{
+    node_->addLeaf(itemsSchema.root());
+}
+
 MapSchema::MapSchema(const Schema &valuesSchema) :
+    Schema(new NodeMap)
+{
+    node_->addLeaf(valuesSchema.root());
+}
+
+MapSchema::MapSchema(const MapSchema &valuesSchema) :
     Schema(new NodeMap)
 {
     node_->addLeaf(valuesSchema.root());

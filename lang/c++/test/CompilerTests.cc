@@ -60,6 +60,31 @@ void testEmptyBytesDefault()
     BOOST_CHECK_EQUAL(expected, actual.str());
 }
 
+void test2dArray()
+{
+    std::string input = "{\n\
+    \"type\": \"array\",\n\
+    \"items\": {\n\
+        \"type\": \"array\",\n\
+        \"items\": \"double\"\n\
+    }\n\
+}\n";
+
+    std::string expected = "{\n\
+    \"type\": \"array\",\n\
+    \"items\": {\n\
+        \"type\": \"array\",\n\
+        \"items\": \"double\"\n\
+    }\n\
+}\n\
+";
+    avro::ValidSchema schema = avro::compileJsonSchemaFromString(input);
+    std::ostringstream actual;
+    schema.toJson(actual);
+    BOOST_CHECK_EQUAL(expected, actual.str());
+
+}
+
 boost::unit_test::test_suite*
 init_unit_test_suite(int argc, char* argv[])
 {
@@ -67,5 +92,6 @@ init_unit_test_suite(int argc, char* argv[])
 
     test_suite* ts= BOOST_TEST_SUITE("Avro C++ unit tests for Compiler.cc");
     ts->add(BOOST_TEST_CASE(&testEmptyBytesDefault));
+    ts->add(BOOST_TEST_CASE(&test2dArray));
     return ts;
 }
