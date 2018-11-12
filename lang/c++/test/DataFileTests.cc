@@ -45,6 +45,7 @@ using boost::unit_test::test_suite;
 using avro::ValidSchema;
 using avro::GenericDatum;
 using avro::GenericRecord;
+using avro::NodePtr;
 
 const int count = 1000;
 
@@ -133,13 +134,29 @@ static const char dsch[] = "{\"type\": \"record\","
         "{\"name\":\"re\", \"type\":\"double\"},"
         "{\"name\":\"im\", \"type\":\"double\"}"
     "]}";
-static const char dblsch[] = "{\"type\": \"record\","
-    "\"name\":\"ComplexDouble\", \"fields\": ["
+static const char dblsch[] =
+    "{\"type\": \"record\","
+    "\"name\":\"ComplexDouble\", "
+    "\"doc\": \"\\\"Quoted_doc_string\\\"\", "
+    "\"fields\": ["
         "{\"name\":\"re\", \"type\":\"double\"}"
     "]}";
 static const char fsch[] = "{\"type\": \"fixed\","
     "\"name\":\"Fixed_32\", \"size\":4}";
-
+static const char ischWithDoc[] =
+    "{\"type\": \"record\","
+    "\"name\":\"ComplexInteger\", "
+    "\"doc\": \"record_doc\", "
+    "\"fields\": ["
+        "{\"name\":\"re1\", \"type\":\"long\", \"doc\": \"field_doc\"},"
+        "{\"name\":\"re2\", \"type\":\"long\"},"
+        "{\"name\":\"re3\", \"type\":\"long\", \"doc\": \"\"},"
+        "{\"name\":\"re4\", \"type\":\"long\", "
+        "\"doc\": \"A_\\\"quoted_doc\\\"\"},"
+        "{\"name\":\"re5\", \"type\":\"long\", \"doc\": \"doc with\nspaces\"},"
+        "{\"name\":\"re6\", \"type\":\"long\", "
+        "\"doc\": \"extra slashes\\\\\\\\\"}"
+    "]}";
 
 string toString(const ValidSchema& s)
 {
@@ -561,18 +578,42 @@ public:
 #endif
 
     void testSchemaReadWrite() {
-    uint32_t a=42;
-    {
+        uint32_t a=42;
+        {
             avro::DataFileWriter<uint32_t> df(filename, writerSchema);
-        df.write(a);
+            df.write(a);
         }
 
         {
-        avro::DataFileReader<uint32_t> df(filename);
-        uint32_t b;
+            avro::DataFileReader<uint32_t> df(filename);
+            uint32_t b;
             df.read(b);
             BOOST_CHECK_EQUAL(b, a);
+        }
     }
+
+    void testSchemaReadWriteWithDoc() {
+        uint32_t a=42;
+        {
+          avro::DataFileWriter<uint32_t> df(filename, writerSchema);
+          df.write(a);
+        }
+
+        {
+          avro::DataFileReader<uint32_t> df(filename);
+          uint32_t b;
+          df.read(b);
+          BOOST_CHECK_EQUAL(b, a);
+
+          const NodePtr& root = df.readerSchema().root();
+          BOOST_CHECK_EQUAL(root->getDoc(), "record_doc");
+          BOOST_CHECK_EQUAL(root->leafAt(0)->getDoc(), "field_doc");
+          BOOST_CHECK_EQUAL(root->leafAt(1)->getDoc(), "");
+          BOOST_CHECK_EQUAL(root->leafAt(2)->getDoc(), "");
+          BOOST_CHECK_EQUAL(root->leafAt(3)->getDoc(), "A_\"quoted_doc\"");
+          BOOST_CHECK_EQUAL(root->leafAt(4)->getDoc(), "doc with\nspaces");
+          BOOST_CHECK_EQUAL(root->leafAt(5)->getDoc(), "extra slashes\\\\");
+        }
     }
 };
 
@@ -674,6 +715,14 @@ init_unit_test_suite(int argc, char *argv[])
         shared_ptr<DataFileTest> t(new DataFileTest("test11.df", sch, sch));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testReaderSplits, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test12.df");
+        shared_ptr<DataFileTest> t(new DataFileTest("test12.df", ischWithDoc, ischWithDoc));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testSchemaReadWriteWithDoc, t));
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }

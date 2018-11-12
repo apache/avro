@@ -17,6 +17,8 @@
  */
 
 
+#include <sstream>
+#include <iomanip>
 #include <boost/algorithm/string/replace.hpp>
 #include "NodeImpl.hh"
 
@@ -25,6 +27,7 @@ using std::string;
 namespace avro {
 
 namespace {
+
 // Escape string for serialization.
 string escape(const string &unescaped) {
   string s;
@@ -219,12 +222,20 @@ void
 NodePrimitive::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << type() << '\"';
+    if (getDoc().size()) {
+        os << ",\n" << indent(depth) << "\"doc\": \""
+           << escape(getDoc()) << "\"";
+    }
 }
 
 void
 NodeSymbolic::printJson(std::ostream &os, int depth) const
 {
     os << '\"' << nameAttribute_.get() << '\"';
+    if (getDoc().size()) {
+        os << ",\n" << indent(depth) << "\"doc\": \""
+           << escape(getDoc()) << "\"";
+    }
 }
 
 static void printName(std::ostream& os, const Name& n, int depth)
@@ -241,6 +252,10 @@ NodeRecord::printJson(std::ostream &os, int depth) const
     os << "{\n";
     os << indent(++depth) << "\"type\": \"record\",\n";
     printName(os, nameAttribute_.get(), depth);
+    if (getDoc().size()) {
+        os << indent(depth) << "\"doc\": \""
+           << escape(getDoc()) << "\",\n";
+    }
     os << indent(depth) << "\"fields\": [";
 
     size_t fields = leafAttributes_.size();
@@ -430,6 +445,10 @@ NodeEnum::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"enum\",\n";
+    if (getDoc().size()) {
+        os << indent(depth) << "\"doc\": \""
+           << escape(getDoc()) << "\",\n";
+    }
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"symbols\": [\n";
 
@@ -451,6 +470,10 @@ NodeArray::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(depth+1) << "\"type\": \"array\",\n";
+    if (getDoc().size()) {
+        os << indent(depth+1) << "\"doc\": \""
+           << escape(getDoc()) << "\",\n";
+    }
     os << indent(depth+1) <<  "\"items\": ";
     leafAttributes_.get()->printJson(os, depth+1);
     os << '\n';
@@ -462,6 +485,10 @@ NodeMap::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(depth+1) <<"\"type\": \"map\",\n";
+    if (getDoc().size()) {
+        os << indent(depth+1) << "\"doc\": \""
+           << escape(getDoc()) << "\",\n";
+    }
     os << indent(depth+1) << "\"values\": ";
     leafAttributes_.get(1)->printJson(os, depth+1);
     os << '\n';
@@ -490,6 +517,10 @@ NodeFixed::printJson(std::ostream &os, int depth) const
 {
     os << "{\n";
     os << indent(++depth) << "\"type\": \"fixed\",\n";
+    if (getDoc().size()) {
+        os << indent(depth) << "\"doc\": \""
+           << escape(getDoc()) << "\",\n";
+    }
     printName(os, nameAttribute_.get(), depth);
     os << indent(depth) << "\"size\": " << sizeAttribute_.get() << "\n";
     os << indent(--depth) << '}';

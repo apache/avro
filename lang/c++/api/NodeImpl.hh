@@ -35,7 +35,7 @@
 namespace avro {
 
 /// Implementation details for Node.  NodeImpl represents all the avro types,
-/// whose properties are enabled are disabled by selecting concept classes.
+/// whose properties are enabled and disabled by selecting concept classes.
 
 template
 <
@@ -52,6 +52,7 @@ class NodeImpl : public Node
     NodeImpl(Type type) :
         Node(type),
         nameAttribute_(),
+        docAttribute_(),
         leafAttributes_(),
         leafNameAttributes_(),
         sizeAttribute_()
@@ -64,13 +65,30 @@ class NodeImpl : public Node
              const SizeConcept &size) :
         Node(type),
         nameAttribute_(name),
+        docAttribute_(),
         leafAttributes_(leaves),
         leafNameAttributes_(leafNames),
         sizeAttribute_(size)
     { }
 
+    // Ctor with "doc"
+    NodeImpl(Type type,
+             const NameConcept &name,
+             const concepts::SingleAttribute<std::string> &doc,
+             const LeavesConcept &leaves,
+             const LeafNamesConcept &leafNames,
+             const SizeConcept &size) :
+        Node(type),
+        nameAttribute_(name),
+        docAttribute_(doc),
+        leafAttributes_(leaves),
+        leafNameAttributes_(leafNames),
+        sizeAttribute_(size)
+    {}
+
     void swap(NodeImpl& impl) {
         std::swap(nameAttribute_, impl.nameAttribute_);
+        std::swap(docAttribute_, impl.docAttribute_);
         std::swap(leafAttributes_, impl.leafAttributes_);
         std::swap(leafNameAttributes_, impl.leafNameAttributes_);
         std::swap(sizeAttribute_, impl.sizeAttribute_);
@@ -78,6 +96,7 @@ class NodeImpl : public Node
     }
 
     bool hasName() const {
+        // e.g.: true for single and multiattributes, false for noattributes.
         return NameConcept::hasAttribute;
     }
 
@@ -87,6 +106,14 @@ class NodeImpl : public Node
 
     const Name &name() const {
         return nameAttribute_.get();
+    }
+
+    void doSetDoc(const std::string &doc) {
+      docAttribute_.add(doc);
+    }
+
+    const std::string &getDoc() const {
+      return docAttribute_.get();
     }
 
     void doAddLeaf(const NodePtr &newLeaf) {
@@ -172,6 +199,10 @@ class NodeImpl : public Node
     }
 
     NameConcept nameAttribute_;
+
+    // Rem: NameConcept type is HasName (= SingleAttribute<Name>), we use std::string instead
+    concepts::SingleAttribute<std::string> docAttribute_; /** Doc used to compare schemas */
+
     LeavesConcept leafAttributes_;
     LeafNamesConcept leafNameAttributes_;
     SizeConcept sizeAttribute_;
@@ -180,6 +211,8 @@ class NodeImpl : public Node
 
 typedef concepts::NoAttribute<Name>     NoName;
 typedef concepts::SingleAttribute<Name> HasName;
+
+typedef concepts::SingleAttribute<std::string> HasDoc;
 
 typedef concepts::NoAttribute<NodePtr>      NoLeaves;
 typedef concepts::SingleAttribute<NodePtr>  SingleLeaf;
@@ -277,6 +310,20 @@ public:
         const LeafNames &fieldsNames,
         const std::vector<GenericDatum>& dv) :
         NodeImplRecord(AVRO_RECORD, name, fields, fieldsNames, NoSize()),
+        defaultValues(dv) {
+        for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
+            if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
+                throw Exception(boost::format(
+                    "Cannot add duplicate name: %1%") %
+                    leafNameAttributes_.get(i));
+            }
+        }
+    }
+
+    NodeRecord(const HasName &name, const HasDoc &doc, const MultiLeaves &fields,
+        const LeafNames &fieldsNames,
+        const std::vector<GenericDatum> &dv) :
+        NodeImplRecord(AVRO_RECORD, name, doc, fields, fieldsNames, NoSize()),
         defaultValues(dv) {
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {

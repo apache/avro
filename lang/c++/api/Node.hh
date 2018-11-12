@@ -78,7 +78,7 @@ std::ostream& operator << (std::ostream& os, const Name& n) {
 /// objects.
 ///
 /// The Node object uses reference-counted pointers.  This is so that schemas
-/// may be reused in other other schemas, without needing to worry about memory
+/// may be reused in other schemas, without needing to worry about memory
 /// deallocation for nodes that are added to multiple schema parse trees.
 ///
 /// Node has minimal implementation, serving as an abstract base class for
@@ -116,6 +116,12 @@ class AVRO_DECL Node : private boost::noncopyable
         doSetName(name);
     }
     virtual const Name &name() const = 0;
+
+    virtual const std::string &getDoc() const = 0;
+    void setDoc(const std::string &doc) {
+        checkLock();
+        doSetDoc(doc);
+    }
 
     void addLeaf(const NodePtr &newLeaf) {
         checkLock();
@@ -170,6 +176,8 @@ class AVRO_DECL Node : private boost::noncopyable
     }
 
     virtual void doSetName(const Name &name) = 0;
+    virtual void doSetDoc(const std::string &name) = 0;
+
     virtual void doAddLeaf(const NodePtr &newLeaf) = 0;
     virtual void doAddName(const std::string &name) = 0;
     virtual void doSetFixedSize(int size) = 0;

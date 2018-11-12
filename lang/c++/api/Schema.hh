@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef avro_Schema_hh__ 
-#define avro_Schema_hh__ 
+#ifndef avro_Schema_hh__
+#define avro_Schema_hh__
 
 #include "Config.hh"
 #include "NodeImpl.hh"
+#include <string>
 
 /// \file
 ///
@@ -102,6 +103,9 @@ class AVRO_DECL RecordSchema : public Schema {
 public:
     RecordSchema(const std::string &name);
     void addField(const std::string &name, const Schema &fieldSchema);
+
+    std::string getDoc() const;
+    void setDoc(const std::string &);
 };
 
 class AVRO_DECL EnumSchema : public Schema {
