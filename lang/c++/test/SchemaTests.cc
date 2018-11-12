@@ -200,17 +200,14 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
 
     // Logical types
-    R"({"type": "bytes", "logicalType": "decimal",
-        "precision": 12, "scale": 6})",
-    R"({"type": "fixed", "name": "test", "size": 16,
-        "logicalType": "decimal", "precision": 38, "scale": 9})",
-    R"({"type": "int", "logicalType": "date"})",
-    R"({"type": "int", "logicalType": "time-millis"})",
-    R"({"type": "long", "logicalType": "time-micros"})",
-    R"({"type": "long", "logicalType": "timestamp-millis"})",
-    R"({"type": "long", "logicalType": "timestamp-micros"})",
-    R"({"type": "fixed", "name": "test", "size": 12,
-        "logicalType": "duration"})"
+    R"({"type":"bytes","logicalType":"decimal","precision":12,"scale":6})",
+    R"({"type":"fixed","name":"test","size":16,"logicalType":"decimal","precision":38,"scale":9})",
+    R"({"type":"int","logicalType":"date"})",
+    R"({"type":"int","logicalType":"time-millis"})",
+    R"({"type":"long","logicalType":"time-micros"})",
+    R"({"type":"long","logicalType":"timestamp-millis"})",
+    R"({"type":"long","logicalType":"timestamp-micros"})",
+    R"({"type":"fixed","name":"test","size":12,"logicalType":"duration"})"
 };
 
 const char* malformedLogicalTypes[] = {
