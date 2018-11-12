@@ -52,7 +52,9 @@
               <testSourceDirectory>${project.basedir}/src/test/resources/avro</testSourceDirectory>
               <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
               <enableDecimalLogicalType>true</enableDecimalLogicalType>
-              <customConversions>org.apache.avro.codegentest.CustomDecimalConversion</customConversions>
+              <customConversions>
+                <conversion>org.apache.avro.codegentest.CustomDecimalConversion</conversion>
+              </customConversions>
             </configuration>
           </execution>
         </executions>
