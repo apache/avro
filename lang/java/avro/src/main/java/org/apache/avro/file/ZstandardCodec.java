@@ -46,10 +46,11 @@ public class ZstandardCodec extends Codec {
     }
 
     @Override
-    public ByteBuffer compress(ByteBuffer uncompressedData) throws IOException {
-        ByteArrayOutputStream baos = getOutputBuffer(uncompressedData.remaining());
-        OutputStream outputStream = new ZstdCompressorOutputStream(baos);
-        writeAndClose(uncompressedData, outputStream);
+    public ByteBuffer compress(ByteBuffer data) throws IOException {
+        ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+        try (OutputStream outputStream = new ZstdCompressorOutputStream(baos)) {
+           outputStream.write(data.array(), computeOffset(data), data.remaining());
+        }
         return ByteBuffer.wrap(baos.toByteArray());
     }
 
@@ -58,27 +59,13 @@ public class ZstandardCodec extends Codec {
         ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
         InputStream bytesIn = new ByteArrayInputStream(
           compressedData.array(),
-          compressedData.arrayOffset() + compressedData.position(),
+          computeOffset(compressedData),
           compressedData.remaining());
-        InputStream ios = new ZstdCompressorInputStream(bytesIn);
-        try {
-          IOUtils.copy(ios, baos);
-        } finally {
-          ios.close();
+        try (InputStream ios = new ZstdCompressorInputStream(bytesIn)) {
+            IOUtils.copy(ios, baos);
         }
         return ByteBuffer.wrap(baos.toByteArray());
     }
-
-    private void writeAndClose(ByteBuffer data, OutputStream to) throws IOException {
-        byte[] input = data.array();
-        int offset = data.arrayOffset() + data.position();
-        int length = data.remaining();
-        try {
-          to.write(input, offset, length);
-        } finally {
-          to.close();
-        }
-      }
 
     // get and initialize the output buffer for use.
     private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
