@@ -323,7 +323,7 @@ static NodePtr makeRecordNode(const Entity& e, const Name& name,
         defaultValues.push_back(f.defaultValue);
     }
     NodeRecord* node;
-    if (doc == nullptr) {
+    if (doc == NULL) {
         node = new NodeRecord(asSingleAttribute(name), fieldValues, fieldNames,
                               defaultValues);
     } else {
@@ -437,7 +437,7 @@ static NodePtr makeNode(const Entity& e, const Object& m,
                     *boost::dynamic_pointer_cast<NodeRecord>(result));
             } else {  // No doc
                 NodePtr r =
-                    makeRecordNode(e, nm, nullptr, m, st, nm.ns());
+                    makeRecordNode(e, nm, NULL, m, st, nm.ns());
                 (boost::dynamic_pointer_cast<NodeRecord>(r))
                     ->swap(*boost::dynamic_pointer_cast<NodeRecord>(result));
             }

@@ -45,6 +45,7 @@ using boost::unit_test::test_suite;
 using avro::ValidSchema;
 using avro::GenericDatum;
 using avro::GenericRecord;
+using avro::NodePtr;
 
 const int count = 1000;
 
@@ -604,7 +605,7 @@ public:
           df.read(b);
           BOOST_CHECK_EQUAL(b, a);
 
-          auto root = df.readerSchema().root();
+          const NodePtr& root = df.readerSchema().root();
           BOOST_CHECK_EQUAL(root->getDoc(), "record_doc");
           BOOST_CHECK_EQUAL(root->leafAt(0)->getDoc(), "field_doc");
           BOOST_CHECK_EQUAL(root->leafAt(1)->getDoc(), "");
