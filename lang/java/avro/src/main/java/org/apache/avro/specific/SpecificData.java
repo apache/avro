@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
 import java.nio.ByteBuffer;
@@ -31,9 +32,6 @@ import java.lang.reflect.ParameterizedType;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol;
 import org.apache.avro.AvroRuntimeException;
@@ -55,8 +53,20 @@ public class SpecificData extends GenericData {
 
   private static final Class<?>[] NO_ARG = new Class[]{};
   private static final Class<?>[] SCHEMA_ARG = new Class[]{Schema.class};
-  private static final Map<Class,Constructor> CTOR_CACHE =
-    new ConcurrentHashMap<>();
+  private static final ClassValue<Constructor> CTOR_CACHE = new ClassValue<Constructor>() {
+    @Override
+    protected Constructor computeValue(Class<?> c) {
+      boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
+      try {
+        Constructor meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
+        meth.setAccessible(true);
+        return meth;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+  };
 
   public static final String CLASS_PROP = "java-class";
   public static final String KEY_CLASS_PROP = "java-key-class";
@@ -121,6 +131,22 @@ public class SpecificData extends GenericData {
 
   /** Return the singleton instance. */
   public static SpecificData get() { return INSTANCE; }
+
+  private boolean useCustomCoderFlag
+    = Boolean.parseBoolean(System.getProperty("org.apache.avro.specific.use_custom_coders","false"));
+
+  /** Retrieve the current value of the custom-coders feature flag.
+    * Defaults to <code>true</code>, but this default can be overriden
+    * using the system property
+    * <code>org.apache.avro.specific.use_custom_coders</code>, and can
+    * be set dynamically by {@link useCustomCoders}.  See <a
+    * href="https://avro.apache.org/docs/current/gettingstartedjava.html#Beta+feature:+Generating+faster+code"Getting started with Java</a> for more about this
+    * feature flag. */
+  public boolean useCustomCoders() { return useCustomCoderFlag; }
+
+  /** Dynamically set the value of the custom-coder feature flag.
+   *  See {@link useCustomCoders}. */
+  public void setCustomCoders(boolean flag) { useCustomCoderFlag = flag; }
 
   @Override
   protected boolean isEnum(Object datum) {
@@ -221,23 +247,34 @@ public class SpecificData extends GenericData {
     return namespace + "$" + name;
   }
 
-  private final LoadingCache<java.lang.reflect.Type,Schema> schemaCache =
-      CacheBuilder.newBuilder()
-          .weakKeys()
-          .build(new CacheLoader<java.lang.reflect.Type,Schema>() {
-            public Schema load(java.lang.reflect.Type type)
-                throws AvroRuntimeException {
-              return createSchema(type, new LinkedHashMap<>());
-            }
-          });
+  // cache for schemas created from Class objects.  Use ClassValue to avoid
+  // locking classloaders and is GC and thread safe.
+  private final ClassValue<Schema> schemaClassCache = new ClassValue<Schema>() {
+    @Override
+    protected Schema computeValue(Class<?> type) {
+      return createSchema(type, new LinkedHashMap<>());
+    }
+  };
+  // for non-class objects, use a WeakHashMap, but this needs a sync block around it
+  private final Map<java.lang.reflect.Type, Schema> schemaTypeCache = new WeakHashMap<>();
 
   /** Find the schema for a Java type. */
   public Schema getSchema(java.lang.reflect.Type type) {
     try {
-      return schemaCache.get(type);
+      if (type instanceof Class) {
+        return schemaClassCache.get((Class<?>)type);
+      }
+      synchronized (schemaTypeCache) {
+        Schema s = schemaTypeCache.get(type);
+        if (s == null) {
+          s = createSchema(type, new LinkedHashMap<>());
+          schemaTypeCache.put(type, s);
+        }
+        return s;
+      }
     } catch (Exception e) {
       throw (e instanceof AvroRuntimeException) ?
-          (AvroRuntimeException)e.getCause() : new AvroRuntimeException(e);
+          (AvroRuntimeException)e : new AvroRuntimeException(e);
     }
   }
 
@@ -355,11 +392,6 @@ public class SpecificData extends GenericData {
     Object result;
     try {
       Constructor meth = (Constructor)CTOR_CACHE.get(c);
-      if (meth == null) {
-        meth = c.getDeclaredConstructor(useSchema ? SCHEMA_ARG : NO_ARG);
-        meth.setAccessible(true);
-        CTOR_CACHE.put(c, meth);
-      }
       result = meth.newInstance(useSchema ? new Object[]{s} : (Object[])null);
     } catch (Exception e) {
       throw new RuntimeException(e);

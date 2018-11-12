@@ -57,6 +57,14 @@
     "fields" : [ ]
   }, {
     "type" : "record",
+    "name" : "Baz",
+    "namespace" : "ns.other.schema",
+    "fields" : [ {
+      "name" : "x",
+      "type" : "int"
+    } ]
+  }, {
+    "type" : "record",
     "name" : "Foo",
     "fields" : [ {
       "name" : "x",
@@ -66,6 +74,9 @@
     "type" : "record",
     "name" : "Bar",
     "fields" : [ {
+      "name" : "baz",
+      "type" : "ns.other.schema.Baz"
+    }, {
       "name" : "foo",
       "type" : "Foo"
     } ]
@@ -81,6 +92,13 @@
     },
     "bar" : {
       "request" : [ ],
+      "response" : "null"
+    },
+    "bazm" : {
+      "request" : [ {
+        "name" : "baz",
+        "type" : "ns.other.schema.Baz"
+      } ],
       "response" : "null"
     },
     "barf" : {

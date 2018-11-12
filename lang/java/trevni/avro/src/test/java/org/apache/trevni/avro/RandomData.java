@@ -64,7 +64,7 @@ public class RandomData implements Iterable<Object> {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
       for (Schema.Field field : schema.getFields()) {
-        Object value = (field.getJsonProp(USE_DEFAULT) == null)
+        Object value = (field.getObjectProp(USE_DEFAULT) == null)
           ? generate(field.schema(), random, d+1)
           : GenericData.get().getDefaultValue(field);
         record.put(field.name(), value);

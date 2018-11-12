@@ -65,6 +65,11 @@ public abstract class CodecFactory {
     return new BZip2Codec.Option();
   }
 
+  /** zstandard codec.*/
+  public static CodecFactory zstandardCodec() {
+    return new ZstandardCodec.Option();
+  }
+
   /** Creates internal Codec. */
   protected abstract Codec createInstance();
 
@@ -78,22 +83,24 @@ public abstract class CodecFactory {
   public static final int DEFAULT_XZ_LEVEL = LZMA2Options.PRESET_DEFAULT;
 
   static {
-    addCodec("null", nullCodec());
-    addCodec("deflate", deflateCodec(DEFAULT_DEFLATE_LEVEL));
-    addCodec("snappy", snappyCodec());
-    addCodec("bzip2", bzip2Codec());
-    addCodec("xz", xzCodec(DEFAULT_XZ_LEVEL));
+    addCodec(DataFileConstants.NULL_CODEC, nullCodec());
+    addCodec(DataFileConstants.DEFLATE_CODEC, deflateCodec(DEFAULT_DEFLATE_LEVEL));
+    addCodec(DataFileConstants.SNAPPY_CODEC, snappyCodec());
+    addCodec(DataFileConstants.BZIP2_CODEC, bzip2Codec());
+    addCodec(DataFileConstants.XZ_CODEC, xzCodec(DEFAULT_XZ_LEVEL));
+    addCodec(DataFileConstants.ZSTANDARD_CODEC, zstandardCodec());
   }
 
   /** Maps a codec name into a CodecFactory.
    *
-   * Currently there are five codecs registered by default:
+   * Currently there are six codecs registered by default:
    * <ul>
    *   <li>{@code null}</li>
    *   <li>{@code deflate}</li>
    *   <li>{@code snappy}</li>
    *   <li>{@code bzip2}</li>
    *   <li>{@code xz}</li>
+   *   <li>{@code zstandard}</li>
    * </ul>
    */
   public static CodecFactory fromString(String s) {

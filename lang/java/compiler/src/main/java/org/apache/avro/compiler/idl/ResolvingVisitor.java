@@ -17,10 +17,11 @@
  */
 package org.apache.avro.compiler.idl;
 
-import com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.function.Function;
+
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -41,7 +42,8 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
   private final Schema root;
 
 
-  public ResolvingVisitor(final Schema root, final IdentityHashMap<Schema, Schema> replace,
+  public ResolvingVisitor(final Schema root,
+          final IdentityHashMap<Schema, Schema> replace,
           final Function<String, Schema> symbolTable) {
     this.replace = replace;
     this.symbolTable = symbolTable;
@@ -73,7 +75,7 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
       break;
       case ENUM:
         newSchema = Schema.createEnum(terminal.getName(), terminal.getDoc(),
-                terminal.getNamespace(), terminal.getEnumSymbols());
+                terminal.getNamespace(), terminal.getEnumSymbols(), terminal.getEnumDefault());
         break;
       case FIXED:
         newSchema = Schema.createFixed(terminal.getName(), terminal.getDoc(),

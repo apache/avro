@@ -58,6 +58,7 @@ class BinaryDecoder : public Decoder {
 
     int64_t doDecodeLong();
     size_t doDecodeItemCount();
+    size_t doDecodeLength();
     void more();
 };
 
@@ -115,9 +116,19 @@ double BinaryDecoder::decodeDouble()
     return result;
 }
 
+size_t BinaryDecoder::doDecodeLength()
+{
+    ssize_t len = decodeInt();
+    if (len < 0) {
+        throw Exception(
+            boost::format("Cannot have negative length: %1%") % len);
+    }
+    return len;
+}
+
 void BinaryDecoder::decodeString(std::string& value)
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     value.resize(len);
     if (len > 0) {
         in_.readBytes(reinterpret_cast<uint8_t*>(&value[0]), len);
@@ -126,13 +137,13 @@ void BinaryDecoder::decodeString(std::string& value)
 
 void BinaryDecoder::skipString()
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     in_.skipBytes(len);
 }
 
 void BinaryDecoder::decodeBytes(std::vector<uint8_t>& value)
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     value.resize(len);
     if (len > 0) {
         in_.readBytes(&value[0], len);
@@ -141,7 +152,7 @@ void BinaryDecoder::decodeBytes(std::vector<uint8_t>& value)
 
 void BinaryDecoder::skipBytes()
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     in_.skipBytes(len);
 }
 

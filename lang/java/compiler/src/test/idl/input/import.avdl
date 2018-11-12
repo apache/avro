@@ -26,12 +26,15 @@ protocol Import {
   import protocol "OnTheClasspath.avpr";
   import schema "OnTheClasspath.avsc";
   
+  import schema "baz.avsc";
   import schema "foo.avsc";
   import protocol "bar.avpr";
   
   record Bar {
+    ns.other.schema.Baz baz;
     Foo foo;
   }
 
+  void bazm(ns.other.schema.Baz baz);
   Bar barf(Foo foo);
 }

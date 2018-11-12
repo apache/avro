@@ -19,7 +19,6 @@
 
 package org.apache.avro.message;
 
-import com.google.common.collect.MapMaker;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import org.apache.avro.generic.GenericData;
@@ -28,6 +27,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A {@link MessageDecoder} that reads a binary-encoded datum. This checks for
@@ -69,7 +69,7 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
   private final SchemaStore resolver;
 
   private final Map<Long, RawMessageDecoder<D>> codecByFingerprint =
-      new MapMaker().makeMap();
+      new ConcurrentHashMap<>();
 
   /**
    * Creates a new {@link BinaryMessageEncoder} that uses the given

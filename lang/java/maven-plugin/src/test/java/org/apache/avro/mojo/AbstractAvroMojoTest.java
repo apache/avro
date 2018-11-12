@@ -20,6 +20,7 @@ package org.apache.avro.mojo;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
 /**
@@ -27,7 +28,7 @@ import org.apache.maven.plugin.testing.AbstractMojoTestCase;
  *
  * @author saden
  */
-public class AbstractAvroMojoTest extends AbstractMojoTestCase {
+public abstract class AbstractAvroMojoTest extends AbstractMojoTestCase {
 
   @Override
   protected void setUp() throws Exception {

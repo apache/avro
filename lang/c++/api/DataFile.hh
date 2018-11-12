@@ -85,6 +85,11 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
      */
     void sync();
 
+    /**
+     * Shared constructor portion since we aren't using C++11
+     */
+    void init(const ValidSchema &schema, size_t syncInterval, const Codec &codec);
+
 public:
     /**
      * Returns the current encoder for this writer.
@@ -108,6 +113,8 @@ public:
      */
     DataFileWriterBase(const char* filename, const ValidSchema& schema,
         size_t syncInterval, Codec codec = NULL_CODEC);
+    DataFileWriterBase(std::auto_ptr<OutputStream> outputStream,
+                       const ValidSchema& schema, size_t syncInterval, Codec codec);
 
     ~DataFileWriterBase();
     /**
@@ -140,6 +147,10 @@ public:
     DataFileWriter(const char* filename, const ValidSchema& schema,
         size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
         base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) { }
+
+    DataFileWriter(std::auto_ptr<OutputStream> outputStream, const ValidSchema& schema,
+        size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
+        base_(new DataFileWriterBase(outputStream, schema, syncInterval, codec)) { }
 
     /**
      * Writes the given piece of data into the file.
@@ -177,7 +188,9 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     int64_t objectCount_;
     bool eof_;
     Codec codec_;
-
+    int64_t blockStart_;
+    int64_t blockEnd_;
+    
     ValidSchema readerSchema_;
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;
@@ -194,6 +207,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     void readHeader();
 
     bool readDataBlock();
+    void doSeek(int64_t position);
 public:
     /**
      * Returns the current decoder for this reader.
@@ -217,6 +231,8 @@ public:
      * the DataFileReaderBase object.
      */
     DataFileReaderBase(const char* filename);
+
+    DataFileReaderBase(std::auto_ptr<InputStream> inputStream);
 
     /**
      * Initializes the reader so that the reader and writer schemas
@@ -247,6 +263,29 @@ public:
      * Closes the reader. No further operation is possible on this reader.
      */
     void close();
+
+    /**
+     * Move to a specific, known synchronization point, for example one returned
+     * from tell() after sync().
+     */
+    void seek(int64_t position);
+
+    /**
+     * Move to the next synchronization point after a position. To process a
+     * range of file entires, call this with the starting position, then check
+     * pastSync() with the end point before each use of decoder().
+     */
+    void sync(int64_t position);
+
+    /**
+     * Return true if past the next synchronization point after a position.
+     */
+    bool pastSync(int64_t position);
+
+    /**
+     * Return the last synchronization point before our current position.
+     */
+    int64_t previousSync();
 };
 
 /**
@@ -265,6 +304,11 @@ public:
         base_->init(readerSchema);
     }
 
+    DataFileReader(std::auto_ptr<InputStream> inputStream, const ValidSchema& readerSchema) :
+        base_(new DataFileReaderBase(inputStream)) {
+        base_->init(readerSchema);
+    }
+
     /**
      * Constructs the reader for the given file and the reader is
      * expected to use the schema that is used with data.
@@ -274,6 +318,10 @@ public:
         base_->init();
     }
 
+    DataFileReader(std::auto_ptr<InputStream> inputStream) :
+        base_(new DataFileReaderBase(inputStream)) {
+        base_->init();
+    }
 
     /**
      * Constructs a reader using the reader base. This form of constructor
@@ -330,6 +378,29 @@ public:
      * Closes the reader. No further operation is possible on this reader.
      */
     void close() { return base_->close(); }
+
+    /**
+     * Move to a specific, known synchronization point, for example one returned
+     * from previousSync().
+     */
+    void seek(int64_t position) { base_->seek(position); }
+
+    /**
+     * Move to the next synchronization point after a position. To process a
+     * range of file entires, call this with the starting position, then check
+     * pastSync() with the end point before each call to read().
+     */
+    void sync(int64_t position) { base_->sync(position); }
+
+    /**
+     * Return true if past the next synchronization point after a position.
+     */
+    bool pastSync(int64_t position) { return base_->pastSync(position); }
+
+    /**
+     * Return the last synchronization point before our current position.
+     */
+    int64_t previousSync() { return base_->previousSync(); }
 };
 
 }   // namespace avro

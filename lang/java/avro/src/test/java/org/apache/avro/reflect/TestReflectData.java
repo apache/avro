@@ -18,13 +18,13 @@
 
 package org.apache.avro.reflect;
 
-import org.apache.avro.Schema;
-import org.junit.Test;
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
 
-import static org.hamcrest.Matchers.lessThan;
-import static org.junit.Assert.assertThat;
+import org.apache.avro.Schema;
+import org.junit.Test;
 
 public class TestReflectData {
   @Test

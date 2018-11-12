@@ -78,8 +78,8 @@ std::ostream& operator << (std::ostream& os, const Name& n) {
 /// The user does not use the Node object directly, they interface with Schema
 /// objects.
 ///
-/// The Node object uses reference-counted pointers.  This is so that schemas 
-/// may be reused in other other schemas, without needing to worry about memory
+/// The Node object uses reference-counted pointers.  This is so that schemas
+/// may be reused in other schemas, without needing to worry about memory
 /// deallocation for nodes that are added to multiple schema parse trees.
 ///
 /// Node has minimal implementation, serving as an abstract base class for
@@ -125,6 +125,12 @@ class AVRO_DECL Node : private boost::noncopyable
     }
     virtual const Name &name() const = 0;
 
+    virtual const std::string &getDoc() const = 0;
+    void setDoc(const std::string &doc) {
+        checkLock();
+        doSetDoc(doc);
+    }
+
     void addLeaf(const NodePtr &newLeaf) {
         checkLock();
         doAddLeaf(newLeaf);
@@ -160,6 +166,11 @@ class AVRO_DECL Node : private boost::noncopyable
 
     virtual void setLeafToSymbolic(int index, const NodePtr &node) = 0;
 
+    // Serialize the default value GenericDatum g for the node contained
+    // in a record node.
+    virtual void printDefaultToJson(const GenericDatum& g, std::ostream &os,
+                                    int depth) const = 0;
+
   protected:
 
     void checkLock() const {
@@ -173,6 +184,8 @@ class AVRO_DECL Node : private boost::noncopyable
     }
 
     virtual void doSetName(const Name &name) = 0;
+    virtual void doSetDoc(const std::string &name) = 0;
+
     virtual void doAddLeaf(const NodePtr &newLeaf) = 0;
     virtual void doAddName(const std::string &name) = 0;
     virtual void doSetFixedSize(int size) = 0;

@@ -18,10 +18,11 @@
 package org.apache.avro.io.parsing;
 
 import java.util.Arrays;
+
+import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaValidationException;
 import org.apache.avro.SchemaValidatorBuilder;
-import org.apache.avro.Schema;
 import org.junit.Assert;
 import org.junit.Test;
 

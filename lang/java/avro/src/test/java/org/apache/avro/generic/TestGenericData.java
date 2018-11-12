@@ -17,38 +17,30 @@
  */
 package org.apache.avro.generic;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Collection;
-import java.util.ArrayDeque;
-
 import static org.apache.avro.TestCircularReferences.Reference;
 import static org.apache.avro.TestCircularReferences.Referenceable;
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.TestCircularReferences.ReferenceManager;
+import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import org.junit.Test;
 
 public class TestGenericData {
@@ -314,6 +306,51 @@ public class TestGenericData {
     // \u2013 is EN DASH
     r.put(stringField.name(), "hello\nthere\"\tyou\u2013}");
     r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(),"a"));
+
+    String json = r.toString();
+    JsonFactory factory = new JsonFactory();
+    JsonParser parser = factory.createJsonParser(json);
+    ObjectMapper mapper = new ObjectMapper();
+
+    // will throw exception if string is not parsable json
+    mapper.readTree(parser);
+  }
+
+  @Test
+  public void testMapWithNonStringKeyToStringIsJson() throws Exception {
+    Schema intMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
+    Field intMapField = new Field("intMap", Schema.createMap(intMapSchema), null, null);
+    Schema decMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
+    Field decMapField = new Field("decMap", Schema.createMap(decMapSchema), null, null);
+    Schema boolMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
+    Field boolMapField = new Field("boolMap", Schema.createMap(decMapSchema), null, null);
+    Schema fileMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
+    Field fileMapField = new Field("fileMap", Schema.createMap(decMapSchema), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(intMapField,decMapField,boolMapField,fileMapField));
+
+    HashMap<Integer, String> intPair =  new HashMap<>();
+    intPair.put(1, "one");
+    intPair.put(2, "two");
+
+    HashMap<java.math.BigDecimal, String> decPair =  new HashMap<>();
+    decPair.put(java.math.BigDecimal.valueOf(1), "one");
+    decPair.put(java.math.BigDecimal.valueOf(2), "two");
+
+    HashMap<Boolean, String> boolPair =  new HashMap<>();
+    boolPair.put(true, "isTrue");
+    boolPair.put(false, "isFalse");
+    boolPair.put(null, null);
+
+    HashMap<java.io.File, String> filePair =  new HashMap<>();
+    java.io.File f = new java.io.File( getClass().getResource("/SchemaBuilder.avsc").toURI() );
+    filePair.put(f, "File");
+
+    GenericRecord r = new GenericData.Record(schema);
+    r.put(intMapField.name(), intPair);
+    r.put(decMapField.name(), decPair);
+    r.put(boolMapField.name(), boolPair);
+    r.put(fileMapField.name(), filePair);
 
     String json = r.toString();
     JsonFactory factory = new JsonFactory();

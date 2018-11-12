@@ -39,5 +39,6 @@ public class DataFileConstants {
   public static final String SNAPPY_CODEC = "snappy";
   public static final String BZIP2_CODEC = "bzip2";
   public static final String XZ_CODEC = "xz";
+  public static final String ZSTANDARD_CODEC = "zstandard";
 
 }

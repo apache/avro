@@ -37,7 +37,7 @@ import org.apache.avro.util.Utf8;
  * clients handle fields that appear to be coming out of order, this class
  * defines the method {@link #readFieldOrder}.
  *
- * <p>See the <a href="doc-files/parsing.html">parser documentation</a> for
+ * <p>See the <a href="parsing/doc-files/parsing.html">parser documentation</a> for
  *  information on how this works.
  */
 public class ResolvingDecoder extends ValidatingDecoder {
@@ -116,9 +116,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * the above loop will always be correct.
    *
    * Throws a runtime exception if we're not just about to read the
-   * field of a record.  Also, this method will consume the field
-   * information, and thus may only be called <em>once</em> before
-   * reading the field value.  (However, if the client knows the
+   * first field of a record.  (If the client knows the
    * order of incoming fields, then the client does <em>not</em>
    * need to call this method but rather can just start reading the
    * field values.)

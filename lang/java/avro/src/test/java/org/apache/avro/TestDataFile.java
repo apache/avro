@@ -28,19 +28,14 @@ import java.util.List;
 import java.util.Random;
 
 import junit.framework.Assert;
-
-import org.apache.avro.file.CodecFactory;
-import org.apache.avro.file.FileReader;
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.file.DataFileStream;
-import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.file.SeekableFileInput;
-import org.apache.avro.file.Syncable;
+import org.apache.avro.file.*;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumReader;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -52,7 +47,10 @@ public class TestDataFile {
   private static final Logger LOG =
     LoggerFactory.getLogger(TestDataFile.class);
 
-  CodecFactory codec = null;
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
+  private final CodecFactory codec;
   public TestDataFile(CodecFactory codec) {
     this.codec = codec;
     LOG.info("Running with codec: " + codec);
@@ -70,6 +68,7 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.xzCodec(0) });
     r.add(new Object[] { CodecFactory.xzCodec(1) });
     r.add(new Object[] { CodecFactory.xzCodec(6) });
+    r.add(new Object[] { CodecFactory.zstandardCodec() });
     return r;
   }
 
@@ -77,8 +76,8 @@ public class TestDataFile {
     Integer.parseInt(System.getProperty("test.count", "200"));
   private static final boolean VALIDATE =
     !"false".equals(System.getProperty("test.validate", "true"));
-  private static final File DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
+
+
   private static final long SEED = System.currentTimeMillis();
   private static final String SCHEMA_JSON =
     "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
@@ -87,7 +86,7 @@ public class TestDataFile {
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   private File makeFile() {
-    return new File(DIR, "test-" + codec + ".avro");
+    return new File(DIR.getRoot().getPath(), "test-" + codec + ".avro");
   }
 
   @Test public void runTestsInOrder() throws Exception {

@@ -88,12 +88,13 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
       Protocol p = parser.CompilationUnit();
       String json = p.toString(true);
       Protocol protocol = Protocol.parse(json);
-      SpecificCompiler compiler = new SpecificCompiler(protocol);
+      SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
       compiler.setStringType(GenericData.StringType.valueOf(stringType));
       compiler.setTemplateDir(templateDirectory);
       compiler.setFieldVisibility(getFieldVisibility());
       compiler.setCreateSetters(createSetters);
       compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+      compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
       compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);
