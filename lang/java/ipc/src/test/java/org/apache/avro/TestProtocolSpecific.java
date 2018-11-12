@@ -51,17 +51,13 @@ import java.io.LineNumberReader;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.Random;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.nio.file.Files;
+import java.util.*;
 
 
 public class TestProtocolSpecific {
 
   protected static final int REPEATING = -1;
-  protected static final File SERVER_PORTS_DIR
-  = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
 
   public static int ackCount;
 
@@ -312,23 +308,32 @@ public class TestProtocolSpecific {
 
   public static class InteropTest {
 
-  @Test
+    private static File SERVER_PORTS_DIR;
+    static {
+      try {
+        SERVER_PORTS_DIR = Files.createTempDirectory(TestProtocolSpecific.class.getSimpleName()).toFile();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+    @Test
     public void testClient() throws Exception {
-      for (File f : SERVER_PORTS_DIR.listFiles()) {
+      for (File f : Objects.requireNonNull(SERVER_PORTS_DIR.listFiles())) {
         LineNumberReader reader = new LineNumberReader(new FileReader(f));
         int port = Integer.parseInt(reader.readLine());
-        System.out.println("Validating java client to "+
-            f.getName()+" - " + port);
+        System.out.println("Validating java client to " +
+                f.getName() + " - " + port);
         Transceiver client = new SocketTransceiver(
-            new InetSocketAddress("localhost", port));
-        proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
+                new InetSocketAddress("localhost", port));
+        proxy = SpecificRequestor.getClient(Simple.class, client);
         TestProtocolSpecific proto = new TestProtocolSpecific();
         proto.testHello();
         proto.testEcho();
         proto.testEchoBytes();
         proto.testError();
-        System.out.println("Done! Validation java client to "+
-            f.getName()+" - " + port);
+        System.out.println("Done! Validation java client to " +
+                f.getName() + " - " + port);
       }
     }
 
@@ -337,8 +342,8 @@ public class TestProtocolSpecific {
      */
     public static void main(String[] args) throws Exception {
       SocketServer server = new SocketServer(
-          new SpecificResponder(Simple.class, new TestImpl()),
-          new InetSocketAddress(0));
+              new SpecificResponder(Simple.class, new TestImpl()),
+              new InetSocketAddress(0));
       server.start();
       File portFile = new File(SERVER_PORTS_DIR, "java-port");
       FileWriter w = new FileWriter(portFile);

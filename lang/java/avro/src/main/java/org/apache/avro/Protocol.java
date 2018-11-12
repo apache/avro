@@ -148,11 +148,11 @@ public class Protocol extends JsonProperties {
       Message that = (Message)o;
       return this.name.equals(that.name)
         && this.request.equals(that.request)
-        && props.equals(that.props);
+        && propsEqual(that);
     }
 
     public int hashCode() {
-      return name.hashCode() + request.hashCode() + props.hashCode();
+      return name.hashCode() + request.hashCode() + propsHashCode();
     }
 
     public String getDoc() { return doc; }
@@ -237,7 +237,7 @@ public class Protocol extends JsonProperties {
    */
   public Protocol(Protocol p) {
     this(p.getName(), p.getDoc(), p.getNamespace());
-    props.putAll(p.props);
+    putAll(p);
   }
 
   public Protocol(String name, String doc, String namespace) {
@@ -320,12 +320,12 @@ public class Protocol extends JsonProperties {
       && this.namespace.equals(that.namespace)
       && this.types.equals(that.types)
       && this.messages.equals(that.messages)
-      && this.props.equals(that.props);
+      && this.propsEqual(that);
   }
 
   public int hashCode() {
     return name.hashCode() + namespace.hashCode()
-      + types.hashCode() + messages.hashCode() + props.hashCode();
+      + types.hashCode() + messages.hashCode() + propsHashCode();
   }
 
   /** Render this as <a href="http://json.org/">JSON</a>.*/

@@ -17,9 +17,7 @@
  */
 package org.apache.avro.reflect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,20 +25,9 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
+import org.apache.avro.*;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.Decoder;
@@ -49,8 +36,6 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord;
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.node.NullNode;
 
 public class TestReflect {
 
@@ -326,7 +311,7 @@ public class TestReflect {
     r9_1.value = r8;
     checkReadWrite(r9_1, ReflectData.get().getSchema(R9_1.class));
   }
-  
+
   // test union annotation on methods and parameters
   public static interface P0 {
     @Union({Void.class,String.class})
@@ -581,7 +566,7 @@ public class TestReflect {
     check(o.getClass(), schemaJson);
   }
 
-  private void check(Type type, String schemaJson) {
+  private void check(java.lang.reflect.Type type, String schemaJson) {
     assertEquals(schemaJson, ReflectData.get().getSchema(type).toString());
   }
 
@@ -754,7 +739,8 @@ public class TestReflect {
     String saved = System.getProperty("avro.disable.unsafe");
     try {
       System.setProperty("avro.disable.unsafe", "true");
-      ReflectData.ACCESSOR_CACHE.clear();
+      ReflectData.ACCESSOR_CACHE.remove(multipleAnnotationRecord.class);
+      ReflectData.ACCESSOR_CACHE.remove(AnotherSampleRecord.class);
       ReflectionUtil.resetFieldAccess();
       testMultipleAnnotations();
       testRecordWithNullIO();
@@ -763,7 +749,8 @@ public class TestReflect {
         System.clearProperty("avro.disable.unsafe");
       else
         System.setProperty("avro.disable.unsafe", saved);
-      ReflectData.ACCESSOR_CACHE.clear();
+      ReflectData.ACCESSOR_CACHE.remove(multipleAnnotationRecord.class);
+      ReflectData.ACCESSOR_CACHE.remove(AnotherSampleRecord.class);
       ReflectionUtil.resetFieldAccess();
     }
   }

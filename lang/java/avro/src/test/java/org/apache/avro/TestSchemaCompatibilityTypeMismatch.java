@@ -18,27 +18,11 @@
 package org.apache.avro;
 
 import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.A_INT_RECORD1;
-import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
-import static org.apache.avro.TestSchemas.BYTES_SCHEMA;
-import static org.apache.avro.TestSchemas.DOUBLE_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM2_AB_SCHEMA;
-import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
-import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_ARRAY_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_FLOAT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_LIST_RECORD;
-import static org.apache.avro.TestSchemas.INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_MAP_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_ARRAY_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_LIST_RECORD;
-import static org.apache.avro.TestSchemas.LONG_MAP_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_SCHEMA;
-import static org.apache.avro.TestSchemas.NULL_SCHEMA;
-import static org.apache.avro.TestSchemas.STRING_SCHEMA;
+import static org.apache.avro.TestSchemas.*;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;

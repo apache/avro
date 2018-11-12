@@ -15,25 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.avro;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.MapMaker;
-import com.google.common.primitives.Bytes;
+import java.io.IOException;
 
-class GuavaClasses {
-  /*
-   * Referencing Guava classes here includes them in the minimized Guava jar
-   * that is shaded in the avro jar.
-   */
-  static {
-    MapMaker.class.getName();
-    Bytes.class.getName();
-    LoadingCache.class.getName();
-    CacheBuilder.class.getName();
-    CacheLoader.class.getName();
+public class InvalidAvroMagicException extends IOException {
+  public InvalidAvroMagicException(String message) {
+    super(message);
   }
 }

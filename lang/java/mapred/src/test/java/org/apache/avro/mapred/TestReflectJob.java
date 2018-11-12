@@ -99,7 +99,7 @@ public class TestReflectJob {
   @SuppressWarnings("deprecation")
   public void testJob() throws Exception {
     JobConf job = new JobConf();
-    String dir = System.getProperty("test.dir", ".") + "target/testReflectJob";
+    String dir = "target/testReflectJob";
     Path inputPath = new Path(dir + "/in");
     Path outputPath = new Path(dir + "/out");
 
@@ -122,7 +122,7 @@ public class TestReflectJob {
     FileInputFormat.setInputPaths(job, inputPath);
     FileOutputFormat.setOutputPath(job, outputPath);
 
-    AvroJob.setReflect(job);                      // use reflection
+    AvroJob.setReflect(job); // use reflection
 
     JobClient.runJob(job);
 

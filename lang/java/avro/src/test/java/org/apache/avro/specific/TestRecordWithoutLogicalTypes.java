@@ -5,9 +5,10 @@
  */
 package org.apache.avro.specific;
 
+import java.nio.ByteBuffer;
+
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
-import java.nio.ByteBuffer;
 
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated

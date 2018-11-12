@@ -18,16 +18,33 @@
 package org.apache.avro.util;
 
 import java.nio.charset.Charset;
-import java.io.UnsupportedEncodingException;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.BinaryData;
+import org.slf4j.LoggerFactory;
 
 /** A Utf8 string.  Unlike {@link String}, instances are mutable.  This is more
  * efficient than {@link String} when reading or writing a sequence of values,
  * as a single instance may be reused. */
 public class Utf8 implements Comparable<Utf8>, CharSequence {
+  private static final String MAX_LENGTH_PROPERTY = "org.apache.avro.limits.string.maxLength";
+  private static final int MAX_LENGTH;
   private static final byte[] EMPTY = new byte[0];
   private static final Charset UTF8 = Charset.forName("UTF-8");
+
+  static {
+    String o = System.getProperty(MAX_LENGTH_PROPERTY);
+    int i = Integer.MAX_VALUE;
+    if (o != null) {
+      try {
+        i = Integer.parseUnsignedInt(o);
+      } catch (NumberFormatException nfe) {
+        LoggerFactory.getLogger(Utf8.class)
+          .warn("Could not parse property " + MAX_LENGTH_PROPERTY + ": " + o, nfe);
+      }
+    }
+    MAX_LENGTH = i;
+  }
 
   private byte[] bytes = EMPTY;
   private int length;
@@ -74,6 +91,9 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   /** Set length in bytes.  Should called whenever byte content changes, even
    * if the length does not change, as this also clears the cached String. */
   public Utf8 setByteLength(int newLength) {
+    if (newLength > MAX_LENGTH) {
+      throw new AvroRuntimeException("String length " + newLength + " exceeds maximum allowed");
+    }
     if (this.bytes.length < newLength) {
       byte[] newBytes = new byte[newLength];
       System.arraycopy(bytes, 0, newBytes, 0, this.length);
@@ -92,43 +112,11 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return this;
   }
 
-  private abstract static class Utf8Converter {
-    public abstract String fromUtf8(byte[] bytes, int length);
-    public abstract byte[] toUtf8(String str);
-  }
-
-  private static final Utf8Converter UTF8_CONVERTER =
-    System.getProperty("java.version").startsWith("1.6.")
-    ? new Utf8Converter() {                       // optimized for Java 6
-        public String fromUtf8(byte[] bytes, int length) {
-          try {
-            return new String(bytes, 0, length, "UTF-8");
-          } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-          }
-        }
-        public byte[] toUtf8(String str) {
-          try {
-            return str.getBytes("UTF-8");
-          } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }
-    : new Utf8Converter() {                       // faster in Java 7 & 8
-        public String fromUtf8(byte[] bytes, int length) {
-          return new String(bytes, 0, length, UTF8);
-        }
-        public byte[] toUtf8(String str) {
-          return str.getBytes(UTF8);
-        }
-      };
-
   @Override
   public String toString() {
     if (this.length == 0) return "";
     if (this.string == null) {
-      this.string = UTF8_CONVERTER.fromUtf8(bytes, length);
+      this.string = new String(bytes, 0, length, UTF8);
     }
     return this.string;
   }
@@ -169,7 +157,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   /** Gets the UTF-8 bytes for a String */
   public static final byte[] getBytesFor(String str) {
-    return UTF8_CONVERTER.toUtf8(str);
+    return str.getBytes(UTF8);
   }
 
 }

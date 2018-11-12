@@ -78,7 +78,7 @@ import org.apache.avro.util.internal.Accessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  * Grammar to parse a higher-level language into an Avro Schema.
@@ -1608,7 +1608,7 @@ String JsonString() :
   t = <STRING_LITERAL>
   {
     String betweenQuotes = t.image.substring(1, t.image.length() - 1);
-    return StringEscapeUtils.unescapeJavaScript(betweenQuotes);
+    return StringEscapeUtils.unescapeJava(betweenQuotes);
   }
 }
 

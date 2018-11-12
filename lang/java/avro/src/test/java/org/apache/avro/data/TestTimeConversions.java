@@ -18,16 +18,12 @@
 
 package org.apache.avro.data;
 
+import java.util.Date;
+
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.avro.data.TimeConversions.DateConversion;
-import org.apache.avro.data.TimeConversions.LossyTimeMicrosConversion;
-import org.apache.avro.data.TimeConversions.LossyTimestampMicrosConversion;
-import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
-import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
-import org.apache.avro.data.TimeConversions.TimeConversion;
-import org.apache.avro.data.TimeConversions.TimestampConversion;
+import org.apache.avro.data.TimeConversions.*;
 import org.apache.avro.reflect.ReflectData;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -36,8 +32,6 @@ import org.joda.time.LocalTime;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.Date;
 
 public class TestTimeConversions {
 

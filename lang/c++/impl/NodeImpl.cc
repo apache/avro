@@ -23,13 +23,14 @@
 #include "NodeImpl.hh"
 
 
+using std::string;
 namespace avro {
 
 namespace {
 
 // Escape string for serialization.
-std::string escape(const std::string &unescaped) {
-  std::string s;
+string escape(const string &unescaped) {
+  string s;
   s.reserve(unescaped.length());
   for (std::string::const_iterator it = unescaped.begin(); it != unescaped.end(); ++it) {
     char c = *it;
@@ -82,7 +83,7 @@ struct indent {
 /// ostream operator for indent
 std::ostream& operator <<(std::ostream &os, indent x)
 {
-    static const std::string spaces("    ");
+    static const string spaces("    ");
     while (x.d--) {
         os << spaces;
     }
@@ -257,11 +258,11 @@ NodeRecord::printJson(std::ostream &os, int depth) const
     }
     os << indent(depth) << "\"fields\": [";
 
-    int fields = leafAttributes_.size();
+    size_t fields = leafAttributes_.size();
     ++depth;
     // Serialize "default" field:
     assert(defaultValues.empty() || (defaultValues.size() == fields));
-    for (int i = 0; i < fields; ++i) {
+    for (size_t i = 0; i < fields; ++i) {
         if (i > 0) {
             os << ',';
         }
@@ -311,15 +312,15 @@ void NodePrimitive::printDefaultToJson(const GenericDatum &g, std::ostream &os,
       os << g.value<double>();
       break;
     case AVRO_STRING:
-      os << "\"" << escape(g.value<std::string>()) << "\"";
+      os << "\"" << escape(g.value<string>()) << "\"";
       break;
     case AVRO_BYTES: {
       // Convert to a string:
       const std::vector<uint8_t> &vg = g.value<std::vector<uint8_t> >();
-      std::string s;
+      string s;
       s.resize(vg.size() * kByteStringSize);
       for (unsigned int i = 0; i < vg.size(); i++) {
-        std::string hex_string = intToHex(static_cast<int>(vg[i]));
+        string hex_string = intToHex(static_cast<int>(vg[i]));
         s.replace(i*kByteStringSize, kByteStringSize, hex_string);
       }
       os << "\"" << s << "\"";
@@ -341,10 +342,10 @@ void NodeFixed::printDefaultToJson(const GenericDatum &g, std::ostream &os,
   // ex: "\uOOff"
   // Convert to a string
   const std::vector<uint8_t> &vg = g.value<GenericFixed>().value();
-  std::string s;
+  string s;
   s.resize(vg.size() * kByteStringSize);
   for (unsigned int i = 0; i < vg.size(); i++) {
-    std::string hex_string = intToHex(static_cast<int>(vg[i]));
+    string hex_string = intToHex(static_cast<int>(vg[i]));
     s.replace(i*kByteStringSize, kByteStringSize, hex_string);
   }
   os << "\"" << s << "\"";

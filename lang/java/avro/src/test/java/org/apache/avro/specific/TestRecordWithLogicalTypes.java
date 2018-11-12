@@ -5,11 +5,11 @@
  */
 package org.apache.avro.specific;
 
+import java.math.BigDecimal;
+
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
-
-import java.math.BigDecimal;
 
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated

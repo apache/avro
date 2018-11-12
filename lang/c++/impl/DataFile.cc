@@ -54,7 +54,6 @@ const string AVRO_SNAPPY_CODEC = "snappy";
 
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
-const size_t defaultSyncInterval = 64 * 1024;
 
 boost::iostreams::zlib_params get_zlib_params() {
   boost::iostreams::zlib_params ret;

@@ -19,15 +19,13 @@
 package org.apache.avro.file;
 
 
-import org.apache.avro.file.codec.CustomCodec;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.apache.avro.file.codec.CustomCodec;
+import org.junit.Test;
 
 public class TestCustomCodec {
 

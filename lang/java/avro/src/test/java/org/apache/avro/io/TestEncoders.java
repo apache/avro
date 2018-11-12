@@ -17,6 +17,11 @@
  */
 package org.apache.avro.io;
 
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,23 +30,21 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
-
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import org.junit.rules.TemporaryFolder;
 
 public class TestEncoders {
   private static final int ENCODER_BUFFER_SIZE = 32;
@@ -49,11 +52,14 @@ public class TestEncoders {
 
   private static EncoderFactory factory = EncoderFactory.get();
 
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
   @Test
   public void testBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
     BinaryEncoder enc = factory.binaryEncoder(out, null);
-    Assert.assertTrue(enc == factory.binaryEncoder(out, enc));
+    Assert.assertSame(enc, factory.binaryEncoder(out, enc));
   }
 
   @Test(expected=NullPointerException.class)
@@ -66,7 +72,7 @@ public class TestEncoders {
     OutputStream out = new ByteArrayOutputStream();
     BinaryEncoder reuse = null;
     reuse = factory.blockingBinaryEncoder(out, reuse);
-    Assert.assertTrue(reuse == factory.blockingBinaryEncoder(out, reuse));
+    Assert.assertSame(reuse, factory.blockingBinaryEncoder(out, reuse));
     // comparison
   }
 
@@ -79,7 +85,7 @@ public class TestEncoders {
   public void testDirectBinaryEncoderInit() throws IOException {
     OutputStream out = new ByteArrayOutputStream();
     BinaryEncoder enc = factory.directBinaryEncoder(out, null);
-    Assert.assertTrue(enc ==  factory.directBinaryEncoder(out, enc));
+    Assert.assertSame(enc, factory.directBinaryEncoder(out, enc));
   }
 
   @Test(expected=NullPointerException.class)
@@ -216,7 +222,7 @@ public class TestEncoders {
 
   @Test
   public void testMappedByteBuffer() throws IOException {
-    Path file = Files.createTempFile("test", "data");
+    Path file = Paths.get(DIR.getRoot().getPath() + "testMappedByteBuffer.avro");
     Files.write(file, someBytes(EXAMPLE_DATA_SIZE));
     MappedByteBuffer buffer = FileChannel.open(file, StandardOpenOption.READ).map(FileChannel.MapMode.READ_ONLY, 0, EXAMPLE_DATA_SIZE);
 

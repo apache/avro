@@ -17,19 +17,19 @@
  */
 package org.apache.avro.util;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.io.BufferedReader;
-import java.io.StringReader;
 
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.junit.experimental.runners.Enclosed;
-
-import static org.junit.Assert.assertTrue;
 
 @RunWith(Enclosed.class)
 public class TestCaseFinder {

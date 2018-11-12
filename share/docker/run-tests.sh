@@ -27,12 +27,5 @@ for lang in /avro/lang/*/
 do
   headline "Run tests: $lang"
   cd "$lang"
-
-  if [[ "$lang" = *"c++"* ]]; then
-    # The current cpp tests are failing:
-    # https://issues.apache.org/jira/projects/AVRO/issues/AVRO-2230
-    ./build.sh test || true
-  else
-    ./build.sh test
-  fi
+  ./build.sh test
 done

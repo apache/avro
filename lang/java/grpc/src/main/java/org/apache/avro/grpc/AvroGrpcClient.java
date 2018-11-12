@@ -18,8 +18,6 @@
 
 package org.apache.avro.grpc;
 
-import com.google.common.base.Throwables;
-
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Protocol;
@@ -91,13 +89,16 @@ public abstract class AvroGrpcClient {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       try {
         return invokeUnaryMethod(method, args);
+      } catch (RuntimeException re) {
+        //rethrow any runtime exception
+        throw re;
       } catch (Exception e) {
         //throw any of the declared exceptions
         for (Class<?> exceptionClass : method.getExceptionTypes()) {
-          Throwables.propagateIfInstanceOf(e, (Class<Exception>) exceptionClass);
+          if (exceptionClass.isInstance(e)) {
+            throw e;
+          }
         }
-        //also throw if any runtime exception
-        Throwables.propagateIfInstanceOf(e, RuntimeException.class);
         //wrap all other exceptions
         throw new AvroRemoteException(e);
       }
@@ -124,7 +125,9 @@ public abstract class AvroGrpcClient {
       try {
         return callFuture.get();
       } catch (Exception e) {
-        Throwables.propagateIfInstanceOf(e.getCause(), Exception.class);
+        if (e.getCause() instanceof Exception) {
+          throw (Exception)e.getCause();
+        }
         throw new AvroRemoteException(e.getCause());
       }
     }

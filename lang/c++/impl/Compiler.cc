@@ -192,42 +192,6 @@ static vector<uint8_t> toBin(const string& s)
     return result;
 }
 
-static string nameof(const NodePtr& n)
-{
-    Type t = n->type();
-    switch (t) {
-    case AVRO_STRING:
-        return "string";
-    case AVRO_BYTES:
-        return "bytes";
-    case AVRO_INT:
-        return "int";
-    case AVRO_LONG:
-        return "long";
-    case AVRO_FLOAT:
-        return "float";
-    case AVRO_DOUBLE:
-        return "double";
-    case AVRO_BOOL:
-        return "boolean";
-    case AVRO_NULL:
-        return "null";
-    case AVRO_RECORD:
-    case AVRO_ENUM:
-    case AVRO_FIXED:
-    case AVRO_SYMBOLIC:
-        return n->name().fullname();
-    case AVRO_ARRAY:
-        return "array";
-    case AVRO_MAP:
-        return "map";
-    case AVRO_UNION:
-        return "union";
-    default:
-        throw Exception(boost::format("Unknown type: %1%") % t);
-    }
-}
-
 static GenericDatum makeGenericDatum(NodePtr n,
         const Entity& e, const SymbolTable& st)
 {
