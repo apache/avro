@@ -285,16 +285,26 @@ static void testRoundTrip(const char* schema)
     std::ostringstream os;
     compiledSchema.toJson(os);
     std::string result = os.str();
-
-    std::string cleanedSchema(schema);
-    // Remove whitespace for comparison.
-    cleanedSchema.erase(std::remove_if(cleanedSchema.begin(),
-                                       cleanedSchema.end(),
-                                       ::isspace),
-                        cleanedSchema.end());
-
     result.erase(std::remove_if(result.begin(), result.end(), ::isspace), result.end()); // Remove whitespace
-    BOOST_CHECK(result == cleanedSchema);
+    BOOST_CHECK(result == std::string(schema));
+    // Verify that the compact schema from toJson has the same content as the
+    // schema.
+    std::string result2 = compiledSchema.toJson(false);
+    BOOST_CHECK(result2 == std::string(schema));
+}
+
+static void testCompactSchemas()
+{
+  for (size_t i = 0; i < sizeof(schemasToCompact)/ sizeof(schemasToCompact[0]); i++)
+  {
+    const char* schema = schemasToCompact[i];
+    BOOST_TEST_CHECKPOINT(schema);
+    avro::ValidSchema compiledSchema =
+        compileJsonSchemaFromString(std::string(schema));
+
+    std::string result = compiledSchema.toJson(false);
+    BOOST_CHECK_EQUAL(result, compactSchemas[i]);
+  }
 }
 
 static void testLogicalTypes()
@@ -431,25 +441,6 @@ static void testMalformedLogicalTypes(const char* schema)
     BOOST_CHECK(logicalType.type() == LogicalType::NONE);
     GenericDatum datum(parsedSchema);
     BOOST_CHECK(datum.logicalType().type() == LogicalType::NONE);
-    BOOST_CHECK(result == std::string(schema));
-    // Verify that the compact schema from toJson has the same content as the
-    // schema.
-    std::string result2 = compiledSchema.toJson(false);
-    BOOST_CHECK(result2 == std::string(schema));
-}
-
-static void testCompactSchemas()
-{
-  for (size_t i = 0; i < sizeof(schemasToCompact)/ sizeof(schemasToCompact[0]); i++)
-  {
-    const char* schema = schemasToCompact[i];
-    BOOST_TEST_CHECKPOINT(schema);
-    avro::ValidSchema compiledSchema =
-        compileJsonSchemaFromString(std::string(schema));
-
-    std::string result = compiledSchema.toJson(false);
-    BOOST_CHECK_EQUAL(result, compactSchemas[i]);
-  }
 }
 
 }

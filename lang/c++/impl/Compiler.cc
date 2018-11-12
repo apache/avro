@@ -103,7 +103,7 @@ static NodePtr makeNode(const string &t, SymbolTable &st, const string &ns)
 
 /** Returns "true" if the field is in the container */
 // e.g.: can be false for non-mandatory fields
-bool containsField(const Entity& e, const Object& m, const string& fieldName) {
+bool containsField(const Object& m, const string& fieldName) {
     Object::const_iterator it = m.find(fieldName);
     return (it != m.end());
 }
@@ -334,7 +334,7 @@ static NodePtr makeRecordNode(const Entity& e, const Name& name,
 }
 
 static LogicalType makeLogicalType(const Entity& e, const Object& m) {
-    if (!containsField(e, m, "logicalType")) {
+    if (!containsField(m, "logicalType")) {
         return LogicalType(LogicalType::NONE);
     }
 
@@ -344,7 +344,7 @@ static LogicalType makeLogicalType(const Entity& e, const Object& m) {
         LogicalType decimalType(LogicalType::DECIMAL);
         try {
             decimalType.setPrecision(getLongField(e, m, "precision"));
-            if (containsField(e, m, "scale")) {
+            if (containsField(m, "scale")) {
                 decimalType.setScale(getLongField(e, m, "scale"));
             }
         } catch (Exception& ex) {
