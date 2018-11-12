@@ -5,7 +5,7 @@
     "fields": [
         {
             "name": "mylong",
-	    "doc": "mylong field doc.",
+            "doc": "mylong field doc.",
             "type": "long"
         },
         {
