@@ -53,8 +53,7 @@ public class RpcSendTool implements Tool {
   }
 
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser p = new OptionParser();
     OptionSpec<String> file =
       p.accepts("file", "Data file containing request parameters.")

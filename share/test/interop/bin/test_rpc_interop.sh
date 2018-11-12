@@ -15,13 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e                          # exit on error
+set -ex
 
 cd `dirname "$0"`/../../../..   # connect to root
 
 VERSION=`cat share/VERSION.txt`
-
-set -x                          # echo commands
 
 java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
 java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
@@ -75,7 +73,6 @@ do
         done
         read ignore port < $portfile
         $client http://127.0.0.1:$port $proto $msg -file $c/request.avro
-        wait
         done
     done
     done

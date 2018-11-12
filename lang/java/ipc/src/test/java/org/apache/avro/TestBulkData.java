@@ -51,7 +51,11 @@ public class TestBulkData {
   }
 
   public static class BulkDataImpl implements BulkData {
+
+    @Override
     public ByteBuffer read() { return DATA.duplicate(); }
+
+    @Override
     public void write(ByteBuffer data) {
       Assert.assertEquals(SIZE, data.remaining());
     }
