@@ -17,7 +17,7 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM java:8-jdk
+FROM openjdk:8
 
 WORKDIR /root
 
@@ -28,6 +28,10 @@ RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
 # Install dependencies from packages
 RUN apt-get -qq update && \
+  apt-get -qq install software-properties-common apt-transport-https -y && \
+  curl https://packages.sury.org/php/apt.gpg | apt-key add - && \
+  echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && \
+  apt-get -qq update && \
   apt-get -qq install --no-install-recommends -y \
     ant \
     asciidoc \
@@ -46,15 +50,14 @@ RUN apt-get -qq update && \
     libglib2.0-dev \
     libjansson-dev \
     libsnappy-dev \
-    libsnappy1 \
     make \
     maven \
     mono-devel \
     nodejs \
     nunit \
     perl \
-    php5 \
-    php5-gmp \
+    php5.6 \
+    php5.6-gmp \
     phpunit \
     python \
     python-setuptools \
