@@ -19,11 +19,11 @@
 
 use strict;
 use warnings;
+use File::Temp;
 use Avro::DataFile;
 use Avro::BinaryEncoder;
 use Avro::BinaryDecoder;
 use Avro::Schema;
-use File::Temp;
 use Test::Exception;
 use Test::More;
 
