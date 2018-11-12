@@ -104,8 +104,8 @@ static NodePtr makeNode(const string &t, SymbolTable &st, const string &ns)
 /** Returns "true" if the field is in the container */
 // e.g.: can be false for non-mandatory fields
 bool containsField(const Object &m, const string &fieldName) {
-  Object::const_iterator it = m.find(fieldName);
-  return it != m.end();
+    Object::const_iterator it = m.find(fieldName);
+    return it != m.end();
 }
 
 const json::Object::const_iterator findField(const Entity &e,
