@@ -63,15 +63,6 @@ boost::iostreams::zlib_params get_zlib_params() {
 }
 }
 
-
-static string toString(const ValidSchema& schema)
-{
-    ostringstream oss;
-    schema.toJson(oss);
-    return oss.str();
-}
-
-
 DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& schema, size_t syncInterval,
                                        Codec codec) :
     filename_(filename),

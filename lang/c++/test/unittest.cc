@@ -975,6 +975,44 @@ struct TestResolution
     ValidSchema unionTwo_;
 };
 
+void testNestedArraySchema()
+{
+    ArraySchema b0 = ArraySchema(NullSchema());
+    ArraySchema a0 = ArraySchema(b0);
+
+    avro::ValidSchema vs(a0);
+    std::ostringstream actual;
+    vs.toJson(actual);
+
+    std::string expected = "{\n\
+    \"type\": \"array\",\n\
+    \"items\": {\n\
+        \"type\": \"array\",\n\
+        \"items\": \"null\"\n\
+    }\n\
+}\n";
+    BOOST_CHECK_EQUAL(expected, actual.str());
+}
+
+void testNestedMapSchema()
+{
+    MapSchema b0 = MapSchema(NullSchema());
+    MapSchema a0 = MapSchema(b0);
+
+    avro::ValidSchema vs(a0);
+    std::ostringstream actual;
+    vs.toJson(actual);
+
+    std::string expected = "{\n\
+    \"type\": \"map\",\n\
+    \"values\": {\n\
+        \"type\": \"map\",\n\
+        \"values\": \"null\"\n\
+    }\n\
+}\n";
+    BOOST_CHECK_EQUAL(expected, actual.str());
+}
+
 boost::unit_test::test_suite*
 init_unit_test_suite( int argc, char* argv[] )
 {
@@ -994,6 +1032,8 @@ init_unit_test_suite( int argc, char* argv[] )
                                     boost::make_shared<TestBadStuff>()));
     test->add(BOOST_CLASS_TEST_CASE(&TestResolution::test,
                                     boost::make_shared<TestResolution>()));
+    test->add(BOOST_TEST_CASE(&testNestedArraySchema));
+    test->add(BOOST_TEST_CASE(&testNestedMapSchema));
 
     return test;
 }

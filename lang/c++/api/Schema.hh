@@ -117,11 +117,13 @@ public:
 class AVRO_DECL ArraySchema : public Schema {
 public:
     ArraySchema(const Schema &itemsSchema);
+    ArraySchema(const ArraySchema &itemsSchema);
 };
 
 class AVRO_DECL MapSchema : public Schema {
 public:
     MapSchema(const Schema &valuesSchema);
+    MapSchema(const MapSchema &itemsSchema);
 };
 
 class AVRO_DECL UnionSchema : public Schema {
