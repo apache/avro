@@ -305,49 +305,41 @@ static void testCompactSchemas()
 
 static void testLogicalTypes()
 {
-    const char* bytesDecimalType = R"(
-    {
-        "type": "bytes",
-        "logicalType": "decimal",
-        "precision": 10,
-        "scale": 2
-    })";
-    const char* fixedDecimalType = R"(
-    {
-        "type": "fixed",
-        "size": 16,
-        "name": "fixedDecimalType",
-        "logicalType": "decimal",
-        "precision": 12,
-        "scale": 6
-    })";
-    const char* dateType = R"(
-    {
-        "type": "int", "logicalType": "date"
-    })";
-    const char* timeMillisType = R"(
-    {
-        "type": "int", "logicalType": "time-millis"
-    })";
-    const char* timeMicrosType = R"(
-    {
-        "type": "long", "logicalType": "time-micros"
-    })";
-    const char* timestampMillisType = R"(
-    {
-        "type": "long", "logicalType": "timestamp-millis"
-    })";
-    const char* timestampMicrosType = R"(
-    {
-        "type": "long", "logicalType": "timestamp-micros"
-    })";
-    const char* durationType = R"(
-    {
-        "type": "fixed",
-        "size": 12,
-        "name": "durationType",
-        "logicalType": "duration"
-    })";
+    const char* bytesDecimalType = "{\
+        \"type\": \"bytes\",\
+        \"logicalType\": \"decimal\",\
+        \"precision\": 10,\
+        \"scale\": 2\
+    }";
+    const char* fixedDecimalType = "{\
+        \"type\": \"fixed\",\
+        \"size\": 16,\
+        \"name\": \"fixedDecimalType\",\
+        \"logicalType\": \"decimal\",\
+        \"precision\": 12,\
+        \"scale\": 6\
+    }";
+    const char* dateType = "{\
+        \"type\": \"int\", \"logicalType\": \"date\"\
+    }";
+    const char* timeMillisType = "{\
+        \"type\": \"int\", \"logicalType\": \"time-millis\"\
+    }";
+    const char* timeMicrosType = "{\
+        \"type\": \"long\", \"logicalType\": \"time-micros\"\
+    }";
+    const char* timestampMillisType = "{\
+        \"type\": \"long\", \"logicalType\": \"timestamp-millis\"\
+    }";
+    const char* timestampMicrosType = "{\
+        \"type\": \"long\", \"logicalType\": \"timestamp-micros\"\
+    }";
+    const char* durationType = "{\
+        \"type\": \"fixed\",\
+        \"size\": 12,\
+        \"name\": \"durationType\",\
+        \"logicalType\": \"duration\"\
+    }";
 
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
