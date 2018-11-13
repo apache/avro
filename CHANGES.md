@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.16.0
 * Built using Gradle 4.10.2
 * Updated compatibility testing through Gradle 4.10.2
 * Added support for the Gradle [Build Cache](https://docs.gradle.org/current/userguide/build_cache.html) (#48); contribution from [dcabasson](https://github.com/dcabasson)
