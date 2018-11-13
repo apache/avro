@@ -305,42 +305,41 @@ static void testCompactSchemas()
 
 static void testLogicalTypes()
 {
-    const char* bytesDecimalType = "{\
-        \"type\": \"bytes\",\
-        \"logicalType\": \"decimal\",\
-        \"precision\": 10,\
-        \"scale\": 2\
+    const char* bytesDecimalType = "{\n\
+        \"type\": \"bytes\",\n\
+        \"logicalType\": \"decimal\",\n\
+        \"precision\": 10,\n\
+        \"scale\": 2\n\
     }";
-    const char* fixedDecimalType = "{\
-        \"type\": \"fixed\",\
-        \"size\": 16,\
-        \"name\": \"fixedDecimalType\",\
-        \"logicalType\": \"decimal\",\
-        \"precision\": 12,\
-        \"scale\": 6\
+    const char* fixedDecimalType = "{\n\
+        \"type\": \"fixed\",\n\
+        \"size\": 16,\n\
+        \"name\": \"fixedDecimalType\",\n\
+        \"logicalType\": \"decimal\",\n\
+        \"precision\": 12,\n\
+        \"scale\": 6\n\
     }";
-    const char* dateType = "{\
-        \"type\": \"int\", \"logicalType\": \"date\"\
+    const char* dateType = "{\n\
+        \"type\": \"int\", \"logicalType\": \"date\"\n\
     }";
-    const char* timeMillisType = "{\
-        \"type\": \"int\", \"logicalType\": \"time-millis\"\
+    const char* timeMillisType = "{\n\
+        \"type\": \"int\", \"logicalType\": \"time-millis\"\n\
     }";
-    const char* timeMicrosType = "{\
-        \"type\": \"long\", \"logicalType\": \"time-micros\"\
+    const char* timeMicrosType = "{\n\
+        \"type\": \"long\", \"logicalType\": \"time-micros\"\n\
     }";
-    const char* timestampMillisType = "{\
-        \"type\": \"long\", \"logicalType\": \"timestamp-millis\"\
+    const char* timestampMillisType = "{\n\
+        \"type\": \"long\", \"logicalType\": \"timestamp-millis\"\n\
     }";
-    const char* timestampMicrosType = "{\
-        \"type\": \"long\", \"logicalType\": \"timestamp-micros\"\
+    const char* timestampMicrosType = "{\n\
+        \"type\": \"long\", \"logicalType\": \"timestamp-micros\"\n\
     }";
-    const char* durationType = "{\
-        \"type\": \"fixed\",\
-        \"size\": 12,\
-        \"name\": \"durationType\",\
-        \"logicalType\": \"duration\"\
+    const char* durationType = "{\n\
+        \"type\": \"fixed\",\n\
+        \"size\": 12,\n\
+        \"name\": \"durationType\",\n\
+        \"logicalType\": \"duration\"\n\
     }";
-
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
