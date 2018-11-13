@@ -200,32 +200,31 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1}",
 
     // Logical types
-    R"({"type":"bytes","logicalType":"decimal","precision":12,"scale":6})",
-    R"({"type":"fixed","name":"test","size":16,"logicalType":"decimal","precision":38,"scale":9})",
-    R"({"type":"int","logicalType":"date"})",
-    R"({"type":"int","logicalType":"time-millis"})",
-    R"({"type":"long","logicalType":"time-micros"})",
-    R"({"type":"long","logicalType":"timestamp-millis"})",
-    R"({"type":"long","logicalType":"timestamp-micros"})",
-    R"({"type":"fixed","name":"test","size":12,"logicalType":"duration"})"
+    "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":12,\"scale\":6}",
+    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":16,\"logicalType\":\"decimal\",\"precision\":38,\"scale\":9}",
+    "{\"type\":\"int\",\"logicalType\":\"date\"}",
+    "{\"type\":\"int\",\"logicalType\":\"time-millis\"}",
+    "{\"type\":\"long\",\"logicalType\":\"time-micros\"}",
+    "{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}",
+    "{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}",
+    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":12,\"logicalType\":\"duration\"}"
 };
 
 const char* malformedLogicalTypes[] = {
     // Wrong base type.
-    R"({"type": "long", "logicalType": "decimal", "precision": 10})",
-    R"({"type": "string", "logicalType": "date"})",
-    R"({"type": "string", "logicalType": "time-millis"})",
-    R"({"type": "string", "logicalType": "time-micros"})",
-    R"({"type": "string", "logicalType": "timestamp-millis"})",
-    R"({"type": "string", "logicalType": "timestamp-micros"})",
-    R"({"type": "string", "logicalType": "duration"})",
+    "{\"type\":\"long\",\"logicalType\": \"decimal\",\"precision\": 10}",
+    "{\"type\":\"string\",\"logicalType\":\"date\"}",
+    "{\"type\":\"string\",\"logicalType\":\"time-millis\"}",
+    "{\"type\":\"string\",\"logicalType\":\"time-micros\"}",
+    "{\"type\":\"string\",\"logicalType\":\"timestamp-millis\"}",
+    "{\"type\":\"string\",\"logicalType\":\"timestamp-micros\"}",
+    "{\"type\":\"string\",\"logicalType\":\"duration\"}",
     // Missing the required field 'precision'.
-    R"({"type": "bytes", "logicalType": "decimal"})",
+    "{\"type\":\"bytes\",\"logicalType\":\"decimal\"}",
     // The claimed precision is not supported by the size of the fixed type.
-    R"({"type": "fixed", "size": 4, "name": "a", "precision": 20})",
+    "{\"type\":\"fixed\",\"size\":4,\"name\":\"a\",\"precision\":20}",
     // Scale is larger than precision.
-    R"({"type": "bytes", "logicalType": "decimal",
-        "precision": 5, "scale": 10})"
+    "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":5,\"scale\":10}"
 };
 const char* schemasToCompact[] = {
     // Schema without any whitespace
