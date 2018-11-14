@@ -103,13 +103,13 @@ static NodePtr makeNode(const string &t, SymbolTable &st, const string &ns)
 
 /** Returns "true" if the field is in the container */
 // e.g.: can be false for non-mandatory fields
-bool containsField(const Object &m, const string &fieldName) {
+bool containsField(const Object& m, const string& fieldName) {
     Object::const_iterator it = m.find(fieldName);
-    return it != m.end();
+    return (it != m.end());
 }
 
-const json::Object::const_iterator findField(const Entity &e,
-    const Object &m, const string &fieldName)
+const json::Object::const_iterator findField(const Entity& e,
+    const Object& m, const string& fieldName)
 {
     Object::const_iterator it = m.find(fieldName);
     if (it == m.end()) {
@@ -333,6 +333,44 @@ static NodePtr makeRecordNode(const Entity& e, const Name& name,
     return NodePtr(node);
 }
 
+static LogicalType makeLogicalType(const Entity& e, const Object& m) {
+    if (!containsField(m, "logicalType")) {
+        return LogicalType(LogicalType::NONE);
+    }
+
+    const std::string& typeField = getStringField(e, m, "logicalType");
+
+    if (typeField == "decimal") {
+        LogicalType decimalType(LogicalType::DECIMAL);
+        try {
+            decimalType.setPrecision(getLongField(e, m, "precision"));
+            if (containsField(m, "scale")) {
+                decimalType.setScale(getLongField(e, m, "scale"));
+            }
+        } catch (Exception& ex) {
+            // If any part of the logical type is malformed, per the standard we
+            // must ignore the whole attribute.
+            return LogicalType(LogicalType::NONE);
+        }
+        return decimalType;
+    }
+
+    LogicalType::Type t = LogicalType::NONE;
+    if (typeField == "date")
+        t = LogicalType::DATE;
+    else if (typeField == "time-millis")
+        t = LogicalType::TIME_MILLIS;
+    else if (typeField == "time-micros")
+        t = LogicalType::TIME_MICROS;
+    else if (typeField == "timestamp-millis")
+        t = LogicalType::TIMESTAMP_MILLIS;
+    else if (typeField == "timestamp-micros")
+        t = LogicalType::TIMESTAMP_MICROS;
+    else if (typeField == "duration")
+        t = LogicalType::DURATION;
+    return LogicalType(t);
+}
+
 static NodePtr makeEnumNode(const Entity& e,
     const Name& name, const Object& m)
 {
@@ -419,12 +457,10 @@ static NodePtr makeNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
     const string& type = getStringField(e, m, "type");
-    if (NodePtr result = makePrimitive(type)) {
-        return result;
-    } else if (type == "record" || type == "error" ||
+    NodePtr result;
+    if (type == "record" || type == "error" ||
         type == "enum" || type == "fixed") {
         Name nm = getName(e, m, ns);
-        NodePtr result;
         if (type == "record" || type == "error") {
             result = NodePtr(new NodeRecord());
             st[nm] = result;
@@ -446,12 +482,24 @@ static NodePtr makeNode(const Entity& e, const Object& m,
                 makeFixedNode(e, nm, m);
             st[nm] = result;
         }
-        return result;
     } else if (type == "array") {
-        return makeArrayNode(e, m, st, ns);
+        result = makeArrayNode(e, m, st, ns);
     } else if (type == "map") {
-        return makeMapNode(e, m, st, ns);
+        result = makeMapNode(e, m, st, ns);
+    } else {
+        result = makePrimitive(type);
     }
+
+    if (result) {
+        try {
+            result->setLogicalType(makeLogicalType(e, m));
+        } catch (Exception& ex) {
+            // Per the standard we must ignore the logical type attribute if it
+            // is malformed.
+        }
+        return result;
+    }
+
     throw Exception(boost::format("Unknown type definition: %1%")
         % e.toString());
 }

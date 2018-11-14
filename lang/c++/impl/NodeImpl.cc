@@ -221,7 +221,19 @@ NodeSymbolic::resolve(const Node &reader) const
 void
 NodePrimitive::printJson(std::ostream &os, int depth) const
 {
+    bool hasLogicalType = logicalType().type() != LogicalType::NONE;
+
+    if (hasLogicalType) {
+        os << "{\n" << indent(depth) << "\"type\": ";
+    }
+
     os << '\"' << type() << '\"';
+
+    if (hasLogicalType) {
+        os << ",\n" << indent(depth);
+        logicalType().printJson(os);
+        os << "\n}";
+    }
     if (getDoc().size()) {
         os << ",\n" << indent(depth) << "\"doc\": \""
            << escape(getDoc()) << "\"";
@@ -522,8 +534,14 @@ NodeFixed::printJson(std::ostream &os, int depth) const
            << escape(getDoc()) << "\",\n";
     }
     printName(os, nameAttribute_.get(), depth);
-    os << indent(depth) << "\"size\": " << sizeAttribute_.get() << "\n";
-    os << indent(--depth) << '}';
+    os << indent(depth) << "\"size\": " << sizeAttribute_.get();
+
+    if (logicalType().type() != LogicalType::NONE) {
+      os << ",\n" << indent(depth);
+      logicalType().printJson(os);
+    }
+
+    os << "\n" << indent(--depth) << '}';
 }
 
 } // namespace avro
