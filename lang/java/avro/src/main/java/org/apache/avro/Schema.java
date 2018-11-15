@@ -1288,7 +1288,7 @@ public abstract class Schema extends JsonProperties {
       } else if (type.equals("record") || type.equals("error")) { // record
         List<Field> fields = new ArrayList<Field>();
         result = new RecordSchema(name, doc, type.equals("error"));
-        if (name != null) names.add(result);
+        if (name != null && !names.contains(result)) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
           throw new SchemaParseException("Record has no fields: "+schema);
