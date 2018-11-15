@@ -563,7 +563,7 @@ public abstract class Schema extends JsonProperties {
       if (this.equals(names.get(name))) {
         gen.writeString(name.getQualified(names.space()));
         return true;
-      } else if (name.name != null) {
+      } else if (name.name != null && !names.contains(this)) {
         names.put(name, this);
       }
       return false;
