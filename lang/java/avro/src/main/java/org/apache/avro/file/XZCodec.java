@@ -30,6 +30,7 @@ import org.apache.commons.compress.utils.IOUtils;
 
 /** * Implements xz compression and decompression. */
 public class XZCodec extends Codec {
+  public final static int DEFAULT_COMPRESSION = 6;
 
   static class Option extends CodecFactory {
       private int compressionLevel;

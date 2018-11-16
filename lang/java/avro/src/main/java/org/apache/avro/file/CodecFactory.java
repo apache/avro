@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.zip.Deflater;
 
 import org.apache.avro.AvroRuntimeException;
-import org.tukaani.xz.LZMA2Options;
 
 /**  Encapsulates the ability to specify and configure a compression codec.
  *
@@ -57,7 +56,12 @@ public abstract class CodecFactory {
 
   /** Snappy codec.*/
   public static CodecFactory snappyCodec() {
-    return new SnappyCodec.Option();
+    try {
+      return new SnappyCodec.Option();
+    } catch (Throwable t) {
+      //snappy not available
+      return null;
+    }
   }
 
   /** bzip2 codec.*/
@@ -80,15 +84,15 @@ public abstract class CodecFactory {
     new HashMap<>();
 
   public static final int DEFAULT_DEFLATE_LEVEL = Deflater.DEFAULT_COMPRESSION;
-  public static final int DEFAULT_XZ_LEVEL = LZMA2Options.PRESET_DEFAULT;
+  public static final int DEFAULT_XZ_LEVEL = XZCodec.DEFAULT_COMPRESSION;
 
   static {
     addCodec(DataFileConstants.NULL_CODEC, nullCodec());
     addCodec(DataFileConstants.DEFLATE_CODEC, deflateCodec(DEFAULT_DEFLATE_LEVEL));
-    addCodec(DataFileConstants.SNAPPY_CODEC, snappyCodec());
     addCodec(DataFileConstants.BZIP2_CODEC, bzip2Codec());
     addCodec(DataFileConstants.XZ_CODEC, xzCodec(DEFAULT_XZ_LEVEL));
     addCodec(DataFileConstants.ZSTANDARD_CODEC, zstandardCodec());
+    addCodec(DataFileConstants.SNAPPY_CODEC, snappyCodec());
   }
 
   /** Maps a codec name into a CodecFactory.
@@ -116,7 +120,10 @@ public abstract class CodecFactory {
   /** Adds a new codec implementation.  If name already had
    * a codec associated with it, returns the previous codec. */
   public static CodecFactory addCodec(String name, CodecFactory c) {
-    return REGISTERED.put(name, c);
+    if (c != null) {
+      return REGISTERED.put(name, c);
+    }
+    return null;
   }
 
   @Override

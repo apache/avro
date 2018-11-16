@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
@@ -59,9 +60,6 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.SchemaNormalization;
-
-import com.thoughtworks.paranamer.CachingParanamer;
-import com.thoughtworks.paranamer.Paranamer;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
@@ -790,12 +788,36 @@ public class ReflectData extends SpecificData {
     return protocol;
   }
 
-  private final Paranamer paranamer = new CachingParanamer();
+  private Function<Method, String[]> paranamer;
+  private synchronized Function<Method, String[]> getParanamer() {
+    if (paranamer == null) {
+      try {
+        final com.thoughtworks.paranamer.CachingParanamer p = new com.thoughtworks.paranamer.CachingParanamer();
+        paranamer = new Function<Method, String[]>() {
+          public String[] apply(Method t) {
+            return p.lookupParameterNames(t);
+          }
+        };
+      } catch (Throwable t) {
+        paranamer = new Function<Method, String[]>() {
+          public String[] apply(Method t) {
+            return new String[0];
+          }
+        };
+      }
+    }
+    return paranamer;
+  }
+
+  private String[] getParameterNames(Method m) {
+    return getParanamer().apply(m);
+  }
+
 
   private Message getMessage(Method method, Protocol protocol,
                              Map<String,Schema> names) {
     List<Schema.Field> fields = new ArrayList<>();
-    String[] paramNames = paranamer.lookupParameterNames(method);
+    String[] paramNames = getParameterNames(method);
     Type[] paramTypes = method.getGenericParameterTypes();
     Annotation[][] annotations = method.getParameterAnnotations();
     for (int i = 0; i < paramTypes.length; i++) {
