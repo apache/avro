@@ -1484,9 +1484,10 @@ public class Perf {
       }
 
       try {
+        String[] nicknames = { randomString(r), randomString(r) };
         return FooBarSpecificRecord.newBuilder().setId(r.nextInt())
             .setName(randomString(r))
-            .setNicknames(Arrays.asList(randomString(r), randomString(r)))
+            .setNicknames(new ArrayList<String>(Arrays.asList(nicknames)))
             .setTypeEnum(typeEnums[r.nextInt(typeEnums.length)])
             .setRelatedids(relatedIds).build();
       } catch (Exception e) {
