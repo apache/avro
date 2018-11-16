@@ -38,7 +38,6 @@ import org.apache.avro.Schema.Field;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 /** A set of messages forming an application protocol.
  * <p> A protocol consists of:
@@ -85,20 +84,22 @@ public class Protocol extends JsonProperties {
 
     /** Construct a message. */
     private Message(String name, String doc,
-                    Map<String,?> propMap, Schema request) {
+                    JsonProperties propMap, Schema request) {
       super(MESSAGE_RESERVED);
       this.name = name;
       this.doc = doc;
       this.request = request;
 
-      if (propMap != null)                        // copy props
-        for (Map.Entry<String,?> prop : propMap.entrySet()) {
-          Object value = prop.getValue();
-          this.addProp(prop.getKey(),
-                       value instanceof String
-                       ? TextNode.valueOf((String)value)
-                       : (JsonNode)value);
-        }
+      if (propMap != null)
+        // copy props
+        addAllProps(propMap);
+    }
+    private Message(String name, String doc,
+        Map<String, ?> propMap, Schema request) {
+      super(MESSAGE_RESERVED, propMap);
+      this.name = name;
+      this.doc = doc;
+      this.request = request;
     }
 
     /** The name of this message. */
@@ -118,7 +119,7 @@ public class Protocol extends JsonProperties {
     public String toString() {
       try {
         StringWriter writer = new StringWriter();
-        JsonGenerator gen = Schema.FACTORY.createJsonGenerator(writer);
+        JsonGenerator gen = Schema.FACTORY.createGenerator(writer);
         toJson(gen);
         gen.flush();
         return writer.toString();
@@ -166,6 +167,12 @@ public class Protocol extends JsonProperties {
     /** Construct a message. */
     private TwoWayMessage(String name, String doc, Map<String,?> propMap,
                           Schema request, Schema response, Schema errors) {
+      super(name, doc, propMap, request);
+      this.response = response;
+      this.errors = errors;
+    }
+    private TwoWayMessage(String name, String doc, JsonProperties propMap,
+        Schema request, Schema response, Schema errors) {
       super(name, doc, propMap, request);
       this.response = response;
       this.errors = errors;
@@ -278,36 +285,45 @@ public class Protocol extends JsonProperties {
   /** Create a one-way message. */
   @Deprecated
   public Message createMessage(String name, String doc, Schema request) {
-    return createMessage(name, doc, new LinkedHashMap<String,String>(),request);
+    return new Message(name, doc, new LinkedHashMap<String,String>(), request);
   }
 
   /** Create a one-way message using the {@code name}, {@code doc}, and {@code props} of {@code m}. */
   public Message createMessage(Message m, Schema request) {
-    return createMessage(m.getName(), m.getDoc(), m.getJsonProps(), request);
+    return new Message(name, doc, m, request);
   }
 
   /** Create a one-way message. */
   public <T> Message createMessage(String name, String doc,
-                                   Map<String,T> propMap, Schema request) {
+                                  JsonProperties propMap, Schema request) {
+    return new Message(name, doc, propMap, request);
+  }
+  /** Create a one-way message. */
+  public <T> Message createMessage(String name, String doc,
+                                   Map<String,?> propMap, Schema request) {
     return new Message(name, doc, propMap, request);
   }
 
   /** Create a two-way message. */
   @Deprecated
-  public Message createMessage(String name, String doc, Schema request,
-                               Schema response, Schema errors) {
-    return createMessage(name, doc, new LinkedHashMap<String,String>(),
-                         request, response, errors);
+  public Message createMessage(String name, String doc, Schema request, Schema response, Schema errors) {
+    return new TwoWayMessage(name, doc, new LinkedHashMap<String,String>(), request, response, errors);
   }
 
   /** Create a two-way message using the {@code name}, {@code doc}, and {@code props} of {@code m}. */
   public Message createMessage(Message m, Schema request, Schema response, Schema errors) {
-    return createMessage(m.getName(), m.getDoc(), m.getJsonProps(), request, response, errors);
+    return new TwoWayMessage(m.getName(), m.getDoc(), m, request, response, errors);
   }
 
   /** Create a two-way message. */
   public <T> Message createMessage(String name, String doc,
-                                   Map<String,T> propMap, Schema request,
+                                   JsonProperties propMap, Schema request,
+                                   Schema response, Schema errors) {
+    return new TwoWayMessage(name, doc, propMap, request, response, errors);
+  }
+  /** Create a two-way message. */
+  public <T> Message createMessage(String name, String doc,
+                                   Map<String,?> propMap, Schema request,
                                    Schema response, Schema errors) {
     return new TwoWayMessage(name, doc, propMap, request, response, errors);
   }
@@ -338,7 +354,7 @@ public class Protocol extends JsonProperties {
   public String toString(boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
-      JsonGenerator gen = Schema.FACTORY.createJsonGenerator(writer);
+      JsonGenerator gen = Schema.FACTORY.createGenerator(writer);
       if (pretty) gen.useDefaultPrettyPrinter();
       toJson(gen);
       gen.flush();
@@ -386,12 +402,12 @@ public class Protocol extends JsonProperties {
 
   /** Read a protocol from a Json file. */
   public static Protocol parse(File file) throws IOException {
-    return parse(Schema.FACTORY.createJsonParser(file));
+    return parse(Schema.FACTORY.createParser(file));
   }
 
   /** Read a protocol from a Json stream. */
   public static Protocol parse(InputStream stream) throws IOException {
-    return parse(Schema.FACTORY.createJsonParser(stream));
+    return parse(Schema.FACTORY.createParser(stream));
   }
 
   /** Read a protocol from one or more json strings */
@@ -405,7 +421,7 @@ public class Protocol extends JsonProperties {
   /** Read a protocol from a Json string. */
   public static Protocol parse(String string) {
     try {
-      return parse(Schema.FACTORY.createJsonParser
+      return parse(Schema.FACTORY.createParser
                    (new ByteArrayInputStream(string.getBytes("UTF-8"))));
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
