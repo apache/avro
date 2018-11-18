@@ -130,6 +130,7 @@ module Avro
       end
 
       def validate_map(expected_schema, datum, path, result)
+        fail TypeMismatchError unless datum.is_a?(Hash)
         datum.keys.each do |k|
           result.add_error(path, "unexpected key type '#{ruby_to_avro_type(k.class)}' in map") unless k.is_a?(String)
         end

@@ -301,6 +301,10 @@ class TestSchema < Test::Unit::TestCase
     assert_failed_validation("at . unexpected key type 'Symbol' in map") do
       validate!(schema, some: 1)
     end
+
+    assert_failed_validation('at . expected type map, got null') do
+      validate!(schema, nil)
+    end
   end
 
   def test_validate_deep_record
