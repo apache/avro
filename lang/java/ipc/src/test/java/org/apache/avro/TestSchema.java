@@ -44,6 +44,7 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.RandomData;
 import org.apache.avro.util.Utf8;
 import org.junit.Rule;
 import org.junit.Test;
@@ -665,7 +666,7 @@ public class TestSchema {
     Schema schema = Schema.parse(jsonSchema);
     checkProp(schema);
     Object reuse = null;
-    for (Object datum : new RandomData(schema, COUNT)) {
+    for (Object datum : new RandomData(schema, COUNT, true)) {
 
       if (induce) {
         Schema induced = GenericData.get().induce(datum);

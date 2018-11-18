@@ -24,13 +24,13 @@ import java.util.Arrays;
 import org.apache.trevni.ValueType;
 import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnFileMetaData;
-
 import org.apache.avro.Schema;
-
+import org.apache.avro.util.RandomData;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class TestShredder {
+  private static final long SEED = System.currentTimeMillis();
 
   private static final int COUNT = 100;
   private static final File FILE = new File("target", "test.trv");
@@ -257,7 +257,7 @@ public class TestShredder {
     AvroColumnWriter<Object> writer =
       new AvroColumnWriter<>(schema, new ColumnFileMetaData());
     int count = 0;
-    for (Object datum : new RandomData(schema, COUNT)) {
+    for (Object datum : new RandomData(schema, COUNT, SEED)) {
       //System.out.println("datum="+datum);
       writer.write(datum);
     }
@@ -268,7 +268,7 @@ public class TestShredder {
     AvroColumnReader<Object> reader =
       new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
                                    .setSchema(schema));
-    for (Object expected : new RandomData(schema, COUNT))
+    for (Object expected : new RandomData(schema, COUNT, SEED))
       assertEquals(expected, reader.next());
     reader.close();
   }
