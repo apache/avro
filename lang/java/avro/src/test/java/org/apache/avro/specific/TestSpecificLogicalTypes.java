@@ -46,6 +46,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
+import org.joda.time.chrono.ISOChronology;
 import org.joda.time.format.ISODateTimeFormat;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -133,6 +134,7 @@ public class TestSpecificLogicalTypes {
 
   @Test
   public void testAbilityToReadJsr310RecordWrittenAsJodaRecord() throws IOException {
+
     TestRecordWithLogicalTypes withJoda = new TestRecordWithLogicalTypes(
             true,
             34,
@@ -142,7 +144,7 @@ public class TestSpecificLogicalTypes {
             null,
             LocalDate.now(),
             LocalTime.now(),
-            DateTime.now().withZone(DateTimeZone.UTC),
+            new DateTime((System.currentTimeMillis() / 1000) * 1000, ISOChronology.getInstance()).withZone(DateTimeZone.UTC),
             new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
