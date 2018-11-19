@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,8 +119,8 @@ public class TestSpecificLogicalTypes {
         3019.34,
         null,
         java.time.LocalDate.now(),
-        java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
-        java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
+        java.time.LocalTime.now(),
+        java.time.Instant.now(),
         new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
@@ -144,7 +143,10 @@ public class TestSpecificLogicalTypes {
             null,
             LocalDate.now(),
             LocalTime.now(),
-            new DateTime((System.currentTimeMillis() / 1000) * 1000, ISOChronology.getInstance()).withZone(DateTimeZone.UTC),
+            // There is no reliable way to get fixed width string from ISO_INSTANT below
+            // for granularity less than one second second.
+            new DateTime((System.currentTimeMillis() / 1000) * 1000,
+                    ISOChronology.getInstance()).withZone(DateTimeZone.UTC),
             new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
@@ -164,7 +166,7 @@ public class TestSpecificLogicalTypes {
 
     Assert.assertThat(ISO_LOCAL_DATE.format(withJsr310.getD()), is(ISODateTimeFormat.date().print(withJoda.getD())));
     Assert.assertThat(ISO_LOCAL_TIME.format(withJsr310.getT()), is(ISODateTimeFormat.time().print(withJoda.getT())));
-    Assert.assertThat(ISO_INSTANT.format(withJsr310.getTs()), is(ISODateTimeFormat.dateTime().print(withJoda.getTs())));
+    Assert.assertThat(ISO_INSTANT.format(withJsr310.getTs()), is(ISODateTimeFormat.dateTimeNoMillis().print(withJoda.getTs())));
     Assert.assertThat(withJsr310.getDec(), comparesEqualTo(withJoda.getDec()));
   }
 
@@ -178,8 +180,8 @@ public class TestSpecificLogicalTypes {
             3019.34,
             null,
             java.time.LocalDate.now(),
-            java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
-            java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
+            java.time.LocalTime.now(),
+            java.time.Instant.now(),
             new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
     );
 
