@@ -391,6 +391,26 @@ public abstract class Schema extends JsonProperties {
                        "default","doc","name","order","type","aliases");
   }
 
+  /** Returns true if this record is an union type. */
+  public boolean isUnion(){
+    return this instanceof UnionSchema;
+  }
+
+  /** Returns true if this record is an union type containing null. */
+  public boolean isNullable() {
+    if (!isUnion()) {
+      return getType().equals(Schema.Type.NULL);
+    }
+
+    for (Schema schema : getTypes()) {
+      if (schema.isNullable()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /** A field within a record. */
   public static class Field extends JsonProperties {
 
