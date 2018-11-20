@@ -22,9 +22,11 @@
 #include "Config.hh"
 
 #include <cassert>
+#include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "CustomFields.hh"
 #include "Exception.hh"
 #include "LogicalType.hh"
 #include "Types.hh"
@@ -107,6 +109,24 @@ class AVRO_DECL Node : private boost::noncopyable
     }
 
     void setLogicalType(LogicalType logicalType);
+
+    const CustomFields &customFields() const {
+        return customFields_;
+    }
+
+    void addCustomField(const std::string& fieldName,
+                        const json::Entity& fieldValue) {
+        checkLock();
+        customFields_.addField(fieldName, fieldValue);
+    }
+
+    void addCustomField(const std::string& fieldName,
+                        const std::string& fieldValue) {
+        checkLock();
+        customFields_.addField(
+            fieldName,
+            json::Entity(boost::make_shared<std::string>(fieldValue)));
+    }
 
     void lock() {
         locked_ = true;
@@ -194,6 +214,7 @@ class AVRO_DECL Node : private boost::noncopyable
 
     const Type type_;
     LogicalType logicalType_;
+    CustomFields customFields_;
     bool locked_;
 };
 

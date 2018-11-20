@@ -291,6 +291,19 @@ static GenericDatum makeGenericDatum(NodePtr n,
     return GenericDatum();
 }
 
+static void addCustomFields(const NodePtr &node, const Object &m) {
+    // Don't add known fields on primitive type and fixed type into custom
+    // fields.
+    static const std::vector<std::string> kKnownFields =
+        {"name", "type", "default", "doc", "size", "logicalType",
+         "values", "precision", "scale", "namespace"};
+    for (const auto &entry : m) {
+        if (std::find(kKnownFields.begin(), kKnownFields.end(), entry.first)
+            == kKnownFields.end()) {
+            node->addCustomField(entry.first, entry.second);
+        }
+    }
+}
 
 static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
 {
@@ -496,6 +509,15 @@ static NodePtr makeNode(const Entity& e, const Object& m,
         } catch (Exception& ex) {
             // Per the standard we must ignore the logical type attribute if it
             // is malformed.
+        }
+        // For now, only add custom fields for fixed or primitive type.
+        if (type != "map" && type != "array" && type != "enum" &&
+            type != "error" && type != "record") {
+            try {
+                addCustomFields(result, m);
+            } catch (Exception& ex) {
+                // Ignore all exceptions regarding custom fields.
+            }
         }
         return result;
     }

@@ -90,6 +90,17 @@ std::ostream& operator <<(std::ostream &os, indent x)
     return os;
 }
 
+void printCustomFields(const CustomFields& customFields, int depth,
+                       std::ostream &os) {
+    std::map<std::string, json::Entity>::const_iterator iter =
+        customFields.fields().begin();
+    while (iter != customFields.fields().end()) {
+      os << ",\n" << indent(depth);
+      customFields.printJson(os, iter->first);
+      ++iter;
+    }
+}
+
 } // anonymous namespace
 
 const int kByteStringSize = 6;
@@ -223,7 +234,7 @@ NodePrimitive::printJson(std::ostream &os, int depth) const
 {
     bool hasLogicalType = logicalType().type() != LogicalType::NONE;
 
-    if (hasLogicalType) {
+    if (hasLogicalType || !customFields().fields().empty()) {
         os << "{\n" << indent(depth) << "\"type\": ";
     }
 
@@ -232,6 +243,10 @@ NodePrimitive::printJson(std::ostream &os, int depth) const
     if (hasLogicalType) {
         os << ",\n" << indent(depth);
         logicalType().printJson(os);
+    }
+    printCustomFields(customFields(), depth, os);
+
+    if (hasLogicalType || !customFields().fields().empty()) {
         os << "\n}";
     }
     if (getDoc().size()) {
@@ -540,6 +555,7 @@ NodeFixed::printJson(std::ostream &os, int depth) const
       os << ",\n" << indent(depth);
       logicalType().printJson(os);
     }
+    printCustomFields(customFields(), depth, os);
 
     os << "\n" << indent(--depth) << '}';
 }
