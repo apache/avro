@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ module Avro
       def byte!
         @reader.read(1).unpack('C').first
       end
-      
+
       def read_null
         # null is written as zero byte's
         nil
@@ -159,7 +159,7 @@ module Avro
         nil
       end
 
-      # a boolean is written as a single byte 
+      # a boolean is written as a single byte
       # whose value is either 0 (false) or 1 (true).
       def write_boolean(datum)
         on_disk = datum ? 1.chr : 0.chr
@@ -504,7 +504,7 @@ module Avro
       def write_data(writers_schema, logical_datum, encoder)
         datum = writers_schema.type_adapter.encode(logical_datum)
 
-        unless Schema.validate(writers_schema, datum, encoded = true)
+        unless Schema.validate(writers_schema, datum, { recursive: false, encoded: true })
           raise AvroTypeError.new(writers_schema, datum)
         end
 
@@ -539,6 +539,7 @@ module Avro
       end
 
       def write_array(writers_schema, datum, encoder)
+        raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Array)
         if datum.size > 0
           encoder.write_long(datum.size)
           datum.each do |item|
@@ -549,6 +550,7 @@ module Avro
       end
 
       def write_map(writers_schema, datum, encoder)
+        raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
         if datum.size > 0
           encoder.write_long(datum.size)
           datum.each do |k,v|
@@ -571,6 +573,7 @@ module Avro
       end
 
       def write_record(writers_schema, datum, encoder)
+        raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
         writers_schema.fields.each do |field|
           write_data(field.type, datum[field.name], encoder)
         end
