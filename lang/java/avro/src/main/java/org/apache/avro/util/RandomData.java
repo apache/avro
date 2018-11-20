@@ -15,37 +15,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro;
+package org.apache.avro.util;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.avro.Schema;
+import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.util.Utf8;
 
 /** Generates schema data as Java objects with random values. */
 public class RandomData implements Iterable<Object> {
+  public static final String USE_DEFAULT = "use-default";
+
   private final Schema root;
   private final long seed;
   private final int count;
+  private final boolean utf8ForString;
 
   public RandomData(Schema schema, int count) {
-    this(schema, count, System.currentTimeMillis());
+    this(schema, count, false);
   }
 
   public RandomData(Schema schema, int count, long seed) {
+    this(schema, count, seed, false);
+  }
+
+  public RandomData(Schema schema, int count, boolean utf8ForString) {
+    this(schema, count, System.currentTimeMillis(), utf8ForString);
+  }
+
+  public RandomData(Schema schema, int count, long seed, boolean utf8ForString) {
     this.root = schema;
     this.seed = seed;
     this.count = count;
+    this.utf8ForString = utf8ForString;
   }
 
   public Iterator<Object> iterator() {
@@ -62,12 +76,16 @@ public class RandomData implements Iterable<Object> {
   }
 
   @SuppressWarnings(value="unchecked")
-  private static Object generate(Schema schema, Random random, int d) {
+  private Object generate(Schema schema, Random random, int d) {
     switch (schema.getType()) {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
-      for (Schema.Field field : schema.getFields())
-        record.put(field.name(), generate(field.schema(), random, d+1));
+      for (Schema.Field field : schema.getFields()) {
+        Object value = (field.getObjectProp(USE_DEFAULT) == null) ?
+                        generate(field.schema(), random, d+1) :
+                        GenericData.get().getDefaultValue(field);
+        record.put(field.name(), value);
+      }
       return record;
     case ENUM:
       List<String> symbols = schema.getEnumSymbols();
@@ -75,6 +93,7 @@ public class RandomData implements Iterable<Object> {
         (schema, symbols.get(random.nextInt(symbols.size())));
     case ARRAY:
       int length = (random.nextInt(5)+2)-d;
+      @SuppressWarnings("rawtypes")
       GenericArray<Object> array =
         new GenericData.Array(length<=0?0:length, schema);
       for (int i = 0; i < length; i++)
@@ -84,7 +103,7 @@ public class RandomData implements Iterable<Object> {
       length = (random.nextInt(5)+2)-d;
       Map<Object,Object> map = new HashMap<>(length <= 0 ? 0 : length);
       for (int i = 0; i < length; i++) {
-        map.put(randomUtf8(random, 40),
+        map.put(randomString(random, 40),
                 generate(schema.getValueType(), random, d+1));
       }
       return map;
@@ -95,7 +114,7 @@ public class RandomData implements Iterable<Object> {
       byte[] bytes = new byte[schema.getFixedSize()];
       random.nextBytes(bytes);
       return new GenericData.Fixed(schema, bytes);
-    case STRING:  return randomUtf8(random, 40);
+    case STRING:  return randomString(random, 40);
     case BYTES:   return randomBytes(random, 40);
     case INT:     return random.nextInt();
     case LONG:    return random.nextLong();
@@ -107,12 +126,15 @@ public class RandomData implements Iterable<Object> {
     }
   }
 
-  private static Utf8 randomUtf8(Random rand, int maxLength) {
-    Utf8 utf8 = new Utf8().setLength(rand.nextInt(maxLength));
-    for (int i = 0; i < utf8.getLength(); i++) {
-      utf8.getBytes()[i] = (byte)('a'+rand.nextInt('z'-'a'));
+  private static final Charset UTF8 = Charset.forName("UTF-8");
+
+  private Object randomString(Random random, int maxLength) {
+    int length = random.nextInt(maxLength);
+    byte[] bytes = new byte[length];
+    for (int i = 0; i < length; i++) {
+      bytes[i] = (byte)('a'+random.nextInt('z'-'a'));
     }
-    return utf8;
+    return utf8ForString ? new Utf8(bytes) : new String(bytes, UTF8);
   }
 
   private static ByteBuffer randomBytes(Random rand, int maxLength) {
@@ -123,14 +145,15 @@ public class RandomData implements Iterable<Object> {
   }
 
   public static void main(String[] args) throws Exception {
-    if(args.length != 3) {
-      System.out.println("Usage: RandomData <schemafile> <outputfile> <count>");
+    if (args.length < 3 || args.length > 4) {
+      System.out.println("Usage: RandomData <schemafile> <outputfile> <count> [codec]");
       System.exit(-1);
     }
-    Schema sch = Schema.parse(new File(args[0]));
+    Schema sch = new Schema.Parser().parse(new File(args[0]));
     DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>())
-      .create(sch, new File(args[1]));
+      new DataFileWriter<>(new GenericDatumWriter<>());
+    writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
+    writer.create(sch, new File(args[1]));
     try {
       for (Object datum : new RandomData(sch, Integer.parseInt(args[2]))) {
         writer.append(datum);

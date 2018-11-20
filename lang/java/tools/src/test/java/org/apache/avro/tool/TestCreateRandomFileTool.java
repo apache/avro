@@ -30,7 +30,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
-import org.apache.trevni.avro.RandomData;
+import org.apache.avro.util.RandomData;
 import org.apache.trevni.TestUtil;
 
 import org.junit.After;
@@ -47,6 +47,8 @@ public class TestCreateRandomFileTool {
     new File("../../../share/test/schemas/weather.avsc");
 
   private final Schema.Parser schemaParser = new Schema.Parser();
+
+  private static final long SEED = System.currentTimeMillis();
 
   private ByteArrayOutputStream out;
   private ByteArrayOutputStream err;
@@ -83,17 +85,18 @@ public class TestCreateRandomFileTool {
     args.addAll(Arrays.asList(new String[] {
         OUT_FILE.toString(),
         "--count", COUNT,
-        "--schema-file", SCHEMA_FILE.toString()
+        "--schema-file", SCHEMA_FILE.toString(),
+        "--seed", Long.toString(SEED)
         }));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
 
     DataFileReader<Object> reader =
-      new DataFileReader(OUT_FILE, new GenericDatumReader<>());
+      new DataFileReader<Object>(OUT_FILE, new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
     for (Object expected :
-           new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT)))
+           new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();
@@ -103,7 +106,8 @@ public class TestCreateRandomFileTool {
     ArrayList<String> args = new ArrayList<>();
     args.addAll(Arrays.asList(new String[] {
             OUT_FILE.toString(),
-            "--schema-file", SCHEMA_FILE.toString()
+            "--schema-file", SCHEMA_FILE.toString(),
+            "--seed", Long.toString(SEED)
     }));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
@@ -129,17 +133,18 @@ public class TestCreateRandomFileTool {
   public void testStdOut() throws Exception {
     TestUtil.resetRandomSeed();
     run(Arrays.asList(new String[]
-            { "-", "--count", COUNT, "--schema-file", SCHEMA_FILE.toString() }));
+            { "-", "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(),
+              "--seed", Long.toString(SEED) }));
 
     byte[] file = out.toByteArray();
 
     DataFileStream<Object> reader =
-        new DataFileStream(new ByteArrayInputStream(file),
+        new DataFileStream<Object>(new ByteArrayInputStream(file),
                            new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
     for (Object expected :
-           new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT)))
+           new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();
