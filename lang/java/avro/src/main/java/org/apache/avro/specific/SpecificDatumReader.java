@@ -33,7 +33,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
   /** Construct for reading instances of a class. */
   public SpecificDatumReader(Class<T> c) {
-    this(new SpecificData(c.getClassLoader()));
+    this(SpecificData.getForClass(c));
     setSchema(getSpecificData().getSchema(c));
   }
 
