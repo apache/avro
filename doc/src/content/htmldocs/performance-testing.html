@@ -102,9 +102,12 @@ At this point you can checkout Avro and launch your Docker container:
 <pre>
   git clone https://github.com/apache/avro.git
   cd avro
+  screen
   ./build.sh docker --args "--cpuset-cpus 2,6"
 </pre>
-The <code>--args</code> flag in the last command deserves some explanation.  In general, the <code>--args</code> allows you to pass additional arguments to the <code>docker&nbsp;run</code> command executed inside <code>build.sh</code>.  In this case, the <code>--cpuset-cpus</code> flag for <code>docker</code> tells docker to schedule the contianer exclusively on the listed (virtual) CPUs.  We identified vCPUs 2 and 6 using the <code>lscpu</code> Linux command:
+Note the use of <code>screen</code> here: executions of <code>run-perf.sh</code> can take a few hours, depending on the configuration.  By running it inside of <code>screen</code>, you are protected from an SSH disconnection causing <code>run-perf.sh</code> to prematurely terminate.
+
+<p>The <code>--args</code> flag in the last command deserves some explanation.  In general, the <code>--args</code> allows you to pass additional arguments to the <code>docker&nbsp;run</code> command executed inside <code>build.sh</code>.  In this case, the <code>--cpuset-cpus</code> flag for <code>docker</code> tells docker to schedule the contianer exclusively on the listed (virtual) CPUs.  We identified vCPUs 2 and 6 using the <code>lscpu</code> Linux command:
 <pre>
   [ec2-user@ip-0-0-0-0 avro]$ lscpu --extended
   CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE
@@ -117,7 +120,7 @@ The <code>--args</code> flag in the last command deserves some explanation.  In 
   6   0    0      2    2:2:2:0       yes
   7   0    0      3    3:3:3:0       yes
 </pre>
-Notice that (v)CPUs 2 and 6 are both on core 2: it's sufficient to schedule the container on the same core, vs a single vCPU.
+Notice that (v)CPUs 2 and 6 are both on core 2: it's sufficient to schedule the container on the same core, vs a single vCPU.  One final tip: to confirm that your container is running on the expected CPUs, run <code>top</code> and then press the <code>1</code> key -- this will show you the load on each individual CPU.
 
 
 <h1>Appendix A: Sample uses of run-perf.sh</h1>
