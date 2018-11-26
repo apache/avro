@@ -60,7 +60,6 @@ RUN apt-get -qq update && \
     perl \
     php5.6 \
     php5.6-gmp \
-    phpunit \
     python \
     python-setuptools \
     python3-setuptools \
@@ -95,6 +94,9 @@ RUN curl -L http://cpanmin.us | perl - --self-upgrade && \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
   Test::Exception Test::Pod
+
+# Install PHPUnit
+RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy
