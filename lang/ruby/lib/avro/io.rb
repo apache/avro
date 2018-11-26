@@ -175,7 +175,6 @@ module Avro
       # int and long values are written using variable-length,
       # zig-zag coding.
       def write_long(n)
-        foo = n
         n = (n << 1) ^ (n >> 63)
         while (n & ~0x7F) != 0
           @writer.write(((n & 0x7f) | 0x80).chr)
@@ -299,7 +298,7 @@ module Avro
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            block_size = decoder.read_long
+            _block_size = decoder.read_long
           end
           block_count.times do
             read_items << read_data(writers_schema.items,
@@ -318,7 +317,7 @@ module Avro
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            block_size = decoder.read_long
+            _block_size = decoder.read_long
           end
           block_count.times do
             key = decoder.read_string
@@ -483,7 +482,7 @@ module Avro
           if block_count < 0
             decoder.skip(decoder.read_long)
           else
-            block_count.times &blk
+            block_count.times(&blk)
           end
           block_count = decoder.read_long
         end

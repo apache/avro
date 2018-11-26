@@ -274,7 +274,7 @@ class TestSchema < Test::Unit::TestCase
     assert_equal enum_schema_hash, enum_schema_json.to_avro
   end
 
-def test_empty_record
+  def test_empty_record
     schema = Avro::Schema.parse('{"type":"record", "name":"Empty"}')
     assert_empty(schema.fields)
   end
