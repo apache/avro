@@ -231,6 +231,8 @@ module Avro
         if schema_type == :request || schema_type == 'request'
           @type_sym = schema_type.to_sym
           @namespace = namespace
+          @name = nil
+          @doc = nil
         else
           super(schema_type, name, namespace, names, doc)
         end
@@ -315,7 +317,7 @@ module Avro
 
       def initialize(name, space, symbols, names=nil, doc=nil)
         if symbols.uniq.length < symbols.length
-          fail_msg = 'Duplicate symbol: %s' % symbols
+          fail_msg = "Duplicate symbol: #{symbols}"
           raise Avro::SchemaParseError, fail_msg
         end
         super(:enum, name, space, names, doc)

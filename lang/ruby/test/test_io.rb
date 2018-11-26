@@ -181,8 +181,8 @@ EOS
 
   def test_enum_with_duplicate
     str = '{"type": "enum", "name": "Test","symbols" : ["AA", "AA"]}'
-    assert_raises(Avro::SchemaParseError) do
-      schema = Avro::Schema.parse str
+    assert_raises(Avro::SchemaParseError.new('Duplicate symbol: ["AA", "AA"]')) do
+      Avro::Schema.parse str
     end
   end
 
@@ -289,7 +289,7 @@ EOS
   end
 
   def test_skip_long
-    for value_to_skip, hex_encoding in BINARY_INT_ENCODINGS
+    for value_to_skip, _hex_encoding in BINARY_INT_ENCODINGS
       value_to_read = 6253
 
       # write some data in binary to string buffer
@@ -314,7 +314,7 @@ EOS
   end
 
   def test_skip_int
-    for value_to_skip, hex_encoding in BINARY_INT_ENCODINGS
+    for value_to_skip, _hex_encoding in BINARY_INT_ENCODINGS
       value_to_read = 6253
 
       writer = StringIO.new
@@ -364,7 +364,7 @@ EOS
       datum_to_write = 219
       for rs in promotable_schemas[(i + 1)..-1]
         readers_schema = Avro::Schema.parse(rs)
-        writer, enc, dw = write_datum(datum_to_write, writers_schema)
+        writer, _enc, _dw = write_datum(datum_to_write, writers_schema)
         datum_read = read_datum(writer, writers_schema, readers_schema)
         if datum_read != datum_to_write
           incorrect += 1
