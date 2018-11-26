@@ -20,9 +20,10 @@ set -e                # exit on error
 cd `dirname "$0"`     # connect to root
 
 VERSION=`cat share/VERSION.txt`
+DOCKER_XTRA_ARGS=""
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker|rat|githooks|docker-test}"
+  echo "Usage: $0 {test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
 }
 
@@ -33,8 +34,10 @@ fi
 
 set -x                # echo commands
 
-for target in "$@"
+while (( "$#" ))
 do
+  target="$1"
+  shift
   case "$target" in
 
     test)
@@ -200,6 +203,10 @@ do
       ;;
 
     docker)
+      if [[ $1 =~ ^--args ]]; then
+        DOCKER_XTRA_ARGS=$2
+        shift 2
+      fi
       docker build -t avro-build -f share/docker/Dockerfile .
       if [ "$(uname -s)" == "Linux" ]; then
         USER_NAME=${SUDO_USER:=$USER}
@@ -226,6 +233,7 @@ UserSpecificDocker
         -v ${HOME}/.m2:/home/${USER_NAME}/.m2 \
         -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
         -u ${USER_NAME} \
+        ${DOCKER_XTRA_ARGS} \
         avro-build-${USER_NAME} bash
       ;;
 
