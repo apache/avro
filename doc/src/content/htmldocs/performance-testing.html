@@ -81,9 +81,43 @@ As mentioned in the introduction, we tried a number of different mechanisms to r
 
 <p> <li> Modified the code slightly, for example: starting the timer of a cycle after, rather than before, encoders or decoders are constructed; cacheing encoders and decoders; and reusing record objects during read tests rather than construct new ones for each record being read.
 
+<p> <li> Using Docker's <code>--cpuset-cpus</code> flag to force the tests onto a single core.
+
 <p> <li> Using a dedicated EC2 instance (<code>c5d.2xlarge</code>).
 </ul>
 Of the above, the only change that made a significant difference was the last: in going from a laptop and desktop computer to a dedicated EC2 instances, we went from over 70 tests (out of 200) with a variance of 5% or more between runs to 35.  As mentioned in the introduction, we should switch to a framework like <a href="https://java-performance.info/jmh/">JMH</a> to attack this problem more fundamentally.
+
+<p> If you want to setup your own EC2 instance for testing, here's how we did it.  We launched a dedicated EC2 <code>c5d.2xlarge</code> instance from the AWS console, using the "Amazon Linux 64-bit HVM GP2" AMI.  We logged into this instance and ran the following commands to install Docker and Git (we did all our Avro build and testing inside the Docker image):
+<pre>
+  sudo yum update
+  sudo yum install -y git-all
+  git config --global user.name "Your Name"
+  git config --global user.email email-address-used@github.com
+  git config --global core.editor emacs
+  sudo install -y docker
+  sudo usermod -aG docker ec2-user ## Need to log back in for this to take effect
+  sudo service docker start
+</pre>
+At this point you can checkout Avro and launch your Docker container:
+<pre>
+  git clone https://github.com/apache/avro.git
+  cd avro
+  ./build.sh docker --args "--cpuset-cpus 2,6"
+</pre>
+The <code>--args</code> flag in the last command deserves some explanation.  In general, the <code>--args</code> allows you to pass additional arguments to the <code>docker&nbsp;run</code> command executed inside <code>build.sh</code>.  In this case, the <code>--cpuset-cpus</code> flag for <code>docker</code> tells docker to schedule the contianer exclusively on the listed (virtual) CPUs.  We identified vCPUs 2 and 6 using the <code>lscpu</code> Linux command:
+<pre>
+  [ec2-user@ip-0-0-0-0 avro]$ lscpu --extended
+  CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE
+  0   0    0      0    0:0:0:0       yes
+  1   0    0      1    1:1:1:0       yes
+  2   0    0      2    2:2:2:0       yes
+  3   0    0      3    3:3:3:0       yes
+  4   0    0      0    0:0:0:0       yes
+  5   0    0      1    1:1:1:0       yes
+  6   0    0      2    2:2:2:0       yes
+  7   0    0      3    3:3:3:0       yes
+</pre>
+Notice that (v)CPUs 2 and 6 are both on core 2: it's sufficient to schedule the container on the same core, vs a single vCPU.
 
 
 <h1>Appendix A: Sample uses of run-perf.sh</h1>
