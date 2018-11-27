@@ -158,6 +158,27 @@ EOS
     check_default(fixed_schema, '"a"', "a")
   end
 
+  def test_record_with_nil
+    schema = Avro::Schema.parse('{"type":"record", "name":"rec", "fields":[{"type":"int", "name":"i"}]}')
+    assert_raise(Avro::IO::AvroTypeError) do
+      write_datum(nil, schema)
+    end
+  end
+
+  def test_array_with_nil
+    schema = Avro::Schema.parse('{"type":"array", "items":"int"}')
+    assert_raise(Avro::IO::AvroTypeError) do
+      write_datum(nil, schema)
+    end
+  end
+
+  def test_map_with_nil
+    schema = Avro::Schema.parse('{"type":"map", "values":"long"}')
+    assert_raise(Avro::IO::AvroTypeError) do
+      write_datum(nil, schema)
+    end
+  end
+
   def test_enum_with_duplicate
     str = '{"type": "enum", "name": "Test","symbols" : ["AA", "AA"]}'
     assert_raises(Avro::SchemaParseError) do

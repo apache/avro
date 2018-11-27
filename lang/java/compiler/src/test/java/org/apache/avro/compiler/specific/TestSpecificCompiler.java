@@ -606,4 +606,74 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(uuidSchema));
   }
+
+  @Test
+  public void testPojoWithOptionalTurnedOffByDefault() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        assertFalse(line.contains("Optional"));
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+  }
+
+  @Test
+  public void testPojoWithOptionalCreatedWhenOptionTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setGettersReturnOptional(true);
+    //compiler.setCreateOptionalGetters(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+    assertEquals(9, optionalFound);
+  }
+  @Test
+  public void testPojoWithOptionalCreatedWhenOptionalForEverythingTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    //compiler.setGettersReturnOptional(true);
+    compiler.setCreateOptionalGetters(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+    assertEquals(17, optionalFound);
+  }
 }

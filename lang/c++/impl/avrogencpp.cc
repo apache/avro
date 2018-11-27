@@ -531,7 +531,7 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 		<< "    }\n"
 		<< "    static void decode(Decoder& d, " << fn << "& v) {\n"
 		<< "		size_t index = d.decodeEnum();\n"
-		<< "		if (index < " << first << " || index > " << last << ")\n"
+		<< "		if (index > " << last << ")\n"
 		<< "		{\n"
 		<< "			std::ostringstream error;\n"
 		<< "			error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"

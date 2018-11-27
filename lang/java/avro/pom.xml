@@ -106,8 +106,7 @@
                 <id>interop-generate-null-codec</id>
                 <phase>generate-resources</phase>
                 <configuration>
-                  <mainClass>org.apache.avro.RandomData</mainClass>
-                  <classpathScope>test</classpathScope>
+                  <mainClass>org.apache.avro.util.RandomData</mainClass>
                   <arguments>
                     <argument>../../../share/test/schemas/interop.avsc</argument>
                     <argument>../../../build/interop/data/java.avro</argument>
@@ -121,8 +120,7 @@
                 <id>interop-generate-deflate-codec</id>
                 <phase>generate-resources</phase>
                 <configuration>
-                  <mainClass>org.apache.avro.RandomData</mainClass>
-                  <classpathScope>test</classpathScope>
+                  <mainClass>org.apache.avro.util.RandomData</mainClass>
                   <arguments>
                     <argument>../../../share/test/schemas/interop.avsc</argument>
                     <argument>../../../build/interop/data/java_deflate.avro</argument>

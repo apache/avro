@@ -24,12 +24,12 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.RandomData;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.ByteBufferInputStream;
 import org.apache.avro.util.ByteBufferOutputStream;
+import org.apache.avro.util.RandomData;
 import org.apache.avro.util.Utf8;
 import org.junit.Assert;
 import org.junit.BeforeClass;
