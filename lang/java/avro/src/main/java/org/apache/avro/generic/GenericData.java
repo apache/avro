@@ -541,7 +541,7 @@ public class GenericData {
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet()) {
         buffer.append("\"");
-        buffer.append(String.valueOf(entry.getKey()));
+        writeEscapedString(String.valueOf(entry.getKey()), buffer);
         buffer.append("\": ");
         toString(entry.getValue(), buffer, seenObjects);
         if (++count < map.size())
