@@ -595,7 +595,7 @@ public abstract class Symbol {
     @Deprecated public FieldOrderAction(Schema.Field[] fields) {
       this.fields = fields;
       boolean noReorder = true;
-      for (int i = 0; i < fields.length; i++)
+      for (int i = 0; noReorder && i < fields.length; i++)
         noReorder &= (i == fields[i].pos());
       this.noReorder = noReorder;
     }
