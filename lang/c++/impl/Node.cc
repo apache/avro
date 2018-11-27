@@ -82,6 +82,18 @@ bool Name::operator == (const Name& n) const
     return ns_ == n.ns_ && simpleName_ == n.simpleName_;
 }
 
+void Node::addCustomField(const std::string& fieldName,
+                        const json::Entity& fieldValue) {
+    checkLock();
+    std::pair<std::map<std::string, json::Entity>::iterator, bool> iter_and_find;
+    iter_and_find = customFields_.insert(
+        std::pair<std::string, json::Entity>(fieldName, fieldValue));
+    if (!iter_and_find.second) {
+        throw Exception(fieldName + " already exists and cannot be added");
+    }
+}
+
+
 void Node::setLogicalType(LogicalType logicalType) {
     checkLock();
 

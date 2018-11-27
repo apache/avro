@@ -294,14 +294,18 @@ static GenericDatum makeGenericDatum(NodePtr n,
 static void addCustomFields(const NodePtr &node, const Object &m) {
     // Don't add known fields on primitive type and fixed type into custom
     // fields.
-    static const std::vector<std::string> kKnownFields =
+    static const std::string kKnownFieldsArr[] =
         {"name", "type", "default", "doc", "size", "logicalType",
          "values", "precision", "scale", "namespace"};
-    for (const auto &entry : m) {
-        if (std::find(kKnownFields.begin(), kKnownFields.end(), entry.first)
+    static const std::vector<std::string> kKnownFields(
+        kKnownFieldsArr, kKnownFieldsArr + sizeof(kKnownFieldsArr) / sizeof(std::string));
+    std::map<std::string, Entity>::const_iterator it = m.begin();
+    while (it != m.end()) {
+        if (std::find(kKnownFields.begin(), kKnownFields.end(), it->first)
             == kKnownFields.end()) {
-            node->addCustomField(entry.first, entry.second);
+            node->addCustomField(it->first, it->second);
         }
+        ++it;
     }
 }
 

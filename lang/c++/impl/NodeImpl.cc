@@ -93,10 +93,10 @@ std::ostream& operator <<(std::ostream &os, indent x)
 void printCustomFields(const CustomFields& customFields, int depth,
                        std::ostream &os) {
     std::map<std::string, json::Entity>::const_iterator iter =
-        customFields.fields().begin();
-    while (iter != customFields.fields().end()) {
+        customFields.begin();
+    while (iter != customFields.end()) {
       os << ",\n" << indent(depth);
-      customFields.printJson(os, iter->first);
+      os << "\"" << iter->first << "\": " << customFields.at(iter->first).toString();
       ++iter;
     }
 }
@@ -234,7 +234,7 @@ NodePrimitive::printJson(std::ostream &os, int depth) const
 {
     bool hasLogicalType = logicalType().type() != LogicalType::NONE;
 
-    if (hasLogicalType || !customFields().fields().empty()) {
+    if (hasLogicalType || !customFields().empty()) {
         os << "{\n" << indent(depth) << "\"type\": ";
     }
 
@@ -246,7 +246,7 @@ NodePrimitive::printJson(std::ostream &os, int depth) const
     }
     printCustomFields(customFields(), depth, os);
 
-    if (hasLogicalType || !customFields().fields().empty()) {
+    if (hasLogicalType || !customFields().empty()) {
         os << "\n}";
     }
     if (getDoc().size()) {
