@@ -156,6 +156,27 @@ public abstract class Symbol {
    * <tt>Sequence</tt> in the input are replaced by its production recursively.
    * Non-<tt>Sequence</tt> symbols, they internally have other symbols
    * those internal symbols also get flattened.
+   * When flattening is done, the only place there might be Sequence
+   * symbols is in the productions of a Repeater, Alternative, or the
+   * symToParse and symToSkip in a UnionAdjustAction or SkipAction.
+   *
+   * Why is this done?  We want our parsers to be fast.  If we left
+   * the grammars unflattened, then the parser would be constantly
+   * copying the contents of nested Sequence productions onto the
+   * parsing stack.  Instead, because of flattening, we have a long
+   * top-level production with no Sequences unless the Sequence is
+   * absolutely needed, e.g., in the case of a Repeater or an
+   * Alterantive.
+   *
+   * Well, this is not exactly true when recursion is involved.  Where
+   * there is a recursive record, that record will be "inlined" once,
+   * but any internal (ie, recursive) references to that record will
+   * be a Sequence for the record.  That Sequence will not further
+   * inline itself -- it will refer to itself as a Sequence.  The same
+   * is true for any records nested in this outer recursive record.
+   * Recursion is rare, and we want things to be fast in the typical
+   * case, which is why we do the flattening optimization.
+   *
    *
    * The algorithm does a few tricks to handle recursive symbol definitions.
    * In order to avoid infinite recursion with recursive symbols, we have a map
@@ -490,10 +511,20 @@ public abstract class Symbol {
   }
 
   public static class EnumAdjustAction extends IntCheckAction {
+    public final boolean noAdjustments;
     public final Object[] adjustments;
     @Deprecated public EnumAdjustAction(int rsymCount, Object[] adjustments) {
       super(rsymCount);
       this.adjustments = adjustments;
+      boolean noAdj = true;
+      if (adjustments != null) {
+        int count = Math.min(rsymCount, adjustments.length);
+        noAdj = (adjustments.length <= rsymCount);
+        for (int i = 0; noAdj && i < count; i++)
+          noAdj &= ((adjustments[i] instanceof Integer)
+                    && i == (Integer)adjustments[i]);
+      }
+      this.noAdjustments = noAdj;
     }
   }
 
@@ -559,9 +590,14 @@ public abstract class Symbol {
   }
 
   public static final class FieldOrderAction extends ImplicitAction {
+    public final boolean noReorder;
     public final Schema.Field[] fields;
     @Deprecated public FieldOrderAction(Schema.Field[] fields) {
       this.fields = fields;
+      boolean noReorder = true;
+      for (int i = 0; noReorder && i < fields.length; i++)
+        noReorder &= (i == fields[i].pos());
+      this.noReorder = noReorder;
     }
   }
 
@@ -644,6 +680,8 @@ public abstract class Symbol {
   public static final Symbol MAP_START = new Symbol.Terminal("map-start");
   public static final Symbol MAP_END = new Symbol.Terminal("map-end");
   public static final Symbol ITEM_END = new Symbol.Terminal("item-end");
+
+  public static final Symbol WRITER_UNION_ACTION = writerUnionAction();
 
   /* a pseudo terminal used by parsers */
   public static final Symbol FIELD_ACTION =
