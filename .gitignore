@@ -16,3 +16,4 @@ test-output
 /lang/java/compiler/nbactions.xml
 /lang/java/compiler/nb-configuration.xml
 /lang/java/compiler/nbproject/
+**/.vscode/**/*
