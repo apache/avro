@@ -1634,7 +1634,7 @@ private void JsonPair(ObjectNode o) :
 }
 {
   name=JsonString() <COLON> value=Json()
-    { o.put(name, value); } 
+    { o.set(name, value); }
 }
 
 private JsonNode JsonArray() :

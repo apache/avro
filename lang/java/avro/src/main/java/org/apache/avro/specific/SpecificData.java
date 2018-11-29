@@ -373,7 +373,7 @@ public class SpecificData extends GenericData {
 
           if (!fullName.equals(getClassName(schema)))
             // HACK: schema mismatches class. maven shade plugin? try replacing.
-            schema = Schema.parse
+            schema = new Schema.Parser().parse
               (schema.toString().replace(schema.getNamespace(),
                                          c.getPackage().getName()));
         } catch (NoSuchFieldException e) {
@@ -426,11 +426,11 @@ public class SpecificData extends GenericData {
   @Override
   protected int compare(Object o1, Object o2, Schema s, boolean eq) {
     switch (s.getType()) {
-    case ENUM:
-      if (o1 instanceof Enum)
-        return ((Enum)o1).ordinal() - ((Enum)o2).ordinal();
-    default:
-      return super.compare(o1, o2, s, eq);
+      case ENUM:
+        if (o1 instanceof Enum)
+          return ((Enum)o1).ordinal() - ((Enum)o2).ordinal();
+      default:
+        return super.compare(o1, o2, s, eq);
     }
   }
 
@@ -442,8 +442,8 @@ public class SpecificData extends GenericData {
     boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
     Object result;
     try {
-      Constructor meth = (Constructor)CTOR_CACHE.get(c);
-      result = meth.newInstance(useSchema ? new Object[]{s} : (Object[])null);
+      Constructor meth = CTOR_CACHE.get(c);
+      result = meth.newInstance(useSchema ? new Object[]{s} : null);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

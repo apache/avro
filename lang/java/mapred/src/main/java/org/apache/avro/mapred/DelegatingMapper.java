@@ -44,6 +44,7 @@ implements Mapper<AvroWrapper<IN>,NullWritable,KO,VO>
   boolean isMapOnly;
   AvroCollector<OUT> out;
 
+  @Override
   public void configure(JobConf conf) {
     this.conf = conf;
     this.isMapOnly = conf.getNumReduceTasks() == 0;

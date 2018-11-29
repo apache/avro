@@ -25,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 
-import org.apache.avro.SchemaCompatibility.*;
-import org.apache.avro.TestSchemas.ReaderWriter;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -508,10 +506,9 @@ public class TestSchemaCompatibility {
   }
 
   Deque<String> asDeqeue(String... args) {
-    Deque<String> dq = new ArrayDeque<>();
     List<String> x = Arrays.asList(args);
     Collections.reverse(x);
-    dq.addAll(x);
+    Deque<String> dq = new ArrayDeque<>(x);
     return dq;
   }
 }

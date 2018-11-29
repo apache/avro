@@ -47,6 +47,7 @@ class TetherOutputFormat
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   public RecordWriter<TetherData, NullWritable>
     getRecordWriter(FileSystem ignore, JobConf job,
                     String name, Progressable prog)
@@ -67,10 +68,12 @@ class TetherOutputFormat
     writer.create(schema, path.getFileSystem(job).create(path));
 
     return new RecordWriter<TetherData, NullWritable>() {
+      @Override
         public void write(TetherData datum, NullWritable ignore)
           throws IOException {
           writer.appendEncoded(datum.buffer());
         }
+      @Override
         public void close(Reporter reporter) throws IOException {
           writer.close();
         }

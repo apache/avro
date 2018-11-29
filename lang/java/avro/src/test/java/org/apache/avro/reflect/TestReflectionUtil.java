@@ -33,7 +33,7 @@ public class TestReflectionUtil {
   public void testUnsafeWhenNotExists() throws Exception {
     ClassLoader cl = new NoUnsafe();
     Class<?> testerClass = cl.loadClass(Tester.class.getName());
-    testerClass.getDeclaredMethod("checkUnsafe").invoke(testerClass.newInstance());
+    testerClass.getDeclaredMethod("checkUnsafe").invoke(testerClass.getDeclaredConstructor().newInstance());
   }
 
   public static final class Tester {

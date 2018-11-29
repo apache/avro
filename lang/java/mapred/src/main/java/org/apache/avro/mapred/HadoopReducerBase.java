@@ -43,10 +43,10 @@ abstract class HadoopReducerBase<K,V,OUT,KO,VO> extends MapReduceBase
 
   class ReduceIterable implements Iterable<V>, Iterator<V> {
     private Iterator<AvroValue<V>> values;
-    public boolean hasNext() { return values.hasNext(); }
-    public V next() { return values.next().datum(); }
-    public void remove() { throw new UnsupportedOperationException(); }
-    public Iterator<V> iterator() { return this; }
+    @Override public boolean hasNext() { return values.hasNext(); }
+    @Override public V next() { return values.next().datum(); }
+    @Override public void remove() { throw new UnsupportedOperationException(); }
+    @Override public Iterator<V> iterator() { return this; }
   }
   private ReduceIterable reduceIterable = new ReduceIterable();
 

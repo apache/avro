@@ -44,6 +44,7 @@ class TetherOutputService implements OutputProtocol {
     this.collector = collector;
   }
 
+  @Override
   public synchronized void configure(int inputPort) {
     LOG.info("got input port from child: inputport="+inputPort);
     this.inputPort = inputPort;
@@ -63,6 +64,7 @@ class TetherOutputService implements OutputProtocol {
     return inputPort;
   }
 
+  @Override
   public void output(ByteBuffer datum) {
     try {
       collector.collect(new TetherData(datum), NullWritable.get());
@@ -74,24 +76,28 @@ class TetherOutputService implements OutputProtocol {
     }
   }
 
+  @Override
   public void outputPartitioned(int partition, ByteBuffer datum) {
     TetherPartitioner.setNextPartition(partition);
     output(datum);
   }
 
+  @Override
   public void status(String message) { reporter.setStatus(message.toString());  }
 
-
+  @Override
   public void count(String group, String name, long amount) {
     reporter.getCounter(group.toString(), name.toString()).increment(amount);
   }
 
+  @Override
   public synchronized void fail(String message) {
     LOG.warn("Failing: "+message);
     error = message.toString();
     notify();
   }
 
+  @Override
   public synchronized void complete() {
     LOG.info("got task complete");
     complete = true;

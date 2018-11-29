@@ -146,6 +146,7 @@ public abstract class JsonProperties {
   private ConcurrentMap<String,JsonNode> props = new ConcurrentHashMap<String,JsonNode>() {
     private static final long serialVersionUID = 1L;
     private Queue<MapEntry<String, JsonNode>> propOrder = new ConcurrentLinkedQueue<MapEntry<String, JsonNode>>();
+    @Override
     public JsonNode putIfAbsent(String key,  JsonNode value) {
       JsonNode r = super.putIfAbsent(key, value);
       if (r == null) {
@@ -153,9 +154,11 @@ public abstract class JsonProperties {
       }
       return r;
     }
+    @Override
     public JsonNode put(String key,  JsonNode value) {
       return putIfAbsent(key, value);
     }
+    @Override
     public Set<Map.Entry<String, JsonNode>> entrySet() {
       return new AbstractSet<Map.Entry<String, JsonNode>>() {
         @Override

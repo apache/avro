@@ -156,7 +156,7 @@ public class TetherTool implements Tool {
       job.set(AvroJob.OUTPUT_SCHEMA, Schema.parse(outschema).toString());
       if (line.hasOption("outschemamap")) {
         job.set(AvroJob.MAP_OUTPUT_SCHEMA,
-            Schema.parse((File)line.getParsedOptionValue("outschemamap")).toString());
+          new Schema.Parser().parse((File)line.getParsedOptionValue("outschemamap")).toString());
       }
       if (line.hasOption("reduces")) {
         job.setNumReduceTasks((Integer)line.getParsedOptionValue("reduces"));

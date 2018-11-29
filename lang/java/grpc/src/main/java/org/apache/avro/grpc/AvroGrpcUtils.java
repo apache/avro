@@ -29,7 +29,7 @@ import io.grpc.KnownLength;
 
 /** Utility methods for using Avro IDL and serialization with gRPC. */
 public final class AvroGrpcUtils {
-  private static Logger log = Logger.getLogger(AvroGrpcUtils.class.getName());
+  private static final Logger LOG = Logger.getLogger(AvroGrpcUtils.class.getName());
 
   private AvroGrpcUtils() {
   }
@@ -79,7 +79,7 @@ public final class AvroGrpcUtils {
       }
       stream.close();
     } catch (Exception e) {
-      log.log(Level.WARNING, "failed to skip/close the input stream, may cause memory leak", e);
+      LOG.log(Level.WARNING, "failed to skip/close the input stream, may cause memory leak", e);
     }
   }
 }

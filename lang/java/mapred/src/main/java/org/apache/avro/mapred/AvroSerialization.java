@@ -41,12 +41,14 @@ import org.apache.avro.io.EncoderFactory;
 public class AvroSerialization<T> extends Configured
   implements Serialization<AvroWrapper<T>> {
 
+  @Override
   public boolean accept(Class<?> c) {
     return AvroWrapper.class.isAssignableFrom(c);
   }
 
   /** Returns the specified map output deserializer.  Defaults to the final
    * output deserializer if no map output schema was specified. */
+  @Override
   public Deserializer<AvroWrapper<T>> getDeserializer(Class<AvroWrapper<T>> c) {
     Configuration conf = getConf();
     boolean isKey = AvroKey.class.isAssignableFrom(c);
@@ -72,10 +74,12 @@ public class AvroSerialization<T> extends Configured
       this.isKey = isKey;
     }
 
+    @Override
     public void open(InputStream in) {
       this.decoder = FACTORY.directBinaryDecoder(in, decoder);
     }
 
+    @Override
     public AvroWrapper<T> deserialize(AvroWrapper<T> wrapper)
       throws IOException {
       T datum = reader.read(wrapper == null ? null : wrapper.datum(), decoder);
@@ -87,6 +91,7 @@ public class AvroSerialization<T> extends Configured
       return wrapper;
     }
 
+    @Override
     public void close() throws IOException {
       decoder.inputStream().close();
     }
@@ -94,6 +99,7 @@ public class AvroSerialization<T> extends Configured
   }
 
   /** Returns the specified output serializer. */
+  @Override
   public Serializer<AvroWrapper<T>> getSerializer(Class<AvroWrapper<T>> c) {
     // AvroWrapper used for final output, AvroKey or AvroValue for map output
     boolean isFinalOutput = c.equals(AvroWrapper.class);
@@ -117,11 +123,13 @@ public class AvroSerialization<T> extends Configured
       this.writer = writer;
     }
 
+    @Override
     public void open(OutputStream out) {
       this.out = out;
       this.encoder = new EncoderFactory().binaryEncoder(out, null);
     }
 
+    @Override
     public void serialize(AvroWrapper<T> wrapper) throws IOException {
       writer.write(wrapper.datum(), encoder);
       // would be a lot faster if the Serializer interface had a flush()
@@ -130,6 +138,7 @@ public class AvroSerialization<T> extends Configured
       encoder.flush();
     }
 
+    @Override
     public void close() throws IOException {
       out.close();
     }

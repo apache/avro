@@ -40,6 +40,7 @@ public class DatagramTransceiver extends Transceiver {
   private SocketAddress remote;
   private ByteBuffer buffer = ByteBuffer.allocate(MAX_SIZE);
 
+  @Override
   public String getRemoteName() { return remote.toString(); }
 
   public DatagramTransceiver(SocketAddress remote) throws IOException {
@@ -51,6 +52,7 @@ public class DatagramTransceiver extends Transceiver {
     this.channel = channel;
   }
 
+  @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
     buffer.clear();
     remote = channel.receive(buffer);
@@ -69,6 +71,7 @@ public class DatagramTransceiver extends Transceiver {
     }
   }
 
+  @Override
   public synchronized void writeBuffers(List<ByteBuffer> buffers)
     throws IOException {
     buffer.clear();

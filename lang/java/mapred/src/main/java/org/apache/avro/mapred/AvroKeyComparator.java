@@ -39,10 +39,12 @@ public class AvroKeyComparator<T>
       schema = Pair.getKeySchema(AvroJob.getMapOutputSchema(conf));
   }
 
+  @Override
   public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
     return BinaryData.compare(b1, s1, l1, b2, s2, l2, schema);
   }
 
+  @Override
   public int compare(AvroWrapper<T> x, AvroWrapper<T> y) {
     return ReflectData.get().compare(x.datum(), y.datum(), schema);
   }

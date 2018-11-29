@@ -46,6 +46,7 @@ class HadoopCombiner<K,V>
       this.collector = collector;
     }
 
+    @Override
     public void collect(Pair<K,V> datum) throws IOException {
       keyWrapper.datum(datum.key());              // split the Pair
       valueWrapper.datum(datum.value());

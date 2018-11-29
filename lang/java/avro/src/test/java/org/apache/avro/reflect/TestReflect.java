@@ -17,13 +17,13 @@
  */
 package org.apache.avro.reflect;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -437,7 +437,7 @@ public class TestReflect {
   @Test public void testR12() throws Exception {
     Schema s = ReflectData.get().getSchema(R12.class);
     assertEquals(Schema.Type.INT, s.getField("x").schema().getType());
-    assertEquals(Schema.parse
+    assertEquals(new Schema.Parser().parse
                  ("{\"type\":\"array\",\"items\":[\"null\",\"string\"]}"),
                  s.getField("strings").schema());
   }
@@ -511,7 +511,7 @@ public class TestReflect {
 
     // check reflective setField works for records
     if (s.getType().equals(Schema.Type.RECORD)) {
-      Object copy = object.getClass().newInstance();
+      Object copy = object.getClass().getDeclaredConstructor().newInstance();
       for (Field f : s.getFields()) {
         Object val = ReflectData.get().getField(object, f.name(), f.pos());
         ReflectData.get().setField(copy, f.name(), f.pos(), val);
@@ -563,15 +563,16 @@ public class TestReflect {
           +"{\"name\":\"b\",\"type\":\"int\"}]}");
   }
 
-  public static class RAvroStringableField { @Stringable int a; }
-  public void testAnnotationAvroStringableFields() throws Exception {
-    check(RAvroStringableField.class, "{\"type\":\"record\",\"name\":\"RAvroNameCollide\",\"namespace\":"
-          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":["
-          +"{\"name\":\"a\",\"type\":\"String\"}]}");
+  public static class RAvroStringableField {
+    @Stringable int a;
   }
 
-
-
+  @Test
+  public void testAnnotationAvroStringableFields() throws Exception {
+    check(RAvroStringableField.class, "{\"type\":\"record\",\"name\":\"RAvroStringableField\",\"namespace\":"
+          +"\"org.apache.avro.reflect.TestReflect\",\"fields\":["
+          +"{\"name\":\"a\",\"type\":\"string\"}]}");
+  }
 
   private void check(Object o, String schemaJson) {
     check(o.getClass(), schemaJson);
@@ -1132,7 +1133,7 @@ public class TestReflect {
 
   @Test
   public void testNullableByteArrayNotNullValue() throws Exception {
-    checkReadWrite(new NullableBytesTest("foo".getBytes()));
+    checkReadWrite(new NullableBytesTest("foo".getBytes(UTF_8)));
   }
 
   @Test

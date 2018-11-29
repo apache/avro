@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 public class TestUnionSelfReference {
   /** The logger for TestUnionSelfReference */
   @SuppressWarnings("unused")
-  private static final Logger LOGGER = LoggerFactory.getLogger(TestUnionSelfReference.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestUnionSelfReference.class);
   
   private static final String SIMPLE_BINARY_TREE =
 	  "{"
@@ -91,7 +91,7 @@ public class TestUnionSelfReference {
 	  +"    ]"
 	  +"  }";
   @Test
-  public void testSelfReferenceInUnion(){ 
+  public void testSelfReferenceInUnion() {
      Schema schema = new Schema.Parser().parse(SIMPLE_BINARY_TREE);
      Field leftField = schema.getField("left");
      assertEquals(JsonProperties.NULL_VALUE,leftField.defaultVal());
@@ -109,7 +109,7 @@ public class TestUnionSelfReference {
   }
   
   @Test
-  public void testSelfReferenceInThreeUnion(){ 
+  public void testSelfReferenceInThreeUnion() {
      Schema schema = new Schema.Parser().parse(THREE_TYPE_UNION);
      Field leftField = schema.getField("left");
      assertEquals(JsonProperties.NULL_VALUE,leftField.defaultVal());

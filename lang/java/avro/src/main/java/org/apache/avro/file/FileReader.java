@@ -20,6 +20,7 @@ package org.apache.avro.file;
 import java.io.IOException;
 import java.io.Closeable;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.avro.Schema;
 

@@ -77,7 +77,7 @@ public class TetherJob extends Configured {
           }
           job.set(TETHER_EXEC_ARGS, sb.toString());
         }
-        job.set(TETHER_EXEC_CACHED,  (new Boolean(cached)).toString());
+        job.set(TETHER_EXEC_CACHED,  (Boolean.valueOf(cached)).toString());
   }
 
   /**

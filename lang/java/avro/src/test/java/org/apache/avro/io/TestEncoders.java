@@ -95,11 +95,11 @@ public class TestEncoders {
 
   @Test
   public void testJsonEncoderInit() throws IOException {
-    Schema s = Schema.parse("\"int\"");
+    Schema s = new Schema.Parser().parse("\"int\"");
     OutputStream out = new ByteArrayOutputStream();
     factory.jsonEncoder(s, out);
     JsonEncoder enc = factory.jsonEncoder(s,
-        new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8));
+        new JsonFactory().createGenerator(out, JsonEncoding.UTF8));
     enc.configure(out);
   }
 
@@ -128,7 +128,7 @@ public class TestEncoders {
 
   @Test
   public void testValidatingEncoderInit() throws IOException {
-    Schema s = Schema.parse("\"int\"");
+    Schema s = new Schema.Parser().parse("\"int\"");
     OutputStream out = new ByteArrayOutputStream();
     Encoder e = factory.directBinaryEncoder(out, null);
     factory.validatingEncoder(s, e).configure(e);

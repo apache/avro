@@ -122,7 +122,7 @@ public class TestKeyWordCount {
   }
 
   public void checkOutputFormat() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyTest", "part-r-00000");
 
@@ -150,13 +150,13 @@ public class TestKeyWordCount {
   }
 
   public void checkInputFormat() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyTest");
 
     job.setMapperClass(Counter.class);
 
-    Schema subSchema = Schema.parse("{\"type\":\"record\"," +
+    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," +
                                     "\"name\":\"PairValue\","+
                                     "\"fields\": [ " +
                                     "{\"name\":\"value\", \"type\":\"long\"}" +

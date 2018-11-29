@@ -19,6 +19,8 @@ package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import junit.framework.Assert;
 import org.apache.avro.file.*;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -101,7 +102,7 @@ public class TestDataFile {
     testFSync(true);
   }
 
-  public void testGenericWrite() throws IOException {
+  private void testGenericWrite() throws IOException {
     DataFileWriter<Object> writer =
       new DataFileWriter<>(new GenericDatumWriter<>())
       .setSyncInterval(100);
@@ -127,7 +128,7 @@ public class TestDataFile {
           } catch (DataFileWriter.AppendWriteException e) {
             System.out.println("Ignoring: "+e);
           }
-          Assert.assertTrue("failed to throw when expected", threwProperly);
+          assertTrue("failed to throw when expected", threwProperly);
         }
       }
     } finally {
@@ -143,10 +144,10 @@ public class TestDataFile {
       doubleCloseEx = e;
     }
 
-    Assert.assertNull("Double close() threw an unexpected exception", doubleCloseEx);
+    assertNull("Double close() threw an unexpected exception", doubleCloseEx);
   }
 
-  public void testGenericRead() throws IOException {
+  private void testGenericRead() throws IOException {
     DataFileReader<Object> reader =
       new DataFileReader<>(makeFile(), new GenericDatumReader<>());
     try {
@@ -166,7 +167,7 @@ public class TestDataFile {
     }
   }
 
-  public void testSplits() throws IOException {
+  private void testSplits() throws IOException {
     File file = makeFile();
     DataFileReader<Object> reader =
       new DataFileReader<>(file, new GenericDatumReader<>());
@@ -193,7 +194,7 @@ public class TestDataFile {
     }
   }
 
-  public void testSyncDiscovery() throws IOException {
+  private void testSyncDiscovery() throws IOException {
     File file = makeFile();
     DataFileReader<Object> reader =
       new DataFileReader<>(file, new GenericDatumReader<>());
@@ -210,7 +211,7 @@ public class TestDataFile {
       }
       // confirm that the first point is the one reached by sync(0)
       reader.sync(0);
-      assertEquals((long)reader.previousSync(), (long)syncs.get(0));
+      assertEquals(reader.previousSync(), (long)syncs.get(0));
       // and confirm that all points are reachable
       for (Long sync : syncs) {
         reader.seek(sync);
@@ -221,7 +222,7 @@ public class TestDataFile {
     }
   }
 
-  public void testGenericAppend() throws IOException {
+  private void testGenericAppend() throws IOException {
     File file = makeFile();
     long start = file.length();
     DataFileWriter<Object> writer =
@@ -254,7 +255,7 @@ public class TestDataFile {
     }
   }
 
-  public void testReadWithHeader() throws IOException {
+  private void testReadWithHeader() throws IOException {
     File file = makeFile();
     DataFileReader<Object> reader =
       new DataFileReader<>(file, new GenericDatumReader<>());
@@ -317,7 +318,7 @@ public class TestDataFile {
     // accurately do is that each sync did not lead to a flush and that the
     // file was flushed at least as many times as we called flush. Generally
     // noticed that out.flushCount is almost always 24 though.
-    Assert.assertTrue(out.flushCount < currentCount &&
+    assertTrue(out.flushCount < currentCount &&
       out.flushCount >= flushCounter);
   }
 
@@ -349,7 +350,7 @@ public class TestDataFile {
         }
       }
       System.out.println("Total number of syncs: " + out.syncCount);
-      Assert.assertEquals(syncCounter, out.syncCount);
+      assertEquals(syncCounter, out.syncCount);
     } finally {
       writer.close();
     }
@@ -368,7 +369,7 @@ public class TestDataFile {
     File input = new File(args[0]);
     Schema projection = null;
     if (args.length > 1)
-      projection = Schema.parse(new File(args[1]));
+      projection = new Schema.Parser().parse(new File(args[1]));
     TestDataFile.readFile(input, new GenericDatumReader<>(null, projection));
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)
@@ -376,7 +377,7 @@ public class TestDataFile {
     System.out.println("Time: "+(System.currentTimeMillis()-start));
   }
 
-  private class TestingByteArrayOutputStream extends ByteArrayOutputStream
+  private static class TestingByteArrayOutputStream extends ByteArrayOutputStream
     implements Syncable {
     private int flushCount = 0;
     private int syncCount = 0;

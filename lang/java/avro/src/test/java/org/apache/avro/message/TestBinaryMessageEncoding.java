@@ -88,7 +88,7 @@ public class TestBinaryMessageEncoding {
     MessageEncoder<Record> v2Encoder = new BinaryMessageEncoder<>(GenericData.get(), SCHEMA_V2);
 
     for (Record record : records) {
-      if (record.getSchema() == SCHEMA_V1) {
+      if (record.getSchema().equals(SCHEMA_V1)) {
         buffers.add(v1Encoder.encode(record));
       } else {
         buffers.add(v2Encoder.encode(record));

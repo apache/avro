@@ -345,7 +345,7 @@ public class ReflectData extends SpecificData {
     return c;
   }
 
-  private static final Class BYTES_CLASS = new byte[0].getClass();
+  private static final Class BYTES_CLASS = byte[].class;
   private static final IdentityHashMap<Class, Class> ARRAY_CLASSES;
   static {
     ARRAY_CLASSES = new IdentityHashMap<>();
@@ -363,6 +363,7 @@ public class ReflectData extends SpecificData {
    * It returns false for non-string-maps because Avro writes out such maps
    * as an array of records. Even their JSON representation is an array.
    */
+  @Override
   protected boolean isMap(Object datum) {
     return (datum instanceof Map) && !isNonStringMap(datum);
   }
@@ -555,7 +556,7 @@ public class ReflectData extends SpecificData {
       }
       AvroSchema explicit = c.getAnnotation(AvroSchema.class);
       if (explicit != null)                                  // explicit schema
-        return Schema.parse(explicit.value());
+        return new Schema.Parser().parse(explicit.value());
       if (CharSequence.class.isAssignableFrom(c))            // String
         return Schema.create(Schema.Type.STRING);
       if (ByteBuffer.class.isAssignableFrom(c))              // bytes
@@ -736,14 +737,14 @@ public class ReflectData extends SpecificData {
     AvroEncode enc = field.getAnnotation(AvroEncode.class);
     if (enc != null)
       try {
-          return enc.using().newInstance().getSchema();
+          return enc.using().getDeclaredConstructor().newInstance().getSchema();
       } catch (Exception e) {
           throw new AvroRuntimeException("Could not create schema from custom serializer for " + field.getName());
       }
 
     AvroSchema explicit = field.getAnnotation(AvroSchema.class);
     if (explicit != null)                                   // explicit schema
-      return Schema.parse(explicit.value());
+      return new Schema.Parser().parse(explicit.value());
 
     Union union = field.getAnnotation(Union.class);
     if (union != null)
@@ -779,8 +780,7 @@ public class ReflectData extends SpecificData {
       }
 
     // reverse types, since they were defined in reference order
-    List<Schema> types = new ArrayList<>();
-    types.addAll(names.values());
+    List<Schema> types = new ArrayList<>(names.values());
     Collections.reverse(types);
     protocol.setTypes(types);
 
@@ -807,7 +807,7 @@ public class ReflectData extends SpecificData {
       for (int j = 0; j < annotations[i].length; j++) {
         Annotation annotation = annotations[i][j];
         if (annotation instanceof AvroSchema)     // explicit schema
-          paramSchema = Schema.parse(((AvroSchema)annotation).value());
+          paramSchema = new Schema.Parser().parse(((AvroSchema)annotation).value());
         else if (annotation instanceof Union)     // union
           paramSchema = getAnnotatedUnion(((Union)annotation), names);
         else if (annotation instanceof Nullable)  // nullable
@@ -830,7 +830,7 @@ public class ReflectData extends SpecificData {
 
     AvroSchema explicit = method.getAnnotation(AvroSchema.class);
     if (explicit != null)                         // explicit schema
-      response = Schema.parse(explicit.value());
+      response = new Schema.Parser().parse(explicit.value());
 
     List<Schema> errs = new ArrayList<>();
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw
@@ -838,7 +838,8 @@ public class ReflectData extends SpecificData {
       if (err != AvroRemoteException.class)
         errs.add(getSchema(err, names));
     Schema errors = Schema.createUnion(errs);
-    return protocol.createMessage(method.getName(), null /* doc */, request, response, errors);
+    return protocol.createMessage(method.getName(), null /* doc */,
+      new LinkedHashMap<String,String>() /* propMap */, request, response, errors);
   }
 
   private Schema getSchema(Type type, Map<String,Schema> names) {

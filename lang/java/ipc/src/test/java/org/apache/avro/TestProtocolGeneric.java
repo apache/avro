@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -193,6 +194,7 @@ public class TestProtocolGeneric {
     Protocol.Message message =
       protocol.createMessage("hello",
                              null /* doc */,
+                             new LinkedHashMap<String,String>(),
                              Schema.createRecord(fields),
                              Schema.create(Schema.Type.STRING),
                              Schema.createUnion(new ArrayList<>()));
@@ -230,7 +232,8 @@ public class TestProtocolGeneric {
     params.add(new Field("record", record, null, null));
 
     Protocol.Message message =
-      protocol.createMessage("echo", null, Schema.createRecord(params),
+      protocol.createMessage("echo", null, new LinkedHashMap<String,String>(),
+                             Schema.createRecord(params),
                              record,
                              Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("echo", message);

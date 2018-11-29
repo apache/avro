@@ -190,7 +190,7 @@ class Util {
       pathList.add(path);
     } else if (fs.isDirectory(path)) {
       for (FileStatus status : fs.listStatus(path)) {
-        if(!status.isDir()) {
+        if(!status.isDirectory()) {
           pathList.add(status.getPath());
         }
       }

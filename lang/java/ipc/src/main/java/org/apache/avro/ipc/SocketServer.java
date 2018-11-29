@@ -37,6 +37,7 @@ import org.apache.avro.ipc.generic.GenericResponder;
  * protocol and is not intended for production services.
  * @deprecated use {@link SaslSocketServer} instead.
  */
+@Deprecated
 public class SocketServer extends Thread implements Server {
   private static final Logger LOG = LoggerFactory.getLogger(SocketServer.class);
 
@@ -58,8 +59,10 @@ public class SocketServer extends Thread implements Server {
     setDaemon(true);
   }
 
+  @Override
   public int getPort() { return channel.socket().getLocalPort(); }
 
+  @Override
   public void run() {
     LOG.info("starting "+channel.socket().getInetAddress());
     try {
@@ -82,6 +85,7 @@ public class SocketServer extends Thread implements Server {
     }
   }
 
+  @Override
   public void close() {
     this.interrupt();
     group.interrupt();
@@ -108,6 +112,7 @@ public class SocketServer extends Thread implements Server {
       thread.start();
     }
 
+    @Override
     public void run() {
       try {
         try {
@@ -132,6 +137,7 @@ public class SocketServer extends Thread implements Server {
   public static void main(String[] arg) throws Exception {
     Responder responder =
       new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {
+        @Override
         public Object respond(Message message, Object request)
           throws Exception {
           throw new IOException("no messages!");

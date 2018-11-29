@@ -332,7 +332,7 @@ public class BinaryDecoder extends Decoder {
   protected void doSkipBytes(long length) throws IOException {
     int remaining = limit - pos;
     if (length <= remaining) {
-      pos += length;
+      pos = (int) (pos + length);
     } else {
       limit = pos = 0;
       length -= remaining;
@@ -631,7 +631,6 @@ public class BinaryDecoder extends Decoder {
       decoder.minPos = 0;
       decoder.limit = 0;
       this.ba = new BufferAccessor(decoder);
-      return;
     }
 
     protected void detach() {
@@ -744,7 +743,7 @@ public class BinaryDecoder extends Decoder {
       int pos = ba.getPos();
       int remaining = lim - pos;
       if (remaining > n) {
-        pos += n;
+        pos = (int) (pos + n);
         ba.setPos(pos);
         return n;
       } else {
@@ -942,9 +941,9 @@ public class BinaryDecoder extends Decoder {
       // the buffer is shared, so this should return 0
       max = ba.getLim();
       position = ba.getPos();
-      long remaining = max - position;
+      long remaining = (long) max - position;
       if (remaining >= length) {
-        position += length;
+        position = (int) (position + length);
         ba.setPos(position);
         return length;
       } else {

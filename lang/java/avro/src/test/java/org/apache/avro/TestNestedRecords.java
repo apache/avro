@@ -27,6 +27,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -63,7 +64,7 @@ public class TestNestedRecords {
             "}";
 
 
-    final ByteArrayInputStream inputStream = new ByteArrayInputStream(inputAsExpected.getBytes());
+    final ByteArrayInputStream inputStream = new ByteArrayInputStream(inputAsExpected.getBytes(UTF_8));
 
     final JsonDecoder decoder = DecoderFactory.get().jsonDecoder(parent, inputStream);
     final DatumReader<Object> reader = new GenericDatumReader<Object>(parent);

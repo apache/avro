@@ -43,7 +43,7 @@ public class TestCompare {
 
   @Test
   public void testNull() throws Exception {
-    Schema schema = Schema.parse("\"null\"");
+    Schema schema = new Schema.Parser().parse("\"null\"");
     byte[] b = render(null, schema, new GenericDatumWriter<>());
     assertEquals(0, BinaryData.compare(b, 0, b, 0, schema));
   }
@@ -101,7 +101,7 @@ public class TestCompare {
   @Test
   public void testArray() throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
-    Schema schema = Schema.parse(json);
+    Schema schema = new Schema.Parser().parse(json);
     GenericArray<Long> a1 = new GenericData.Array<>(1, schema);
     a1.add(1L);
     GenericArray<Long> a2 = new GenericData.Array<>(1, schema);
@@ -117,7 +117,7 @@ public class TestCompare {
       +"{\"name\":\"g\",\"type\":\"int\",\"order\":\"descending\"},"
       +"{\"name\":\"h\",\"type\":\"int\"}]}";
     String recordJson = "{\"type\":\"record\", \"name\":\"Test\","+fields;
-    Schema schema = Schema.parse(recordJson);
+    Schema schema = new Schema.Parser().parse(recordJson);
     GenericData.Record r1 = new GenericData.Record(schema);
     r1.put("f", 1);
     r1.put("g", 13);
@@ -133,7 +133,7 @@ public class TestCompare {
     check(recordJson, r1, r2);
 
     String record2Json = "{\"type\":\"record\", \"name\":\"Test2\","+fields;
-    Schema schema2 = Schema.parse(record2Json);
+    Schema schema2 = new Schema.Parser().parse(record2Json);
     GenericData.Record r3= new GenericData.Record(schema2);
     r3.put("f", 1);
     r3.put("g", 13);
@@ -145,7 +145,7 @@ public class TestCompare {
   public void testEnum() throws Exception {
     String json =
       "{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}";
-    Schema schema = Schema.parse(json);
+    Schema schema = new Schema.Parser().parse(json);
     check(json,
           new GenericData.EnumSymbol(schema, "A"),
           new GenericData.EnumSymbol(schema, "B"));
@@ -154,7 +154,7 @@ public class TestCompare {
   @Test
   public void testFixed() throws Exception {
     String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
-    Schema schema = Schema.parse(json);
+    Schema schema = new Schema.Parser().parse(json);
     check(json,
           new GenericData.Fixed(schema, new byte[]{(byte)'a'}),
           new GenericData.Fixed(schema, new byte[]{(byte)'b'}));
@@ -194,7 +194,7 @@ public class TestCompare {
   private static <T> void check(String schemaJson, T o1, T o2,
                             boolean comparable)
     throws Exception {
-    check(Schema.parse(schemaJson), o1, o2, comparable,
+    check(new Schema.Parser().parse(schemaJson), o1, o2, comparable,
           new GenericDatumWriter<>(), GenericData.get());
   }
 

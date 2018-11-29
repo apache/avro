@@ -60,7 +60,7 @@ public class TestWordCount {
   @Rule
   public TemporaryFolder tmpFolder = new TemporaryFolder();
   public static final Schema STATS_SCHEMA =
-      Schema.parse("{\"name\":\"stats\",\"type\":\"record\","
+    new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
           + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"},"
           + "{\"name\":\"name\",\"type\":\"string\"}]}");
 
@@ -105,8 +105,8 @@ public class TestWordCount {
     @Override
     protected void map(AvroKey<TextStats> record, NullWritable ignore, Context context)
         throws IOException, InterruptedException {
-      mCount.set(record.datum().count);
-      mText.set(record.datum().name.toString());
+      mCount.set(record.datum().getCount());
+      mText.set(record.datum().getName().toString());
       context.write(mText, mCount);
     }
   }
@@ -181,11 +181,11 @@ public class TestWordCount {
     protected void reduce(Text line, Iterable<IntWritable> counts, Context context)
         throws IOException, InterruptedException {
       TextStats record = new TextStats();
-      record.count = 0;
+      record.setCount(0);
       for (IntWritable count : counts) {
-        record.count += count.get();
+        record.setCount(record.getCount() + count.get());
       }
-      record.name = line.toString();
+      record.setName(line.toString());
       mStats.datum(record);
       context.write(mStats, NullWritable.get());
     }
@@ -234,7 +234,7 @@ public class TestWordCount {
 
   @Test
   public void testAvroGenericOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
@@ -274,7 +274,7 @@ public class TestWordCount {
 
   @Test
   public void testAvroSpecificOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
@@ -303,7 +303,7 @@ public class TestWordCount {
         new SpecificDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
-      counts.put(record.name.toString(), record.count);
+      counts.put(record.getName().toString(), record.getCount());
     }
     reader.close();
 
@@ -314,7 +314,7 @@ public class TestWordCount {
 
   @Test
   public void testAvroReflectOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
@@ -354,7 +354,7 @@ public class TestWordCount {
 
   @Test
   public void testAvroInput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
@@ -384,7 +384,7 @@ public class TestWordCount {
         new SpecificDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
-      counts.put(record.name.toString(), record.count);
+      counts.put(record.getName().toString(), record.getCount());
     }
     reader.close();
 
@@ -395,7 +395,7 @@ public class TestWordCount {
 
   @Test
   public void testReflectInput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
             .toURI().toString()));
@@ -435,7 +435,7 @@ public class TestWordCount {
 
   @Test
   public void testAvroMapOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
@@ -465,7 +465,7 @@ public class TestWordCount {
         new SpecificDatumReader<>());
     Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
-      counts.put(record.name.toString(), record.count);
+      counts.put(record.getName().toString(), record.getCount());
     }
     reader.close();
 
@@ -479,7 +479,7 @@ public class TestWordCount {
    */
   @Test
   public void testAvroUsingTextFileOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")

@@ -71,7 +71,7 @@ public class AvroJob {
   /** Return a job's map input schema. */
   public static Schema getInputSchema(Configuration job) {
     String schemaString = job.get(INPUT_SCHEMA);
-    return schemaString != null ? Schema.parse(schemaString) : null;
+    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
   }
 
   /** Configure a job's map output schema.  The map output schema defaults to
@@ -84,7 +84,7 @@ public class AvroJob {
 
   /** Return a job's map output key schema. */
   public static Schema getMapOutputSchema(Configuration job) {
-    return Schema.parse(job.get(MAP_OUTPUT_SCHEMA, job.get(OUTPUT_SCHEMA)));
+    return new Schema.Parser().parse(job.get(MAP_OUTPUT_SCHEMA, job.get(OUTPUT_SCHEMA)));
   }
 
   /** Configure a job's output schema.  Unless this is a map-only job, this
@@ -140,7 +140,7 @@ public class AvroJob {
 
   /** Return a job's output key schema. */
   public static Schema getOutputSchema(Configuration job) {
-    return Schema.parse(job.get(OUTPUT_SCHEMA));
+    return new Schema.Parser().parse(job.get(OUTPUT_SCHEMA));
   }
 
   private static void configureAvroInput(JobConf job) {

@@ -83,10 +83,12 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
       _fieldName = fieldName;
     }
 
+    @Override
     public short getThriftFieldId() {
       return _thriftId;
     }
 
+    @Override
     public String getFieldName() {
       return _fieldName;
     }
@@ -123,6 +125,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     this.x = other.x;
   }
 
+  @Override
   public Nested deepCopy() {
     return new Nested(this);
   }
@@ -155,6 +158,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __X_ISSET_ID, value);
   }
 
+  @Override
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case X:
@@ -168,6 +172,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     }
   }
 
+  @Override
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case X:
@@ -178,6 +183,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
   }
 
   /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+  @Override
   public boolean isSet(_Fields field) {
     if (field == null) {
       throw new IllegalArgumentException();
@@ -241,14 +247,17 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     return 0;
   }
 
+  @Override
   public _Fields fieldForId(int fieldId) {
     return _Fields.findByThriftId(fieldId);
   }
 
+  @Override
   public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
     schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
   }
 
+  @Override
   public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
     schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
   }
@@ -289,6 +298,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
   }
 
   private static class NestedStandardSchemeFactory implements SchemeFactory {
+    @Override
     public NestedStandardScheme getScheme() {
       return new NestedStandardScheme();
     }
@@ -296,6 +306,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
 
   private static class NestedStandardScheme extends StandardScheme<Nested> {
 
+    @Override
     public void read(org.apache.thrift.protocol.TProtocol iprot, Nested struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
@@ -323,6 +334,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
       struct.validate();
     }
 
+    @Override
     public void write(org.apache.thrift.protocol.TProtocol oprot, Nested struct) throws org.apache.thrift.TException {
       struct.validate();
 

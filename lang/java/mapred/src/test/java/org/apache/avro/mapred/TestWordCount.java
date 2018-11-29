@@ -18,7 +18,8 @@
 
 package org.apache.avro.mapred;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.fs.FileStatus;
@@ -132,19 +133,19 @@ public class TestWordCount {
     long sumOfCounts = 0;
     long numOfCounts = 0;
     while (recordReader.next(inputPair, ignore)) {
-      Assert.assertEquals(inputPair.datum().get(0), defaultRank);
+      assertEquals(inputPair.datum().get(0), defaultRank);
       sumOfCounts += (Long) inputPair.datum().get(1);
       numOfCounts++;
     }
 
-    Assert.assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
+    assertEquals(numOfCounts, WordCountUtil.COUNTS.size());
 
     long actualSumOfCounts = 0;
     for (Long count : WordCountUtil.COUNTS.values()) {
       actualSumOfCounts += count;
     }
 
-    Assert.assertEquals(sumOfCounts, actualSumOfCounts);
+    assertEquals(sumOfCounts, actualSumOfCounts);
   }
 
 }

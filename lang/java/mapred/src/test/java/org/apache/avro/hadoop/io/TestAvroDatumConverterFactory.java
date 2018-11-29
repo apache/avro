@@ -47,7 +47,7 @@ public class TestAvroDatumConverterFactory {
 
   @Before
   public void setup() throws IOException {
-    mJob = new Job();
+    mJob = Job.getInstance();
     mFactory = new AvroDatumConverterFactory(mJob.getConfiguration());
   }
 

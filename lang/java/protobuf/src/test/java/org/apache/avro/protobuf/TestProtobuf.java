@@ -78,7 +78,7 @@ public class TestProtobuf {
 
     Object o = new ProtobufDatumReader<>(Foo.class).read
       (null,
-       DecoderFactory.get().createBinaryDecoder
+       DecoderFactory.get().binaryDecoder
        (new ByteArrayInputStream(bao.toByteArray()), null));
 
     assertEquals(foo, o);

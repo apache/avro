@@ -72,7 +72,7 @@ public class TestShredder {
     +"]}";
 
   @Test public void testSimpleRecord() throws Exception {
-    check(Schema.parse(SIMPLE_RECORD),
+    check(new Schema.Parser().parse(SIMPLE_RECORD),
           new ColumnMetaData("x", ValueType.INT),
           new ColumnMetaData("y", ValueType.STRING));
   }
@@ -84,8 +84,8 @@ public class TestShredder {
       +"{\"name\":\"z\",\"type\":\"int\","
       +"\"default\":1,\""+RandomData.USE_DEFAULT+"\":true}"
       +"]}";
-    checkWrite(Schema.parse(SIMPLE_RECORD));
-    checkRead(Schema.parse(s));
+    checkWrite(new Schema.Parser().parse(SIMPLE_RECORD));
+    checkRead(new Schema.Parser().parse(s));
   }
 
   @Test public void testNestedRecord() throws Exception {
@@ -95,7 +95,7 @@ public class TestShredder {
       +"{\"name\":\"R\",\"type\":"+SIMPLE_RECORD+"},"
       +"{\"name\":\"y\",\"type\":\"string\"}"
       +"]}";
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           new ColumnMetaData("x", ValueType.INT),
           new ColumnMetaData("R#x", ValueType.INT),
           new ColumnMetaData("R#y", ValueType.STRING),
@@ -108,7 +108,7 @@ public class TestShredder {
       +"{\"name\":\"R1\",\"type\":"+SIMPLE_RECORD+"},"
       +"{\"name\":\"R2\",\"type\":\"R\"}"
       +"]}";
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
       new ColumnMetaData("R1#x", ValueType.INT),
       new ColumnMetaData("R1#y", ValueType.STRING),
       new ColumnMetaData("R2#x", ValueType.INT),
@@ -117,7 +117,7 @@ public class TestShredder {
 
   @Test public void testSimpleArray() throws Exception {
     String s = "{\"type\":\"array\",\"items\":\"long\"}";
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           new ColumnMetaData("[]", ValueType.LONG).isArray(true));
   }
 
@@ -126,7 +126,7 @@ public class TestShredder {
 
   @Test public void testArray() throws Exception {
     ColumnMetaData p = new ColumnMetaData("[]", ValueType.NULL).isArray(true);
-    check(Schema.parse(RECORD_ARRAY),
+    check(new Schema.Parser().parse(RECORD_ARRAY),
           p,
           new ColumnMetaData("[]#x", ValueType.INT).setParent(p),
           new ColumnMetaData("[]#y", ValueType.STRING).setParent(p));
@@ -134,14 +134,14 @@ public class TestShredder {
 
   @Test public void testSimpleUnion() throws Exception {
     String s = "[\"int\",\"string\"]";
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           new ColumnMetaData("int", ValueType.INT).isArray(true),
           new ColumnMetaData("string", ValueType.STRING).isArray(true));
   }
 
   @Test public void testSimpleOptional() throws Exception {
     String s = "[\"null\",\"string\"]";
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           new ColumnMetaData("string", ValueType.STRING).isArray(true));
   }
 
@@ -149,7 +149,7 @@ public class TestShredder {
 
   @Test public void testUnion() throws Exception {
     ColumnMetaData p = new ColumnMetaData("R", ValueType.NULL).isArray(true);
-    check(Schema.parse(UNION),
+    check(new Schema.Parser().parse(UNION),
           new ColumnMetaData("int", ValueType.INT).isArray(true),
           p,
           new ColumnMetaData("R#x", ValueType.INT).setParent(p),
@@ -164,7 +164,7 @@ public class TestShredder {
       +"{\"name\":\"y\",\"type\":\"string\"}"
       +"]}";
     ColumnMetaData p = new ColumnMetaData("A[]", ValueType.NULL).isArray(true);
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           new ColumnMetaData("x", ValueType.INT),
           p,
           new ColumnMetaData("A[]#x", ValueType.INT).setParent(p),
@@ -180,7 +180,7 @@ public class TestShredder {
       +"{\"name\":\"y\",\"type\":\"string\"}"
       +"]}";
     ColumnMetaData p = new ColumnMetaData("u/R", ValueType.NULL).isArray(true);
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           new ColumnMetaData("x", ValueType.INT),
           new ColumnMetaData("u/int", ValueType.INT).isArray(true),
           p,
@@ -198,7 +198,7 @@ public class TestShredder {
     ColumnMetaData r = new ColumnMetaData("a[]/R", ValueType.NULL)
       .setParent(p)
       .isArray(true);
-      check(Schema.parse(s),
+      check(new Schema.Parser().parse(s),
           p,
           new ColumnMetaData("a[]/int", ValueType.INT)
             .setParent(p)
@@ -217,7 +217,7 @@ public class TestShredder {
     ColumnMetaData r = new ColumnMetaData("a/array[]", ValueType.NULL)
       .setParent(q)
       .isArray(true);
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           new ColumnMetaData("a/int", ValueType.INT).isArray(true),
           q,
           r,
@@ -228,7 +228,7 @@ public class TestShredder {
   @Test public void testSimpleMap() throws Exception {
     String s = "{\"type\":\"map\",\"values\":\"long\"}";
     ColumnMetaData p = new ColumnMetaData(">", ValueType.NULL).isArray(true);
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           p,
           new ColumnMetaData(">key", ValueType.STRING).setParent(p),
           new ColumnMetaData(">value", ValueType.LONG).setParent(p));
@@ -237,7 +237,7 @@ public class TestShredder {
   @Test public void testMap() throws Exception {
     String s = "{\"type\":\"map\",\"values\":"+SIMPLE_RECORD+"}";
     ColumnMetaData p = new ColumnMetaData(">", ValueType.NULL).isArray(true);
-    check(Schema.parse(s),
+    check(new Schema.Parser().parse(s),
           p,
           new ColumnMetaData(">key", ValueType.STRING).setParent(p),
           new ColumnMetaData(">value#x", ValueType.INT).setParent(p),

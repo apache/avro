@@ -183,7 +183,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
       return (float) in.readLong();
     } else {
       assert actual == Symbol.FLOAT;
-      return (float) in.readFloat();
+      return in.readFloat();
     }
   }
 

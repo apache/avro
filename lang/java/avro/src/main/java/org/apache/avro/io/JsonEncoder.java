@@ -81,10 +81,10 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     if (null == out)
       throw new NullPointerException("OutputStream cannot be null");
     JsonGenerator g
-      = new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
+      = new JsonFactory().createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       DefaultPrettyPrinter pp = new DefaultPrettyPrinter() {
-        //@Override
+        @Override
         public void writeRootValueSeparator(JsonGenerator jg)
             throws IOException
         {

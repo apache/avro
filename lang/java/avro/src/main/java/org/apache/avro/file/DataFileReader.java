@@ -174,7 +174,6 @@ public class DataFileReader<D>
     // if no match or EOF set start to the end position
       blockStart = sin.tell();
     //System.out.println("block start location after EOF: " + blockStart );
-      return;
   }
 
   @Override

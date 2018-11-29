@@ -58,25 +58,29 @@ public class AvroUtf8InputFormat
       this.lineRecordReader = new LineRecordReader(job, split);
     }
 
+    @Override
     public void close() throws IOException {
       lineRecordReader.close();
     }
 
+    @Override
     public long getPos() throws IOException {
       return lineRecordReader.getPos();
     }
 
+    @Override
     public float getProgress() throws IOException {
       return lineRecordReader.getProgress();
     }
 
+    @Override
     public boolean next(AvroWrapper<Utf8> key, NullWritable value)
       throws IOException {
       boolean success = lineRecordReader.next(currentKeyHolder,
           currentValueHolder);
       if (success) {
         key.datum(new Utf8(currentValueHolder.getBytes())
-            .setLength(currentValueHolder.getLength()));
+            .setByteLength(currentValueHolder.getLength()));
       } else {
         key.datum(null);
       }
@@ -97,10 +101,12 @@ public class AvroUtf8InputFormat
 
   private CompressionCodecFactory compressionCodecs = null;
 
+  @Override
   public void configure(JobConf conf) {
     compressionCodecs = new CompressionCodecFactory(conf);
   }
 
+  @Override
   protected boolean isSplitable(FileSystem fs, Path file) {
     return compressionCodecs.getCodec(file) == null;
   }

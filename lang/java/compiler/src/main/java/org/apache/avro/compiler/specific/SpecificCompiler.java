@@ -21,9 +21,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,6 +56,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
 
 /**
@@ -295,9 +297,9 @@ public class SpecificCompiler {
 
   public void addCustomConversion(Class<?> conversionClass) {
     try {
-      final Conversion<?> conversion = (Conversion<?>)conversionClass.newInstance();
+      final Conversion<?> conversion = (Conversion<?>) conversionClass.getDeclaredConstructor().newInstance();
       specificData.addLogicalTypeConversion(conversion);
-    }  catch (IllegalAccessException | InstantiationException e) {
+    }  catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
       throw new RuntimeException("Failed to instantiate conversion class " + conversionClass, e);
     }
   }
@@ -406,7 +408,7 @@ public class SpecificCompiler {
           fos = new FileOutputStream(f);
           fw = new OutputStreamWriter(fos, outputCharacterEncoding);
         } else {
-          fw = new FileWriter(f);
+          fw = Files.newBufferedWriter(f.toPath(), UTF_8);
         }
         fw.write(FILE_HEADER);
         fw.write(contents);

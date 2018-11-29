@@ -123,7 +123,7 @@ public class TestKeyValueInput {
     File inputFile = createInputFile();
 
     // Configure the job input.
-    Job job = new Job();
+    Job job = Job.getInstance();
     FileInputFormat.setInputPaths(job, new Path(inputFile.getAbsolutePath()));
     job.setInputFormatClass(AvroKeyValueInputFormat.class);
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.INT));
@@ -196,7 +196,7 @@ public class TestKeyValueInput {
     File inputFile = createInputFile();
 
     // Configure the job input.
-    Job job = new Job();
+    Job job = Job.getInstance();
     FileInputFormat.setInputPaths(job, new Path(inputFile.getAbsolutePath()));
     job.setInputFormatClass(AvroKeyValueInputFormat.class);
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.INT));

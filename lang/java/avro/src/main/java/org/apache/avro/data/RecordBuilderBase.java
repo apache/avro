@@ -48,7 +48,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
   protected RecordBuilderBase(Schema schema, GenericData data) {
     this.schema = schema;
     this.data = data;
-    fields = (Field[]) schema.getFields().toArray(EMPTY_FIELDS);
+    fields = schema.getFields().toArray(EMPTY_FIELDS);
     fieldSetFlags = new boolean[fields.length];
   }
 
@@ -60,7 +60,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
   protected RecordBuilderBase(RecordBuilderBase<T> other, GenericData data) {
     this.schema = other.schema;
     this.data = data;
-    fields = (Field[]) schema.getFields().toArray(EMPTY_FIELDS);
+    fields = schema.getFields().toArray(EMPTY_FIELDS);
     fieldSetFlags = new boolean[other.fieldSetFlags.length];
     System.arraycopy(
         other.fieldSetFlags, 0, fieldSetFlags, 0, fieldSetFlags.length);

@@ -326,7 +326,7 @@ public class ProtobufData extends GenericData {
       }
       String json = toString(value);
       try {
-        return MAPPER.readTree(FACTORY.createJsonParser(json));
+        return MAPPER.readTree(FACTORY.createParser(json));
       } catch (IOException e) {
         throw new RuntimeException(e);
       }

@@ -56,7 +56,7 @@ public class TestAvroSerialization {
   public void testGetSerializerForKey() throws IOException {
     // Set the writer schema in the job configuration.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputKeySchema(job, writerSchema);
 
     // Get a serializer from the configuration.
@@ -75,7 +75,7 @@ public class TestAvroSerialization {
   public void testGetSerializerForValue() throws IOException {
     // Set the writer schema in the job configuration.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputValueSchema(job, writerSchema);
 
     // Get a serializer from the configuration.
@@ -94,7 +94,7 @@ public class TestAvroSerialization {
   public void testGetDeserializerForKey() throws IOException {
     // Set the reader schema in the job configuration.
     Schema readerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputKeySchema(job, readerSchema);
 
     // Get a deserializer from the configuration.
@@ -113,7 +113,7 @@ public class TestAvroSerialization {
   public void testGetDeserializerForValue() throws IOException {
     // Set the reader schema in the job configuration.
     Schema readerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputValueSchema(job, readerSchema);
 
     // Get a deserializer from the configuration.
@@ -141,7 +141,7 @@ public class TestAvroSerialization {
   }
 
   private <T, O> O roundTrip(Schema schema, T data, Class<? extends GenericData> modelClass) throws IOException {
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputKeySchema(job, schema);
     if (modelClass != null)
       AvroJob.setDataModelClass(job, modelClass);

@@ -982,7 +982,7 @@ public class GenericData {
       return e1.hasNext() ? 1 : (e2.hasNext() ? -1 : 0);
     case MAP:
       if (equals)
-        return ((Map)o1).equals(o2) ? 0 : 1;
+        return o1.equals(o2) ? 0 : 1;
       throw new AvroRuntimeException("Can't compare maps!");
     case UNION:
       int i1 = resolveUnion(s, o1);
@@ -1115,7 +1115,7 @@ public class GenericData {
         Map<CharSequence, Object> mapCopy =
           new HashMap<>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
-          mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
+          mapCopy.put(deepCopy(STRINGS, entry.getKey()),
               deepCopy(schema.getValueType(), entry.getValue()));
         }
         return mapCopy;

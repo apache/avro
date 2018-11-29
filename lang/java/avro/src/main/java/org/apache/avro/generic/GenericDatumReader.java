@@ -548,7 +548,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       }
       break;
     case UNION:
-      skip(schema.getTypes().get((int)in.readIndex()), in);
+      skip(schema.getTypes().get(in.readIndex()), in);
       break;
     case FIXED:
       in.skipFixed(schema.getFixedSize());

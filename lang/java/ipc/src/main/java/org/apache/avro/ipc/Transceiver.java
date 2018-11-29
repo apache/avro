@@ -104,6 +104,6 @@ public abstract class Transceiver implements Closeable {
     throw new IllegalStateException("Not connected.");
   }
 
-  public void close() throws IOException {}
+  @Override public void close() throws IOException {}
 }
 

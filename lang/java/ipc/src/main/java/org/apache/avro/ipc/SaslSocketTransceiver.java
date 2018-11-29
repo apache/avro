@@ -377,8 +377,11 @@ public class SaslSocketTransceiver extends Transceiver {
   }
 
   private static class AnonymousClient implements SaslClient {
+    @Override
     public String getMechanismName() { return "ANONYMOUS"; }
+    @Override
     public boolean hasInitialResponse() { return true; }
+    @Override
     public byte[] evaluateChallenge(byte[] challenge) throws SaslException {
       try {
         return System.getProperty("user.name").getBytes("UTF-8");
@@ -386,14 +389,14 @@ public class SaslSocketTransceiver extends Transceiver {
         throw new SaslException(e.toString());
       }
     }
-    public boolean isComplete() { return true; }
-    public byte[] unwrap(byte[] incoming, int offset, int len) {
+    @Override public boolean isComplete() { return true; }
+    @Override public byte[] unwrap(byte[] incoming, int offset, int len) {
       throw new UnsupportedOperationException();
     }
-    public byte[] wrap(byte[] outgoing, int offset, int len) {
+    @Override public byte[] wrap(byte[] outgoing, int offset, int len) {
       throw new UnsupportedOperationException();
     }
-    public Object getNegotiatedProperty(String propName) { return null; }
-    public void dispose() {}
+    @Override public Object getNegotiatedProperty(String propName) { return null; }
+    @Override public void dispose() {}
   }
 }

@@ -21,6 +21,8 @@ import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchema
 import static org.apache.avro.TestSchemas.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
@@ -40,11 +42,7 @@ public class TestSchemaCompatibilityFixedSizeMismatch {
         { FIXED_8_BYTES, FIXED_4_BYTES, "expected: 4, found: 8", "/size" },
         { A_DINT_B_DFIXED_8_BYTES_RECORD1, A_DINT_B_DFIXED_4_BYTES_RECORD1, "expected: 4, found: 8", "/fields/1/type/size" },
         { A_DINT_B_DFIXED_4_BYTES_RECORD1, A_DINT_B_DFIXED_8_BYTES_RECORD1, "expected: 8, found: 4", "/fields/1/type/size" }, };
-    List<Object[]> list = new ArrayList<>(fields.length);
-    for (Object[] schemas : fields) {
-      list.add(schemas);
-    }
-    return list;
+    return Arrays.asList(fields);
   }
 
   @Parameter(0)

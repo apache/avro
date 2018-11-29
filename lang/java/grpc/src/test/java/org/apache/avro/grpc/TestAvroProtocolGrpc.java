@@ -82,7 +82,7 @@ public class TestAvroProtocolGrpc {
         .build();
     server.start();
     int port = server.getPort();
-    channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext(true).build();
+    channel = ManagedChannelBuilder.forAddress("localhost", port).usePlaintext().build();
     stub = AvroGrpcClient.create(channel, TestService.class);
     callbackStub = AvroGrpcClient.create(channel, TestService.Callback.class);
   }
@@ -210,7 +210,7 @@ public class TestAvroProtocolGrpc {
   @Test
   public void testConcurrentChannels() throws Exception {
     ManagedChannel otherChannel = ManagedChannelBuilder.forAddress("localhost", server.getPort())
-        .usePlaintext(true).build();
+        .usePlaintext().build();
     TestService otherStub = AvroGrpcClient.create(otherChannel, TestService.class);
     Future<Integer>[] adds = new Future[5];
     Future<Integer>[] otherAdds = new Future[5];

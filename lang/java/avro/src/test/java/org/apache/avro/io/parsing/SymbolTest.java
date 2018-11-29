@@ -15,13 +15,12 @@
  */
 package org.apache.avro.io.parsing;
 
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import junit.framework.Assert;
 import org.apache.avro.Schema;
 import org.junit.Test;
 
@@ -63,7 +62,7 @@ public class SymbolTest {
     if (symb.production != null) {
       for (Symbol s : symb.production) {
         if (s == null) {
-          Assert.fail("invalid parsing tree should not contain nulls");
+          fail("invalid parsing tree should not contain nulls");
         }
         if (s.kind != Symbol.Kind.ROOT) {
           validateNonNull(s, seen);

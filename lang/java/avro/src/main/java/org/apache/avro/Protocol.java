@@ -116,6 +116,7 @@ public class Protocol extends JsonProperties {
     /** Returns true if this is a one-way message, with no response or errors.*/
     public boolean isOneWay() { return true; }
 
+    @Override
     public String toString() {
       try {
         StringWriter writer = new StringWriter();
@@ -143,6 +144,7 @@ public class Protocol extends JsonProperties {
       gen.writeBooleanField("one-way", true);
     }
 
+    @Override
     public boolean equals(Object o) {
       if (o == this) return true;
       if (!(o instanceof Message)) return false;
@@ -152,6 +154,7 @@ public class Protocol extends JsonProperties {
         && propsEqual(that);
     }
 
+    @Override
     public int hashCode() {
       return name.hashCode() + request.hashCode() + propsHashCode();
     }
@@ -328,6 +331,7 @@ public class Protocol extends JsonProperties {
     return new TwoWayMessage(name, doc, propMap, request, response, errors);
   }
 
+  @Override
   public boolean equals(Object o) {
     if (o == this) return true;
     if (!(o instanceof Protocol)) return false;
@@ -339,6 +343,7 @@ public class Protocol extends JsonProperties {
       && this.propsEqual(that);
   }
 
+  @Override
   public int hashCode() {
     return name.hashCode() + namespace.hashCode()
       + types.hashCode() + messages.hashCode() + propsHashCode();

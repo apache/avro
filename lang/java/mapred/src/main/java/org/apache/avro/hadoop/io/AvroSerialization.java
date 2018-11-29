@@ -194,7 +194,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getKeyWriterSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_WRITER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
@@ -205,7 +205,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getKeyReaderSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_READER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
@@ -216,7 +216,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getValueWriterSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_WRITER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
@@ -227,7 +227,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
    */
   public static Schema getValueReaderSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_READER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**

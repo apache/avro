@@ -171,7 +171,7 @@ public class TestBinaryDecoder {
       +"{\"name\":\"arrayField\", \"type\": " +
           "{\"type\":\"array\", \"items\":\"boolean\"}},"
       +"{\"name\":\"longField\", \"type\":\"long\"}]}";
-    schema = Schema.parse(jsonSchema);
+    schema = new Schema.Parser().parse(jsonSchema);
     GenericDatumWriter<Object> writer = new GenericDatumWriter<>();
     writer.setSchema(schema);
     ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);

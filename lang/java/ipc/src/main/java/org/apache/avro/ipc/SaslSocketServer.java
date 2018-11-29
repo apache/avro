@@ -47,6 +47,7 @@ public class SaslSocketServer extends SocketServer {
     throws IOException {
     this(responder, addr,
          new SaslServerFactory() {
+           @Override
            public SaslServer getServer() { return new AnonymousServer(); }
          });
   }
@@ -58,6 +59,7 @@ public class SaslSocketServer extends SocketServer {
                           final CallbackHandler cbh) throws IOException {
     this(responder, addr,
          new SaslServerFactory() {
+           @Override
            public SaslServer getServer() throws SaslException {
              return Sasl.createSaslServer(mechanism, protocol, serverName,
                                           props, cbh);
@@ -78,8 +80,8 @@ public class SaslSocketServer extends SocketServer {
 
   private static class AnonymousServer implements SaslServer {
     private String user;
-    public String getMechanismName() { return "ANONYMOUS"; }
-    public byte[] evaluateResponse(byte[] response) throws SaslException {
+    @Override public String getMechanismName() { return "ANONYMOUS"; }
+    @Override public byte[] evaluateResponse(byte[] response) throws SaslException {
       try {
         this.user = new String(response, "UTF-8");
       } catch (IOException e) {
@@ -87,16 +89,16 @@ public class SaslSocketServer extends SocketServer {
       }
       return null;
     }
-    public boolean isComplete() { return user != null; }
-    public String getAuthorizationID() { return user; }
-    public byte[] unwrap(byte[] incoming, int offset, int len) {
+    @Override public boolean isComplete() { return user != null; }
+    @Override public String getAuthorizationID() { return user; }
+    @Override public byte[] unwrap(byte[] incoming, int offset, int len) {
       throw new UnsupportedOperationException();
     }
-    public byte[] wrap(byte[] outgoing, int offset, int len) {
+    @Override public byte[] wrap(byte[] outgoing, int offset, int len) {
       throw new UnsupportedOperationException();
     }
-    public Object getNegotiatedProperty(String propName) { return null; }
-    public void dispose() {}
+    @Override public Object getNegotiatedProperty(String propName) { return null; }
+    @Override public void dispose() {}
   }
 
 }

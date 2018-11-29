@@ -45,6 +45,7 @@ class HadoopReducer<K,V,OUT>
       this.out = out;
     }
 
+    @Override
     public void collect(OUT datum) throws IOException {
       wrapper.datum(datum);
       out.collect(wrapper, NullWritable.get());

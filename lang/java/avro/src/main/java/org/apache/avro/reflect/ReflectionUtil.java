@@ -68,7 +68,7 @@ class ReflectionUtil {
 
   private static <T> T load(String name, Class<T> type) throws Exception {
     return ReflectionUtil.class.getClassLoader().loadClass(name)
-        .asSubclass(type).newInstance();
+        .asSubclass(type).getDeclaredConstructor().newInstance();
   }
 
   public static FieldAccess getFieldAccess() {

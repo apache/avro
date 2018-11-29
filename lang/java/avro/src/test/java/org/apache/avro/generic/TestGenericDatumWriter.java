@@ -43,7 +43,7 @@ public class TestGenericDatumWriter {
     String json = "{\"type\": \"record\", \"name\": \"r\", \"fields\": ["
       + "{ \"name\": \"f1\", \"type\": \"long\" }"
       + "]}";
-    Schema s = Schema.parse(json);
+    Schema s = new Schema.Parser().parse(json);
     GenericRecord r = new GenericData.Record(s);
     r.put("f1", 100L);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
@@ -61,7 +61,7 @@ public class TestGenericDatumWriter {
   @Test
   public void testArrayConcurrentModification() throws Exception {
     String json = "{\"type\": \"array\", \"items\": \"int\" }";
-    Schema s = Schema.parse(json);
+    Schema s = new Schema.Parser().parse(json);
     final GenericArray<Integer> a = new GenericData.Array<>(1, s);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     final GenericDatumWriter<GenericArray<Integer>> w =
@@ -99,7 +99,7 @@ public class TestGenericDatumWriter {
   @Test
   public void testMapConcurrentModification() throws Exception {
     String json = "{\"type\": \"map\", \"values\": \"int\" }";
-    Schema s = Schema.parse(json);
+    Schema s = new Schema.Parser().parse(json);
     final Map<String, Integer> m = new HashMap<>();
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
     final GenericDatumWriter<Map<String, Integer>> w =
@@ -214,7 +214,7 @@ public class TestGenericDatumWriter {
           "}" +
         "}" +
       "]}";
-    Schema schema = Schema.parse(json);
+    Schema schema = new Schema.Parser().parse(json);
     GenericRecord record = new GenericData.Record(schema);
     record.put("field", "ONE");
 
@@ -237,7 +237,7 @@ public class TestGenericDatumWriter {
           "}" +
         "}" +
       "]}";
-    Schema schema = Schema.parse(json);
+    Schema schema = new Schema.Parser().parse(json);
     GenericRecord record = new GenericData.Record(schema);
     record.put("field", AnEnum.ONE);
 

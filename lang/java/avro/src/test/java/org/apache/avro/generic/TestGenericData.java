@@ -118,7 +118,7 @@ public class TestGenericData {
     GenericArray<CharSequence> l2 =
       new GenericData.Array<>(1, s.getFields().get(0).schema());
     String foo = "foo";
-    l0.add(new StringBuffer(foo));
+    l0.add(new StringBuilder(foo));
     l1.add(foo);
     l2.add(new Utf8(foo));
     r0.put(0, l0);
@@ -190,7 +190,7 @@ public class TestGenericData {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
     GenericArray<Integer> array = new GenericData.Array<>(1, schema);
     array.add(99);
-    assertEquals(new Integer(99), array.get(0));
+    assertEquals(Integer.valueOf(99), array.get(0));
     List<Integer> list = new ArrayList<>();
     list.add(99);
     assertEquals(array, list);
@@ -218,19 +218,19 @@ public class TestGenericData {
       array.add(i);
     assertEquals(5, array.size());
     array.add(0, 6);
-    assertEquals(new Integer(6), array.get(0));
+    assertEquals(Integer.valueOf(6), array.get(0));
     assertEquals(6, array.size());
-    assertEquals(new Integer(0), array.get(1));
-    assertEquals(new Integer(4), array.get(5));
+    assertEquals(Integer.valueOf(0), array.get(1));
+    assertEquals(Integer.valueOf(4), array.get(5));
     array.add(6, 7);
-    assertEquals(new Integer(7), array.get(6));
+    assertEquals(Integer.valueOf(7), array.get(6));
     assertEquals(7, array.size());
-    assertEquals(new Integer(6), array.get(0));
-    assertEquals(new Integer(4), array.get(5));
+    assertEquals(Integer.valueOf(6), array.get(0));
+    assertEquals(Integer.valueOf(4), array.get(5));
     array.add(1, 8);
-    assertEquals(new Integer(8), array.get(1));
-    assertEquals(new Integer(0), array.get(2));
-    assertEquals(new Integer(6), array.get(0));
+    assertEquals(Integer.valueOf(8), array.get(1));
+    assertEquals(Integer.valueOf(0), array.get(2));
+    assertEquals(Integer.valueOf(6), array.get(0));
     assertEquals(8, array.size());
     try {
       array.get(9);
@@ -246,14 +246,14 @@ public class TestGenericData {
     for(int i=0; i<10; ++i)
       array.add(i);
     assertEquals(10, array.size());
-    assertEquals(new Integer(0), array.get(0));
-    assertEquals(new Integer(9), array.get(9));
+    assertEquals(Integer.valueOf(0), array.get(0));
+    assertEquals(Integer.valueOf(9), array.get(9));
 
     array.remove(0);
     assertEquals(9, array.size());
-    assertEquals(new Integer(1), array.get(0));
-    assertEquals(new Integer(2), array.get(1));
-    assertEquals(new Integer(9), array.get(8));
+    assertEquals(Integer.valueOf(1), array.get(0));
+    assertEquals(Integer.valueOf(2), array.get(1));
+    assertEquals(Integer.valueOf(9), array.get(8));
 
     // Test boundary errors.
     try {
@@ -270,13 +270,13 @@ public class TestGenericData {
     } catch (IndexOutOfBoundsException e){}
 
     // Test that we can still remove for properly sized arrays, and the rval
-    assertEquals(new Integer(9), array.remove(8));
+    assertEquals(Integer.valueOf(9), array.remove(8));
     assertEquals(8, array.size());
 
 
     // Test insertion after remove
     array.add(88);
-    assertEquals(new Integer(88), array.get(8));
+    assertEquals(Integer.valueOf(88), array.get(8));
   }
   @Test
   public void testArraySet()
@@ -287,12 +287,12 @@ public class TestGenericData {
     for(int i=0; i<10; ++i)
       array.add(i);
     assertEquals(10, array.size());
-    assertEquals(new Integer(0), array.get(0));
-    assertEquals(new Integer(5), array.get(5));
+    assertEquals(Integer.valueOf(0), array.get(0));
+    assertEquals(Integer.valueOf(5), array.get(5));
 
-    assertEquals(new Integer(5), array.set(5, 55));
+    assertEquals(Integer.valueOf(5), array.set(5, 55));
     assertEquals(10, array.size());
-    assertEquals(new Integer(55), array.get(5));
+    assertEquals(Integer.valueOf(55), array.get(5));
   }
 
   @Test
@@ -309,7 +309,7 @@ public class TestGenericData {
 
     String json = r.toString();
     JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(json);
+    JsonParser parser = factory.createParser(json);
     ObjectMapper mapper = new ObjectMapper();
 
     // will throw exception if string is not parsable json
@@ -354,7 +354,7 @@ public class TestGenericData {
 
     String json = r.toString();
     JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(json);
+    JsonParser parser = factory.createParser(json);
     ObjectMapper mapper = new ObjectMapper();
 
     // will throw exception if string is not parsable json
@@ -443,8 +443,9 @@ public class TestGenericData {
   public void testEnumCompare() {
     Schema s = Schema.createEnum("Kind",null,null,Arrays.asList("Z","Y","X"));
     GenericEnumSymbol z = new GenericData.EnumSymbol(s, "Z");
+    GenericEnumSymbol z2 = new GenericData.EnumSymbol(s, "Z");
+    assertEquals(0, z.compareTo(z2));
     GenericEnumSymbol y = new GenericData.EnumSymbol(s, "Y");
-    assertEquals(0, z.compareTo(z));
     assertTrue(y.compareTo(z) > 0);
     assertTrue(z.compareTo(y) < 0);
   }

@@ -36,6 +36,7 @@ import java.net.URL;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 
 public class TestProtocolHttp extends TestProtocolSpecific {
 
@@ -74,7 +75,7 @@ public class TestProtocolHttp extends TestProtocolSpecific {
     // a version of the Simple protocol that doesn't declare "ack" one-way
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
     Protocol.Message message =
-      protocol.createMessage("ack", null,
+      protocol.createMessage("ack", null, new LinkedHashMap<String,String>(),
                              Schema.createRecord(new ArrayList<>()),
                              Schema.create(Schema.Type.NULL),
                              Schema.createUnion(new ArrayList<>()));

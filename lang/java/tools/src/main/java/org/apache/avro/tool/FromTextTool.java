@@ -77,7 +77,7 @@ public class FromTextTool implements Tool {
     DataFileWriter<ByteBuffer> writer =
         new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(codecFactory);
-    writer.create(Schema.parse(TEXT_FILE_SCHEMA), outStream);
+    writer.create(new Schema.Parser().parse(TEXT_FILE_SCHEMA), outStream);
 
     ByteBuffer line = ByteBuffer.allocate(128);
     boolean returnSeen = false;

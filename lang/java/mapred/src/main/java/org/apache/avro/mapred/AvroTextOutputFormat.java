@@ -74,11 +74,12 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       this.keyValueSeparator = keyValueSeparator;
     }
 
+    @Override
     public void write(K key, V value) throws IOException {
       boolean nullKey = key == null || key instanceof NullWritable;
       boolean nullValue = value == null || value instanceof NullWritable;
       if (nullKey && nullValue) {
-        return;
+        // NO-OP
       } else if (!nullKey && nullValue) {
         writer.append(toByteBuffer(key));
       } else if (nullKey && !nullValue) {
@@ -88,6 +89,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       }
     }
 
+    @Override
     public void close(Reporter reporter) throws IOException {
       writer.close();
     }

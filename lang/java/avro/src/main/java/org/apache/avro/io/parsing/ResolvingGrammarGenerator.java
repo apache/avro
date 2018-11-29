@@ -612,18 +612,23 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * from those put in by {@link ValidatingGrammarGenerator#resolving resolving()}.
    */
    static class LitS2 extends ValidatingGrammarGenerator.LitS {
-     public Schema expected;
-     public LitS2(Schema actual, Schema expected) {
+      public Schema expected;
+
+      public LitS2(Schema actual, Schema expected) {
        super(actual);
        this.expected = expected;
-     }
-     public boolean equals(Object o) {
+      }
+
+      @Override
+      public boolean equals(Object o) {
        if (! (o instanceof LitS2)) return false;
        LitS2 other = (LitS2) o;
        return actual == other.actual && expected == other.expected;
-     }
-     public int hashCode() {
-       return super.hashCode() + expected.hashCode();
-     }
-   }
+      }
+
+      @Override
+      public int hashCode() {
+         return super.hashCode() + expected.hashCode();
+      }
+  }
 }

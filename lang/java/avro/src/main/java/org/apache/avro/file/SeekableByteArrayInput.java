@@ -23,20 +23,23 @@ import java.io.IOException;
 /** A {@link SeekableInput} backed with data in a byte array. */
 public class SeekableByteArrayInput extends ByteArrayInputStream implements SeekableInput {
 
-    public SeekableByteArrayInput(byte[] data) {
-        super(data);
-    }
+  public SeekableByteArrayInput(byte[] data) {
+      super(data);
+  }
 
-    public long length() throws IOException {
-        return this.count;
-    }
+  @Override
+  public long length() throws IOException {
+    return this.count;
+  }
 
-    public void seek(long p) throws IOException {
-        this.reset();
-        this.skip(p);
-    }
+  @Override
+  public void seek(long p) throws IOException {
+    this.reset();
+    this.skip(p);
+  }
 
-    public long tell() throws IOException {
-        return this.pos;
-    }
+  @Override
+  public long tell() throws IOException {
+    return this.pos;
+  }
 }

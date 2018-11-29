@@ -124,11 +124,13 @@ public class ValidatingGrammarGenerator {
      * Two LitS are equal if and only if their underlying schema is
      * the same (not merely equal).
      */
+    @Override
     public boolean equals(Object o) {
       if (! (o instanceof LitS)) return false;
-      return actual == ((LitS)o).actual;
+      return actual.equals(((LitS)o).actual);
     }
 
+    @Override
     public int hashCode() {
       return actual.hashCode();
     }

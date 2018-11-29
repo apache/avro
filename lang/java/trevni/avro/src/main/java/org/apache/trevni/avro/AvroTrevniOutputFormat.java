@@ -77,7 +77,7 @@ public class AvroTrevniOutputFormat <T>
     final FileSystem fs = dir.getFileSystem(job);
     if (!fs.mkdirs(dir))
       throw new IOException("Failed to create directory: " + dir);
-    final long blockSize = fs.getDefaultBlockSize();
+    final long blockSize = fs.getDefaultBlockSize(dir);
 
     return new RecordWriter<AvroWrapper<T>, NullWritable>() {
       private int part = 0;
@@ -95,6 +95,7 @@ public class AvroTrevniOutputFormat <T>
         writer = new AvroColumnWriter<>(schema, meta, ReflectData.get());
       }
 
+      @Override
       public void write(AvroWrapper<T> wrapper, NullWritable ignore)
         throws IOException {
         writer.write(wrapper.datum());

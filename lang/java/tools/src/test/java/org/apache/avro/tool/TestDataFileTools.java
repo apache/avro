@@ -19,8 +19,8 @@ package org.apache.avro.tool;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,7 +29,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.StringBufferInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -200,7 +199,7 @@ public class TestDataFileTools {
         args.add("-");
         args.addAll(extra);
         new DataFileWriteTool().run(
-                new StringBufferInputStream(jsonData),
+                new ByteArrayInputStream(jsonData.getBytes("UTF-8")),
                 new PrintStream(out), // stdout
                 null, // stderr
                 args);
@@ -230,7 +229,7 @@ public class TestDataFileTools {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(baos);
     new DataFileWriteTool().run(
-        new StringBufferInputStream("{"),
+        new ByteArrayInputStream("{".getBytes("UTF-8")),
         new PrintStream(out), // stdout
         null, // stderr
         Arrays.asList("-schema", "{ \"type\":\"record\", \"fields\":" +
@@ -271,7 +270,7 @@ public class TestDataFileTools {
     try(FileOutputStream fout = new FileOutputStream(outFile)) {
       try(PrintStream out = new PrintStream(fout)) {
         new DataFileWriteTool().run(
-                new StringBufferInputStream(json),
+                new ByteArrayInputStream(json.getBytes("UTF-8")),
                 new PrintStream(out), // stdout
                 null, // stderr
                 Arrays.asList("-schema", schema, "-"));

@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Utility to collect data written to an {@link OutputStream} in {@link
@@ -61,7 +61,7 @@ public class ByteBufferOutputStream extends OutputStream {
   }
 
   public void reset() {
-    buffers = new LinkedList<>();
+    buffers = new ArrayList<>();
     buffers.add(ByteBuffer.allocate(BUFFER_SIZE));
   }
 

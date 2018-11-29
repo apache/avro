@@ -18,7 +18,6 @@
 
 package org.apache.avro.mapred;
 
-import junit.framework.Assert;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,10 +29,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestAvroInputFormat {
 
@@ -69,16 +69,16 @@ public class TestAvroInputFormat {
 
     AvroInputFormat inputFormat = new AvroInputFormat();
     FileStatus[] statuses = inputFormat.listStatus(conf);
-    Assert.assertEquals(1, statuses.length);
-    Assert.assertEquals("somefile.avro", statuses[0].getPath().getName());
+    assertEquals(1, statuses.length);
+    assertEquals("somefile.avro", statuses[0].getPath().getName());
 
     conf.setBoolean(AvroInputFormat.IGNORE_FILES_WITHOUT_EXTENSION_KEY, false);
     statuses = inputFormat.listStatus(conf);
-    Assert.assertEquals(2, statuses.length);
+    assertEquals(2, statuses.length);
     Set<String> names = new HashSet<>();
     names.add(statuses[0].getPath().getName());
     names.add(statuses[1].getPath().getName());
-    Assert.assertTrue(names.contains("somefile.avro"));
-    Assert.assertTrue(names.contains("someotherfile.txt"));
+    assertTrue(names.contains("somefile.avro"));
+    assertTrue(names.contains("someotherfile.txt"));
   }
 }

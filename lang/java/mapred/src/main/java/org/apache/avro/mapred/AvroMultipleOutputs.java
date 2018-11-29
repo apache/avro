@@ -435,11 +435,13 @@ public class AvroMultipleOutputs {
     }
 
     @SuppressWarnings({"unchecked"})
+    @Override
     public void write(Object key, Object value) throws IOException {
       reporter.incrCounter(COUNTERS_GROUP, counterName, 1);
       writer.write(key, value);
     }
 
+    @Override
     public void close(Reporter reporter) throws IOException {
       writer.close(reporter);
     }
@@ -454,7 +456,7 @@ public class AvroMultipleOutputs {
    * @param datum       output data
    * @throws IOException thrown if output collector could not be created
    */
-  public void collect(String namedOutput, Reporter reporter,Object datum) throws IOException{
+  public void collect(String namedOutput, Reporter reporter, Object datum) throws IOException{
     getCollector(namedOutput,reporter).collect(datum);
   }
 
@@ -468,7 +470,7 @@ public class AvroMultipleOutputs {
    * @param schema      schema to use for this output
    * @throws IOException thrown if output collector could not be created
   */
-  public void collect(String namedOutput, Reporter reporter, Schema schema,Object datum) throws IOException{
+  public void collect(String namedOutput, Reporter reporter, Schema schema, Object datum) throws IOException{
     getCollector(namedOutput,reporter,schema).collect(datum);
   }
 
@@ -483,7 +485,7 @@ public class AvroMultipleOutputs {
    * @param schema      schema to use for this output
    * @throws IOException thrown if output collector could not be created
   */
-  public void collect(String namedOutput,Reporter reporter,Schema schema,Object datum,String baseOutputPath) throws IOException{
+  public void collect(String namedOutput, Reporter reporter, Schema schema, Object datum, String baseOutputPath) throws IOException{
     getCollector(namedOutput,null,reporter,baseOutputPath,schema).collect(datum);
   }
 
@@ -570,6 +572,7 @@ public class AvroMultipleOutputs {
     return new AvroCollector() {
 
       @SuppressWarnings({"unchecked"})
+      @Override
       public void collect(Object key) throws IOException{
        AvroWrapper wrapper = new AvroWrapper(key);
        writer.write(wrapper, NullWritable.get());
@@ -602,6 +605,7 @@ public class AvroMultipleOutputs {
    public static final String CONFIG_NAMED_OUTPUT = "mo.config.namedOutput";
 
    @SuppressWarnings({"unchecked", "deprecation"})
+   @Override
    public RecordWriter<Object, Object> getRecordWriter(FileSystem fs,JobConf job, String baseFileName, Progressable arg3) throws IOException {
    String nameOutput = job.get(CONFIG_NAMED_OUTPUT, null);
    String fileName = getUniqueName(job, baseFileName);

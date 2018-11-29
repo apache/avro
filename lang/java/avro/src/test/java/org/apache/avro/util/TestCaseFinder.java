@@ -97,6 +97,7 @@ public class TestCaseFinder {
       CaseFinder.find(mk("<<INPUT blah"), "", result);
     }
 
+    @Test (expected=java.lang.IllegalArgumentException.class)
     public void testBadDocLabel2() throws Exception {
       List<Object[]> result = new ArrayList<>();
       CaseFinder.find(mk("<<INPUT blah"), "kill-er", result);

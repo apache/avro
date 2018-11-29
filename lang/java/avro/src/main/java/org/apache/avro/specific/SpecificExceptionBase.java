@@ -46,10 +46,11 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
     super(value, cause);
   }
 
-  public abstract Schema getSchema();
-  public abstract Object get(int field);
-  public abstract void put(int field, Object value);
+  @Override public abstract Schema getSchema();
+  @Override public abstract Object get(int field);
+  @Override public abstract void put(int field, Object value);
 
+  @Override
   public boolean equals(Object that) {
     if (that == this) return true;                        // identical object
     if (!(that instanceof SpecificExceptionBase)) return false; // not a record
@@ -57,6 +58,7 @@ public abstract class SpecificExceptionBase extends AvroRemoteException
     return SpecificData.get().compare(this, that, this.getSchema()) == 0;
   }
 
+  @Override
   public int hashCode() {
     return SpecificData.get().hashCode(this, this.getSchema());
   }

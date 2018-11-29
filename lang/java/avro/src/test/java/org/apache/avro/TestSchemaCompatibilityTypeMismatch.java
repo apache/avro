@@ -21,6 +21,7 @@ import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchema
 import static org.apache.avro.TestSchemas.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
@@ -91,11 +92,7 @@ public class TestSchemaCompatibilityTypeMismatch {
 
         { NULL_SCHEMA, INT_SCHEMA, "reader type: NULL not compatible with writer type: INT", "/" }
     };
-    List<Object[]> list = new ArrayList<>(fields.length);
-    for (Object[] schemas : fields) {
-      list.add(schemas);
-    }
-    return list;
+    return Arrays.asList(fields);
   }
 
   @Parameter(0)

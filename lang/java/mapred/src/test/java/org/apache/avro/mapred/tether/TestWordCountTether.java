@@ -69,7 +69,7 @@ public class TestWordCountTether {
     JobConf job = new JobConf();
     Path outputPath = new Path(outputPathStr);
 
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // create the input file
     WordCountUtil.writeLinesFile(inputPath);

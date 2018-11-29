@@ -57,7 +57,7 @@ public class TestGenericRecordBuilder {
 
     // Build the record, and verify that fields are set:
     Record record = builder.build();
-    Assert.assertEquals(new Integer(1), record.get("intField"));
+    Assert.assertEquals(Integer.valueOf(1), record.get("intField"));
     Assert.assertEquals(anArray, record.get("anArray"));
     Assert.assertNotNull(record.get("id"));
     Assert.assertEquals("0", record.get("id").toString());

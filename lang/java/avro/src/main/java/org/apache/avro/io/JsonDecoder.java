@@ -108,7 +108,7 @@ public class JsonDecoder extends ParsingDecoder
     parser.reset();
     reorderBuffers.clear();
     currentReorderBuffer = null;
-    this.in = jsonFactory.createJsonParser(in);
+    this.in = jsonFactory.createParser(in);
     this.in.nextToken();
     return this;
   }
@@ -132,7 +132,7 @@ public class JsonDecoder extends ParsingDecoder
     parser.reset();
     reorderBuffers.clear();
     currentReorderBuffer = null;
-    this.in = new JsonFactory().createJsonParser(in);
+    this.in = new JsonFactory().createParser(in);
     this.in.nextToken();
     return this;
   }

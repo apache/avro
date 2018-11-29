@@ -17,6 +17,7 @@
  */
 package org.apache.avro.reflect;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayOutputStream;
@@ -54,7 +55,7 @@ public class TestNonStringMapKeys {
     Company [] entityObjs = {entityObj1, entityObj2};
     byte[] bytes = testSerialization(testType, entityObj1, entityObj2);
     List<GenericRecord> records =
-      (List<GenericRecord>) testGenericDatumRead(testType, bytes, entityObjs);
+      testGenericDatumRead(testType, bytes, entityObjs);
 
     GenericRecord record = records.get(0);
     Object employees = record.get("employees");
@@ -74,8 +75,7 @@ public class TestNonStringMapKeys {
       (id.equals(2) && name.equals("Bar"))
     );
 
-    List<Company> records2 =
-      (List<Company>) testReflectDatumRead(testType, bytes, entityObjs);
+    List<Company> records2 = testReflectDatumRead(testType, bytes, entityObjs);
     Company co = records2.get(0);
     log ("Read: " + co);
     assertNotNull (co.getEmployees());
@@ -106,8 +106,7 @@ public class TestNonStringMapKeys {
     String testType = "NestedMapsTest";
     Company2 [] entityObjs = {entityObj1};
     byte[] bytes = testSerialization(testType, entityObj1);
-    List<GenericRecord> records =
-      (List<GenericRecord>) testGenericDatumRead(testType, bytes, entityObjs);
+    List<GenericRecord> records = testGenericDatumRead(testType, bytes, entityObjs);
 
     GenericRecord record = records.get(0);
     Object employees = record.get("employees");
@@ -137,8 +136,7 @@ public class TestNonStringMapKeys {
       value = ((Utf8)value).toString();
     assertEquals ("CompanyFoo", value);
 
-    List<Company2> records2 =
-      (List<Company2>) testReflectDatumRead(testType, bytes, entityObjs);
+    List<Company2> records2 = testReflectDatumRead(testType, bytes, entityObjs);
     Company2 co = records2.get(0);
     log ("Read: " + co);
     assertNotNull (co.getEmployees());
@@ -167,8 +165,7 @@ public class TestNonStringMapKeys {
     String testType = "RecordNameInvariance";
     SameMapSignature [] entityObjs = {entityObj1};
     byte[] bytes = testSerialization(testType, entityObj1);
-    List<GenericRecord> records =
-      (List<GenericRecord>) testGenericDatumRead(testType, bytes, entityObjs);
+    List<GenericRecord> records = testGenericDatumRead(testType, bytes, entityObjs);
 
     GenericRecord record = records.get(0);
     Object map1obj = record.get("map1");
@@ -185,8 +182,7 @@ public class TestNonStringMapKeys {
     Object map2obj = record.get("map2");
     assertEquals (map1obj, map2obj);
 
-    List<SameMapSignature> records2 =
-      (List<SameMapSignature>) testReflectDatumRead(testType, bytes, entityObjs);
+    List<SameMapSignature> records2 = testReflectDatumRead(testType, bytes, entityObjs);
     SameMapSignature entity = records2.get(0);
     log ("Read: " + entity);
     assertNotNull (entity.getMap1());
@@ -313,7 +309,7 @@ public class TestNonStringMapKeys {
     encoder.flush();
 
     byte[] bytes = os.toByteArray();
-    System.out.println ("JSON encoder output:\n" + new String(bytes));
+    System.out.println ("JSON encoder output:\n" + new String(bytes, UTF_8));
     return bytes;
   }
 
@@ -326,7 +322,7 @@ public class TestNonStringMapKeys {
     GenericDatumReader<GenericRecord> datumReader =
       new GenericDatumReader<>(schema);
 
-    Decoder decoder = DecoderFactory.get().jsonDecoder(schema, new String(bytes));
+    Decoder decoder = DecoderFactory.get().jsonDecoder(schema, new String(bytes, UTF_8));
     GenericRecord r = datumReader.read(null, decoder);
     return r;
   }

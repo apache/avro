@@ -110,7 +110,7 @@ public class TestKeyValueWordCount {
   }
 
   public void checkOutputFormat() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyValueTest", "part-r-00000");
 
@@ -139,7 +139,7 @@ public class TestKeyValueWordCount {
   }
 
   public void checkInputFormat() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyValueTest");
 

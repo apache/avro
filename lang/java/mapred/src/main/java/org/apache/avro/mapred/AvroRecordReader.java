@@ -53,12 +53,15 @@ public class AvroRecordReader<T>
     this.end = split.getStart() + split.getLength();
   }
 
+  @Override
   public AvroWrapper<T> createKey() {
     return new AvroWrapper<>(null);
   }
 
+  @Override
   public NullWritable createValue() { return NullWritable.get(); }
 
+  @Override
   public boolean next(AvroWrapper<T> wrapper, NullWritable ignore)
     throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
@@ -67,6 +70,7 @@ public class AvroRecordReader<T>
     return true;
   }
 
+  @Override
   public float getProgress() throws IOException {
     if (end == start) {
       return 0.0f;
@@ -75,10 +79,12 @@ public class AvroRecordReader<T>
     }
   }
 
+  @Override
   public long getPos() throws IOException {
     return reader.tell();
   }
 
+  @Override
   public void close() throws IOException { reader.close(); }
 
 }

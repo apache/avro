@@ -19,6 +19,7 @@
 package org.apache.avro.file;
 
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
@@ -37,8 +38,8 @@ public class TestCustomCodec {
     assertFalse(customCodec.equals(snappyCodec));
 
     String testString = "Testing 123";
-    ByteBuffer original = ByteBuffer.allocate(testString.getBytes().length);
-    original.put(testString.getBytes());
+    ByteBuffer original = ByteBuffer.allocate(testString.getBytes(UTF_8).length);
+    original.put(testString.getBytes(UTF_8));
     original.rewind();
     ByteBuffer decompressed = null;
     try {
@@ -49,7 +50,7 @@ public class TestCustomCodec {
       e.printStackTrace();
     }
 
-    assertEquals(testString, new String(decompressed.array()));
+    assertEquals(testString, new String(decompressed.array(), UTF_8));
 
   }
 

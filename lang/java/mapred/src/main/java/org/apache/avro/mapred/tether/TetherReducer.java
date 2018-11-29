@@ -36,10 +36,12 @@ class TetherReducer
   private TetheredProcess process;
   private boolean error;
 
+  @Override
   public void configure(JobConf job) {
     this.job = job;
   }
 
+  @Override
   public void reduce(TetherData datum, Iterator<NullWritable> ignore,
                      OutputCollector<TetherData, NullWritable> collector,
                      Reporter reporter) throws IOException {
@@ -64,6 +66,7 @@ class TetherReducer
   /**
    * Handle the end of the input by closing down the application.
    */
+  @Override
   public void close() throws IOException {
     if (process == null) return;
     try {
