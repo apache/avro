@@ -99,12 +99,12 @@ public class TestSpecificCompiler {
 
   @Test
   public void testPrimitiveSchemaGeneratesNothing() {
-    assertEquals(0, new SpecificCompiler(Schema.parse("\"double\"")).compile().size());
+    assertEquals(0, new SpecificCompiler(new Schema.Parser().parse("\"double\"")).compile().size());
   }
 
   @Test
   public void testSimpleEnumSchema() throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(Schema.parse(TestSchema.BASIC_ENUM_SCHEMA)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(TestSchema.BASIC_ENUM_SCHEMA)).compile();
     assertEquals(1, outputs.size());
     OutputFile o = outputs.iterator().next();
     assertEquals(o.path, "Test.java");
@@ -148,7 +148,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testManglingForRecords() throws IOException {
-    Collection<OutputFile> outputs = new SpecificCompiler(Schema.parse(SCHEMA)).compile();
+    Collection<OutputFile> outputs = new SpecificCompiler(new Schema.Parser().parse(SCHEMA)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -165,7 +165,7 @@ public class TestSpecificCompiler {
       "{ \"name\": \"instanceof\", \"type\": \"enum\"," +
       "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
     Collection<OutputFile> outputs =
-      new SpecificCompiler(Schema.parse(enumSchema)).compile();
+      new SpecificCompiler(new Schema.Parser().parse(enumSchema)).compile();
     assertEquals(1, outputs.size());
     String contents = outputs.iterator().next().contents;
 
@@ -176,7 +176,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testSchemaSplit() throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler(Schema.parse(SCHEMA));
+    SpecificCompiler compiler = new SpecificCompiler(new Schema.Parser().parse(SCHEMA));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
     assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), files);
@@ -193,7 +193,7 @@ public class TestSpecificCompiler {
   @Test
   public void testSchemaWithDocs() {
     Collection<OutputFile> outputs = new SpecificCompiler(
-        Schema.parse(TestSchema.SCHEMA_WITH_DOC_TAGS)).compile();
+      new Schema.Parser().parse(TestSchema.SCHEMA_WITH_DOC_TAGS)).compile();
     assertEquals(3, outputs.size());
     int count = 0;
     for (OutputFile o : outputs) {
@@ -684,7 +684,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testAliases() throws IOException {
-    Schema s = Schema.parse
+    Schema s = new Schema.Parser().parse
       ("{\"name\":\"X\",\"type\":\"record\",\"aliases\":[\"Y\"],\"fields\":["
        +"{\"name\":\"f\",\"type\":\"int\",\"aliases\":[\"g\"]}]}");
     SpecificCompiler compiler = new SpecificCompiler(s);

@@ -75,6 +75,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   /** Return length in bytes.
    * @deprecated call {@link #getByteLength()} instead. */
+  @Deprecated
   public int getLength() { return length; }
 
   /** Return length in bytes. */
@@ -83,6 +84,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   /** Set length in bytes.  Should called whenever byte content changes, even
    * if the length does not change, as this also clears the cached String.
    * @deprecated call {@link #setByteLength(int)} instead. */
+  @Deprecated
   public Utf8 setLength(int newLength) {
     return setByteLength(newLength);
   }

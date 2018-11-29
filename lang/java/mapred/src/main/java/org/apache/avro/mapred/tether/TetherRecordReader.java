@@ -54,10 +54,13 @@ class TetherRecordReader
 
   public Schema getSchema() { return reader.getSchema(); }
 
+  @Override
   public TetherData createKey() { return new TetherData(); }
 
+  @Override
   public NullWritable createValue() { return NullWritable.get(); }
 
+  @Override
   public boolean next(TetherData data, NullWritable ignore)
     throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
@@ -67,6 +70,7 @@ class TetherRecordReader
     return true;
   }
 
+  @Override
   public float getProgress() throws IOException {
     if (end == start) {
       return 0.0f;
@@ -75,10 +79,11 @@ class TetherRecordReader
     }
   }
 
+  @Override
   public long getPos() throws IOException {
     return in.tell();
   }
 
+  @Override
   public void close() throws IOException { reader.close(); }
-
 }

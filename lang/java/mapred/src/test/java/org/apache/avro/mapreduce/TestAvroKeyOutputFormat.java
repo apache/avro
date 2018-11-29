@@ -120,7 +120,7 @@ public class TestAvroKeyOutputFormat {
   private void testGetRecordWriter(Configuration conf, CodecFactory expectedCodec, int expectedSyncInterval)
       throws IOException {
     // Configure a mock task attempt context.
-    Job job = new Job(conf);
+    Job job = Job.getInstance(conf);
     job.getConfiguration().set("mapred.output.dir", mTempDir.getRoot().getPath());
     Schema writerSchema = Schema.create(Schema.Type.INT);
     AvroJob.setOutputKeySchema(job, writerSchema);

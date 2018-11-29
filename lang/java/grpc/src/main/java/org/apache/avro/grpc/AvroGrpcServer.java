@@ -73,6 +73,7 @@ public abstract class AvroGrpcServer {
       this.method = method;
     }
 
+    @Override
     public void invoke(Object[] request, StreamObserver<Object> responseObserver) {
       Object methodResponse = null;
       try {

@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -24,6 +25,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
@@ -49,7 +52,7 @@ public class TestSchemaNormalization {
     { return CaseFinder.find(data(), "canonical", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toParsingForm(Schema.parse(input)),
+      assertEquals(SchemaNormalization.toParsingForm(new Schema.Parser().parse(input)),
                    expectedOutput);
     }
   }
@@ -63,7 +66,7 @@ public class TestSchemaNormalization {
     { return CaseFinder.find(data(),"fingerprint", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
-      Schema s = Schema.parse(input);
+      Schema s = new Schema.Parser().parse(input);
       long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
       assertEquals(carefulFP, Long.parseLong(expectedOutput));
       assertEqHex(carefulFP, SchemaNormalization.parsingFingerprint64(s));
@@ -82,7 +85,7 @@ public class TestSchemaNormalization {
     @Test public void testCanonicalization() throws Exception {
       Locale originalDefaultLocale = Locale.getDefault();
       Locale.setDefault(Locale.forLanguageTag("tr"));
-      Schema s = Schema.parse(input);
+      Schema s = new Schema.Parser().parse(input);
       long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
       assertEquals(carefulFP, Long.parseLong(expectedOutput));
       assertEqHex(carefulFP, SchemaNormalization.parsingFingerprint64(s));
@@ -95,7 +98,7 @@ public class TestSchemaNormalization {
      + "/test/data/schema-tests.txt");
 
   private static BufferedReader data() throws IOException
-  { return new BufferedReader(new FileReader(DATA_FILE)); }
+  { return Files.newBufferedReader(Paths.get(DATA_FILE), UTF_8); }
 
   /** Compute the fingerprint of <i>bytes[s,s+l)</i> using a slow
       algorithm that's an alternative to that implemented in {@link
@@ -109,7 +112,7 @@ public class TestSchemaNormalization {
     // randomness for small inputs
 
     long tmp = altExtend(SchemaNormalization.EMPTY64, 64, ONE,
-        s.getBytes(StandardCharsets.UTF_8));
+        s.getBytes(UTF_8));
     return altExtend(SchemaNormalization.EMPTY64, 64, tmp, POSTFIX);
   }
 

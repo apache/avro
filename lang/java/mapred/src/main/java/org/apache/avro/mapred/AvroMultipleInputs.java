@@ -17,7 +17,8 @@
  */
 package org.apache.avro.mapred;
 
-import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -98,9 +99,9 @@ import org.apache.hadoop.mapred.JobConf;
  * </p>
  */
 public class AvroMultipleInputs {
-  private static String schemaKey =
+  private static final String SCHEMA_KEY =
       "avro.mapreduce.input.multipleinputs.dir.schemas";
-  private static String mappersKey =
+  private static final String MAPPERS_KEY =
       "avro.mapreduce.input.multipleinputs.dir.mappers";
   /**
    * Add a {@link Path} with a custom {@link Schema} to the list of
@@ -116,8 +117,8 @@ public class AvroMultipleInputs {
     String schemaMapping = path.toString() + ";"
        + toBase64(inputSchema.toString());
 
-    String schemas = conf.get(schemaKey);
-    conf.set(schemaKey,
+    String schemas = conf.get(SCHEMA_KEY);
+    conf.set(SCHEMA_KEY,
         schemas == null ? schemaMapping : schemas + ","
             + schemaMapping);
 
@@ -141,8 +142,8 @@ public class AvroMultipleInputs {
 
     String mapperMapping = path.toString() + ";" + mapperClass.getName();
     System.out.println(mapperMapping);
-    String mappers = conf.get(mappersKey);
-    conf.set(mappersKey, mappers == null ? mapperMapping
+    String mappers = conf.get(MAPPERS_KEY);
+    conf.set(MAPPERS_KEY, mappers == null ? mapperMapping
        : mappers + "," + mapperMapping);
 
     conf.setMapperClass(DelegatingMapper.class);
@@ -158,11 +159,11 @@ public class AvroMultipleInputs {
    */
   @SuppressWarnings("unchecked")
   static Map<Path, Class<? extends AvroMapper>> getMapperTypeMap(JobConf conf) {
-    if (conf.get(mappersKey) == null) {
+    if (conf.get(MAPPERS_KEY) == null) {
       return Collections.emptyMap();
     }
     Map<Path, Class<? extends AvroMapper>> m = new HashMap<>();
-    String[] pathMappings = conf.get(mappersKey).split(",");
+    String[] pathMappings = conf.get(MAPPERS_KEY).split(",");
     for (String pathMapping : pathMappings) {
       String[] split = pathMapping.split(";");
       Class<? extends AvroMapper> mapClass;
@@ -185,12 +186,12 @@ public class AvroMultipleInputs {
    * @return A map of paths to schemas for the job
    */
   static Map<Path, Schema> getInputSchemaMap(JobConf conf) {
-    if (conf.get(schemaKey) == null) {
+    if (conf.get(SCHEMA_KEY) == null) {
       return Collections.emptyMap();
     }
     Map<Path, Schema> m = new HashMap<>();
     String[] schemaMappings =
-        conf.get(schemaKey).split(",");
+        conf.get(SCHEMA_KEY).split(",");
     Schema.Parser schemaParser = new Schema.Parser();
     for (String schemaMapping : schemaMappings) {
       String[] split = schemaMapping.split(";");
@@ -207,15 +208,13 @@ public class AvroMultipleInputs {
   }
 
   private static String toBase64(String rawString) {
-    final byte[] buf = rawString.getBytes(StandardCharsets.UTF_8);
-    return new String(Base64.getMimeEncoder().encode(buf),
-        StandardCharsets.UTF_8);
+    final byte[] buf = rawString.getBytes(UTF_8);
+    return new String(Base64.getMimeEncoder().encode(buf), UTF_8);
   }
 
   private static String fromBase64(String base64String) {
-    final byte[] buf = base64String.getBytes(StandardCharsets.UTF_8);
-    return new String(Base64.getMimeDecoder().decode(buf),
-        StandardCharsets.UTF_8);
+    final byte[] buf = base64String.getBytes(UTF_8);
+    return new String(Base64.getMimeDecoder().decode(buf), UTF_8);
   }
 
 }

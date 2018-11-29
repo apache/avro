@@ -48,7 +48,7 @@ public class TestAvroTextSort {
     JobConf job = new JobConf();
     String inputPath = INPUT_DIR.getRoot().getPath();
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     WordCountUtil.writeLinesBytesFile(inputPath);
 

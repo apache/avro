@@ -57,7 +57,7 @@ import org.junit.Test;
 public class TestAvroKeyValueRecordWriter {
   @Test
   public void testWriteRecords() throws IOException {
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
     TaskAttemptContext context = createMock(TaskAttemptContext.class);
 
@@ -78,10 +78,10 @@ public class TestAvroKeyValueRecordWriter {
         = new AvroKeyValueRecordWriter<>(keyConverter, valueConverter,
             new ReflectData(), compressionCodec, outputStream);
     TextStats appleStats = new TextStats();
-    appleStats.name = "apple";
+    appleStats.setName("apple");
     writer.write(new Text("apple"), new AvroValue<>(appleStats));
     TextStats bananaStats = new TextStats();
-    bananaStats.name = "banana";
+    bananaStats.setName("banana");
     writer.write(new Text("banana"), new AvroValue<>(bananaStats));
     writer.close(context);
 
@@ -101,7 +101,7 @@ public class TestAvroKeyValueRecordWriter {
         = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(firstRecord.get());
     assertEquals("apple", firstRecord.getKey().toString());
-    assertEquals("apple", firstRecord.getValue().name.toString());
+    assertEquals("apple", firstRecord.getValue().getName().toString());
 
     // Verify that the second record was written;
     assertTrue(avroFileReader.hasNext());
@@ -109,7 +109,7 @@ public class TestAvroKeyValueRecordWriter {
         = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(secondRecord.get());
     assertEquals("banana", secondRecord.getKey().toString());
-    assertEquals("banana", secondRecord.getValue().name.toString());
+    assertEquals("banana", secondRecord.getValue().getName().toString());
 
     // That's all, folks.
     assertFalse(avroFileReader.hasNext());
@@ -120,7 +120,7 @@ public class TestAvroKeyValueRecordWriter {
     String attribute;
   }
   @Test public void testUsingReflection() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
     Schema schema = ReflectData.get().getSchema(R1.class);
     AvroJob.setOutputValueSchema(job, schema);
     TaskAttemptContext context = createMock(TaskAttemptContext.class);
@@ -171,7 +171,7 @@ public class TestAvroKeyValueRecordWriter {
 
   @Test
   public void testSyncableWriteRecords() throws IOException {
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setOutputValueSchema(job, TextStats.SCHEMA$);
     TaskAttemptContext context = createMock(TaskAttemptContext.class);
 
@@ -191,11 +191,11 @@ public class TestAvroKeyValueRecordWriter {
         = new AvroKeyValueRecordWriter<>(keyConverter, valueConverter,
             new ReflectData(), compressionCodec, outputStream);
     TextStats appleStats = new TextStats();
-    appleStats.name = "apple";
+    appleStats.setName("apple");
     long pointOne = writer.sync();
     writer.write(new Text("apple"), new AvroValue<>(appleStats));
     TextStats bananaStats = new TextStats();
-    bananaStats.name = "banana";
+    bananaStats.setName("banana");
     long pointTwo = writer.sync();
     writer.write(new Text("banana"), new AvroValue<>(bananaStats));
     writer.close(context);
@@ -216,7 +216,7 @@ public class TestAvroKeyValueRecordWriter {
         = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(secondRecord.get());
     assertEquals("banana", secondRecord.getKey().toString());
-    assertEquals("banana", secondRecord.getValue().name.toString());
+    assertEquals("banana", secondRecord.getValue().getName().toString());
 
 
     avroFileReader.seek(pointOne);
@@ -226,7 +226,7 @@ public class TestAvroKeyValueRecordWriter {
         = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(firstRecord.get());
     assertEquals("apple", firstRecord.getKey().toString());
-    assertEquals("apple", firstRecord.getValue().name.toString());
+    assertEquals("apple", firstRecord.getValue().getName().toString());
 
 
     // That's all, folks.

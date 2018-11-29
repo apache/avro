@@ -679,7 +679,7 @@ public class AvroSequenceFile {
           LOG.debug("Using key writer schema from SequenceFile metadata: "
               + keySchemaText.toString());
           AvroSerialization.setKeyWriterSchema(
-              confWithAvro, Schema.parse(keySchemaText.toString()));
+              confWithAvro, new Schema.Parser().parse(keySchemaText.toString()));
           if (null != mKeyReaderSchema) {
             AvroSerialization.setKeyReaderSchema(confWithAvro, mKeyReaderSchema);
           }
@@ -691,7 +691,7 @@ public class AvroSequenceFile {
           LOG.debug("Using value writer schema from SequenceFile metadata: "
               + valueSchemaText.toString());
           AvroSerialization.setValueWriterSchema(
-              confWithAvro, Schema.parse(valueSchemaText.toString()));
+              confWithAvro, new Schema.Parser().parse(valueSchemaText.toString()));
           if (null != mValueReaderSchema) {
             AvroSerialization.setValueReaderSchema(confWithAvro, mValueReaderSchema);
           }

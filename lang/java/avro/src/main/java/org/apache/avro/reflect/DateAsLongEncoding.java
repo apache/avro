@@ -43,7 +43,7 @@ public class DateAsLongEncoding extends CustomEncoding<Date> {
 
   @Override
   protected final Date read(Object reuse, Decoder in) throws IOException {
-    if (reuse != null && reuse instanceof Date) {
+    if (reuse instanceof Date) {
       ((Date)reuse).setTime(in.readLong());
       return (Date)reuse;
     }

@@ -264,7 +264,7 @@ public abstract class Symbol {
       super(Kind.TERMINAL);
       this.printName = printName;
     }
-    public String toString() { return printName; }
+    @Override public String toString() { return printName; }
   }
 
   public static class ImplicitAction extends Symbol {
@@ -313,14 +313,17 @@ public abstract class Symbol {
       return production.length;
     }
 
+    @Override
     public Iterator<Symbol> iterator() {
       return new Iterator<Symbol>() {
         private int pos = production.length;
 
+        @Override
         public boolean hasNext() {
           return 0 < pos;
         }
 
+        @Override
         public Symbol next() {
           if (0 < pos) {
             return production[--pos];
@@ -329,6 +332,7 @@ public abstract class Symbol {
           }
         }
 
+        @Override
         public void remove() {
           throw new UnsupportedOperationException();
         }

@@ -91,7 +91,7 @@ public class AvroColumnReader<D>
     this.reader = new ColumnFileReader(params.input);
     this.model = params.model;
     this.fileSchema =
-      Schema.parse(reader.getMetaData().getString(AvroColumnWriter.SCHEMA_KEY));
+      new Schema.Parser().parse(reader.getMetaData().getString(AvroColumnWriter.SCHEMA_KEY));
     this.readSchema = params.schema == null ? fileSchema : params.schema;
     initialize();
   }

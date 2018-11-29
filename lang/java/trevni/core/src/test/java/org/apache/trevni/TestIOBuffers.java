@@ -17,6 +17,8 @@
  */
 package org.apache.trevni;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.util.Random;
 
 import java.io.ByteArrayOutputStream;
@@ -246,7 +248,7 @@ public class TestIOBuffers {
   @Test public void testSkipBytes() throws Exception {
     long sentinel = Long.MAX_VALUE;
     OutputBuffer out = new OutputBuffer();
-    out.writeValue("trevni".getBytes(), ValueType.BYTES);
+    out.writeValue("trevni".getBytes(UTF_8), ValueType.BYTES);
     out.writeLong(sentinel);
 
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));

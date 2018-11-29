@@ -62,16 +62,17 @@ public class RandomData implements Iterable<Object> {
     this.utf8ForString = utf8ForString;
   }
 
+  @Override
   public Iterator<Object> iterator() {
     return new Iterator<Object>() {
       private int n;
       private Random random = new Random(seed);
-      public boolean hasNext() { return n < count; }
-      public Object next() {
+      @Override public boolean hasNext() { return n < count; }
+      @Override public Object next() {
         n++;
         return generate(root, random, 0);
       }
-      public void remove() { throw new UnsupportedOperationException(); }
+      @Override public void remove() { throw new UnsupportedOperationException(); }
     };
   }
 

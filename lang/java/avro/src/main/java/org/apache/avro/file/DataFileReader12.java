@@ -95,7 +95,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     if (codec != null && ! codec.equals(NULL_CODEC)) {
       throw new UnknownAvroCodecException("Unknown codec: " + codec);
     }
-    this.schema = Schema.parse(getMetaString(SCHEMA));
+    this.schema = new Schema.Parser().parse(getMetaString(SCHEMA));
     this.reader = reader;
 
     reader.setSchema(schema);

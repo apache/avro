@@ -41,7 +41,7 @@ public class TestAvroKeyInputFormat {
   @Test
   public void testCreateRecordReader() throws IOException, InterruptedException {
     // Set up the job configuration.
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.STRING));
     Configuration conf = job.getConfiguration();
 

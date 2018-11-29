@@ -112,6 +112,16 @@
             <target>1.8</target>
             <compilerArgs>
               <arg>-parameters</arg>
+              <!--<arg>-Werror</arg>-->
+              <arg>-Xlint:all</arg>
+              <!-- Override options warnings to support cross-compilation -->
+              <arg>-Xlint:-options</arg>
+              <!-- Temporary lint overrides, to be removed over time. -->
+              <arg>-Xlint:-rawtypes</arg>
+              <arg>-Xlint:-serial</arg>
+              <arg>-Xlint:-unchecked</arg>
+              <!--<arg>-Xlint:sunapi</arg>-->
+              <!--<arg>-XDenableSunApiLintControl</arg>-->
             </compilerArgs>
           </configuration>
         </plugin>

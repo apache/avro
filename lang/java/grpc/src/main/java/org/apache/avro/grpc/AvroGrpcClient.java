@@ -86,6 +86,7 @@ public abstract class AvroGrpcClient {
       this.serviceDescriptor = serviceDescriptor;
     }
 
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       try {
         return invokeUnaryMethod(method, args);

@@ -243,7 +243,7 @@ public class TestAvroMultipleInputs {
     Path inputPath2 = new Path(INPUT_DIR_2.getRoot().getPath());
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
 
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     writeNamesFiles(new File(inputPath1.toUri().getPath()));
     writeBalancesFiles(new File(inputPath2.toUri().getPath()));

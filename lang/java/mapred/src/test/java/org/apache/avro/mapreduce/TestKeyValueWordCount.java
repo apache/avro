@@ -79,7 +79,7 @@ public class TestKeyValueWordCount {
   public void testKeyValueMapReduce()
       throws ClassNotFoundException, IOException, InterruptedException, URISyntaxException {
     // Configure a word count job over our test input file.
-    Job job = new Job();
+    Job job = Job.getInstance();
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
             .toURI().toString()));

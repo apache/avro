@@ -48,8 +48,10 @@ public class HttpTransceiver extends Transceiver {
   /** Set the connect and read timeouts, in milliseconds. */
   public void setTimeout(int timeout) { this.timeout = timeout; }
 
+  @Override
   public String getRemoteName() { return this.url.toString(); }
 
+  @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
     InputStream in = connection.getInputStream();
     try {
@@ -59,6 +61,7 @@ public class HttpTransceiver extends Transceiver {
     }
   }
 
+  @Override
   public synchronized void writeBuffers(List<ByteBuffer> buffers)
     throws IOException {
     if (proxy == null)

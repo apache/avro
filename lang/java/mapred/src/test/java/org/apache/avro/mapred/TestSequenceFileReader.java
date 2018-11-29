@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.io.File;
 import java.net.URI;
-import java.nio.file.Files;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.SequenceFile;
@@ -113,7 +112,7 @@ public class TestSequenceFileReader {
   public void testSequenceFileInputFormat() throws Exception {
     JobConf job = new JobConf();
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for Avro from sequence file
     AvroJob.setInputSequenceFile(job);
@@ -150,7 +149,7 @@ public class TestSequenceFileReader {
   public void testNonAvroMapper() throws Exception {
     JobConf job = new JobConf();
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for non-Avro sequence file
     job.setInputFormat(SequenceFileInputFormat.class);
@@ -188,7 +187,7 @@ public class TestSequenceFileReader {
   public void testNonAvroMapOnly() throws Exception {
     JobConf job = new JobConf();
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for non-Avro sequence file
     job.setInputFormat(SequenceFileInputFormat.class);
@@ -228,7 +227,7 @@ public class TestSequenceFileReader {
   public void testNonAvroReducer() throws Exception {
     JobConf job = new JobConf();
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // configure input for Avro from sequence file
     AvroJob.setInputSequenceFile(job);

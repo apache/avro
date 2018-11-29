@@ -117,7 +117,7 @@ public class TestWordCount {
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
 
 
-    Schema subSchema = Schema.parse("{\"type\":\"record\"," +
+    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," +
                                     "\"name\":\"PairValue\","+
                                     "\"fields\": [ " +
                                     "{\"name\":\"value\", \"type\":\"long\"}" +

@@ -100,6 +100,7 @@ class Histogram<B, T> {
       }
     }
 
+    @Override
     public int segment(T value) {
       Map.Entry<T, Integer> e = index.floorEntry(value);
       if (e == null) {
@@ -211,7 +212,7 @@ class Histogram<B, T> {
     return totalCount;
   }
 
-
+  @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     boolean first = true;

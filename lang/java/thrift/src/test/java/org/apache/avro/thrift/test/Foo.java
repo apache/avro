@@ -69,6 +69,7 @@ public class Foo {
       super(iprot, oprot);
     }
 
+    @Override
     public void ping() throws org.apache.thrift.TException
     {
       send_ping();
@@ -88,6 +89,7 @@ public class Foo {
       return;
     }
 
+    @Override
     public int add(int num1, int num2) throws org.apache.thrift.TException
     {
       send_add(num1, num2);
@@ -112,6 +114,7 @@ public class Foo {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "add failed: unknown result");
     }
 
+    @Override
     public void zip() throws org.apache.thrift.TException
     {
       send_zip();
@@ -141,6 +144,7 @@ public class Foo {
       super(protocolFactory, clientManager, transport);
     }
 
+    @Override
     public void ping(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
       ping_call method_call = new ping_call(resultHandler, this, ___protocolFactory, ___transport);
@@ -153,6 +157,7 @@ public class Foo {
         super(client, protocolFactory, transport, resultHandler, false);
       }
 
+      @Override
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("ping", org.apache.thrift.protocol.TMessageType.CALL, 0));
         ping_args args = new ping_args();
@@ -171,6 +176,7 @@ public class Foo {
       }
     }
 
+    @Override
     public void add(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
       add_call method_call = new add_call(num1, num2, resultHandler, this, ___protocolFactory, ___transport);
@@ -187,6 +193,7 @@ public class Foo {
         this.num2 = num2;
       }
 
+      @Override
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("add", org.apache.thrift.protocol.TMessageType.CALL, 0));
         add_args args = new add_args();
@@ -196,6 +203,7 @@ public class Foo {
         prot.writeMessageEnd();
       }
 
+      @Override
       public Object getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
@@ -206,6 +214,7 @@ public class Foo {
       }
     }
 
+    @Override
     public void zip(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
       zip_call method_call = new zip_call(resultHandler, this, ___protocolFactory, ___transport);
@@ -218,6 +227,7 @@ public class Foo {
         super(client, protocolFactory, transport, resultHandler, true);
       }
 
+      @Override
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("zip", org.apache.thrift.protocol.TMessageType.CALL, 0));
         zip_args args = new zip_args();
@@ -225,6 +235,7 @@ public class Foo {
         prot.writeMessageEnd();
       }
 
+      @Override
       public Object getResult()  {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
@@ -238,7 +249,7 @@ public class Foo {
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Processor.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(Processor.class.getName());
     public Processor(I iface) {
       super(iface, getProcessMap(new HashMap<>()));
     }
@@ -259,14 +270,17 @@ public class Foo {
         super("ping");
       }
 
+      @Override
       public ping_args getEmptyArgsInstance() {
         return new ping_args();
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
 
+      @Override
       public ping_result getResult(I iface, ping_args args) throws org.apache.thrift.TException {
         ping_result result = new ping_result();
         iface.ping();
@@ -279,10 +293,12 @@ public class Foo {
         super("add");
       }
 
+      @Override
       public add_args getEmptyArgsInstance() {
         return new add_args();
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
@@ -342,9 +358,11 @@ public class Foo {
         return new ping_args();
       }
 
+      @Override
       public AsyncMethodCallback<Void> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<Void>() {
+          @Override
           public void onComplete(Void o) {
             ping_result result = new ping_result();
             try {
@@ -355,6 +373,7 @@ public class Foo {
             }
             fb.close();
           }
+          @Override
           public void onError(Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TBase msg;
@@ -374,10 +393,12 @@ public class Foo {
         };
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
 
+      @Override
       public void start(I iface, ping_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws TException {
         iface.ping(resultHandler);
       }
@@ -388,13 +409,16 @@ public class Foo {
         super("add");
       }
 
+      @Override
       public add_args getEmptyArgsInstance() {
         return new add_args();
       }
 
+      @Override
       public AsyncMethodCallback<Integer> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<Integer>() {
+          @Override
           public void onComplete(Integer o) {
             add_result result = new add_result();
             result.success = o;
@@ -407,6 +431,7 @@ public class Foo {
             }
             fb.close();
           }
+          @Override
           public void onError(Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TBase msg;
@@ -426,10 +451,12 @@ public class Foo {
         };
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
 
+      @Override
       public void start(I iface, add_args args, org.apache.thrift.async.AsyncMethodCallback<Integer> resultHandler) throws TException {
         iface.add(args.num1, args.num2,resultHandler);
       }
@@ -440,24 +467,30 @@ public class Foo {
         super("zip");
       }
 
+      @Override
       public zip_args getEmptyArgsInstance() {
         return new zip_args();
       }
 
+      @Override
       public AsyncMethodCallback<Void> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<Void>() {
+          @Override
           public void onComplete(Void o) {
           }
+          @Override
           public void onError(Exception e) {
           }
         };
       }
 
+      @Override
       protected boolean isOneway() {
         return true;
       }
 
+      @Override
       public void start(I iface, zip_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws TException {
         iface.zip(resultHandler);
       }
@@ -523,10 +556,12 @@ public class Foo {
         _fieldName = fieldName;
       }
 
+      @Override
       public short getThriftFieldId() {
         return _thriftId;
       }
 
+      @Override
       public String getFieldName() {
         return _fieldName;
       }
@@ -547,6 +582,7 @@ public class Foo {
     public ping_args(ping_args other) {
     }
 
+    @Override
     public ping_args deepCopy() {
       return new ping_args(this);
     }
@@ -555,11 +591,13 @@ public class Foo {
     public void clear() {
     }
 
+    @Override
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       }
     }
 
+    @Override
     public Object getFieldValue(_Fields field) {
       switch (field) {
       }

@@ -56,11 +56,11 @@ public class TestAvroMultipleOutputs {
   public TemporaryFolder DIR = new TemporaryFolder();
 
   public static final Schema STATS_SCHEMA =
-          Schema.parse("{\"name\":\"stats\",\"type\":\"record\","
+    new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
                   + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"},"
                   + "{\"name\":\"name\",\"type\":\"string\"}]}");
   public static final Schema STATS_SCHEMA_2 =
-          Schema.parse("{\"name\":\"stats\",\"type\":\"record\","
+    new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
                   + "\"fields\":[{\"name\":\"count1\",\"type\":\"int\"},"
                   + "{\"name\":\"name1\",\"type\":\"string\"}]}");
 
@@ -93,8 +93,8 @@ public class TestAvroMultipleOutputs {
     @Override
     protected void map(AvroKey<TextStats> record, NullWritable ignore, Context context)
             throws IOException, InterruptedException {
-      mCount.set(record.datum().count);
-      mText.set(record.datum().name.toString());
+      mCount.set(record.datum().getCount());
+      mText.set(record.datum().getName().toString());
       context.write(mText, mCount);
     }
   }
@@ -154,11 +154,11 @@ public class TestAvroMultipleOutputs {
     protected void reduce(Text line, Iterable<IntWritable> counts, Context context)
             throws IOException, InterruptedException {
       TextStats record = new TextStats();
-      record.count = 0;
+      record.setCount(0);
       for (IntWritable count : counts) {
-        record.count += count.get();
+        record.setCount(record.getCount() + count.get());
       }
-      record.name = line.toString();
+      record.setName(line.toString());
       mStats.datum(record);
       context.write(mStats, NullWritable.get());
       amos.write("myavro3", mStats, NullWritable.get());
@@ -190,7 +190,7 @@ public class TestAvroMultipleOutputs {
 
   @Test
   public void testAvroGenericOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
@@ -208,7 +208,7 @@ public class TestAvroMultipleOutputs {
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
 
     Path outputPath = new Path(DIR.getRoot().getPath() + "/testAvroGenericOutput");
-    outputPath.getFileSystem(job.getConfiguration()).delete(outputPath);
+    outputPath.getFileSystem(job.getConfiguration()).delete(outputPath, true);
     FileOutputFormat.setOutputPath(job, outputPath);
 
     Assert.assertTrue(job.waitForCompletion(true));
@@ -294,7 +294,7 @@ public class TestAvroMultipleOutputs {
 
   @Test
   public void testAvroSpecificOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
@@ -311,7 +311,7 @@ public class TestAvroMultipleOutputs {
 
     job.setOutputFormatClass(AvroKeyOutputFormat.class);
     Path outputPath = new Path(DIR.getRoot().getPath() + "/testAvroSpecificOutput");
-    outputPath.getFileSystem(job.getConfiguration()).delete(outputPath);
+    outputPath.getFileSystem(job.getConfiguration()).delete(outputPath, true);
     FileOutputFormat.setOutputPath(job, outputPath);
 
     Assert.assertTrue(job.waitForCompletion(true));
@@ -323,7 +323,7 @@ public class TestAvroMultipleOutputs {
             new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
             new SpecificDatumReader<>())) {
       for (TextStats record : reader) {
-        counts.put(record.name.toString(), record.count);
+        counts.put(record.getName().toString(), record.getCount());
       }
     }
 
@@ -334,7 +334,7 @@ public class TestAvroMultipleOutputs {
 
   @Test
   public void testAvroInput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
@@ -365,7 +365,7 @@ public class TestAvroMultipleOutputs {
             new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
             new SpecificDatumReader<>())) {
       for (TextStats record : reader) {
-        counts.put(record.name.toString(), record.count);
+        counts.put(record.getName().toString(), record.getCount());
       }
     }
 
@@ -376,7 +376,7 @@ public class TestAvroMultipleOutputs {
 
   @Test
   public void testAvroMapOutput() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     FileInputFormat.setInputPaths(job, new Path(getClass()
             .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
@@ -406,7 +406,7 @@ public class TestAvroMultipleOutputs {
             new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
             new SpecificDatumReader<>())) {
       for (TextStats record : reader) {
-        counts.put(record.name.toString(), record.count);
+        counts.put(record.getName().toString(), record.getCount());
       }
     }
 

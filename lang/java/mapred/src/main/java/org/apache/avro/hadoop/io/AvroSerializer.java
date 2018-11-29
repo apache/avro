@@ -46,7 +46,7 @@ import org.apache.hadoop.io.serializer.Serializer;
 public class AvroSerializer<T> implements Serializer<AvroWrapper<T>> {
 
   /** An factory for creating Avro datum encoders. */
-  private static EncoderFactory mEncoderFactory = new EncoderFactory();
+  private static final EncoderFactory ENCODER_FACTORY = new EncoderFactory();
 
   /** The writer schema for the data to serialize. */
   private final Schema mWriterSchema;
@@ -100,7 +100,7 @@ public class AvroSerializer<T> implements Serializer<AvroWrapper<T>> {
   @Override
   public void open(OutputStream outputStream) throws IOException {
     mOutputStream = outputStream;
-    mAvroEncoder = mEncoderFactory.binaryEncoder(outputStream, mAvroEncoder);
+    mAvroEncoder = ENCODER_FACTORY.binaryEncoder(outputStream, mAvroEncoder);
   }
 
   /** {@inheritDoc} */

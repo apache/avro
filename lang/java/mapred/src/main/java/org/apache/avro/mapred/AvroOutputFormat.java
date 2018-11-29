@@ -163,10 +163,12 @@ public class AvroOutputFormat <T>
     writer.create(schema, path.getFileSystem(job).create(path));
 
     return new RecordWriter<AvroWrapper<T>, NullWritable>() {
+      @Override
         public void write(AvroWrapper<T> wrapper, NullWritable ignore)
           throws IOException {
           writer.append(wrapper.datum());
         }
+      @Override
         public void close(Reporter reporter) throws IOException {
           writer.close();
         }

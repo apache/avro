@@ -150,7 +150,7 @@ public final class AvroJob {
    */
   public static Schema getInputKeySchema(Configuration conf) {
     String schemaString = conf.get(CONF_INPUT_KEY_SCHEMA);
-    return schemaString != null ? Schema.parse(schemaString) : null;
+    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
   }
 
   /**
@@ -161,7 +161,7 @@ public final class AvroJob {
    */
   public static Schema getInputValueSchema(Configuration conf) {
     String schemaString = conf.get(CONF_INPUT_VALUE_SCHEMA);
-    return schemaString != null ? Schema.parse(schemaString) : null;
+    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
   }
 
   /**
@@ -192,7 +192,7 @@ public final class AvroJob {
    */
   public static Schema getOutputKeySchema(Configuration conf) {
     String schemaString = conf.get(CONF_OUTPUT_KEY_SCHEMA);
-    return schemaString != null ? Schema.parse(schemaString) : null;
+    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
   }
 
   /**
@@ -203,6 +203,6 @@ public final class AvroJob {
    */
   public static Schema getOutputValueSchema(Configuration conf) {
     String schemaString = conf.get(CONF_OUTPUT_VALUE_SCHEMA);
-    return schemaString != null ? Schema.parse(schemaString) : null;
+    return schemaString != null ? new Schema.Parser().parse(schemaString) : null;
   }
 }

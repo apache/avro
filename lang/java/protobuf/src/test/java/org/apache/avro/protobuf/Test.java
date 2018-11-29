@@ -1710,6 +1710,7 @@ public final class Test {
        * all the primitive types
        * </pre>
        */
+      @Override
       public boolean hasInt32() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
@@ -1720,6 +1721,7 @@ public final class Test {
        * all the primitive types
        * </pre>
        */
+      @Override
       public int getInt32() {
         return int32_;
       }
@@ -1755,12 +1757,14 @@ public final class Test {
       /**
        * <code>optional int64 int64 = 2;</code>
        */
+      @Override
       public boolean hasInt64() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <code>optional int64 int64 = 2;</code>
        */
+      @Override
       public long getInt64() {
         return int64_;
       }
@@ -1788,12 +1792,14 @@ public final class Test {
       /**
        * <code>optional uint32 uint32 = 3;</code>
        */
+      @Override
       public boolean hasUint32() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <code>optional uint32 uint32 = 3;</code>
        */
+      @Override
       public int getUint32() {
         return uint32_;
       }
@@ -1821,12 +1827,14 @@ public final class Test {
       /**
        * <code>optional uint64 uint64 = 4;</code>
        */
+      @Override
       public boolean hasUint64() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
        * <code>optional uint64 uint64 = 4;</code>
        */
+      @Override
       public long getUint64() {
         return uint64_;
       }
@@ -1854,12 +1862,14 @@ public final class Test {
       /**
        * <code>optional sint32 sint32 = 5;</code>
        */
+      @Override
       public boolean hasSint32() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
        * <code>optional sint32 sint32 = 5;</code>
        */
+      @Override
       public int getSint32() {
         return sint32_;
       }
@@ -1887,12 +1897,14 @@ public final class Test {
       /**
        * <code>optional sint64 sint64 = 6;</code>
        */
+      @Override
       public boolean hasSint64() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional sint64 sint64 = 6;</code>
        */
+      @Override
       public long getSint64() {
         return sint64_;
       }
@@ -1920,12 +1932,14 @@ public final class Test {
       /**
        * <code>optional fixed32 fixed32 = 7;</code>
        */
+      @Override
       public boolean hasFixed32() {
         return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional fixed32 fixed32 = 7;</code>
        */
+      @Override
       public int getFixed32() {
         return fixed32_;
       }
@@ -1953,12 +1967,14 @@ public final class Test {
       /**
        * <code>optional fixed64 fixed64 = 8;</code>
        */
+      @Override
       public boolean hasFixed64() {
         return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
        * <code>optional fixed64 fixed64 = 8;</code>
        */
+      @Override
       public long getFixed64() {
         return fixed64_;
       }
@@ -1986,12 +2002,14 @@ public final class Test {
       /**
        * <code>optional sfixed32 sfixed32 = 9;</code>
        */
+      @Override
       public boolean hasSfixed32() {
         return ((bitField0_ & 0x00000100) == 0x00000100);
       }
       /**
        * <code>optional sfixed32 sfixed32 = 9;</code>
        */
+      @Override
       public int getSfixed32() {
         return sfixed32_;
       }
@@ -2019,12 +2037,14 @@ public final class Test {
       /**
        * <code>optional sfixed64 sfixed64 = 10;</code>
        */
+      @Override
       public boolean hasSfixed64() {
         return ((bitField0_ & 0x00000200) == 0x00000200);
       }
       /**
        * <code>optional sfixed64 sfixed64 = 10;</code>
        */
+      @Override
       public long getSfixed64() {
         return sfixed64_;
       }
@@ -2052,12 +2072,14 @@ public final class Test {
       /**
        * <code>optional float float = 11;</code>
        */
+      @Override
       public boolean hasFloat() {
         return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional float float = 11;</code>
        */
+      @Override
       public float getFloat() {
         return float_;
       }
@@ -2085,12 +2107,14 @@ public final class Test {
       /**
        * <code>optional double double = 12;</code>
        */
+      @Override
       public boolean hasDouble() {
         return ((bitField0_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional double double = 12;</code>
        */
+      @Override
       public double getDouble() {
         return double_;
       }
@@ -2118,12 +2142,14 @@ public final class Test {
       /**
        * <code>optional bool bool = 13;</code>
        */
+      @Override
       public boolean hasBool() {
         return ((bitField0_ & 0x00001000) == 0x00001000);
       }
       /**
        * <code>optional bool bool = 13;</code>
        */
+      @Override
       public boolean getBool() {
         return bool_;
       }
@@ -2151,12 +2177,14 @@ public final class Test {
       /**
        * <code>optional string string = 14;</code>
        */
+      @Override
       public boolean hasString() {
         return ((bitField0_ & 0x00002000) == 0x00002000);
       }
       /**
        * <code>optional string string = 14;</code>
        */
+      @Override
       public java.lang.String getString() {
         java.lang.Object ref = string_;
         if (!(ref instanceof java.lang.String)) {
@@ -2171,6 +2199,7 @@ public final class Test {
       /**
        * <code>optional string string = 14;</code>
        */
+      @Override
       public com.google.protobuf.ByteString
           getStringBytes() {
         java.lang.Object ref = string_;

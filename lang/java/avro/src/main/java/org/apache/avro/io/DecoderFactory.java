@@ -132,7 +132,7 @@ public class DecoderFactory {
     if (null == reuse || !reuse.getClass().equals(BinaryDecoder.class)) {
       return new BinaryDecoder(in, binaryDecoderBufferSize);
     } else {
-      return ((BinaryDecoder)reuse).configure(in, binaryDecoderBufferSize);
+      return reuse.configure(in, binaryDecoderBufferSize);
     }
   }
 

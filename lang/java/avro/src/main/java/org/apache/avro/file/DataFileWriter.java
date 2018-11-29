@@ -17,6 +17,8 @@
  */
 package org.apache.avro.file;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -26,7 +28,6 @@ import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -254,7 +255,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     try {
       MessageDigest digester = MessageDigest.getInstance("MD5");
       long time = System.currentTimeMillis();
-      digester.update((UUID.randomUUID()+"@"+time).getBytes());
+      digester.update((UUID.randomUUID()+"@"+time).getBytes(UTF_8));
       return digester.digest();
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
@@ -268,7 +269,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   private DataFileWriter<D> setMetaInternal(String key, String value) {
-    return setMetaInternal(key, value.getBytes(StandardCharsets.UTF_8));
+    return setMetaInternal(key, value.getBytes(UTF_8));
   }
 
   /** Set a metadata property. */
@@ -285,7 +286,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, String value) {
-    return setMeta(key, value.getBytes(StandardCharsets.UTF_8));
+    return setMeta(key, value.getBytes(UTF_8));
   }
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, long value) {

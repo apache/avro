@@ -87,7 +87,7 @@ public class TestThrift {
 
     Object o = new ThriftDatumReader<>(Test.class).read
       (null,
-       DecoderFactory.get().createBinaryDecoder
+       DecoderFactory.get().binaryDecoder
        (new ByteArrayInputStream(bao.toByteArray()), null));
 
     assertEquals(test, o);

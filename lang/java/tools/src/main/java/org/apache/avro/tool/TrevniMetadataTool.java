@@ -73,7 +73,7 @@ public class TrevniMetadataTool implements Tool {
   /** Read a Trevni file and print each row as a JSON object. */
   public void dump(Input input, PrintStream out, boolean pretty)
     throws IOException {
-    this.generator = FACTORY.createJsonGenerator(out, JsonEncoding.UTF8);
+    this.generator = FACTORY.createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       generator.useDefaultPrettyPrinter();
     } else {                                      // ensure newline separation

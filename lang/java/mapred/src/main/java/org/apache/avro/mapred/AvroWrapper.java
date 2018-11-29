@@ -34,10 +34,12 @@ public class AvroWrapper<T> {
   /** Set the wrapped datum. */
   public void datum(T datum) { this.datum = datum; }
 
+  @Override
   public int hashCode() {
     return (datum == null) ? 0 : datum.hashCode();
   }
 
+  @Override
   public boolean equals(Object obj) {
     if (this == obj)
       return true;

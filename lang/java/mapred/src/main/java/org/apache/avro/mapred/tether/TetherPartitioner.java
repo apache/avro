@@ -34,6 +34,7 @@ class TetherPartitioner implements Partitioner<TetherData, NullWritable> {
 
   private Schema schema;
 
+  @Override
   public void configure(JobConf job) {
     schema = AvroJob.getMapOutputSchema(job);
   }
@@ -42,6 +43,7 @@ class TetherPartitioner implements Partitioner<TetherData, NullWritable> {
     CACHE.set(newValue);
   }
 
+  @Override
   public int getPartition(TetherData key, NullWritable value,
                           int numPartitions) {
     Integer result = CACHE.get();

@@ -20,7 +20,7 @@ package org.apache.avro;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.apache.avro.ipc.RPCContext;
 import org.apache.avro.ipc.RPCPlugin;

@@ -45,7 +45,7 @@ public class TestJsonDecoder {
     String def =
       "{\"type\":\"record\",\"name\":\"X\",\"fields\":"
       +"[{\"type\":\""+type+"\",\"name\":\"n\"}]}";
-    Schema schema = Schema.parse(def);
+    Schema schema = new Schema.Parser().parse(def);
     DatumReader<GenericRecord> reader =
       new GenericDatumReader<>(schema);
 
@@ -66,7 +66,7 @@ public class TestJsonDecoder {
       +"[{\"type\":\"long\",\"name\":\"l\"},"
       +"{\"type\":{\"type\":\"array\",\"items\":\"int\"},\"name\":\"a\"}"
       +"]}";
-    Schema ws = Schema.parse(w);
+    Schema ws = new Schema.Parser().parse(w);
     DecoderFactory df = DecoderFactory.get();
     String data = "{\"a\":[1,2],\"l\":100}{\"l\": 200, \"a\":[1,2]}";
     JsonDecoder in = df.jsonDecoder(ws, data);

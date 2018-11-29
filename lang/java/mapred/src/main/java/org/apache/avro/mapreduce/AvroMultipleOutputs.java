@@ -64,7 +64,7 @@ import org.apache.hadoop.util.ReflectionUtils;
  * Usage pattern for job submission:
  * <pre>
  *
- * Job job = new Job();
+ * Job job = Job.getInstance();
  *
  * FileInputFormat.setInputPath(job, inDir);
  * FileOutputFormat.setOutputPath(job, outDir);
@@ -311,12 +311,14 @@ public class AvroMultipleOutputs{
     }
 
     @SuppressWarnings({"unchecked"})
+    @Override
     public void write(Object key, Object value)
         throws IOException, InterruptedException {
       context.getCounter(COUNTERS_GROUP, counterName).increment(1);
       writer.write(key, value);
     }
 
+    @Override
     public void close(TaskAttemptContext context)
         throws IOException, InterruptedException {
       writer.close(context);
@@ -434,7 +436,7 @@ public class AvroMultipleOutputs{
       Schema valSchema, String baseOutputPath) throws IOException,
       InterruptedException {
     checkBaseOutputPath(baseOutputPath);
-    Job job = new Job(context.getConfiguration());
+    Job job = Job.getInstance(context.getConfiguration());
     setSchema(job, keySchema, valSchema);
     TaskAttemptContext taskContext = createTaskAttemptContext(job.getConfiguration(), context.getTaskAttemptID());
     getRecordWriter(taskContext, baseOutputPath).write(key, value);

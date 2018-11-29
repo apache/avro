@@ -110,15 +110,18 @@ class TaggedInputSplit implements Configurable, InputSplit {
     return schema;
   }
 
+  @Override
   public long getLength() throws IOException {
     return inputSplit.getLength();
   }
 
+  @Override
   public String[] getLocations() throws IOException {
     return inputSplit.getLocations();
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   public void readFields(DataInput in) throws IOException {
     inputSplitClass = (Class<? extends InputSplit>) readClass(in);
     inputSplit = (InputSplit) ReflectionUtils
@@ -139,6 +142,7 @@ class TaggedInputSplit implements Configurable, InputSplit {
     }
   }
 
+  @Override
   public void write(DataOutput out) throws IOException {
     Text.writeString(out, inputSplitClass.getName());
     inputSplit.write(out);
@@ -147,10 +151,12 @@ class TaggedInputSplit implements Configurable, InputSplit {
     Text.writeString(out, schema.toString());
   }
 
+  @Override
   public Configuration getConf() {
     return conf;
   }
 
+  @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
   }

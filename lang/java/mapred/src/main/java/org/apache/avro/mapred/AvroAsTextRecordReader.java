@@ -51,14 +51,17 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
     this.end = split.getStart() + split.getLength();
   }
 
+  @Override
   public Text createKey() {
     return new Text();
   }
 
+  @Override
   public Text createValue() {
     return new Text();
   }
 
+  @Override
   public boolean next(Text key, Text ignore) throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
       return false;
@@ -81,6 +84,7 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
     return true;
   }
 
+  @Override
   public float getProgress() throws IOException {
     if (end == start) {
       return 0.0f;
@@ -89,11 +93,11 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
     }
   }
 
+  @Override
   public long getPos() throws IOException {
     return reader.tell();
   }
 
+  @Override
   public void close() throws IOException { reader.close(); }
-
-
 }

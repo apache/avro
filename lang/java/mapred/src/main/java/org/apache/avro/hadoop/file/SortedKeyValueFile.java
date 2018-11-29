@@ -284,6 +284,7 @@ public class SortedKeyValueFile {
      *
      * @return An iterator.
      */
+    @Override
     public Iterator<AvroKeyValue<K, V>> iterator() {
       return new AvroKeyValue.Iterator<>(mDataFileReader.iterator());
     }

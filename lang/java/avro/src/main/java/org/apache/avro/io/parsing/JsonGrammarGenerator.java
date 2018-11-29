@@ -33,6 +33,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
    * Returns the non-terminal that is the start symbol
    * for the grammar for the grammar for the given schema <tt>sc</tt>.
    */
+  @Override
   public Symbol generate(Schema schema) {
     return Symbol.root(generate(schema, new HashMap<>()));
   }
@@ -47,6 +48,7 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
    * @param seen  A map of schema to symbol mapping done so far.
    * @return      The start symbol for the schema
    */
+  @Override
   public Symbol generate(Schema sc, Map<LitS, Symbol> seen) {
     switch (sc.getType()) {
     case NULL:

@@ -233,13 +233,13 @@ public class TestValidatingIO {
         result.add(r.nextInt());
         break;
       case 'L':
-        result.add(new Long(r.nextInt()));
+        result.add(Long.valueOf(r.nextInt()));
         break;
       case 'F':
-        result.add(new Float(r.nextInt()));
+        result.add(Float.valueOf(r.nextInt()));
         break;
       case 'D':
-        result.add(new Double(r.nextInt()));
+        result.add(Double.valueOf(r.nextInt()));
         break;
       case 'S':
       case 'K':

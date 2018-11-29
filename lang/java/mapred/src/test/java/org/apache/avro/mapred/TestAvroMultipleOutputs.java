@@ -18,7 +18,7 @@
 
 package org.apache.avro.mapred;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.fs.FileStatus;
@@ -314,7 +314,7 @@ public class TestAvroMultipleOutputs {
     AvroJob.setInputSchema(job, readerSchema);
     Path inputPath = new Path(inputDirectory + "/myavro2-m-00000.avro");
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
-    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), job);
+    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), (String[])null);
     AvroRecordReader<Utf8> recordReader = new AvroRecordReader<>(job, fileSplit);
     AvroWrapper<Utf8> inputPair = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();

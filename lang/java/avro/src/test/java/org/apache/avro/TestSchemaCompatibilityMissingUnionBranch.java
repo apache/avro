@@ -22,6 +22,7 @@ import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchema
 import static org.apache.avro.TestSchemas.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -81,11 +82,7 @@ public class TestSchemaCompatibilityMissingUnionBranch {
               asList("/1", "/2", "/3") },
         { A_DINT_B_DINT_UNION_RECORD1, A_DINT_B_DINT_STRING_UNION_RECORD1,
               asList("reader union lacking writer type: STRING"), asList("/fields/1/type/1") } };
-    List<Object[]> list = new ArrayList<>(fields.length);
-    for (Object[] schemas : fields) {
-      list.add(schemas);
-    }
-    return list;
+    return Arrays.asList(fields);
   }
 
   @Parameter(0)

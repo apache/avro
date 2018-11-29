@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Stack;
@@ -57,7 +58,7 @@ public class TestBlockingIO {
       this.depth = depth;
       byte[] in = input.getBytes("UTF-8");
       JsonFactory f = new JsonFactory();
-      JsonParser p = f.createJsonParser(
+      JsonParser p = f.createParser(
           new ByteArrayInputStream(input.getBytes("UTF-8")));
 
       ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -70,11 +71,11 @@ public class TestBlockingIO {
       byte[] bb = os.toByteArray();
       // dump(bb);
       this.input = DecoderFactory.get().binaryDecoder(bb, null);
-      this.parser =  f.createJsonParser(new ByteArrayInputStream(in));
+      this.parser =  f.createParser(new ByteArrayInputStream(in));
     }
 
     public void scan() throws IOException {
-      Stack<S> countStack = new Stack<>();
+      ArrayDeque<S> countStack = new ArrayDeque<>();
       long count = 0;
       while (parser.nextToken() != null) {
         switch (parser.getCurrentToken()) {
@@ -126,7 +127,7 @@ public class TestBlockingIO {
     }
 
     public void skip(int skipLevel) throws IOException {
-      Stack<S> countStack = new Stack<>();
+      ArrayDeque<S> countStack = new ArrayDeque<>();
       long count = 0;
       while (parser.nextToken() != null) {
         switch (parser.getCurrentToken()) {

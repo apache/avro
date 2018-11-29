@@ -73,13 +73,13 @@ public class RPCContext {
    * the client to the server
    */
   public Map<String,ByteBuffer> requestHandshakeMeta() {
-    if (handshakeRequest.meta == null)
-      handshakeRequest.meta = new HashMap<>();
-    return handshakeRequest.meta;
+    if (handshakeRequest.getMeta() == null)
+      handshakeRequest.setMeta(new HashMap<>());
+    return handshakeRequest.getMeta();
   }
 
   void setRequestHandshakeMeta(Map<String,ByteBuffer> newmeta) {
-    handshakeRequest.meta = newmeta;
+    handshakeRequest.setMeta(newmeta);
   }
 
   /**
@@ -89,13 +89,13 @@ public class RPCContext {
    * the server to the client
    */
   public Map<String,ByteBuffer> responseHandshakeMeta() {
-    if (handshakeResponse.meta == null)
-      handshakeResponse.meta = new HashMap<>();
-    return handshakeResponse.meta;
+    if (handshakeResponse.getMeta() == null)
+      handshakeResponse.setMeta(new HashMap<>());
+    return handshakeResponse.getMeta();
   }
 
   void setResponseHandshakeMeta(Map<String,ByteBuffer> newmeta) {
-    handshakeResponse.meta = newmeta;
+    handshakeResponse.setMeta(newmeta);
   }
 
   /**

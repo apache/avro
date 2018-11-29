@@ -201,37 +201,38 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
     WRITABLE_CONVERTERS.put
       (NullWritable.class,
        new Converter<Void>() {
-        public Void convert(Writable o) { return null; }
+         @Override public Void convert(Writable o) { return null; }
       });
     WRITABLE_CONVERTERS.put
       (BooleanWritable.class,
        new Converter<Boolean>() {
-        public Boolean convert(Writable o) {return ((BooleanWritable)o).get();}
+         @Override public Boolean convert(Writable o) {return ((BooleanWritable)o).get();}
       });
     WRITABLE_CONVERTERS.put
       (IntWritable.class,
        new Converter<Integer>() {
-        public Integer convert(Writable o) { return ((IntWritable)o).get(); }
+         @Override public Integer convert(Writable o) { return ((IntWritable)o).get(); }
       });
     WRITABLE_CONVERTERS.put
       (LongWritable.class,
        new Converter<Long>() {
-        public Long convert(Writable o) { return ((LongWritable)o).get(); }
+         @Override public Long convert(Writable o) { return ((LongWritable)o).get(); }
       });
     WRITABLE_CONVERTERS.put
       (FloatWritable.class,
        new Converter<Float>() {
-        public Float convert(Writable o) { return ((FloatWritable)o).get(); }
+        @Override  public Float convert(Writable o) { return ((FloatWritable)o).get(); }
       });
     WRITABLE_CONVERTERS.put
       (DoubleWritable.class,
        new Converter<Double>() {
-        public Double convert(Writable o) { return ((DoubleWritable)o).get(); }
+         @Override public Double convert(Writable o) { return ((DoubleWritable)o).get(); }
       });
     WRITABLE_CONVERTERS.put
       (BytesWritable.class,
        new Converter<ByteBuffer>() {
-        public ByteBuffer convert(Writable o) {
+         @Override
+         public ByteBuffer convert(Writable o) {
           BytesWritable b = (BytesWritable)o;
           return ByteBuffer.wrap(b.getBytes(), 0, b.getLength());
         }
@@ -239,9 +240,8 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
     WRITABLE_CONVERTERS.put
       (Text.class,
        new Converter<String>() {
-        public String convert(Writable o) { return o.toString(); }
+         @Override
+         public String convert(Writable o) { return o.toString(); }
       });
   }
-
-
 }

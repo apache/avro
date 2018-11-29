@@ -29,9 +29,8 @@ public class SeekableFileInput
   public SeekableFileInput(File file) throws IOException { super(file); }
   public SeekableFileInput(FileDescriptor fd) throws IOException { super(fd); }
 
-  public void seek(long p) throws IOException { getChannel().position(p); }
-  public long tell() throws IOException { return getChannel().position(); }
-  public long length() throws IOException { return getChannel().size(); }
-
+  @Override public void seek(long p) throws IOException { getChannel().position(p); }
+  @Override public long tell() throws IOException { return getChannel().position(); }
+  @Override public long length() throws IOException { return getChannel().size(); }
 }
 

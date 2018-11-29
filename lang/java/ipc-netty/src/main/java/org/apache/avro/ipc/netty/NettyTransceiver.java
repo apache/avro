@@ -557,7 +557,7 @@ public class NettyTransceiver extends Transceiver {
    * A ChannelFutureListener for channel write operations that notifies
    * a {@link Callback} if an error occurs while writing to the channel.
    */
-  protected class WriteFutureListener implements ChannelFutureListener {
+  protected static class WriteFutureListener implements ChannelFutureListener {
     protected final Callback<List<ByteBuffer>> callback;
 
     /**

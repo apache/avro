@@ -256,7 +256,7 @@ public class ReflectDatumReader<T> extends SpecificDatumReader<T> {
     else if (Short.class.getName().equals(intClass))
       value = ((Integer)value).shortValue();
     else if (Character.class.getName().equals(intClass))
-        value = ((Character)(char)(int)(Integer)value);
+        value = (char)(int)(Integer)value;
     return value;
   }
 

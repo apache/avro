@@ -242,6 +242,7 @@ public class TestProtocolSpecific {
     Protocol.Message message =
       protocol.createMessage("hello",
                              null /* doc */,
+                             new LinkedHashMap<String,String>(),
                              Schema.createRecord(fields),
                              Schema.create(Schema.Type.STRING),
                              Schema.createUnion(new ArrayList<>()));

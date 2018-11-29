@@ -71,10 +71,12 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
       _fieldName = fieldName;
     }
 
+    @Override
     public short getThriftFieldId() {
       return _thriftId;
     }
 
+    @Override
     public String getFieldName() {
       return _fieldName;
     }
@@ -102,6 +104,8 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
   public FooOrBar(FooOrBar other) {
     super(other);
   }
+
+  @Override
   public FooOrBar deepCopy() {
     return new FooOrBar(this);
   }
@@ -244,6 +248,7 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     return _Fields.findByThriftIdOrThrow(id);
   }
 
+  @Override
   public _Fields fieldForId(int fieldId) {
     return _Fields.findByThriftId(fieldId);
   }
@@ -286,7 +291,7 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     return setField_ == _Fields.BAR;
   }
 
-
+  @Override
   public boolean equals(Object other) {
     if (other instanceof FooOrBar) {
       return equals((FooOrBar)other);

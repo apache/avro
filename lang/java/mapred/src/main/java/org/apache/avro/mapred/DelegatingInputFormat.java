@@ -21,7 +21,6 @@ package org.apache.avro.mapred;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,6 +33,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.lib.MultipleInputs;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
@@ -43,6 +43,7 @@ import org.apache.hadoop.util.ReflectionUtils;
  */
 class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
 
+  @Override
   public InputSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
 
     JobConf confCopy = new JobConf(conf);
@@ -58,7 +59,7 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
     // First, build a map of Schemas to Paths
     for (Entry<Path, Schema> entry : schemaMap.entrySet()) {
       if (!schemaPaths.containsKey(entry.getValue())) {
-        schemaPaths.put(entry.getValue(), new LinkedList<>());
+        schemaPaths.put(entry.getValue(), new ArrayList<>());
         System.out.println(entry.getValue());
         System.out.println(entry.getKey());
       }
@@ -82,7 +83,7 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
       for (Path path : paths) {
        Class<? extends AvroMapper> mapperClass = mapperMap.get(path);
        if (!mapperPaths.containsKey(mapperClass)) {
-         mapperPaths.put(mapperClass, new LinkedList<>());
+         mapperPaths.put(mapperClass, new ArrayList<>());
        }
 
        mapperPaths.get(mapperClass).add(path);
@@ -116,6 +117,7 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   public RecordReader<K, V> getRecordReader(InputSplit split, JobConf conf,
       Reporter reporter) throws IOException {
 

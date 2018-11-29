@@ -29,7 +29,7 @@ class OutputBuffer extends ByteArrayOutputStream {
 
   private int bitCount;                           // position in booleans
 
-  public OutputBuffer() { super(BLOCK_SIZE + BLOCK_SIZE >> 2); }
+  public OutputBuffer() { super((BLOCK_SIZE + BLOCK_SIZE) >> 2); }
 
   public boolean isFull() { return size() >= BLOCK_SIZE; }
 
@@ -236,36 +236,36 @@ class OutputBuffer extends ByteArrayOutputStream {
 
   public static int size(int n) {
     n = (n << 1) ^ (n >> 31);                     // move sign to low-order bit
-    if (n <= (1<<7*1)-1)
+    if (n <= (1<<(7*1))-1)
       return 1;
-    if (n <= (1<<7*2)-1)
+    if (n <= (1<<(7*2))-1)
       return 2;
-    if (n <= (1<<7*3)-1)
+    if (n <= (1<<(7*3))-1)
       return 3;
-    if (n <= (1<<7*4)-1)
+    if (n <= (1<<(7*4))-1)
       return 4;
     return 5;
   }
 
   public static int size(long n) {
     n = (n << 1) ^ (n >> 63);                     // move sign to low-order bit
-    if (n <= (1<<7*1)-1)
+    if (n <= (1<<(7*1))-1)
       return 1;
-    if (n <= (1<<7*2)-1)
+    if (n <= (1<<(7*2))-1)
       return 2;
-    if (n <= (1<<7*3)-1)
+    if (n <= (1<<(7*3))-1)
       return 3;
-    if (n <= (1<<7*4)-1)
+    if (n <= (1<<(7*4))-1)
       return 4;
-    if (n <= (1<<7*5)-1)
+    if (n <= (1<<(7*5))-1)
       return 5;
-    if (n <= (1<<7*6)-1)
+    if (n <= (1<<(7*6))-1)
       return 6;
-    if (n <= (1<<7*7)-1)
+    if (n <= (1<<(7*7))-1)
       return 7;
-    if (n <= (1<<7*8)-1)
+    if (n <= (1<<(7*8))-1)
       return 8;
-    if (n <= (1<<7*9)-1)
+    if (n <= (1<<(7*9))-1)
       return 9;
     return 10;
   }

@@ -208,17 +208,17 @@ public abstract class Requestor {
       remote = REMOTE_PROTOCOLS.get(remoteHash);
     }
     HandshakeRequest handshake = new HandshakeRequest();
-    handshake.clientHash = localHash;
-    handshake.serverHash = remoteHash;
+    handshake.setClientHash(localHash);
+    handshake.setServerHash(remoteHash);
     if (sendLocalText)
-      handshake.clientProtocol = local.toString();
+      handshake.setClientProtocol(local.toString());
 
     RPCContext context = new RPCContext();
     context.setHandshakeRequest(handshake);
     for (RPCPlugin plugin : rpcMetaPlugins) {
       plugin.clientStartConnect(context);
     }
-    handshake.meta = context.requestHandshakeMeta();
+    handshake.setMeta(context.requestHandshakeMeta());
 
     HANDSHAKE_WRITER.write(handshake, out);
   }
@@ -227,7 +227,7 @@ public abstract class Requestor {
     if (getTransceiver().isConnected()) return true;
     boolean established = false;
     HandshakeResponse handshake = HANDSHAKE_READER.read(null, in);
-    switch (handshake.match) {
+    switch (handshake.getMatch()) {
     case BOTH:
       established = true;
       sendLocalText = false;
@@ -244,7 +244,7 @@ public abstract class Requestor {
       sendLocalText = true;
       break;
     default:
-      throw new AvroRuntimeException("Unexpected match: "+handshake.match);
+      throw new AvroRuntimeException("Unexpected match: " + handshake.getMatch());
     }
 
     RPCContext context = new RPCContext();
@@ -258,8 +258,8 @@ public abstract class Requestor {
   }
 
   private void setRemote(HandshakeResponse handshake) throws IOException {
-    remote = Protocol.parse(handshake.serverProtocol.toString());
-    MD5 remoteHash = (MD5)handshake.serverHash;
+    remote = Protocol.parse(handshake.getServerProtocol().toString());
+    MD5 remoteHash = handshake.getServerHash();
     REMOTE_HASHES.put(transceiver.getRemoteName(), remoteHash);
     REMOTE_PROTOCOLS.putIfAbsent(remoteHash, remote);
   }

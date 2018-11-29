@@ -37,9 +37,9 @@ public class AvroMissingFieldException extends AvroRuntimeException {
 
   @Override
   public String toString() {
-    String result = "";
+    StringBuilder result = new StringBuilder();
     for (Field field: chainOfFields) {
-      result = " --> " + field.name() + result;
+      result.insert(0, " --> " + field.name());
     }
     return "Path in schema:" + result;
   }

@@ -54,10 +54,12 @@ public class SocketTransceiver extends Transceiver {
     LOG.info("open to "+getRemoteName());
   }
 
+  @Override
   public String getRemoteName() {
     return channel.socket().getRemoteSocketAddress().toString();
   }
 
+  @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
     List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
@@ -81,6 +83,7 @@ public class SocketTransceiver extends Transceiver {
     }
   }
 
+  @Override
   public synchronized void writeBuffers(List<ByteBuffer> buffers)
     throws IOException {
     if (buffers == null) return;                  // no data to write

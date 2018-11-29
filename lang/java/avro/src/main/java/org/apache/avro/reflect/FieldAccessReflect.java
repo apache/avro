@@ -31,14 +31,14 @@ class FieldAccessReflect extends FieldAccess {
     AvroEncode enc = field.getAnnotation(AvroEncode.class);
     if (enc != null)
       try {
-        return new ReflectionBasesAccessorCustomEncoded(field, enc.using().newInstance());
+        return new ReflectionBasesAccessorCustomEncoded(field, enc.using().getDeclaredConstructor().newInstance());
       } catch (Exception e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }
     return new ReflectionBasedAccessor(field);
   }
 
-  private class ReflectionBasedAccessor extends FieldAccessor {
+  private static class ReflectionBasedAccessor extends FieldAccessor {
     protected final Field field;
     private boolean isStringable;
     private boolean isCustomEncoded;
@@ -82,7 +82,7 @@ class FieldAccessReflect extends FieldAccess {
     }
   }
 
-  private final class ReflectionBasesAccessorCustomEncoded extends ReflectionBasedAccessor {
+  private static final class ReflectionBasesAccessorCustomEncoded extends ReflectionBasedAccessor {
 
     private CustomEncoding<?> encoding;
 
@@ -109,7 +109,7 @@ class FieldAccessReflect extends FieldAccess {
       }
     }
 
-    protected boolean isCustomEncoded() {
+    @Override protected boolean isCustomEncoded() {
       return true;
     }
 

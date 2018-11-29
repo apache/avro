@@ -106,8 +106,10 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
     this.typeEnum = typeEnum;
   }
 
+  @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
+  @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return id;
@@ -121,6 +123,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
 
   // Used by DatumReader.  Applications should not call.
   @SuppressWarnings(value="unchecked")
+  @Override
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: id = (java.lang.Integer)value$; break;

@@ -58,7 +58,7 @@ public class Json {
     try {
       InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc");
       try {
-        SCHEMA = Schema.parse(in);
+        SCHEMA = new Schema.Parser().parse(in);
       } finally {
         in.close();
       }
@@ -113,7 +113,7 @@ public class Json {
    */
   public static Object parseJson(String s) {
     try {
-      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createJsonParser(
+      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createParser(
           new StringReader(s))));
     } catch (JsonParseException e) {
       throw new RuntimeException(e);
@@ -216,7 +216,7 @@ public class Json {
       ObjectNode object = JsonNodeFactory.instance.objectNode();
       for (long l = in.readMapStart(); l > 0; l = in.mapNext())
         for (long i = 0; i < l; i++)
-          object.put(in.readString(), read(in));
+          object.set(in.readString(), read(in));
       return object;
     default:
       throw new AvroRuntimeException("Unexpected Json node type");

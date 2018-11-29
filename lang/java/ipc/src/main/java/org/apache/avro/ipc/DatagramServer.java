@@ -52,8 +52,10 @@ public class DatagramServer extends Thread implements Server {
     setDaemon(true);
   }
 
+  @Override
   public int getPort() { return channel.socket().getLocalPort(); }
 
+  @Override
   public void run() {
     while (true) {
       try {
@@ -67,6 +69,7 @@ public class DatagramServer extends Thread implements Server {
     }
   }
 
+  @Override
   public void close() { this.interrupt(); }
 
   public static void main(String[] arg) throws Exception {

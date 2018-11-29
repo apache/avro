@@ -80,8 +80,10 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     this.dec = dec;
   }
 
+  @Override
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
+  @Override
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return b;
@@ -99,6 +101,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   }
   // Used by DatumReader.  Applications should not call.
   @SuppressWarnings(value="unchecked")
+  @Override
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: b = (java.lang.Boolean)value$; break;

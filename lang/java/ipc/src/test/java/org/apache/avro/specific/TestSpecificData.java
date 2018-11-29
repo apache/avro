@@ -130,7 +130,7 @@ public class TestSpecificData {
 
     String json = foo.toString();
     JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(json);
+    JsonParser parser = factory.createParser(json);
     ObjectMapper mapper = new ObjectMapper();
 
     // will throw exception if string is not parsable json

@@ -75,7 +75,7 @@ public class AvroResponseMarshaller implements MethodDescriptor.Marshaller<Objec
     }
   }
 
-  private class AvroResponseInputStream extends AvroInputStream {
+  private static class AvroResponseInputStream extends AvroInputStream {
     private final Protocol.Message message;
     private Object response;
 

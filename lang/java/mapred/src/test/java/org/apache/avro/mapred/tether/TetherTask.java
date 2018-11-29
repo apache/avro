@@ -141,8 +141,8 @@ public abstract class TetherTask<IN,MID,OUT> {
   void configure(TaskType taskType, CharSequence inSchemaText, CharSequence outSchemaText) {
     this.taskType = taskType;
     try {
-      Schema inSchema = Schema.parse(inSchemaText.toString());
-      Schema outSchema = Schema.parse(outSchemaText.toString());
+      Schema inSchema = new Schema.Parser().parse(inSchemaText.toString());
+      Schema outSchema = new Schema.Parser().parse(outSchemaText.toString());
       switch (taskType) {
       case MAP:
         this.inReader = new SpecificDatumReader<>(inSchema);

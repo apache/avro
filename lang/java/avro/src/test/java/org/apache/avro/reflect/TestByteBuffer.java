@@ -18,6 +18,7 @@
 
 package org.apache.avro.reflect;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 
 import java.io.*;
@@ -54,7 +55,7 @@ public class TestByteBuffer {
     content = new File(DIR.getRoot().getPath(),"test-content");
     try(FileOutputStream out = new FileOutputStream(content)) {
       for (int i = 0; i < 100000; i++) {
-        out.write("hello world\n".getBytes());
+        out.write("hello world\n".getBytes(UTF_8));
       }
     }
   }

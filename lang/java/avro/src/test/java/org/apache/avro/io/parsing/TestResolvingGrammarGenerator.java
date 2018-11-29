@@ -50,7 +50,7 @@ public class TestResolvingGrammarGenerator {
 
   public TestResolvingGrammarGenerator(String jsonSchema, String jsonData)
     throws IOException {
-    this.schema = Schema.parse(jsonSchema);
+    this.schema = new Schema.Parser().parse(jsonSchema);
     JsonFactory factory = new JsonFactory();
     ObjectMapper mapper = new ObjectMapper(factory);
 

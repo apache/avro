@@ -33,9 +33,9 @@ public abstract class SpecificRecordBase
   implements SpecificRecord, Comparable<SpecificRecord>, GenericRecord,
              Externalizable {
 
-  public abstract Schema getSchema();
-  public abstract Object get(int field);
-  public abstract void put(int field, Object value);
+  @Override public abstract Schema getSchema();
+  @Override public abstract Object get(int field);
+  @Override public abstract void put(int field, Object value);
 
   public SpecificData getSpecificData() {
     // Default implementation for backwards compatibility, overridden in generated code

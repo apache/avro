@@ -63,9 +63,9 @@ public class TestEvolvedSchema {
   GenericData.Record evolvedRecord;
   GenericData.Record innerRecord;
 
-  private static final Schema writer = Schema.parse(writerSchema);
-  private static final Schema evolved = Schema.parse(evolvedSchema2);
-  private static final Schema inner = Schema.parse(innerSchema);
+  private static final Schema writer = new Schema.Parser().parse(writerSchema);
+  private static final Schema evolved = new Schema.Parser().parse(evolvedSchema2);
+  private static final Schema inner = new Schema.Parser().parse(innerSchema);
 
   @Before
   public void setUp() {

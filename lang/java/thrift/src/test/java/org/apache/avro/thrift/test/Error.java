@@ -83,10 +83,12 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
       _fieldName = fieldName;
     }
 
+    @Override
     public short getThriftFieldId() {
       return _thriftId;
     }
 
+    @Override
     public String getFieldName() {
       return _fieldName;
     }
@@ -121,6 +123,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     }
   }
 
+  @Override
   public Error deepCopy() {
     return new Error(this);
   }
@@ -130,6 +133,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     this.message = null;
   }
 
+  @Override
   public String getMessage() {
     return this.message;
   }
@@ -153,6 +157,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     }
   }
 
+  @Override
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case MESSAGE:
@@ -166,6 +171,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     }
   }
 
+  @Override
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case MESSAGE:

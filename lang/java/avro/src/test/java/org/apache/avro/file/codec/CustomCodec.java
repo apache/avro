@@ -18,6 +18,8 @@
 
 package org.apache.avro.file.codec;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -57,8 +59,8 @@ public class CustomCodec extends Codec {
     if (this == other)
       return true;
     if (other instanceof Codec) {
-      ByteBuffer original = ByteBuffer.allocate(getName().getBytes().length);
-      original.put(getName().getBytes());
+      ByteBuffer original = ByteBuffer.allocate(getName().getBytes(UTF_8).length);
+      original.put(getName().getBytes(UTF_8));
       original.rewind();
       try {
         return compareDecompress((Codec) other, original);

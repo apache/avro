@@ -17,6 +17,7 @@
  */
 package org.apache.avro;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -55,7 +56,7 @@ public class TestDataFileCustomSync {
     try {
       MessageDigest digester = MessageDigest.getInstance("MD5");
       long time = System.currentTimeMillis();
-      digester.update((UUID.randomUUID()+"@"+time).getBytes());
+      digester.update((UUID.randomUUID()+"@"+time).getBytes(UTF_8));
       return digester.digest();
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);

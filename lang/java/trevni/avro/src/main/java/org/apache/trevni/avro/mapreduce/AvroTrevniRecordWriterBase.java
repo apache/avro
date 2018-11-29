@@ -90,7 +90,7 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
     fs = dirPath.getFileSystem(context.getConfiguration());
     fs.mkdirs(dirPath);
 
-    blockSize = fs.getDefaultBlockSize();
+    blockSize = fs.getDefaultBlockSize(dirPath);
   }
 
   /**

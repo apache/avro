@@ -36,6 +36,7 @@ class MapCollector<OUT,K,V,KO,VO> extends AvroCollector<OUT> {
     this.isMapOnly = isMapOnly;
   }
 
+  @Override
   public void collect(OUT datum) throws IOException {
     if (isMapOnly) {
       wrapper.datum(datum);

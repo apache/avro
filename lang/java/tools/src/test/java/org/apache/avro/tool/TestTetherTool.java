@@ -73,7 +73,7 @@ public class TestTetherTool {
     String outputPathStr = OUTPUT_DIR.getRoot().getPath();
     Path outputPath = new Path(outputPathStr);
 
-    outputPath.getFileSystem(job).delete(outputPath);
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // create the input file
     WordCountUtil.writeLinesFile(inputPathStr + "/lines.avro");
