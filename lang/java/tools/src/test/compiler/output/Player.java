@@ -28,6 +28,14 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$);
 
   /**
+   * Return the BinaryMessageEncoder instance used by this class.
+   * @return the message encoder used by this class
+   */
+  public static BinaryMessageEncoder<Player> getEncoder() {
+    return ENCODER;
+  }
+
+  /**
    * Return the BinaryMessageDecoder instance used by this class.
    * @return the message decoder used by this class
    */
