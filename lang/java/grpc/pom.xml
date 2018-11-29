@@ -77,6 +77,11 @@
   <dependencies>
     <dependency>
       <groupId>io.grpc</groupId>
+      <artifactId>grpc-core</artifactId>
+      <version>${grpc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.grpc</groupId>
       <artifactId>grpc-stub</artifactId>
       <version>${grpc.version}</version>
     </dependency>
@@ -85,6 +90,12 @@
       <artifactId>grpc-netty</artifactId>
       <version>${grpc.version}</version>
       <!-- use netty only for tests as user can use grpc transports other than Netty -->
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http2</artifactId>
+      <version>${netty-codec-http2.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
