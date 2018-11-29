@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -80,14 +80,14 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
       DatumReader<T> datumReader = (readerSchema != null)
         ? dataModel.createDatumReader(writerSchema, readerSchema)
         : dataModel.createDatumReader(writerSchema);
-      return new AvroKeyDeserializer<T>(writerSchema, readerSchema, datumReader);
+      return new AvroKeyDeserializer<>(writerSchema, readerSchema, datumReader);
     } else if (AvroValue.class.isAssignableFrom(c)) {
       Schema writerSchema = getValueWriterSchema(conf);
       Schema readerSchema = getValueReaderSchema(conf);
       DatumReader<T> datumReader = (readerSchema != null)
         ? dataModel.createDatumReader(writerSchema, readerSchema)
         : dataModel.createDatumReader(writerSchema);
-      return new AvroValueDeserializer<T>(writerSchema, readerSchema, datumReader);
+      return new AvroValueDeserializer<>(writerSchema, readerSchema, datumReader);
     } else {
       throw new IllegalStateException("Only AvroKey and AvroValue are supported.");
     }
@@ -112,7 +112,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
     }
     GenericData dataModel = createDataModel(conf);
     DatumWriter<T> datumWriter = dataModel.createDatumWriter(schema);
-    return new AvroSerializer<T>(schema, datumWriter);
+    return new AvroSerializer<>(schema, datumWriter);
   }
 
   /**
@@ -177,7 +177,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Sets the data model class for de/seralization.
+   * Sets the data model class for de/serialization.
    *
    * @param conf The configuration.
    * @param modelClass The data model class.
@@ -231,7 +231,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Gets the data model class for de/seralization.
+   * Gets the data model class for de/serialization.
    *
    * @param conf The configuration.
    */

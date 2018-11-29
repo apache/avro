@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,22 +35,26 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.RecordWriter;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestAvroTextOutputFormat {
+  @Rule
+  public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   private static final String UTF8 = "UTF-8";
 
   @Test
   public void testAvroTextRecordWriter() throws Exception {
-    File file = new File(System.getProperty("test.dir", "."), "writer");
+    File file = new File(tmpFolder.getRoot().getPath(), "writer");
     Schema schema = Schema.create(Schema.Type.BYTES);
     DatumWriter<ByteBuffer> datumWriter =
-      new GenericDatumWriter<ByteBuffer>(schema);
+      new GenericDatumWriter<>(schema);
     DataFileWriter<ByteBuffer> fileWriter =
-      new DataFileWriter<ByteBuffer>(datumWriter);
+      new DataFileWriter<>(datumWriter);
     fileWriter.create(schema, file);
-    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<Object, Object>()
+    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<>()
       .new AvroTextRecordWriter(fileWriter, "\t".getBytes(UTF8));
 
     rw.write(null, null);
@@ -69,9 +73,9 @@ public class TestAvroTextOutputFormat {
 
     rw.close(null);
 
-    DatumReader<ByteBuffer> reader = new GenericDatumReader<ByteBuffer>();
+    DatumReader<ByteBuffer> reader = new GenericDatumReader<>();
     DataFileReader<ByteBuffer> fileReader =
-      new DataFileReader<ByteBuffer>(file, reader);
+      new DataFileReader<>(file, reader);
     assertEquals("k1", asString(fileReader.next()));
     assertEquals("k2", asString(fileReader.next()));
     assertEquals("v1", asString(fileReader.next()));

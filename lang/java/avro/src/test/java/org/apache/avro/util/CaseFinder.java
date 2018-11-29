@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,8 @@ package org.apache.avro.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Parser for files containing test cases consisting of
  * <code>&lt;String,String&gt;</code> pairs, where the first string is

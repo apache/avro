@@ -141,6 +141,8 @@ module Avro
       end
 
       def match_record_schemas(writers_schema, readers_schema)
+        return false if writers_schema.type_sym == :union
+
         writer_fields_hash = writers_schema.fields_hash
         readers_schema.fields.each do |field|
           if writer_fields_hash.key?(field.name)

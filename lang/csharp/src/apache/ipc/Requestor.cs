@@ -357,7 +357,7 @@ namespace Avro.ipc
         }
 
 
-        private class TransceiverCallback<T> : ICallback<IList<MemoryStream>> 
+        private class TransceiverCallback<T> : ICallback<IList<MemoryStream>>
         {
             private readonly Requestor requestor;
             private readonly RpcRequest request;

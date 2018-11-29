@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,8 @@
  */
 package org.apache.avro.compiler.specific;
 
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JODA;
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.JSR310;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,75 +31,88 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData.StringType;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 @RunWith(JUnit4.class)
 public class TestSpecificCompiler {
-  private final String schemaSrcPath = "src/test/resources/simple_record.avsc";
-  private final String velocityTemplateDir =
-      "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
-  private File src;
-  private File outputDir;
+  private static final Logger LOG = LoggerFactory.getLogger(TestSpecificCompiler.class);
+
+  @Rule
+  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+
+  @Rule public TestName name = new TestName();
+
   private File outputFile;
 
   @Before
   public void setUp() {
-    this.src = new File(this.schemaSrcPath);
-    this.outputDir = AvroTestUtil.tempDirectory(getClass(), "specific-output");
-    this.outputFile = new File(this.outputDir, "SimpleRecord.java");
-    if (outputFile.exists() && !outputFile.delete()) {
-      throw new IllegalStateException("unable to delete " + outputFile);
-    }
+    this.outputFile = new File(this.OUTPUT_DIR.getRoot(), "SimpleRecord.java");
   }
 
-  @After
-  public void tearDow() {
-    if (this.outputFile != null) {
-      this.outputFile.delete();
-    }
-  }
+  private File src = new File("src/test/resources/simple_record.avsc");
 
   /** Uses the system's java compiler to actually compile the generated code. */
-  static void assertCompilesWithJavaCompiler(Collection<SpecificCompiler.OutputFile> outputs)
-          throws IOException {
-    if (outputs.isEmpty())
+  static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs) throws IOException {
+    if (outputs.isEmpty()) {
       return;               // Nothing to compile!
+    }
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager fileManager =
             compiler.getStandardFileManager(null, null, null);
 
-    File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
-    List<File> javaFiles = new ArrayList<File>();
+    List<File> javaFiles = new ArrayList<>();
     for (SpecificCompiler.OutputFile o : outputs) {
       javaFiles.add(o.writeToDestination(null, dstDir));
     }
 
+    final List<Diagnostic<?>> warnings = new ArrayList<>();
+    DiagnosticListener<JavaFileObject> diagnosticListener = diagnostic -> {
+      switch (diagnostic.getKind()) {
+      case ERROR:
+        // Do not add these to warnings because they will fail the compile, anyway.
+        LOG.error("{}", diagnostic);
+        break;
+      case WARNING:
+      case MANDATORY_WARNING:
+        LOG.warn("{}", diagnostic);
+        warnings.add(diagnostic);
+        break;
+      case NOTE:
+      case OTHER:
+        LOG.debug("{}", diagnostic);
+        break;
+      }
+    };
     JavaCompiler.CompilationTask cTask = compiler.getTask(null, fileManager,
-            null, null, null, fileManager.getJavaFileObjects(
-                    javaFiles.toArray(new File[javaFiles.size()])));
+            diagnosticListener, Collections.singletonList("-Xlint:all"), null,
+            fileManager.getJavaFileObjects(javaFiles.toArray(new File[javaFiles.size()])));
     boolean compilesWithoutError = cTask.call();
     assertTrue(compilesWithoutError);
+    assertEquals("Warnings produced when compiling generated code with -Xlint:all", 0, warnings.size());
   }
 
   private static Schema createSampleRecordSchema(int numStringFields, int numDoubleFields) {
@@ -112,19 +127,24 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
+    return createCompiler(JODA);
+  }
+
+  private SpecificCompiler createCompiler(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) throws IOException {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(this.src);
-    SpecificCompiler compiler = new SpecificCompiler(schema);
-    compiler.setTemplateDir(this.velocityTemplateDir);
+    SpecificCompiler compiler = new SpecificCompiler(schema, dateTimeLogicalTypeImplementation);
+    String velocityTemplateDir = "src/main/velocity/org/apache/avro/compiler/specific/templates/java/classic/";
+    compiler.setTemplateDir(velocityTemplateDir);
     compiler.setStringType(StringType.CharSequence);
     return compiler;
   }
 
   @Test
-  public void testCanReadTemplateFilesOnTheFilesystem() throws IOException, URISyntaxException{
+  public void testCanReadTemplateFilesOnTheFilesystem() throws IOException {
     SpecificCompiler compiler = createCompiler();
-    compiler.compileToDestination(this.src, this.outputDir);
-    assertTrue(this.outputFile.exists());
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(new File(OUTPUT_DIR.getRoot(),"SimpleRecord.java").exists());
   }
 
   @Test
@@ -134,54 +154,54 @@ public class TestSpecificCompiler {
     assertFalse(compiler.deprecatedFields());
     assertTrue(compiler.publicFields());
     assertFalse(compiler.privateFields());
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
-    BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // No line, once trimmed, should start with a deprecated field declaration
-      // nor a private field declaration.  Since the nested builder uses private
-      // fields, we cannot do the second check.
-      line = line.trim();
-      assertFalse("Line started with a deprecated field declaration: " + line,
-        line.startsWith("@Deprecated public int value"));
+    try(BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        // No line, once trimmed, should start with a deprecated field declaration
+        // nor a private field declaration.  Since the nested builder uses private
+        // fields, we cannot do the second check.
+        line = line.trim();
+        assertFalse("Line started with a deprecated field declaration: " + line,
+                line.startsWith("@Deprecated public int value"));
+      }
     }
-    reader.close();
   }
 
   @Test
   public void testCreateAllArgsConstructor() throws Exception {
     SpecificCompiler compiler = createCompiler();
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
-    BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
     boolean foundAllArgsConstructor = false;
-    while (!foundAllArgsConstructor && (line = reader.readLine()) != null) {
-      foundAllArgsConstructor = line.contains("All-args constructor");
+    try(BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while (!foundAllArgsConstructor && (line = reader.readLine()) != null) {
+        foundAllArgsConstructor = line.contains("All-args constructor");
+      }
     }
-    reader.close();
     assertTrue(foundAllArgsConstructor);
   }
 
   @Test
   public void testMaxValidParameterCounts() throws Exception {
     Schema validSchema1 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT, 0);
-    assertCompilesWithJavaCompiler(new SpecificCompiler(validSchema1).compile());
+    assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName() + "1"), new SpecificCompiler(validSchema1).compile());
 
     Schema validSchema2 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT - 2, 1);
-    assertCompilesWithJavaCompiler(new SpecificCompiler(validSchema1).compile());
+    assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName() + "2"), new SpecificCompiler(validSchema1).compile());
   }
 
   @Test
   public void testInvalidParameterCounts() throws Exception {
     Schema invalidSchema1 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT + 1, 0);
     SpecificCompiler compiler = new SpecificCompiler(invalidSchema1);
-    assertCompilesWithJavaCompiler(compiler.compile());
+    assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName() + "1"), compiler.compile());
 
     Schema invalidSchema2 = createSampleRecordSchema(SpecificCompiler.MAX_FIELD_PARAMETER_UNIT_COUNT, 10);
     compiler = new SpecificCompiler(invalidSchema2);
-    assertCompilesWithJavaCompiler(compiler.compile());
+    assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName() + "2"), compiler.compile());
   }
 
   @Test
@@ -211,10 +231,10 @@ public class TestSpecificCompiler {
     assertTrue(compiler.deprecatedFields());
     assertTrue(compiler.publicFields());
     assertFalse(compiler.privateFields());
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
     BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
+    String line;
     while ((line = reader.readLine()) != null) {
       // No line, once trimmed, should start with a public field declaration
       line = line.trim();
@@ -231,7 +251,7 @@ public class TestSpecificCompiler {
     assertFalse(compiler.deprecatedFields());
     assertFalse(compiler.publicFields());
     assertTrue(compiler.privateFields());
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
     BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
     String line = null;
@@ -251,19 +271,19 @@ public class TestSpecificCompiler {
   public void testSettersCreatedByDefault() throws IOException {
     SpecificCompiler compiler = createCompiler();
     assertTrue(compiler.isCreateSetters());
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
-    BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
     int foundSetters = 0;
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // We should find the setter in the main class
-      line = line.trim();
-      if (line.startsWith("public void setValue(")) {
-        foundSetters++;
+    try(BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        // We should find the setter in the main class
+        line = line.trim();
+        if (line.startsWith("public void setValue(")) {
+          foundSetters++;
+        }
       }
     }
-    reader.close();
     assertEquals("Found the wrong number of setters", 1, foundSetters);
   }
 
@@ -272,35 +292,35 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.setCreateSetters(false);
     assertFalse(compiler.isCreateSetters());
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
-    BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // No setter should be found
-      line = line.trim();
-      assertFalse("No line should include the setter: " + line,
-        line.startsWith("public void setValue("));
+    try(BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        // No setter should be found
+        line = line.trim();
+        assertFalse("No line should include the setter: " + line,
+                line.startsWith("public void setValue("));
+      }
     }
-    reader.close();
   }
 
   @Test
   public void testSettingOutputCharacterEncoding() throws Exception {
     SpecificCompiler compiler = createCompiler();
     // Generated file in default encoding
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     byte[] fileInDefaultEncoding = new byte[(int) this.outputFile.length()];
     FileInputStream is = new FileInputStream(this.outputFile);
     is.read(fileInDefaultEncoding);
     is.close(); //close input stream otherwise delete might fail
     if (!this.outputFile.delete()) {
-      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasnt changed.
+      throw new IllegalStateException("unable to delete " + this.outputFile); //delete otherwise compiler might not overwrite because src timestamp hasn't changed.
     }
     // Generate file in another encoding (make sure it has different number of bytes per character)
     String differentEncoding = Charset.defaultCharset().equals(Charset.forName("UTF-16")) ? "UTF-32" : "UTF-16";
     compiler.setOutputCharacterEncoding(differentEncoding);
-    compiler.compileToDestination(this.src, this.outputDir);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     byte[] fileInDifferentEncoding = new byte[(int) this.outputFile.length()];
     is = new FileInputStream(this.outputFile);
     is.read(fileInDifferentEncoding);
@@ -378,6 +398,26 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testJavaTypeWithJsr310DateTimeTypes() throws Exception {
+    SpecificCompiler compiler = createCompiler(JSR310);
+
+    Schema dateSchema = LogicalTypes.date()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeSchema = LogicalTypes.timeMillis()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+
+    // Date/time types should always use upper level java classes
+    Assert.assertEquals("Should use java.time.LocalDate for date type",
+        "java.time.LocalDate", compiler.javaType(dateSchema));
+    Assert.assertEquals("Should use java.time.LocalTime for time-millis type",
+        "java.time.LocalTime", compiler.javaType(timeSchema));
+    Assert.assertEquals("Should use java.time.Instant for timestamp-millis type",
+        "java.time.Instant", compiler.javaType(timestampSchema));
+  }
+
+  @Test
   public void testJavaUnbox() throws Exception {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(false);
@@ -412,7 +452,26 @@ public class TestSpecificCompiler {
         "org.joda.time.LocalTime", compiler.javaUnbox(timeSchema));
     Assert.assertEquals("Should use Joda DateTime for timestamp-millis type",
         "org.joda.time.DateTime", compiler.javaUnbox(timestampSchema));
+  }
 
+  @Test
+  public void testJavaUnboxJsr310DateTime() throws Exception {
+    SpecificCompiler compiler = createCompiler(JSR310);
+
+    Schema dateSchema = LogicalTypes.date()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeSchema = LogicalTypes.timeMillis()
+        .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    // Date/time types should always use upper level java classes, even though
+    // their underlying representations are primitive types
+    Assert.assertEquals("Should use java.time.LocalDate for date type",
+        "java.time.LocalDate", compiler.javaUnbox(dateSchema));
+    Assert.assertEquals("Should use java.time.LocalTime for time-millis type",
+        "java.time.LocalTime", compiler.javaUnbox(timeSchema));
+    Assert.assertEquals("Should use java.time.Instant for timestamp-millis type",
+        "java.time.Instant", compiler.javaUnbox(timestampSchema));
   }
 
   @Test
@@ -471,8 +530,24 @@ public class TestSpecificCompiler {
   public void testLogicalTypesWithMultipleFields() throws Exception {
     Schema logicalTypesWithMultipleFields = new Schema.Parser().parse(
         new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
-    assertCompilesWithJavaCompiler(
+    assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName()),
         new SpecificCompiler(logicalTypesWithMultipleFields).compile());
+  }
+
+  @Test
+  public void testUnionAndFixedFields() throws Exception {
+    Schema unionTypesWithMultipleFields = new Schema.Parser().parse(
+        new File("src/test/resources/union_and_fixed_fields.avsc"));
+    assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
+        new SpecificCompiler(unionTypesWithMultipleFields).compile());
+  }
+
+  @Test
+  public void testLogicalTypesWithMultipleFieldsJsr310DateTime() throws Exception {
+    Schema logicalTypesWithMultipleFields = new Schema.Parser().parse(
+        new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
+    assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
+        new SpecificCompiler(logicalTypesWithMultipleFields, JSR310).compile());
   }
 
   @Test
@@ -532,7 +607,73 @@ public class TestSpecificCompiler {
         "null", compiler.conversionInstance(uuidSchema));
   }
 
-  public void testToFromByteBuffer() {
+  @Test
+  public void testPojoWithOptionalTurnedOffByDefault() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        assertFalse(line.contains("Optional"));
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+  }
 
+  @Test
+  public void testPojoWithOptionalCreatedWhenOptionTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setGettersReturnOptional(true);
+    //compiler.setCreateOptionalGetters(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+    assertEquals(9, optionalFound);
+  }
+  @Test
+  public void testPojoWithOptionalCreatedWhenOptionalForEverythingTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    //compiler.setGettersReturnOptional(true);
+    compiler.setCreateOptionalGetters(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    BufferedReader reader = null;
+    try {
+      reader = new BufferedReader(new FileReader(this.outputFile));
+
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    } finally {
+      if (reader != null)
+        reader.close();
+    }
+    assertEquals(17, optionalFound);
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,9 +28,19 @@ public class SchemaTask extends ProtocolTask {
   protected void doCompile(File src, File dest) throws IOException {
     Schema.Parser parser = new Schema.Parser();
     Schema schema = parser.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(schema);
+    SpecificCompiler compiler = new SpecificCompiler(schema, getDateTimeLogicalTypeImplementation());
     compiler.setStringType(getStringType());
     compiler.compileToDestination(src, dest);
+  }
+
+  public static void main(String[] args) throws IOException {
+    if (args.length < 2) {
+      System.err.println("Usage: SchemaTask <schema.avsc>... <output-folder>");
+      System.exit(1);
+    }
+    File dst = new File(args[args.length-1]);
+    for (int i = 0; i < args.length-1; i++)
+      new SchemaTask().doCompile(new File(args[i]), dst);
   }
 }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -55,7 +55,7 @@ public class TestAvroDatumConverterFactory {
   public void testConvertAvroKey() throws IOException {
     AvroJob.setOutputKeySchema(mJob, Schema.create(Schema.Type.STRING));
 
-    AvroKey<CharSequence> avroKey = new AvroKey<CharSequence>("foo");
+    AvroKey<CharSequence> avroKey = new AvroKey<>("foo");
     @SuppressWarnings("unchecked")
     AvroDatumConverter<AvroKey<CharSequence>, ?> converter = mFactory.create(
         (Class<AvroKey<CharSequence>>) avroKey.getClass());
@@ -66,7 +66,7 @@ public class TestAvroDatumConverterFactory {
   public void testConvertAvroValue() throws IOException {
     AvroJob.setOutputValueSchema(mJob, Schema.create(Schema.Type.INT));
 
-    AvroValue<Integer> avroValue = new AvroValue<Integer>(42);
+    AvroValue<Integer> avroValue = new AvroValue<>(42);
     @SuppressWarnings("unchecked")
     AvroDatumConverter<AvroValue<Integer>, Integer> converter = mFactory.create(
         (Class<AvroValue<Integer>>) avroValue.getClass());

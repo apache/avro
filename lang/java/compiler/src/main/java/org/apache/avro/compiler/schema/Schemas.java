@@ -1,8 +1,22 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.avro.compiler.schema;
 
-import com.google.common.base.Function;
-import com.google.common.base.Supplier;
-import com.google.common.collect.Lists;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
@@ -10,6 +24,8 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
@@ -87,11 +103,11 @@ public final class Schemas {
    */
   public static <T> T visit(final Schema start, final SchemaVisitor<T> visitor) {
     // Set of Visited Schemas
-    IdentityHashMap<Schema, Schema> visited = new IdentityHashMap<Schema, Schema>();
+    IdentityHashMap<Schema, Schema> visited = new IdentityHashMap<>();
     // Stack that contains the Schams to process and afterVisitNonTerminal functions.
     // Deque<Either<Schema, Supplier<SchemaVisitorAction>>>
     // Using either has a cost which we want to avoid...
-    Deque<Object> dq = new ArrayDeque<Object>();
+    Deque<Object> dq = new ArrayDeque<>();
     dq.addLast(start);
     Object current;
     while ((current = dq.pollLast()) != null) {
@@ -124,13 +140,10 @@ public final class Schemas {
               visited.put(schema, schema);
               break;
             case RECORD:
-              terminate = visitNonTerminal(visitor, schema, dq,
-                  Lists.transform(Lists.reverse(schema.getFields()), new Function<Field, Schema>() {
-                    @Override
-                    public Schema apply(Field f) {
-                      return f.schema();
-                    }
-                  }));
+              Iterator<Schema> reverseSchemas = schema.getFields().stream().map(Field::schema)
+                  .collect(Collectors.toCollection(ArrayDeque::new))
+                  .descendingIterator();
+              terminate = visitNonTerminal(visitor, schema, dq, () -> reverseSchemas);
               visited.put(schema, schema);
               break;
             case UNION:

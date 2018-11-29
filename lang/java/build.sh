@@ -43,7 +43,7 @@ function do_dist() {
 
 case "$target" in
   test)
-    mvn test
+    mvn -B test
     ;;
 
   dist)

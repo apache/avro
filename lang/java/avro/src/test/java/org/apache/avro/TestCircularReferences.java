@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,6 +21,7 @@ package org.apache.avro;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
@@ -145,9 +146,9 @@ public class TestCircularReferences {
       void set(Object referenceable);
     }
 
-    private final Map<Long, Object> references = new HashMap<Long, Object>();
-    private final Map<Object, Long> ids = new IdentityHashMap<Object, Long>();
-    private final Map<Long, List<Callback>> callbacksById = new HashMap<Long, List<Callback>>();
+    private final Map<Long, Object> references = new HashMap<>();
+    private final Map<Object, Long> ids = new IdentityHashMap<>();
+    private final Map<Long, List<Callback>> callbacksById = new HashMap<>();
     private final ReferenceableTracker tracker = new ReferenceableTracker();
     private final ReferenceHandler handler = new ReferenceHandler();
 
@@ -232,7 +233,7 @@ public class TestCircularReferences {
           } else {
             List<Callback> callbacks = callbacksById.get(id);
             if (callbacks == null) {
-              callbacks = new ArrayList<Callback>();
+              callbacks = new ArrayList<>();
               callbacksById.put(id, callbacks);
             }
             // add a callback to resolve this reference when the id is available
@@ -308,13 +309,13 @@ public class TestCircularReferences {
         parentSchema);
     Reference parentRef = new Reference("parent");
 
-    List<Schema.Field> childFields = new ArrayList<Schema.Field>();
+    List<Schema.Field> childFields = new ArrayList<>();
     childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, null));
     childFields.add(new Schema.Field("parent", parentRefSchema, null, null));
     Schema childSchema = parentRef.addToSchema(
         Schema.createRecord("Child", null, null, false, childFields));
 
-    List<Schema.Field> parentFields = new ArrayList<Schema.Field>();
+    List<Schema.Field> parentFields = new ArrayList<>();
     parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
     parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING), null, null));
     parentFields.add(new Schema.Field("child", childSchema, null, null));
@@ -363,11 +364,11 @@ public class TestCircularReferences {
 
   private <D> List<D> read(GenericData model, Schema schema, File file) throws IOException {
     DatumReader<D> reader = newReader(model, schema);
-    List<D> data = new ArrayList<D>();
+    List<D> data = new ArrayList<>();
     FileReader<D> fileReader = null;
 
     try {
-      fileReader = new DataFileReader<D>(file, reader);
+      fileReader = new DataFileReader<>(file, reader);
       for (D datum : fileReader) {
         data.add(datum);
       }
@@ -389,7 +390,7 @@ public class TestCircularReferences {
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = model.createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<D>(writer);
+    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
     try {
       fileWriter.create(schema, file);

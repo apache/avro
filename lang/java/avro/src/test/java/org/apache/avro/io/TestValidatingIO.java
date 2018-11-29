@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,21 +17,14 @@
  */
 package org.apache.avro.io;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
@@ -226,7 +219,7 @@ public class TestValidatingIO {
   public static Object[] randomValues(String calls) {
     Random r = new Random(0L);
     InputScanner cs = new InputScanner(calls.toCharArray());
-    List<Object> result = new ArrayList<Object>();
+    List<Object> result = new ArrayList<>();
     while (! cs.isDone()) {
       char c = cs.cur();
       cs.next();
@@ -534,7 +527,7 @@ public class TestValidatingIO {
   };
 
   public static Object[][] convertTo2dArray(final Object[][]... values) {
-    ArrayList<Object[]> ret = new ArrayList<Object[]>();
+    ArrayList<Object[]> ret = new ArrayList<>();
 
     Iterator<Object[]> iter = cartesian(values);
     while (iter.hasNext()) {

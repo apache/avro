@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,8 +34,8 @@ class AvroColumnator {
 
   private Schema schema;
 
-  private List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
-  private List<Integer> arrayWidths = new ArrayList<Integer>();
+  private List<ColumnMetaData> columns = new ArrayList<>();
+  private List<Integer> arrayWidths = new ArrayList<>();
 
   public AvroColumnator(Schema schema) {
     this.schema = schema;
@@ -57,7 +57,7 @@ class AvroColumnator {
     return result;
   }
 
-  private Map<Schema,Schema> seen = new IdentityHashMap<Schema,Schema>();
+  private Map<Schema,Schema> seen = new IdentityHashMap<>();
 
   private void columnize(String path, Schema s,
                          ColumnMetaData parent, boolean isArray) {

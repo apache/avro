@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,50 +17,14 @@
  */
 package org.apache.avro;
 
-import static org.apache.avro.TestSchemas.A_DINT_B_DINT_RECORD1;
-import static org.apache.avro.TestSchemas.A_DINT_RECORD1;
-import static org.apache.avro.TestSchemas.A_INT_B_DINT_RECORD1;
-import static org.apache.avro.TestSchemas.A_INT_B_INT_RECORD1;
-import static org.apache.avro.TestSchemas.A_INT_RECORD1;
-import static org.apache.avro.TestSchemas.A_LONG_RECORD1;
-import static org.apache.avro.TestSchemas.BOOLEAN_SCHEMA;
-import static org.apache.avro.TestSchemas.BYTES_SCHEMA;
-import static org.apache.avro.TestSchemas.BYTES_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.DOUBLE_SCHEMA;
-import static org.apache.avro.TestSchemas.DOUBLE_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
-import static org.apache.avro.TestSchemas.EMPTY_RECORD2;
-import static org.apache.avro.TestSchemas.EMPTY_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM2_AB_SCHEMA;
-import static org.apache.avro.TestSchemas.FLOAT_SCHEMA;
-import static org.apache.avro.TestSchemas.FLOAT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_ARRAY_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_FLOAT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_LIST_RECORD;
-import static org.apache.avro.TestSchemas.INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_LONG_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_MAP_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_STRING_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.INT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_ARRAY_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_LIST_RECORD;
-import static org.apache.avro.TestSchemas.LONG_MAP_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_SCHEMA;
-import static org.apache.avro.TestSchemas.LONG_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.NULL_SCHEMA;
-import static org.apache.avro.TestSchemas.STRING_INT_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.STRING_SCHEMA;
-import static org.apache.avro.TestSchemas.STRING_UNION_SCHEMA;
-import static org.apache.avro.TestSchemas.list;
+import static org.apache.avro.TestSchemas.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.apache.avro.TestSchemas.ReaderWriter;
+
+import org.apache.avro.TestSchemas.*;
 import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -385,7 +349,7 @@ public class TestSchemaValidation {
 
   private void testValidatorPasses(SchemaValidator validator,
       Schema schema, Schema... prev) throws SchemaValidationException {
-    ArrayList<Schema> prior = new ArrayList<Schema>();
+    ArrayList<Schema> prior = new ArrayList<>();
     for(int i = prev.length - 1; i >= 0; i--) {
       prior.add(prev[i]);
     }
@@ -394,7 +358,7 @@ public class TestSchemaValidation {
 
   private void testValidatorFails(SchemaValidator validator,
       Schema schemaFails, Schema... prev) throws SchemaValidationException {
-    ArrayList<Schema> prior = new ArrayList<Schema>();
+    ArrayList<Schema> prior = new ArrayList<>();
     for(int i = prev.length - 1; i >= 0; i--) {
       prior.add(prev[i]);
     }
@@ -406,5 +370,17 @@ public class TestSchemaValidation {
       threw = true;
     }
     Assert.assertTrue(threw);
+  }
+  public static final org.apache.avro.Schema recursiveSchema = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Node\",\"namespace\":\"avro\",\"fields\":[{\"name\":\"value\",\"type\":[\"null\",\"Node\"],\"default\":null}]}");
+
+  /**
+   * Unit test to verify that recursive schemas can be validated.
+   * See AVRO-2122.
+   */
+  @Test
+  public void testRecursiveSchemaValidation() throws SchemaValidationException {
+    // before AVRO-2122, this would cause a StackOverflowError
+    final SchemaValidator backwardValidator = builder.canReadStrategy().validateLatest();
+    backwardValidator.validate(recursiveSchema, Arrays.asList(recursiveSchema));
   }
 }

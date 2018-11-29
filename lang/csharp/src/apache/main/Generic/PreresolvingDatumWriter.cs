@@ -129,7 +129,7 @@ namespace Avro.Generic
             }
             var writeSteps = new RecordFieldWriter[recordSchema.Fields.Count];
             recordResolver = (v, e) => WriteRecordFields(v, writeSteps, e);
-            
+
             _recordWriters.Add(recordSchema, recordResolver);
 
             int index = 0;

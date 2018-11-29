@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ module Avro
       def byte!
         @reader.read(1).unpack('C').first
       end
-      
+
       def read_null
         # null is written as zero byte's
         nil
@@ -159,7 +159,7 @@ module Avro
         nil
       end
 
-      # a boolean is written as a single byte 
+      # a boolean is written as a single byte
       # whose value is either 0 (false) or 1 (true).
       def write_boolean(datum)
         on_disk = datum ? 1.chr : 0.chr
@@ -175,7 +175,6 @@ module Avro
       # int and long values are written using variable-length,
       # zig-zag coding.
       def write_long(n)
-        foo = n
         n = (n << 1) ^ (n >> 63)
         while (n & ~0x7F) != 0
           @writer.write(((n & 0x7f) | 0x80).chr)
@@ -254,7 +253,7 @@ module Avro
 
         # function dispatch for reading data based on type of writer's
         # schema
-        case writers_schema.type_sym
+        datum = case writers_schema.type_sym
         when :null;    decoder.read_null
         when :boolean; decoder.read_boolean
         when :string;  decoder.read_string
@@ -272,6 +271,8 @@ module Avro
         else
           raise AvroError, "Cannot read unknown schema type: #{writers_schema.type}"
         end
+
+        readers_schema.type_adapter.decode(datum)
       end
 
       def read_fixed(writers_schema, readers_schema, decoder)
@@ -297,7 +298,7 @@ module Avro
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            block_size = decoder.read_long
+            _block_size = decoder.read_long
           end
           block_count.times do
             read_items << read_data(writers_schema.items,
@@ -316,7 +317,7 @@ module Avro
         while block_count != 0
           if block_count < 0
             block_count = -block_count
-            block_size = decoder.read_long
+            _block_size = decoder.read_long
           end
           block_count.times do
             key = decoder.read_string
@@ -481,7 +482,7 @@ module Avro
           if block_count < 0
             decoder.skip(decoder.read_long)
           else
-            block_count.times &blk
+            block_count.times(&blk)
           end
           block_count = decoder.read_long
         end
@@ -499,8 +500,10 @@ module Avro
         write_data(writers_schema, datum, encoder)
       end
 
-      def write_data(writers_schema, datum, encoder)
-        unless Schema.validate(writers_schema, datum)
+      def write_data(writers_schema, logical_datum, encoder)
+        datum = writers_schema.type_adapter.encode(logical_datum)
+
+        unless Schema.validate(writers_schema, datum, { recursive: false, encoded: true })
           raise AvroTypeError.new(writers_schema, datum)
         end
 
@@ -535,6 +538,7 @@ module Avro
       end
 
       def write_array(writers_schema, datum, encoder)
+        raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Array)
         if datum.size > 0
           encoder.write_long(datum.size)
           datum.each do |item|
@@ -545,6 +549,7 @@ module Avro
       end
 
       def write_map(writers_schema, datum, encoder)
+        raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
         if datum.size > 0
           encoder.write_long(datum.size)
           datum.each do |k,v|
@@ -567,6 +572,7 @@ module Avro
       end
 
       def write_record(writers_schema, datum, encoder)
+        raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
         writers_schema.fields.each do |field|
           write_data(field.type, datum[field.name], encoder)
         end

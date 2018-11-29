@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,11 +28,11 @@ import org.apache.avro.io.parsing.JsonGrammarGenerator;
 import org.apache.avro.io.parsing.Parser;
 import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.util.DefaultPrettyPrinter;
-import org.codehaus.jackson.util.MinimalPrettyPrinter;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 
 /** An {@link Encoder} for Avro's JSON data encoding.
  * </p>
@@ -131,10 +131,8 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    *          The JsonGenerator to direct output to. Cannot be null.
    * @throws IOException
    * @return this JsonEncoder
-   * @deprecated internal method
    */
-  @Deprecated
-  public JsonEncoder configure(JsonGenerator generator) throws IOException {
+  private JsonEncoder configure(JsonGenerator generator) throws IOException {
     if (null == generator)
       throw new NullPointerException("JsonGenerator cannot be null");
     if (null != parser) {

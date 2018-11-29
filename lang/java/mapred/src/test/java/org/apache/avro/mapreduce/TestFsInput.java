@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,15 +29,12 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 
 public class TestFsInput {
   private static File file;
@@ -45,22 +42,18 @@ public class TestFsInput {
   private Configuration conf;
   private FsInput fsInput;
 
-  @BeforeClass
-  public static void setUpBeforeClass() throws Exception {
-    File directory = AvroTestUtil.tempDirectory(TestFsInput.class, "file");
-    file = new File(directory, "file.txt");
-    PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8")));
-    try {
-      out.print(FILE_CONTENTS);
-    } finally {
-      out.close();
-    }
-  }
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
 
   @Before
   public void setUp() throws Exception {
     conf = new Configuration();
     conf.set("fs.default.name", "file:///");
+    file = new File(DIR.getRoot(), "file.txt");
+
+    try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8")))) {
+      out.print(FILE_CONTENTS);
+    }
     fsInput = new FsInput(new Path(file.getPath()), conf);
   }
 
@@ -73,14 +66,11 @@ public class TestFsInput {
 
   @Test
   public void testConfigurationConstructor() throws Exception {
-    FsInput in = new FsInput(new Path(file.getPath()), conf);
-    try {
+    try (FsInput in = new FsInput(new Path(file.getPath()), conf)) {
       int expectedByteCount = 1;
       byte[] readBytes = new byte[expectedByteCount];
       int actualByteCount = fsInput.read(readBytes, 0, expectedByteCount);
       assertThat(actualByteCount, is(equalTo(expectedByteCount)));
-    } finally {
-      in.close();
     }
   }
 
@@ -88,14 +78,11 @@ public class TestFsInput {
   public void testFileSystemConstructor() throws Exception {
     Path path = new Path(file.getPath());
     FileSystem fs = path.getFileSystem(conf);
-    FsInput in = new FsInput(path, fs);
-    try {
+    try (FsInput in = new FsInput(path, fs)) {
       int expectedByteCount = 1;
       byte[] readBytes = new byte[expectedByteCount];
       int actualByteCount = fsInput.read(readBytes, 0, expectedByteCount);
       assertThat(actualByteCount, is(equalTo(expectedByteCount)));
-    } finally {
-      in.close();
     }
   }
 

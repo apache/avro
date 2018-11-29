@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
@@ -32,18 +31,23 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestRecodecTool {
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
   @Test
   public void testRecodec() throws Exception {
     String metaKey = "myMetaKey";
     String metaValue = "myMetaValue";
-    
-    File inputFile = AvroTestUtil.tempFile(getClass(), "input.avro");
-    
+
+    File inputFile = new File(DIR.getRoot(), "input.avro");
+
     Schema schema = Schema.create(Type.STRING);
-    DataFileWriter<String> writer = new DataFileWriter<String>(
+    DataFileWriter<String> writer = new DataFileWriter<>(
         new GenericDatumWriter<String>(schema))
         .setMeta(metaKey, metaValue)
         .create(schema, inputFile);
@@ -56,51 +60,37 @@ public class TestRecodecTool {
     }
     writer.close();
 
-    File defaultOutputFile = AvroTestUtil.tempFile(getClass(), "default-output.avro");
-    File nullOutputFile = AvroTestUtil.tempFile(getClass(), "null-output.avro");
-    File deflateDefaultOutputFile = AvroTestUtil.tempFile(getClass(), "deflate-default-output.avro");
-    File deflate1OutputFile = AvroTestUtil.tempFile(getClass(), "deflate-1-output.avro");
-    File deflate9OutputFile = AvroTestUtil.tempFile(getClass(), "deflate-9-output.avro");
-    
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<String>());
+    File defaultOutputFile = new File(DIR.getRoot(), "default-output.avro");
+    File nullOutputFile = new File(DIR.getRoot(),  "null-output.avro");
+    File deflateDefaultOutputFile = new File(DIR.getRoot(),  "deflate-default-output.avro");
+    File deflate1OutputFile = new File(DIR.getRoot(),  "deflate-1-output.avro");
+    File deflate9OutputFile = new File(DIR.getRoot(),  "deflate-9-output.avro");
+
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<>());
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null, asList("--codec=null"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflateDefaultOutputFile), null, asList("--codec=deflate"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate1OutputFile), null, asList("--codec=deflate", "--level=1"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate9OutputFile), null, asList("--codec=deflate", "--level=9"));
-    
+
     // We assume that metadata copying is orthogonal to codec selection, and
     // so only test it for a single file.
     Assert.assertEquals(
       metaValue,
-      new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<Void>())
+      new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<>())
         .getMetaString(metaKey));
-    
+
     // The "default" codec should be the same as null.
     Assert.assertEquals(defaultOutputFile.length(), nullOutputFile.length());
-    
+
     // All of the deflated files should be smaller than the null file.
     assertLessThan(deflateDefaultOutputFile.length(), nullOutputFile.length());
     assertLessThan(deflate1OutputFile.length(), nullOutputFile.length());
     assertLessThan(deflate9OutputFile.length(), nullOutputFile.length());
-    
+
     // The "level 9" file should be smaller than the "level 1" file.
     assertLessThan(deflate9OutputFile.length(), deflate1OutputFile.length());
-    
-//    System.err.println(inputFile.length());
-//    System.err.println(defaultOutputFile.length());
-//    System.err.println(nullOutputFile.length());
-//    System.err.println(deflateDefaultOutputFile.length());
-//    System.err.println(deflate1OutputFile.length());
-//    System.err.println(deflate9OutputFile.length());
-    
-    inputFile.delete();
-    defaultOutputFile.delete();
-    nullOutputFile.delete();
-    deflateDefaultOutputFile.delete();
-    deflate1OutputFile.delete();
-    deflate9OutputFile.delete();
   }
-  
+
   private static void assertLessThan(long less, long more) {
     if (less >= more) {
       Assert.fail("Expected " + less + " to be less than " + more);

@@ -66,9 +66,9 @@ namespace Avro.File
         void SetMeta(String key, string value);
 
         /// <summary>
-        /// Set the synchronization interval for this 
-        /// file / stream, in bytes. Valid values range 
-        /// from 32 to 2^30. Suggested values are 
+        /// Set the synchronization interval for this
+        /// file / stream, in bytes. Valid values range
+        /// from 32 to 2^30. Suggested values are
         /// between 2K and 2M
         /// </summary>
         /// <param name="syncInterval"></param>
@@ -76,7 +76,7 @@ namespace Avro.File
         void SetSyncInterval(int syncInterval);
 
         /// <summary>
-        /// Forces the end of the current block, 
+        /// Forces the end of the current block,
         /// emitting a synchronization marker
         /// </summary>
         /// <returns></returns>

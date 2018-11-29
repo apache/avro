@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.util.ByteBufferInputStream;
 
 
@@ -110,7 +111,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
       }
       shift += 7;
     } while (shift < 32);
-    throw new IOException("Invalid int encoding");
+    throw new InvalidNumberEncodingException("Invalid int encoding");
 
   }
 
@@ -131,7 +132,7 @@ class DirectBinaryDecoder extends BinaryDecoder {
       }
       shift += 7;
     } while (shift < 64);
-    throw new IOException("Invalid long encoding");
+    throw new InvalidNumberEncodingException("Invalid long encoding");
   }
 
   private final byte[] buf = new byte[8];

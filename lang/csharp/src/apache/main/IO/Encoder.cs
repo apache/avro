@@ -36,7 +36,7 @@ namespace Avro.IO
 
         void SetItemCount(long value);
         void StartItem();
-        
+
         void WriteArrayStart();
         void WriteArrayEnd();
 

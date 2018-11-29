@@ -84,7 +84,7 @@ namespace Avro.IO
         /// items from Avro array. This returns the number of entries in the initial chunk. After consuming
         /// the chunk, the client should call ReadArrayNext() to get the number of entries in the next
         /// chunk. The client should repeat the procedure until there are no more entries in the array.
-        /// 
+        ///
         /// for (int n = decoder.ReadArrayStart(); n > 0; n = decoder.ReadArrayNext())
         /// {
         ///     // Read one array entry.
@@ -152,7 +152,7 @@ namespace Avro.IO
         ///  Skips a int Avro type on the stream.
         /// </summary>
         void SkipInt();
-        
+
         /// <summary>
         ///  Skips a long Avro type on the stream.
         /// </summary>

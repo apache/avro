@@ -44,7 +44,7 @@ namespace Avro.ipc
         protected void HttpListenerCallback(IAsyncResult result)
         {
             try
-            {                
+            {
                 HttpListener listener = (HttpListener)result.AsyncState;
                 if (_listener != listener) //the server which began this callback was stopped - just exit
                     return;

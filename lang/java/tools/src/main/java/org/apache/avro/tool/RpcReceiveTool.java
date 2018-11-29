@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -81,7 +81,7 @@ public class RpcReceiveTool implements Tool {
       try {
         JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(message.getRequest(),
             out);
-        GenericDatumWriter<Object> writer = new GenericDatumWriter<Object>(
+        GenericDatumWriter<Object> writer = new GenericDatumWriter<>(
             message.getRequest());
         writer.write(request, jsonEncoder);
         jsonEncoder.flush();

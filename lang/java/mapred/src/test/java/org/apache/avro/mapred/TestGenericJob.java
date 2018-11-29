@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,8 +20,10 @@ package org.apache.avro.mapred;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.Schema;
@@ -49,18 +51,19 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 @SuppressWarnings("deprecation")
 public class TestGenericJob {
-  private static final String dir =
-    System.getProperty("test.dir", ".") + "target/testGenericJob";
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
 
   private static Schema createSchema() {
-    List<Field> fields = new ArrayList<Schema.Field>();
+    List<Field> fields = new ArrayList<>();
 
-
-    fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<Object>()));
+    fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<>()));
 
     Schema recordSchema =
       Schema.createRecord("Container", "", "org.apache.avro.mapred", false);
@@ -69,7 +72,7 @@ public class TestGenericJob {
   }
 
   private static Schema createArraySchema() {
-    List<Schema> schemas = new ArrayList<Schema>();
+    List<Schema> schemas = new ArrayList<>();
     for (int i = 0; i < 5; i++) {
       schemas.add(createInnerSchema("optional_field_" + i));
     }
@@ -81,25 +84,19 @@ public class TestGenericJob {
   private static Schema createInnerSchema(String name) {
     Schema innerrecord = Schema.createRecord(name, "", "", false);
     innerrecord.setFields
-      (Arrays.asList(new Field(name, Schema.create(Type.LONG), "", 0L)));
+      (Collections.singletonList(new Field(name, Schema.create(Type.LONG), "", 0L)));
     return innerrecord;
   }
 
   @Before
     public void setup() throws IOException {
     // needed to satisfy the framework only - input ignored in mapper
-    File indir = new File(dir);
-    indir.mkdirs();
+    String dir = DIR.getRoot().getPath();
     File infile = new File(dir + "/in");
     RandomAccessFile file = new RandomAccessFile(infile, "rw");
     // add some data so framework actually calls our mapper
     file.writeChars("aa bb cc\ndd ee ff\n");
     file.close();
-  }
-
-  @After
-    public void tearDown() throws IOException {
-    FileUtil.fullyDelete(new File(dir));
   }
 
   static class AvroTestConverter
@@ -111,17 +108,16 @@ public class TestGenericJob {
                     OutputCollector<AvroWrapper<Pair<Long,GenericData.Record>>,NullWritable> out,
                     Reporter reporter) throws IOException {
       GenericData.Record optional_entry =
-        new GenericData.Record(createInnerSchema("optional_field_1"));
-      optional_entry.put("optional_field_1", 0l);
+          new GenericData.Record(createInnerSchema("optional_field_1"));
+      optional_entry.put("optional_field_1", 0L);
       GenericData.Array<GenericData.Record> array =
-        new GenericData.Array<GenericData.Record>(1, createArraySchema());
+          new GenericData.Array<>(1, createArraySchema());
       array.add(optional_entry);
 
       GenericData.Record container = new GenericData.Record(createSchema());
       container.put("Optional", array);
 
-      out.collect(new AvroWrapper<Pair<Long,GenericData.Record>>
-                  (new Pair<Long,GenericData.Record>(key.get(), container)),
+      out.collect(new AvroWrapper<>(new Pair<>(key.get(), container)),
                   NullWritable.get());
     }
   }
@@ -130,11 +126,11 @@ public class TestGenericJob {
   @Test
     public void testJob() throws Exception {
     JobConf job = new JobConf();
-    Path outputPath = new Path(dir + "/out");
+    Path outputPath = new Path(DIR.getRoot().getPath() + "/out");
     outputPath.getFileSystem(job).delete(outputPath);
 
     job.setInputFormat(TextInputFormat.class);
-    FileInputFormat.setInputPaths(job, dir + "/in");
+    FileInputFormat.setInputPaths(job, DIR.getRoot().getPath() + "/in");
 
     job.setMapperClass(AvroTestConverter.class);
     job.setNumReduceTasks(0);

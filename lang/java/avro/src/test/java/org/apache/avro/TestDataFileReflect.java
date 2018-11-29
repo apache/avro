@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,13 +31,14 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestDataFileReflect {
 
-  private static final File DIR = new File(System.getProperty("test.dir",
-      "/tmp"));
-  private static final File FILE = new File(DIR, "test.avro");
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
 
   /*
    * Test that using multiple schemas in a file works doing a union before
@@ -45,33 +46,37 @@ public class TestDataFileReflect {
    */
   @Test
   public void testMultiReflectWithUnionBeforeWriting() throws IOException {
-    FileOutputStream fos = new FileOutputStream(FILE);
+    File file = new File(DIR.getRoot().getPath(), "testMultiReflectWithUnionBeforeWriting.avro");
+    CheckList<Object> check = new CheckList<>();
+    try(FileOutputStream fos = new FileOutputStream(file)) {
 
-    ReflectData reflectData = ReflectData.get();
-    List<Schema> schemas = Arrays.asList(new Schema[] {
-        reflectData.getSchema(FooRecord.class),
-        reflectData.getSchema(BarRecord.class) });
-    Schema union = Schema.createUnion(schemas);
-    DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new ReflectDatumWriter<Object>(union))
-      .create(union, fos);
+      ReflectData reflectData = ReflectData.get();
+      List<Schema> schemas = Arrays.asList(
+              reflectData.getSchema(FooRecord.class),
+              reflectData.getSchema(BarRecord.class)
+      );
+      Schema union = Schema.createUnion(schemas);
 
-    // test writing to a file
-    CheckList<Object> check = new CheckList<Object>();
-    write(writer, new BarRecord("One beer please"), check);
-    write(writer, new FooRecord(10), check);
-    write(writer, new BarRecord("Two beers please"), check);
-    write(writer, new FooRecord(20), check);
-    writer.close();
+      try (DataFileWriter<Object> writer = new DataFileWriter<>(new ReflectDatumWriter<>(union))) {
+        writer.create(union, fos);
 
-    ReflectDatumReader<Object> din = new ReflectDatumReader<Object>();
-    SeekableFileInput sin = new SeekableFileInput(FILE);
-    DataFileReader<Object> reader = new DataFileReader<Object>(sin, din);
-    int count = 0;
-    for (Object datum : reader)
-      check.assertEquals(datum, count++);
-    Assert.assertEquals(count, check.size());
-    reader.close();
+        // test writing to a file
+        write(writer, new BarRecord("One beer please"), check);
+        write(writer, new FooRecord(10), check);
+        write(writer, new BarRecord("Two beers please"), check);
+        write(writer, new FooRecord(20), check);
+      }
+    }
+    //new File(DIR.getRoot().getPath(), "test.avro");
+    ReflectDatumReader<Object> din = new ReflectDatumReader<>();
+    SeekableFileInput sin = new SeekableFileInput(file);
+    try(DataFileReader<Object> reader = new DataFileReader<>(sin, din)) {
+      int count = 0;
+      for (Object datum : reader) {
+        check.assertEquals(datum, count++);
+      }
+      Assert.assertEquals(count, check.size());
+    }
   }
 
   /*
@@ -79,30 +84,32 @@ public class TestDataFileReflect {
    */
   @Test
   public void testNull() throws IOException {
-    FileOutputStream fos = new FileOutputStream(FILE);
+    File file = new File(DIR.getRoot().getPath(), "testNull.avro");
+    CheckList<BarRecord> check = new CheckList<>();
 
-    ReflectData reflectData = ReflectData.AllowNull.get();
-    Schema schema = reflectData.getSchema(BarRecord.class);
-    DataFileWriter<BarRecord> writer = new DataFileWriter<BarRecord>
-      (new ReflectDatumWriter<BarRecord>(BarRecord.class, reflectData))
-      .create(schema, fos);
+    try(FileOutputStream fos = new FileOutputStream(file)) {
+      ReflectData reflectData = ReflectData.AllowNull.get();
+      Schema schema = reflectData.getSchema(BarRecord.class);
+      try(DataFileWriter<BarRecord> writer = new DataFileWriter<>(new ReflectDatumWriter<>(BarRecord.class, reflectData))) {
+        writer.create(schema, fos);
+        // test writing to a file
+        write(writer, new BarRecord("One beer please"), check);
+        // null record here, fails when using the default reflectData instance
+        write(writer, new BarRecord(), check);
+        write(writer, new BarRecord("Two beers please"), check);
+      }
+    }
 
-    // test writing to a file
-    CheckList<BarRecord> check = new CheckList<BarRecord>();
-    write(writer, new BarRecord("One beer please"), check);
-    // null record here, fails when using the default reflectData instance
-    write(writer, new BarRecord(), check);
-    write(writer, new BarRecord("Two beers please"), check);
-    writer.close();
-
-    ReflectDatumReader<BarRecord> din = new ReflectDatumReader<BarRecord>();
-    SeekableFileInput sin = new SeekableFileInput(FILE);
-    DataFileReader<BarRecord> reader = new DataFileReader<BarRecord>(sin, din);
-    int count = 0;
-    for (BarRecord datum : reader)
-      check.assertEquals(datum, count++);
-    Assert.assertEquals(count, check.size());
-    reader.close();
+    ReflectDatumReader<BarRecord> din = new ReflectDatumReader<>();
+    try(SeekableFileInput sin = new SeekableFileInput(file)) {
+      try (DataFileReader<BarRecord> reader = new DataFileReader<>(sin, din)) {
+        int count = 0;
+        for (BarRecord datum : reader) {
+          check.assertEquals(datum, count++);
+        }
+        Assert.assertEquals(count, check.size());
+      }
+    }
   }
 
   /*
@@ -110,27 +117,30 @@ public class TestDataFileReflect {
    */
   @Test
   public void testNestedClass() throws IOException {
-    FileOutputStream fos = new FileOutputStream(FILE);
+    File file = new File(DIR.getRoot().getPath(), "testNull.avro");
 
-    Schema schema = ReflectData.get().getSchema(BazRecord.class);
-    DataFileWriter<BazRecord> writer =
-      new DataFileWriter<BazRecord>(new ReflectDatumWriter<BazRecord>(schema))
-      .create(schema, fos);
+    CheckList<BazRecord> check = new CheckList<>();
+    try(FileOutputStream fos = new FileOutputStream(file)) {
+      Schema schema = ReflectData.get().getSchema(BazRecord.class);
+      try (DataFileWriter<BazRecord> writer = new DataFileWriter<>(new ReflectDatumWriter<BazRecord>(schema))) {
+        writer.create(schema, fos);
 
-    // test writing to a file
-    CheckList<BazRecord> check = new CheckList<BazRecord>();
-    write(writer, new BazRecord(10), check);
-    write(writer, new BazRecord(20), check);
-    writer.close();
+        // test writing to a file
+        write(writer, new BazRecord(10), check);
+        write(writer, new BazRecord(20), check);
+      }
+    }
 
-    ReflectDatumReader<BazRecord> din = new ReflectDatumReader<BazRecord>();
-    SeekableFileInput sin = new SeekableFileInput(FILE);
-    DataFileReader<BazRecord> reader = new DataFileReader<BazRecord>(sin, din);
-    int count = 0;
-    for (BazRecord datum : reader)
-      check.assertEquals(datum, count++);
-    Assert.assertEquals(count, check.size());
-    reader.close();
+    ReflectDatumReader<BazRecord> din = new ReflectDatumReader<>();
+    try(SeekableFileInput sin = new SeekableFileInput(file)) {
+      try (DataFileReader<BazRecord> reader = new DataFileReader<>(sin, din)) {
+        int count = 0;
+        for (BazRecord datum : reader) {
+          check.assertEquals(datum, count++);
+        }
+        Assert.assertEquals(count, check.size());
+      }
+    }
   }
 
   private <T> void write(DataFileWriter<T> writer, T o, CheckList<T> l)

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,9 +65,8 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
     try {
       @SuppressWarnings("rawtypes")
       List runtimeClasspathElements = project.getRuntimeClasspathElements();
-      Idl parser;
 
-      List<URL> runtimeUrls = new ArrayList<URL>();
+      List<URL> runtimeUrls = new ArrayList<>();
 
       // Add the source directory of avro files to the classpath so that
       // imports can refer to other idl files as classpath resources
@@ -83,18 +82,23 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
 
       URLClassLoader projPathLoader = new URLClassLoader
           (runtimeUrls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
-        parser = new Idl(new File(sourceDirectory, filename), projPathLoader);
 
-      Protocol p = parser.CompilationUnit();
-      String json = p.toString(true);
-      Protocol protocol = Protocol.parse(json);
-      SpecificCompiler compiler = new SpecificCompiler(protocol);
-      compiler.setStringType(GenericData.StringType.valueOf(stringType));
-      compiler.setTemplateDir(templateDirectory);
-      compiler.setFieldVisibility(getFieldVisibility());
-      compiler.setCreateSetters(createSetters);
-      compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-      compiler.compileToDestination(null, outputDirectory);
+      try (Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader)) {
+
+        Protocol p = parser.CompilationUnit();
+        String json = p.toString(true);
+        Protocol protocol = Protocol.parse(json);
+        SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
+        compiler.setStringType(GenericData.StringType.valueOf(stringType));
+        compiler.setTemplateDir(templateDirectory);
+        compiler.setFieldVisibility(getFieldVisibility());
+        compiler.setCreateOptionalGetters(createOptionalGetters);
+        compiler.setGettersReturnOptional(gettersReturnOptional);
+        compiler.setCreateSetters(createSetters);
+        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+        compiler.compileToDestination(null, outputDirectory);
+      }
     } catch (ParseException e) {
       throw new IOException(e);
     } catch (DependencyResolutionRequiredException drre) {

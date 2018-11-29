@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,7 @@ public class SequenceFileInputFormat<K,V>
       getRecordReader(InputSplit split, JobConf job, Reporter reporter)
     throws IOException {
     reporter.setStatus(split.toString());
-    return new SequenceFileRecordReader<K,V>(job, (FileSplit)split);
+    return new SequenceFileRecordReader<>(job, (FileSplit) split);
   }
 
 }

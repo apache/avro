@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -29,7 +29,6 @@ import org.apache.avro.file.CodecFactory;
 import org.apache.avro.file.DataFileConstants;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.mapred.AvroKey;
-import org.apache.avro.mapred.AvroOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -37,7 +36,6 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.easymock.Capture;
-import org.easymock.EasyMock;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -79,6 +77,14 @@ public class TestAvroKeyOutputFormat {
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.BZIP2_CODEC);
     testGetRecordWriter(conf, CodecFactory.bzip2Codec(), DataFileConstants.DEFAULT_SYNC_INTERVAL);
+  }
+
+  @Test
+  public void testWithZstandardCode() throws IOException {
+    Configuration conf = new Configuration();
+    conf.setBoolean("mapred.output.compress", true);
+    conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.ZSTANDARD_CODEC);
+    testGetRecordWriter(conf, CodecFactory.zstandardCodec(), DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
   @Test
@@ -134,7 +140,7 @@ public class TestAvroKeyOutputFormat {
         = createMock(AvroKeyOutputFormat.RecordWriterFactory.class);
 
     // Expect the record writer factory to be called with appropriate parameters.
-    Capture<CodecFactory> capturedCodecFactory = new Capture<CodecFactory>();
+    Capture<CodecFactory> capturedCodecFactory = new Capture<>();
     expect(recordWriterFactory.create(eq(writerSchema),
         anyObject(GenericData.class),
         capture(capturedCodecFactory),  // Capture for comparison later.
@@ -146,7 +152,7 @@ public class TestAvroKeyOutputFormat {
     replay(recordWriterFactory);
 
     AvroKeyOutputFormat<Integer> outputFormat
-        = new AvroKeyOutputFormat<Integer>(recordWriterFactory);
+        = new AvroKeyOutputFormat<>(recordWriterFactory);
     RecordWriter<AvroKey<Integer>, NullWritable> recordWriter
         = outputFormat.getRecordWriter(context);
     // Make sure the expected codec was used.

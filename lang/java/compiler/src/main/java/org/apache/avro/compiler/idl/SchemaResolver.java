@@ -1,11 +1,13 @@
 /*
- * Copyright 2015 The Apache Software Foundation.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,13 +17,13 @@
  */
 package org.apache.avro.compiler.idl;
 
-import com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -92,26 +94,26 @@ final class SchemaResolver {
     final Collection<Schema> types = protocol.getTypes();
     // replace unresolved schemas.
     List<Schema> newSchemas = new ArrayList(types.size());
-    IdentityHashMap<Schema, Schema> replacements = new IdentityHashMap<Schema, Schema>();
+    IdentityHashMap<Schema, Schema> replacements = new IdentityHashMap<>();
     for (Schema schema : types) {
       newSchemas.add(Schemas.visit(schema, new ResolvingVisitor(schema, replacements, new SymbolTable(protocol))));
     }
     result.setTypes(newSchemas); // replace types with resolved ones
 
-    // Resolve all schemas refferenced by protocol Messages.
+    // Resolve all schemas referenced by protocol Messages.
     for (Map.Entry<String, Protocol.Message> entry : protocol.getMessages().entrySet()) {
       Protocol.Message value = entry.getValue();
       Protocol.Message nvalue;
       if (value.isOneWay()) {
         Schema replacement = resolve(replacements, value.getRequest(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-            value.getObjectProps(), replacement);
+            value, replacement);
       } else {
         Schema request = resolve(replacements, value.getRequest(), protocol);
         Schema response = resolve(replacements, value.getResponse(), protocol);
         Schema errors = resolve(replacements, value.getErrors(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-            value.getObjectProps(), request, response, errors);
+            value, request, response, errors);
       }
       result.getMessages().put(entry.getKey(), nvalue);
     }

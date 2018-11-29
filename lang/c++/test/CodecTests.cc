@@ -1070,6 +1070,64 @@ static const TestData data[] = {
       "{\"name\":\"car\", \"type\":\"Lisp\"},"
       "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
       "U2U1S10U0N", 1},
+    { "{"  // https://issues.apache.org/jira/browse/AVRO-1635
+      "  \"name\": \"Container\","
+      "  \"type\": \"record\","
+      "  \"fields\": [{"
+      "    \"name\": \"field\","
+      "    \"type\": {"
+      "      \"name\": \"Object\","
+      "      \"type\": \"record\","
+      "      \"fields\": [{"
+      "        \"name\": \"value\","
+      "        \"type\": ["
+      "          \"string\","
+      "          {\"type\": \"map\", \"values\": \"Object\"}"
+      "        ]"
+      "      }]"
+      "    }"
+      "  }]"
+      "}",
+      "U1{c1sK1U0S1c2sK2U1{c2sK4U1{c1sK6U1{}}sK5U1{}}sK3U0S3}", 5},
+    { "{"
+      "  \"name\": \"Container\","
+      "  \"type\": \"record\","
+      "  \"fields\": [{"
+      "    \"name\": \"tree_A\","
+      "    \"type\": {"
+      "      \"name\": \"ArrayTree\","
+      "      \"type\": \"record\","
+      "      \"fields\": [{"
+      "        \"name\": \"label\","
+      "        \"type\": \"long\""
+      "      }, {"
+      "        \"name\": \"children\","
+      "        \"type\": {"
+      "          \"type\": \"array\","
+      "          \"items\": {"
+      "            \"name\": \"MapTree\","
+      "            \"type\": \"record\","
+      "            \"fields\": [{"
+      "              \"name\": \"label\","
+      "              \"type\": \"int\""
+      "            }, {"
+      "              \"name\": \"children\","
+      "              \"type\": {"
+      "                \"type\": \"map\","
+      "                \"values\": \"ArrayTree\""
+      "              }"
+      "            }]"
+      "          }"
+      "        }"
+      "      }]"
+      "    }"
+      "  }, {"
+      "    \"name\": \"tree_B\","
+      "    \"type\": \"MapTree\""
+      "  }]"
+      "}",
+      "L[c1sI{c1sK3L[]c2sK4L[c1sI{c1sK6L[c2sI{}sI{}]}]sK5L[]}]I{c2sK1L[]sK2L[]}",
+      7},
 };
 
 static const TestData2 data2[] = {
@@ -1363,9 +1421,16 @@ static const TestData4 data4BinaryOnly[] = {
 #define COUNTOF(x)  sizeof(x) / sizeof(x[0])
 #define ENDOF(x)    (x) + COUNTOF(x)
 
-#define ADD_TESTS(testSuite, Factory, testFunc, data)           \
-testSuite.add(BOOST_PARAM_TEST_CASE(&testFunc<Factory>,         \
-    data, data + COUNTOF(data)))
+// Boost 1.67 and later expects test cases to have unique names. This dummy
+// helper functions leads to names which compose 'testFunc', 'Factory', and
+// 'data'.
+template <typename Test, typename Data>
+Test testWithData(const Test &test, const Data &) {
+    return test;
+}
+#define ADD_TESTS(testSuite, Factory, testFunc, data) \
+    testSuite.add(BOOST_PARAM_TEST_CASE(              \
+        testWithData(&testFunc<Factory>, data), data, data + COUNTOF(data)))
 
 struct BinaryEncoderFactory {
     static EncoderPtr newEncoder(const ValidSchema& schema) {

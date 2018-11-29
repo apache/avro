@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -72,7 +72,7 @@ public class NettyTransceiver extends Transceiver {
 
   private final AtomicInteger serialGenerator = new AtomicInteger(0);
   private final Map<Integer, Callback<List<ByteBuffer>>> requests =
-    new ConcurrentHashMap<Integer, Callback<List<ByteBuffer>>>();
+    new ConcurrentHashMap<>();
 
   private final ChannelFactory channelFactory;
   private final long connectTimeoutMillis;
@@ -238,7 +238,7 @@ public class NettyTransceiver extends Transceiver {
    */
   protected static Map<String, Object> buildDefaultBootstrapOptions(
       Long connectTimeoutMillis) {
-    Map<String, Object> options = new HashMap<String, Object>(3);
+    Map<String, Object> options = new HashMap<>(3);
     options.put(NETTY_TCP_NODELAY_OPTION, DEFAULT_TCP_NODELAY_VALUE);
     options.put(NETTY_KEEPALIVE_OPTION, true);
     options.put(NETTY_CONNECT_TIMEOUT_OPTION,
@@ -357,7 +357,7 @@ public class NettyTransceiver extends Transceiver {
           // Remove all pending requests (will be canceled after relinquishing
           // write lock).
           requestsToCancel =
-            new ConcurrentHashMap<Integer, Callback<List<ByteBuffer>>>(requests);
+            new ConcurrentHashMap<>(requests);
           requests.clear();
         }
       }
@@ -453,7 +453,7 @@ public class NettyTransceiver extends Transceiver {
   public List<ByteBuffer> transceive(List<ByteBuffer> request)
     throws IOException {
     try {
-      CallFuture<List<ByteBuffer>> transceiverFuture = new CallFuture<List<ByteBuffer>>();
+      CallFuture<List<ByteBuffer>> transceiverFuture = new CallFuture<>();
       transceive(request, transceiverFuture);
       return transceiverFuture.get();
     } catch (InterruptedException e) {

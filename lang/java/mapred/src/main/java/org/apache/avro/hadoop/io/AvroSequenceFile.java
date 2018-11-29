@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -74,10 +74,10 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_
 public class AvroSequenceFile {
   private static final Logger LOG = LoggerFactory.getLogger(AvroSequenceFile.class);
 
-  /** The SequencFile.Metadata field for the Avro key writer schema. */
+  /** The SequenceFile.Metadata field for the Avro key writer schema. */
   public static final Text METADATA_FIELD_KEY_SCHEMA = new Text("avro.key.schema");
 
-  /** The SequencFile.Metadata field for the Avro value writer schema. */
+  /** The SequenceFile.Metadata field for the Avro value writer schema. */
   public static final Text METADATA_FIELD_VALUE_SCHEMA = new Text("avro.value.schema");
 
   /** Constructor disabled for this container class. */
@@ -446,7 +446,7 @@ public class AvroSequenceFile {
       /**
        * Gets the desired number of replicas to store for each block of the file.
        *
-       * @return The replciation factor for the blocks of the file.
+       * @return The replication factor for the blocks of the file.
        */
       public short getReplicationFactor() {
         if (DEFAULT == mReplicationFactor) {

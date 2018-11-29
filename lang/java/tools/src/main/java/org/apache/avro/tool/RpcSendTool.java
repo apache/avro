@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,12 +34,9 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.generic.GenericRequestor;
-
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 
 /**
  * Sends a single RPC message.
@@ -105,12 +102,10 @@ public class RpcSendTool implements Tool {
 
   private void dumpJson(PrintStream out, Schema schema, Object datum)
   throws IOException {
-    DatumWriter<Object> writer = new GenericDatumWriter<Object>(schema);
-    JsonGenerator g =
-      new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
-    g.useDefaultPrettyPrinter();
-    writer.write(datum, EncoderFactory.get().jsonEncoder(schema, g));
-    g.flush();
+    DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
+    JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(schema, out, true);
+    writer.write(datum, jsonEncoder);
+    jsonEncoder.flush();
     out.println();
     out.flush();
   }

@@ -106,7 +106,7 @@ ProductionPtr JsonGrammarGenerator::doGenerate(const NodePtr& n,
             reverse(result->begin(), result->end());
 
             m[n] = result;
-            return result;
+            return make_shared<Production>(1, Symbol::indirect(result));
         }
     case AVRO_ENUM:
         {
@@ -363,6 +363,7 @@ template <typename P>
 size_t JsonDecoder<P>::arrayStart()
 {
     parser_.advance(Symbol::sArrayStart);
+    parser_.pushRepeatCount(0);
     expect(JsonParser::tkArrayStart);
     return arrayNext();
 }
@@ -377,7 +378,7 @@ size_t JsonDecoder<P>::arrayNext()
         parser_.advance(Symbol::sArrayEnd);
         return 0;
     }
-    parser_.setRepeatCount(1);
+    parser_.nextRepeatCount(1);
     return 1;
 }
 
@@ -419,6 +420,7 @@ template <typename P>
 size_t JsonDecoder<P>::mapStart()
 {
     parser_.advance(Symbol::sMapStart);
+    parser_.pushRepeatCount(0);
     expect(JsonParser::tkObjectStart);
     return mapNext();
 }
@@ -433,7 +435,7 @@ size_t JsonDecoder<P>::mapNext()
         parser_.advance(Symbol::sMapEnd);
         return 0;
     }
-    parser_.setRepeatCount(1);
+    parser_.nextRepeatCount(1);
     return 1;
 }
 
@@ -624,6 +626,7 @@ template<typename P, typename F>
 void JsonEncoder<P, F>::arrayStart()
 {
     parser_.advance(Symbol::sArrayStart);
+    parser_.pushRepeatCount(0);
     out_.arrayStart();
 }
 
@@ -639,6 +642,7 @@ template<typename P, typename F>
 void JsonEncoder<P, F>::mapStart()
 {
     parser_.advance(Symbol::sMapStart);
+    parser_.pushRepeatCount(0);
     out_.objectStart();
 }
 
@@ -653,7 +657,7 @@ void JsonEncoder<P, F>::mapEnd()
 template<typename P, typename F>
 void JsonEncoder<P, F>::setItemCount(size_t count)
 {
-    parser_.setRepeatCount(count);
+    parser_.nextRepeatCount(count);
 }
 
 template<typename P, typename F>

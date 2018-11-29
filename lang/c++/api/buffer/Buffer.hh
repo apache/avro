@@ -490,6 +490,7 @@ inline InputBuffer OutputBuffer::extractData(size_type bytes)
     return InputBuffer(newImpl);
 }
 
+#ifndef _WIN32
 /** 
  * Create an array of iovec structures from the buffer.  This utility is used
  * to support writev and readv function calls.  The caller should ensure the
@@ -519,6 +520,7 @@ inline void toIovec(BufferType &buf, std::vector<struct iovec> &iov)
         ++iter;
     }
 }
+#endif
 
 } // namespace
 

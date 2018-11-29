@@ -18,7 +18,7 @@ namespace org.apache.avro.test
 		private static Schema _SCHEMA = Avro.Schema.Parse("{\"type\":\"fixed\",\"name\":\"MD5\",\"namespace\":\"org.apache.avro.test\",\"size\":16,\"javaAn" +
 				"notation\":\"org.apache.avro.TestAnnotation\"}");
 		private static uint fixedSize = 16;
-		public MD5() : 
+		public MD5() :
 				base(fixedSize)
 		{
 		}

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -80,12 +80,12 @@ public class TestThrift {
   private void check(Test test) throws Exception {
 
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    ThriftDatumWriter<Test> w = new ThriftDatumWriter<Test>(Test.class);
+    ThriftDatumWriter<Test> w = new ThriftDatumWriter<>(Test.class);
     Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
     w.write(test, e);
     e.flush();
 
-    Object o = new ThriftDatumReader<Test>(Test.class).read
+    Object o = new ThriftDatumReader<>(Test.class).read
       (null,
        DecoderFactory.get().createBinaryDecoder
        (new ByteArrayInputStream(bao.toByteArray()), null));

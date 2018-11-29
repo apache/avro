@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +36,7 @@ import java.util.zip.InflaterOutputStream;
  * {@link Inflater} and {@link Deflater}, is using
  * RFC1951.
  */
-class DeflateCodec extends Codec {
+public class DeflateCodec extends Codec {
 
   static class Option extends CodecFactory {
     private int compressionLevel;
@@ -70,30 +70,19 @@ class DeflateCodec extends Codec {
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    DeflaterOutputStream ios = new DeflaterOutputStream(baos, getDeflater());
-    writeAndClose(data, ios);
-    ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
-    return result;
+    try(OutputStream outputStream = new DeflaterOutputStream(baos, getDeflater())) {
+      outputStream.write(data.array(), computeOffset(data), data.remaining());
+    }
+    return ByteBuffer.wrap(baos.toByteArray());
   }
 
   @Override
   public ByteBuffer decompress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    InflaterOutputStream ios = new InflaterOutputStream(baos, getInflater());
-    writeAndClose(data, ios);
-    ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
-    return result;
-  }
-
-  private void writeAndClose(ByteBuffer data, OutputStream to) throws IOException {
-    byte[] input = data.array();
-    int offset = data.arrayOffset() + data.position();
-    int length = data.remaining();
-    try {
-      to.write(input, offset, length);
-    } finally {
-      to.close();
+    try(OutputStream outputStream = new InflaterOutputStream(baos, getInflater())) {
+      outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
+    return ByteBuffer.wrap(baos.toByteArray());
   }
 
   // get and initialize the inflater for use.

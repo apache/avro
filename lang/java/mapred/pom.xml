@@ -92,28 +92,12 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>1.4.1</version>
+        <artifactId>maven-jar-plugin</artifactId>
         <executions>
           <execution>
-            <id>enforce-banned-dependencies</id>
             <goals>
-              <goal>enforce</goal>
+              <goal>test-jar</goal>
             </goals>
-            <configuration>
-              <rules>
-                <bannedDependencies>
-                  <!-- Ban all versions of Guava other than 11.0.2 that Hadoop uses -->
-                  <excludes>
-                    <exclude>com.google.guava:guava</exclude>
-                  </excludes>
-                  <includes>
-                    <include>com.google.guava:guava:11.0.2</include>
-                  </includes>
-                </bannedDependencies>
-              </rules>
-              <fail>true</fail>
-            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -152,12 +136,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
@@ -171,6 +151,12 @@
         So we should not include it here -->
       <scope>provided</scope>
     </dependency>
+    <dependency>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <scope>test</scope>
+    </dependency>
+
   </dependencies>
 </project>
 

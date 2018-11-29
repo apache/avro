@@ -1,10 +1,27 @@
-
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.avro.compiler.idl;
 
-import com.google.common.base.Function;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.function.Function;
+
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -25,7 +42,8 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
   private final Schema root;
 
 
-  public ResolvingVisitor(final Schema root, final IdentityHashMap<Schema, Schema> replace,
+  public ResolvingVisitor(final Schema root,
+          final IdentityHashMap<Schema, Schema> replace,
           final Function<String, Schema> symbolTable) {
     this.replace = replace;
     this.symbolTable = symbolTable;
@@ -57,7 +75,7 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
       break;
       case ENUM:
         newSchema = Schema.createEnum(terminal.getName(), terminal.getDoc(),
-                terminal.getNamespace(), terminal.getEnumSymbols());
+                terminal.getNamespace(), terminal.getEnumSymbols(), terminal.getEnumDefault());
         break;
       case FIXED:
         newSchema = Schema.createFixed(terminal.getName(), terminal.getDoc(),
@@ -97,7 +115,7 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
           Schema replacement = replace.get(resSchema);
           if (replacement == null) {
             replace.put(nt, Schemas.visit(resSchema, new ResolvingVisitor(resSchema,
-                    new IdentityHashMap<Schema, Schema>(), symbolTable)));
+                    new IdentityHashMap<>(), symbolTable)));
           } else {
             replace.put(nt, replacement);
           }
@@ -120,7 +138,7 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
          if (!SchemaResolver.isUnresolvedSchema(nt)) {
             newSchema = replace.get(nt);
             List<Schema.Field> fields = nt.getFields();
-            List<Schema.Field> newFields = new ArrayList<Schema.Field>(fields.size());
+            List<Schema.Field> newFields = new ArrayList<>(fields.size());
             for (Schema.Field field : fields) {
              Schema.Field newField = new Schema.Field(field.name(), replace.get(field.schema()),
                      field.doc(), field.defaultVal(), field.order());
@@ -132,7 +150,7 @@ public final class ResolvingVisitor implements SchemaVisitor<Schema> {
          return SchemaVisitorAction.CONTINUE;
        case UNION:
           List<Schema> types = nt.getTypes();
-          List<Schema> newTypes = new ArrayList<Schema>(types.size());
+          List<Schema> newTypes = new ArrayList<>(types.size());
           for (Schema sch : types) {
             newTypes.add(replace.get(sch));
           }

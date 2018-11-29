@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -72,17 +72,17 @@ public class TestKeyValueInput {
         Schema.create(Schema.Type.INT), Schema.create(Schema.Type.STRING));
 
     AvroKeyValue<Integer, CharSequence> record1
-        = new AvroKeyValue<Integer, CharSequence>(new GenericData.Record(keyValueSchema));
+        = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     record1.setKey(1);
     record1.setValue("apple banana carrot");
 
     AvroKeyValue<Integer, CharSequence> record2
-        = new AvroKeyValue<Integer, CharSequence>(new GenericData.Record(keyValueSchema));
+        = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     record2.setKey(2);
     record2.setValue("apple banana");
 
     AvroKeyValue<Integer, CharSequence> record3
-        = new AvroKeyValue<Integer, CharSequence>(new GenericData.Record(keyValueSchema));
+        = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     record3.setKey(3);
     record3.setValue("apple");
 
@@ -108,11 +108,11 @@ public class TestKeyValueInput {
     @Override
     protected void reduce(Text token, Iterable<IntWritable> docids, Context context)
         throws IOException, InterruptedException {
-      List<Integer> hitlist = new ArrayList<Integer>();
+      List<Integer> hitlist = new ArrayList<>();
       for (IntWritable docid : docids) {
         hitlist.add(docid.get());
       }
-      context.write(token, new AvroValue<List<Integer>>(hitlist));
+      context.write(token, new AvroValue<>(hitlist));
     }
   }
 
@@ -150,15 +150,15 @@ public class TestKeyValueInput {
 
     // Verify that the output Avro container file has the expected data.
     File avroFile = new File(outputPath.toString(), "part-r-00000.avro");
-    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<GenericRecord>(
+    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(
         AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING),
             Schema.createArray(Schema.create(Schema.Type.INT))));
     DataFileReader<GenericRecord> avroFileReader
-        = new DataFileReader<GenericRecord>(avroFile, datumReader);
+        = new DataFileReader<>(avroFile, datumReader);
     assertTrue(avroFileReader.hasNext());
 
     AvroKeyValue<CharSequence, List<Integer>> appleRecord
-        = new AvroKeyValue<CharSequence, List<Integer>>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(appleRecord.get());
     assertEquals("apple", appleRecord.getKey().toString());
     List<Integer> appleDocs = appleRecord.getValue();
@@ -169,7 +169,7 @@ public class TestKeyValueInput {
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<CharSequence, List<Integer>> bananaRecord
-        = new AvroKeyValue<CharSequence, List<Integer>>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(bananaRecord.get());
     assertEquals("banana", bananaRecord.getKey().toString());
     List<Integer> bananaDocs = bananaRecord.getValue();
@@ -179,7 +179,7 @@ public class TestKeyValueInput {
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<CharSequence, List<Integer>> carrotRecord
-        = new AvroKeyValue<CharSequence, List<Integer>>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertEquals("carrot", carrotRecord.getKey().toString());
     List<Integer> carrotDocs = carrotRecord.getValue();
     assertEquals(1, carrotDocs.size());
@@ -221,29 +221,29 @@ public class TestKeyValueInput {
 
     // Verify that the output Avro container file has the expected data.
     File avroFile = new File(outputPath.toString(), "part-m-00000.avro");
-    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<GenericRecord>(
+    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(
         AvroKeyValue.getSchema(Schema.create(Schema.Type.INT),
             Schema.create(Schema.Type.STRING)));
     DataFileReader<GenericRecord> avroFileReader
-        = new DataFileReader<GenericRecord>(avroFile, datumReader);
+        = new DataFileReader<>(avroFile, datumReader);
     assertTrue(avroFileReader.hasNext());
 
     AvroKeyValue<Integer, CharSequence> record1
-        = new AvroKeyValue<Integer, CharSequence>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(record1.get());
     assertEquals(1, record1.getKey().intValue());
     assertEquals("apple banana carrot", record1.getValue().toString());
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<Integer, CharSequence> record2
-        = new AvroKeyValue<Integer, CharSequence>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(record2.get());
     assertEquals(2, record2.getKey().intValue());
     assertEquals("apple banana", record2.getValue().toString());
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<Integer, CharSequence> record3
-        = new AvroKeyValue<Integer, CharSequence>(avroFileReader.next());
+        = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(record3.get());
     assertEquals(3, record3.getKey().intValue());
     assertEquals("apple", record3.getValue().toString());

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,6 +25,8 @@ import java.io.IOException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.ResolvingDecoder;
+import org.apache.avro.io.Encoder;
 
 /** Base class for generated record classes. */
 public abstract class SpecificRecordBase
@@ -89,5 +91,20 @@ public abstract class SpecificRecordBase
     throws IOException {
     new SpecificDatumReader(getSchema())
       .read(this, SpecificData.getDecoder(in));
+  }
+
+  /** Returns true iff an instance supports the {@link #encode} and
+    * {@link #decode} operations.  Should only be used by
+    * <code>SpecificDatumReader/Writer</code> to selectively use
+    * {@link #customEncode} and {@link #customDecode} to optimize the (de)serialization of
+    * values. */
+  protected boolean hasCustomCoders() { return false; }
+
+  protected void customEncode(Encoder out) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+
+  protected void customDecode(ResolvingDecoder in) throws IOException {
+    throw new UnsupportedOperationException();
   }
 }
