@@ -104,7 +104,7 @@ namespace Avro.File
             inStream.Seek(0, SeekOrigin.Begin);
 
             if (magic.SequenceEqual(DataFileConstants.Magic))   // current format
-                return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory);         // (not supporting 1.2 or below, format) 
+                return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory);         // (not supporting 1.2 or below, format)
 
             throw new AvroRuntimeException("Not an Avro data file");
         }
@@ -140,7 +140,7 @@ namespace Avro.File
             }
             catch (KeyNotFoundException)
             {
-                return null; 
+                return null;
             }
         }
 
@@ -158,7 +158,7 @@ namespace Avro.File
             }
             try
             {
-                return System.Text.Encoding.UTF8.GetString(value);          
+                return System.Text.Encoding.UTF8.GetString(value);
             }
             catch (Exception e)
             {
@@ -179,7 +179,7 @@ namespace Avro.File
         {
             Seek(position);
             // work around an issue where 1.5.4 C stored sync in metadata
-            if ((position == 0) && (GetMeta(DataFileConstants.MetaDataSync) != null)) 
+            if ((position == 0) && (GetMeta(DataFileConstants.MetaDataSync) != null))
             {
                 Init(_stream); // re-init to skip header
                 return;
@@ -236,7 +236,7 @@ namespace Avro.File
                 if (_blockRemaining == 0)
                 {
                     // TODO: Check that the (block) stream is not partially read
-                    /*if (_datumDecoder != null) 
+                    /*if (_datumDecoder != null)
                     { }*/
                     if (HasNextBlock())
                     {
@@ -270,7 +270,7 @@ namespace Avro.File
             _decoder = new BinaryDecoder(stream);
             _syncBuffer = new byte[DataFileConstants.SyncSize];
 
-            // read magic 
+            // read magic
             byte[] firstBytes = new byte[DataFileConstants.Magic.Length];
             try
             {
@@ -283,7 +283,7 @@ namespace Avro.File
             if (!firstBytes.SequenceEqual(DataFileConstants.Magic))
                 throw new AvroRuntimeException("Not a valid data file!");
 
-            // read meta data 
+            // read meta data
             long len = _decoder.ReadMapStart();
             if (len > 0)
             {
@@ -298,10 +298,10 @@ namespace Avro.File
                 } while ((len = _decoder.ReadMapNext()) != 0);
             }
 
-            // read in sync data 
+            // read in sync data
             _decoder.ReadFixed(_header.SyncData);
 
-            // parse schema and set codec 
+            // parse schema and set codec
             _header.Schema = Schema.Parse(GetMetaString(DataFileConstants.MetaDataSchema));
             _reader = _datumReaderFactory(_header.Schema, _readerSchema ?? _header.Schema);
             _codec = ResolveCodec();
@@ -398,11 +398,11 @@ namespace Avro.File
         {
             try
             {
-                // block currently being read 
+                // block currently being read
                 if (_availableBlock)
                     return true;
 
-                // check to ensure still data to read 
+                // check to ensure still data to read
                 if (!DataLeft())
                     return false;
 

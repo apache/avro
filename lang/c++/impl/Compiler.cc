@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <boost/algorithm/string/replace.hpp>
 #include <sstream>
 
 #include "Compiler.hh"
@@ -42,7 +43,7 @@ typedef map<Name, NodePtr> SymbolTable;
 
 // #define DEBUG_VERBOSE
 
-static NodePtr makePrimitive(const std::string& t)
+static NodePtr makePrimitive(const string& t)
 {
     if (t == "null") {
         return NodePtr(new NodePrimitive(AVRO_NULL));
@@ -65,7 +66,7 @@ static NodePtr makePrimitive(const std::string& t)
     }
 }
 
-static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string& ns);
+static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string &ns);
 
 template <typename T>
 concepts::SingleAttribute<T> asSingleAttribute(const T& t)
@@ -75,17 +76,17 @@ concepts::SingleAttribute<T> asSingleAttribute(const T& t)
     return n;
 }
 
-static bool isFullName(const string& s)
+static bool isFullName(const string &s)
 {
     return s.find('.') != string::npos;
 }
-    
-static Name getName(const string& name, const string& ns)
+
+static Name getName(const string &name, const string &ns)
 {
     return (isFullName(name)) ? Name(name) : Name(name, ns);
 }
 
-static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
+static NodePtr makeNode(const string &t, SymbolTable &st, const string &ns)
 {
     NodePtr result = makePrimitive(t);
     if (result) {
@@ -100,6 +101,13 @@ static NodePtr makeNode(const std::string& t, SymbolTable& st, const string& ns)
     throw Exception(boost::format("Unknown type: %1%") % n.fullname());
 }
 
+/** Returns "true" if the field is in the container */
+// e.g.: can be false for non-mandatory fields
+bool containsField(const Object& m, const string& fieldName) {
+    Object::const_iterator it = m.find(fieldName);
+    return (it != m.end());
+}
+
 const json::Object::const_iterator findField(const Entity& e,
     const Object& m, const string& fieldName)
 {
@@ -112,7 +120,7 @@ const json::Object::const_iterator findField(const Entity& e,
     }
 }
 
-template <typename T> void ensureType(const Entity& e, const string& name)
+template <typename T> void ensureType(const Entity &e, const string &name)
 {
     if (e.type() != json::type_traits<T>::type()) {
         throw Exception(boost::format("Json field \"%1%\" is not a %2%: %3%") %
@@ -120,8 +128,8 @@ template <typename T> void ensureType(const Entity& e, const string& name)
     }
 }
 
-const string& getStringField(const Entity& e, const Object& m,
-                             const string& fieldName)
+const string& getStringField(const Entity &e, const Object &m,
+                             const string &fieldName)
 {
     Object::const_iterator it = findField(e, m, fieldName);
     ensureType<string>(it->second, fieldName);
@@ -143,7 +151,20 @@ const int64_t getLongField(const Entity& e, const Object& m,
     ensureType<int64_t>(it->second, fieldName);
     return it->second.longValue();
 }
-    
+
+// Unescape double quotes (") for de-serialization.  This method complements the
+// method NodeImpl::escape() which is used for serialization.
+static void unescape(string& s) {
+    boost::replace_all(s, "\\\"", "\"");
+}
+
+const string getDocField(const Entity& e, const Object& m)
+{
+    string doc = getStringField(e, m, "doc");
+    unescape(doc);
+    return doc;
+}
+
 struct Field {
     const string& name;
     const NodePtr schema;
@@ -156,11 +177,13 @@ static void assertType(const Entity& e, EntityType et)
 {
     if (e.type() != et) {
         throw Exception(boost::format("Unexpected type for default value: "
-            "Expected %1%, but found %2%") % et % e.type());
+            "Expected %1%, but found %2% in line %3%") %
+                json::typeToString(et) % json::typeToString(e.type()) %
+                e.line());
     }
 }
 
-static vector<uint8_t> toBin(const std::string& s)
+static vector<uint8_t> toBin(const string& s)
 {
     vector<uint8_t> result(s.size());
     if (s.size() > 0) {
@@ -169,46 +192,12 @@ static vector<uint8_t> toBin(const std::string& s)
     return result;
 }
 
-static string nameof(const NodePtr& n)
+static GenericDatum makeGenericDatum(NodePtr n,
+        const Entity& e, const SymbolTable& st)
 {
     Type t = n->type();
-    switch (t) {
-    case AVRO_STRING:
-        return "string";
-    case AVRO_BYTES:
-        return "bytes";
-    case AVRO_INT:
-        return "int";
-    case AVRO_LONG:
-        return "long";
-    case AVRO_FLOAT:
-        return "float";
-    case AVRO_DOUBLE:
-        return "double";
-    case AVRO_BOOL:
-        return "boolean";
-    case AVRO_NULL:
-        return "null";
-    case AVRO_RECORD:
-    case AVRO_ENUM:
-    case AVRO_FIXED:
-    case AVRO_SYMBOLIC:
-        return n->name().fullname();
-    case AVRO_ARRAY:
-        return "array";
-    case AVRO_MAP:
-        return "map";
-    case AVRO_UNION:
-        return "union";
-    default:
-        throw Exception(boost::format("Unknown type: %1%") % t);
-    }
-}
+    EntityType dt = e.type();
 
-static GenericDatum makeGenericDatum(NodePtr n, const Entity& e,
-    const SymbolTable& st)
-{
-    Type t = n->type();
     if (t == AVRO_SYMBOLIC) {
         n = st.find(n->name())->second;
         t = n->type();
@@ -227,9 +216,15 @@ static GenericDatum makeGenericDatum(NodePtr n, const Entity& e,
         assertType(e, json::etLong);
         return GenericDatum(e.longValue());
     case AVRO_FLOAT:
+        if (dt == json::etLong) {
+            return GenericDatum(static_cast<float>(e.longValue()));
+        }
         assertType(e, json::etDouble);
         return GenericDatum(static_cast<float>(e.doubleValue()));
     case AVRO_DOUBLE:
+        if (dt == json::etLong) {
+            return GenericDatum(static_cast<double>(e.longValue()));
+        }
         assertType(e, json::etDouble);
         return GenericDatum(e.doubleValue());
     case AVRO_BOOL:
@@ -283,32 +278,9 @@ static GenericDatum makeGenericDatum(NodePtr n, const Entity& e,
     case AVRO_UNION:
     {
         GenericUnion result(n);
-        string name;
-        Entity e2;
-        if (e.type() == json::etNull) {
-            name = "null";
-            e2 = e;
-        } else {
-            assertType(e, json::etObject);
-            const map<string, Entity>& v = e.objectValue();
-            if (v.size() != 1) {
-                throw Exception(boost::format("Default value for "
-                    "union has more than one field: %1%") % e.toString());
-            }
-            map<string, Entity>::const_iterator it = v.begin();
-            name = it->first;
-            e2 = it->second;
-        }
-        for (size_t i = 0; i < n->leaves(); ++i) {
-            const NodePtr& b = n->leafAt(i);
-            if (nameof(b) == name) {
-                result.selectBranch(i);
-                result.datum() = makeGenericDatum(b, e2, st);
-                return GenericDatum(n, result);
-            }
-        }
-        throw Exception(boost::format("Invalid default value %1%") %
-            e.toString());
+        result.selectBranch(0);
+        result.datum() = makeGenericDatum(n->leafAt(0), e, st);
+        return GenericDatum(n, result);
     }
     case AVRO_FIXED:
         assertType(e, json::etString);
@@ -327,27 +299,76 @@ static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
     Object::const_iterator it = findField(e, m, "type");
     map<string, Entity>::const_iterator it2 = m.find("default");
     NodePtr node = makeNode(it->second, st, ns);
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
     GenericDatum d = (it2 == m.end()) ? GenericDatum() :
         makeGenericDatum(node, it2->second, st);
     return Field(n, node, d);
 }
 
-static NodePtr makeRecordNode(const Entity& e,
-    const Name& name, const Object& m, SymbolTable& st, const string& ns)
-{        
+// Extended makeRecordNode (with doc).
+static NodePtr makeRecordNode(const Entity& e, const Name& name,
+                              const string* doc, const Object& m,
+                              SymbolTable& st, const string& ns) {
     const Array& v = getArrayField(e, m, "fields");
     concepts::MultiAttribute<string> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
     vector<GenericDatum> defaultValues;
-    
+
     for (Array::const_iterator it = v.begin(); it != v.end(); ++it) {
         Field f = makeField(*it, st, ns);
         fieldNames.add(f.name);
         fieldValues.add(f.schema);
         defaultValues.push_back(f.defaultValue);
     }
-    return NodePtr(new NodeRecord(asSingleAttribute(name),
-        fieldValues, fieldNames, defaultValues));
+    NodeRecord* node;
+    if (doc == NULL) {
+        node = new NodeRecord(asSingleAttribute(name), fieldValues, fieldNames,
+                              defaultValues);
+    } else {
+        node = new NodeRecord(asSingleAttribute(name), asSingleAttribute(*doc),
+                              fieldValues, fieldNames, defaultValues);
+    }
+    return NodePtr(node);
+}
+
+static LogicalType makeLogicalType(const Entity& e, const Object& m) {
+    if (!containsField(m, "logicalType")) {
+        return LogicalType(LogicalType::NONE);
+    }
+
+    const std::string& typeField = getStringField(e, m, "logicalType");
+
+    if (typeField == "decimal") {
+        LogicalType decimalType(LogicalType::DECIMAL);
+        try {
+            decimalType.setPrecision(getLongField(e, m, "precision"));
+            if (containsField(m, "scale")) {
+                decimalType.setScale(getLongField(e, m, "scale"));
+            }
+        } catch (Exception& ex) {
+            // If any part of the logical type is malformed, per the standard we
+            // must ignore the whole attribute.
+            return LogicalType(LogicalType::NONE);
+        }
+        return decimalType;
+    }
+
+    LogicalType::Type t = LogicalType::NONE;
+    if (typeField == "date")
+        t = LogicalType::DATE;
+    else if (typeField == "time-millis")
+        t = LogicalType::TIME_MILLIS;
+    else if (typeField == "time-micros")
+        t = LogicalType::TIME_MICROS;
+    else if (typeField == "timestamp-millis")
+        t = LogicalType::TIMESTAMP_MILLIS;
+    else if (typeField == "timestamp-micros")
+        t = LogicalType::TIMESTAMP_MICROS;
+    else if (typeField == "duration")
+        t = LogicalType::DURATION;
+    return LogicalType(t);
 }
 
 static NodePtr makeEnumNode(const Entity& e,
@@ -362,7 +383,11 @@ static NodePtr makeEnumNode(const Entity& e,
         }
         symbols.add(it->stringValue());
     }
-    return NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
+    NodePtr node = NodePtr(new NodeEnum(asSingleAttribute(name), symbols));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static NodePtr makeFixedNode(const Entity& e,
@@ -370,19 +395,27 @@ static NodePtr makeFixedNode(const Entity& e,
 {
     int v = static_cast<int>(getLongField(e, m, "size"));
     if (v <= 0) {
-        throw Exception(boost::format("Size for fixed is not positive: ") %
+        throw Exception(boost::format("Size for fixed is not positive: %1%") %
             e.toString());
     }
-    return NodePtr(new NodeFixed(asSingleAttribute(name),
-        asSingleAttribute(v)));
+    NodePtr node =
+        NodePtr(new NodeFixed(asSingleAttribute(name), asSingleAttribute(v)));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static NodePtr makeArrayNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
     Object::const_iterator it = findField(e, m, "items");
-    return NodePtr(new NodeArray(asSingleAttribute(
-        makeNode(it->second, st, ns))));
+    NodePtr node = NodePtr(new NodeArray(
+        asSingleAttribute(makeNode(it->second, st, ns))));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static NodePtr makeMapNode(const Entity& e, const Object& m,
@@ -390,8 +423,12 @@ static NodePtr makeMapNode(const Entity& e, const Object& m,
 {
     Object::const_iterator it = findField(e, m, "values");
 
-    return NodePtr(new NodeMap(asSingleAttribute(
-        makeNode(it->second, st, ns))));
+    NodePtr node = NodePtr(new NodeMap(
+        asSingleAttribute(makeNode(it->second, st, ns))));
+    if (containsField(m, "doc")) {
+        node->setDoc(getDocField(e, m));
+    }
+    return node;
 }
 
 static Name getName(const Entity& e, const Object& m, const string& ns)
@@ -420,29 +457,49 @@ static NodePtr makeNode(const Entity& e, const Object& m,
     SymbolTable& st, const string& ns)
 {
     const string& type = getStringField(e, m, "type");
-    if (NodePtr result = makePrimitive(type)) {
-        return result;
-    } else if (type == "record" || type == "error" ||
+    NodePtr result;
+    if (type == "record" || type == "error" ||
         type == "enum" || type == "fixed") {
         Name nm = getName(e, m, ns);
-        NodePtr result;
         if (type == "record" || type == "error") {
             result = NodePtr(new NodeRecord());
             st[nm] = result;
-            NodePtr r = makeRecordNode(e, nm, m, st, nm.ns());
-            (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
-                *boost::dynamic_pointer_cast<NodeRecord>(result));
+            // Get field doc
+            if (containsField(m, "doc")) {
+                string doc = getDocField(e, m);
+
+                NodePtr r = makeRecordNode(e, nm, &doc, m, st, nm.ns());
+                (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
+                    *boost::dynamic_pointer_cast<NodeRecord>(result));
+            } else {  // No doc
+                NodePtr r =
+                    makeRecordNode(e, nm, NULL, m, st, nm.ns());
+                (boost::dynamic_pointer_cast<NodeRecord>(r))
+                    ->swap(*boost::dynamic_pointer_cast<NodeRecord>(result));
+            }
         } else {
             result = (type == "enum") ? makeEnumNode(e, nm, m) :
                 makeFixedNode(e, nm, m);
             st[nm] = result;
         }
-        return result;
     } else if (type == "array") {
-        return makeArrayNode(e, m, st, ns);
+        result = makeArrayNode(e, m, st, ns);
     } else if (type == "map") {
-        return makeMapNode(e, m, st, ns);
+        result = makeMapNode(e, m, st, ns);
+    } else {
+        result = makePrimitive(type);
     }
+
+    if (result) {
+        try {
+            result->setLogicalType(makeLogicalType(e, m));
+        } catch (Exception& ex) {
+            // Per the standard we must ignore the logical type attribute if it
+            // is malformed.
+        }
+        return result;
+    }
+
     throw Exception(boost::format("Unknown type definition: %1%")
         % e.toString());
 }
@@ -496,7 +553,7 @@ AVRO_DECL ValidSchema compileJsonSchemaFromString(const char* input)
         ::strlen(input));
 }
 
-AVRO_DECL ValidSchema compileJsonSchemaFromString(const std::string& input)
+AVRO_DECL ValidSchema compileJsonSchemaFromString(const string& input)
 {
     return compileJsonSchemaFromMemory(
         reinterpret_cast<const uint8_t*>(&input[0]), input.size());
@@ -517,7 +574,7 @@ AVRO_DECL void compileJsonSchema(std::istream &is, ValidSchema &schema)
     schema = compile(is);
 }
 
-AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema, std::string &error)
+AVRO_DECL bool compileJsonSchema(std::istream &is, ValidSchema &schema, string &error)
 {
     try {
         compileJsonSchema(is, schema);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,13 +24,13 @@ import java.util.Arrays;
 import org.apache.trevni.ValueType;
 import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnFileMetaData;
-
 import org.apache.avro.Schema;
-
+import org.apache.avro.util.RandomData;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class TestShredder {
+  private static final long SEED = System.currentTimeMillis();
 
   private static final int COUNT = 100;
   private static final File FILE = new File("target", "test.trv");
@@ -255,9 +255,9 @@ public class TestShredder {
 
   private void checkWrite(Schema schema) throws IOException {
     AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
+      new AvroColumnWriter<>(schema, new ColumnFileMetaData());
     int count = 0;
-    for (Object datum : new RandomData(schema, COUNT)) {
+    for (Object datum : new RandomData(schema, COUNT, SEED)) {
       //System.out.println("datum="+datum);
       writer.write(datum);
     }
@@ -266,9 +266,9 @@ public class TestShredder {
 
   private void checkRead(Schema schema) throws IOException {
     AvroColumnReader<Object> reader =
-      new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE)
+      new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
                                    .setSchema(schema));
-    for (Object expected : new RandomData(schema, COUNT))
+    for (Object expected : new RandomData(schema, COUNT, SEED))
       assertEquals(expected, reader.next());
     reader.close();
   }

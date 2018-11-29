@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,16 +17,12 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,11 +44,22 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.RandomData;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.JsonNode;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
+
+import static org.junit.Assert.*;
 
 public class TestSchema {
+
+  @Rule
+  public TestName name = new TestName();
+
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
 
   public static final String LISP_SCHEMA = "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
             +"{\"name\":\"value\", \"type\":[\"null\", \"string\","
@@ -88,7 +95,7 @@ public class TestSchema {
   public void testNull() throws Exception {
     assertEquals(Schema.create(Type.NULL), Schema.parse("\"null\""));
     assertEquals(Schema.create(Type.NULL), Schema.parse("{\"type\":\"null\"}"));
-    check("\"null\"", "null", null);
+    check(new File(DIR.getRoot(), name.getMethodName()), "\"null\"", "null", null);
   }
 
   @Test
@@ -96,7 +103,7 @@ public class TestSchema {
     assertEquals(Schema.create(Type.BOOLEAN), Schema.parse("\"boolean\""));
     assertEquals(Schema.create(Type.BOOLEAN),
                  Schema.parse("{\"type\":\"boolean\"}"));
-    check("\"boolean\"", "true", Boolean.TRUE);
+    check(new File(DIR.getRoot(), name.getMethodName()),"\"boolean\"", "true", Boolean.TRUE);
   }
 
   @Test
@@ -104,7 +111,7 @@ public class TestSchema {
     assertEquals(Schema.create(Type.STRING), Schema.parse("\"string\""));
     assertEquals(Schema.create(Type.STRING),
                  Schema.parse("{\"type\":\"string\"}"));
-    check("\"string\"", "\"foo\"", new Utf8("foo"));
+    check(new File(DIR.getRoot(), name.getMethodName()),"\"string\"", "\"foo\"", new Utf8("foo"));
   }
 
   @Test
@@ -112,7 +119,7 @@ public class TestSchema {
     assertEquals(Schema.create(Type.BYTES), Schema.parse("\"bytes\""));
     assertEquals(Schema.create(Type.BYTES),
                  Schema.parse("{\"type\":\"bytes\"}"));
-    check("\"bytes\"", "\"\\u0000ABC\\u00FF\"",
+    check(new File(DIR.getRoot(), name.getMethodName()),"\"bytes\"", "\"\\u0000ABC\\u00FF\"",
           ByteBuffer.wrap(new byte[]{0,65,66,67,-1}));
   }
 
@@ -120,14 +127,14 @@ public class TestSchema {
   public void testInt() throws Exception {
     assertEquals(Schema.create(Type.INT), Schema.parse("\"int\""));
     assertEquals(Schema.create(Type.INT), Schema.parse("{\"type\":\"int\"}"));
-    check("\"int\"", "9", new Integer(9));
+    check(new File(DIR.getRoot(), name.getMethodName()),"\"int\"", "9", 9);
   }
 
   @Test
   public void testLong() throws Exception {
     assertEquals(Schema.create(Type.LONG), Schema.parse("\"long\""));
     assertEquals(Schema.create(Type.LONG), Schema.parse("{\"type\":\"long\"}"));
-    check("\"long\"", "11", new Long(11));
+    check(new File(DIR.getRoot(), name.getMethodName()),"\"long\"", "11", 11L);
   }
 
   @Test
@@ -135,7 +142,7 @@ public class TestSchema {
     assertEquals(Schema.create(Type.FLOAT), Schema.parse("\"float\""));
     assertEquals(Schema.create(Type.FLOAT),
                  Schema.parse("{\"type\":\"float\"}"));
-    check("\"float\"", "1.1", new Float(1.1));
+    check(new File(DIR.getRoot(), name.getMethodName()),"\"float\"", "1.1", 1.1f);
     checkDefault("\"float\"", "\"NaN\"", Float.NaN);
     checkDefault("\"float\"", "\"Infinity\"", Float.POSITIVE_INFINITY);
     checkDefault("\"float\"", "\"-Infinity\"", Float.NEGATIVE_INFINITY);
@@ -146,7 +153,7 @@ public class TestSchema {
     assertEquals(Schema.create(Type.DOUBLE), Schema.parse("\"double\""));
     assertEquals(Schema.create(Type.DOUBLE),
                  Schema.parse("{\"type\":\"double\"}"));
-    check("\"double\"", "1.2", new Double(1.2));
+    check(new File(DIR.getRoot(), name.getMethodName()),"\"double\"", "1.2", 1.2);
     checkDefault("\"double\"", "\"NaN\"", Double.NaN);
     checkDefault("\"double\"", "\"Infinity\"", Double.POSITIVE_INFINITY);
     checkDefault("\"double\"", "\"-Infinity\"", Double.NEGATIVE_INFINITY);
@@ -156,20 +163,20 @@ public class TestSchema {
   public void testArray() throws Exception {
     String json = "{\"type\":\"array\", \"items\": \"long\"}";
     Schema schema = Schema.parse(json);
-    Collection<Long> array = new GenericData.Array<Long>(1, schema);
+    Collection<Long> array = new GenericData.Array<>(1, schema);
     array.add(1L);
-    check(json, "[1]", array);
-    array = new ArrayList<Long>(1);
+    check(new File(DIR.getRoot(), name.getMethodName()),json, "[1]", array);
+    array = new ArrayList<>(1);
     array.add(1L);
-    check(json, "[1]", array);
+    check(new File(DIR.getRoot(), name.getMethodName()),json, "[1]", array);
     checkParseError("{\"type\":\"array\"}");      // items required
   }
 
   @Test
   public void testMap() throws Exception {
-    HashMap<Utf8,Long> map = new HashMap<Utf8,Long>();
+    HashMap<Utf8,Long> map = new HashMap<>();
     map.put(new Utf8("a"), 1L);
-    check("{\"type\":\"map\", \"values\":\"long\"}", "{\"a\":1}", map);
+    check(new File(DIR.getRoot(), name.getMethodName()),"{\"type\":\"map\", \"values\":\"long\"}", "{\"a\":1}", map);
     checkParseError("{\"type\":\"map\"}");        // values required
   }
 
@@ -182,7 +189,7 @@ public class TestSchema {
         "    \"null\"]" +
         "   }]" +
         " }";
-    check(unionMapSchema, true);
+    check(new File(DIR.getRoot(), name.getMethodName()),unionMapSchema, true);
   }
 
   @Test
@@ -193,7 +200,7 @@ public class TestSchema {
 
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", 11L);
-    check(recordJson, "{\"f\":11}", record, false);
+    check(new File(DIR.getRoot(), name.getMethodName()),recordJson, "{\"f\":11}", record, false);
 
     // test field props
     assertEquals("bar", schema.getField("f").getProp("foo"));
@@ -233,17 +240,17 @@ public class TestSchema {
       +"[{\"name\":\"f\", \"type\": {\"type\":\"map\", \"values\":\"long\"}}]}";
     Schema schema = Schema.parse(json);
 
-    HashMap<Utf8,Long> map = new HashMap<Utf8,Long>();
+    HashMap<Utf8,Long> map = new HashMap<>();
     map.put(new Utf8("a"), 1L);
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", map);
-    check(json, "{\"f\":{\"a\":1}}", record, false);
+    check(new File(DIR.getRoot(), name.getMethodName()),json, "{\"f\":{\"a\":1}}", record, false);
   }
 
 
   @Test
   public void testEnum() throws Exception {
-    check(BASIC_ENUM_SCHEMA, "\"B\"",
+    check(new File(DIR.getRoot(), name.getMethodName()),BASIC_ENUM_SCHEMA, "\"B\"",
           new GenericData.EnumSymbol(Schema.parse(BASIC_ENUM_SCHEMA), "B"),
           false);
     checkParseError("{\"type\":\"enum\"}");        // symbols required
@@ -260,14 +267,15 @@ public class TestSchema {
   public void testFixed() throws Exception {
     String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
     Schema schema = Schema.parse(json);
-    check(json, "\"a\"",
+    check(new File(DIR.getRoot(), name.getMethodName()),json, "\"a\"",
           new GenericData.Fixed(schema, new byte[]{(byte)'a'}), false);
     checkParseError("{\"type\":\"fixed\"}");        // size required
   }
 
   @Test
   public void testRecursive() throws Exception {
-    check("{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
+    check(new File(DIR.getRoot(), name.getMethodName()),
+            "{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
           +"{\"name\":\"label\", \"type\":\"string\"},"
           +"{\"name\":\"children\", \"type\":"
           +"{\"type\": \"array\", \"items\": \"Node\" }}]}",
@@ -291,13 +299,13 @@ public class TestSchema {
     for (int i = 1; i < 15; i++) {                // 15 is big enough to trigger
       // create a list of records, each with a single field whose type is a
       // union of all of the records.
-      List<Schema> recs = new ArrayList<Schema>();
+      List<Schema> recs = new ArrayList<>();
       for (int j = 0; j < i; j++)
         recs.add(Schema.createRecord(""+(char)('A'+j), null, null, false));
       for (Schema s : recs) {
         Schema union = Schema.createUnion(recs);
         Field f = new Field("x", union, null, null);
-        List<Field> fields = new ArrayList<Field>();
+        List<Field> fields = new ArrayList<>();
         fields.add(f);
         s.setFields(fields);
       }
@@ -313,13 +321,13 @@ public class TestSchema {
 
   @Test
   public void testLisp() throws Exception {
-    check(LISP_SCHEMA, false);
+    check(new File(DIR.getRoot(), name.getMethodName()),LISP_SCHEMA, false);
   }
 
   @Test
   public void testUnion() throws Exception {
-    check("[\"string\", \"long\"]", false);
-    checkDefault("[\"double\", \"long\"]", "1.1", new Double(1.1));
+    check(new File(DIR.getRoot(), name.getMethodName()),"[\"string\", \"long\"]", false);
+    checkDefault("[\"double\", \"long\"]", "1.1", 1.1);
 
     // test that erroneous default values cause errors
     for (String type : new String[]
@@ -375,8 +383,8 @@ public class TestSchema {
     " {\"type\":\"fixed\",\"name\":\"Bar2\",\"size\": 1}," +
     " {\"type\":\"enum\",\"name\":\"Baz2\",\"symbols\": [\"X\"]}";
 
-    check(partial + namedTypes + "]", false);
-    check(partial + namedTypes + namedTypes2 + "]", false);
+    check(new File(DIR.getRoot(), name.getMethodName()),partial + namedTypes + "]", false);
+    check(new File(DIR.getRoot(), name.getMethodName()),partial + namedTypes + namedTypes2 + "]", false);
     checkParseError(partial + namedTypes + namedTypes + "]");
 
     // fail with two branches of the same unnamed type
@@ -392,7 +400,7 @@ public class TestSchema {
     checkUnionError(new Schema[] {Schema.createMap(Schema.create(Type.INT)),
         Schema.createMap(Schema.create(Type.INT))});
 
-    List<String> symbols = new ArrayList<String>();
+    List<String> symbols = new ArrayList<>();
     symbols.add("NOTHING");
 
     // succeed with two branches of the same named type, if different names
@@ -400,19 +408,19 @@ public class TestSchema {
     u = buildUnion(new Schema[] {
         Schema.parse("{\"type\":\"record\",\"name\":\"x.A\",\"fields\":[]}"),
         Schema.parse("{\"type\":\"record\",\"name\":\"y.A\",\"fields\":[]}")});
-    check(u.toString(), false);
+    check(new File(DIR.getRoot(), name.getMethodName()),u.toString(), false);
 
     u = buildUnion(new Schema[] {
         Schema.parse
         ("{\"type\":\"enum\",\"name\":\"x.A\",\"symbols\":[\"X\"]}"),
         Schema.parse
         ("{\"type\":\"enum\",\"name\":\"y.A\",\"symbols\":[\"Y\"]}")});
-    check(u.toString(), false);
+    check(new File(DIR.getRoot(), name.getMethodName()),u.toString(), false);
 
     u = buildUnion(new Schema[] {
         Schema.parse("{\"type\":\"fixed\",\"name\":\"x.A\",\"size\":4}"),
         Schema.parse("{\"type\":\"fixed\",\"name\":\"y.A\",\"size\":8}")});
-    check(u.toString(), false);
+    check(new File(DIR.getRoot(), name.getMethodName()),u.toString(), false);
 
     // fail with two branches of the same named type, but same names
     checkUnionError(new Schema[] {Schema.createRecord("Foo", null, "org.test", false),
@@ -428,13 +436,13 @@ public class TestSchema {
   }
 
   @Test
-  public void testComplexProp() throws Exception {
+  public void testComplexProp() {
     String json = "{\"type\":\"null\", \"foo\": [0]}";
     Schema s = Schema.parse(json);
-    assertEquals(null, s.getProp("foo"));
+    assertNull(s.getProp("foo"));
   }
 
-  @Test public void testPropOrdering() throws Exception {
+  @Test public void testPropOrdering() {
     String json = "{\"type\":\"int\",\"z\":\"c\",\"yy\":\"b\",\"x\":\"a\"}";
     Schema s = Schema.parse(json);
     assertEquals(json, s.toString());
@@ -443,12 +451,12 @@ public class TestSchema {
   @Test
   public void testParseInputStream() throws IOException {
     Schema s = Schema.parse(
-        new ByteArrayInputStream("\"boolean\"".getBytes("UTF-8")));
+        new ByteArrayInputStream("\"boolean\"".getBytes(StandardCharsets.UTF_8)));
     assertEquals(Schema.parse("\"boolean\""), s);
   }
 
   @Test
-  public void testNamespaceScope() throws Exception {
+  public void testNamespaceScope() {
     String z = "{\"type\":\"record\",\"name\":\"Z\",\"fields\":[]}";
     String y = "{\"type\":\"record\",\"name\":\"q.Y\",\"fields\":["
       +"{\"name\":\"f\",\"type\":"+z+"}]}";
@@ -463,7 +471,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testNamespaceNesting() throws Exception {
+  public void testNamespaceNesting() {
     String y = "{\"type\":\"record\",\"name\":\"y.Y\",\"fields\":["
       +"{\"name\":\"f\",\"type\":\"x.X\"}]}";
     String x = "{\"type\":\"record\",\"name\":\"x.X\",\"fields\":["
@@ -474,7 +482,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testNestedNullNamespace() throws Exception {
+  public void testNestedNullNamespace() {
     Schema inner =
       Schema.parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);
@@ -504,7 +512,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testNestedNonNullNamespace1() throws Exception {
+  public void testNestedNonNullNamespace1() {
     Schema inner1 = Schema.createEnum("InnerEnum", null, "space", Arrays.asList("x"));
     Schema inner2 = Schema.parse("{\"type\":\"record\",\"namespace\":\"space\",\"name\":"
       +"\"InnerRecord\",\"fields\":[]}");
@@ -515,7 +523,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testNestedNonNullNamespace2() throws Exception {
+  public void testNestedNonNullNamespace2() {
     Schema inner1 = Schema.createFixed("InnerFixed", null, "space", 1);
     Schema inner2 = Schema.parse("{\"type\":\"record\",\"namespace\":\"space\",\"name\":"
       +"\"InnerRecord\",\"fields\":[]}");
@@ -526,7 +534,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testNullNamespaceAlias() throws Exception {
+  public void testNullNamespaceAlias() {
     Schema s =
       Schema.parse("{\"type\":\"record\",\"name\":\"Z\",\"fields\":[]}");
     Schema t =
@@ -544,8 +552,8 @@ public class TestSchema {
     GenericData.Record record = new GenericData.Record(schema);
     try {
       checkBinary(schema, record,
-                  new GenericDatumWriter<Object>(),
-                  new GenericDatumReader<Object>());
+          new GenericDatumWriter<>(),
+          new GenericDatumReader<>());
     } catch (NullPointerException e) {
       assertEquals("null of string in field x of Test", e.getMessage());
     }
@@ -565,9 +573,7 @@ public class TestSchema {
     try {
       Schema.createUnion(branchList);
       fail("Union should not have constructed from: " + branchList);
-    } catch (AvroRuntimeException are) {
-      return;
-    }
+    } catch (AvroRuntimeException ignored) { }
   }
 
   private static Schema buildUnion(Schema[] branches) {
@@ -607,7 +613,7 @@ public class TestSchema {
   }
 
   @Test
-  public void testAliases() throws Exception {
+  public void testAliases() {
     String t1 = "{\"type\":\"record\",\"name\":\"a.b\",\"fields\":["
       +"{\"name\":\"f\",\"type\":\"long\"},"
       +"{\"name\":\"h\",\"type\":\"int\"}]}";
@@ -623,7 +629,7 @@ public class TestSchema {
     assertEquals(s2.getField("g").aliases(), Collections.singleton("f"));
 
     Schema s3 = Schema.applyAliases(s1,s2);
-    assertFalse(s2 == s3);
+    assertNotSame(s2, s3);
     assertEquals(s2, s3);
 
     t1 = "{\"type\":\"enum\",\"name\":\"a.b\","
@@ -633,7 +639,7 @@ public class TestSchema {
     s1 = Schema.parse(t1);
     s2 = Schema.parse(t2);
     s3 = Schema.applyAliases(s1,s2);
-    assertFalse(s2 == s3);
+    assertNotSame(s2, s3);
     assertEquals(s2, s3);
 
     t1 = "{\"type\":\"fixed\",\"name\":\"a\","
@@ -643,27 +649,24 @@ public class TestSchema {
     s1 = Schema.parse(t1);
     s2 = Schema.parse(t2);
     s3 = Schema.applyAliases(s1,s2);
-    assertFalse(s2 == s3);
+    assertNotSame(s2, s3);
     assertEquals(s2, s3);
   }
 
-  private static void check(String schemaJson, String defaultJson,
-                            Object defaultValue) throws Exception {
-    check(schemaJson, defaultJson, defaultValue, true);
+  private static void check(File dst, String schemaJson, String defaultJson, Object defaultValue) throws Exception {
+    check(dst, schemaJson, defaultJson, defaultValue, true);
   }
-  private static void check(String schemaJson, String defaultJson,
-                            Object defaultValue, boolean induce)
-    throws Exception {
-    check(schemaJson, induce);
+
+  private static void check(File dst, String schemaJson, String defaultJson, Object defaultValue, boolean induce) throws Exception {
+    check(dst, schemaJson, induce);
     checkDefault(schemaJson, defaultJson, defaultValue);
   }
 
-  private static void check(String jsonSchema, boolean induce)
-    throws Exception {
+  private static void check(File dst, String jsonSchema, boolean induce) throws Exception {
     Schema schema = Schema.parse(jsonSchema);
     checkProp(schema);
     Object reuse = null;
-    for (Object datum : new RandomData(schema, COUNT)) {
+    for (Object datum : new RandomData(schema, COUNT, true)) {
 
       if (induce) {
         Schema induced = GenericData.get().induce(datum);
@@ -674,23 +677,23 @@ public class TestSchema {
                  GenericData.get().validate(schema, datum));
 
       checkBinary(schema, datum,
-                  new GenericDatumWriter<Object>(),
-                  new GenericDatumReader<Object>(), null);
+          new GenericDatumWriter<>(),
+          new GenericDatumReader<>(), null);
       reuse = checkBinary(schema, datum,
-          new GenericDatumWriter<Object>(),
-          new GenericDatumReader<Object>(), reuse);
+          new GenericDatumWriter<>(),
+          new GenericDatumReader<>(), reuse);
       checkDirectBinary(schema, datum,
-                  new GenericDatumWriter<Object>(),
-                  new GenericDatumReader<Object>());
+          new GenericDatumWriter<>(),
+          new GenericDatumReader<>());
       checkBlockingBinary(schema, datum,
-                  new GenericDatumWriter<Object>(),
-                  new GenericDatumReader<Object>());
+          new GenericDatumWriter<>(),
+          new GenericDatumReader<>());
       checkJson(schema, datum,
-                  new GenericDatumWriter<Object>(),
-                  new GenericDatumReader<Object>());
+          new GenericDatumWriter<>(),
+          new GenericDatumReader<>());
 
       // Check that we can generate the code for every schema we see.
-      TestSpecificCompiler.assertCompiles(schema, false);
+      TestSpecificCompiler.assertCompiles(dst, schema, false);
 
       // Check that we can read/write the json of every schema we see.
       checkBinaryJson(jsonSchema);
@@ -699,15 +702,15 @@ public class TestSchema {
 
   private static void checkProp(Schema s0) throws Exception {
     if(s0.getType().equals(Schema.Type.UNION)) return; // unions have no props
-    assertEquals(null, s0.getProp("foo"));
+    assertNull(s0.getProp("foo"));
     Schema s1 = Schema.parse(s0.toString());
     s1.addProp("foo", "bar");
     assertEquals("bar", s1.getProp("foo"));
-    assertFalse(s0.equals(s1));
+    assertNotEquals(s0, s1);
     Schema s2 = Schema.parse(s1.toString());
     assertEquals("bar", s2.getProp("foo"));
     assertEquals(s1, s2);
-    assertFalse(s0.equals(s2));
+    assertNotEquals(s0, s2);
   }
 
   public static void checkBinary(Schema schema, Object datum,
@@ -801,16 +804,16 @@ public class TestSchema {
                                 String json) throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
-    DatumWriter<Object> writer = new GenericDatumWriter<Object>();
+    DatumWriter<Object> writer = new GenericDatumWriter<>();
     writer.setSchema(schema);
     writer.write(datum, encoder);
     encoder.flush();
     byte[] data = out.toByteArray();
 
-    String encoded = new String(data, "UTF-8");
+    String encoded = new String(data, StandardCharsets.UTF_8);
     assertEquals("Encoded data does not match.", json, encoded);
 
-    DatumReader<Object> reader = new GenericDatumReader<Object>();
+    DatumReader<Object> reader = new GenericDatumReader<>();
     reader.setSchema(schema);
     Object decoded = reader.read(null, DecoderFactory.get()
         .jsonDecoder(schema, new ByteArrayInputStream(data)));
@@ -846,7 +849,7 @@ public class TestSchema {
     +"\"type\":"+schemaJson+", "
     +"\"default\":"+defaultJson+"}]}";
     Schema expected = Schema.parse(recordJson);
-    DatumReader<Object> in = new GenericDatumReader<Object>(ACTUAL, expected);
+    DatumReader<Object> in = new GenericDatumReader<>(ACTUAL, expected);
     GenericData.Record record = (GenericData.Record)
       in.read(null, DecoderFactory.get().binaryDecoder(
           new byte[0], null));
@@ -857,16 +860,13 @@ public class TestSchema {
   private static void checkValidateDefaults(String schemaJson, String defaultJson) {
     try {
       Schema.Parser parser = new Schema.Parser();
-      parser.setValidateDefaults(true);
       String recordJson =
           "{\"type\":\"record\", \"name\":\"Foo\", \"fields\":[{\"name\":\"f\", "
               +"\"type\":"+schemaJson+", "
               +"\"default\":"+defaultJson+"}]}";
       parser.parse(recordJson);
       fail("Schema of type " + schemaJson + " should not have default " + defaultJson);
-    } catch (AvroTypeException e) {
-      return;
-    }
+    } catch (AvroTypeException ignored) { }
   }
 
   @Test(expected=AvroTypeException.class)
@@ -874,7 +874,7 @@ public class TestSchema {
     Schema expected =
       Schema.parse("{\"type\":\"record\", \"name\":\"Foo\", \"fields\":"+
                    "[{\"name\":\"f\", \"type\": \"string\"}]}");
-    DatumReader<Object> in = new GenericDatumReader<Object>(ACTUAL, expected);
+    DatumReader<Object> in = new GenericDatumReader<>(ACTUAL, expected);
     in.read(null, DecoderFactory.get().binaryDecoder(
         new ByteArrayInputStream(new byte[0]), null));
   }
@@ -886,7 +886,7 @@ public class TestSchema {
     Schema expected = Schema.parse
       ("{\"type\":\"enum\",\"name\":\"E\",\"symbols\":[\"Y\",\"Z\"]}");
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    DatumWriter<Object> writer = new GenericDatumWriter<Object>(actual);
+    DatumWriter<Object> writer = new GenericDatumWriter<>(actual);
     Encoder encoder = EncoderFactory.get().directBinaryEncoder(out, null);
     writer.write(new GenericData.EnumSymbol(actual, "Y"), encoder);
     writer.write(new GenericData.EnumSymbol(actual, "X"), encoder);
@@ -894,7 +894,7 @@ public class TestSchema {
     byte[] data = out.toByteArray();
     Decoder decoder = DecoderFactory.get().binaryDecoder(
         data, null);
-    DatumReader<String> in = new GenericDatumReader<String>(actual, expected);
+    DatumReader<String> in = new GenericDatumReader<>(actual, expected);
     assertEquals("Wrong value", new GenericData.EnumSymbol(expected, "Y"),
                  in.read(null, decoder));
     try {
@@ -934,8 +934,7 @@ public class TestSchema {
   }
 
   private static List<String> lockedArrayList() {
-    return new Schema.LockableArrayList<String>(Arrays.asList(new String[] {
-        "a", "b", "c" })).lock();
+    return new Schema.LockableArrayList<>(Arrays.asList("a", "b", "c")).lock();
   }
 
   @Test(expected=IllegalStateException.class)
@@ -950,25 +949,22 @@ public class TestSchema {
 
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList3() {
-    lockedArrayList().addAll(Arrays.asList(new String[] { "p" }));
+    lockedArrayList().addAll(Collections.singletonList("p"));
   }
 
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList4() {
-    lockedArrayList().addAll(0,
-        Arrays.asList(new String[] { "p" }));
+    lockedArrayList().addAll(0, Collections.singletonList("p"));
   }
 
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList5() {
-    lockedArrayList().
-      removeAll(Arrays.asList(new String[] { "a" }));
+    lockedArrayList().removeAll(Collections.singletonList("a"));
   }
 
   @Test(expected=IllegalStateException.class)
   public void testLockedArrayList6() {
-    lockedArrayList().
-      retainAll(Arrays.asList(new String[] { "a" }));
+    lockedArrayList().retainAll(Collections.singletonList("a"));
   }
 
   @Test(expected=IllegalStateException.class)

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,17 +24,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
+import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.JsonProperties;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -47,12 +51,10 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
 import org.apache.avro.util.Utf8;
+import org.apache.avro.util.internal.Accessor;
 
-import org.codehaus.jackson.JsonNode;
-
-import com.google.common.collect.MapMaker;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /** Utilities for generic Java data. See {@link GenericRecordBuilder} for a convenient
  * way to build {@link GenericRecord} instances.
@@ -98,10 +100,10 @@ public class GenericData {
   public ClassLoader getClassLoader() { return classLoader; }
 
   private Map<String, Conversion<?>> conversions =
-      new HashMap<String, Conversion<?>>();
+      new HashMap<>();
 
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
-      new IdentityHashMap<Class<?>, Map<String, Conversion<?>>>();
+      new IdentityHashMap<>();
 
   /**
    * Registers the given conversion to be used when reading and writing with
@@ -116,7 +118,7 @@ public class GenericData {
       conversionsByClass.get(type).put(
           conversion.getLogicalTypeName(), conversion);
     } else {
-      Map<String, Conversion<?>> conversions = new LinkedHashMap<String, Conversion<?>>();
+      Map<String, Conversion<?>> conversions = new LinkedHashMap<>();
       conversions.put(conversion.getLogicalTypeName(), conversion);
       conversionsByClass.put(type, conversions);
     }
@@ -256,7 +258,11 @@ public class GenericData {
     @Override
     public Schema getSchema() { return schema; }
     @Override public int size() { return size; }
-    @Override public void clear() { size = 0; }
+    @Override public void clear() {
+      // Let GC do its work
+      Arrays.fill(elements, 0, size, null);
+      size = 0;
+    }
     @Override public Iterator<T> iterator() {
       return new Iterator<T>() {
         private int position = 0;
@@ -272,15 +278,6 @@ public class GenericData {
       if (i >= size)
         throw new IndexOutOfBoundsException("Index " + i + " out of bounds.");
       return (T)elements[i];
-    }
-    @Override public boolean add(T o) {
-      if (size == elements.length) {
-        Object[] newElements = new Object[(size * 3)/2 + 1];
-        System.arraycopy(elements, 0, newElements, 0, size);
-        elements = newElements;
-      }
-      elements[size++] = o;
-      return true;
     }
     @Override public void add(int location, T o) {
       if (location > size || location < 0) {
@@ -332,19 +329,6 @@ public class GenericData {
         left++;
         right--;
       }
-    }
-    @Override
-    public String toString() {
-      StringBuilder buffer = new StringBuilder();
-      buffer.append("[");
-      int count = 0;
-      for (T e : this) {
-        buffer.append(e==null ? "null" : e.toString());
-        if (++count < size())
-          buffer.append(", ");
-      }
-      buffer.append("]");
-      return buffer.toString();
     }
   }
 
@@ -501,7 +485,7 @@ public class GenericData {
   /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
   public String toString(Object datum) {
     StringBuilder buffer = new StringBuilder();
-    toString(datum, buffer, new IdentityHashMap<Object, Object>(128) );
+    toString(datum, buffer, new IdentityHashMap<>(128) );
     return buffer.toString();
   }
 
@@ -556,8 +540,9 @@ public class GenericData {
       @SuppressWarnings(value="unchecked")
       Map<Object,Object> map = (Map<Object,Object>)datum;
       for (Map.Entry<Object,Object> entry : map.entrySet()) {
-        toString(entry.getKey(), buffer, seenObjects);
-        buffer.append(": ");
+        buffer.append("\"");
+        writeEscapedString(String.valueOf(entry.getKey()), buffer);
+        buffer.append("\": ");
         toString(entry.getValue(), buffer, seenObjects);
         if (++count < map.size())
           buffer.append(", ");
@@ -743,7 +728,7 @@ public class GenericData {
   /** Return the schema full name for a datum.  Called by {@link
    * #resolveUnion(Schema,Object)}. */
   protected String getSchemaName(Object datum) {
-    if (datum == null)
+    if (datum == null || datum == JsonProperties.NULL_VALUE)
       return Type.NULL.getName();
     if (isRecord(datum))
       return getRecordSchema(datum).getFullName();
@@ -1000,7 +985,7 @@ public class GenericData {
   }
 
   private final Map<Field, Object> defaultValueCache
-    = new MapMaker().weakKeys().makeMap();
+    = Collections.synchronizedMap(new WeakHashMap<>());
 
   /**
    * Gets the default value of the given field, if any.
@@ -1008,12 +993,12 @@ public class GenericData {
    * @return the default value associated with the given field,
    * or null if none is specified in the schema.
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  @SuppressWarnings({ "unchecked" })
   public Object getDefaultValue(Field field) {
-    JsonNode json = field.defaultValue();
+    JsonNode json = Accessor.defaultValue(field);
     if (json == null)
-      throw new AvroRuntimeException("Field " + field
-                                     + " not set and has no default value");
+      throw new AvroMissingFieldException("Field " + field
+                                          + " not set and has no default value", field);
     if (json.isNull()
         && (field.schema().getType() == Type.NULL
             || (field.schema().getType() == Type.UNION
@@ -1030,13 +1015,16 @@ public class GenericData {
       try {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(baos, null);
-        ResolvingGrammarGenerator.encode(encoder, field.schema(), json);
+        Accessor.encode(encoder, field.schema(), json);
         encoder.flush();
         BinaryDecoder decoder =
           DecoderFactory.get().binaryDecoder(baos.toByteArray(), null);
         defaultValue =
           createDatumReader(field.schema()).read(null, decoder);
 
+        // this MAY result in two threads creating the same defaultValue
+        // and calling put.  The last thread will win.  However,
+        // that's not an issue.
         defaultValueCache.put(field, defaultValue);
       } catch (IOException e) {
         throw new AvroRuntimeException(e);
@@ -1077,7 +1065,7 @@ public class GenericData {
     switch (schema.getType()) {
       case ARRAY:
         List<Object> arrayValue = (List) value;
-        List<Object> arrayCopy = new GenericData.Array<Object>(
+        List<Object> arrayCopy = new GenericData.Array<>(
             arrayValue.size(), schema);
         for (Object obj : arrayValue) {
           arrayCopy.add(deepCopy(schema.getElementType(), obj));
@@ -1108,7 +1096,7 @@ public class GenericData {
       case MAP:
         Map<CharSequence, Object> mapValue = (Map) value;
         Map<CharSequence, Object> mapCopy =
-          new HashMap<CharSequence, Object>(mapValue.size());
+          new HashMap<>(mapValue.size());
         for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
           mapCopy.put((CharSequence)(deepCopy(STRINGS, entry.getKey())),
               deepCopy(schema.getValueType(), entry.getValue()));

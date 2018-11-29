@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,11 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import org.apache.avro.Conversion;
-import org.apache.avro.Conversions;
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
+
+import org.apache.avro.*;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
@@ -194,11 +191,11 @@ public class TestGenericLogicalTypes {
   }
 
   private <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
-    List<D> data = new ArrayList<D>();
+    List<D> data = new ArrayList<>();
     FileReader<D> fileReader = null;
 
     try {
-      fileReader = new DataFileReader<D>(file, reader);
+      fileReader = new DataFileReader<>(file, reader);
       for (D datum : fileReader) {
         data.add(datum);
       }
@@ -219,7 +216,7 @@ public class TestGenericLogicalTypes {
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = model.createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<D>(writer);
+    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
     try {
       fileWriter.create(schema, file);
@@ -246,28 +243,28 @@ public class TestGenericLogicalTypes {
              UUID.randomUUID().toString(),        // use raw type
              GenericData.get());                  // with no conversions
   }
-    
+
   @Test
   public void testCopyDecimal() {
     testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
              new BigDecimal("-34.34"),
              GENERIC);
   }
-    
+
   @Test
   public void testCopyDecimalRaw() {
     testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
              ByteBuffer.wrap(new BigDecimal("-34.34").unscaledValue().toByteArray()),
              GenericData.get());                  // no conversions
   }
-    
+
   private void testCopy(Schema schema, Object value, GenericData model) {
     // test direct copy of instance
     checkCopy(value, model.deepCopy(schema, value), false);
 
     // test nested in a record
     Schema recordSchema = Schema.createRecord("X", "", "test", false);
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("x", schema, "", null));
     recordSchema.setFields(fields);
 
@@ -288,7 +285,7 @@ public class TestGenericLogicalTypes {
   }
 
   private void checkCopy(Object original, Object copy, boolean notSame) {
-    if (notSame) 
+    if (notSame)
       Assert.assertNotSame(original, copy);
     Assert.assertEquals(original, copy);
   }

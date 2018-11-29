@@ -30,35 +30,35 @@ namespace Avro.Test
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""namespace"":""com"", ""aliases"":[""c"",""foo.y""],
                    ""fields"":
                     [{""name"":""f1"",""type"":""long"", ""extraprop"":""important"", ""id"":""1029"", ""aliases"":[""a"",""b"",""c""] },
-                     {""name"":""f2"",""type"": ""int""}]}", 
+                     {""name"":""f2"",""type"": ""int""}]}",
                    true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1""],
                    ""fields"":[{""name"":""f1"",""type"":""long"", ""order"":""junk"" },
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     false)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1""], ""customprop"":""123456"",
                    ""fields"":[{""name"":""f1"",""type"":""long"", ""order"":""ascending"", ""fprop"":""faaa"" },
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1""],
                    ""fields"":[{""name"":""f1"",""type"":""long""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1"",""Alias2""],
                    ""fields"":[{""name"":""f1"",""type"":""long""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     true)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[""Alias1"",9],
                    ""fields"":[{""name"":""f1"",""type"":""long""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     false)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"":[1, 2],
                     ""fields"":[{""name"":""f1"",""type"":""long"", ""default"": ""100""},
-                    {""name"":""f2"",""type"": ""int""}]}", 
+                    {""name"":""f2"",""type"": ""int""}]}",
                     false)]
         [TestCase(@"{""type"":""record"",""name"":""LongList"", ""aliases"": ""wrong alias format"",
                     ""fields"":[{""name"":""value"",""type"":""long"", ""default"": ""100""},
-                    {""name"":""next"",""type"":[""LongList"",""null""]}]}", 
+                    {""name"":""next"",""type"":[""LongList"",""null""]}]}",
                     false)]
         public void TestAliases(string s, bool valid)   // also tests properties, default, order
         {
@@ -137,84 +137,84 @@ namespace Avro.Test
         }
 
         // Records
-        [TestCase(1,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(1,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
-                  @"{""type"":""record"",""name"":""Rec"", 
+                  @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
-                                 {""name"":""f2"",""type"": ""int""}]}", 
+                                 {""name"":""f2"",""type"": ""int""}]}",
                   true)]
-        [TestCase(2,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(2,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
-                  @"{""type"":""record"",""name"":""NewRec"", 
+                  @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false)]
         [TestCase(3,@"{""type"":""record"",""name"":""Rec"", ""aliases"":[""NewRec""],
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
-                  @"{""type"":""record"",""name"":""NewRec"", 
+                  @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   true)]
         [TestCase(4,@"{""type"":""record"",""name"":""Rec"", ""aliases"":[""OtherRec"",""DiffRec""],
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
-                  @"{""type"":""record"",""name"":""NewRec"", 
+                  @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false)]
-        [TestCase(5,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(5,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f3"",""type"": ""int""}]}",
-                  @"{""type"":""record"",""name"":""Rec"", 
+                  @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false)]
-        [TestCase(6,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(6,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f3"",""type"": ""int"", ""aliases"":[""f2""]}]}",
-                  @"{""type"":""record"",""name"":""Rec"", 
+                  @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   true)]
-        [TestCase(7,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(7,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f3"",""type"": ""int"", ""aliases"":[""f4"",""f5""]}]}",
-                  @"{""type"":""record"",""name"":""Rec"", 
+                  @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"":""long"" },
                                  {""name"":""f2"",""type"": ""int""}]}",
                   false)]
-        [TestCase(8,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(8,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""Symbol"", ""symbols"":[""A""] }}]}",
-                  @"{""type"":""record"",""name"":""Rec"", 
+                  @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A""] }}]}",
                   false)]
-        [TestCase(9,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(9,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""NewSymbol""], ""symbols"":[""A""] }}]}",
-                  @"{""type"":""record"",""name"":""Rec"", 
+                  @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A""] }}]}",
                   true)]
-        [TestCase(10,@"{""type"":""record"",""name"":""Rec"", 
+        [TestCase(10,@"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""DiffSymbol""], ""symbols"":[""A""] }}]}",
-                  @"{""type"":""record"",""name"":""Rec"", 
+                  @"{""type"":""record"",""name"":""Rec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A""] }}]}",
                   false)]
-        [TestCase(11,@"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""], 
+        [TestCase(11,@"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""],
                     ""fields"":[{""name"":""f2"",""aliases"":[""f1""],""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""NewSymbol""], ""symbols"":[""A""] }},
                                 {""name"":""f3"",""aliases"":[""f4""],""type"": {""type"":""fixed"", ""name"":""Fixed"", ""aliases"":[""NewFixed""], ""size"": 1 }}
                                ]}",
-                  @"{""type"":""record"",""name"":""NewRec"", 
+                  @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A""] }},
                                  {""name"":""f4"",""type"": {""type"":""fixed"", ""name"":""NewFixed"", ""size"": 1 }}
                                 ]}",
                   true)]
-        [TestCase(12,@"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""], 
+        [TestCase(12,@"{""type"":""record"",""name"":""Rec"",""aliases"":[""NewRec""],
                      ""fields"":[{""name"":""f2"",""aliases"":[""f1""],""type"": {""type"":""enum"", ""name"":""Symbol"", ""aliases"":[""NewSymbol""], ""symbols"":[""A""] }},
                                  {""name"":""f3"",""aliases"":[""f4""],""type"": {""type"":""fixed"", ""name"":""Fixed"", ""aliases"":[""NewFixed""], ""size"":1 }}
                                 ]}",
-                  @"{""type"":""record"",""name"":""NewRec"", 
+                  @"{""type"":""record"",""name"":""NewRec"",
                      ""fields"":[{""name"":""f1"",""type"": {""type"":""enum"", ""name"":""NewSymbol"", ""symbols"":[""A"",""B""] }},
                                  {""name"":""f4"",""type"": {""type"":""fixed"", ""name"":""NewFixed"", ""size"":1 }}
                                 ]}",

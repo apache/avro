@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,6 +25,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -53,7 +54,7 @@ public class TestNettyServerWithCallbacks {
   private static Simple.Callback simpleClient;
   private static final AtomicBoolean ackFlag = new AtomicBoolean(false);
   private static final AtomicReference<CountDownLatch> ackLatch =
-    new AtomicReference<CountDownLatch>(new CountDownLatch(1));
+    new AtomicReference<>(new CountDownLatch(1));
   private static Simple simpleService = new SimpleImpl(ackFlag);
 
   @BeforeClass
@@ -87,13 +88,13 @@ public class TestNettyServerWithCallbacks {
     Assert.assertEquals("Hello, how are you?", simpleClient.hello("how are you?"));
 
     // Test asynchronous RPC (future):
-    CallFuture<String> future1 = new CallFuture<String>();
+    CallFuture<String> future1 = new CallFuture<>();
     simpleClient.hello("World!", future1);
     Assert.assertEquals("Hello, World!", future1.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future1.getError());
 
     // Test asynchronous RPC (callback):
-    final CallFuture<String> future2 = new CallFuture<String>();
+    final CallFuture<String> future2 = new CallFuture<>();
     simpleClient.hello("what's up?", new Callback<String>() {
       @Override
       public void handleResult(String result) {
@@ -120,13 +121,13 @@ public class TestNettyServerWithCallbacks {
     Assert.assertEquals(record, simpleClient.echo(record));
 
     // Test asynchronous RPC (future):
-    CallFuture<TestRecord> future1 = new CallFuture<TestRecord>();
+    CallFuture<TestRecord> future1 = new CallFuture<>();
     simpleClient.echo(record, future1);
     Assert.assertEquals(record, future1.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future1.getError());
 
     // Test asynchronous RPC (callback):
-    final CallFuture<TestRecord> future2 = new CallFuture<TestRecord>();
+    final CallFuture<TestRecord> future2 = new CallFuture<>();
     simpleClient.echo(record, new Callback<TestRecord>() {
       @Override
       public void handleResult(TestRecord result) {
@@ -147,13 +148,13 @@ public class TestNettyServerWithCallbacks {
     Assert.assertEquals(8, simpleClient.add(2, 6));
 
     // Test asynchronous RPC (future):
-    CallFuture<Integer> future1 = new CallFuture<Integer>();
+    CallFuture<Integer> future1 = new CallFuture<>();
     simpleClient.add(8, 8, future1);
     Assert.assertEquals(new Integer(16), future1.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future1.getError());
 
     // Test asynchronous RPC (callback):
-    final CallFuture<Integer> future2 = new CallFuture<Integer>();
+    final CallFuture<Integer> future2 = new CallFuture<>();
     simpleClient.add(512, 256, new Callback<Integer>() {
       @Override
       public void handleResult(Integer result) {
@@ -176,13 +177,13 @@ public class TestNettyServerWithCallbacks {
     Assert.assertEquals(byteBuffer, simpleClient.echoBytes(byteBuffer));
 
     // Test asynchronous RPC (future):
-    CallFuture<ByteBuffer> future1 = new CallFuture<ByteBuffer>();
+    CallFuture<ByteBuffer> future1 = new CallFuture<>();
     simpleClient.echoBytes(byteBuffer, future1);
     Assert.assertEquals(byteBuffer, future1.get(2, TimeUnit.SECONDS));
     Assert.assertNull(future1.getError());
 
     // Test asynchronous RPC (callback):
-    final CallFuture<ByteBuffer> future2 = new CallFuture<ByteBuffer>();
+    final CallFuture<ByteBuffer> future2 = new CallFuture<>();
     simpleClient.echoBytes(byteBuffer, new Callback<ByteBuffer>() {
       @Override
       public void handleResult(ByteBuffer result) {
@@ -211,7 +212,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     // Test asynchronous RPC (future):
-    CallFuture<Void> future = new CallFuture<Void>();
+    CallFuture<Void> future = new CallFuture<>();
     simpleClient.error(future);
     try {
       future.get(2, TimeUnit.SECONDS);
@@ -227,7 +228,7 @@ public class TestNettyServerWithCallbacks {
 
     // Test asynchronous RPC (callback):
     final CountDownLatch latch = new CountDownLatch(1);
-    final AtomicReference<Throwable> errorRef = new AtomicReference<Throwable>();
+    final AtomicReference<Throwable> errorRef = new AtomicReference<>();
     simpleClient.error(new Callback<Void>() {
       @Override
       public void handleResult(Void result) {
@@ -277,7 +278,7 @@ public class TestNettyServerWithCallbacks {
         Assert.assertEquals(3, simpleClient2.add(1, 2));
 
         // Try again with callbacks:
-        CallFuture<Integer> addFuture = new CallFuture<Integer>();
+        CallFuture<Integer> addFuture = new CallFuture<>();
         simpleClient2.add(1, 2, addFuture);
         Assert.assertEquals(new Integer(3), addFuture.get());
 
@@ -304,7 +305,7 @@ public class TestNettyServerWithCallbacks {
         // is thrown:
         ioeCaught = false;
         try {
-          addFuture = new CallFuture<Integer>();
+          addFuture = new CallFuture<>();
           simpleClient2.add(1, 2, addFuture);
           addFuture.get();
           Assert.fail("Send after server close should have thrown Exception");
@@ -335,7 +336,7 @@ public class TestNettyServerWithCallbacks {
       int serverPort = server2.getPort();
       System.out.println("server2 port : " + serverPort);
 
-      CallFuture<Integer> addFuture = new CallFuture<Integer>();
+      CallFuture<Integer> addFuture = new CallFuture<>();
       Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
           serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
       try {
@@ -370,8 +371,8 @@ public class TestNettyServerWithCallbacks {
     }
   }
 
-  @Test
-  public void cancelPendingRequestsAfterChannelCloseByServerShutdown() throws Exception {
+  @Test(timeout = 20000)
+  public void cancelPendingRequestsAfterChannelCloseByServerShutdown() throws Throwable {
     // The purpose of this test is to verify that a client doesn't stay
     // blocked when a server is unexpectedly killed (or when for some
     // other reason the channel is suddenly closed) while the server
@@ -381,7 +382,7 @@ public class TestNettyServerWithCallbacks {
     // Start up a second server so that closing the server doesn't
     // interfere with the other unit tests:
     BlockingSimpleImpl blockingSimpleImpl = new BlockingSimpleImpl();
-    Server server2 = new NettyServer(new SpecificResponder(Simple.class,
+    final Server server2 = new NettyServer(new SpecificResponder(Simple.class,
         blockingSimpleImpl), new InetSocketAddress(0));
     server2.start();
 
@@ -404,7 +405,8 @@ public class TestNettyServerWithCallbacks {
       // Acquire the run permit, to avoid that the server method returns immediately
       blockingSimpleImpl.acquireRunPermit();
 
-      Thread t = new Thread(new Runnable() {
+      // Start client call
+      Future<?> clientFuture = Executors.newSingleThreadExecutor().submit(new Runnable() {
         @Override
         public void run() {
           try {
@@ -416,23 +418,30 @@ public class TestNettyServerWithCallbacks {
         }
       });
 
-      // Start client call
-      t.start();
-
       // Wait until method is entered on the server side
       blockingSimpleImpl.acquireEnterPermit();
 
       // The server side method is now blocked waiting on the run permit
       // (= is busy handling the request)
 
-      // Stop the server
-      server2.close();
+      // Stop the server in a separate thread as it blocks the actual thread until the server side
+      // method is running
+      new Thread(new Runnable() {
+        @Override
+        public void run() {
+          server2.close();
+        }
+      }).start();
 
       // With the server gone, we expect the client to get some exception and exit
-      // Wait for client thread to exit
-      t.join(10000);
-
-      Assert.assertFalse("Client request should not be blocked on server shutdown", t.isAlive());
+      // Wait for the client call to exit
+      try {
+        clientFuture.get(10, TimeUnit.SECONDS);
+      } catch (ExecutionException e) {
+        throw e.getCause();
+      } catch (TimeoutException e) {
+        Assert.fail("Client request should not be blocked on server shutdown");
+      }
 
     } finally {
       blockingSimpleImpl.releaseRunPermit();

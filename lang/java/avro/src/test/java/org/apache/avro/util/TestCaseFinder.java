@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,19 +17,19 @@
  */
 package org.apache.avro.util;
 
+import static org.junit.Assert.assertTrue;
+
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.io.BufferedReader;
-import java.io.StringReader;
 
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.junit.experimental.runners.Enclosed;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(Enclosed.class)
 public class TestCaseFinder {
@@ -47,7 +47,7 @@ public class TestCaseFinder {
 
     @Parameters
     public static List<Object[]> cases() {
-      List<Object[]> result = new ArrayList<Object[]>();
+      List<Object[]> result = new ArrayList<>();
       result.add(new Object[] { "", "foo", new Object[][] { } });
       result.add(new Object[] { "<<INPUT a\n<<OUTPUT b", "OUTPUT",
                                 new Object[][] { {"a","b"} } });
@@ -84,7 +84,7 @@ public class TestCaseFinder {
     }
 
     @Test public void testOutput() throws Exception {
-      List<Object[]> result = new ArrayList<Object[]>();
+      List<Object[]> result = new ArrayList<>();
       CaseFinder.find(mk(input), label, result);
       assertTrue(pr(result), eq(result, expectedOutput));
     }
@@ -93,24 +93,24 @@ public class TestCaseFinder {
   public static class NonParameterized {
     @Test (expected=java.lang.IllegalArgumentException.class)
     public void testBadDocLabel1() throws Exception {
-      List<Object[]> result = new ArrayList<Object[]>();
+      List<Object[]> result = new ArrayList<>();
       CaseFinder.find(mk("<<INPUT blah"), "", result);
     }
 
     public void testBadDocLabel2() throws Exception {
-      List<Object[]> result = new ArrayList<Object[]>();
+      List<Object[]> result = new ArrayList<>();
       CaseFinder.find(mk("<<INPUT blah"), "kill-er", result);
     }
 
     @Test (expected=java.io.IOException.class)
     public void testBadSingleLineHeredoc() throws Exception {
-      List<Object[]> result = new ArrayList<Object[]>();
+      List<Object[]> result = new ArrayList<>();
       CaseFinder.find(mk("<<INPUTblah"), "foo", result);
     }
 
     @Test (expected=java.io.IOException.class)
     public void testUnterminatedHeredoc() throws Exception {
-      List<Object[]> result = new ArrayList<Object[]>();
+      List<Object[]> result = new ArrayList<>();
       CaseFinder.find(mk("<<INPUT"), "foo", result);
     }
   }

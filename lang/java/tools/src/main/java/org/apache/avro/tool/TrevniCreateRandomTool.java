@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,9 +23,9 @@ import java.io.PrintStream;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.util.RandomData;
 import org.apache.trevni.ColumnFileMetaData;
 import org.apache.trevni.avro.AvroColumnWriter;
-import org.apache.trevni.avro.RandomData;
 
 /** Tool to create randomly populated Trevni file based on an Avro schema */
 public class TrevniCreateRandomTool implements Tool {
@@ -52,10 +52,10 @@ public class TrevniCreateRandomTool implements Tool {
     int count = Integer.parseInt(args.get(1));
     File outputFile = new File(args.get(2));
 
-    Schema schema = Schema.parse(schemaFile);
+    Schema schema = new Schema.Parser().parse(schemaFile);
 
     AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
+      new AvroColumnWriter<>(schema, new ColumnFileMetaData());
 
     for (Object datum : new RandomData(schema, count))
       writer.write(datum);

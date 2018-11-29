@@ -18,7 +18,6 @@
 #if ($schema.getNamespace())
 package $schema.getNamespace();
 #end
-@SuppressWarnings("all")
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
@@ -27,7 +26,7 @@ package $schema.getNamespace();
 #end
 @org.apache.avro.specific.AvroGenerated
 public enum ${this.mangle($schema.getName())} {
-  #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($velocityHasNext), #end#end
+  #foreach ($symbol in ${schema.getEnumSymbols()})${this.mangle($symbol)}#if ($foreach.hasNext), #end#end
   ;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("${this.javaEscape($schema.toString())}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }

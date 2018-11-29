@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -99,6 +99,23 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     } catch (ClassNotFoundException e) {
       throw new AvroRuntimeException(e);
     }
+  }
+
+  @Override
+  protected Object readRecord(Object old, Schema expected, ResolvingDecoder in)
+    throws IOException {
+    SpecificData data = getSpecificData();
+    if (data.useCustomCoders()) {
+      old = data.newRecord(old, expected);
+      if (old instanceof SpecificRecordBase) {
+        SpecificRecordBase d = (SpecificRecordBase) old;
+        if (d.hasCustomCoders()) {
+          d.customDecode(in);
+          return d;
+        }
+      }
+    }
+    return super.readRecord(old, expected, in);
   }
 
   @Override

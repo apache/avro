@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,6 +30,7 @@ import org.apache.commons.compress.utils.IOUtils;
 
 /** * Implements xz compression and decompression. */
 public class XZCodec extends Codec {
+  public final static int DEFAULT_COMPRESSION = 6;
 
   static class Option extends CodecFactory {
       private int compressionLevel;
@@ -59,8 +60,9 @@ public class XZCodec extends Codec {
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    OutputStream ios = new XZCompressorOutputStream(baos, compressionLevel);
-    writeAndClose(data, ios);
+    try (OutputStream outputStream = new XZCompressorOutputStream(baos, compressionLevel)) {
+      outputStream.write(data.array(), computeOffset(data), data.remaining());
+    }
     return ByteBuffer.wrap(baos.toByteArray());
   }
 
@@ -69,26 +71,13 @@ public class XZCodec extends Codec {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
     InputStream bytesIn = new ByteArrayInputStream(
       data.array(),
-      data.arrayOffset() + data.position(),
+      computeOffset(data),
       data.remaining());
-    InputStream ios = new XZCompressorInputStream(bytesIn);
-    try {
+
+    try (InputStream ios = new XZCompressorInputStream(bytesIn)) {
       IOUtils.copy(ios, baos);
-    } finally {
-      ios.close();
     }
     return ByteBuffer.wrap(baos.toByteArray());
-  }
-
-  private void writeAndClose(ByteBuffer data, OutputStream to) throws IOException {
-    byte[] input = data.array();
-    int offset = data.arrayOffset() + data.position();
-    int length = data.remaining();
-    try {
-      to.write(input, offset, length);
-    } finally {
-      to.close();
-    }
   }
 
   // get and initialize the output buffer for use.
@@ -109,7 +98,7 @@ public class XZCodec extends Codec {
   public boolean equals(Object obj) {
     if (this == obj)
       return true;
-    if (getClass() != obj.getClass())
+    if (obj == null || obj.getClass() != getClass())
       return false;
     XZCodec other = (XZCodec)obj;
     return (this.compressionLevel == other.compressionLevel);

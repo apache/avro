@@ -96,7 +96,7 @@ namespace Avro.Test
         [TestCase("[{\"type\": \"array\", \"items\": \"long\"}, {\"type\": \"array\", \"items\": \"string\"}]",
             Description = "Duplicate type", ExpectedException = typeof(SchemaParseException))]
         [TestCase("{\"type\":[\"string\", \"null\", \"long\"]}")]
-        
+
         // Fixed
         [TestCase("{ \"type\": \"fixed\", \"name\": \"Test\", \"size\": 1}")]
         [TestCase("{\"type\": \"fixed\", \"name\": \"MyFixed\", \"namespace\": \"org.apache.hadoop.avro\", \"size\": 1}")]
@@ -118,7 +118,7 @@ namespace Avro.Test
         [TestCase("double", Schema.Type.Double)]
         [TestCase("bytes", Schema.Type.Bytes)]
         [TestCase("string", Schema.Type.String)]
-        
+
         [TestCase("{ \"type\": \"null\" }", Schema.Type.Null)]
         [TestCase("{ \"type\": \"boolean\" }", Schema.Type.Boolean)]
         [TestCase("{ \"type\": \"int\" }", Schema.Type.Int)]
@@ -221,7 +221,7 @@ namespace Avro.Test
             Assert.AreEqual(Schema.Type.Array, sc.Tag);
             ArraySchema ars = sc as ArraySchema;
             Assert.AreEqual(item, ars.ItemSchema.Name);
-            
+
             testEquality(s, sc);
             testToString(sc);
         }

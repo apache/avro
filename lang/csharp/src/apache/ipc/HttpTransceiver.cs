@@ -112,7 +112,7 @@ namespace Avro.ipc
         protected HttpWebRequest CreateAvroHttpRequest(long contentLength)
         {
             HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(_modelRequest.RequestUri);
-            
+
             //TODO: what else to copy from model request?
             wr.AllowAutoRedirect = _modelRequest.AllowAutoRedirect;
             wr.AllowWriteStreamBuffering = _modelRequest.AllowWriteStreamBuffering;

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -79,8 +79,8 @@ public class TestKeyValueWordCount {
 
   private static class WordCountReducer extends Reducer< Text, LongWritable, AvroKey<String>, AvroValue<Long>> {
 
-    AvroKey<String> resultKey = new AvroKey<String>();
-    AvroValue<Long> resultValue = new AvroValue<Long>();
+    AvroKey<String> resultKey = new AvroKey<>();
+    AvroValue<Long> resultValue = new AvroValue<>();
 
     @Override
     protected void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {

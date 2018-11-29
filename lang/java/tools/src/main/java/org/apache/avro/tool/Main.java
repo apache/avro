@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ public class Main {
   int maxLen = 0;
 
   Main() {
-    tools = new TreeMap<String, Tool>();
+    tools = new TreeMap<>();
     for (Tool tool : new Tool[] {
         new CatTool(),
         new SpecificCompilerTool(),
@@ -89,9 +89,19 @@ public class Main {
       }
     }
     System.err.print("Version ");
-    printStream(Main.class.getClassLoader().getResourceAsStream("VERSION.txt"));
+    InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt");
+    try {
+      printStream(versionInput);
+    } finally {
+      versionInput.close();
+    }
     System.err.print(" of ");
-    printHead(Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE"), 5);
+    InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE");
+    try {
+      printHead(noticeInput, 5);
+    } finally {
+      noticeInput.close();
+    }
     System.err.println("----------------");
 
     System.err.println("Available tools:");

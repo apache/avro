@@ -36,7 +36,7 @@ namespace Avro.Test.Ipc
         private SocketServer server;
         private SocketTransceiver transceiver;
         private SimpleCallback simpleClient;
-        
+
         [TestFixtureSetUp]
         public void Init()
         {
@@ -75,7 +75,7 @@ namespace Avro.Test.Ipc
         // AVRO-625 [Test]
         public void CancelPendingRequestsOnTransceiverClose()
         {
-            // Start up a second server so that closing the server doesn't 
+            // Start up a second server so that closing the server doesn't
             // interfere with the other unit tests:
             var blockingSimpleImpl = new BlockingSimpleImpl();
 
@@ -104,7 +104,7 @@ namespace Avro.Test.Ipc
                 }
                 finally
                 {
-                    // When the transceiver is closed, the CallFuture should get 
+                    // When the transceiver is closed, the CallFuture should get
                     // an IOException
                     transceiver2.Close();
                 }
@@ -456,7 +456,7 @@ namespace Avro.Test.Ipc
         [Test]
         public void ClientReconnectAfterServerRestart()
         {
-            // Start up a second server so that closing the server doesn't 
+            // Start up a second server so that closing the server doesn't
             // interfere with the other unit tests:
             SimpleImpl simpleImpl = new BlockingSimpleImpl();
 
@@ -494,7 +494,7 @@ namespace Avro.Test.Ipc
 
                 server2.Start();
 
-                // Invoke an RPC using the same client, which should reestablish the 
+                // Invoke an RPC using the same client, which should reestablish the
                 // connection to the server:
                 Assert.AreEqual(3, simpleClient2.add(1, 2));
             }
@@ -563,7 +563,7 @@ namespace Avro.Test.Ipc
         public void Error(bool systemError)
         {
             Type expected;
-            
+
             if(systemError)
             {
                 expected = typeof(Exception);
@@ -691,7 +691,7 @@ namespace Avro.Test.Ipc
         [Test]
         public void TestSendAfterChannelClose()
         {
-            // Start up a second server so that closing the server doesn't 
+            // Start up a second server so that closing the server doesn't
             // interfere with the other unit tests:
 
             var responder = new SpecificResponder<Simple>(new SimpleImpl());
@@ -718,7 +718,7 @@ namespace Avro.Test.Ipc
                     // Shut down server:
                     server2.Stop();
 
-                    // Send a new RPC, and verify that it throws an Exception that 
+                    // Send a new RPC, and verify that it throws an Exception that
                     // can be detected by the client:
                     bool ioeCaught = false;
                     try
@@ -733,7 +733,7 @@ namespace Avro.Test.Ipc
 
                     Assert.IsTrue(ioeCaught, "Expected IOException");
 
-                    // Send a new RPC with callback, and verify that the correct Exception 
+                    // Send a new RPC with callback, and verify that the correct Exception
                     // is thrown:
                     ioeCaught = false;
                     try

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,10 +28,11 @@ import java.lang.annotation.Target;
  * May be used for base classes or interfaces whose instantiable subclasses can
  * be listed in the parameters to the @Union annotation.  If applied to method
  * parameters this determines the reflected message parameter type.  If applied
- * to a method, this determines its return type.
+ * to a method, this determines its return type. A null schema may be specified
+ * with {@link java.lang.Void}.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.PARAMETER, ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @Documented
 public @interface Union {
   /** The instantiable classes that compose this union. */

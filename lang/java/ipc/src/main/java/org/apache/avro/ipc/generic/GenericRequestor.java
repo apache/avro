@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -82,19 +82,19 @@ public class GenericRequestor extends Requestor {
   @Override
   public void writeRequest(Schema schema, Object request, Encoder out)
     throws IOException {
-    new GenericDatumWriter<Object>(schema, data).write(request, out);
+    new GenericDatumWriter<>(schema, data).write(request, out);
   }
 
   @Override
   public Object readResponse(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    return new GenericDatumReader<Object>(writer, reader, data).read(null, in);
+    return new GenericDatumReader<>(writer, reader, data).read(null, in);
   }
 
   @Override
   public Exception readError(Schema writer, Schema reader, Decoder in)
     throws IOException {
-    Object error = new GenericDatumReader<Object>(writer, reader, data)
+    Object error = new GenericDatumReader<>(writer, reader, data)
       .read(null,in);
     if (error instanceof CharSequence)
       return new AvroRuntimeException(error.toString()); // system error

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
-
+import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
@@ -115,6 +115,25 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
   /**
+   * The createOptionalGetters parameter enables generating the getOptional...
+   * methods that return an Optional of the requested type.
+   * This works ONLY on Java 8+
+   *
+   * @parameter property="createOptionalGetters"
+   */
+  protected boolean createOptionalGetters = false;
+
+  /**
+   * The gettersReturnOptional parameter enables generating get...
+   * methods that return an Optional of the requested type.
+   * This will replace the
+   * This works ONLY on Java 8+
+   *
+   * @parameter property="gettersReturnOptional"
+   */
+  protected boolean gettersReturnOptional = false;
+
+  /**
    * Determines whether or not to create setters for the fields of the record.
    * The default is to create setters.
    *
@@ -128,6 +147,14 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter default-value="false"
    */
   protected boolean enableDecimalLogicalType;
+
+  /**
+   * Determines which type of classes to generate for date/time related logical types. Either 'joda' or 'jsr310'.
+   * Defaults to joda for backwards compatibility reasons.
+   *
+   * @parameter default-value="joda"
+   */
+  protected String dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.JODA.name().toLowerCase();
 
   /**
    * The current Maven project.
@@ -234,6 +261,22 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       return SpecificCompiler.FieldVisibility.valueOf(upper);
     } catch (IllegalArgumentException e) {
       return SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED;
+    }
+  }
+
+  protected DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
+    try {
+      if (this.dateTimeLogicalTypeImplementation == null || this.dateTimeLogicalTypeImplementation.isEmpty()) {
+        return DateTimeLogicalTypeImplementation.DEFAULT;
+      } else {
+        String upper = String.valueOf(this.dateTimeLogicalTypeImplementation).trim().toUpperCase();
+        return DateTimeLogicalTypeImplementation.valueOf(upper);
+      }
+    } catch (IllegalArgumentException e) {
+      getLog().warn("Unknown value '" + this.dateTimeLogicalTypeImplementation
+        + "' for property dateTimeLogicalTypeImplementation; using '"
+        + DateTimeLogicalTypeImplementation.DEFAULT.name().toLowerCase() + "' instead");
+      return DateTimeLogicalTypeImplementation.DEFAULT;
     }
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -56,7 +56,7 @@ public class DatagramTransceiver extends Transceiver {
     remote = channel.receive(buffer);
     LOG.info("received from "+remote);
     buffer.flip();
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       int length = buffer.getInt();
       if (length == 0) {                          // end of buffers

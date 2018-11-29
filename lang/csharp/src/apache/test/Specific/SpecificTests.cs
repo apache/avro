@@ -41,7 +41,7 @@ namespace Avro.Test
         [TestCase(@"{
   ""protocol"" : ""MyProtocol"",
   ""namespace"" : ""com.foo"",
-  ""types"" : [ 
+  ""types"" : [
    {
 	""type"" : ""record"",
 	""name"" : ""A"",
@@ -53,14 +53,14 @@ namespace Avro.Test
 	""symbols"" : [ ""A"", ""B"", ""C"" ]
    },
    {
-   ""type"": ""fixed"", 
-   ""size"": 16, 
+   ""type"": ""fixed"",
+   ""size"": 16,
    ""name"": ""MyFixed""
    },
    {
 	""type"" : ""record"",
 	""name"" : ""Z"",
-	""fields"" : 
+	""fields"" :
 			[ 	
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
@@ -89,7 +89,7 @@ namespace Avro.Test
 				{ ""name"" : ""myObject"", ""type"" : [ ""MyEnum"", ""A"", ""null"" ] },
                 { ""name"" : ""myArray3"", ""type"" : { ""type"" : ""array"", ""items"" : { ""type"" : ""array"", ""items"" : [ ""double"", ""string"", ""null"" ] } } }
 			]
-   } 
+   }
    ]
 }"
 , new object[] {3, // index of the schema to serialize
@@ -100,19 +100,19 @@ namespace Avro.Test
   string bytes = ""bytes sample text"";
   System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
-  myUInt=1; 
-  myULong=2; 
-  myUBool=true; 
-  myUDouble=(double)3; 
-  myUFloat=(float)4.5; 
+  myUInt=1;
+  myULong=2;
+  myUBool=true;
+  myUDouble=(double)3;
+  myUFloat=(float)4.5;
   myUBytes = encoding.GetBytes(bytes);
-  myUString=""Hello""; 
+  myUString=""Hello"";
 
-  myInt=1; 
-  myLong=2; 
-  myBool=true; 
-  myDouble=(double)3; 
-  myFloat=(float)4.5; 
+  myInt=1;
+  myLong=2;
+  myBool=true;
+  myDouble=(double)3;
+  myFloat=(float)4.5;
   myBytes=encoding.GetBytes(bytes);
   myString=""Hello"";
   myNull=null;
@@ -229,7 +229,7 @@ namespace Avro.Test
         [TestCase]
         public void TestEnumResolution()
         {
-            Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," + 
+            Schema writerSchema = Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
                                         "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [\"FIRST\", \"SECOND\"]} }]}");
 
             var testRecord = new EnumRecord();
@@ -285,7 +285,7 @@ namespace Avro.Test
             var e = new BinaryEncoder(ms);
             writer.Write(value, e);
             var output = ms.ToArray();
-            
+
             Assert.AreEqual(expected.Length, output.Length);
             Assert.True(expected.SequenceEqual(output));
         }
@@ -359,7 +359,7 @@ namespace Avro.Test
         {
             get
             {
-                return Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," + 
+                return Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
                                         "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\":" +
                                         " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");
             }

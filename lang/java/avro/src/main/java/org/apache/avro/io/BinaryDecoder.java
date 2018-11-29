@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.util.Utf8;
 
 /** An {@link Decoder} for binary-format data.
@@ -38,6 +39,15 @@ import org.apache.avro.util.Utf8;
  */
 
 public class BinaryDecoder extends Decoder {
+
+  /**
+   * The maximum size of array to allocate.
+   * Some VMs reserve some header words in an array.
+   * Attempts to allocate larger arrays may result in
+   * OutOfMemoryError: Requested array size exceeds VM limit
+   */
+  private static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
+
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a
   // container class for performance reasons. This improves performance
@@ -142,7 +152,7 @@ public class BinaryDecoder extends Decoder {
             b = buf[pos + len++] & 0xff;
             n ^= (b & 0x7f) << 28;
             if (b > 0x7f) {
-              throw new IOException("Invalid int encoding");
+              throw new InvalidNumberEncodingException("Invalid int encoding");
             }
           }
         }
@@ -214,7 +224,7 @@ public class BinaryDecoder extends Decoder {
               b = buf[pos + len++] & 0xff;
               l ^= (b & 0x7fL) << 63;
               if (b > 0x7f) {
-                throw new IOException("Invalid long encoding");
+                throw new InvalidNumberEncodingException("Invalid long encoding");
               }
             }
           }
@@ -256,11 +266,17 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public Utf8 readString(Utf8 old) throws IOException {
-    int length = readInt();
+    long length = readLong();
+    if (length > MAX_ARRAY_SIZE) {
+      throw new UnsupportedOperationException("Cannot read strings longer than " + MAX_ARRAY_SIZE + " bytes");
+    }
+    if (length < 0L) {
+      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
+    }
     Utf8 result = (old != null ? old : new Utf8());
-    result.setByteLength(length);
-    if (0 != length) {
-      doReadBytes(result.getBytes(), 0, length);
+    result.setByteLength((int) length);
+    if (0L != length) {
+      doReadBytes(result.getBytes(), 0, (int) length);
     }
     return result;
   }

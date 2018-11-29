@@ -259,7 +259,7 @@ namespace Avro.Generic
             foreach (Field rf in rs)
             {
                 if (writerSchema.Contains(rf.Name)) continue;
-                
+
                 defaultStream.Position = 0; // reset for writing
                 Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
                 defaultStream.Flush();
@@ -324,7 +324,6 @@ namespace Avro.Generic
         /// <returns>An enum object.</returns>
         protected virtual object ReadEnum(object reuse, EnumSchema writerSchema, Schema readerSchema, Decoder d)
         {
-            EnumSchema es = readerSchema as EnumSchema;
             return CreateEnum(reuse, readerSchema as EnumSchema, writerSchema[d.ReadEnum()]);
         }
 

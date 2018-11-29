@@ -170,7 +170,7 @@ namespace Avro.Test.Ipc
 
                 if (threads.Count > 0)
                     Thread.Sleep(1000);
-                else 
+                else
                     break;
             }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidAvroMagicException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -51,8 +52,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
    */
   public static final class Header {
     Schema schema;
-    Map<String,byte[]> meta = new HashMap<String,byte[]>();
-    private transient List<String> metaKeyList = new ArrayList<String>();
+    Map<String,byte[]> meta = new HashMap<>();
+    private transient List<String> metaKeyList = new ArrayList<>();
     byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
     private Header() {}
   }
@@ -85,7 +86,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   }
 
   /**
-   * create an unitialized DataFileStream
+   * create an uninitialized DataFileStream
    */
   protected DataFileStream(DatumReader<D> reader) throws IOException {
     this.reader = reader;
@@ -99,10 +100,10 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     try {
       vin.readFixed(magic);                         // read magic
     } catch (IOException e) {
-      throw new IOException("Not a data file.", e);
+      throw new IOException("Not an Avro data file.", e);
     }
     if (!Arrays.equals(DataFileConstants.MAGIC, magic))
-      throw new IOException("Not a data file.");
+      throw new InvalidAvroMagicException("Not an Avro data file.");
 
     long l = vin.readMapStart();                  // read meta data
     if (l > 0) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.avro.AvroTestUtil;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
@@ -43,11 +43,13 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 @SuppressWarnings("deprecation")
 public class TestDataFileTools {
-  static final int COUNT = 10;
+  static final int COUNT = 15;
   static File sampleFile;
   static String jsonData;
   static Schema schema;
@@ -56,30 +58,29 @@ public class TestDataFileTools {
   private static final String KEY_NEEDING_ESCAPES = "trn\\\r\t\n";
   private static final String ESCAPED_KEY = "trn\\\\\\r\\t\\n";
 
+  @ClassRule
+  public static TemporaryFolder DIR = new TemporaryFolder();
+
   @BeforeClass
   public static void writeSampleFile() throws IOException {
-    sampleFile = AvroTestUtil.tempFile(TestDataFileTools.class,
-      TestDataFileTools.class.getName() + ".avro");
+    sampleFile = new File(DIR.getRoot(), TestDataFileTools.class.getName() + ".avro");
     schema = Schema.create(Type.INT);
-    schemaFile = AvroTestUtil.tempFile(TestDataFileTools.class, "schema-temp.schema");
-    FileWriter fw = new FileWriter(schemaFile);
-    fw.append(schema.toString());
-    fw.close();
-
-    DataFileWriter<Object> writer
-      = new DataFileWriter<Object>(new GenericDatumWriter<Object>(schema))
-      .setMeta(KEY_NEEDING_ESCAPES, "")
-      .create(schema, sampleFile);
-    StringBuilder builder = new StringBuilder();
-
-    for (int i = 0; i < COUNT; ++i) {
-      builder.append(Integer.toString(i));
-      builder.append("\n");
-      writer.append(i);
+    schemaFile = new File(DIR.getRoot(), "schema-temp.schema");
+    try(FileWriter fw = new FileWriter(schemaFile)) {
+      fw.append(schema.toString());
     }
 
-    writer.flush();
-    writer.close();
+    StringBuilder builder = new StringBuilder();
+    try(DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>(schema))) {
+      writer.setMeta(KEY_NEEDING_ESCAPES, "");
+      writer.create(schema, sampleFile);
+
+      for (int i = 0; i < COUNT; ++i) {
+        builder.append(Integer.toString(i));
+        builder.append("\n");
+        writer.append(i);
+      }
+    }
 
     jsonData = builder.toString();
   }
@@ -118,6 +119,43 @@ public class TestDataFileTools {
   }
 
   @Test
+  public void testReadHeadDefaultCount() throws Exception {
+    String expectedJson = jsonData.substring(0, 20); // first 10 numbers
+    assertEquals(expectedJson,
+      run(new DataFileReadTool(), "--head", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadEquals3Count() throws Exception {
+    String expectedJson = jsonData.substring(0, 6); // first 3 numbers
+    assertEquals(expectedJson,
+      run(new DataFileReadTool(), "--head=3", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadSpace5Count() throws Exception {
+    String expectedJson = jsonData.substring(0, 10); // first 5 numbers
+    assertEquals(expectedJson,
+      run(new DataFileReadTool(), "--head", "5", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadLongCount() throws Exception {
+    assertEquals(jsonData,
+      run(new DataFileReadTool(), "--head=3000000000", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadHeadEqualsZeroCount() throws Exception {
+    assertEquals("\n", run(new DataFileReadTool(), "--head=0", sampleFile.getPath()));
+  }
+
+  @Test(expected = AvroRuntimeException.class)
+  public void testReadHeadNegativeCount() throws Exception {
+    assertEquals("\n", run(new DataFileReadTool(), "--head=-5", sampleFile.getPath()));
+  }
+
+  @Test
   public void testGetMeta() throws Exception {
     String output = run(new DataFileGetMetaTool(), sampleFile.getPath());
     assertTrue(output, output.contains("avro.schema\t"+schema.toString()+"\n"));
@@ -127,8 +165,7 @@ public class TestDataFileTools {
   @Test
   public void testGetMetaForSingleKey() throws Exception {
     assertEquals(schema.toString() + "\n",
-        run(new DataFileGetMetaTool(), sampleFile.getPath(), "--key",
-            "avro.schema"));
+        run(new DataFileGetMetaTool(), sampleFile.getPath(), "--key", "avro.schema"));
   }
 
   @Test
@@ -144,7 +181,7 @@ public class TestDataFileTools {
 
   @Test
   public void testWrite() throws Exception {
-    testWrite("plain", Collections.<String>emptyList(), "null");
+    testWrite("plain", Collections.emptyList(), "null");
   }
 
   public void testWrite(String name, List<String> extra, String expectedCodec)
@@ -152,59 +189,53 @@ public class TestDataFileTools {
       testWrite(name, extra, expectedCodec, "-schema", schema.toString());
       testWrite(name, extra, expectedCodec, "-schema-file", schemaFile.toString());
   }
+
   public void testWrite(String name, List<String> extra, String expectedCodec, String... extraArgs)
   throws Exception {
-    File outFile = AvroTestUtil.tempFile(getClass(),
-        TestDataFileTools.class + ".testWrite." + name + ".avro");
-    FileOutputStream fout = new FileOutputStream(outFile);
-    PrintStream out = new PrintStream(fout);
-    List<String> args = new ArrayList<String>();
-    for (String arg : extraArgs) {
-        args.add(arg);
+    File outFile = new File(DIR.getRoot(), TestDataFileTools.class + ".testWrite." + name + ".avro");
+    try(FileOutputStream fout = new FileOutputStream(outFile)) {
+      try(PrintStream out = new PrintStream(fout)) {
+        List<String> args = new ArrayList<>();
+        Collections.addAll(args, extraArgs);
+        args.add("-");
+        args.addAll(extra);
+        new DataFileWriteTool().run(
+                new StringBufferInputStream(jsonData),
+                new PrintStream(out), // stdout
+                null, // stderr
+                args);
+      }
     }
-    args.add("-");
-    args.addAll(extra);
-    new DataFileWriteTool().run(
-        new StringBufferInputStream(jsonData),
-        new PrintStream(out), // stdout
-        null, // stderr
-        args);
-    out.close();
-    fout.close();
 
     // Read it back, and make sure it's valid.
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileReader<Object> fileReader = new DataFileReader<Object>(outFile,reader);
-    int i = 0;
-    for (Object datum : fileReader) {
-      assertEquals(i, datum);
-      i++;
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    try (DataFileReader<Object> fileReader = new DataFileReader<>(outFile, reader)) {
+      int i = 0;
+      for (Object datum : fileReader) {
+        assertEquals(i, datum);
+        i++;
+      }
+      assertEquals(COUNT, i);
+      assertEquals(schema, fileReader.getSchema());
+      String codecStr = fileReader.getMetaString("avro.codec");
+      if (null == codecStr) {
+        codecStr = "null";
+      }
+      assertEquals(expectedCodec, codecStr);
     }
-    assertEquals(COUNT, i);
-    assertEquals(schema, fileReader.getSchema());
-    String codecStr = fileReader.getMetaString("avro.codec");
-    if (null == codecStr) {
-      codecStr = "null";
-    }
-    assertEquals(expectedCodec, codecStr);
   }
 
-  @Test
+  @Test(expected=IOException.class)
   public void testFailureOnWritingPartialJSONValues() throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(baos);
-    try {
-      new DataFileWriteTool().run(
-          new StringBufferInputStream("{"),
-          new PrintStream(out), // stdout
-          null, // stderr
-          Arrays.asList("-schema", "{ \"type\":\"record\", \"fields\":" +
-                        "[{\"name\":\"foo\", \"type\":\"string\"}], " +
-                        "\"name\":\"boring\" }", "-"));
-      fail("Expected exception.");
-    } catch (IOException expected) {
-      // expected
-    }
+    new DataFileWriteTool().run(
+        new StringBufferInputStream("{"),
+        new PrintStream(out), // stdout
+        null, // stderr
+        Arrays.asList("-schema", "{ \"type\":\"record\", \"fields\":" +
+                      "[{\"name\":\"foo\", \"type\":\"string\"}], " +
+                      "\"name\":\"boring\" }", "-"));
   }
 
   @Test
@@ -216,38 +247,36 @@ public class TestDataFileTools {
   }
 
   private int countRecords(File outFile) throws IOException {
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
-    DataFileReader<Object> fileReader =
-      new DataFileReader<Object>(outFile,reader);
-    int i = 0;
-    for (@SuppressWarnings("unused") Object datum : fileReader) {
-      i++;
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    try(DataFileReader<Object> fileReader = new DataFileReader<>(outFile, reader)) {
+      int i = 0;
+      for (@SuppressWarnings("unused") Object datum : fileReader) {
+        i++;
+      }
+      return i;
     }
-    return i;
   }
 
   @Test
   public void testDifferentSeparatorsBetweenJsonRecords() throws Exception {
     File outFile = writeToAvroFile(
-        "seperators",
+        "separators",
         "{ \"type\":\"array\", \"items\":\"int\" }",
         "[]    [] []\n[][3]     ");
     assertEquals(5, countRecords(outFile));
   }
 
   public File writeToAvroFile(String testName, String schema, String json) throws Exception {
-    File outFile = AvroTestUtil.tempFile(getClass(),
-        TestDataFileTools.class + "." + testName + ".avro");
-    FileOutputStream fout = new FileOutputStream(outFile);
-    PrintStream out = new PrintStream(fout);
-    new DataFileWriteTool().run(
-        new StringBufferInputStream(json),
-        new PrintStream(out), // stdout
-        null, // stderr
-        Arrays.asList("-schema", schema, "-"));
-    out.close();
-    fout.close();
+    File outFile = new File(DIR.getRoot(), TestDataFileTools.class + "." + testName + ".avro");
+    try(FileOutputStream fout = new FileOutputStream(outFile)) {
+      try(PrintStream out = new PrintStream(fout)) {
+        new DataFileWriteTool().run(
+                new StringBufferInputStream(json),
+                new PrintStream(out), // stdout
+                null, // stderr
+                Arrays.asList("-schema", schema, "-"));
+      }
+    }
     return outFile;
   }
-
 }

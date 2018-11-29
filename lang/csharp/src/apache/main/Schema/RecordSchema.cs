@@ -103,8 +103,8 @@ namespace Avro
         /// <param name="request">true if this is an anonymous record with 'request' instead of 'fields'</param>
         /// <param name="fieldMap">map of field names and field objects</param>
         /// <param name="names">list of named schema already read</param>
-        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases,  PropertyMap props, 
-                                List<Field> fields, bool request, IDictionary<string, Field> fieldMap, 
+        private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases,  PropertyMap props,
+                                List<Field> fields, bool request, IDictionary<string, Field> fieldMap,
                                 IDictionary<string, Field> fieldAliasMap, SchemaNames names)
                                 : base(type, name, aliases, props, names)
         {
@@ -138,7 +138,7 @@ namespace Avro
             var defaultValue = jfield["default"];
 
             JToken jtype = jfield["type"];
-            if (null == jtype) 
+            if (null == jtype)
                 throw new SchemaParseException("'type' was not found for field: " + name);
             var schema = Schema.ParseJson(jtype, names, encspace);
 
@@ -272,7 +272,7 @@ namespace Avro
             return protect(() => true, () =>
             {
                 if (!that.SchemaName.Equals(SchemaName))
-                    if (!InAliases(that.SchemaName)) 
+                    if (!InAliases(that.SchemaName))
                         return false;
 
                 foreach (Field f in this)
@@ -316,7 +316,7 @@ namespace Avro
          * to see if we have been into this if so, we execute the bypass function otherwise we execute the main function.
          * Before executing the main function, we ensure that we create a marker so that if we come back here recursively
          * we can detect it.
-         * 
+         *
          * The infinite loop happens in ToString(), Equals() and GetHashCode() methods.
          * Though it does not happen for CanRead() because of the current implemenation of UnionSchema's can read,
          * it could potenitally happen.
@@ -324,10 +324,10 @@ namespace Avro
          */
         private T protect<T>(Function<T> bypass, Function<T> main, RecordSchema that)
         {
-            if (seen == null) 
+            if (seen == null)
                 seen = new List<RecordSchemaPair>();
 
-            else if (seen.Find((RecordSchemaPair rs) => rs.first == this && rs.second == that) != null) 
+            else if (seen.Find((RecordSchemaPair rs) => rs.first == this && rs.second == that) != null)
                 return bypass();
 
             RecordSchemaPair p = new RecordSchemaPair(this, that);

@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'avro/logical_types'
+
 module Avro
   class Schema
     # Sets of strings, for backwards compatibility. See below for sets of symbols,
@@ -40,6 +42,7 @@ module Avro
     def self.real_parse(json_obj, names=nil, default_namespace=nil)
       if json_obj.is_a? Hash
         type = json_obj['type']
+        logical_type = json_obj['logicalType']
         raise SchemaParseError, %Q(No "type" property: #{json_obj}) if type.nil?
 
         # Check that the type is valid before calling #to_sym, since symbols are never garbage
@@ -50,7 +53,7 @@ module Avro
 
         type_sym = type.to_sym
         if PRIMITIVE_TYPES_SYM.include?(type_sym)
-          return PrimitiveSchema.new(type_sym)
+          return PrimitiveSchema.new(type_sym, logical_type)
 
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
@@ -58,13 +61,15 @@ module Avro
           case type_sym
           when :fixed
             size = json_obj['size']
-            return FixedSchema.new(name, namespace, size, names)
+            return FixedSchema.new(name, namespace, size, names, logical_type)
           when :enum
             symbols = json_obj['symbols']
-            return EnumSchema.new(name, namespace, symbols, names)
+            doc     = json_obj['doc']
+            return EnumSchema.new(name, namespace, symbols, names, doc)
           when :record, :error
             fields = json_obj['fields']
-            return RecordSchema.new(name, namespace, fields, names, type_sym)
+            doc    = json_obj['doc']
+            return RecordSchema.new(name, namespace, fields, names, type_sym, doc)
           else
             raise SchemaParseError.new("Unknown named type: #{type}")
           end
@@ -91,51 +96,28 @@ module Avro
     end
 
     # Determine if a ruby datum is an instance of a schema
-    def self.validate(expected_schema, datum)
-      case expected_schema.type_sym
-      when :null
-        datum.nil?
-      when :boolean
-        datum == true || datum == false
-      when :string, :bytes
-        datum.is_a? String
-      when :int
-        (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
-            (INT_MIN_VALUE <= datum) && (datum <= INT_MAX_VALUE)
-      when :long
-        (datum.is_a?(Fixnum) || datum.is_a?(Bignum)) &&
-            (LONG_MIN_VALUE <= datum) && (datum <= LONG_MAX_VALUE)
-      when :float, :double
-        datum.is_a?(Float) || datum.is_a?(Fixnum) || datum.is_a?(Bignum)
-      when :fixed
-        datum.is_a?(String) && datum.bytesize == expected_schema.size
-      when :enum
-        expected_schema.symbols.include? datum
-      when :array
-        datum.is_a?(Array) &&
-          datum.all?{|d| validate(expected_schema.items, d) }
-      when :map
-          datum.keys.all?{|k| k.is_a? String } &&
-          datum.values.all?{|v| validate(expected_schema.values, v) }
-      when :union
-        expected_schema.schemas.any?{|s| validate(s, datum) }
-      when :record, :error, :request
-        datum.is_a?(Hash) &&
-          expected_schema.fields.all?{|f| validate(f.type, datum[f.name]) }
-      else
-        raise "you suck #{expected_schema.inspect} is not allowed."
-      end
+    def self.validate(expected_schema, logical_datum, options = { recursive: true, encoded: false })
+      SchemaValidator.validate!(expected_schema, logical_datum, options)
+      true
+    rescue SchemaValidator::ValidationError
+      false
     end
 
-    def initialize(type)
+    def initialize(type, logical_type=nil)
       @type_sym = type.is_a?(Symbol) ? type : type.to_sym
+      @logical_type = logical_type
     end
 
     attr_reader :type_sym
+    attr_reader :logical_type
 
     # Returns the type as a string (rather than a symbol), for backwards compatibility.
     # Deprecated in favor of {#type_sym}.
     def type; @type_sym.to_s; end
+
+    def type_adapter
+      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type) || LogicalTypes::Identity
+    end
 
     # Returns the MD5 fingerprint of the schema as an Integer.
     def md5_fingerprint
@@ -147,6 +129,18 @@ module Avro
     def sha256_fingerprint
       parsing_form = SchemaNormalization.to_parsing_form(self)
       Digest::SHA256.hexdigest(parsing_form).to_i(16)
+    end
+
+    def read?(writers_schema)
+      SchemaCompatibility.can_read?(writers_schema, self)
+    end
+
+    def be_read?(other_schema)
+      other_schema.read?(self)
+    end
+
+    def mutual_read?(other_schema)
+      SchemaCompatibility.mutual_read?(other_schema, self)
     end
 
     def ==(other, seen=nil)
@@ -172,7 +166,9 @@ module Avro
     end
 
     def to_avro(names=nil)
-      {'type' => type}
+      props = {'type' => type}
+      props['logicalType'] = logical_type if logical_type
+      props
     end
 
     def to_s
@@ -181,9 +177,11 @@ module Avro
 
     class NamedSchema < Schema
       attr_reader :name, :namespace
-      def initialize(type, name, namespace=nil, names=nil)
-        super(type)
+
+      def initialize(type, name, namespace=nil, names=nil, doc=nil, logical_type=nil)
+        super(type, logical_type)
         @name, @namespace = Name.extract_namespace(name, namespace)
+        @doc  = doc
         names = Name.add_name(names, self)
       end
 
@@ -194,6 +192,7 @@ module Avro
         end
         props = {'name' => @name}
         props.merge!('namespace' => @namespace) if @namespace
+        props.merge!('doc' => @doc) if @doc
         super.merge props
       end
 
@@ -203,7 +202,7 @@ module Avro
     end
 
     class RecordSchema < NamedSchema
-      attr_reader :fields
+      attr_reader :fields, :doc
 
       def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
@@ -213,7 +212,8 @@ module Avro
             name = field['name']
             default = field.key?('default') ? field['default'] : :no_default
             order = field['order']
-            new_field = Field.new(type, name, default, order, names, namespace)
+            doc = field['doc']
+            new_field = Field.new(type, name, default, order, names, namespace, doc)
             # make sure field name has not been used yet
             if field_names.include?(new_field.name)
               raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use"
@@ -227,14 +227,20 @@ module Avro
         field_objects
       end
 
-      def initialize(name, namespace, fields, names=nil, schema_type=:record)
+      def initialize(name, namespace, fields, names=nil, schema_type=:record, doc=nil)
         if schema_type == :request || schema_type == 'request'
           @type_sym = schema_type.to_sym
           @namespace = namespace
+          @name = nil
+          @doc = nil
         else
-          super(schema_type, name, namespace, names)
+          super(schema_type, name, namespace, names, doc)
         end
-        @fields = RecordSchema.make_field_objects(fields, names, self.namespace)
+        @fields = if fields
+                    RecordSchema.make_field_objects(fields, names, self.namespace)
+                  else
+                    {}
+                  end
       end
 
       def fields_hash
@@ -285,8 +291,7 @@ module Avro
       def initialize(schemas, names=nil, default_namespace=nil)
         super(:union)
 
-        schema_objects = []
-        schemas.each_with_index do |schema, i|
+        @schemas = schemas.each_with_object([]) do |schema, schema_objects|
           new_schema = subparse(schema, names, default_namespace)
           ns_type = new_schema.type_sym
 
@@ -299,7 +304,6 @@ module Avro
           else
             schema_objects << new_schema
           end
-          @schemas = schema_objects
         end
       end
 
@@ -309,13 +313,14 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
-      attr_reader :symbols
-      def initialize(name, space, symbols, names=nil)
+      attr_reader :symbols, :doc
+
+      def initialize(name, space, symbols, names=nil, doc=nil)
         if symbols.uniq.length < symbols.length
-          fail_msg = 'Duplicate symbol: %s' % symbols
+          fail_msg = "Duplicate symbol: #{symbols}"
           raise Avro::SchemaParseError, fail_msg
         end
-        super(:enum, name, space, names)
+        super(:enum, name, space, names, doc)
         @symbols = symbols
       end
 
@@ -327,11 +332,11 @@ module Avro
 
     # Valid primitive types are in PRIMITIVE_TYPES.
     class PrimitiveSchema < Schema
-      def initialize(type)
+      def initialize(type, logical_type=nil)
         if PRIMITIVE_TYPES_SYM.include?(type)
-          super(type)
+          super(type, logical_type)
         elsif PRIMITIVE_TYPES.include?(type)
-          super(type.to_sym)
+          super(type.to_sym, logical_type)
         else
           raise AvroError.new("#{type} is not a valid primitive type.")
         end
@@ -345,12 +350,12 @@ module Avro
 
     class FixedSchema < NamedSchema
       attr_reader :size
-      def initialize(name, space, size, names=nil)
+      def initialize(name, space, size, names=nil, logical_type=nil)
         # Ensure valid cto args
-        unless size.is_a?(Fixnum) || size.is_a?(Bignum)
+        unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
-        super(:fixed, name, space, names)
+        super(:fixed, name, space, names, logical_type)
         @size = size
       end
 
@@ -361,19 +366,25 @@ module Avro
     end
 
     class Field < Schema
-      attr_reader :type, :name, :default, :order
+      attr_reader :type, :name, :default, :order, :doc
 
-      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil)
+      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil)
         @type = subparse(type, names, namespace)
         @name = name
         @default = default
         @order = order
+        @doc = doc
+      end
+
+      def default?
+        @default != :no_default
       end
 
       def to_avro(names=Set.new)
         {'name' => name, 'type' => type.to_avro(names)}.tap do |avro|
-          avro['default'] = default unless default == :no_default
+          avro['default'] = default if default?
           avro['order'] = order if order
+          avro['doc'] = doc if doc
         end
       end
     end

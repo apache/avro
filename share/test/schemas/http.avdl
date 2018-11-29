@@ -59,7 +59,7 @@ protocol Http {
 
     record Request {
       long              timestamp;
-      NetworkConnection connection;
+      union { null, NetworkConnection } connection = null;
       HttpRequest       httpRequest;
     }
 

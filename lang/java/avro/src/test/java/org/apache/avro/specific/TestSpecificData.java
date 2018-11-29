@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,17 +18,12 @@
 
 package org.apache.avro.specific;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -95,7 +90,7 @@ public class TestSpecificData {
   public static class TestRecord extends SpecificRecordBase {
     private static final Schema SCHEMA = Schema.createRecord("TestRecord", null, null, false);
     static {
-      List<Field> fields = new ArrayList<Field>();
+      List<Field> fields = new ArrayList<>();
       fields.add(new Field("x", Schema.create(Type.INT), null, null));
       Schema stringSchema = Schema.create(Type.STRING);
       GenericData.setStringType(stringSchema, GenericData.StringType.String);
@@ -161,7 +156,7 @@ public class TestSpecificData {
     final Schema string = Schema.create(Type.STRING);
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);
-    final DatumWriter<Object> writer = new SpecificDatumWriter<Object>(string);
+    final DatumWriter<Object> writer = new SpecificDatumWriter<>(string);
     try {
       writer.write(new Object(), encoder);
       fail("Non stringable object should be rejected.");

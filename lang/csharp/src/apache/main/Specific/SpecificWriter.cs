@@ -195,7 +195,7 @@ namespace Avro.Specific
                     return obj is string;
                 case Schema.Type.Error:
                 case Schema.Type.Record:
-                    return obj is ISpecificRecord && 
+                    return obj is ISpecificRecord &&
                            (((obj as ISpecificRecord).Schema) as RecordSchema).SchemaName.Equals((sc as RecordSchema).SchemaName);
                 case Schema.Type.Enumeration:
                     return obj.GetType().IsEnum && (sc as EnumSchema).Symbols.Contains(obj.ToString());
@@ -206,7 +206,7 @@ namespace Avro.Specific
                 case Schema.Type.Union:
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
-                    return obj is SpecificFixed && 
+                    return obj is SpecificFixed &&
                            (((obj as SpecificFixed).Schema) as FixedSchema).SchemaName.Equals((sc as FixedSchema).SchemaName);
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);

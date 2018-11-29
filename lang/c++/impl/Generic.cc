@@ -58,8 +58,6 @@ void GenericReader::read(GenericDatum& datum, Decoder& d, bool isResolving)
 {
     if (datum.isUnion()) {
         datum.selectBranch(d.decodeUnionIndex());
-        read(datum.value<GenericUnion>().datum(), d, isResolving);
-        return;
     }
     switch (datum.type()) {
     case AVRO_NULL:
@@ -176,8 +174,6 @@ void GenericWriter::write(const GenericDatum& datum, Encoder& e)
 {
     if (datum.isUnion()) {
         e.encodeUnionIndex(datum.unionBranch());
-        write(datum.value<GenericUnion>().datum(), e);
-        return;
     }
     switch (datum.type()) {
     case AVRO_NULL:

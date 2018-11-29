@@ -32,9 +32,9 @@ namespace Avro.File
         public const string MetaDataReserved = "avro";
 
         public const int Version = 1;
-        public static byte[] Magic = { (byte)'O', 
-                                       (byte)'b', 
-                                       (byte)'j', 
+        public static byte[] Magic = { (byte)'O',
+                                       (byte)'b',
+                                       (byte)'j',
                                        (byte)Version };
 
         public const int NullCodecHash = 2;

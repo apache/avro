@@ -23,18 +23,21 @@ The C++ port is thus far incomplete.  Currently, it contains:
    objects of the same data types, and the code to serialize and parse
    it.
 
-What's missing: Defaults are not yet supported.  And the file and rpc
-containers are not yet implemented. Documentation, sparse.
+What's missing: Rpc containers are not yet implemented. Documentation is sparse.
 
 INSTRUCTIONS
 
-To compile requires boost headers, and the boost regex library.
-Additionally, to generate the avro spec compiler requires flex and bison.
+Pre-requisites:
+
+To compile requires boost headers, and the boost regex library. Optionally, it requires Snappy compression library. If Snappy is available, it builds support for Snappy compression and skips it otherwise. (Please see your OS-specific instructions on how to install Boost and Snappy for your OS).
+
 To build one requires cmake 2.6 or later.
 
-To generate a Makefile under Unix or Cygwin use:
+To generate a Makefile under Unix, MacOS (using GNU) or Cygwin use:
 
-cmake -G "Unix Makefiles"
+mkdir build
+cd build
+cmake -G "Unix Makefiles" ..
 
 If it doesn't work, either you are missing some packages (boost, flex or bison),
 or you need to help configure locate them.
@@ -42,17 +45,24 @@ or you need to help configure locate them.
 If the Makefile is configured correctly, then you can make and run tests:
 
     make
-    ./build/unittest
-    ./build/buffertest
-    ./build/testgentest
-    ./build/CodecTests
-    ./build/StreamTests
+    ctest
 
 To install
 
     make package
 
 and then untar the generated .tar.gz file.
+
+To build and test on MacOS (using Xcode)
+
+mkdir build.mac
+cd build.mac
+cmake -G Xcode
+
+xcodebuild -configuration Release
+ctest -C Release
+
+If debug version is required, replace 'Release' above with 'Debug'.
 
 Note: The LICENSE and NOTICE files in the lang/c++ source directory are used to
 build the binary distribution. The LICENSE and NOTICE information for the Avro

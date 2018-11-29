@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,10 +18,10 @@
 
 package org.apache.avro.file.codec;
 
-import org.apache.avro.file.Codec;
-
 import java.io.IOException;
-import java.nio.*;
+import java.nio.ByteBuffer;
+
+import org.apache.avro.file.Codec;
 
 /**
  * Simple Custom Codec to validate making Codec Public
@@ -72,7 +72,7 @@ public class CustomCodec extends Codec {
   /**
    * Codecs must implement an equals() method.  Two codecs, A and B are equal
    * if: the result of A and B decompressing content compressed by A is the same
-   * AND the retult of A and B decompressing content compressed by B is the same
+   * AND the result of A and B decompressing content compressed by B is the same
    */
   private boolean compareDecompress(Codec other, ByteBuffer original) throws IOException {
     ByteBuffer compressedA = this.compress(original);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -54,7 +54,7 @@ final class NullCodec extends Codec {
   public boolean equals(Object other) {
     if (this == other)
       return true;
-    return (this.getClass() == other.getClass());
+    return (other != null && other.getClass() == getClass());
   }
 
   @Override

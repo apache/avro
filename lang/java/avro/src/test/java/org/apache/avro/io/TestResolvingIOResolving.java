@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,14 @@
  */
 package org.apache.avro.io;
 
-import org.junit.Test;
-import org.junit.runners.Parameterized;
-import org.junit.runner.RunWith;
-import org.apache.avro.Schema;
-
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Arrays;
+import java.util.Collection;
+
+import org.apache.avro.Schema;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class TestResolvingIOResolving {
@@ -190,7 +190,7 @@ public class TestResolvingIOResolving {
           + "{\"name\":\"f3\", \"type\":\"double\"}]}", "BLD",
           new Object[] { true, 100L, 10.75d } },
         // Array of record with arrays.
-        { "{ \"type\": \"array\", \"items\":" + 
+        { "{ \"type\": \"array\", \"items\":" +
             "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
             + "{\"name\":\"f0\", \"type\":\"boolean\"},"
             + "{\"name\":\"f1\", \"type\": {\"type\":\"array\", \"items\": \"boolean\" }}"

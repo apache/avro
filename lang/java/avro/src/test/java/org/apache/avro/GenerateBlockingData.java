@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,15 +17,16 @@
  */
 package org.apache.avro;
 
-import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.RandomData;
 
 /**
  * Generates file with objects of a specific schema(that doesn't contain nesting
@@ -66,7 +67,7 @@ public class GenerateBlockingData {
     int numObjects = Integer.parseInt(args[2]);
 
     FileOutputStream out = new FileOutputStream(outputFile, false);
-    DatumWriter<Object> dout = new GenericDatumWriter<Object>();
+    DatumWriter<Object> dout = new GenericDatumWriter<>();
     dout.setSchema(sch);
     Encoder vout = factory.directBinaryEncoder(out, null);
     vout.writeLong(numObjects); // metadata:the count of objects in the file

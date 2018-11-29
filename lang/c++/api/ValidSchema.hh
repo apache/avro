@@ -50,11 +50,15 @@ public:
     }
 
     void toJson(std::ostream &os) const;
+    std::string toJson(bool prettyPrint = true) const;
 
     void toFlatList(std::ostream &os) const;
 
   protected:
     NodePtr root_;
+
+  private:
+    static std::string compactSchema(const std::string &schema);
 };
 
 } // namespace avro

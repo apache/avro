@@ -26,6 +26,11 @@
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
+#include <boost/crc.hpp>  // for boost::crc_32_type
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+#include <snappy.h>
+#endif
 
 namespace avro {
 using std::auto_ptr;
@@ -43,9 +48,12 @@ const string AVRO_CODEC_KEY("avro.codec");
 const string AVRO_NULL_CODEC("null");
 const string AVRO_DEFLATE_CODEC("deflate");
 
+#ifdef SNAPPY_CODEC_AVAILABLE
+const string AVRO_SNAPPY_CODEC = "snappy";
+#endif
+
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
-const size_t defaultSyncInterval = 64 * 1024;
 
 boost::iostreams::zlib_params get_zlib_params() {
   boost::iostreams::zlib_params ret;
@@ -55,27 +63,41 @@ boost::iostreams::zlib_params get_zlib_params() {
 }
 }
 
-
-static string toString(const ValidSchema& schema)
-{
-    ostringstream oss;
-    schema.toJson(oss);
-    return oss.str();
-}
-
-DataFileWriterBase::DataFileWriterBase(const char* filename,
-    const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(filename), schema_(schema), encoderPtr_(binaryEncoder()),
+DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& schema, size_t syncInterval,
+                                       Codec codec) :
+    filename_(filename),
+    schema_(schema),
+    encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
     codec_(codec),
     stream_(fileOutputStream(filename)),
     buffer_(memoryOutputStream()),
-    sync_(makeSync()), objectCount_(0)
+    sync_(makeSync()),
+    objectCount_(0)
 {
+    init(schema, syncInterval, codec);
+}
+
+DataFileWriterBase::DataFileWriterBase(std::auto_ptr<OutputStream> outputStream,
+    const ValidSchema& schema, size_t syncInterval, Codec codec) :
+    filename_(NULL),
+    schema_(schema),
+    encoderPtr_(binaryEncoder()),
+    syncInterval_(syncInterval),
+    codec_(codec),
+    stream_(outputStream),
+    buffer_(memoryOutputStream()),
+    sync_(makeSync()),
+    objectCount_(0)
+{
+    init(schema, syncInterval, codec);
+}
+
+void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, const Codec &codec) {
     if (syncInterval < minSyncInterval || syncInterval > maxSyncInterval) {
         throw Exception(boost::format("Invalid sync interval: %1%. "
             "Should be between %2% and %3%") % syncInterval %
-            minSyncInterval % maxSyncInterval);
+                        minSyncInterval % maxSyncInterval);
     }
     setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
 
@@ -83,14 +105,19 @@ DataFileWriterBase::DataFileWriterBase(const char* filename,
       setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
     } else if (codec_ == DEFLATE_CODEC) {
       setMetadata(AVRO_CODEC_KEY, AVRO_DEFLATE_CODEC);
+#ifdef SNAPPY_CODEC_AVAILABLE
+    } else if (codec_ == SNAPPY_CODEC) {
+      setMetadata(AVRO_CODEC_KEY, AVRO_SNAPPY_CODEC);
+#endif
     } else {
-      throw Exception("Unknown codec codec");
+      throw Exception(boost::format("Unknown codec: %1%") % codec);
     }
-    setMetadata(AVRO_SCHEMA_KEY, toString(schema));
+    setMetadata(AVRO_SCHEMA_KEY, schema.toJson(false));
 
     writeHeader();
     encoderPtr_->init(*buffer_);
 }
+
 
 DataFileWriterBase::~DataFileWriterBase()
 {
@@ -117,13 +144,11 @@ void DataFileWriterBase::sync()
         encoderPtr_->flush();
         std::auto_ptr<InputStream> in = memoryInputStream(*buffer_);
         copy(*in, *stream_);
-    } else {
+    } else if (codec_ == DEFLATE_CODEC) {
         std::vector<char> buf;
         {
             boost::iostreams::filtering_ostream os;
-            if (codec_ == DEFLATE_CODEC) {
-                os.push(boost::iostreams::zlib_compressor(get_zlib_params()));
-            }
+            os.push(boost::iostreams::zlib_compressor(get_zlib_params()));
             os.push(boost::iostreams::back_inserter(buf));
             const uint8_t* data;
             size_t len;
@@ -139,6 +164,49 @@ void DataFileWriterBase::sync()
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
         copy(*in, *stream_);
+#ifdef SNAPPY_CODEC_AVAILABLE
+    } else if (codec_ == SNAPPY_CODEC) {
+        std::vector<char> temp;
+        std::string compressed;
+        boost::crc_32_type crc;
+        {
+            boost::iostreams::filtering_ostream os;
+            os.push(boost::iostreams::back_inserter(temp));
+            const uint8_t* data;
+            size_t len;
+
+            std::auto_ptr<InputStream> input = memoryInputStream(*buffer_);
+            while (input->next(&data, &len)) {
+                boost::iostreams::write(os, reinterpret_cast<const char*>(data),
+                        len);
+            }
+        } // make sure all is flushed
+
+        crc.process_bytes(reinterpret_cast<const char*>(&temp[0]), temp.size());
+        // For Snappy, add the CRC32 checksum
+        int32_t checksum = crc();
+
+        // Now compress
+        size_t compressed_size = snappy::Compress(
+                reinterpret_cast<const char*>(&temp[0]), temp.size(),
+                &compressed);
+        temp.clear();
+        {
+            boost::iostreams::filtering_ostream os;
+            os.push(boost::iostreams::back_inserter(temp));
+            boost::iostreams::write(os, compressed.c_str(), compressed_size);
+        }
+        temp.push_back((checksum >> 24) & 0xFF);
+        temp.push_back((checksum >> 16) & 0xFF);
+        temp.push_back((checksum >> 8) & 0xFF);
+        temp.push_back(checksum & 0xFF);
+        std::auto_ptr<InputStream> in = memoryInputStream(
+                reinterpret_cast<const uint8_t*>(&temp[0]), temp.size());
+        int64_t byteCount = temp.size();
+        avro::encode(*encoderPtr_, byteCount);
+        encoderPtr_->flush();
+        copy(*in, *stream_);
+#endif
     }
 
     encoderPtr_->init(*stream_);
@@ -195,7 +263,15 @@ void DataFileWriterBase::setMetadata(const string& key, const string& value)
 }
 
 DataFileReaderBase::DataFileReaderBase(const char* filename) :
-    filename_(filename), stream_(fileInputStream(filename)),
+    filename_(filename), stream_(fileSeekableInputStream(filename)),
+    decoder_(binaryDecoder()), objectCount_(0), eof_(false), blockStart_(-1),
+    blockEnd_(-1)
+{
+    readHeader();
+}
+
+DataFileReaderBase::DataFileReaderBase(std::auto_ptr<InputStream> inputStream) :
+    filename_(NULL), stream_(inputStream),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
@@ -211,7 +287,7 @@ void DataFileReaderBase::init()
 void DataFileReaderBase::init(const ValidSchema& readerSchema)
 {
     readerSchema_ = readerSchema;
-    dataDecoder_  = (toString(readerSchema_) != toString(dataSchema_)) ?
+    dataDecoder_  = (readerSchema_.toJson(true) != dataSchema_.toJson(true)) ?
         resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) :
         binaryDecoder();
     readDataBlock();
@@ -241,7 +317,7 @@ std::ostream& operator << (std::ostream& os, const DataFileSync& s)
 
 bool DataFileReaderBase::hasMore()
 {
-     if (eof_) {
+    if (eof_) {
         return false;
     } else if (objectCount_ != 0) {
         return true;
@@ -304,6 +380,7 @@ auto_ptr<InputStream> boundedInputStream(InputStream& in, size_t limit)
 bool DataFileReaderBase::readDataBlock()
 {
     decoder_->init(*stream_);
+    blockStart_ = stream_->byteCount();
     const uint8_t* p = 0;
     size_t n = 0;
     if (! stream_->next(&p, &n)) {
@@ -315,12 +392,13 @@ bool DataFileReaderBase::readDataBlock()
     int64_t byteCount;
     avro::decode(*decoder_, byteCount);
     decoder_->init(*stream_);
-
+    blockEnd_ = stream_->byteCount() + byteCount;
+    
     auto_ptr<InputStream> st = boundedInputStream(*stream_, static_cast<size_t>(byteCount));
     if (codec_ == NULL_CODEC) {
         dataDecoder_->init(*st);
         dataStream_ = st;
-    } else {
+    } else if (codec_ == DEFLATE_CODEC) {
         compressed_.clear();
         const uint8_t* data;
         size_t len;
@@ -329,17 +407,52 @@ bool DataFileReaderBase::readDataBlock()
         }
         // boost::iostreams::write(os, reinterpret_cast<const char*>(data), len);
         os_.reset(new boost::iostreams::filtering_istream());
-        if (codec_ == DEFLATE_CODEC) {
-            os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
-        } else {
-            throw Exception("Bad codec");
-        }
+        os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
         os_->push(boost::iostreams::basic_array_source<char>(
             &compressed_[0], compressed_.size()));
 
         std::auto_ptr<InputStream> in = istreamInputStream(*os_);
         dataDecoder_->init(*in);
         dataStream_ = in;
+#ifdef SNAPPY_CODEC_AVAILABLE
+    } else if (codec_ == SNAPPY_CODEC) {
+        boost::crc_32_type crc;
+        uint32_t checksum = 0;
+        compressed_.clear();
+        uncompressed.clear();
+        const uint8_t* data;
+        size_t len;
+        while (st->next(&data, &len)) {
+            compressed_.insert(compressed_.end(), data, data + len);
+        }
+        len = compressed_.size();
+        int b1 = compressed_[len - 4] & 0xFF;
+        int b2 = compressed_[len - 3] & 0xFF;
+        int b3 = compressed_[len - 2] & 0xFF;
+        int b4 = compressed_[len - 1] & 0xFF;
+
+        checksum = (b1 << 24) + (b2 << 16) + (b3 << 8) + (b4);
+        if (!snappy::Uncompress(reinterpret_cast<const char*>(&compressed_[0]),
+                len - 4, &uncompressed)) {
+            throw Exception(
+                    "Snappy Compression reported an error when decompressing");
+        }
+        crc.process_bytes(uncompressed.c_str(), uncompressed.size());
+        uint32_t c = crc();
+        if (checksum != c) {
+            throw Exception(boost::format("Checksum did not match for Snappy compression: Expected: %1%, computed: %2%") % checksum % c);
+        }
+        os_.reset(new boost::iostreams::filtering_istream());
+        os_->push(
+                boost::iostreams::basic_array_source<char>(uncompressed.c_str(),
+                        uncompressed.size()));
+        std::auto_ptr<InputStream> in = istreamInputStream(*os_);
+
+        dataDecoder_->init(*in);
+        dataStream_ = in;
+#endif
+    } else {
+        throw Exception("Bad codec");
     }
     return true;
 }
@@ -387,6 +500,11 @@ void DataFileReaderBase::readHeader()
     it = metadata_.find(AVRO_CODEC_KEY);
     if (it != metadata_.end() && toString(it->second) == AVRO_DEFLATE_CODEC) {
         codec_ = DEFLATE_CODEC;
+#ifdef SNAPPY_CODEC_AVAILABLE
+    } else if (it != metadata_.end()
+            && toString(it->second) == AVRO_SNAPPY_CODEC) {
+        codec_ = SNAPPY_CODEC;
+#endif
     } else {
         codec_ = NULL_CODEC;
         if (it != metadata_.end() && toString(it->second) != AVRO_NULL_CODEC) {
@@ -395,6 +513,75 @@ void DataFileReaderBase::readHeader()
     }
 
     avro::decode(*decoder_, sync_);
+    decoder_->init(*stream_);
+    blockStart_ = stream_->byteCount();
+}
+
+void DataFileReaderBase::doSeek(int64_t position) {
+    if (SeekableInputStream *ss = dynamic_cast<SeekableInputStream *>(stream_.get())) {
+        if (!eof_) {
+            dataDecoder_->init(*dataStream_);
+            drain(*dataStream_);
+        }
+        decoder_->init(*stream_);
+        ss->seek(position);
+        eof_ = false;
+    } else {
+        throw Exception("seek not supported on non-SeekableInputStream");
+    }
+}
+
+void DataFileReaderBase::seek(int64_t position) {
+    doSeek(position);
+    readDataBlock();
+}
+
+void DataFileReaderBase::sync(int64_t position) {
+    doSeek(position);
+    DataFileSync sync_buffer;
+    const uint8_t *p = 0;
+    size_t n = 0;
+    int i = 0;
+    while (i < DataFileSync::static_size) {
+        if (n == 0 && !stream_->next(&p, &n)) {
+            eof_ = true;
+            return;
+        }
+        int len =
+            std::min(static_cast<size_t>(DataFileSync::static_size - i), n);
+        memcpy(&sync_buffer[i], p, len);
+        p += len;
+        n -= len;
+        i += len;
+    }
+    for (;;) {
+        int j = 0;
+        for (; j < DataFileSync::static_size; ++j) {
+            if (sync_[j] != sync_buffer[(i + j) % DataFileSync::static_size]) {
+                break;
+            }
+        }
+        if (j == DataFileSync::static_size) {
+            // Found the sync marker!
+            break;
+        }
+        if (n == 0 && !stream_->next(&p, &n)) {
+            eof_ = true;
+            return;
+        }
+        sync_buffer[i++ % DataFileSync::static_size] = *p++;
+        --n;
+    }
+    stream_->backup(n);
+    readDataBlock();
+}
+
+bool DataFileReaderBase::pastSync(int64_t position) {
+  return !hasMore() || blockStart_ >= position + DataFileSync::static_size;
+}
+
+int64_t DataFileReaderBase::previousSync() {
+  return blockStart_;
 }
 
 }   // namespace avro

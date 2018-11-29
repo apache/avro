@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,14 +17,12 @@
  */
 package org.apache.avro.util;
 
-import java.io.UnsupportedEncodingException;
-
-import junit.framework.Assert;
-
-import org.junit.Test;
-
 import static junit.framework.Assert.assertSame;
 import static org.junit.Assert.assertEquals;
+
+import java.io.UnsupportedEncodingException;
+
+import org.junit.Test;
 
 public class TestUtf8 {
   @Test public void testByteConstructor() throws Exception {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,11 @@
  */
 package org.apache.avro.tool;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Tool to concatenate avro files with the same schema and non-reserved
@@ -59,16 +62,16 @@ public class ConcatTool implements Tool {
       args = args.subList(0, args.size() - 1);
     }
 
-    DataFileWriter<GenericRecord> writer = new DataFileWriter<GenericRecord>(
-      new GenericDatumWriter<GenericRecord>());
+    DataFileWriter<GenericRecord> writer = new DataFileWriter<>(
+      new GenericDatumWriter<>());
     Schema schema = null;
-    Map<String, byte[]> metadata = new TreeMap<String, byte[]>();
+    Map<String, byte[]> metadata = new TreeMap<>();
     String inputCodec = null;
 
-    for (String inFile : args) {
+    for (String inFile : expandsInputFiles(args)) {
       InputStream input = Util.fileOrStdin(inFile, in);
-      DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
-        input, new GenericDatumReader<GenericRecord>());
+      DataFileStream<GenericRecord> reader = new DataFileStream<>(
+        input, new GenericDatumReader<>());
 
       if (schema == null) {
         // this is the first file - set up the writer, and store the
@@ -124,6 +127,24 @@ public class ConcatTool implements Tool {
     return 0;
   }
 
+  /** Processes a list of input files to expand directories if needed. */
+  private static List<String> expandsInputFiles(List<String> args) throws IOException {
+    List<String> files = new ArrayList<>();
+
+    for (String arg : args) {
+      if (arg.equals("-")) {
+        files.add(arg);
+      } else {
+        List<Path> paths = Util.getFiles(arg);
+        for (Path path : paths) {
+          files.add(path.toString());
+        }
+      }
+    }
+
+    return files;
+  }
+
   private void printHelp(PrintStream out) {
     out.println("concat [input-file...] output-file");
     out.println();
@@ -136,8 +157,9 @@ public class ConcatTool implements Tool {
     out.println("  3 if the codecs don't match");
     out.println("If no input files are given stdin will be used. The tool");
     out.println("0 on success. A dash ('-') can be given as an input file");
-    out.println("to use stdin, and as an output file to use stdout.");
-
+    out.println("to use stdin, and as an output file to use stdout. If a directory");
+    out.println("is given as an input-file all the files within this directory");
+    out.println("are used.");
   }
 
 @Override

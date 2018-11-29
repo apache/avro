@@ -1,9 +1,11 @@
 {
     "type": "record",
+    "doc": "Top level Doc.",
     "name": "RootRecord",
     "fields": [
         {
             "name": "mylong",
+            "doc": "mylong field doc.",
             "type": "long"
         },
         {
@@ -102,6 +104,10 @@
         {
             "name": "bytes",
             "type": "bytes"
+        },
+		        {
+            "name": "null",
+            "type": "null"
         }
     ]
 }

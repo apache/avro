@@ -1070,6 +1070,64 @@ static const TestData data[] = {
       "{\"name\":\"car\", \"type\":\"Lisp\"},"
       "{\"name\":\"cdr\", \"type\":\"Lisp\"}]}]}]}",
       "U2U1S10U0N", 1},
+    { "{"  // https://issues.apache.org/jira/browse/AVRO-1635
+      "  \"name\": \"Container\","
+      "  \"type\": \"record\","
+      "  \"fields\": [{"
+      "    \"name\": \"field\","
+      "    \"type\": {"
+      "      \"name\": \"Object\","
+      "      \"type\": \"record\","
+      "      \"fields\": [{"
+      "        \"name\": \"value\","
+      "        \"type\": ["
+      "          \"string\","
+      "          {\"type\": \"map\", \"values\": \"Object\"}"
+      "        ]"
+      "      }]"
+      "    }"
+      "  }]"
+      "}",
+      "U1{c1sK1U0S1c2sK2U1{c2sK4U1{c1sK6U1{}}sK5U1{}}sK3U0S3}", 5},
+    { "{"
+      "  \"name\": \"Container\","
+      "  \"type\": \"record\","
+      "  \"fields\": [{"
+      "    \"name\": \"tree_A\","
+      "    \"type\": {"
+      "      \"name\": \"ArrayTree\","
+      "      \"type\": \"record\","
+      "      \"fields\": [{"
+      "        \"name\": \"label\","
+      "        \"type\": \"long\""
+      "      }, {"
+      "        \"name\": \"children\","
+      "        \"type\": {"
+      "          \"type\": \"array\","
+      "          \"items\": {"
+      "            \"name\": \"MapTree\","
+      "            \"type\": \"record\","
+      "            \"fields\": [{"
+      "              \"name\": \"label\","
+      "              \"type\": \"int\""
+      "            }, {"
+      "              \"name\": \"children\","
+      "              \"type\": {"
+      "                \"type\": \"map\","
+      "                \"values\": \"ArrayTree\""
+      "              }"
+      "            }]"
+      "          }"
+      "        }"
+      "      }]"
+      "    }"
+      "  }, {"
+      "    \"name\": \"tree_B\","
+      "    \"type\": \"MapTree\""
+      "  }]"
+      "}",
+      "L[c1sI{c1sK3L[]c2sK4L[c1sI{c1sK6L[c2sI{}sI{}]}]sK5L[]}]I{c2sK1L[]sK2L[]}",
+      7},
 };
 
 static const TestData2 data2[] = {
@@ -1274,6 +1332,21 @@ static const TestData4 data4[] = {
         "[Rc1sI]",
         { "100", NULL }, 1 },
 
+    // Record of array of record with deleted field as last field
+    { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+        "{\"name\": \"g1\","
+            "\"type\":{\"type\":\"array\",\"items\":{"
+                "\"name\":\"item\",\"type\":\"record\",\"fields\":["
+                "{\"name\":\"f1\", \"type\":\"int\"},"
+                "{\"name\":\"f2\", \"type\": \"long\", \"default\": 0}]}}}]}", "[c1sIL]",
+        { "10", "11", NULL },
+        "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
+        "{\"name\": \"g1\","
+            "\"type\":{\"type\":\"array\",\"items\":{"
+                "\"name\":\"item\",\"type\":\"record\",\"fields\":["
+                "{\"name\":\"f1\", \"type\":\"int\"}]}}}]}", "R[c1sI]",
+        { "10", NULL }, 2 },
+
     // Enum resolution
     { "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"x\",\"y\",\"z\"]}",
         "e2",
@@ -1302,20 +1375,12 @@ static const TestData4 data4[] = {
         "[c2sU1IsU1I]", { "100", "100", NULL } ,
         "{\"type\":\"array\", \"items\": \"int\"}",
             "[c2sIsI]", { "100", "100", NULL }, 2 },
-    { "{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
-        "[c1sU1Ic1sU1I]", { "100", "100", NULL } ,
-        "{\"type\":\"array\", \"items\": \"int\"}",
-            "[c1sIc1sI]", { "100", "100", NULL }, 2 },
 
     // Map of unions
     { "{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
         "{c2sS10U1IsS10U1I}", { "k1", "100", "k2", "100", NULL } ,
         "{\"type\":\"map\", \"values\": \"int\"}",
             "{c2sS10IsS10I}", { "k1", "100", "k2", "100", NULL }, 2 },
-    { "{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
-        "{c1sS10U1Ic1sS10U1I}", { "k1", "100", "k2", "100", NULL } ,
-        "{\"type\":\"map\", \"values\": \"int\"}",
-            "{c1sS10Ic1sS10I}", { "k1", "100", "k2", "100", NULL }, 2 },
 
     // Union + promotion
     { "\"int\"", "I", { "100", NULL },
@@ -1339,12 +1404,33 @@ static const TestData4 data4[] = {
         { "1", "100", "10.75", NULL }, 1 },
 };
 
+static const TestData4 data4BinaryOnly[] = {
+    // Arrray of unions
+    { "{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
+        "[c1sU1Ic1sU1I]", { "100", "100", NULL } ,
+        "{\"type\":\"array\", \"items\": \"int\"}",
+            "[c1sIc1sI]", { "100", "100", NULL }, 2 },
+
+    // Map of unions
+    { "{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
+        "{c1sS10U1Ic1sS10U1I}", { "k1", "100", "k2", "100", NULL } ,
+        "{\"type\":\"map\", \"values\": \"int\"}",
+            "{c1sS10Ic1sS10I}", { "k1", "100", "k2", "100", NULL }, 2 },
+};
+
 #define COUNTOF(x)  sizeof(x) / sizeof(x[0])
 #define ENDOF(x)    (x) + COUNTOF(x)
 
-#define ADD_TESTS(testSuite, Factory, testFunc, data)           \
-testSuite.add(BOOST_PARAM_TEST_CASE(&testFunc<Factory>,         \
-    data, data + COUNTOF(data)))
+// Boost 1.67 and later expects test cases to have unique names. This dummy
+// helper functions leads to names which compose 'testFunc', 'Factory', and
+// 'data'.
+template <typename Test, typename Data>
+Test testWithData(const Test &test, const Data &) {
+    return test;
+}
+#define ADD_TESTS(testSuite, Factory, testFunc, data) \
+    testSuite.add(BOOST_PARAM_TEST_CASE(              \
+        testWithData(&testFunc<Factory>, data), data, data + COUNTOF(data)))
 
 struct BinaryEncoderFactory {
     static EncoderPtr newEncoder(const ValidSchema& schema) {
@@ -1405,6 +1491,21 @@ struct BinaryEncoderResolvingDecoderFactory : public BinaryEncoderFactory {
     }
 };
 
+struct JsonEncoderResolvingDecoderFactory {
+    static EncoderPtr newEncoder(const ValidSchema& schema) {
+        return jsonEncoder(schema);
+    }
+
+    static DecoderPtr newDecoder(const ValidSchema& schema) {
+        return resolvingDecoder(schema, schema, jsonDecoder(schema));
+    }
+
+    static DecoderPtr newDecoder(const ValidSchema& writer,
+        const ValidSchema& reader) {
+        return resolvingDecoder(writer, reader, jsonDecoder(writer));
+    }
+};
+
 struct ValidatingEncoderResolvingDecoderFactory :
     public ValidatingEncoderFactory {
     static DecoderPtr newDecoder(const ValidSchema& schema) {
@@ -1426,14 +1527,21 @@ void add_tests(boost::unit_test::test_suite& ts)
     ADD_TESTS(ts, JsonCodec, testCodec, data);
     ADD_TESTS(ts, JsonPrettyCodec, testCodec, data);
     ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory, testCodec, data);
+    ADD_TESTS(ts, JsonEncoderResolvingDecoderFactory, testCodec, data);
     ADD_TESTS(ts, ValidatingCodecFactory, testReaderFail, data2);
     ADD_TESTS(ts, ValidatingCodecFactory, testWriterFail, data2);
     ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory,
         testCodecResolving, data3);
+    ADD_TESTS(ts, JsonEncoderResolvingDecoderFactory,
+        testCodecResolving, data3);
     ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory,
+        testCodecResolving2, data4);
+    ADD_TESTS(ts, JsonEncoderResolvingDecoderFactory,
         testCodecResolving2, data4);
     ADD_TESTS(ts, ValidatingEncoderResolvingDecoderFactory,
         testCodecResolving2, data4);
+    ADD_TESTS(ts, BinaryEncoderResolvingDecoderFactory,
+        testCodecResolving2, data4BinaryOnly);
 
     ADD_TESTS(ts, ValidatingCodecFactory, testGeneric, data);
     ADD_TESTS(ts, ValidatingCodecFactory, testGenericResolving, data3);
@@ -1470,9 +1578,13 @@ static void testLimits(const EncoderPtr& e, const DecoderPtr& d)
         e->encodeDouble(std::numeric_limits<double>::infinity());
         e->encodeDouble(-std::numeric_limits<double>::infinity());
         e->encodeDouble(std::numeric_limits<double>::quiet_NaN());
+        e->encodeDouble(std::numeric_limits<double>::max());
+        e->encodeDouble(std::numeric_limits<double>::min());
         e->encodeFloat(std::numeric_limits<float>::infinity());
         e->encodeFloat(-std::numeric_limits<float>::infinity());
         e->encodeFloat(std::numeric_limits<float>::quiet_NaN());
+        e->encodeFloat(std::numeric_limits<float>::max());
+        e->encodeFloat(std::numeric_limits<float>::min());
         e->flush();
     }
 
@@ -1484,13 +1596,16 @@ static void testLimits(const EncoderPtr& e, const DecoderPtr& d)
         BOOST_CHECK_EQUAL(d->decodeDouble(),
             -std::numeric_limits<double>::infinity());
         BOOST_CHECK(boost::math::isnan(d->decodeDouble()));
+        BOOST_CHECK(d->decodeDouble() == std::numeric_limits<double>::max());
+        BOOST_CHECK(d->decodeDouble() == std::numeric_limits<double>::min());
         BOOST_CHECK_EQUAL(d->decodeFloat(),
             std::numeric_limits<float>::infinity());
         BOOST_CHECK_EQUAL(d->decodeFloat(),
             -std::numeric_limits<float>::infinity());
         BOOST_CHECK(boost::math::isnan(d->decodeFloat()));
+        BOOST_CHECK_CLOSE(d->decodeFloat(), std::numeric_limits<float>::max(), 0.00011);
+        BOOST_CHECK_CLOSE(d->decodeFloat(), std::numeric_limits<float>::min(), 0.00011);
     }
-
 }
 
 static void testLimitsBinaryCodec()
@@ -1504,9 +1619,13 @@ static void testLimitsJsonCodec()
         "{ \"name\": \"d1\", \"type\": \"double\" },"
         "{ \"name\": \"d2\", \"type\": \"double\" },"
         "{ \"name\": \"d3\", \"type\": \"double\" },"
+        "{ \"name\": \"d4\", \"type\": \"double\" },"
+        "{ \"name\": \"d5\", \"type\": \"double\" },"
         "{ \"name\": \"f1\", \"type\": \"float\" },"
         "{ \"name\": \"f2\", \"type\": \"float\" },"
-        "{ \"name\": \"f3\", \"type\": \"float\" }"
+        "{ \"name\": \"f3\", \"type\": \"float\" },"
+        "{ \"name\": \"f4\", \"type\": \"float\" },"
+        "{ \"name\": \"f5\", \"type\": \"float\" }"
     "]}";
     ValidSchema schema = parsing::makeValidSchema(s);
     testLimits(jsonEncoder(schema), jsonDecoder(schema));

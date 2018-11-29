@@ -84,6 +84,17 @@ EOS
     check_default(record_schema, '{"f": 11}', {"f" => 11})
   end
 
+  def test_record_with_logical_type
+    record_schema = <<EOS
+      {"type": "record",
+       "name": "Test",
+       "fields": [{"name": "ts",
+                   "type": {"type": "long",
+                            "logicalType": "timestamp-micros"}}]}
+EOS
+    check(record_schema)
+  end
+
   def test_error
     error_schema = <<EOS
       {"type": "error",
@@ -115,6 +126,7 @@ EOS
   def test_union
     union_schema = <<EOS
       ["string",
+       {"type": "int", "logicalType": "date"},
        "null",
        "long",
        {"type": "record",
@@ -146,10 +158,31 @@ EOS
     check_default(fixed_schema, '"a"', "a")
   end
 
+  def test_record_with_nil
+    schema = Avro::Schema.parse('{"type":"record", "name":"rec", "fields":[{"type":"int", "name":"i"}]}')
+    assert_raise(Avro::IO::AvroTypeError) do
+      write_datum(nil, schema)
+    end
+  end
+
+  def test_array_with_nil
+    schema = Avro::Schema.parse('{"type":"array", "items":"int"}')
+    assert_raise(Avro::IO::AvroTypeError) do
+      write_datum(nil, schema)
+    end
+  end
+
+  def test_map_with_nil
+    schema = Avro::Schema.parse('{"type":"map", "values":"long"}')
+    assert_raise(Avro::IO::AvroTypeError) do
+      write_datum(nil, schema)
+    end
+  end
+
   def test_enum_with_duplicate
     str = '{"type": "enum", "name": "Test","symbols" : ["AA", "AA"]}'
-    assert_raises(Avro::SchemaParseError) do
-      schema = Avro::Schema.parse str
+    assert_raises(Avro::SchemaParseError.new('Duplicate symbol: ["AA", "AA"]')) do
+      Avro::Schema.parse str
     end
   end
 
@@ -256,7 +289,7 @@ EOS
   end
 
   def test_skip_long
-    for value_to_skip, hex_encoding in BINARY_INT_ENCODINGS
+    for value_to_skip, _hex_encoding in BINARY_INT_ENCODINGS
       value_to_read = 6253
 
       # write some data in binary to string buffer
@@ -281,7 +314,7 @@ EOS
   end
 
   def test_skip_int
-    for value_to_skip, hex_encoding in BINARY_INT_ENCODINGS
+    for value_to_skip, _hex_encoding in BINARY_INT_ENCODINGS
       value_to_read = 6253
 
       writer = StringIO.new
@@ -331,7 +364,7 @@ EOS
       datum_to_write = 219
       for rs in promotable_schemas[(i + 1)..-1]
         readers_schema = Avro::Schema.parse(rs)
-        writer, enc, dw = write_datum(datum_to_write, writers_schema)
+        writer, _enc, _dw = write_datum(datum_to_write, writers_schema)
         datum_read = read_datum(writer, writers_schema, readers_schema)
         if datum_read != datum_to_write
           incorrect += 1
@@ -339,6 +372,40 @@ EOS
       end
       assert_equal(incorrect, 0)
     end
+  end
+
+  def test_interchangeable_schemas
+    interchangeable_schemas = ['"string"', '"bytes"']
+    incorrect = 0
+    interchangeable_schemas.each_with_index do |ws, i|
+      writers_schema = Avro::Schema.parse(ws)
+      datum_to_write = 'foo'
+      readers_schema = Avro::Schema.parse(interchangeable_schemas[i == 0 ? 1 : 0])
+      writer, * = write_datum(datum_to_write, writers_schema)
+      datum_read = read_datum(writer, writers_schema, readers_schema)
+      if datum_read != datum_to_write
+        incorrect += 1
+      end
+    end
+    assert_equal(incorrect, 0)
+  end
+
+  def test_array_schema_promotion
+    writers_schema = Avro::Schema.parse('{"type":"array", "items":"int"}')
+    readers_schema = Avro::Schema.parse('{"type":"array", "items":"long"}')
+    datum_to_write = [1, 2]
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_map_schema_promotion
+    writers_schema = Avro::Schema.parse('{"type":"map", "values":"int"}')
+    readers_schema = Avro::Schema.parse('{"type":"map", "values":"long"}')
+    datum_to_write = { 'foo' => 1, 'bar' => 2 }
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, datum_to_write)
   end
 
   def test_snappy_backward_compat
@@ -417,7 +484,7 @@ EOS
 
   def checkser(schm, randomdata)
     datum = randomdata.next
-    assert validate(schm, datum)
+    assert validate(schm, datum), 'datum is not valid for schema'
     w = Avro::IO::DatumWriter.new(schm)
     writer = StringIO.new "", "w"
     w.write(datum, Avro::IO::BinaryEncoder.new(writer))

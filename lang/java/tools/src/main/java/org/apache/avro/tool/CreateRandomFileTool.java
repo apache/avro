@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -28,7 +28,7 @@ import joptsimple.OptionSpec;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.trevni.avro.RandomData;
+import org.apache.avro.util.RandomData;
 
 /** Creates a file filled with randomly-generated instances of a schema. */
 public class CreateRandomFileTool implements Tool {
@@ -43,6 +43,7 @@ public class CreateRandomFileTool implements Tool {
     return "Creates a file with randomly generated instances of a schema.";
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,
       List<String> args) throws Exception {
@@ -62,6 +63,11 @@ public class CreateRandomFileTool implements Tool {
         p.accepts("schema", "Schema")
         .withOptionalArg()
         .ofType(String.class);
+    OptionSpec<Long> seedOpt =
+        p.accepts("seed", "Seed for random")
+        .withOptionalArg()
+        .ofType(Long.class);
+
     OptionSet opts = p.parse(args.toArray(new String[0]));
     if (opts.nonOptionArguments().size() != 1) {
       err.println("Usage: outFile (filename or '-' for stdout)");
@@ -72,6 +78,7 @@ public class CreateRandomFileTool implements Tool {
 
     String schemastr = inschema.value(opts);
     String schemafile = file.value(opts);
+    Long seed = seedOpt.value(opts);
     if (schemastr == null && schemafile == null) {
         err.println("Need input schema (--schema-file) or (--schema)");
         p.printHelpOn(err);
@@ -82,11 +89,21 @@ public class CreateRandomFileTool implements Tool {
         : new Schema.Parser().parse(schemastr);
 
     DataFileWriter<Object> writer =
-      new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+      new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(Util.codecFactory(opts, codec, level));
     writer.create(schema, Util.fileOrStdout(args.get(0), out));
 
-    for (Object datum : new RandomData(schema, (int)count.value(opts)))
+    Integer countValue = count.value(opts);
+    if (countValue == null) {
+      err.println("Need count (--count)");
+      p.printHelpOn(err);
+      writer.close();
+      return 1;
+    }
+
+    RandomData rd = seed == null ? new RandomData(schema, countValue) :
+      new RandomData(schema, countValue, seed);
+    for (Object datum : rd)
       writer.append(datum);
 
     writer.close();

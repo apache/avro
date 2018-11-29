@@ -75,6 +75,31 @@ public:
     virtual size_t byteCount() const = 0;
 };
 
+/** 
+ * An InputStream which also supports seeking to a specific offset.
+ */
+class AVRO_DECL SeekableInputStream : public InputStream {
+protected:
+
+    /**
+     * An empty constuctor.
+     */
+    SeekableInputStream() { }
+
+public:
+    /**
+     * Destructor.
+     */
+    virtual ~SeekableInputStream() { }
+
+    /**
+     * Seek to a specific position in the stream. This may invalidate pointers
+     * returned from next(). This will also reset byteCount() to the given
+     * position.
+     */
+    virtual void seek(int64_t position) = 0;
+};
+
 /**
  * A no-copy output stream.
  */
@@ -161,8 +186,10 @@ AVRO_DECL std::auto_ptr<OutputStream> fileOutputStream(const char* filename,
  * Returns a new InputStream whose contents come from the given file.
  * Data is read in chunks of given buffer size.
  */
-AVRO_DECL std::auto_ptr<InputStream> fileInputStream(const char* filename,
-    size_t bufferSize = 8 * 1024);
+AVRO_DECL std::auto_ptr<InputStream> fileInputStream(
+    const char *filename, size_t bufferSize = 8 * 1024);
+AVRO_DECL std::auto_ptr<SeekableInputStream> fileSeekableInputStream(
+    const char *filename, size_t bufferSize = 8 * 1024);
 
 /**
  * Returns a new OutputStream whose contents will be sent to the given
@@ -177,8 +204,8 @@ AVRO_DECL std::auto_ptr<OutputStream> ostreamOutputStream(std::ostream& os,
  * std::istream. The std::istream object should outlive the returned
  * InputStream.
  */
-AVRO_DECL std::auto_ptr<InputStream> istreamInputStream(std::istream& in,
-    size_t bufferSize = 8 * 1024);
+AVRO_DECL std::auto_ptr<InputStream> istreamInputStream(
+    std::istream &in, size_t bufferSize = 8 * 1024);
 
 /** A convenience class for reading from an InputStream */
 struct StreamReader {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,13 +35,14 @@ import org.apache.avro.io.parsing.JsonGrammarGenerator;
 import org.apache.avro.io.parsing.Parser;
 import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
-import org.codehaus.jackson.Base64Variant;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonLocation;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonStreamContext;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.ObjectCodec;
+import com.fasterxml.jackson.core.Base64Variant;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonStreamContext;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.Version;
 
 /** A {@link Decoder} for Avro's JSON data encoding.
  * </p>
@@ -53,11 +54,11 @@ public class JsonDecoder extends ParsingDecoder
   implements Parser.ActionHandler {
   private JsonParser in;
   private static JsonFactory jsonFactory = new JsonFactory();
-  Stack<ReorderBuffer> reorderBuffers = new Stack<ReorderBuffer>();
+  Stack<ReorderBuffer> reorderBuffers = new Stack<>();
   ReorderBuffer currentReorderBuffer;
 
   private static class ReorderBuffer {
-    public Map<String, List<JsonElement>> savedFields = new HashMap<String, List<JsonElement>>();
+    public Map<String, List<JsonElement>> savedFields = new HashMap<>();
     public JsonParser origParser = null;
   }
 
@@ -96,7 +97,7 @@ public class JsonDecoder extends ParsingDecoder
    * Otherwise, this JsonDecoder will reset its state and then
    * reconfigure its input.
    * @param in
-   *   The IntputStream to read from. Cannot be null.
+   *   The InputStream to read from. Cannot be null.
    * @throws IOException
    * @return this JsonDecoder
    */
@@ -105,6 +106,8 @@ public class JsonDecoder extends ParsingDecoder
       throw new NullPointerException("InputStream to read from cannot be null!");
     }
     parser.reset();
+    reorderBuffers.clear();
+    currentReorderBuffer = null;
     this.in = jsonFactory.createJsonParser(in);
     this.in.nextToken();
     return this;
@@ -127,6 +130,8 @@ public class JsonDecoder extends ParsingDecoder
       throw new NullPointerException("String to read from cannot be null!");
     }
     parser.reset();
+    reorderBuffers.clear();
+    currentReorderBuffer = null;
     this.in = new JsonFactory().createJsonParser(in);
     this.in.nextToken();
     return this;
@@ -471,7 +476,7 @@ public class JsonDecoder extends ParsingDecoder
             if (currentReorderBuffer == null) {
               currentReorderBuffer = new ReorderBuffer();
             }
-            currentReorderBuffer.savedFields.put(fn, getVaueAsTree(in));
+            currentReorderBuffer.savedFields.put(fn, getValueAsTree(in));
           }
         } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
         throw new AvroTypeException("Expected field name not found: " + fa.fname);
@@ -520,9 +525,9 @@ public class JsonDecoder extends ParsingDecoder
     }
   }
 
-  private static List<JsonElement> getVaueAsTree(JsonParser in) throws IOException {
+  private static List<JsonElement> getValueAsTree(JsonParser in) throws IOException {
     int level = 0;
-    List<JsonElement> result = new ArrayList<JsonElement>();
+    List<JsonElement> result = new ArrayList<>();
     do {
       JsonToken t = in.getCurrentToken();
       switch (t) {
@@ -690,6 +695,61 @@ public class JsonDecoder extends ParsingDecoder
       @Override
       public JsonToken getCurrentToken() {
         return elements.get(pos).token;
+      }
+
+      @Override
+      public Version version() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public JsonToken nextValue() throws IOException {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public int getCurrentTokenId() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean hasCurrentToken() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean hasTokenId(int id) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean hasToken(JsonToken t) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void clearCurrentToken() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public JsonToken getLastClearedToken() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void overrideCurrentName(String name) {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public boolean hasTextCharacters() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public String getValueAsString(String def) throws IOException {
+        throw new UnsupportedOperationException();
       }
     };
   }

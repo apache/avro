@@ -45,7 +45,7 @@ namespace Avro
         public IList<Protocol> Protocols { get; private set; }
 
         /// <summary>
-        /// List of generated namespaces 
+        /// List of generated namespaces
         /// </summary>
         protected Dictionary<string, CodeNamespace> namespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
 
@@ -83,7 +83,7 @@ namespace Avro
         /// <returns></returns>
         protected virtual CodeNamespace addNamespace(string name)
         {
-            if (string.IsNullOrEmpty(name)) 
+            if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "name cannot be null.");
 
             CodeNamespace ns = null;
@@ -272,7 +272,6 @@ namespace Avro
             ctd.Members.Add(codeField);
 
             // Add Size property
-            var fieldRef = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), sizefname);
             var property = new CodeMemberProperty();
             property.Attributes = MemberAttributes.Public | MemberAttributes.Static;
             property.Name = "FixedSize";
@@ -319,7 +318,7 @@ namespace Avro
             if (string.IsNullOrEmpty(nspace))
                 throw new CodeGenException("Namespace required for enum schema " + enumschema.Name);
             CodeNamespace codens = addNamespace(nspace);
-            
+
             codens.Types.Add(ctd);
         }
 
@@ -408,7 +407,7 @@ namespace Avro
             ctd.BaseTypes.Add(protocolNameMangled);
 
             // Need to override
-            
+
 
 
             AddProtocolDocumentation(protocol, ctd);
@@ -649,7 +648,7 @@ namespace Avro
         }
 
         /// <summary>
-        /// Gets the string representation of the schema's data type 
+        /// Gets the string representation of the schema's data type
         /// </summary>
         /// <param name="schema">schema</param>
         /// <param name="nullible">flag to indicate union with null</param>
@@ -757,7 +756,7 @@ namespace Avro
         /// <param name="ctd">CodeTypeDeclaration for the class</param>
         protected virtual void createSchemaField(Schema schema, CodeTypeDeclaration ctd, bool overrideFlag)
         {
-            // create schema field 
+            // create schema field
             var ctrfield = new CodeTypeReference("Schema");
             string schemaFname = "_SCHEMA";
             var codeField = new CodeMemberField(ctrfield, schemaFname);

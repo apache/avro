@@ -346,6 +346,30 @@ class TestIO(unittest.TestCase):
     self.assertRaises(
         avro_io.AvroTypeException, write_datum, datum_to_write, writer_schema)
 
+  def testUnionSchemaSpecificity(self):
+    union_schema = schema.Parse("""
+        [{
+         "type" : "record",
+         "name" : "A",
+         "fields" : [{"name" : "foo", "type" : ["string", "null"]}]
+        },
+        {
+         "type" : "record",
+         "name" : "B",
+         "fields" : [{"name" : "bar", "type" : ["string", "null"]}]
+        },
+        {
+         "type" : "record",
+         "name" : "AOrB",
+         "fields" : [{"name" : "entity", "type" : ["A", "B"]}]
+        }]
+    """)
+    sch = {s.name: s for s in union_schema.schemas}.get('AOrB')
+    datum_to_read = {'entity': {'foo': 'this is an instance of schema A'}}
+    writer, encoder, datum_writer = write_datum(datum_to_read, sch)
+    datum_read = read_datum(writer, sch, sch)
+    self.assertEqual(datum_to_read, datum_read)
+
 
 if __name__ == '__main__':
   raise Exception('Use run_tests.py')

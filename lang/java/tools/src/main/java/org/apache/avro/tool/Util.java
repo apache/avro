@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -22,6 +22,7 @@ import static org.apache.avro.file.DataFileConstants.DEFLATE_CODEC;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -168,30 +169,39 @@ class Util {
     }
   }
 
-  /**If pathname is a file, this method returns a list with a single absolute Path to that file,
-   * if pathname is a directory, this method returns a list of Pathes to all the files within
-   * this directory.
-   * Only files inside that directory are included, no subdirectories or files in subdirectories
-   * will be added.
+  /**
+   * If pathname is a file, this method returns a list with a single absolute Path to that file.
+   * If pathname is a directory, this method returns a list of Pathes to all the files within
+   * this directory. Only files inside that directory are included, no subdirectories or files
+   * in subdirectories will be added.
+   * If pathname is a glob pattern, all files matching the pattern are included.
+   *
    * The List is sorted alphabetically.
-   * @param fileOrDirName filename or directoryname
+   * @param fileOrDirName filename, directoryname or a glob pattern
    * @return A Path List
    * @throws IOException
    */
-  static List<Path> getFiles(String fileOrDirName)
-    throws IOException {
-    List<Path> pathList = new ArrayList<Path>();
+  static List<Path> getFiles(String fileOrDirName) throws IOException {
+    List<Path> pathList = new ArrayList<>();
     Path path = new Path(fileOrDirName);
     FileSystem fs = path.getFileSystem(new Configuration());
 
     if (fs.isFile(path)) {
       pathList.add(path);
-    }
-    else if (fs.getFileStatus(path).isDir()) {
+    } else if (fs.isDirectory(path)) {
       for (FileStatus status : fs.listStatus(path)) {
         if(!status.isDir()) {
           pathList.add(status.getPath());
         }
+      }
+    } else {
+      FileStatus[] fileStatuses = fs.globStatus(path);
+      if (fileStatuses != null) {
+        for (FileStatus status : fileStatuses) {
+          pathList.add(status.getPath());
+        }
+      } else {
+        throw new FileNotFoundException(fileOrDirName);
       }
     }
     Collections.sort(pathList);
@@ -199,16 +209,17 @@ class Util {
   }
 
   /**
-   * This method returns a list which contains a path to every given file
-   * in the input and a path to every file inside a given directory.
+   * Concatenate the result of {@link #getFiles(String)} applied to all file or directory names.
    * The list is sorted alphabetically and contains no subdirectories or files within those.
-   * @param fileOrDirNames A list of filenames and directorynames
-   * @return A list of Pathes, one for each file
+   *
+   * The list is sorted alphabetically.
+   * @param fileOrDirNames A list of filenames, directorynames or glob patterns
+   * @return A list of Paths, one for each file
    * @throws IOException
    */
   static List<Path> getFiles(List<String> fileOrDirNames)
       throws IOException {
-    ArrayList<Path> pathList = new ArrayList<Path>();
+    ArrayList<Path> pathList = new ArrayList<>();
     for(String name : fileOrDirNames) {
       pathList.addAll(getFiles(name));
     }
@@ -224,7 +235,7 @@ class Util {
    */
   static Object jsonToGenericDatum(Schema schema, String jsonData)
       throws IOException {
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
     Object datum = reader.read(null,
         DecoderFactory.get().jsonDecoder(schema, jsonData));
     return datum;
@@ -233,8 +244,8 @@ class Util {
   /** Reads and returns the first datum in a data file. */
   static Object datumFromFile(Schema schema, String file) throws IOException {
     DataFileReader<Object> in =
-      new DataFileReader<Object>(new File(file),
-                                 new GenericDatumReader<Object>(schema));
+        new DataFileReader<>(new File(file),
+                             new GenericDatumReader<>(schema));
     try {
       return in.next();
     } finally {

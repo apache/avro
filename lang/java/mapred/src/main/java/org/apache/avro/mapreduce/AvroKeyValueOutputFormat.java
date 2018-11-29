@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@
 package org.apache.avro.mapreduce;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.hadoop.io.AvroDatumConverter;
@@ -59,8 +60,14 @@ public class AvroKeyValueOutputFormat<K, V> extends AvroOutputFormatBase<K, V> {
 
     GenericData dataModel = AvroSerialization.createDataModel(conf);
 
-    return new AvroKeyValueRecordWriter<K, V>(keyConverter, valueConverter,
-        dataModel, getCompressionCodec(context), getAvroFileOutputStream(context),
-        getSyncInterval(context));
+    OutputStream out = getAvroFileOutputStream(context);
+    try {
+      return new AvroKeyValueRecordWriter<>(keyConverter, valueConverter,
+              dataModel, getCompressionCodec(context), out,
+              getSyncInterval(context));
+    } catch (IOException e) {
+      out.close();
+      throw e;
+    }
   }
 }

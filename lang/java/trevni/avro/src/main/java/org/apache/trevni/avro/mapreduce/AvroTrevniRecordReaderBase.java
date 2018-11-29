@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,7 +65,7 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
       params.setSchema(AvroJob.getInputKeySchema(context.getConfiguration()));
     }
 
-    reader = new AvroColumnReader<T>(params);
+    reader = new AvroColumnReader<>(params);
     rows = reader.getRowCount();
   }
 

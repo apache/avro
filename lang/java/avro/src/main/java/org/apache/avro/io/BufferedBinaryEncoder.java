@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -90,8 +90,11 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
    */
   private void flushBuffer() throws IOException {
     if (pos > 0) {
-      sink.innerWrite(buf, 0, pos);
-      pos = 0;
+      try {
+        sink.innerWrite(buf, 0, pos);
+      } finally {
+        pos = 0;
+      }
     }
   }
 
@@ -157,11 +160,12 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
 
   @Override
   public void writeFixed(ByteBuffer bytes) throws IOException {
+    ByteBuffer readOnlyBytes = bytes.asReadOnlyBuffer();
     if (!bytes.hasArray() && bytes.remaining() > bulkLimit) {
       flushBuffer();
-      sink.innerWrite(bytes);                     // bypass the buffer
+      sink.innerWrite(readOnlyBytes);                     // bypass the readOnlyBytes
     } else {
-      super.writeFixed(bytes);
+      super.writeFixed(readOnlyBytes);
     }
   }
 

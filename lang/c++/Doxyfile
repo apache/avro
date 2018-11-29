@@ -28,3 +28,4 @@ ALPHABETICAL_INDEX     = NO
 GENERATE_LATEX         = NO
 HAVE_DOT               = NO
 OUTPUT_DIRECTORY       = doc
+EXAMPLE_PATH           = examples
