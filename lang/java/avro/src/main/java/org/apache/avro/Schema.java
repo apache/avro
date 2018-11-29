@@ -1404,8 +1404,13 @@ public abstract class Schema extends JsonProperties {
           throw new SchemaParseException("Invalid or no size: "+schema);
         result = new FixedSchema(name, doc, sizeNode.intValue());
         if (name != null) names.add(result);
-      } else
+      } else {  //For unions with self reference
+        Name nameFromType = new Name(type, names.space);
+        if (names.containsKey(nameFromType)) {
+          return names.get(nameFromType);
+        }
         throw new SchemaParseException("Type not supported: "+type);
+      }
       Iterator<String> i = schema.fieldNames();
 
       Set reserved = SCHEMA_RESERVED;
