@@ -53,52 +53,62 @@ public class Resolver {
    *
    * @param writer    The schema used by the writer
    * @param reader    The schema used by the reader
+   * @param data      Used for <tt>getDefaultValue</tt> and getting conversions
    * @return          Nested actions for resolving the two
    */
-  public static Action resolve(Schema writer, Schema reader) {
-    return resolve(writer, reader, new HashMap<>());
+  public static Action resolve(Schema writer, Schema reader, GenericData data) {
+      return resolve(writer, reader, data, new HashMap<>());
   }
 
-  private static Action resolve(Schema w, Schema r, Map<SeenPair, Action> seen) {
+  /**
+   * Uses <tt>GenericData.get()</tt> for the <tt>data</tt> param.
+   */
+  public static Action resolve(Schema writer, Schema reader) {
+    return resolve(writer, reader, GenericData.get(), new HashMap<>());
+  }
+
+  private static Action resolve(Schema w, Schema r, GenericData d,
+                                Map<SeenPair, Action> seen)
+  {
     final Schema.Type wType = w.getType();
     final Schema.Type rType = r.getType();
 
     if (wType == Schema.Type.UNION)
-      return WriterUnion.resolve(w, r, seen);
+      return WriterUnion.resolve(w, r, d, seen);
 
     if (wType == rType) {
       switch (wType) {
       case NULL: case BOOLEAN:
       case INT: case LONG: case FLOAT: case DOUBLE:
       case STRING: case BYTES:
-        return new DoNothing(w, r);
+        return new DoNothing(w, r, d);
 
       case FIXED:
         if (w.getFullName() != null && ! w.getFullName().equals(r.getFullName()))
-          return new ErrorAction(w, r, ErrorType.NAMES_DONT_MATCH);
+          return new ErrorAction(w, r, d, ErrorType.NAMES_DONT_MATCH);
         else if (w.getFixedSize() != r.getFixedSize())
-          return new ErrorAction(w, r, ErrorType.SIZES_DONT_MATCH);
-        else return new DoNothing(w, r);
+          return new ErrorAction(w, r, d, ErrorType.SIZES_DONT_MATCH);
+        else return new DoNothing(w, r, d);
 
       case ARRAY:
-        Action et = resolve(w.getElementType(), r.getElementType(), seen);
-        return new Container(w, r, et);
+        Action et = resolve(w.getElementType(), r.getElementType(), d, seen);
+        return new Container(w, r, d, et);
 
       case MAP:
-        Action vt = resolve(w.getValueType(), r.getValueType(), seen);
-        return new Container(w, r, vt);
+        Action vt = resolve(w.getValueType(), r.getValueType(), d, seen);
+        return new Container(w, r, d, vt);
 
       case ENUM:
-        return EnumAdjust.resolve(w, r);
+        return EnumAdjust.resolve(w, r, d);
 
       case RECORD:
-        return RecordAdjust.resolve(w, r, seen);
+        return RecordAdjust.resolve(w, r, d, seen);
 
       default:
         throw new IllegalArgumentException("Unknown type for schema: " + wType);
       }
-    } else if (rType == Schema.Type.UNION) return ReaderUnion.resolve(w, r, seen);
-    else return Promote.resolve(w, r);
+    } else if (rType == Schema.Type.UNION) return ReaderUnion.resolve(w, r, d, seen);
+    else return Promote.resolve(w, r, d);
   }
 
   /**
@@ -131,7 +141,7 @@ public class Resolver {
      */
     public final Conversion<?> conversion;
 
-    protected Action(Schema w, Schema r, Type t) {
+    protected Action(Schema w, Schema r, GenericData data, Type t) {
       this.writer = w;
       this.reader = r;
       this.type = t;
@@ -140,7 +150,7 @@ public class Resolver {
         this.conversion = null;
       } else {
         this.logicalType = r.getLogicalType();
-        this.conversion = GenericData.get().getConversionFor(logicalType);
+        this.conversion = data.getConversionFor(logicalType);
       }
     }
   }
@@ -151,7 +161,8 @@ public class Resolver {
    * <em>only</em> for primitive types and fixed types, and not for
    * any other kind of schema. */
   public static class DoNothing extends Action {
-    public DoNothing(Schema w, Schema r) { super(w, r, Action.Type.DO_NOTHING); }
+    public DoNothing(Schema w, Schema r, GenericData d)
+    { super(w, r, d, Action.Type.DO_NOTHING); }
   }
 
   /**
@@ -187,8 +198,8 @@ public class Resolver {
 
     public final ErrorType error;
 
-    public ErrorAction(Schema w, Schema r, ErrorType e) {
-      super(w, r, Action.Type.ERROR);
+    public ErrorAction(Schema w, Schema r, GenericData d, ErrorType e) {
+      super(w, r, d, Action.Type.ERROR);
       this.error = e;
     }
 
@@ -226,7 +237,8 @@ public class Resolver {
    * promotion is one allowed by the Avro spec.
    */
   public static class Promote extends Action {
-    private Promote(Schema w, Schema r) { super(w, r, Action.Type.PROMOTE); }
+    private Promote(Schema w, Schema r, GenericData d)
+    { super(w, r, d, Action.Type.PROMOTE); }
 
     /**
      * Return a promotion.
@@ -237,9 +249,9 @@ public class Resolver {
      * @throws IllegalArgumentException if <em>getType()</em> of the two schemas
      * are not different.
      */
-    public static Action resolve(Schema w, Schema r) {
-      if (isValid(w, r)) return new Promote(w,r);
-      else return new ErrorAction(w, r, ErrorType.INCOMPATIBLE_SCHEMA_TYPES);
+    public static Action resolve(Schema w, Schema r, GenericData d) {
+      if (isValid(w, r)) return new Promote(w, r, d);
+      else return new ErrorAction(w, r, d, ErrorType.INCOMPATIBLE_SCHEMA_TYPES);
     }
 
     /**
@@ -280,8 +292,8 @@ public class Resolver {
    */
   public static class Container extends Action {
     public final Action elementAction;
-    public Container(Schema w, Schema r, Action e) {
-      super(w, r, Action.Type.CONTAINER);
+    public Container(Schema w, Schema r, GenericData d, Action e) {
+      super(w, r, d, Action.Type.CONTAINER);
       this.elementAction = e;
     }
   }
@@ -313,8 +325,8 @@ public class Resolver {
     public final int[] adjustments;
     public final boolean noAdjustmentsNeeded;
 
-    private EnumAdjust(Schema w, Schema r, int[] adj) {
-      super(w, r, Action.Type.ENUM);
+    private EnumAdjust(Schema w, Schema r, GenericData d, int[] adj) {
+      super(w, r, d, Action.Type.ENUM);
       this.adjustments = adj;
       boolean noAdj = true;
       int rsymCount = r.getEnumSymbols().size();
@@ -330,9 +342,9 @@ public class Resolver {
      * ErrorAction.Type.NAMES_DONT_MATCH} is returned, otherwise an
      * appropriate {@link EnumAdjust} is.
      */
-    public static Action resolve(Schema w, Schema r) {
+    public static Action resolve(Schema w, Schema r, GenericData d) {
       if (w.getFullName() != null && ! w.getFullName().equals(r.getFullName()))
-        return new ErrorAction(w, r, ErrorType.NAMES_DONT_MATCH);
+        return new ErrorAction(w, r, d, ErrorType.NAMES_DONT_MATCH);
 
       final List<String> wsymbols = w.getEnumSymbols();
       final List<String> rsymbols = r.getEnumSymbols();
@@ -343,7 +355,7 @@ public class Resolver {
         int j = rsymbols.indexOf(wsymbols.get(i));
         adjustments[i] = (0 <= j ? j : defaultIndex);
       }
-      return new EnumAdjust(w, r, adjustments);
+      return new EnumAdjust(w, r, d, adjustments);
     }
   }
 
@@ -357,7 +369,7 @@ public class Resolver {
    * for this subclass.
    */
   public static class Skip extends Action {
-    public Skip(Schema w) { super(w, null, Action.Type.SKIP); }
+    public Skip(Schema w, GenericData d) { super(w, null, d, Action.Type.SKIP); }
   }
 
   /**
@@ -395,6 +407,15 @@ public class Resolver {
     public final int firstDefault;
 
     /**
+     * Contains the default values to be used for the last
+     * <tt>readerOrder.length-firstDefault</tt> fields in
+     * rearderOrder.  The <tt>i</tt>th element of <tt>defaults</tt> is
+     * the default value for the <tt>i+firstDefault</tt> member of
+     * <tt>readerOrder</tt>.
+     */
+    public final Object[] defaults;
+
+    /**
      * Returns true iff
      * <code>i&nbsp;==&nbsp;readerOrder[i].pos()</code> for all
      * indices <code>i</code>.  Which is to say: the order of the
@@ -408,11 +429,14 @@ public class Resolver {
       return result;
     }
 
-    private RecordAdjust(Schema w, Schema r, Action[] fa, Field[] ro, int firstD) {
-      super(w, r, Action.Type.RECORD);
+    private RecordAdjust(Schema w, Schema r, GenericData d,
+                         Action[] fa, Field[] ro, int firstD, Object[] defaults)
+    {
+      super(w, r, d, Action.Type.RECORD);
       this.fieldActions = fa;
       this.readerOrder = ro;
       this.firstDefault = firstD;
+      this.defaults = defaults;
     }
 
     /**
@@ -424,14 +448,14 @@ public class Resolver {
      * value.
      * @throws RuntimeException if writer and reader schemas are not both records
      */
-    static Action resolve(Schema w, Schema r, Map<SeenPair, Action> seen) {
+    static Action resolve(Schema w, Schema r, GenericData d, Map<SeenPair, Action> seen) {
       SeenPair wr = new SeenPair(w, r);
       Action result = seen.get(wr);
       if (result != null) return result;
 
 /* Current implementation doesn't do this check.  To pass regressions tests, we can't either.
       if (w.getFullName() != null && ! w.getFullName().equals(r.getFullName())) {
-        result = new ErrorAction(w, r, ErrorType.NAMES_DONT_MATCH);
+        result = new ErrorAction(w, r, d, ErrorType.NAMES_DONT_MATCH);
         seen.put(wr, result);
         return result;
       }
@@ -439,28 +463,32 @@ public class Resolver {
       List<Field> wfields = w.getFields();
       List<Field> rfields = r.getFields();
 
-      Action[] actions = new Action[wfields.size()];
-      Field[] reordered = new Field[rfields.size()];
       int firstDefault = 0;
       for (Schema.Field wf : wfields)
         if (r.getField(wf.name()) != null) firstDefault++;
-      result = new RecordAdjust(w, r, actions, reordered, firstDefault);
+      Action[] actions = new Action[wfields.size()];
+      Field[] reordered = new Field[rfields.size()];
+      Object[] defaults = new Object[reordered.length - firstDefault];
+      result = new RecordAdjust(w, r, d, actions, reordered, firstDefault, defaults);
       seen.put(wr, result); // Insert early to handle recursion
 
       int i = 0; int ridx = 0; for (Field wField : wfields) {
         Field rField = r.getField(wField.name());
         if (rField != null) {
           reordered[ridx++] = rField;
-          actions[i++] = Resolver.resolve(wField.schema(), rField.schema(), seen);
-        } else actions[i++] = new Skip(wField.schema());
+          actions[i++] = Resolver.resolve(wField.schema(), rField.schema(), d, seen);
+        } else actions[i++] = new Skip(wField.schema(), d);
       }
       for (Field rf : rfields)
         if (w.getField(rf.name()) == null)
           if (rf.defaultValue() == null) {
-            result = new ErrorAction(w, r, ErrorType.MISSING_REQUIRED_FIELD);
+            result = new ErrorAction(w, r, d, ErrorType.MISSING_REQUIRED_FIELD);
             seen.put(wr, result);
             return result;
-          } else reordered[ridx++] = rf;
+          } else {
+            defaults[ridx-firstDefault] = d.getDefaultValue(rf);
+            reordered[ridx++] = rf;
+          }
       return result;
     }
   }
@@ -482,21 +510,23 @@ public class Resolver {
   public static class WriterUnion extends Action {
     public final Action[] actions;
     public final boolean unionEquiv;
-    private WriterUnion(Schema w, Schema r, boolean ue, Action[] a) {
-      super(w, r, Action.Type.WRITER_UNION);
+    private WriterUnion(Schema w, Schema r, GenericData d, boolean ue, Action[] a) {
+      super(w, r, d, Action.Type.WRITER_UNION);
       unionEquiv = ue;
       actions = a;
     }
 
-    public static Action resolve(Schema w, Schema r, Map<SeenPair,Action> seen) {
+    public static Action resolve(Schema w, Schema r, GenericData d,
+                                 Map<SeenPair,Action> seen)
+    {
       boolean ueqv = unionEquiv(w, r, new HashMap<>());
       List<Schema> wb = w.getTypes();
       List<Schema> rb = (ueqv ? r.getTypes() : null);
       int sz = wb.size();
       Action[] actions = new Action[sz];
       for (int i = 0; i < sz; i++)
-        actions[i] = Resolver.resolve(wb.get(i), (ueqv ? rb.get(i) : r), seen);
-      return new WriterUnion(w, r, ueqv, actions);
+        actions[i] = Resolver.resolve(wb.get(i), (ueqv ? rb.get(i) : r), d, seen);
+      return new WriterUnion(w, r, d, ueqv, actions);
     }
   }
 
@@ -517,8 +547,8 @@ public class Resolver {
     public final int firstMatch;
     public final Action actualAction;
 
-    public ReaderUnion(Schema w, Schema r, int firstMatch, Action actual) {
-      super(w, r, Action.Type.READER_UNION);
+    public ReaderUnion(Schema w, Schema r, GenericData d, int firstMatch, Action actual) {
+      super(w, r, d, Action.Type.READER_UNION);
       this.firstMatch = firstMatch;
       this.actualAction = actual;
     }
@@ -530,19 +560,23 @@ public class Resolver {
      * @throws RuntimeException if <tt>r</tt> is not a union schema or
      * <tt>w</tt> <em>is</em> a union schema
      */
-    public static Action resolve(Schema w, Schema r, Map<SeenPair,Action> seen) {
+    public static Action resolve(Schema w, Schema r, GenericData d,
+                                 Map<SeenPair,Action> seen)
+    {
       if (w.getType() == Schema.Type.UNION)
         throw new IllegalArgumentException("Writer schema is union.");
-      int i = firstMatchingBranch(w, r, seen);
+      int i = firstMatchingBranch(w, r, d, seen);
       if (0 <= i)
-        return new ReaderUnion(w, r, i, Resolver.resolve(w, r.getTypes().get(i), seen));
-      return new ErrorAction(w, r, ErrorType.NO_MATCHING_BRANCH);
+        return new ReaderUnion(w, r, d, i, Resolver.resolve(w, r.getTypes().get(i), d, seen));
+      return new ErrorAction(w, r, d, ErrorType.NO_MATCHING_BRANCH);
     }
 
     // Note: This code was taken verbatim from the 1.8.x branch of Avro.  It implements
     // a "soft match" algorithm that seems to disagree with the spec.  However, in the
     // interest of "bug-for-bug" compatibility, we imported the old algorithm.
-    private static int firstMatchingBranch(Schema w, Schema r, Map<SeenPair, Action> seen) {
+    private static int firstMatchingBranch(Schema w, Schema r, GenericData d,
+                                           Map<SeenPair, Action> seen)
+    {
       Schema.Type vt = w.getType();
       // first scan for exact match
       int j = 0;
@@ -558,7 +592,7 @@ public class Resolver {
               return j;
 
             if (vt == Schema.Type.RECORD &&
-                !hasMatchError(RecordAdjust.resolve(w, b, seen))) {
+                !hasMatchError(RecordAdjust.resolve(w, b, d, seen))) {
               String vShortName = w.getName();
               String bShortName = b.getName();
               // use the first structure match or one where the name matches
