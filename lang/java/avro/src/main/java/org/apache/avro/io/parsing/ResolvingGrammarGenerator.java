@@ -87,21 +87,23 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     } else if (action instanceof Resolver.ErrorAction) {
       return Symbol.error(action.toString());
 
-    } else if (action instanceof Resolver.SkipAction) {
+    } else if (action instanceof Resolver.Skip) {
       return Symbol.skipAction(simpleGen(action.writer, seen));
 
     } else if (action instanceof Resolver.Promote) {
       return Symbol.resolve(simpleGen(action.writer, seen), simpleGen(action.reader, seen));
 
     } else if (action.writer.getType() == Schema.Type.ARRAY) {
-      Symbol es = generate(((Resolver.ContainerAction)action).elementAction, seen);
+      Symbol es = generate(((Resolver.Container)action).elementAction, seen);
       return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, es), Symbol.ARRAY_START);
 
     } else if (action.writer.getType() == Schema.Type.MAP) {
-      Symbol es = generate(((Resolver.ContainerAction)action).elementAction, seen);
+      Symbol es = generate(((Resolver.Container)action).elementAction, seen);
       return Symbol.seq(Symbol.repeat(Symbol.MAP_END, es, Symbol.STRING), Symbol.MAP_START);
 
     } else if (action.writer.getType() == Schema.Type.UNION) {
+      if (((Resolver.WriterUnion)action).unionEquiv)
+        return simpleGen(action.writer, seen);
       Resolver.Action[] branches = ((Resolver.WriterUnion) action).actions;
       Symbol[] symbols = new Symbol[branches.length];
       String[] labels = new String[branches.length];

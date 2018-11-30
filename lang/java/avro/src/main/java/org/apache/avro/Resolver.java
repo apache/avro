@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.SeenPair;
 import org.apache.avro.Resolver.ErrorAction.ErrorType;
 
 /**
@@ -57,21 +59,12 @@ public class Resolver {
     return resolve(writer, reader, new HashMap<>());
   }
 
-  private static Action resolve(Schema w, Schema r, Map<Pair, Action> seen) {
+  private static Action resolve(Schema w, Schema r, Map<SeenPair, Action> seen) {
     final Schema.Type wType = w.getType();
     final Schema.Type rType = r.getType();
 
-    if (wType == Schema.Type.UNION) {
-      if (unionEquiv(w, r, new HashMap<>())) {
-        return new DoNothing(w, r);
-      } else {
-        List<Schema> branches = w.getTypes();
-        int sz = branches.size();
-        Action[] actions = new Action[sz];
-        for (int i = 0; i < sz; i++) actions[i] = resolve(branches.get(i), r, seen);
-        return new WriterUnion(w, r, actions);
-      }
-    }
+    if (wType == Schema.Type.UNION)
+      return WriterUnion.resolve(w, r, seen);
 
     if (wType == rType) {
       switch (wType) {
@@ -89,11 +82,11 @@ public class Resolver {
 
       case ARRAY:
         Action et = resolve(w.getElementType(), r.getElementType(), seen);
-        return new ContainerAction(w, r, et);
+        return new Container(w, r, et);
 
       case MAP:
         Action vt = resolve(w.getValueType(), r.getValueType(), seen);
-        return new ContainerAction(w, r, vt);
+        return new Container(w, r, vt);
 
       case ENUM:
         return EnumAdjust.resolve(w, r);
@@ -114,23 +107,51 @@ public class Resolver {
    * against a reader's schema (in <tt>reader</tt>).  Ordinarily,
    * neither field can be <tt>null</tt>, except that the
    * <tt>reader</tt> field can be <tt>null</tt> in a {@link
-   * SkipAction}, which is used to skip a field in a writer's record
+   * Skip}, which is used to skip a field in a writer's record
    * that doesn't exist in the reader's (and thus there is no reader
    * schema to resolve to).
    */
   public static abstract class Action {
+    /** Helps us traverse faster. */
+    public static enum Type {
+      DO_NOTHING, ERROR, PROMOTE, CONTAINER, ENUM, SKIP, RECORD,
+      WRITER_UNION, READER_UNION
+    };
+
     public final Schema writer, reader;
-    protected Action(Schema w, Schema r) { writer = w; reader = r; }
+    public final Type type;
+
+    /** If the reader has a logical type, it's stored here for fast
+     * access, otherwise this will be null.
+     */
+    public final LogicalType logicalType;
+
+    /** If the reader has a conversion that needs to be applied, it's
+     * stored here for fast access, otherwise this will be null.
+     */
+    public final Conversion<?> conversion;
+
+    protected Action(Schema w, Schema r, Type t) {
+      this.writer = w;
+      this.reader = r;
+      this.type = t;
+      if (r == null) {
+        this.logicalType = null;
+        this.conversion = null;
+      } else {
+        this.logicalType = r.getLogicalType();
+        this.conversion = GenericData.get().getConversionFor(logicalType);
+      }
+    }
   }
 
   /**
    * In this case, there's nothing to be done for resolution: the two
-   * schemas are effectively the same.  This action may be generated
-   * for any type of schema (including union schemas, for example):
-   * resolvers must be able to handle all these cases.
-   */
+   * schemas are effectively the same.  This action will be generated
+   * <em>only</em> for primitive types and fixed types, and not for
+   * any other kind of schema. */
   public static class DoNothing extends Action {
-    public DoNothing(Schema w, Schema r) { super(w, r); }
+    public DoNothing(Schema w, Schema r) { super(w, r, Action.Type.DO_NOTHING); }
   }
 
   /**
@@ -167,7 +188,7 @@ public class Resolver {
     public final ErrorType error;
 
     public ErrorAction(Schema w, Schema r, ErrorType e) {
-      super(w,r);
+      super(w, r, Action.Type.ERROR);
       this.error = e;
     }
 
@@ -205,7 +226,7 @@ public class Resolver {
    * promotion is one allowed by the Avro spec.
    */
   public static class Promote extends Action {
-    private Promote(Schema w, Schema r) { super(w, r); }
+    private Promote(Schema w, Schema r) { super(w, r, Action.Type.PROMOTE); }
 
     /**
      * Return a promotion.
@@ -257,10 +278,10 @@ public class Resolver {
    * <tt>elementAction</tt> contains the resolving action needed for
    * the element type of an array or value top of a map.
    */
-  public static class ContainerAction extends Action {
+  public static class Container extends Action {
     public final Action elementAction;
-    public ContainerAction(Schema w, Schema r, Action e) {
-      super(w, r);
+    public Container(Schema w, Schema r, Action e) {
+      super(w, r, Action.Type.CONTAINER);
       this.elementAction = e;
     }
   }
@@ -293,7 +314,7 @@ public class Resolver {
     public final boolean noAdjustmentsNeeded;
 
     private EnumAdjust(Schema w, Schema r, int[] adj) {
-      super(w, r);
+      super(w, r, Action.Type.ENUM);
       this.adjustments = adj;
       boolean noAdj = true;
       int rsymCount = r.getEnumSymbols().size();
@@ -335,8 +356,8 @@ public class Resolver {
    * in this case, the {@link Action.reader} field is <tt>null</tt>
    * for this subclass.
    */
-  public static class SkipAction extends Action {
-    public SkipAction(Schema w) { super(w, null); }
+  public static class Skip extends Action {
+    public Skip(Schema w) { super(w, null, Action.Type.SKIP); }
   }
 
   /**
@@ -350,7 +371,7 @@ public class Resolver {
     /**
      * An action for each field of the writer.  If the corresponding
      * field is to be skipped during reading, then this will contain a
-     * {@link SkipAction}.  For fields to be read into the reading
+     * {@link Skip}.  For fields to be read into the reading
      * datum, will contain a regular action for resolving the
      * writer/reader schemas of the matching fields.
      */
@@ -368,7 +389,8 @@ public class Resolver {
 
     /**
      * Pointer into {@link readerOrder} of the first reader field
-     * whose value comes from a default value.
+     * whose value comes from a default value.  Set to length of
+     * {@link readerOrder} if there are none.
      */
     public final int firstDefault;
 
@@ -387,7 +409,7 @@ public class Resolver {
     }
 
     private RecordAdjust(Schema w, Schema r, Action[] fa, Field[] ro, int firstD) {
-      super(w, r);
+      super(w, r, Action.Type.RECORD);
       this.fieldActions = fa;
       this.readerOrder = ro;
       this.firstDefault = firstD;
@@ -402,8 +424,8 @@ public class Resolver {
      * value.
      * @throws RuntimeException if writer and reader schemas are not both records
      */
-    static Action resolve(Schema w, Schema r, Map<Pair, Action> seen) {
-      Pair wr = new Pair(w, r);
+    static Action resolve(Schema w, Schema r, Map<SeenPair, Action> seen) {
+      SeenPair wr = new SeenPair(w, r);
       Action result = seen.get(wr);
       if (result != null) return result;
 
@@ -430,7 +452,7 @@ public class Resolver {
         if (rField != null) {
           reordered[ridx++] = rField;
           actions[i++] = Resolver.resolve(wField.schema(), rField.schema(), seen);
-        } else actions[i++] = new SkipAction(wField.schema());
+        } else actions[i++] = new Skip(wField.schema());
       }
       for (Field rf : rfields)
         if (w.getField(rf.name()) == null)
@@ -444,24 +466,38 @@ public class Resolver {
   }
 
   /**
-   * In this case, the writer was a union and the reader was either
-   * not a union, or was a union that was different from the writer.
-   * In this case, we resolve the entire reader schema with _each_
-   * branch of the writer schema (stored in <tt>actions</tt>).  Based
-   * on the tag we see in the data stream, we pick the resolution
-   * branch selected by that tag.
+   * In this case, the writer was a union.  There are two subcases
+   * here:
    *
-   * (Note, if both the reader and writer are the same union, the
-   * reading process can read the input according to its own schema
-   * with no need for further resolution.  In this case, a {@link
-   * DoNothing} action is generated instead of a {@link WriterUnion}.
-   * This is an optimization for the common-case where an evolved
-   * schema containing a union does not actually change the schema of
-   * the contained union, e.g., nullable fields in a record).
-   */
+   * If the reader and writer are the same union, then the
+   * <tt>unionEquiv</tt> variable is set to true and the
+   * <tt>actions</tt> list holds the resolutions of each branch of the
+   * writer against the corresponding branch of the reader (which will
+   * result in no material resolution work, because the branches will
+   * be equivalent).  If they reader is not a union or is a different
+   * union, then <tt>unionEquiv</tt> is false and the <tt>actions</tt>
+   * list holds the resolution of each of the writer's branches
+   * against the entire schema of the reader (if the reader is a
+   * union, that will result in ReaderUnion actions). */
   public static class WriterUnion extends Action {
     public final Action[] actions;
-    public WriterUnion(Schema w, Schema r, Action[] a) { super(w,r); actions = a; }
+    public final boolean unionEquiv;
+    private WriterUnion(Schema w, Schema r, boolean ue, Action[] a) {
+      super(w, r, Action.Type.WRITER_UNION);
+      unionEquiv = ue;
+      actions = a;
+    }
+
+    public static Action resolve(Schema w, Schema r, Map<SeenPair,Action> seen) {
+      boolean ueqv = unionEquiv(w, r, new HashMap<>());
+      List<Schema> wb = w.getTypes();
+      List<Schema> rb = (ueqv ? r.getTypes() : null);
+      int sz = wb.size();
+      Action[] actions = new Action[sz];
+      for (int i = 0; i < sz; i++)
+        actions[i] = Resolver.resolve(wb.get(i), (ueqv ? rb.get(i) : r), seen);
+      return new WriterUnion(w, r, ueqv, actions);
+    }
   }
 
   /**
@@ -482,7 +518,7 @@ public class Resolver {
     public final Action actualAction;
 
     public ReaderUnion(Schema w, Schema r, int firstMatch, Action actual) {
-      super(w, r);
+      super(w, r, Action.Type.READER_UNION);
       this.firstMatch = firstMatch;
       this.actualAction = actual;
     }
@@ -494,7 +530,7 @@ public class Resolver {
      * @throws RuntimeException if <tt>r</tt> is not a union schema or
      * <tt>w</tt> <em>is</em> a union schema
      */
-    public static Action resolve(Schema w, Schema r, Map<Pair,Action> seen) {
+    public static Action resolve(Schema w, Schema r, Map<SeenPair,Action> seen) {
       if (w.getType() == Schema.Type.UNION)
         throw new IllegalArgumentException("Writer schema is union.");
       int i = firstMatchingBranch(w, r, seen);
@@ -506,7 +542,7 @@ public class Resolver {
     // Note: This code was taken verbatim from the 1.8.x branch of Avro.  It implements
     // a "soft match" algorithm that seems to disagree with the spec.  However, in the
     // interest of "bug-for-bug" compatibility, we imported the old algorithm.
-    private static int firstMatchingBranch(Schema w, Schema r, Map<Pair, Action> seen) {
+    private static int firstMatchingBranch(Schema w, Schema r, Map<SeenPair, Action> seen) {
       Schema.Type vt = w.getType();
       // first scan for exact match
       int j = 0;
@@ -593,7 +629,7 @@ public class Resolver {
     }
   }
 
-  private static boolean unionEquiv(Schema w, Schema r, Map<Pair, Boolean> seen) {
+  private static boolean unionEquiv(Schema w, Schema r, Map<SeenPair, Boolean> seen) {
     Schema.Type wt = w.getType();
     if (wt != r.getType()) return false;
     if ((wt == Schema.Type.RECORD || wt == Schema.Type.FIXED || wt == Schema.Type.ENUM)
@@ -631,7 +667,7 @@ public class Resolver {
     }
 
     case RECORD: {
-      Pair wsc = new Pair(w, r);
+      SeenPair wsc = new SeenPair(w, r);
       if (! seen.containsKey(wsc)) {
         seen.put(wsc, true); // Be optimistic, but we may change our minds
         List<Field> wb = w.getFields();
@@ -648,26 +684,6 @@ public class Resolver {
     }
     default:
       throw new IllegalArgumentException("Unknown schema type: " + w.getType());
-    }
-  }
-
-  private static class Pair {
-    public Schema writer;
-    public Schema reader;
-    Pair(Schema w, Schema r) { writer = w; reader = r; }
-
-    /**
-     * Two Pairs are equal if and only if their underlying schema is
-     * the same (not merely equal).
-     */
-    public boolean equals(Object o) {
-      if (! (o instanceof Pair)) return false;
-      Pair p = (Pair)o;
-      return writer == p.writer && reader == p.reader;
-    }
-
-    public int hashCode() {
-      return writer.hashCode() + reader.hashCode();
     }
   }
 }
