@@ -51,20 +51,27 @@ public class Resolver {
    * symbols, while {@link RecordAdjust} has information about
    * re-ordering and deletion of record fields.
    *
+   * Note that aliases are applied to the writer's schema before
+   * resolution actually takes place.  This means that the
+   * <tt>writer</tt> field of the resulting {@link Action} objects
+   * will not be the same schema as provided to this method.  However,
+   * the <tt>reader</tt> field will be.
+   *
    * @param writer    The schema used by the writer
    * @param reader    The schema used by the reader
    * @param data      Used for <tt>getDefaultValue</tt> and getting conversions
    * @return          Nested actions for resolving the two
    */
   public static Action resolve(Schema writer, Schema reader, GenericData data) {
-      return resolve(writer, reader, data, new HashMap<>());
+    return resolve(Schema.applyAliases(writer, reader),
+                   reader, data, new HashMap<>());
   }
 
   /**
    * Uses <tt>GenericData.get()</tt> for the <tt>data</tt> param.
    */
   public static Action resolve(Schema writer, Schema reader) {
-    return resolve(writer, reader, GenericData.get(), new HashMap<>());
+    return resolve(writer, reader, GenericData.get());
   }
 
   private static Action resolve(Schema w, Schema r, GenericData d,
