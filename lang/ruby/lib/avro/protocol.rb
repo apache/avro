@@ -69,7 +69,6 @@ module Avro
 
     private
     def parse_types(types, type_names)
-      type_objects = []
       types.collect do |type|
         # FIXME adding type.name to type_names is not defined in the
         # spec. Possible bug in the python impl and the spec.

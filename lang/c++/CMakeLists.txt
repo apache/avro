@@ -20,6 +20,8 @@ cmake_minimum_required (VERSION 2.6)
 
 set (CMAKE_LEGACY_CYGWIN_WIN32 0)
 
+cmake_policy (SET CMP0042 NEW)
+
 if (NOT DEFINED CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS)
     set (CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_NO_WARNINGS ON)
 endif()
@@ -60,7 +62,7 @@ endif ()
 
 
 find_package (Boost 1.38 REQUIRED
-    COMPONENTS filesystem system program_options iostreams)
+    COMPONENTS filesystem iostreams program_options regex system)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
@@ -78,7 +80,7 @@ add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
 set (AVRO_SOURCE_FILES
-        impl/Compiler.cc impl/Node.cc
+        impl/Compiler.cc impl/Node.cc impl/LogicalType.cc
         impl/NodeImpl.cc impl/ResolverSchema.cc impl/Schema.cc
         impl/Types.cc impl/ValidSchema.cc impl/Zigzag.cc
         impl/BinaryEncoder.cc impl/BinaryDecoder.cc

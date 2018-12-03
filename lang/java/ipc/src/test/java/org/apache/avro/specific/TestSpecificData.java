@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,15 +30,14 @@ import java.io.ObjectOutputStream;
 
 import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.TypeEnum;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.Assert;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.util.Utf8;
 
 import org.apache.avro.TestSchema;
 import org.apache.avro.test.TestRecord;
@@ -77,7 +76,7 @@ public class TestSpecificData {
   public void testSpecificWithinGeneric() throws Exception {
     // define a record with a field that's a generated TestRecord
     Schema schema = Schema.createRecord("Foo", "", "x.y.z", false);
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("f", TestRecord.SCHEMA$, "", null));
     schema.setFields(fields);
 
@@ -91,16 +90,16 @@ public class TestSpecificData {
 
     // test that this instance can be written & re-read
     TestSchema.checkBinary(schema, record,
-                           new SpecificDatumWriter<Object>(),
-                           new SpecificDatumReader<Object>());
+        new SpecificDatumWriter<>(),
+        new SpecificDatumReader<>());
 
     TestSchema.checkDirectBinary(schema, record,
-        new SpecificDatumWriter<Object>(),
-        new SpecificDatumReader<Object>());
+        new SpecificDatumWriter<>(),
+        new SpecificDatumReader<>());
 
     TestSchema.checkBlockingBinary(schema, record,
-        new SpecificDatumWriter<Object>(),
-        new SpecificDatumReader<Object>());
+        new SpecificDatumWriter<>(),
+        new SpecificDatumReader<>());
 }
 
   @Test public void testConvertGenericToSpecific() {
@@ -149,7 +148,7 @@ public class TestSpecificData {
     out.close();
 
     ObjectInputStream in =
-      new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+        new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
     TestRecord after = (TestRecord)in.readObject();
 
     Assert.assertEquals(before, after);

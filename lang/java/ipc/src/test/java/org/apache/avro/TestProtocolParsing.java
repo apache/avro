@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -54,7 +54,7 @@ public class TestProtocolParsing {
   @Test
   public void oneWay() throws Exception {
     Message m;
-    // permit one-way messages w/ null resposne
+    // permit one-way messages w/ null response
     m = parseMessage("\"ack\": {"
                      +"\"request\": [],"
                      +"\"response\": \"null\","

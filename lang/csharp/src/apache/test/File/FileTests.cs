@@ -319,7 +319,7 @@ namespace Avro.Test.File
         }
 
         /// <summary>
-        /// Partial reading of file / stream from 
+        /// Partial reading of file / stream from
         /// position in stream
         /// </summary>
         /// <param name="schemaStr"></param>
@@ -366,7 +366,7 @@ namespace Avro.Test.File
                 // move to next block from position
                 reader.Sync(position);
 
-                // read records from synced position 
+                // read records from synced position
                 foreach (Foo rec in reader.NextEntries)
                     readRecords.Add(rec);
             }
@@ -455,7 +455,7 @@ namespace Avro.Test.File
             reader.Sync( position );
 
             int readRecords = 0;
-            // read records from synced position 
+            // read records from synced position
             foreach( Foo rec in reader.NextEntries )
             {
                 readRecords++;
@@ -464,7 +464,7 @@ namespace Avro.Test.File
         }
 
         /// <summary>
-        /// Reading all sync positions and 
+        /// Reading all sync positions and
         /// verifying them with subsequent seek
         /// positions
         /// </summary>
@@ -499,7 +499,7 @@ namespace Avro.Test.File
 
             MemoryStream dataFileInputStream = new MemoryStream(dataFileOutputStream.ToArray());
 
-            // read syncs 
+            // read syncs
             IList<long> syncs = new List<long>();
             using (IFileReader<Foo> reader = DataFileReader<Foo>.OpenReader(dataFileInputStream))
             {
@@ -507,7 +507,7 @@ namespace Avro.Test.File
 
                 foreach (Foo foo in reader.NextEntries)
                 {
-                    if (reader.PreviousSync() != previousSync 
+                    if (reader.PreviousSync() != previousSync
                      && reader.Tell() != reader.PreviousSync()) // EOF
                     {
                         previousSync = reader.PreviousSync();
@@ -520,7 +520,7 @@ namespace Avro.Test.File
                 Assert.AreEqual(reader.PreviousSync(), syncs[0],
                               string.Format("Error syncing reader to position: {0}", syncs[0]));
 
-                foreach (long sync in syncs) // the rest 
+                foreach (long sync in syncs) // the rest
                 {
                     reader.Seek(sync);
                     Foo foo = reader.Next();
@@ -567,7 +567,7 @@ namespace Avro.Test.File
             {
                 readFoos.Add(foo);
             }
-            return (readFoos.Count > 0 && 
+            return (readFoos.Count > 0 &&
                 CheckPrimitiveEquals(value, readFoos[0]));
         }
 
@@ -630,9 +630,9 @@ namespace Avro.Test.File
             return records;
         }
 
-        private bool ValidateMetaData<T>(IFileReader<T> reader, 
-                                         string key, 
-                                         object expected, 
+        private bool ValidateMetaData<T>(IFileReader<T> reader,
+                                         string key,
+                                         object expected,
                                          bool useTypeGetter)
         {
             byte[] valueBytes = reader.GetMeta(key);
@@ -643,7 +643,7 @@ namespace Avro.Test.File
                 expectedBytes = (byte[])expected;
                 return Enumerable.SequenceEqual(expectedBytes, valueBytes);
             }
-            else if (expected is long)  
+            else if (expected is long)
             {
                 if (useTypeGetter)
                     return ((long)expected == reader.GetMetaLong(key));
@@ -689,7 +689,7 @@ namespace Avro.Test.File
             yield return new ReaderWriterPair<T>
                              {
                                  CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema),
-                                 CreateWriter = (stream, schema, codec) => 
+                                 CreateWriter = (stream, schema, codec) =>
                                      DataFileWriter<T>.OpenWriter(new SpecificWriter<T>(schema), stream, codec )
                              };
 
@@ -697,7 +697,7 @@ namespace Avro.Test.File
                              {
                                  CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema,
                                      (ws, rs) => new SpecificDatumReader<T>(ws, rs)),
-                                 CreateWriter = (stream, schema, codec) => 
+                                 CreateWriter = (stream, schema, codec) =>
                                      DataFileWriter<T>.OpenWriter(new SpecificDatumWriter<T>(schema), stream, codec )
                              };
         }
@@ -707,7 +707,7 @@ namespace Avro.Test.File
             yield return new ReaderWriterPair<T>
                              {
                                  CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema),
-                                 CreateWriter = (stream, schema, codec) => 
+                                 CreateWriter = (stream, schema, codec) =>
                                      DataFileWriter<T>.OpenWriter(new GenericWriter<T>(schema), stream, codec )
                              };
 
@@ -715,7 +715,7 @@ namespace Avro.Test.File
                              {
                                  CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema,
                                      (ws, rs) => new GenericDatumReader<T>(ws, rs)),
-                                 CreateWriter = (stream, schema, codec) => 
+                                 CreateWriter = (stream, schema, codec) =>
                                      DataFileWriter<T>.OpenWriter(new GenericDatumWriter<T>(schema), stream, codec )
                              };
         }
@@ -741,7 +741,7 @@ namespace Avro.Test.File
         {
             get
             {
-                return Schema.Parse("{\"type\":\"record\",\"name\":\"Foo\",\"namespace\":\"Avro.Test.File\"," + 
+                return Schema.Parse("{\"type\":\"record\",\"name\":\"Foo\",\"namespace\":\"Avro.Test.File\"," +
                                     "\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]}");
             }
         }

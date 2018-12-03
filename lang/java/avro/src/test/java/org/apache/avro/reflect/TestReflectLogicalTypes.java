@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -25,12 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import org.apache.avro.Conversion;
-import org.apache.avro.Conversions;
-import org.apache.avro.LogicalType;
-import org.apache.avro.LogicalTypes;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
+
+import org.apache.avro.*;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
@@ -40,11 +36,7 @@ import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificData;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
 /**
@@ -120,7 +112,7 @@ public class TestReflectLogicalTypes {
   public void testDecimalBytes() throws IOException {
     Schema schema = REFLECT.getSchema(DecimalRecordBytes.class);
     Assert.assertEquals("Should have the correct record name",
-        "org.apache.avro.reflect.TestReflectLogicalTypes$",
+        "org.apache.avro.reflect.TestReflectLogicalTypes",
         schema.getNamespace());
     Assert.assertEquals("Should have the correct record name",
         "DecimalRecordBytes",
@@ -179,7 +171,7 @@ public class TestReflectLogicalTypes {
   public void testDecimalFixed() throws IOException {
     Schema schema = REFLECT.getSchema(DecimalRecordFixed.class);
     Assert.assertEquals("Should have the correct record name",
-        "org.apache.avro.reflect.TestReflectLogicalTypes$",
+        "org.apache.avro.reflect.TestReflectLogicalTypes",
         schema.getNamespace());
     Assert.assertEquals("Should have the correct record name",
         "DecimalRecordFixed",
@@ -242,7 +234,7 @@ public class TestReflectLogicalTypes {
     }
 
     public static <X, Y> Pair<X, Y> of(X first, Y second) {
-      return new Pair<X, Y>(first, second);
+      return new Pair<>(first, second);
     }
   }
 
@@ -298,7 +290,7 @@ public class TestReflectLogicalTypes {
 
     Schema schema = model.getSchema(PairRecord.class);
     Assert.assertEquals("Should have the correct record name",
-        "org.apache.avro.reflect.TestReflectLogicalTypes$",
+        "org.apache.avro.reflect.TestReflectLogicalTypes",
         schema.getNamespace());
     Assert.assertEquals("Should have the correct record name",
         "PairRecord",
@@ -309,7 +301,7 @@ public class TestReflectLogicalTypes {
 
     PairRecord record = new PairRecord();
     record.pair = Pair.of(34L, 35L);
-    List<PairRecord> expected = new ArrayList<PairRecord>();
+    List<PairRecord> expected = new ArrayList<>();
     expected.add(record);
 
     File test = write(model, schema, record);
@@ -627,7 +619,7 @@ public class TestReflectLogicalTypes {
     UUID u2 = UUID.randomUUID();
 
     GenericRecord expected = new GenericData.Record(stringArraySchema);
-    List<String> uuids = new ArrayList<String>();
+    List<String> uuids = new ArrayList<>();
     uuids.add(u1.toString());
     uuids.add(u2.toString());
     expected.put("uuids", uuids);
@@ -703,11 +695,11 @@ public class TestReflectLogicalTypes {
   }
 
   private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
-    List<D> data = new ArrayList<D>();
+    List<D> data = new ArrayList<>();
     FileReader<D> fileReader = null;
 
     try {
-      fileReader = new DataFileReader<D>(file, reader);
+      fileReader = new DataFileReader<>(file, reader);
       for (D datum : fileReader) {
         data.add(datum);
       }
@@ -728,7 +720,7 @@ public class TestReflectLogicalTypes {
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = model.createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<D>(writer);
+    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
     try {
       fileWriter.create(schema, file);

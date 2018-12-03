@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -37,7 +37,7 @@ import org.apache.avro.util.Utf8;
  * clients handle fields that appear to be coming out of order, this class
  * defines the method {@link #readFieldOrder}.
  *
- * <p>See the <a href="doc-files/parsing.html">parser documentation</a> for
+ * <p>See the <a href="parsing/doc-files/parsing.html">parser documentation</a> for
  *  information on how this works.
  */
 public class ResolvingDecoder extends ValidatingDecoder {
@@ -71,7 +71,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    *
    * @param writer  The writer's schema. Cannot be null.
    * @param reader  The reader's schema. Cannot be null.
-   * @return  The opaque reolver.
+   * @return  The opaque resolver.
    * @throws IOException
    */
   public static Object resolve(Schema writer, Schema reader)
@@ -116,9 +116,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * the above loop will always be correct.
    *
    * Throws a runtime exception if we're not just about to read the
-   * field of a record.  Also, this method will consume the field
-   * information, and thus may only be called <em>once</em> before
-   * reading the field value.  (However, if the client knows the
+   * first field of a record.  (If the client knows the
    * order of incoming fields, then the client does <em>not</em>
    * need to call this method but rather can just start reading the
    * field values.)
@@ -129,6 +127,19 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public final Schema.Field[] readFieldOrder() throws IOException {
     return ((Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION)).
       fields;
+  }
+
+  /**
+   * Same as {@link readFieldOrder} except that it returns
+   * <tt>null</tt> if there was no reordering of fields, i.e., if the
+   * correct thing for the reader to do is to read (all) of its fields
+   * in the order specified by its own schema (useful for
+   * optimizations).
+   */
+  public final Schema.Field[] readFieldOrderIfDiff() throws IOException {
+    Symbol.FieldOrderAction top
+      = (Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION);
+    return (top.noReorder ? null : top.fields);
   }
 
   /**
@@ -254,6 +265,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     parser.advance(Symbol.ENUM);
     Symbol.EnumAdjustAction top = (Symbol.EnumAdjustAction) parser.popSymbol();
     int n = in.readEnum();
+    if (top.noAdjustments) return n;
     Object o = top.adjustments[n];
     if (o instanceof Integer) {
       return ((Integer) o).intValue();
@@ -265,9 +277,17 @@ public class ResolvingDecoder extends ValidatingDecoder {
   @Override
   public int readIndex() throws IOException {
     parser.advance(Symbol.UNION);
-    Symbol.UnionAdjustAction top = (Symbol.UnionAdjustAction) parser.popSymbol();
-    parser.pushSymbol(top.symToParse);
-    return top.rindex;
+    Symbol top = parser.popSymbol();
+    int result;
+    if (top instanceof Symbol.UnionAdjustAction) {
+      result = ((Symbol.UnionAdjustAction) top).rindex;
+      top = ((Symbol.UnionAdjustAction) top).symToParse;
+    } else {
+      result = in.readIndex();
+      top = ((Symbol.Alternative) top).getSymbol(result);
+    }
+    parser.pushSymbol(top);
+    return result;
   }
 
   @Override

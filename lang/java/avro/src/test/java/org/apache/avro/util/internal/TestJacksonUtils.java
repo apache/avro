@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,25 +17,18 @@
  */
 package org.apache.avro.util.internal;
 
-import java.util.Collections;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.BooleanNode;
-import org.codehaus.jackson.node.DoubleNode;
-import org.codehaus.jackson.node.IntNode;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.LongNode;
-import org.codehaus.jackson.node.NullNode;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.node.TextNode;
-import org.junit.Test;
-
 import static org.apache.avro.util.internal.JacksonUtils.toJsonNode;
 import static org.apache.avro.util.internal.JacksonUtils.toObject;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+
+import java.util.Collections;
+
+import com.fasterxml.jackson.databind.node.*;
+import org.apache.avro.JsonProperties;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.junit.Test;
 
 public class TestJacksonUtils {
 
@@ -50,7 +43,7 @@ public class TestJacksonUtils {
     assertEquals(BooleanNode.TRUE, toJsonNode(true));
     assertEquals(IntNode.valueOf(1), toJsonNode(1));
     assertEquals(LongNode.valueOf(2), toJsonNode(2L));
-    assertEquals(DoubleNode.valueOf(1.0), toJsonNode(1.0f));
+    assertEquals(FloatNode.valueOf(1.0f), toJsonNode(1.0f));
     assertEquals(DoubleNode.valueOf(2.0), toJsonNode(2.0));
     assertEquals(TextNode.valueOf("\u0001\u0002"), toJsonNode(new byte[] { 1, 2 }));
     assertEquals(TextNode.valueOf("a"), toJsonNode("a"));

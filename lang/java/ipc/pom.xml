@@ -40,7 +40,7 @@
       org.apache.avro*;version="${project.version}",
       org.jboss.netty*,
       javax.servlet*;resolution:=optional,
-      org.mortbay*;resolution:=optional,
+      org.eclipse*;resolution:=optional,
       org.apache.velocity*;resolution:=optional,
       *
     </osgi.import>
@@ -73,6 +73,8 @@
                 <exclude>org/apache/avro/data/Json.avsc</exclude>
               </excludes>
               <stringType>String</stringType>
+              <createOptionalGetters>true</createOptionalGetters>
+              <!--<gettersReturnOptional>true</gettersReturnOptional>-->
               <sourceDirectory>${parent.project.basedir}/../../../../share/schemas/</sourceDirectory>
               <outputDirectory>${project.build.directory}/generated-sources/java</outputDirectory>
               <testSourceDirectory>${parent.project.basedir}/../../../../share/test/schemas/</testSourceDirectory>
@@ -81,6 +83,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -115,23 +118,20 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>${jackson.version}</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>${jackson.version}</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty</artifactId>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty-util</artifactId>
-      <version>${jetty.version}</version>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
@@ -139,15 +139,9 @@
     </dependency>
     <dependency>
       <groupId>org.apache.velocity</groupId>
-      <artifactId>velocity</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>${jetty-servlet-api.version}</version>
+      <artifactId>velocity-engine-core</artifactId>
     </dependency>
 
   </dependencies>
 
 </project>
-

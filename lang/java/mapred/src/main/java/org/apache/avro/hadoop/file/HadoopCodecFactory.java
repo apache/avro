@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -39,7 +39,7 @@ import org.apache.avro.file.CodecFactory;
 public class HadoopCodecFactory {
 
   private static final Map<String, String> HADOOP_AVRO_NAME_MAP =
-      new HashMap<String, String>();
+      new HashMap<>();
 
   static {
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.DeflateCodec", "deflate");

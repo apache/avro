@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -65,7 +65,7 @@ public class SchemaMojo extends AbstractAvroMojo {
 
     // This is necessary to maintain backward-compatibility. If there are
     // no imported files then isolate the schemas from each other, otherwise
-    // allow them to share a single schema so resuse and sharing of schema
+    // allow them to share a single schema so reuse and sharing of schema
     // is possible.
     if (imports == null) {
       schema = new Schema.Parser().parse(src);
@@ -73,10 +73,12 @@ public class SchemaMojo extends AbstractAvroMojo {
       schema = schemaParser.parse(src);
     }
 
-    SpecificCompiler compiler = new SpecificCompiler(schema);
+    SpecificCompiler compiler = new SpecificCompiler(schema, getDateTimeLogicalTypeImplementation());
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setCreateOptionalGetters(createOptionalGetters);
+    compiler.setGettersReturnOptional(gettersReturnOptional);
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));

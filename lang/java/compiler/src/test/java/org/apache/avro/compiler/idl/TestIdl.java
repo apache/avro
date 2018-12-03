@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -34,8 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.avro.Protocol;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -72,7 +72,7 @@ public class TestIdl {
     assertTrue(TEST_INPUT_DIR.exists());
     assertTrue(TEST_OUTPUT_DIR.exists());
 
-    tests = new ArrayList<GenTest>();
+    tests = new ArrayList<>();
     for (File inF : TEST_INPUT_DIR.listFiles()) {
       if (!inF.getName().endsWith(".avdl")) continue;
       if (inF.getName().startsWith(".")) continue;
@@ -117,7 +117,7 @@ public class TestIdl {
 
 
   /**
-   * An invididual comparison test
+   * An individual comparison test
    */
   private static class GenTest {
     private final File in, expectedOut;
@@ -152,7 +152,7 @@ public class TestIdl {
     public void run() throws Exception {
       String output = generate();
       String slurped = slurp(expectedOut);
-      assertEquals(slurped.trim(), output.replace("\r", "").trim());
+      assertEquals(slurped.trim(), output.replace("\\r", "").trim());
     }
 
     public void write() throws Exception {

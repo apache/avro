@@ -38,6 +38,7 @@ A schema may be one of:
  - Null.
 """
 
+from types import MappingProxyType
 
 import abc
 import collections
@@ -45,7 +46,7 @@ import json
 import logging
 import re
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------
 # Constants
@@ -149,49 +150,13 @@ class SchemaParseException(AvroException):
   """Error while parsing a JSON schema descriptor."""
   pass
 
-
 # ------------------------------------------------------------------------------
-
-
-class ImmutableDict(dict):
-  """Dictionary guaranteed immutable.
-
-  All mutations raise an exception.
-  Behaves exactly as a dict otherwise.
-  """
-
-  def __init__(self, items=None, **kwargs):
-    if items is not None:
-      super(ImmutableDict, self).__init__(items)
-      assert (len(kwargs) == 0)
-    else:
-      super(ImmutableDict, self).__init__(**kwargs)
-
-  def __setitem__(self, key, value):
-    raise Exception(
-        'Attempting to map key %r to value %r in ImmutableDict %r'
-        % (key, value, self))
-
-  def __delitem__(self, key):
-    raise Exception(
-        'Attempting to remove mapping for key %r in ImmutableDict %r'
-        % (key, self))
-
-  def clear(self):
-    raise Exception('Attempting to clear ImmutableDict %r' % self)
-
-  def update(self, items=None, **kwargs):
-    raise Exception(
-        'Attempting to update ImmutableDict %r with items=%r, kwargs=%r'
-        % (self, args, kwargs))
-
-  def pop(self, key, default=None):
-    raise Exception(
-        'Attempting to pop key %r from ImmutableDict %r' % (key, self))
-
-  def popitem(self):
-    raise Exception('Attempting to pop item from ImmutableDict %r' % self)
-
+# Utilities
+class MappingProxyEncoder(json.JSONEncoder):
+  def default(self, obj):
+    if isinstance(obj, MappingProxyType):
+      return obj.copy()
+    return json.JSONEncoder.default(self, obj)
 
 # ------------------------------------------------------------------------------
 
@@ -219,18 +184,6 @@ class Schema(object, metaclass=abc.ABCMeta):
       self._props.update(other_props)
 
   @property
-  def name(self):
-    """Returns: the simple name of this schema."""
-    return self._props['name']
-
-  @property
-  def fullname(self):
-    """Returns: the fully qualified name of this schema."""
-    # By default, the full name is the simple name.
-    # Named schemas override this behavior to include the namespace.
-    return self.name
-
-  @property
   def namespace(self):
     """Returns: the namespace this schema belongs to, if any, or None."""
     return self._props.get('namespace', None)
@@ -255,7 +208,7 @@ class Schema(object, metaclass=abc.ABCMeta):
     Returns:
       A read-only dictionary of properties associated to this schema.
     """
-    return ImmutableDict(self._props)
+    return MappingProxyType(self._props)
 
   @property
   def other_props(self):
@@ -264,7 +217,7 @@ class Schema(object, metaclass=abc.ABCMeta):
 
   def __str__(self):
     """Returns: the JSON representation of this schema."""
-    return json.dumps(self.to_json())
+    return json.dumps(self.to_json(), cls=MappingProxyEncoder)
 
   @abc.abstractmethod
   def to_json(self, names):
@@ -620,7 +573,7 @@ class Field(object):
     return FilterKeysOut(items=self._props, keys=FIELD_RESERVED_PROPS)
 
   def __str__(self):
-    return json.dumps(self.to_json())
+    return json.dumps(self.to_json(), cls=MappingProxyEncoder)
 
   def to_json(self, names=None):
     if names is None:
@@ -659,6 +612,12 @@ class PrimitiveSchema(Schema):
     """Returns: the simple name of this schema."""
     # The name of a primitive type is the type itself.
     return self.type
+
+  @property
+  def fullname(self):
+    """Returns: the fully qualified name of this schema."""
+    # The full name is the simple name for primitive schema.
+    return self.name
 
   def to_json(self, names=None):
     if len(self.props) == 1:
@@ -1003,7 +962,7 @@ class RecordSchema(NamedSchema):
         raise SchemaParseException(
             'Duplicate field name %r in list %r.' % (field.name, field_desc_list))
       field_map[field.name] = field
-    return ImmutableDict(field_map)
+    return MappingProxyType(field_map)
 
   def __init__(
       self,

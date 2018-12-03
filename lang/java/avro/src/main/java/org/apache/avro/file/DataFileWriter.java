@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -58,7 +58,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   private BufferedFileOutputStream out;
   private BinaryEncoder vout;
 
-  private final Map<String,byte[]> meta = new HashMap<String,byte[]>();
+  private final Map<String,byte[]> meta = new HashMap<>();
 
   private long blockCount;                       // # entries in current block
 
@@ -211,7 +211,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     throws IOException {
     assertNotOpen();
     DataFileReader<D> reader =
-      new DataFileReader<D>(in, new GenericDatumReader<D>());
+      new DataFileReader<>(in, new GenericDatumReader<>());
     this.schema = reader.getSchema();
     this.sync = reader.getHeader().sync;
     this.meta.putAll(reader.getHeader().meta);
@@ -395,14 +395,17 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   private void writeBlock() throws IOException {
     if (blockCount > 0) {
-      bufOut.flush();
-      ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
-      DataBlock block = new DataBlock(uncompressed, blockCount);
-      block.setFlushOnWrite(flushOnEveryBlock);
-      block.compressUsing(codec);
-      block.writeBlockTo(vout, sync);
-      buffer.reset();
-      blockCount = 0;
+      try {
+        bufOut.flush();
+        ByteBuffer uncompressed = buffer.getByteArrayAsByteBuffer();
+        DataBlock block = new DataBlock(uncompressed, blockCount);
+        block.setFlushOnWrite(flushOnEveryBlock);
+        block.compressUsing(codec);
+        block.writeBlockTo(vout, sync);
+      } finally {
+        buffer.reset();
+        blockCount = 0;
+      }
     }
   }
 
@@ -474,6 +477,17 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     }
 
     public long tell() { return position+count; }
+
+    @Override
+    public synchronized void flush() throws IOException {
+      try {
+        super.flush();
+      } finally {
+        // Ensure that count is reset in any case to avoid writing garbage to the end of the file in case of an error
+        // occurred during the write
+        count = 0;
+      }
+    }
   }
 
   private static class NonCopyingByteArrayOutputStream extends ByteArrayOutputStream {

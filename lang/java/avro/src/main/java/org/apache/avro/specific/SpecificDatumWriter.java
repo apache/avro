@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -69,6 +69,19 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
       datum = datum.toString();                   // convert to string
     }
     writeString(datum, out);
+  }
+
+  @Override
+  protected void writeRecord(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    if (datum instanceof SpecificRecordBase && this.getSpecificData().useCustomCoders()) {
+      SpecificRecordBase d = (SpecificRecordBase) datum;
+      if (d.hasCustomCoders()) {
+        d.customEncode(out);
+        return;
+      }
+    }
+    super.writeRecord(schema, datum, out);
   }
 
   @Override

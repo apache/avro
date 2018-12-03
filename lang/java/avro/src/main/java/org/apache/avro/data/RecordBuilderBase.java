@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -85,7 +85,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     if (isValidValue(field, value)) {
       return;
     }
-    else if (field.defaultValue() != null) {
+    else if (field.defaultVal() != null) {
       return;
     }
     else {

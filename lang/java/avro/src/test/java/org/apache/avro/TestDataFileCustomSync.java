@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,30 +17,26 @@
  */
 package org.apache.avro;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.UUID;
+
 import org.apache.avro.Schema.Type;
-import org.apache.avro.file.DataFileConstants;
-import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 public class TestDataFileCustomSync {
   private byte[] createDataFile(byte[] sync) throws IOException {
     Schema schema = Schema.create(Type.STRING);
-    DataFileWriter<Utf8> w = new DataFileWriter<Utf8>(new GenericDatumWriter<Utf8>(schema));
+    DataFileWriter<Utf8> w = new DataFileWriter<>(new GenericDatumWriter<>(schema));
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     w.create(schema, baos, sync);
     w.append(new Utf8("apple"));

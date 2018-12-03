@@ -54,7 +54,6 @@ const string AVRO_SNAPPY_CODEC = "snappy";
 
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
-const size_t defaultSyncInterval = 64 * 1024;
 
 boost::iostreams::zlib_params get_zlib_params() {
   boost::iostreams::zlib_params ret;
@@ -64,27 +63,41 @@ boost::iostreams::zlib_params get_zlib_params() {
 }
 }
 
-
-static string toString(const ValidSchema& schema)
-{
-    ostringstream oss;
-    schema.toJson(oss);
-    return oss.str();
-}
-
-DataFileWriterBase::DataFileWriterBase(const char* filename,
-    const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(filename), schema_(schema), encoderPtr_(binaryEncoder()),
+DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& schema, size_t syncInterval,
+                                       Codec codec) :
+    filename_(filename),
+    schema_(schema),
+    encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
     codec_(codec),
     stream_(fileOutputStream(filename)),
     buffer_(memoryOutputStream()),
-    sync_(makeSync()), objectCount_(0)
+    sync_(makeSync()),
+    objectCount_(0)
 {
+    init(schema, syncInterval, codec);
+}
+
+DataFileWriterBase::DataFileWriterBase(std::auto_ptr<OutputStream> outputStream,
+    const ValidSchema& schema, size_t syncInterval, Codec codec) :
+    filename_(NULL),
+    schema_(schema),
+    encoderPtr_(binaryEncoder()),
+    syncInterval_(syncInterval),
+    codec_(codec),
+    stream_(outputStream),
+    buffer_(memoryOutputStream()),
+    sync_(makeSync()),
+    objectCount_(0)
+{
+    init(schema, syncInterval, codec);
+}
+
+void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, const Codec &codec) {
     if (syncInterval < minSyncInterval || syncInterval > maxSyncInterval) {
         throw Exception(boost::format("Invalid sync interval: %1%. "
             "Should be between %2% and %3%") % syncInterval %
-            minSyncInterval % maxSyncInterval);
+                        minSyncInterval % maxSyncInterval);
     }
     setMetadata(AVRO_CODEC_KEY, AVRO_NULL_CODEC);
 
@@ -99,11 +112,12 @@ DataFileWriterBase::DataFileWriterBase(const char* filename,
     } else {
       throw Exception(boost::format("Unknown codec: %1%") % codec);
     }
-    setMetadata(AVRO_SCHEMA_KEY, toString(schema));
+    setMetadata(AVRO_SCHEMA_KEY, schema.toJson(false));
 
     writeHeader();
     encoderPtr_->init(*buffer_);
 }
+
 
 DataFileWriterBase::~DataFileWriterBase()
 {
@@ -249,7 +263,15 @@ void DataFileWriterBase::setMetadata(const string& key, const string& value)
 }
 
 DataFileReaderBase::DataFileReaderBase(const char* filename) :
-    filename_(filename), stream_(fileInputStream(filename)),
+    filename_(filename), stream_(fileSeekableInputStream(filename)),
+    decoder_(binaryDecoder()), objectCount_(0), eof_(false), blockStart_(-1),
+    blockEnd_(-1)
+{
+    readHeader();
+}
+
+DataFileReaderBase::DataFileReaderBase(std::auto_ptr<InputStream> inputStream) :
+    filename_(NULL), stream_(inputStream),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
@@ -265,7 +287,7 @@ void DataFileReaderBase::init()
 void DataFileReaderBase::init(const ValidSchema& readerSchema)
 {
     readerSchema_ = readerSchema;
-    dataDecoder_  = (toString(readerSchema_) != toString(dataSchema_)) ?
+    dataDecoder_  = (readerSchema_.toJson(true) != dataSchema_.toJson(true)) ?
         resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) :
         binaryDecoder();
     readDataBlock();
@@ -295,7 +317,7 @@ std::ostream& operator << (std::ostream& os, const DataFileSync& s)
 
 bool DataFileReaderBase::hasMore()
 {
-     if (eof_) {
+    if (eof_) {
         return false;
     } else if (objectCount_ != 0) {
         return true;
@@ -358,6 +380,7 @@ auto_ptr<InputStream> boundedInputStream(InputStream& in, size_t limit)
 bool DataFileReaderBase::readDataBlock()
 {
     decoder_->init(*stream_);
+    blockStart_ = stream_->byteCount();
     const uint8_t* p = 0;
     size_t n = 0;
     if (! stream_->next(&p, &n)) {
@@ -369,7 +392,8 @@ bool DataFileReaderBase::readDataBlock()
     int64_t byteCount;
     avro::decode(*decoder_, byteCount);
     decoder_->init(*stream_);
-
+    blockEnd_ = stream_->byteCount() + byteCount;
+    
     auto_ptr<InputStream> st = boundedInputStream(*stream_, static_cast<size_t>(byteCount));
     if (codec_ == NULL_CODEC) {
         dataDecoder_->init(*st);
@@ -489,6 +513,75 @@ void DataFileReaderBase::readHeader()
     }
 
     avro::decode(*decoder_, sync_);
+    decoder_->init(*stream_);
+    blockStart_ = stream_->byteCount();
+}
+
+void DataFileReaderBase::doSeek(int64_t position) {
+    if (SeekableInputStream *ss = dynamic_cast<SeekableInputStream *>(stream_.get())) {
+        if (!eof_) {
+            dataDecoder_->init(*dataStream_);
+            drain(*dataStream_);
+        }
+        decoder_->init(*stream_);
+        ss->seek(position);
+        eof_ = false;
+    } else {
+        throw Exception("seek not supported on non-SeekableInputStream");
+    }
+}
+
+void DataFileReaderBase::seek(int64_t position) {
+    doSeek(position);
+    readDataBlock();
+}
+
+void DataFileReaderBase::sync(int64_t position) {
+    doSeek(position);
+    DataFileSync sync_buffer;
+    const uint8_t *p = 0;
+    size_t n = 0;
+    int i = 0;
+    while (i < DataFileSync::static_size) {
+        if (n == 0 && !stream_->next(&p, &n)) {
+            eof_ = true;
+            return;
+        }
+        int len =
+            std::min(static_cast<size_t>(DataFileSync::static_size - i), n);
+        memcpy(&sync_buffer[i], p, len);
+        p += len;
+        n -= len;
+        i += len;
+    }
+    for (;;) {
+        int j = 0;
+        for (; j < DataFileSync::static_size; ++j) {
+            if (sync_[j] != sync_buffer[(i + j) % DataFileSync::static_size]) {
+                break;
+            }
+        }
+        if (j == DataFileSync::static_size) {
+            // Found the sync marker!
+            break;
+        }
+        if (n == 0 && !stream_->next(&p, &n)) {
+            eof_ = true;
+            return;
+        }
+        sync_buffer[i++ % DataFileSync::static_size] = *p++;
+        --n;
+    }
+    stream_->backup(n);
+    readDataBlock();
+}
+
+bool DataFileReaderBase::pastSync(int64_t position) {
+  return !hasMore() || blockStart_ >= position + DataFileSync::static_size;
+}
+
+int64_t DataFileReaderBase::previousSync() {
+  return blockStart_;
 }
 
 }   // namespace avro

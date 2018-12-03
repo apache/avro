@@ -259,7 +259,7 @@ namespace Avro.Generic
             foreach (Field rf in rs)
             {
                 if (writerSchema.Contains(rf.Name)) continue;
-                
+
                 defaultStream.Position = 0; // reset for writing
                 Resolver.EncodeDefaultValue(defaultEncoder, rf.Schema, rf.DefaultValue);
                 defaultStream.Flush();

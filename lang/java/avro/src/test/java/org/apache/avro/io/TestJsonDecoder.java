@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,12 +18,10 @@
 package org.apache.avro.io;
 
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Parser;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericDatumReader;
-
-import org.junit.Test;
+import org.apache.avro.generic.GenericRecord;
 import org.junit.Assert;
+import org.junit.Test;
 
 public class TestJsonDecoder {
 
@@ -49,7 +47,7 @@ public class TestJsonDecoder {
       +"[{\"type\":\""+type+"\",\"name\":\"n\"}]}";
     Schema schema = Schema.parse(def);
     DatumReader<GenericRecord> reader =
-      new GenericDatumReader<GenericRecord>(schema);
+      new GenericDatumReader<>(schema);
 
     String[] records = {"{\"n\":1}", "{\"n\":1.0}"};
 

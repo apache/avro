@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.avro.AvroTypeException;
@@ -137,9 +138,9 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
               type == Schema.Type.ARRAY || type == Schema.Type.MAP);
 
       assert 0 <= items;
-      assert 0 != items || start == pos;         // 0==itms ==> start==pos
-      assert 1 < items || start == lastFullItem; // 1<=itms ==> start==lFI
-      assert items <= 1 || start <= lastFullItem; // 1<itms ==> start<=lFI
+      assert 0 != items || start == pos;         // 0==items ==> start==pos
+      assert 1 < items || start == lastFullItem; // 1<=items ==> start==lFI
+      assert items <= 1 || start <= lastFullItem; // 1<items ==> start<=lFI
       assert lastFullItem <= pos;
 
       switch (state) {
@@ -286,6 +287,19 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
     doWriteBytes(bytes, start, len);
+  }
+
+  @Override
+  public void writeFixed(ByteBuffer bytes) throws IOException {
+    int pos = bytes.position();
+    int len = bytes.remaining();
+    if (bytes.hasArray()) {
+      doWriteBytes(bytes.array(), bytes.arrayOffset() + pos, len);
+    } else {
+      byte[] b = new byte[len];
+      bytes.duplicate().get(b, 0, len);
+      doWriteBytes(b, 0, len);
+    }
   }
 
   @Override

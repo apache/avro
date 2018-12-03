@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +36,6 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import javax.tools.JavaCompiler.CompilationTask;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -51,9 +51,22 @@ import org.apache.avro.test.MD5;
 import org.apache.avro.test.Kind;
 
 import org.apache.avro.compiler.specific.SpecificCompiler.OutputFile;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestName;
 
 public class TestSpecificCompiler {
+
+  @Rule
+  public TestName name = new TestName();
+
+  @Rule
+  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
+
+  @Rule
+  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
+
   static final String PROTOCOL = "" +
         "{ \"protocol\": \"default\",\n" +
         "  \"types\":\n" +
@@ -96,7 +109,7 @@ public class TestSpecificCompiler {
     OutputFile o = outputs.iterator().next();
     assertEquals(o.path, "Test.java");
     assertTrue(o.contents.contains("public enum Test"));
-    assertCompilesWithJavaCompiler(outputs);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
   }
 
   @Test
@@ -107,10 +120,8 @@ public class TestSpecificCompiler {
 
   @Test
   public void testManglingForProtocols() throws IOException {
-    String protocolDef = PROTOCOL;
-    Collection<OutputFile> c =
-      new SpecificCompiler(Protocol.parse(protocolDef)).compile();
-    Iterator<OutputFile> i = c.iterator();
+    Collection<OutputFile> outputs = new SpecificCompiler(Protocol.parse(PROTOCOL)).compile();
+    Iterator<OutputFile> i = outputs.iterator();
     String errType = i.next().contents;
     String protocol = i.next().contents;
 
@@ -121,7 +132,7 @@ public class TestSpecificCompiler {
     assertTrue(protocol.contains("public interface default$"));
     assertTrue(protocol.contains("throws org.apache.avro.AvroRemoteException, finally$"));
 
-    assertCompilesWithJavaCompiler(c);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
 
   }
 
@@ -137,16 +148,15 @@ public class TestSpecificCompiler {
 
   @Test
   public void testManglingForRecords() throws IOException {
-    Collection<OutputFile> c =
-      new SpecificCompiler(Schema.parse(SCHEMA)).compile();
-    assertEquals(1, c.size());
-    String contents = c.iterator().next().contents;
+    Collection<OutputFile> outputs = new SpecificCompiler(Schema.parse(SCHEMA)).compile();
+    assertEquals(1, outputs.size());
+    String contents = outputs.iterator().next().contents;
 
     assertTrue(contents.contains("public java.lang.CharSequence package$;"));
     assertTrue(contents.contains("class volatile$ extends"));
     assertTrue(contents.contains("volatile$ short$;"));
 
-    assertCompilesWithJavaCompiler(c);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
   }
 
   @Test
@@ -154,14 +164,14 @@ public class TestSpecificCompiler {
     String enumSchema = "" +
       "{ \"name\": \"instanceof\", \"type\": \"enum\"," +
       "  \"symbols\": [\"new\", \"super\", \"switch\"] }";
-    Collection<OutputFile> c =
+    Collection<OutputFile> outputs =
       new SpecificCompiler(Schema.parse(enumSchema)).compile();
-    assertEquals(1, c.size());
-    String contents = c.iterator().next().contents;
+    assertEquals(1, outputs.size());
+    String contents = outputs.iterator().next().contents;
 
     assertTrue(contents.contains("new$"));
 
-    assertCompilesWithJavaCompiler(c);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), outputs);
   }
 
   @Test
@@ -169,7 +179,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = new SpecificCompiler(Schema.parse(SCHEMA));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
-    assertCompilesWithJavaCompiler(files);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), files);
   }
 
   @Test
@@ -177,7 +187,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = new SpecificCompiler(Protocol.parse(PROTOCOL));
     compiler.maxStringChars = 10;
     Collection<OutputFile> files = compiler.compile();
-    assertCompilesWithJavaCompiler(files);
+    assertCompilesWithJavaCompiler(new File(INPUT_DIR.getRoot(), name.getMethodName()), files);
   }
 
   @Test
@@ -230,13 +240,13 @@ public class TestSpecificCompiler {
       "{ \"name\": \"Foo\", \"type\": \"record\", " +
       "  \"fields\": [ {\"name\": \"package\", \"type\": \"string\" }," +
       "                {\"name\": \"short\", \"type\": \"Foo\" } ] }";
-    File inputFile = AvroTestUtil.tempFile(getClass(), "input.avsc");
-    FileWriter fw = new FileWriter(inputFile);
-    fw.write(schema);
-    fw.close();
+    File inputFile = new File(INPUT_DIR.getRoot().getPath(), "input.avsc");
+    try(FileWriter fw = new FileWriter(inputFile)) {
+      fw.write(schema);
+    }
 
-    File outputDir = new File(System.getProperty("test.dir", "target/test") +
-      System.getProperty("file.separator") + "test_need_compile");
+    File outputDir = OUTPUT_DIR.getRoot();
+
     File outputFile = new File(outputDir, "Foo.java");
     outputFile.delete();
     assertTrue(!outputFile.exists());
@@ -251,9 +261,9 @@ public class TestSpecificCompiler {
     SpecificCompiler.compileSchema(inputFile, outputDir);
     assertEquals(lastModified, outputFile.lastModified());
 
-    fw = new FileWriter(inputFile);
-    fw.write(schema);
-    fw.close();
+    try(FileWriter fw = new FileWriter(inputFile)) {
+      fw.write(schema);
+    }
     SpecificCompiler.compileSchema(inputFile, outputDir);
     assertTrue(lastModified != outputFile.lastModified());
   }
@@ -265,8 +275,7 @@ public class TestSpecificCompiler {
    * @param fields the field(s) to add to the schema.
    * @return the schema.
    */
-  private Schema createRecord(String name,
-      boolean isError, Field... fields) {
+  private Schema createRecord(String name, boolean isError, Field... fields) {
     Schema record = Schema.createRecord(name, null, null, isError);
     record.setFields(Arrays.asList(fields));
     return record;
@@ -404,7 +413,6 @@ public class TestSpecificCompiler {
     cause = new Field("cause", Schema.create(Type.STRING), null, null);
     assertEquals("setCause$", SpecificCompiler.generateSetMethod(
         createRecord("test", true, cause), cause));
-
 
     assertEquals("setClass$", SpecificCompiler.generateSetMethod(
         createRecord("test", false, clasz), clasz));
@@ -694,13 +702,11 @@ public class TestSpecificCompiler {
    * optionally, uses the system's Java compiler to check
    * that the generated code is valid.
    */
-  public static void
-      assertCompiles(Schema schema, boolean useJavaCompiler)
-  throws IOException {
+  public static void assertCompiles(File dstDir,Schema schema, boolean useJavaCompiler) throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(schema).compile();
-    assertTrue(null != outputs);
+    assertNotNull(outputs);
     if (useJavaCompiler) {
-      assertCompilesWithJavaCompiler(outputs);
+      assertCompilesWithJavaCompiler(dstDir, outputs);
     }
   }
 
@@ -709,23 +715,21 @@ public class TestSpecificCompiler {
    * and, optionally, uses the system's Java compiler to check
    * that the generated code is valid.
    */
-  public static void assertCompiles(Protocol protocol, boolean useJavaCompiler)
-  throws IOException {
+  public static void assertCompiles(File dstDir, Protocol protocol, boolean useJavaCompiler) throws IOException {
     Collection<OutputFile> outputs = new SpecificCompiler(protocol).compile();
-    assertTrue(null != outputs);
+    assertNotNull(outputs);
     if (useJavaCompiler) {
-      assertCompilesWithJavaCompiler(outputs);
+      assertCompilesWithJavaCompiler(dstDir, outputs);
     }
   }
 
   /** Uses the system's java compiler to actually compile the generated code. */
-  static void assertCompilesWithJavaCompiler(Collection<OutputFile> outputs)
-  throws IOException {
+  static void assertCompilesWithJavaCompiler(File dstDir, Collection<OutputFile> outputs) throws IOException {
     if (outputs.isEmpty()) {
-      return;               // Nothing to compile!
+      return; // Nothing to compile!
     }
-    File dstDir = AvroTestUtil.tempFile(TestSpecificCompiler.class, "realCompiler");
-    List<File> javaFiles = new ArrayList<File>();
+
+    List<File> javaFiles = new ArrayList<>();
     for (OutputFile o : outputs) {
       javaFiles.add(o.writeToDestination(null, dstDir));
     }
@@ -736,8 +740,8 @@ public class TestSpecificCompiler {
 
     CompilationTask cTask = compiler.getTask(null, fileManager, null, null,
         null,
-        fileManager.getJavaFileObjects(
-            javaFiles.toArray(new File[javaFiles.size()])));
+        fileManager.getJavaFileObjects(javaFiles.toArray(new File[javaFiles.size()]))
+    );
     assertTrue(cTask.call());
   }
 }

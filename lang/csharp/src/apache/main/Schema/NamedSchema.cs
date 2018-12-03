@@ -101,7 +101,7 @@ namespace Avro
         {
             this.SchemaName = name;
             this.aliases = aliases;
-            if (null != name.Name)  // Added this check for anonymous records inside Message 
+            if (null != name.Name)  // Added this check for anonymous records inside Message
                 if (!names.Add(name, this))
                     throw new AvroException("Duplicate schema name " + name.Fullname);
         }
@@ -115,7 +115,7 @@ namespace Avro
         /// <returns>new SchemaName object</returns>
         protected static SchemaName GetName(JToken jtok, string encspace)
         {
-            String n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages 
+            String n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages
             String ns = JsonHelper.GetOptionalString(jtok, "namespace");
             return new SchemaName(n, ns, encspace);
         }

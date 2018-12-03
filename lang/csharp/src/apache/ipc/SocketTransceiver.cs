@@ -196,7 +196,7 @@ namespace Avro.ipc
         {
             if (length == 0)
                 return;
-            
+
             int numReceived = 0;
             do
             {

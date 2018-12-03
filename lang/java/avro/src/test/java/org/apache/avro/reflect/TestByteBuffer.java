@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,12 +20,7 @@ package org.apache.avro.reflect;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -33,21 +28,22 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 
-import org.apache.avro.AvroTestUtil;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
 import org.apache.avro.file.SeekableByteArrayInput;
 import org.apache.avro.io.DatumWriter;
-import org.apache.avro.reflect.ReflectData;
-import org.apache.avro.reflect.ReflectDatumReader;
-import org.apache.avro.reflect.ReflectDatumWriter;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestByteBuffer {
+
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
   static class X{
     String name = "";
     ByteBuffer content;
@@ -55,13 +51,12 @@ public class TestByteBuffer {
   File content;
 
   @Before public void before() throws IOException{
-    File tmpdir = AvroTestUtil.tempDirectory(getClass(), "content");
-    content = new File(tmpdir,"test-content");
-    FileOutputStream out = new FileOutputStream(content);
-    for(int i=0;i<100000;i++){
-      out.write("hello world\n".getBytes());
+    content = new File(DIR.getRoot().getPath(),"test-content");
+    try(FileOutputStream out = new FileOutputStream(content)) {
+      for (int i = 0; i < 100000; i++) {
+        out.write("hello world\n".getBytes());
+      }
     }
-    out.close();
   }
 
   @Test public void test() throws Exception{
@@ -78,7 +73,7 @@ public class TestByteBuffer {
   private X readOneXFromAvro(Schema schema, ByteArrayOutputStream bout)
     throws IOException {
     SeekableByteArrayInput input = new SeekableByteArrayInput(bout.toByteArray());
-    ReflectDatumReader<X> datumReader = new ReflectDatumReader<X>(schema);
+    ReflectDatumReader<X> datumReader = new ReflectDatumReader<>(schema);
     FileReader<X> reader = DataFileReader.openReader(input, datumReader);
     Iterator<X> it = reader.iterator();
     assertTrue("missing first record",it.hasNext());
@@ -89,43 +84,31 @@ public class TestByteBuffer {
 
   private void writeOneXAsAvro(Schema schema, ByteArrayOutputStream bout)
     throws IOException, FileNotFoundException {
-    DatumWriter<X> datumWriter = new ReflectDatumWriter<X>(schema);
-    DataFileWriter<X> writer = new DataFileWriter<X>(datumWriter);
-    writer.create(schema, bout);
-    X x = new X();
-    x.name = "xxx";
-    FileInputStream fis = new FileInputStream(content);
-    try{
-      FileChannel channel = fis.getChannel();
-      try{
-        long contentLength = content.length();
-        //set the content to be a file channel.
-        ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, contentLength);
-        x.content = buffer;
-        writer.append(x);
-      }finally{
-        channel.close();
+    DatumWriter<X> datumWriter = new ReflectDatumWriter<>(schema);
+    try(DataFileWriter<X> writer = new DataFileWriter<>(datumWriter)) {
+      writer.create(schema, bout);
+      X x = new X();
+      x.name = "xxx";
+      try (FileInputStream fis = new FileInputStream(content)) {
+        try (FileChannel channel = fis.getChannel()) {
+          long contentLength = content.length();
+          //set the content to be a file channel.
+          ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, contentLength);
+          x.content = buffer;
+          writer.append(x);
+        }
       }
-    }finally{
-      fis.close();
+      writer.flush();
     }
-    writer.flush();
-    writer.close();
   }
 
-  private String getmd5(File file) throws Exception{
-    FileInputStream fis = new FileInputStream(content);
-    try{
-      FileChannel channel = fis.getChannel();
-      try{
+  private String getmd5(File content) throws Exception{
+    try (FileInputStream fis = new FileInputStream(content)) {
+      try (FileChannel channel = fis.getChannel()) {
         long contentLength = content.length();
         ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, contentLength);
         return getmd5(buffer);
-      }finally{
-        channel.close();
       }
-    }finally{
-      fis.close();
     }
   }
 

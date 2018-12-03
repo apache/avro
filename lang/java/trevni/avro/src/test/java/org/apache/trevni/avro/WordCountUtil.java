@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,35 +20,20 @@ package org.apache.trevni.avro;
 
 import static org.junit.Assert.*;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.File;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.io.PrintStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.mapred.JobConf;
 
 import org.apache.avro.Schema;
-import org.apache.avro.hadoop.io.AvroKeyValue;
-import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.file.DataFileStream;
 import org.apache.avro.mapred.Pair;
 
 public class WordCountUtil {
@@ -73,7 +58,7 @@ public class WordCountUtil {
     "the rain in spain falls mainly on the plains"
   };
 
-  public static final Map<String,Long> COUNTS = new TreeMap<String,Long>();
+  public static final Map<String,Long> COUNTS = new TreeMap<>();
   public static final long TOTAL;
   static {
     long total = 0;
@@ -96,8 +81,8 @@ public class WordCountUtil {
 
   public void writeLinesFile() throws IOException {
     FileUtil.fullyDelete(dir);
-    DatumWriter<String> writer = new GenericDatumWriter<String>();
-    DataFileWriter<String> out = new DataFileWriter<String>(writer);
+    DatumWriter<String> writer = new GenericDatumWriter<>();
+    DataFileWriter<String> out = new DataFileWriter<>(writer);
     linesFiles.getParentFile().mkdirs();
     out.create(Schema.create(Schema.Type.STRING), linesFiles);
     for (String line : LINES)
@@ -107,8 +92,8 @@ public class WordCountUtil {
 
   public void validateCountsFile() throws Exception {
     AvroColumnReader<Pair<String,Long>> reader =
-      new AvroColumnReader<Pair<String,Long>>
-      (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
+        new AvroColumnReader<>(
+            new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (Pair<String,Long> wc : reader) {
       assertEquals(wc.key(), COUNTS.get(wc.key()), wc.value());
@@ -120,8 +105,8 @@ public class WordCountUtil {
 
   public void validateCountsFileGenericRecord() throws Exception {
     AvroColumnReader<GenericRecord > reader =
-      new AvroColumnReader<GenericRecord >
-      (new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
+      new AvroColumnReader<> (
+          new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (GenericRecord  wc : reader) {
       assertEquals((String)wc.get("key"), COUNTS.get(wc.get("key")), (Long)wc.get("value"));

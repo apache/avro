@@ -43,7 +43,7 @@ namespace Avro.IO
         public void WriteNull()
         {
         }
-        
+
         /// <summary>
         /// true is written as 1 and false 0.
         /// </summary>
@@ -97,7 +97,7 @@ namespace Avro.IO
         public void WriteDouble(double value)
         {
             long bits = BitConverter.DoubleToInt64Bits(value);
-            
+
             writeByte((byte)((bits) & 0xFF));
             writeByte((byte)((bits >> 8) & 0xFF));
             writeByte((byte)((bits >> 16) & 0xFF));
@@ -106,14 +106,14 @@ namespace Avro.IO
             writeByte((byte)((bits >> 40) & 0xFF));
             writeByte((byte)((bits >> 48) & 0xFF));
             writeByte((byte)((bits >> 56) & 0xFF));
-            
+
         }
 
         /// <summary>
         /// Bytes are encoded as a long followed by that many bytes of data.
         /// </summary>
         /// <param name="value"></param>
-        /// 
+        ///
         public void WriteBytes(byte[] value)
         {
             WriteLong(value.Length);

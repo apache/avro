@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,22 +17,21 @@
  */
 package org.apache.avro.io;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Stack;
-import java.util.Collection;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Stack;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParser;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 @RunWith(Parameterized.class)
 public class TestBlockingIO {
@@ -75,7 +74,7 @@ public class TestBlockingIO {
     }
 
     public void scan() throws IOException {
-      Stack<S> countStack = new Stack<S>();
+      Stack<S> countStack = new Stack<>();
       long count = 0;
       while (parser.nextToken() != null) {
         switch (parser.getCurrentToken()) {
@@ -127,7 +126,7 @@ public class TestBlockingIO {
     }
 
     public void skip(int skipLevel) throws IOException {
-      Stack<S> countStack = new Stack<S>();
+      Stack<S> countStack = new Stack<>();
       long count = 0;
       while (parser.nextToken() != null) {
         switch (parser.getCurrentToken()) {

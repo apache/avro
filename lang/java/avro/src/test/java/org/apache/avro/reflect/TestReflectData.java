@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,15 +18,13 @@
 
 package org.apache.avro.reflect;
 
-import org.apache.avro.Schema;
-import org.junit.Test;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.Map;
-
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThat;
+
+import java.util.Collections;
+
+import org.apache.avro.Schema;
+import org.junit.Test;
 
 public class TestReflectData {
   @Test
@@ -36,7 +34,7 @@ public class TestReflectData {
     for (int i = 0; i < numSchemas; i++) {
       // Create schema
       Schema schema = Schema.createRecord("schema", null, null, false);
-      schema.setFields(Collections.<Schema.Field>emptyList());
+      schema.setFields(Collections.emptyList());
 
       ReflectData.get().getRecordState(new Object(), schema);
     }

@@ -485,7 +485,7 @@ namespace Avro.Test.Generic
             writer.Write(value, e);
             writer.Write(value, e);
             var output = ms.ToArray();
-            
+
             Assert.AreEqual(expected.Length, output.Length);
             Assert.True(expected.SequenceEqual(output));
         }

@@ -20,9 +20,10 @@ set -e                # exit on error
 cd `dirname "$0"`     # connect to root
 
 VERSION=`cat share/VERSION.txt`
+DOCKER_XTRA_ARGS=""
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker|rat|githooks}"
+  echo "Usage: $0 {test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
 }
 
@@ -33,15 +34,22 @@ fi
 
 set -x                # echo commands
 
-for target in "$@"
+while (( "$#" ))
 do
+  target="$1"
+  shift
   case "$target" in
 
     test)
       # run lang-specific tests
       (cd lang/java; ./build.sh test)
+
+      # create interop test data
+      mkdir -p build/interop/data
+      (cd lang/java/avro; mvn -B -P interop-data-generate generate-resources)
+
       # install java artifacts required by other builds and interop tests
-      mvn install -DskipTests
+      mvn -B install -DskipTests
       (cd lang/py; ./build.sh test)
       (cd lang/py3; ./build.sh test)
       (cd lang/c; ./build.sh test)
@@ -52,9 +60,6 @@ do
       (cd lang/php; ./build.sh test)
       (cd lang/perl; ./build.sh test)
 
-      # create interop test data
-      mkdir -p build/interop/data
-      (cd lang/java/avro; mvn -P interop-data-generate generate-resources)
       (cd lang/py; ant interop-data-generate)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
@@ -62,7 +67,7 @@ do
       (cd lang/php; ./build.sh interop-data-generate)
 
       # run interop data tests
-      (cd lang/java; mvn test -P interop-data-test)
+      (cd lang/java; mvn -B test -P interop-data-test)
       (cd lang/py; ant interop-data-test)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
@@ -70,9 +75,10 @@ do
       (cd lang/php; ./build.sh test-interop)
 
       # java needs to package the jars for the interop rpc tests
-      (cd lang/java; mvn package -DskipTests)
+      (cd lang/java; mvn -B package -DskipTests)
+
       # run interop rpc test
-      /bin/bash share/test/interop/bin/test_rpc_interop.sh
+      ./share/test/interop/bin/test_rpc_interop.sh
     ;;
 
     dist)
@@ -165,7 +171,7 @@ do
       rm -rf build dist
       (cd doc; ant clean)
 
-      (mvn clean)
+      (mvn -B clean)
       rm -rf lang/java/*/userlogs/
       rm -rf lang/java/*/dependency-reduced-pom.xml
 
@@ -197,7 +203,11 @@ do
       ;;
 
     docker)
-      docker build -t avro-build share/docker
+      if [[ $1 =~ ^--args ]]; then
+        DOCKER_XTRA_ARGS=$2
+        shift 2
+      fi
+      docker build -t avro-build -f share/docker/Dockerfile .
       if [ "$(uname -s)" == "Linux" ]; then
         USER_NAME=${SUDO_USER:=$USER}
         USER_ID=$(id -u $USER_NAME)
@@ -217,13 +227,14 @@ UserSpecificDocker
       # within the container and use the result on your normal
       # system.  And this also is a significant speedup in subsequent
       # builds because the dependencies are downloaded only once.
-      docker run --rm=true -t -i \
+      docker run --rm -t -i \
         -v ${PWD}:/home/${USER_NAME}/avro \
         -w /home/${USER_NAME}/avro \
         -v ${HOME}/.m2:/home/${USER_NAME}/.m2 \
         -v ${HOME}/.gnupg:/home/${USER_NAME}/.gnupg \
         -u ${USER_NAME} \
-        avro-build-${USER_NAME}
+        ${DOCKER_XTRA_ARGS} \
+        avro-build-${USER_NAME} bash
       ;;
 
     rat)
@@ -234,6 +245,11 @@ UserSpecificDocker
       echo "Installing AVRO git hooks."
       cp share/githooks/* .git/hooks
       find .git/hooks/ -type f | fgrep -v sample | xargs chmod 755
+      ;;
+
+    docker-test)
+      docker build -t avro-test -f share/docker/Dockerfile .
+      docker run --rm -v ${PWD}:/avro/ avro-test
       ;;
 
     *)

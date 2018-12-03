@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,10 +24,15 @@ import java.util.zip.CRC32;
 import org.xerial.snappy.Snappy;
 
 /** * Implements Snappy compression and decompression. */
-class SnappyCodec extends Codec {
+public class SnappyCodec extends Codec {
   private CRC32 crc32 = new CRC32();
 
   static class Option extends CodecFactory {
+    static {
+      //if snappy isn't available, this will throw an exception which we
+      //can catch so we can avoid registering this codec
+      Snappy.getNativeLibraryVersion();
+    }
     @Override
     protected Codec createInstance() {
       return new SnappyCodec();
@@ -40,12 +45,13 @@ class SnappyCodec extends Codec {
 
   @Override
   public ByteBuffer compress(ByteBuffer in) throws IOException {
+    int offset = computeOffset(in);
     ByteBuffer out =
       ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining())+4);
-    int size = Snappy.compress(in.array(), in.position(), in.remaining(),
+    int size = Snappy.compress(in.array(), offset, in.remaining(),
                                out.array(), 0);
     crc32.reset();
-    crc32.update(in.array(), in.position(), in.remaining());
+    crc32.update(in.array(), offset, in.remaining());
     out.putInt(size, (int)crc32.getValue());
 
     out.limit(size+4);
@@ -55,9 +61,10 @@ class SnappyCodec extends Codec {
 
   @Override
   public ByteBuffer decompress(ByteBuffer in) throws IOException {
+    int offset = computeOffset(in);
     ByteBuffer out = ByteBuffer.allocate
-      (Snappy.uncompressedLength(in.array(),in.position(),in.remaining()-4));
-    int size = Snappy.uncompress(in.array(),in.position(),in.remaining()-4,
+      (Snappy.uncompressedLength(in.array(), offset, in.remaining()-4));
+    int size = Snappy.uncompress(in.array(), offset, in.remaining()-4,
                                  out.array(), 0);
     out.limit(size);
 
@@ -79,5 +86,4 @@ class SnappyCodec extends Codec {
       return false;
     return true;
   }
-
 }

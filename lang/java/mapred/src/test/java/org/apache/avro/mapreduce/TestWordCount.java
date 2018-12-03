@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -140,7 +140,7 @@ public class TestWordCount {
       for (IntWritable count : counts) {
         sum += count.get();
       }
-      context.write(new AvroKey<CharSequence>(key.toString()), new AvroValue<Integer>(sum));
+      context.write(new AvroKey<>(key.toString()), new AvroValue<>(sum));
     }
   }
 
@@ -150,7 +150,7 @@ public class TestWordCount {
 
     @Override
     protected void setup(Context context) {
-      mStats = new AvroKey<GenericData.Record>(null);
+      mStats = new AvroKey<>(null);
     }
 
     @Override
@@ -174,7 +174,7 @@ public class TestWordCount {
 
     @Override
     protected void setup(Context context) {
-      mStats = new AvroKey<TextStats>(null);
+      mStats = new AvroKey<>(null);
     }
 
     @Override
@@ -197,7 +197,7 @@ public class TestWordCount {
 
     @Override
     protected void setup(Context context) {
-      mStats = new AvroKey<ReflectStats>(null);
+      mStats = new AvroKey<>(null);
     }
 
     @Override
@@ -258,10 +258,10 @@ public class TestWordCount {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<GenericData.Record> reader = new DataFileReader<GenericData.Record>(
+    DataFileReader<GenericData.Record> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new GenericDatumReader<GenericData.Record>(STATS_SCHEMA));
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+        new GenericDatumReader<>(STATS_SCHEMA));
+    Map<String, Integer> counts = new HashMap<>();
     for (GenericData.Record record : reader) {
       counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
     }
@@ -298,10 +298,10 @@ public class TestWordCount {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<TextStats> reader = new DataFileReader<TextStats>(
+    DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new SpecificDatumReader<TextStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+        new SpecificDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
       counts.put(record.name.toString(), record.count);
     }
@@ -338,12 +338,12 @@ public class TestWordCount {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<ReflectStats> reader = new DataFileReader<ReflectStats>(
+    DataFileReader<ReflectStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new ReflectDatumReader<ReflectStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+        new ReflectDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (ReflectStats record : reader) {
-      counts.put(record.name.toString(), record.count);
+      counts.put(record.name, record.count);
     }
     reader.close();
 
@@ -379,10 +379,10 @@ public class TestWordCount {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<TextStats> reader = new DataFileReader<TextStats>(
+    DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new SpecificDatumReader<TextStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+        new SpecificDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
       counts.put(record.name.toString(), record.count);
     }
@@ -419,12 +419,12 @@ public class TestWordCount {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<ReflectStats> reader = new DataFileReader<ReflectStats>(
+    DataFileReader<ReflectStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new ReflectDatumReader<ReflectStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+        new ReflectDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (ReflectStats record : reader) {
-      counts.put(record.name.toString(), record.count);
+      counts.put(record.name, record.count);
     }
     reader.close();
 
@@ -460,10 +460,10 @@ public class TestWordCount {
     FileSystem fileSystem = FileSystem.get(job.getConfiguration());
     FileStatus[] outputFiles = fileSystem.globStatus(outputPath.suffix("/part-*"));
     Assert.assertEquals(1, outputFiles.length);
-    DataFileReader<TextStats> reader = new DataFileReader<TextStats>(
+    DataFileReader<TextStats> reader = new DataFileReader<>(
         new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-        new SpecificDatumReader<TextStats>());
-    Map<String, Integer> counts = new HashMap<String, Integer>();
+        new SpecificDatumReader<>());
+    Map<String, Integer> counts = new HashMap<>();
     for (TextStats record : reader) {
       counts.put(record.name.toString(), record.count);
     }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -63,9 +63,9 @@ public class ToTextTool implements Tool {
     BufferedInputStream inStream = Util.fileOrStdin(args.get(0), stdin);
     BufferedOutputStream outStream = Util.fileOrStdout(args.get(1), out);
 
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>();
+    GenericDatumReader<Object> reader = new GenericDatumReader<>();
     DataFileStream<Object> fileReader =
-        new DataFileStream<Object>(inStream, reader);
+        new DataFileStream<>(inStream, reader);
 
     if (!fileReader.getSchema().equals(new Schema.Parser().parse(TEXT_FILE_SCHEMA))) {
       err.println("Avro file is not generic text schema");

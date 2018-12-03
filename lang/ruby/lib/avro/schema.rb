@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'avro/logical_types'
+
 module Avro
   class Schema
     # Sets of strings, for backwards compatibility. See below for sets of symbols,
@@ -40,6 +42,7 @@ module Avro
     def self.real_parse(json_obj, names=nil, default_namespace=nil)
       if json_obj.is_a? Hash
         type = json_obj['type']
+        logical_type = json_obj['logicalType']
         raise SchemaParseError, %Q(No "type" property: #{json_obj}) if type.nil?
 
         # Check that the type is valid before calling #to_sym, since symbols are never garbage
@@ -50,7 +53,7 @@ module Avro
 
         type_sym = type.to_sym
         if PRIMITIVE_TYPES_SYM.include?(type_sym)
-          return PrimitiveSchema.new(type_sym)
+          return PrimitiveSchema.new(type_sym, logical_type)
 
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
@@ -58,7 +61,7 @@ module Avro
           case type_sym
           when :fixed
             size = json_obj['size']
-            return FixedSchema.new(name, namespace, size, names)
+            return FixedSchema.new(name, namespace, size, names, logical_type)
           when :enum
             symbols = json_obj['symbols']
             doc     = json_obj['doc']
@@ -93,22 +96,28 @@ module Avro
     end
 
     # Determine if a ruby datum is an instance of a schema
-    def self.validate(expected_schema, datum)
-      SchemaValidator.validate!(expected_schema, datum)
+    def self.validate(expected_schema, logical_datum, options = { recursive: true, encoded: false })
+      SchemaValidator.validate!(expected_schema, logical_datum, options)
       true
     rescue SchemaValidator::ValidationError
       false
     end
 
-    def initialize(type)
+    def initialize(type, logical_type=nil)
       @type_sym = type.is_a?(Symbol) ? type : type.to_sym
+      @logical_type = logical_type
     end
 
     attr_reader :type_sym
+    attr_reader :logical_type
 
     # Returns the type as a string (rather than a symbol), for backwards compatibility.
     # Deprecated in favor of {#type_sym}.
     def type; @type_sym.to_s; end
+
+    def type_adapter
+      @type_adapter ||= LogicalTypes.type_adapter(type, logical_type) || LogicalTypes::Identity
+    end
 
     # Returns the MD5 fingerprint of the schema as an Integer.
     def md5_fingerprint
@@ -157,7 +166,9 @@ module Avro
     end
 
     def to_avro(names=nil)
-      {'type' => type}
+      props = {'type' => type}
+      props['logicalType'] = logical_type if logical_type
+      props
     end
 
     def to_s
@@ -166,8 +177,9 @@ module Avro
 
     class NamedSchema < Schema
       attr_reader :name, :namespace
-      def initialize(type, name, namespace=nil, names=nil, doc=nil)
-        super(type)
+
+      def initialize(type, name, namespace=nil, names=nil, doc=nil, logical_type=nil)
+        super(type, logical_type)
         @name, @namespace = Name.extract_namespace(name, namespace)
         @doc  = doc
         names = Name.add_name(names, self)
@@ -219,6 +231,8 @@ module Avro
         if schema_type == :request || schema_type == 'request'
           @type_sym = schema_type.to_sym
           @namespace = namespace
+          @name = nil
+          @doc = nil
         else
           super(schema_type, name, namespace, names, doc)
         end
@@ -303,7 +317,7 @@ module Avro
 
       def initialize(name, space, symbols, names=nil, doc=nil)
         if symbols.uniq.length < symbols.length
-          fail_msg = 'Duplicate symbol: %s' % symbols
+          fail_msg = "Duplicate symbol: #{symbols}"
           raise Avro::SchemaParseError, fail_msg
         end
         super(:enum, name, space, names, doc)
@@ -318,11 +332,11 @@ module Avro
 
     # Valid primitive types are in PRIMITIVE_TYPES.
     class PrimitiveSchema < Schema
-      def initialize(type)
+      def initialize(type, logical_type=nil)
         if PRIMITIVE_TYPES_SYM.include?(type)
-          super(type)
+          super(type, logical_type)
         elsif PRIMITIVE_TYPES.include?(type)
-          super(type.to_sym)
+          super(type.to_sym, logical_type)
         else
           raise AvroError.new("#{type} is not a valid primitive type.")
         end
@@ -336,12 +350,12 @@ module Avro
 
     class FixedSchema < NamedSchema
       attr_reader :size
-      def initialize(name, space, size, names=nil)
+      def initialize(name, space, size, names=nil, logical_type=nil)
         # Ensure valid cto args
         unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
-        super(:fixed, name, space, names)
+        super(:fixed, name, space, names, logical_type)
         @size = size
       end
 
