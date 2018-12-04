@@ -24,6 +24,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -38,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
@@ -763,11 +763,11 @@ public class ReflectData extends SpecificData {
     return schema;
   }
 
-  /** Return the protocol for a Java interface.
-   * <p>Note that this requires that <a
-   * href="http://paranamer.codehaus.org/">Paranamer</a> is run over compiled
-   * interface declarations, since Java 6 reflection does not provide access to
-   * method parameter names.  See Avro's build.xml for an example. */
+  /**
+   * Return the protocol for a Java interface.
+   * <p>The correct name of the method parameters needs the <code>-parameters</code>
+   * java compiler argument. More info at https://openjdk.java.net/jeps/118
+   */
   @Override
   public Protocol getProtocol(Class iface) {
     Protocol protocol =
@@ -792,31 +792,14 @@ public class ReflectData extends SpecificData {
     return protocol;
   }
 
-  private Function<Method, String[]> paranamer;
-  private synchronized Function<Method, String[]> getParanamer() {
-    if (paranamer == null) {
-      try {
-        final com.thoughtworks.paranamer.CachingParanamer p = new com.thoughtworks.paranamer.CachingParanamer();
-        paranamer = new Function<Method, String[]>() {
-          public String[] apply(Method t) {
-            return p.lookupParameterNames(t);
-          }
-        };
-      } catch (Throwable t) {
-        paranamer = new Function<Method, String[]>() {
-          public String[] apply(Method t) {
-            return new String[0];
-          }
-        };
-      }
-    }
-    return paranamer;
-  }
-
   private String[] getParameterNames(Method m) {
-    return getParanamer().apply(m);
+    Parameter[] parameters = m.getParameters();
+    String[] paramNames = new String[parameters.length];
+    for (int i = 0; i < parameters.length; i++) {
+      paramNames[i] = parameters[i].getName();
+    }
+    return paramNames;
   }
-
 
   private Message getMessage(Method method, Protocol protocol,
                              Map<String,Schema> names) {

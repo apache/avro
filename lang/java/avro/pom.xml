@@ -38,7 +38,6 @@
     <osgi.import>
       !org.apache.avro*,
       com.fasterxml.jackson*,
-      com.thoughtworks.paranamer;resolution:=optional,
       org.xerial.snappy;resolution:=optional,
       sun.misc;resolution:=optional,
       *
@@ -56,24 +55,6 @@
       </resource>
     </resources>
     <plugins>
-      <plugin>
-        <groupId>com.thoughtworks.paranamer</groupId>
-        <artifactId>paranamer-maven-plugin</artifactId>
-        <version>${paranamer.version}</version>
-        <executions>
-          <execution>
-            <id>paranamer-test</id>
-            <configuration>
-              <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
-              <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
-            </configuration>
-            <phase>process-test-classes</phase>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -145,11 +126,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.thoughtworks.paranamer</groupId>
-      <artifactId>paranamer</artifactId>
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
