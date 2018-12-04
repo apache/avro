@@ -80,6 +80,8 @@ public class SchemaMojo extends AbstractAvroMojo {
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setCreateOptionalGetters(createOptionalGetters);
+    compiler.setGettersReturnOptional(gettersReturnOptional);
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     try {

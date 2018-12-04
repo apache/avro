@@ -29,15 +29,13 @@ java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive
 py_client="python lang/py/build/src/avro/tool.py rpcsend"
 py_server="python lang/py/build/src/avro/tool.py rpcreceive"
 
-#ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
-#ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
+ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
+ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
 
 export PYTHONPATH=lang/py/build/src      # path to avro Python module
 
-#clients=("$java_client" "$py_client" "$ruby_client")
-#servers=("$java_server" "$py_server" "$ruby_server")
-clients=("$java_client" "$py_client")
-servers=("$java_server" "$py_server")
+clients=("$java_client" "$py_client" "$ruby_client")
+servers=("$java_server" "$py_server" "$ruby_server")
 
 proto=share/test/schemas/simple.avpr
 

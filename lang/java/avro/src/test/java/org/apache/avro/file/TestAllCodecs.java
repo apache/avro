@@ -84,6 +84,39 @@ public class TestAllCodecs {
     Assert.assertEquals(decompressedBuffer, inputByteBuffer);
   }
 
+  @Test
+  public void testCodecSlice() throws IOException {
+    int inputSize = 500_000;
+    byte[] input = generateTestData(inputSize);
+
+    Codec codecInstance = CodecFactory.fromString(codec).createInstance();
+
+    ByteBuffer partialBuffer = ByteBuffer.wrap(input);
+    partialBuffer.position(17);
+
+    ByteBuffer inputByteBuffer = partialBuffer.slice();
+    ByteBuffer compressedBuffer = codecInstance.compress(inputByteBuffer);
+
+    int compressedSize = compressedBuffer.remaining();
+
+    // Make sure something returned
+    assertTrue(compressedSize > 0);
+
+    // Create a slice from the compressed buffer
+    ByteBuffer sliceBuffer = ByteBuffer.allocate(compressedSize + 100);
+    sliceBuffer.position(50);
+    sliceBuffer.put(compressedBuffer);
+    sliceBuffer.limit(compressedSize + 50);
+    sliceBuffer.position(50);
+
+    // Decompress the data
+    ByteBuffer decompressedBuffer = codecInstance.decompress(sliceBuffer.slice());
+
+    // Validate the the input and output are equal.
+    inputByteBuffer.rewind();
+    Assert.assertEquals(decompressedBuffer, inputByteBuffer);
+  }
+
   // Generate some test data that will compress easily
   public static byte[] generateTestData(int inputSize) {
     byte[] arr = new byte[inputSize];

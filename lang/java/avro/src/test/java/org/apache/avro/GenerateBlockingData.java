@@ -26,6 +26,7 @@ import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.RandomData;
 
 /**
  * Generates file with objects of a specific schema(that doesn't contain nesting

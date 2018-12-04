@@ -107,13 +107,13 @@ final class SchemaResolver {
       if (value.isOneWay()) {
         Schema replacement = resolve(replacements, value.getRequest(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-            value.getObjectProps(), replacement);
+            value, replacement);
       } else {
         Schema request = resolve(replacements, value.getRequest(), protocol);
         Schema response = resolve(replacements, value.getResponse(), protocol);
         Schema errors = resolve(replacements, value.getErrors(), protocol);
         nvalue = result.createMessage(value.getName(), value.getDoc(),
-            value.getObjectProps(), request, response, errors);
+            value, request, response, errors);
       }
       result.getMessages().put(entry.getKey(), nvalue);
     }

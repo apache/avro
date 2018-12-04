@@ -25,12 +25,15 @@ using std::vector;
 namespace avro {
 
 GenericDatum::GenericDatum(const ValidSchema& schema) :
-    type_(schema.root()->type())
+    type_(schema.root()->type()),
+    logicalType_(schema.root()->logicalType())
 {
     init(schema.root());
 }
 
-GenericDatum::GenericDatum(const NodePtr& schema) : type_(schema->type())
+GenericDatum::GenericDatum(const NodePtr& schema) :
+    type_(schema->type()),
+    logicalType_(schema->logicalType())
 {
     init(schema);
 }
@@ -41,6 +44,7 @@ void GenericDatum::init(const NodePtr& schema)
     if (type_ == AVRO_SYMBOLIC) {
         sc = resolveSymbol(schema);
         type_ = sc->type();
+        logicalType_ = sc->logicalType();
     }
     switch (type_) {
     case AVRO_NULL:

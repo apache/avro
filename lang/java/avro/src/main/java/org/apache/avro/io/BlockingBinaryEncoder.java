@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.avro.AvroTypeException;
@@ -286,6 +287,19 @@ public class BlockingBinaryEncoder extends BufferedBinaryEncoder {
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
     doWriteBytes(bytes, start, len);
+  }
+
+  @Override
+  public void writeFixed(ByteBuffer bytes) throws IOException {
+    int pos = bytes.position();
+    int len = bytes.remaining();
+    if (bytes.hasArray()) {
+      doWriteBytes(bytes.array(), bytes.arrayOffset() + pos, len);
+    } else {
+      byte[] b = new byte[len];
+      bytes.duplicate().get(b, 0, len);
+      doWriteBytes(b, 0, len);
+    }
   }
 
   @Override

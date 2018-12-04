@@ -28,6 +28,14 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$);
 
   /**
+   * Return the BinaryMessageEncoder instance used by this class.
+   * @return the message encoder used by this class
+   */
+  public static BinaryMessageEncoder<Player> getEncoder() {
+    return ENCODER;
+  }
+
+  /**
    * Return the BinaryMessageDecoder instance used by this class.
    * @return the message decoder used by this class
    */
@@ -504,40 +512,64 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   @Override protected void customDecode(org.apache.avro.io.ResolvingDecoder in)
     throws java.io.IOException
   {
-    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrder();
-    for (int i = 0; i < 4; i++) {
-      switch (fieldOrder[i].pos()) {
-      case 0:
-        this.number = in.readInt();
-        break;
+    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
+    if (fieldOrder == null) {
+      this.number = in.readInt();
 
-      case 1:
-        this.first_name = in.readString(this.first_name instanceof Utf8 ? (Utf8)this.first_name : null);
-        break;
+      this.first_name = in.readString(this.first_name instanceof Utf8 ? (Utf8)this.first_name : null);
 
-      case 2:
-        this.last_name = in.readString(this.last_name instanceof Utf8 ? (Utf8)this.last_name : null);
-        break;
+      this.last_name = in.readString(this.last_name instanceof Utf8 ? (Utf8)this.last_name : null);
 
-      case 3:
-        long size0 = in.readArrayStart();
-        java.util.List<avro.examples.baseball.Position> a0 = this.position;
-        if (a0 == null) {
-          a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
-          this.position = a0;
-        } else a0.clear();
-        SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
-        for ( ; 0 < size0; size0 = in.arrayNext()) {
-          for ( ; size0 != 0; size0--) {
-            avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
-            e0 = avro.examples.baseball.Position.values()[in.readEnum()];
-            a0.add(e0);
-          }
+      long size0 = in.readArrayStart();
+      java.util.List<avro.examples.baseball.Position> a0 = this.position;
+      if (a0 == null) {
+        a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
+        this.position = a0;
+      } else a0.clear();
+      SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
+      for ( ; 0 < size0; size0 = in.arrayNext()) {
+        for ( ; size0 != 0; size0--) {
+          avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
+          e0 = avro.examples.baseball.Position.values()[in.readEnum()];
+          a0.add(e0);
         }
-        break;
+      }
 
-      default:
-        throw new java.io.IOException("Corrupt ResolvingDecoder.");
+    } else {
+      for (int i = 0; i < 4; i++) {
+        switch (fieldOrder[i].pos()) {
+        case 0:
+          this.number = in.readInt();
+          break;
+
+        case 1:
+          this.first_name = in.readString(this.first_name instanceof Utf8 ? (Utf8)this.first_name : null);
+          break;
+
+        case 2:
+          this.last_name = in.readString(this.last_name instanceof Utf8 ? (Utf8)this.last_name : null);
+          break;
+
+        case 3:
+          long size0 = in.readArrayStart();
+          java.util.List<avro.examples.baseball.Position> a0 = this.position;
+          if (a0 == null) {
+            a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
+            this.position = a0;
+          } else a0.clear();
+          SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
+          for ( ; 0 < size0; size0 = in.arrayNext()) {
+            for ( ; size0 != 0; size0--) {
+              avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
+              e0 = avro.examples.baseball.Position.values()[in.readEnum()];
+              a0.add(e0);
+            }
+          }
+          break;
+
+        default:
+          throw new java.io.IOException("Corrupt ResolvingDecoder.");
+        }
       }
     }
   }

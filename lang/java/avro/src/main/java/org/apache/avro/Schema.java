@@ -138,7 +138,7 @@ public abstract class Schema extends JsonProperties {
 
   int hashCode = NO_HASHCODE;
 
-  @Override public void addProp(String name, JsonNode value) {
+  @Override public void addProp(String name, String value) {
     super.addProp(name, value);
     hashCode = NO_HASHCODE;
   }
@@ -391,6 +391,26 @@ public abstract class Schema extends JsonProperties {
                        "default","doc","name","order","type","aliases");
   }
 
+  /** Returns true if this record is an union type. */
+  public boolean isUnion(){
+    return this instanceof UnionSchema;
+  }
+
+  /** Returns true if this record is an union type containing null. */
+  public boolean isNullable() {
+    if (!isUnion()) {
+      return getType().equals(Schema.Type.NULL);
+    }
+
+    for (Schema schema : getTypes()) {
+      if (schema.isNullable()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /** A field within a record. */
   public static class Field extends JsonProperties {
 
@@ -430,16 +450,13 @@ public abstract class Schema extends JsonProperties {
 
     Field(String name, Schema schema, String doc,
         JsonNode defaultValue) {
-      this(name, schema, doc, defaultValue, Order.ASCENDING);
+      this(name, schema, doc, defaultValue, true, Order.ASCENDING);
     }
-
-    /** @deprecated use {@link #Field(String, Schema, String, Object, Order)} */
-    @Deprecated
-    public Field(String name, Schema schema, String doc,
+    Field(String name, Schema schema, String doc,
         JsonNode defaultValue, Order order) {
       this(name, schema, doc, defaultValue, true, order);
     }
-    public Field(String name, Schema schema, String doc,
+    Field(String name, Schema schema, String doc,
                  JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
       this.name = validateName(name);
@@ -492,7 +509,7 @@ public abstract class Schema extends JsonProperties {
      */
     public Object defaultVal() { return JacksonUtils.toObject(defaultValue, schema); }
     public Order order() { return order; }
-    @Deprecated public Map<String,String> props() { return getProps(); }
+
     public void addAlias(String alias) {
       if (aliases == null)
         this.aliases = new LinkedHashSet<>();
@@ -1158,6 +1175,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   static class Names extends LinkedHashMap<Name, Schema> {
+    private static final long serialVersionUID = 1L;
     private String space;                         // default namespace
 
     public Names() {}
@@ -1386,8 +1404,13 @@ public abstract class Schema extends JsonProperties {
           throw new SchemaParseException("Invalid or no size: "+schema);
         result = new FixedSchema(name, doc, sizeNode.intValue());
         if (name != null) names.add(result);
-      } else
+      } else {  //For unions with self reference
+        Name nameFromType = new Name(type, names.space);
+        if (names.containsKey(nameFromType)) {
+          return names.get(nameFromType);
+        }
         throw new SchemaParseException("Type not supported: "+type);
+      }
       Iterator<String> i = schema.fieldNames();
 
       Set reserved = SCHEMA_RESERVED;

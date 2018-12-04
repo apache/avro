@@ -22,6 +22,9 @@ import java.nio.ByteBuffer;
 
 /**
  * Interface for Avro-supported compression codecs for data files.
+ *
+ * Note that Codec objects may maintain internal state (e.g. buffers)
+ * and are not thread safe.
  */
 public abstract class Codec {
   /** Name of the codec; written to the file's metadata. */
@@ -37,12 +40,21 @@ public abstract class Codec {
    **/
   @Override
   public abstract boolean equals(Object other);
+
   /**
    * Codecs must implement a hashCode() method that is consistent with equals().*/
   @Override
   public abstract int hashCode();
+
   @Override
   public String toString() {
     return getName();
+  }
+
+  // Codecs often reference the array inside a ByteBuffer. Compute the offset
+  // to the start of data correctly in the case that our ByteBuffer
+  // is a slice() of another.
+  protected static int computeOffset(ByteBuffer data) {
+      return data.arrayOffset() + data.position();
   }
 }

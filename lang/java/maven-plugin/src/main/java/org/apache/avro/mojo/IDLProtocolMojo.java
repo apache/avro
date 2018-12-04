@@ -65,7 +65,6 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
     try {
       @SuppressWarnings("rawtypes")
       List runtimeClasspathElements = project.getRuntimeClasspathElements();
-      Idl parser;
 
       List<URL> runtimeUrls = new ArrayList<>();
 
@@ -83,22 +82,25 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
 
       URLClassLoader projPathLoader = new URLClassLoader
           (runtimeUrls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
-        parser = new Idl(new File(sourceDirectory, filename), projPathLoader);
+      try (Idl parser = new Idl(new File(sourceDirectory, filename), projPathLoader)) {
 
-      Protocol p = parser.CompilationUnit();
-      String json = p.toString(true);
-      Protocol protocol = Protocol.parse(json);
-      SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
-      compiler.setStringType(GenericData.StringType.valueOf(stringType));
-      compiler.setTemplateDir(templateDirectory);
-      compiler.setFieldVisibility(getFieldVisibility());
-      compiler.setCreateSetters(createSetters);
-      compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-      for (String customConversion : customConversions) {
-        compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
+        Protocol p = parser.CompilationUnit();
+        String json = p.toString(true);
+        Protocol protocol = Protocol.parse(json);
+        SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
+        compiler.setStringType(GenericData.StringType.valueOf(stringType));
+        compiler.setTemplateDir(templateDirectory);
+        compiler.setFieldVisibility(getFieldVisibility());
+        compiler.setCreateOptionalGetters(createOptionalGetters);
+        compiler.setGettersReturnOptional(gettersReturnOptional);
+        compiler.setCreateSetters(createSetters);
+        compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+        for (String customConversion : customConversions) {
+          compiler.addCustomConversion(projPathLoader.loadClass(customConversion));
+        }
+        compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+        compiler.compileToDestination(null, outputDirectory);
       }
-      compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
-      compiler.compileToDestination(null, outputDirectory);
     } catch (ParseException e) {
       throw new IOException(e);
     } catch (DependencyResolutionRequiredException drre) {

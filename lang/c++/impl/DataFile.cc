@@ -54,7 +54,6 @@ const string AVRO_SNAPPY_CODEC = "snappy";
 
 const size_t minSyncInterval = 32;
 const size_t maxSyncInterval = 1u << 30;
-const size_t defaultSyncInterval = 64 * 1024;
 
 boost::iostreams::zlib_params get_zlib_params() {
   boost::iostreams::zlib_params ret;
@@ -63,15 +62,6 @@ boost::iostreams::zlib_params get_zlib_params() {
   return ret;
 }
 }
-
-
-static string toString(const ValidSchema& schema)
-{
-    ostringstream oss;
-    schema.toJson(oss);
-    return oss.str();
-}
-
 
 DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& schema, size_t syncInterval,
                                        Codec codec) :
@@ -122,7 +112,7 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
     } else {
       throw Exception(boost::format("Unknown codec: %1%") % codec);
     }
-    setMetadata(AVRO_SCHEMA_KEY, toString(schema));
+    setMetadata(AVRO_SCHEMA_KEY, schema.toJson(false));
 
     writeHeader();
     encoderPtr_->init(*buffer_);
@@ -297,7 +287,7 @@ void DataFileReaderBase::init()
 void DataFileReaderBase::init(const ValidSchema& readerSchema)
 {
     readerSchema_ = readerSchema;
-    dataDecoder_  = (toString(readerSchema_) != toString(dataSchema_)) ?
+    dataDecoder_  = (readerSchema_.toJson(true) != dataSchema_.toJson(true)) ?
         resolvingDecoder(dataSchema_, readerSchema_, binaryDecoder()) :
         binaryDecoder();
     readDataBlock();

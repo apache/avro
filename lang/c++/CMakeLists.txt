@@ -62,7 +62,7 @@ endif ()
 
 
 find_package (Boost 1.38 REQUIRED
-    COMPONENTS filesystem system program_options iostreams)
+    COMPONENTS filesystem iostreams program_options regex system)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
@@ -80,7 +80,7 @@ add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 include_directories (api ${CMAKE_CURRENT_BINARY_DIR} ${Boost_INCLUDE_DIRS})
 
 set (AVRO_SOURCE_FILES
-        impl/Compiler.cc impl/Node.cc
+        impl/Compiler.cc impl/Node.cc impl/LogicalType.cc
         impl/NodeImpl.cc impl/ResolverSchema.cc impl/Schema.cc
         impl/Types.cc impl/ValidSchema.cc impl/Zigzag.cc
         impl/BinaryEncoder.cc impl/BinaryDecoder.cc

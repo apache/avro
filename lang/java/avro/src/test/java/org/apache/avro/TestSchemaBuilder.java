@@ -84,8 +84,7 @@ public class TestSchemaBuilder {
       .prop("p2", "v2")
       .prop("p2", "v2real") // overwrite
       .endInt();
-    @SuppressWarnings("deprecation")
-    int size = s.getProps().size();
+    int size = s.getObjectProps().size();
     Assert.assertEquals(2, size);
     Assert.assertEquals("v1", s.getProp("p1"));
     Assert.assertEquals("v2real", s.getProp("p2"));
@@ -102,13 +101,6 @@ public class TestSchemaBuilder {
       .prop("byteProp", new byte[] {0x41, 0x42, 0x43} )
       .prop("stringProp", "abc" )
       .endInt();
-
-    //string properties
-    @SuppressWarnings("deprecation")
-    Map<String, String> stringProps = s.getProps();
-    Assert.assertEquals(2, stringProps.size());
-    Assert.assertEquals("ABC", stringProps.get("byteProp"));
-    Assert.assertEquals("abc", stringProps.get("stringProp"));
 
     //object properties
     Assert.assertEquals(7, s.getObjectProps().size());
@@ -148,12 +140,6 @@ public class TestSchemaBuilder {
 
     Schema.Field f = s.getField("myField");
 
-    //string properties
-    @SuppressWarnings("deprecation")
-    Map<String, String> stringProps = f.getProps();
-    Assert.assertEquals(2, stringProps.size());
-    Assert.assertEquals("ABC", stringProps.get("byteProp"));
-    Assert.assertEquals("abc", stringProps.get("stringProp"));
 
     //object properties
     Assert.assertEquals(7, f.getObjectProps().size());
@@ -190,11 +176,6 @@ public class TestSchemaBuilder {
     Schema s = SchemaBuilder.builder().intBuilder()
       .prop("arrayProp", values)
       .endInt();
-
-    //string properties
-    @SuppressWarnings("deprecation")
-    int size = s.getProps().size();
-    Assert.assertEquals(0, size);
 
     //object properties
     Assert.assertEquals(1, s.getObjectProps().size());
@@ -235,11 +216,6 @@ public class TestSchemaBuilder {
 
     Schema.Field f = s.getField("myField");
 
-    //string properties
-    @SuppressWarnings("deprecation")
-    int size = f.getProps().size();
-    Assert.assertEquals(0, size);
-
     //object properties
     Assert.assertEquals(1, f.getObjectProps().size());
 
@@ -274,11 +250,6 @@ public class TestSchemaBuilder {
       .prop("mapProp", values)
       .endInt();
 
-    //string properties
-    @SuppressWarnings("deprecation")
-    int size = s.getProps().size();
-    Assert.assertEquals(0, size);
-    Assert.assertEquals(1, s.getObjectProps().size());
 
     //object properties
     Assert.assertTrue(s.getObjectProp("mapProp") instanceof Map);
@@ -323,12 +294,6 @@ public class TestSchemaBuilder {
       .endRecord();
 
     Schema.Field f = s.getField("myField");
-
-    //string properties
-    @SuppressWarnings("deprecation")
-    int size = f.getProps().size();
-    Assert.assertEquals(0, size);
-    Assert.assertEquals(1, f.getObjectProps().size());
 
     //object properties
     Assert.assertTrue(f.getObjectProp("mapProp") instanceof Map);

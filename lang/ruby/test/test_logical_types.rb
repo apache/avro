@@ -34,7 +34,7 @@ class TestLogicalTypes < Test::Unit::TestCase
 
     assert_equal 5, type.encode(Date.new(1970, 1, 6))
     assert_equal 0, type.encode(Date.new(1970, 1, 1))
-    assert_equal -5, type.encode(Date.new(1969, 12, 27))
+    assert_equal(-5, type.encode(Date.new(1969, 12, 27)))
 
     assert_equal Date.new(1970, 1, 6), type.decode(5)
     assert_equal Date.new(1970, 1, 1), type.decode(0)

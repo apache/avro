@@ -52,7 +52,7 @@ namespace Avro
         /// <summary>
         /// Namespace.Name of the schema
         /// </summary>
-        public string Fullname
+        public override string Fullname
         {
             get { return SchemaName.Fullname; }
         }

@@ -22,9 +22,9 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.apache.avro.RandomData;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.util.RandomData;
 import org.junit.Test;
 
 /*

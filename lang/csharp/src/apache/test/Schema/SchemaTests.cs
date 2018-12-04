@@ -69,7 +69,8 @@ namespace Avro.Test
             Description = "No fields", ExpectedException = typeof(SchemaParseException))]
         [TestCase("{\"type\":\"record\",\"name\":\"LongList\", \"fields\": \"hi\"}",
             Description = "Fields not an array", ExpectedException = typeof(SchemaParseException))]
-
+        [TestCase("[{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns1\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}," + 
+                   "{\"type\": \"record\",\"name\": \"Test\",\"namespace\":\"ns2\",\"fields\": [{\"name\": \"f\",\"type\": \"long\"}]}]")]
         // Enum
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}")]
         [TestCase("{\"type\": \"enum\", \"name\": \"Status\", \"symbols\": \"Normal Caution Critical\"}",

@@ -17,9 +17,12 @@
  */
 package org.apache.avro;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +30,10 @@ import java.util.List;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
@@ -110,6 +117,33 @@ public class TestDataFileReflect {
         Assert.assertEquals(count, check.size());
       }
     }
+  }
+
+  @Test
+  public void testNew() throws IOException {
+    ByteBuffer payload = ByteBuffer.allocateDirect(8 * 1024);
+    for (int i = 0; i < 500; i++) {
+      payload.putInt(1);
+    }
+    payload.flip();
+    ByteBufferRecord bbr = new ByteBufferRecord();
+    bbr.setPayload(payload);
+    bbr.setTp(TypeEnum.b);
+
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ReflectDatumWriter<ByteBufferRecord> writer = new ReflectDatumWriter<ByteBufferRecord>(ByteBufferRecord.class);
+    BinaryEncoder avroEncoder = EncoderFactory.get().blockingBinaryEncoder(outputStream, null);
+    writer.write(bbr, avroEncoder);
+    avroEncoder.flush();
+
+    byte[] bytes = outputStream.toByteArray();
+
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+    ReflectDatumReader<ByteBufferRecord> datumReader = new ReflectDatumReader<ByteBufferRecord>(ByteBufferRecord.class);
+    BinaryDecoder avroDecoder = DecoderFactory.get().binaryDecoder(inputStream, null);
+    ByteBufferRecord deserialized = datumReader.read(null, avroDecoder);
+
+    Assert.assertEquals(bbr, deserialized);
   }
 
   /*
