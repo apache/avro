@@ -210,7 +210,7 @@ public class CatTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "extracts samples from files";
+    return "Extracts samples from files";
   }
 
 }
