@@ -29,9 +29,12 @@ import joptsimple.OptionSet;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 
+/**
+ * Utility to convert an Avro @{Schema} to its canonical form.
+ */
 public class SchemaNormalizationTool implements Tool {
   @Override
-  public String getName() { return "schemacanonical"; }
+  public String getName() { return "canonical"; }
 
   @Override
   public String getShortDescription() { return "Converts an Avro Schema to its canonical form"; }
