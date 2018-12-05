@@ -16,21 +16,20 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Avro;
 
 namespace Avro.Generic
 {
     /// <summary>
     /// The default type used by GenericReader and GenericWriter for RecordSchema.
     /// </summary>
-    public class GenericRecord
+    public class GenericRecord : IEquatable<GenericRecord>
     {
         public RecordSchema Schema { get; private set; }
 
-        private IDictionary<string, object> contents = new Dictionary<string, object>();
+        private readonly Dictionary<string, object> contents = new Dictionary<string, object>();
         public GenericRecord(RecordSchema schema)
         {
             this.Schema = schema;
@@ -61,52 +60,55 @@ namespace Avro.Generic
         public override bool Equals(object obj)
         {
             if (this == obj) return true;
-            if (obj != null && obj is GenericRecord)
-            {
-                GenericRecord other = obj as GenericRecord;
-                return Schema.Equals(other.Schema) && areEqual(contents, other.contents);
-            }
-            return false;
+            return obj is GenericRecord
+                && Equals((GenericRecord)obj);
         }
 
-        private static bool areEqual(IDictionary<string, object> d1, IDictionary<string, object> d2)
+        public bool Equals(GenericRecord other)
         {
-            if (d1.Count == d2.Count)
-            {
-                foreach (KeyValuePair<string, object> kv in d1)
-                {
-                    object o;
-                    if (!d2.TryGetValue(kv.Key, out o)) return false;
-                    if (!areEqual(o, kv.Value)) return false;
-                }
-                return true;
-            }
-            return false;
+            return Schema.Equals(other.Schema)
+                && mapsEqual(contents, other.contents);
         }
 
-        private static bool areEqual(object o1, object o2)
+        private static bool mapsEqual(IDictionary d1, IDictionary d2)
+        {
+            if (d1.Count != d2.Count) return false;
+
+            foreach (DictionaryEntry kv in d1)
+            {
+                if (!d2.Contains(kv.Key))
+                    return false;
+                if (!objectsEqual(d2[kv.Key], kv.Value))
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool objectsEqual(object o1, object o2)
         {
             if (o1 == null) return o2 == null;
             if (o2 == null) return false;
             if (o1 is Array)
             {
                 if (!(o2 is Array)) return false;
-                return areEqual(o1 as Array, o1 as Array);
+                return arraysEqual((Array)o1 , (Array)o2);
             }
-            else if (o1 is IDictionary<string, object>)
+
+            if (o1 is IDictionary)
             {
-                if (!(o2 is IDictionary<string, object>)) return false;
-                return areEqual(o1 as IDictionary<string, object>, o1 as IDictionary<string, object>);
+                if (!(o2 is IDictionary)) return false;
+                return mapsEqual((IDictionary)o1, (IDictionary)o2);
             }
+
             return o1.Equals(o2);
         }
 
-        private static bool areEqual(Array a1, Array a2)
+        private static bool arraysEqual(Array a1, Array a2)
         {
             if (a1.Length != a2.Length) return false;
             for (int i = 0; i < a1.Length; i++)
             {
-                if (!areEqual(a1.GetValue(i), a2.GetValue(i))) return false;
+                if (!objectsEqual(a1.GetValue(i), a2.GetValue(i))) return false;
             }
             return true;
         }
