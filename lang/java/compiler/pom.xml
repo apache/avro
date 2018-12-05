@@ -39,8 +39,6 @@
       !org.apache.avro.compiler*,
       org.apache.avro*;version="${project.version}",
       org.apache.commons.lang3*,
-      org.apache.commons.velocity*,
-      org.apache.ant*,
       *
     </osgi.import>
     <osgi.export>org.apache.avro.compiler*;version="${project.version}"</osgi.export>
@@ -178,13 +176,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>avro</artifactId>
-      <version>${project.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>${commons-lang.version}</version>
@@ -195,7 +186,7 @@
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.ant</groupId>
