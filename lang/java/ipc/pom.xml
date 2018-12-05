@@ -141,6 +141,12 @@
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity-engine-core</artifactId>
     </dependency>
+    <!-- javax.annotation-api dependency must be explicit for forward compatibility (Java > 9) -->
+    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>javax.annotation-api</artifactId>
+      <version>1.3.2</version>
+    </dependency>
 
   </dependencies>
 
