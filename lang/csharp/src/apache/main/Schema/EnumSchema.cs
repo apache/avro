@@ -70,7 +70,8 @@ namespace Avro
                 symbolMap[s] = i++;
                 symbols.Add(s);
             }
-            return new EnumSchema(name, aliases, symbols, symbolMap, props, names);
+            return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
+                JsonHelper.GetOptionalString(jtok, "doc"));
         }
 
         /// <summary>
@@ -80,10 +81,13 @@ namespace Avro
         /// <param name="aliases">list of aliases for the name</param>
         /// <param name="symbols">list of enum symbols</param>
         /// <param name="symbolMap">map of enum symbols and value</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already read</param>
+        /// <param name="doc">documentation for this named schema</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
-                            IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names)
-                            : base(Type.Enumeration, name, aliases, props, names)
+                            IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
+                            string doc)
+                            : base(Type.Enumeration, name, aliases, props, names, doc)
         {
             if (null == name.Name) throw new SchemaParseException("name cannot be null for enum schema.");
             this.Symbols = symbols;

@@ -75,7 +75,8 @@ namespace Avro
             var fields = new List<Field>();
             var fieldMap = new Dictionary<string, Field>();
             var fieldAliasMap = new Dictionary<string, Field>();
-            var result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names);
+            var result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
+                JsonHelper.GetOptionalString(jtok, "doc"));
 
             int fieldPos = 0;
             foreach (JObject jfield in jfields)
@@ -99,14 +100,17 @@ namespace Avro
         /// <param name="type">type of record schema, either record or error</param>
         /// <param name="name">name of the record schema</param>
         /// <param name="aliases">list of aliases for the record name</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="fields">list of fields for the record</param>
         /// <param name="request">true if this is an anonymous record with 'request' instead of 'fields'</param>
         /// <param name="fieldMap">map of field names and field objects</param>
+        /// <param name="fieldAliasMap">map of field aliases and field objects</param>
         /// <param name="names">list of named schema already read</param>
+        /// <param name="doc">documentation for this named schema</param>
         private RecordSchema(Type type, SchemaName name, IList<SchemaName> aliases,  PropertyMap props,
                                 List<Field> fields, bool request, IDictionary<string, Field> fieldMap,
-                                IDictionary<string, Field> fieldAliasMap, SchemaNames names)
-                                : base(type, name, aliases, props, names)
+                                IDictionary<string, Field> fieldAliasMap, SchemaNames names, string doc)
+                                : base(type, name, aliases, props, names, doc)
         {
             if (!request && null == name.Name) throw new SchemaParseException("name cannot be null for record schema.");
             this.Fields = fields;
