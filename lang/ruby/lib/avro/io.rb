@@ -43,7 +43,7 @@ module Avro
       end
 
       def byte!
-        @reader.read(1).unpack('C').first
+        @reader.readbyte
       end
 
       def read_null
@@ -76,7 +76,7 @@ module Avro
         # The float is converted into a 32-bit integer using a method
         # equivalent to Java's floatToIntBits and then encoded in
         # little-endian format.
-        @reader.read(4).unpack('e')[0]
+        read_and_unpack(4, 'e'.freeze)
       end
 
       def read_double
@@ -84,7 +84,7 @@ module Avro
         # The double is converted into a 64-bit integer using a method
         # equivalent to Java's doubleToLongBits and then encoded in
         # little-endian format.
-        @reader.read(8).unpack('E')[0]
+        read_and_unpack(8, 'E'.freeze)
       end
 
       def read_bytes
@@ -97,7 +97,7 @@ module Avro
         # A string is encoded as a long followed by that many bytes of
         # UTF-8 encoded character data.
         read_bytes.tap do |string|
-          string.force_encoding("UTF-8") if string.respond_to? :force_encoding
+          string.force_encoding('UTF-8'.freeze) if string.respond_to? :force_encoding
         end
       end
 
@@ -144,6 +144,23 @@ module Avro
       def skip(n)
         reader.seek(reader.tell() + n)
       end
+
+      private
+
+      # Optimize unpacking strings when `unpack1` is available (ruby >= 2.4)
+      if String.instance_methods.include?(:unpack1)
+
+        def read_and_unpack(byte_count, format)
+          @reader.read(byte_count).unpack1(format)
+        end
+
+      else
+
+        def read_and_unpack(byte_count, format)
+          @reader.read(byte_count).unpack(format)[0]
+        end
+
+      end
     end
 
     # Write leaf values
@@ -188,7 +205,7 @@ module Avro
       # equivalent to Java's floatToIntBits and then encoded in
       # little-endian format.
       def write_float(datum)
-        @writer.write([datum].pack('e'))
+        @writer.write([datum].pack('e'.freeze))
       end
 
       # A double is written as 8 bytes.
@@ -196,7 +213,7 @@ module Avro
       # equivalent to Java's doubleToLongBits and then encoded in
       # little-endian format.
       def write_double(datum)
-        @writer.write([datum].pack('E'))
+        @writer.write([datum].pack('E'.freeze))
       end
 
       # Bytes are encoded as a long followed by that many bytes of data.
@@ -208,7 +225,7 @@ module Avro
       # A string is encoded as a long followed by that many bytes of
       # UTF-8 encoded character data
       def write_string(datum)
-        datum = datum.encode('utf-8') if datum.respond_to? :encode
+        datum = datum.encode('utf-8'.freeze) if datum.respond_to? :encode
         write_bytes(datum)
       end
 
