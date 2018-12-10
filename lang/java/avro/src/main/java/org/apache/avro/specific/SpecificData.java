@@ -351,9 +351,14 @@ public class SpecificData extends GenericData {
     return super.getSchemaName(datum);
   }
 
-  /** True iff a class should be serialized with toString(). */
+  /** True if a class should be serialized with toString(). */
   protected boolean isStringable(Class<?> c) {
     return stringableClasses.contains(c);
+  }
+  /** True if a class IS a string type */
+  protected boolean isStringType(Class<?> c) {
+    // this will return true for String, Utf8, CharSequence
+    return CharSequence.class.isAssignableFrom(c);
   }
 
   /** Return the protocol for a Java interface. */

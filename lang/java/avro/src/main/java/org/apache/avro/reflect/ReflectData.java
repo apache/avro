@@ -378,7 +378,7 @@ public class ReflectData extends SpecificData {
       Map m = (Map)datum;
       if (m.size() > 0) {
         Class keyClass = m.keySet().iterator().next().getClass();
-        if (isStringable(keyClass) || keyClass == String.class)
+        if (isStringable(keyClass) || isStringType(keyClass))
           return false;
         return true;
       }
