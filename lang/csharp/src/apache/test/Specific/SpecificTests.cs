@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -94,9 +94,9 @@ namespace Avro.Test
 }"
 , new object[] {3, // index of the schema to serialize
   "com.foo.Z",  // name of the schema to serialize
-@"Console.WriteLine(""Constructing com.foo.Z..."");", // Empty Constructor.
+@"// Console.WriteLine(""Constructing com.foo.Z..."");", // Empty Constructor.
 @"
-  Console.WriteLine(""Populating com.foo.Z..."");
+  // Console.WriteLine(""Populating com.foo.Z..."");
   string bytes = ""bytes sample text"";
   System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 

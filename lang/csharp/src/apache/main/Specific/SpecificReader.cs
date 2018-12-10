@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -80,12 +80,6 @@ namespace Avro.Specific
     /// </summary>
     public class SpecificDefaultReader : DefaultReader
     {
-        /// <summary>
-        /// Static dictionary of type names and its corresponding assembly type.
-        /// This is used to prevent multiple reflection for the same type name.
-        /// </summary>
-        private static IDictionary<string, Type> TypeName = new Dictionary<string, Type>();
-
         /// <summary>
         /// Constructor
         /// </summary>
