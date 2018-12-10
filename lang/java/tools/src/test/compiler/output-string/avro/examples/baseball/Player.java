@@ -127,7 +127,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * Gets the value of the 'number' field.
    * @return The number of the player
    */
-  public java.lang.Integer getNumber() {
+  public int getNumber() {
     return number;
   }
 
@@ -136,7 +136,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * The number of the player
    * @param value the value to set.
    */
-  public void setNumber(java.lang.Integer value) {
+  public void setNumber(int value) {
     this.number = value;
   }
 
@@ -292,7 +292,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       * The number of the player
       * @return The value.
       */
-    public java.lang.Integer getNumber() {
+    public int getNumber() {
       return number;
     }
 

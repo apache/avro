@@ -228,7 +228,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  public ${this.javaUnbox($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
 #end
@@ -252,7 +252,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
    * @param value the value to set.
    */
-  public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} value) {
+  public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
     this.${this.mangle($field.name(), $schema.isError())} = value;
   }
 #end
@@ -384,7 +384,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
       * @return The value.
       */
-    public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    public ${this.javaUnbox($field.schema())} ${this.generateGetMethod($schema, $field)}() {
       return ${this.mangle($field.name(), $schema.isError())};
     }
 
