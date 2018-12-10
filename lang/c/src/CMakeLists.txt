@@ -79,7 +79,7 @@ set(AVRO_SRC
 
 source_group(Avro FILES ${AVRO_SRC})
 
-# The version.sh script gives us a SOVERSION that uses colon as a
+# The version.sh script gives us a VERSION that uses colon as a
 # separator; we need periods.
 
 string(REPLACE ":" "." LIBAVRO_DOT_VERSION ${LIBAVRO_VERSION})
@@ -94,7 +94,8 @@ add_library(avro-shared SHARED ${AVRO_SRC})
 target_link_libraries(avro-shared ${JANSSON_LIBRARIES} ${CODEC_LIBRARIES} ${THREADS_LIBRARIES})
 set_target_properties(avro-shared PROPERTIES
         OUTPUT_NAME avro
-        SOVERSION ${LIBAVRO_DOT_VERSION})
+        VERSION ${LIBAVRO_DOT_VERSION}
+        SOVERSION ${LIBAVRO_SOVERSION})
 endif(NOT WIN32)
 
 install(FILES

@@ -47,6 +47,16 @@ if (UNIX)
     if(LIBAVRO_VERSION_RESULT)
         message(FATAL_ERROR "Cannot determine libavro version number")
     endif(LIBAVRO_VERSION_RESULT)
+
+    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh libcurrent
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE LIBAVRO_SOVERSION_RESULT
+        OUTPUT_VARIABLE LIBAVRO_SOVERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(LIBAVRO_SOVERSION_RESULT)
+        message(FATAL_ERROR "Cannot determine libavro version number")
+    endif(LIBAVRO_SOVERSION_RESULT)
+
 else(UNIX)
     # Hard code for win32 -- need to figure out how to port version.sh for
     # Windows.
