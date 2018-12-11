@@ -470,7 +470,7 @@ public class JsonDecoder extends ParsingDecoder
         do {
           String fn = in.getText();
           in.nextToken();
-          if (name.equals(fn)) {
+          if (name.equals(fn) || fa.aliases.contains(fn)) {
             return null;
           } else {
             if (currentReorderBuffer == null) {
