@@ -960,7 +960,7 @@ class RecordSchema(NamedSchema):
     for field in fields:
       if field.name in field_map:
         raise SchemaParseException(
-            'Duplicate field name %r in list %r.' % (field.name, field_desc_list))
+            'Duplicate record field name %r.' % field.name)
       field_map[field.name] = field
     return MappingProxyType(field_map)
 

@@ -635,6 +635,16 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(type(v), list)
     self.assertEqual(correct,len(OTHER_PROP_EXAMPLES))
 
+  def testDuplicateRecordField(self):
+    schema_string = """{
+      "type": "record",
+      "name": "Test",
+      "fields": [{"name": "foo", "type": "int"}, {"name": "foo", "type": "string"}]
+    }"""
+    with self.assertRaises(schema.SchemaParseException) as e:
+      schema.Parse(schema_string)
+    self.assertRegexpMatches(str(e.exception), 'Duplicate.*field name.*foo')
+
 
 # ------------------------------------------------------------------------------
 
