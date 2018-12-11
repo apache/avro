@@ -31,7 +31,7 @@ import org.apache.maven.project.MavenProject;
 
 /**
  * Generate Avro files (.avsc and .avpr) from Java classes or interfaces
- * 
+ *
  * @goal induce
  * @phase process-classes
  * @threadSafe
@@ -55,7 +55,7 @@ public class InduceMojo extends AbstractMojo {
 
   /**
    * The current Maven project.
-   * 
+   *
    * @parameter default-value="${project}"
    * @readonly
    * @required
