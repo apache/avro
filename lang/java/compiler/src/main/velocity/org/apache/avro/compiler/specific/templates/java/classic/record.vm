@@ -42,6 +42,14 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static SpecificData MODEL$ = new SpecificData();
+#set ($usedConversions = $this.getUsedConversionClasses($schema))
+#if (!$usedConversions.isEmpty())
+static {
+#foreach ($conversion in $usedConversions)
+    MODEL$.addLogicalTypeConversion(new ${conversion}());
+#end
+  }
+#end
 
 #if (!$schema.isError())
   private static final BinaryMessageEncoder<${this.mangle($schema.getName())}> ENCODER =
@@ -158,6 +166,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 
 #end
+  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
   public java.lang.Object get(int field$) {
@@ -172,17 +181,6 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   }
 
 #if ($this.hasLogicalTypeField($schema))
-  protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
-#if ($this.getDateTimeLogicalTypeImplementation().name() == "JODA")
-  protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
-#elseif ($this.getDateTimeLogicalTypeImplementation().name() == "JSR310")
-  protected static final org.apache.avro.data.Jsr310TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.Jsr310TimeConversions.DateConversion();
-  protected static final org.apache.avro.data.Jsr310TimeConversions.TimeMillisConversion TIME_CONVERSION = new org.apache.avro.data.Jsr310TimeConversions.TimeMillisConversion();
-  protected static final org.apache.avro.data.Jsr310TimeConversions.TimestampMillisConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.Jsr310TimeConversions.TimestampMillisConversion();
-#end
-
   private static final org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {
 #foreach ($field in $schema.getFields())
@@ -502,18 +500,10 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
             throw e;
           }
         } else {
-#if ($this.hasLogicalTypeField($schema))
-          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()], record.getConversion($field.pos()));
-#else
           record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()]);
-#end
         }
 #else
-#if ($this.hasLogicalTypeField($schema))
-        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()], record.getConversion($field.pos()));
-#else
         record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()]);
-#end
 #end
 #end
         return record;

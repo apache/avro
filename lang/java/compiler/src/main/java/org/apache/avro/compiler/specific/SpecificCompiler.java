@@ -293,6 +293,72 @@ public class SpecificCompiler {
     return dateTimeLogicalTypeImplementation;
   }
 
+  public void addCustomConversion(Class<?> conversionClass) {
+    try {
+      final Conversion<?> conversion = (Conversion<?>)conversionClass.newInstance();
+      specificData.addLogicalTypeConversion(conversion);
+    }  catch (IllegalAccessException | InstantiationException e) {
+      throw new RuntimeException("Failed to instantiate conversion class " + conversionClass, e);
+    }
+  }
+
+  public Collection<String> getUsedConversionClasses(Schema schema) {
+    LinkedHashMap<String, Conversion<?>> classnameToConversion = new LinkedHashMap<>();
+    for (Conversion<?> conversion : specificData.getConversions()) {
+      classnameToConversion.put(conversion.getConvertedType().getCanonicalName(), conversion);
+    }
+    Collection<String> result = new HashSet<>();
+    for (String className : getClassNamesOfPrimitiveFields(schema)) {
+      if (classnameToConversion.containsKey(className)) {
+        result.add(classnameToConversion.get(className).getClass().getCanonicalName());
+      }
+    }
+    return result;
+  }
+
+  private Set<String> getClassNamesOfPrimitiveFields(Schema schema) {
+    Set<String> result = new HashSet<>();
+    getClassNamesOfPrimitiveFields(schema, result, new HashSet<>());
+    return result;
+  }
+
+  private void getClassNamesOfPrimitiveFields(Schema schema, Set<String> result, Set<Schema> seenSchemas) {
+    if (seenSchemas.contains(schema)) {
+      return;
+    }
+    seenSchemas.add(schema);
+    switch (schema.getType()) {
+      case RECORD:
+        for (Schema.Field field : schema.getFields()) {
+          getClassNamesOfPrimitiveFields(field.schema(), result, seenSchemas);
+        }
+        break;
+      case MAP:
+        getClassNamesOfPrimitiveFields(schema.getValueType(), result, seenSchemas);
+        break;
+      case ARRAY:
+        getClassNamesOfPrimitiveFields(schema.getElementType(), result, seenSchemas);
+        break;
+      case UNION:
+        for (Schema s : schema.getTypes())
+          getClassNamesOfPrimitiveFields(s, result, seenSchemas);
+        break;
+      case ENUM:
+      case FIXED:
+      case NULL:
+        break;
+      case STRING: case BYTES:
+      case INT: case LONG:
+      case FLOAT: case DOUBLE:
+      case BOOLEAN:
+        result.add(javaType(schema));
+        break;
+      default: throw new RuntimeException("Unknown type: "+schema);
+    }
+  }
+
+  private static String logChuteName = null;
+
   private void initializeVelocity() {
     this.velocityEngine = new VelocityEngine();
 
@@ -810,14 +876,13 @@ public class SpecificCompiler {
       return "null";
     }
 
-    if (LogicalTypes.date().equals(schema.getLogicalType())) {
-      return "DATE_CONVERSION";
-    } else if (LogicalTypes.timeMillis().equals(schema.getLogicalType())) {
-      return "TIME_CONVERSION";
-    } else if (LogicalTypes.timestampMillis().equals(schema.getLogicalType())) {
-      return "TIMESTAMP_CONVERSION";
-    } else if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass())) {
-      return enableDecimalLogicalType ? "DECIMAL_CONVERSION" : "null";
+    if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass()) && !enableDecimalLogicalType) {
+      return "null";
+    }
+
+    final Conversion<Object> conversion = specificData.getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return "new " + conversion.getClass().getCanonicalName() + "()";
     }
 
     return "null";

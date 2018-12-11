@@ -37,6 +37,11 @@ public abstract class SpecificRecordBase
   public abstract Object get(int field);
   public abstract void put(int field, Object value);
 
+  public SpecificData getSpecificData() {
+    // Default implementation for backwards compatibility, overridden in generated code
+    return SpecificData.get();
+  }
+
   public Conversion<?> getConversion(int field) {
     // for backward-compatibility. no older specific classes have conversions.
     return null;
@@ -61,22 +66,22 @@ public abstract class SpecificRecordBase
     if (that == this) return true;                        // identical object
     if (!(that instanceof SpecificRecord)) return false;  // not a record
     if (this.getClass() != that.getClass()) return false; // not same schema
-    return SpecificData.get().compare(this, that, this.getSchema(), true) == 0;
+    return getSpecificData().compare(this, that, this.getSchema(), true) == 0;
   }
 
   @Override
   public int hashCode() {
-    return SpecificData.get().hashCode(this, this.getSchema());
+    return getSpecificData().hashCode(this, this.getSchema());
   }
 
   @Override
   public int compareTo(SpecificRecord that) {
-    return SpecificData.get().compare(this, that, this.getSchema());
+    return getSpecificData().compare(this, that, this.getSchema());
   }
 
   @Override
   public String toString() {
-    return SpecificData.get().toString(this);
+    return getSpecificData().toString(this);
   }
 
   @Override

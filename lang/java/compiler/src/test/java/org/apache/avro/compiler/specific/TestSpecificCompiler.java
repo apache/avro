@@ -475,6 +475,42 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testNullableLogicalTypesJavaUnboxDecimalTypesEnabled() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    // Nullable types should return boxed types instead of primitive types
+    Schema nullableDecimalSchema1 = Schema.createUnion(
+      Schema.create(Schema.Type.NULL), LogicalTypes.decimal(9,2)
+        .addToSchema(Schema.create(Schema.Type.BYTES)));
+    Schema nullableDecimalSchema2 = Schema.createUnion(
+      LogicalTypes.decimal(9,2)
+        .addToSchema(Schema.create(Schema.Type.BYTES)), Schema.create(Schema.Type.NULL));
+    Assert.assertEquals("Should return boxed type",
+      compiler.javaUnbox(nullableDecimalSchema1), "java.math.BigDecimal");
+    Assert.assertEquals("Should return boxed type",
+      compiler.javaUnbox(nullableDecimalSchema2), "java.math.BigDecimal");
+  }
+
+  @Test
+  public void testNullableLogicalTypesJavaUnboxDecimalTypesDisabled() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(false);
+
+    // Since logical decimal types are disabled, a ByteBuffer is expected.
+    Schema nullableDecimalSchema1 = Schema.createUnion(
+      Schema.create(Schema.Type.NULL), LogicalTypes.decimal(9,2)
+        .addToSchema(Schema.create(Schema.Type.BYTES)));
+    Schema nullableDecimalSchema2 = Schema.createUnion(
+      LogicalTypes.decimal(9,2)
+        .addToSchema(Schema.create(Schema.Type.BYTES)), Schema.create(Schema.Type.NULL));
+    Assert.assertEquals("Should return boxed type",
+      compiler.javaUnbox(nullableDecimalSchema1), "java.nio.ByteBuffer");
+    Assert.assertEquals("Should return boxed type",
+      compiler.javaUnbox(nullableDecimalSchema2), "java.nio.ByteBuffer");
+  }
+
+  @Test
   public void testNullableTypesJavaUnbox() throws Exception {
     SpecificCompiler compiler = createCompiler();
     compiler.setEnableDecimalLogicalType(false);
@@ -527,6 +563,76 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testGetUsedConversionClassesForNullableLogicalTypes() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    Schema nullableDecimal1 = Schema.createUnion(
+      Schema.create(Schema.Type.NULL), LogicalTypes.decimal(9,2)
+        .addToSchema(Schema.create(Schema.Type.BYTES)));
+    Schema schemaWithNullableDecimal1 = Schema.createRecord("WithNullableDecimal", "", "", false, Collections.singletonList(new Schema.Field("decimal", nullableDecimal1, "", null)));
+
+    final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schemaWithNullableDecimal1);
+    Assert.assertEquals(1, usedConversionClasses.size());
+    Assert.assertEquals("org.apache.avro.Conversions.DecimalConversion", usedConversionClasses.iterator().next());
+  }
+
+  @Test
+  public void testGetUsedConversionClassesForNullableLogicalTypesInNestedRecord() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
+
+    final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
+    Assert.assertEquals(1, usedConversionClasses.size());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+  }
+
+  @Test
+  public void testGetUsedConversionClassesForNullableLogicalTypesInArray() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NullableLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfLogicalType\",\"type\":{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}}]}");
+
+    final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
+    Assert.assertEquals(1, usedConversionClasses.size());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+  }
+
+  @Test
+  public void testGetUsedConversionClassesForNullableLogicalTypesInArrayOfRecords() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NestedLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfRecords\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"RecordInArray\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}}]}");
+
+    final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
+    Assert.assertEquals(1, usedConversionClasses.size());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+  }
+
+  @Test
+  public void testGetUsedConversionClassesForNullableLogicalTypesInUnionOfRecords() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NestedLogicalTypesUnion\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"unionOfRecords\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RecordInUnion\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}]}]}");
+
+    final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
+    Assert.assertEquals(1, usedConversionClasses.size());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+  }
+
+  @Test
+  public void testGetUsedConversionClassesForNullableLogicalTypesInMapOfRecords() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+
+    final Schema schema = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}");
+
+    final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
+    Assert.assertEquals(1, usedConversionClasses.size());
+    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+  }
+
+  @Test
   public void testLogicalTypesWithMultipleFields() throws Exception {
     Schema logicalTypesWithMultipleFields = new Schema.Parser().parse(
         new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
@@ -566,12 +672,12 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid()
         .addToSchema(Schema.create(Schema.Type.STRING));
 
-    Assert.assertEquals("Should use DATE_CONVERSION for date type",
-        "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
-    Assert.assertEquals("Should use TIME_CONVERSION for time type",
-        "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
-    Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
-        "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use date conversion for date type",
+        "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+    Assert.assertEquals("Should use time conversion for time type",
+        "new org.apache.avro.data.TimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use timestamp conversion for date type",
+        "new org.apache.avro.data.TimeConversions.TimestampConversion()", compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
@@ -595,14 +701,14 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid()
         .addToSchema(Schema.create(Schema.Type.STRING));
 
-    Assert.assertEquals("Should use DATE_CONVERSION for date type",
-        "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
-    Assert.assertEquals("Should use TIME_CONVERSION for time type",
-        "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
-    Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
-        "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use date conversion for date type",
+            "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+    Assert.assertEquals("Should use time conversion for time type",
+            "new org.apache.avro.data.TimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use timestamp conversion for date type",
+            "new org.apache.avro.data.TimeConversions.TimestampConversion()", compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
-        "DECIMAL_CONVERSION", compiler.conversionInstance(decimalSchema));
+        "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(uuidSchema));
   }

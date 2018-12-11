@@ -105,6 +105,10 @@ public class GenericData {
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
       new IdentityHashMap<>();
 
+  public Collection<Conversion<?>> getConversions() {
+    return conversions.values();
+  }
+
   /**
    * Registers the given conversion to be used when reading and writing with
    * this data model.

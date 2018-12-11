@@ -94,6 +94,7 @@
     <module>thrift</module>
     <module>archetypes</module>
     <module>grpc</module>
+    <module>integration-test</module>
   </modules>
 
   <build>

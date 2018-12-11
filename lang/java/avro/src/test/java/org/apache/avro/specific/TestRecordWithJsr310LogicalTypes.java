@@ -854,16 +854,16 @@ public class TestRecordWithJsr310LogicalTypes extends org.apache.avro.specific.S
     public TestRecordWithJsr310LogicalTypes build() {
       try {
         TestRecordWithJsr310LogicalTypes record = new TestRecordWithJsr310LogicalTypes();
-        record.b = fieldSetFlags()[0] ? this.b : (java.lang.Boolean) defaultValue(fields()[0], record.getConversion(0));
-        record.i32 = fieldSetFlags()[1] ? this.i32 : (java.lang.Integer) defaultValue(fields()[1], record.getConversion(1));
-        record.i64 = fieldSetFlags()[2] ? this.i64 : (java.lang.Long) defaultValue(fields()[2], record.getConversion(2));
-        record.f32 = fieldSetFlags()[3] ? this.f32 : (java.lang.Float) defaultValue(fields()[3], record.getConversion(3));
-        record.f64 = fieldSetFlags()[4] ? this.f64 : (java.lang.Double) defaultValue(fields()[4], record.getConversion(4));
-        record.s = fieldSetFlags()[5] ? this.s : (java.lang.CharSequence) defaultValue(fields()[5], record.getConversion(5));
-        record.d = fieldSetFlags()[6] ? this.d : (java.time.LocalDate) defaultValue(fields()[6], record.getConversion(6));
-        record.t = fieldSetFlags()[7] ? this.t : (java.time.LocalTime) defaultValue(fields()[7], record.getConversion(7));
-        record.ts = fieldSetFlags()[8] ? this.ts : (java.time.Instant) defaultValue(fields()[8], record.getConversion(8));
-        record.dec = fieldSetFlags()[9] ? this.dec : (java.math.BigDecimal) defaultValue(fields()[9], record.getConversion(9));
+        record.b = fieldSetFlags()[0] ? this.b : (java.lang.Boolean) defaultValue(fields()[0]);
+        record.i32 = fieldSetFlags()[1] ? this.i32 : (java.lang.Integer) defaultValue(fields()[1]);
+        record.i64 = fieldSetFlags()[2] ? this.i64 : (java.lang.Long) defaultValue(fields()[2]);
+        record.f32 = fieldSetFlags()[3] ? this.f32 : (java.lang.Float) defaultValue(fields()[3]);
+        record.f64 = fieldSetFlags()[4] ? this.f64 : (java.lang.Double) defaultValue(fields()[4]);
+        record.s = fieldSetFlags()[5] ? this.s : (java.lang.CharSequence) defaultValue(fields()[5]);
+        record.d = fieldSetFlags()[6] ? this.d : (java.time.LocalDate) defaultValue(fields()[6]);
+        record.t = fieldSetFlags()[7] ? this.t : (java.time.LocalTime) defaultValue(fields()[7]);
+        record.ts = fieldSetFlags()[8] ? this.ts : (java.time.Instant) defaultValue(fields()[8]);
+        record.dec = fieldSetFlags()[9] ? this.dec : (java.math.BigDecimal) defaultValue(fields()[9]);
         return record;
       } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
