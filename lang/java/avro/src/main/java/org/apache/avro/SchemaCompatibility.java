@@ -51,7 +51,7 @@ public class SchemaCompatibility {
 
   /**
    * Validates that the provided reader schema can be used to decode avro data written with the
-   * provided writer schema.
+   * provided writer schema, allowing loss of data due to type conversions.
    * @param reader schema to check.
    * @param writer schema to check.
    * @return a result object identifying any compatibility errors.
@@ -60,8 +60,24 @@ public class SchemaCompatibility {
       final Schema reader,
       final Schema writer
   ) {
+    return checkReaderWriterCompatibility(reader, writer, true);
+  }
+
+  /**
+   * Validates that the provided reader schema can be used to decode avro data written with the
+   * provided writer schema.
+   * @param reader schema to check.
+   * @param writer schema to check.
+   * @param allowDataLoss whether or not to accept type conversions that might lead to loss of encoded data precision.
+   * @return a result object identifying any compatibility errors.
+   */
+  public static SchemaPairCompatibility checkReaderWriterCompatibility(
+      final Schema reader,
+      final Schema writer,
+      final boolean allowDataLoss
+  ) {
     final SchemaCompatibilityResult compatibility =
-        new ReaderWriterCompatibilityChecker()
+        new ReaderWriterCompatibilityChecker(allowDataLoss)
             .getCompatibility(reader, writer);
 
     final String message;
@@ -198,6 +214,10 @@ public class SchemaCompatibility {
     private static final String ROOT_REFERENCE_TOKEN = "";
     private final Map<ReaderWriter, SchemaCompatibilityResult> mMemoizeMap =
         new HashMap<>();
+    private final boolean mAllowDataLoss;
+    public ReaderWriterCompatibilityChecker(boolean allowDataLoss) {
+      mAllowDataLoss = allowDataLoss;
+    }
 
     /**
      * Reports the compatibility of a reader/writer schema pair.
@@ -352,16 +372,19 @@ public class SchemaCompatibility {
           case FLOAT: {
             return ((writer.getType() == Type.INT)
                 || (writer.getType() == Type.LONG))
-                ? result
+                ? result.mergedWith(lossyConversion(reader, writer, SchemaIncompatibilityType.LOSSY_FLOAT_CONVERSION, writer.getType().getName() + " conversion to float risks losing data", location))
                 : result.mergedWith(typeMismatch(reader, writer, location));
 
           }
           case DOUBLE: {
-            return ((writer.getType() == Type.INT)
-                || (writer.getType() == Type.LONG)
-                || (writer.getType() == Type.FLOAT))
-                ? result
-                : result.mergedWith(typeMismatch(reader, writer, location));
+            if (writer.getType() == Type.LONG) {
+              return result.mergedWith(lossyConversion(reader, writer, SchemaIncompatibilityType.LOSSY_DOUBLE_CONVERSION, writer.getType().getName() + " conversion to double risks losing data", location));
+            } else {
+              return ((writer.getType() == Type.INT)
+                  || (writer.getType() == Type.FLOAT))
+                  ? result
+                  : result.mergedWith(typeMismatch(reader, writer, location));
+            }
           }
           case BYTES: {
             return (writer.getType() == Type.STRING)
@@ -403,6 +426,14 @@ public class SchemaCompatibility {
           }
         }
       }
+    }
+
+    /**
+      * If configured to detect possible data loss, return an incompatible result, otherwise return compatible.
+      */
+    private SchemaCompatibilityResult lossyConversion(Schema reader, Schema writer, SchemaIncompatibilityType incompatibility,
+           String details, Deque<String> location) {
+        return mAllowDataLoss ? SchemaCompatibilityResult.compatible() : SchemaCompatibilityResult.incompatible(incompatibility, reader, writer,  details, asList(location));
     }
 
     private SchemaCompatibilityResult checkReaderWriterRecordFields(final Schema reader,
@@ -499,24 +530,34 @@ public class SchemaCompatibility {
     }
   }
 
-  /**
-   * Identifies the type of a schema compatibility result.
-   */
+  /** Identifies the type of a schema compatibility result. */
   public enum SchemaCompatibilityType {
+    /** Schemas are compatible . */
     COMPATIBLE,
+    /** Schemas are incompatible. */
     INCOMPATIBLE,
-
     /** Used internally to tag a reader/writer schema pair and prevent recursion. */
     RECURSION_IN_PROGRESS;
   }
 
+  /** Identifies the type of schema incompatibility. */
   public enum SchemaIncompatibilityType {
+    /** Name mismatch in schema elements. */
     NAME_MISMATCH,
+    /** Size of a fixed type differs. */
     FIXED_SIZE_MISMATCH,
+    /** Reader enum lacking some writer symbols. Not all data might be possible to read. */
     MISSING_ENUM_SYMBOLS,
+    /** Reader field not present in writer schema, and is missing a default value. */
     READER_FIELD_MISSING_DEFAULT_VALUE,
+    /** Field has wrong type. */
     TYPE_MISMATCH,
-    MISSING_UNION_BRANCH;
+    /** Reader not compatible with all branches of a union. */
+    MISSING_UNION_BRANCH,
+    /** Lossy float conversion. */
+    LOSSY_FLOAT_CONVERSION,
+    /** Lossy double conversion. */
+    LOSSY_DOUBLE_CONVERSION;
   }
 
   /**

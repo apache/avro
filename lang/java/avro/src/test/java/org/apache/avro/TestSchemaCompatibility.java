@@ -225,12 +225,6 @@ public class TestSchemaCompatibility {
       new ReaderWriter(LONG_SCHEMA, INT_SCHEMA),
       new ReaderWriter(LONG_SCHEMA, LONG_SCHEMA),
 
-      // Avro spec says INT/LONG can be promoted to FLOAT/DOUBLE.
-      // This is arguable as this causes a loss of precision.
-      new ReaderWriter(FLOAT_SCHEMA, INT_SCHEMA),
-      new ReaderWriter(FLOAT_SCHEMA, LONG_SCHEMA),
-      new ReaderWriter(DOUBLE_SCHEMA, LONG_SCHEMA),
-
       new ReaderWriter(DOUBLE_SCHEMA, INT_SCHEMA),
       new ReaderWriter(DOUBLE_SCHEMA, FLOAT_SCHEMA),
 
@@ -253,19 +247,12 @@ public class TestSchemaCompatibility {
       // Tests involving unions:
       new ReaderWriter(EMPTY_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(FLOAT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_LONG_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(INT_STRING_UNION_SCHEMA, STRING_INT_UNION_SCHEMA),
       new ReaderWriter(INT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(LONG_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(LONG_UNION_SCHEMA, INT_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
-      new ReaderWriter(DOUBLE_UNION_SCHEMA, LONG_UNION_SCHEMA),
-      new ReaderWriter(FLOAT_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, FLOAT_UNION_SCHEMA),
       new ReaderWriter(STRING_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(STRING_UNION_SCHEMA, BYTES_UNION_SCHEMA),
@@ -277,7 +264,6 @@ public class TestSchemaCompatibility {
       new ReaderWriter(FLOAT_SCHEMA, INT_FLOAT_UNION_SCHEMA),
       new ReaderWriter(LONG_SCHEMA, INT_LONG_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_SCHEMA, INT_FLOAT_UNION_SCHEMA),
-      new ReaderWriter(DOUBLE_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA),
 
       // Special case of singleton unions:
       new ReaderWriter(FLOAT_SCHEMA, FLOAT_UNION_SCHEMA),
@@ -314,6 +300,63 @@ public class TestSchemaCompatibility {
       new ReaderWriter(ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD, ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD)
 
   );
+
+  static class LossyConversionTestResult {
+    private final SchemaIncompatibilityType incompatibility;
+    private final String details;
+
+    public LossyConversionTestResult(SchemaIncompatibilityType type, String msg) {
+      incompatibility = type;
+      details = msg;
+    }
+  }
+
+  public static final Map<ReaderWriter, LossyConversionTestResult> POSSIBLE_LOSSY_CONVERSION_TEST_CASES = map(
+      // Avro spec says INT/LONG can be promoted to FLOAT/DOUBLE.
+      // This is arguable as this causes a loss of precision.
+      new ReaderWriter(FLOAT_SCHEMA, INT_SCHEMA),
+      new LossyConversionTestResult(SchemaIncompatibilityType.LOSSY_FLOAT_CONVERSION,
+          "int conversion to float risks losing data"),
+      //
+      new ReaderWriter(FLOAT_SCHEMA, LONG_SCHEMA),
+      new LossyConversionTestResult(SchemaIncompatibilityType.LOSSY_FLOAT_CONVERSION,
+          "long conversion to float risks losing data"),
+      //
+      new ReaderWriter(DOUBLE_SCHEMA, LONG_SCHEMA),
+      new LossyConversionTestResult(SchemaIncompatibilityType.LOSSY_DOUBLE_CONVERSION,
+          "long conversion to double risks losing data"),
+      //
+      new ReaderWriter(FLOAT_UNION_SCHEMA, INT_UNION_SCHEMA),
+      new LossyConversionTestResult(SchemaIncompatibilityType.MISSING_UNION_BRANCH,
+          "reader union lacking writer type: INT"),
+      //
+      new ReaderWriter(FLOAT_UNION_SCHEMA, LONG_UNION_SCHEMA),
+      new LossyConversionTestResult(SchemaIncompatibilityType.MISSING_UNION_BRANCH,
+          "reader union lacking writer type: LONG"),
+      //
+      new ReaderWriter(DOUBLE_UNION_SCHEMA, LONG_UNION_SCHEMA),
+      new LossyConversionTestResult(SchemaIncompatibilityType.MISSING_UNION_BRANCH,
+          "reader union lacking writer type: LONG"),
+      //
+      new ReaderWriter(FLOAT_SCHEMA, INT_FLOAT_UNION_SCHEMA),
+      new LossyConversionTestResult(SchemaIncompatibilityType.LOSSY_FLOAT_CONVERSION,
+          "int conversion to float risks losing data"),
+      //
+      new ReaderWriter(DOUBLE_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA), //
+      new LossyConversionTestResult(SchemaIncompatibilityType.LOSSY_DOUBLE_CONVERSION,
+          "long conversion to double risks losing data"));
+
+  @SuppressWarnings("unchecked")
+  private static <K, V> Map<K, V> map(Object... pairs) {
+    Map<K, V> map = new LinkedHashMap<>();
+    int i = 0;
+    while (i < pairs.length) {
+      K key = (K) pairs[i++];
+      V val = (V) pairs[i++];
+      map.put(key, val);
+    }
+    return map;
+  }
 
   // -----------------------------------------------------------------------------------------------
 
@@ -384,6 +427,38 @@ public class TestSchemaCompatibility {
   }
 
   // -----------------------------------------------------------------------------------------------
+
+  /** Tests reader/writer lossy conversion tests, disallowing data loss, so all pairs should be incompatible. */
+  @Test
+  public void testReaderWriterCompatibilityNoDataLoss() {
+    for (ReaderWriter readerWriter : POSSIBLE_LOSSY_CONVERSION_TEST_CASES.keySet()) {
+      final Schema reader = readerWriter.getReader();
+      final Schema writer = readerWriter.getWriter();
+      final LossyConversionTestResult expected = POSSIBLE_LOSSY_CONVERSION_TEST_CASES.get(readerWriter);
+      final SchemaPairCompatibility result = checkReaderWriterCompatibility(reader, writer, false);
+      assertEquals(String.format("Expecting reader %s to be incompatible with writer %s, but tested compatible.",
+          reader, writer), SchemaCompatibilityType.INCOMPATIBLE, result.getType());
+      assertEquals(String.format("Expecting exactly one incompatibility for reader %s and writer %s.", reader, writer),
+              1, result.getResult().getIncompatibilities().size());
+      Incompatibility incompatibility = result.getResult().getIncompatibilities().get(0);
+      assertEquals(String.format("Expecting different incompatibility for reader %s and writer %s.", reader, writer),
+          expected.incompatibility, incompatibility.getType());
+      assertEquals(String.format("Expecting different error message for reader %s and writer %s.", reader, writer),
+          expected.details, incompatibility.getMessage());
+     }
+  }
+
+  /** Tests reader/writer lossy conversion tests, allowing data loss, so all pairs should be compatible. */
+  @Test
+  public void testReaderWriterCompatibilityAllowDataLoss() {
+    for (ReaderWriter readerWriter : POSSIBLE_LOSSY_CONVERSION_TEST_CASES.keySet()) {
+      final Schema reader = readerWriter.getReader();
+      final Schema writer = readerWriter.getWriter();
+      final SchemaPairCompatibility result = checkReaderWriterCompatibility(reader, writer, true);
+      assertEquals(String.format("Expecting reader %s to be compatible with writer %s, but tested incompatible.",
+          reader, writer), SchemaCompatibilityType.COMPATIBLE, result.getType());
+    }
+  } // -----------------------------------------------------------------------------------------------
 
   /**
    * Descriptor for a test case that encodes a datum according to a given writer schema,
