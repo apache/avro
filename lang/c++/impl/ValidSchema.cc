@@ -17,6 +17,7 @@
  */
 
 #include <boost/format.hpp>
+#include <cctype>
 #include <sstream>
 
 #include "ValidSchema.hh"
