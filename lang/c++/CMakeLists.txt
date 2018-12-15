@@ -40,17 +40,18 @@ set (AVRO_VERSION_MINOR "0")
 project (Avro-cpp)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 
-add_definitions(-std=c++11 -fPIC)
-
 if (WIN32 AND NOT CYGWIN AND NOT MSYS)
-add_definitions (/EHa)
-add_definitions (
-    -DBOOST_REGEX_DYN_LINK
-    -DBOOST_FILESYSTEM_DYN_LINK
-    -DBOOST_SYSTEM_DYN_LINK
-    -DBOOST_IOSTREAMS_DYN_LINK
-    -DBOOST_PROGRAM_OPTIONS_DYN_LINK
-    -DBOOST_ALL_NO_LIB)
+    add_definitions (/EHa)
+    add_definitions (
+        -DNOMINMAX
+        -DBOOST_REGEX_DYN_LINK
+        -DBOOST_FILESYSTEM_DYN_LINK
+        -DBOOST_SYSTEM_DYN_LINK
+        -DBOOST_IOSTREAMS_DYN_LINK
+        -DBOOST_PROGRAM_OPTIONS_DYN_LINK
+        -DBOOST_ALL_NO_LIB)
+else()
+    add_definitions(-std=c++11 -fPIC)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
