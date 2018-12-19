@@ -2139,7 +2139,12 @@ public class SchemaBuilder {
       Field field = new Field(name(), schema, doc(), defaultVal, order);
       addPropsTo(field);
       addAliasesTo(field);
-      names().put(schema);
+      if (schema.getType() == Schema.Type.ENUM) {
+        try {
+          names().put(schema);
+        } catch (Exception ignored) {
+        }
+      }
       return fields.addField(field);
     }
 
