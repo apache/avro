@@ -25,6 +25,7 @@ import java.util.Arrays;
 
 import org.apache.avro.InvalidAvroMagicException;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.avro.io.DatumReader;
 import static org.apache.avro.file.DataFileConstants.SYNC_SIZE;
 import static org.apache.avro.file.DataFileConstants.MAGIC;
@@ -40,7 +41,13 @@ public class DataFileReader<D>
   /** Open a reader for a file. */
   public static <D> FileReader<D> openReader(File file, DatumReader<D> reader)
     throws IOException {
-    return openReader(new SeekableFileInput(file), reader);
+    SeekableFileInput input = new SeekableFileInput( file );
+    try {
+      return openReader( input, reader );
+    } catch ( final Throwable e ) {
+      IOUtils.closeQuietly( input );
+      throw e;
+    }
   }
 
   /** Open a reader for a file. */
@@ -87,16 +94,29 @@ public class DataFileReader<D>
 
   /** Construct a reader for a file. */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
-    this(new SeekableFileInput(file), reader);
+    this(new SeekableFileInput(file), reader, true);
   }
 
   /** Construct a reader for a file. */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader)
     throws IOException {
+    this(sin, reader, false);
+  }
+
+  /** Construct a reader for a file. */
+  protected DataFileReader(SeekableInput sin, DatumReader<D> reader, boolean closeOnError)
+    throws IOException {
     super(reader);
-    this.sin = new SeekableInputStream(sin);
-    initialize(this.sin);
-    blockFinished();
+    try {
+      this.sin = new SeekableInputStream(sin);
+      initialize(this.sin);
+      blockFinished();
+    } catch(final Throwable e) {
+      if (closeOnError) {
+        IOUtils.closeQuietly( sin );
+      }
+      throw e;
+    }
   }
 
   /** Construct using a {@link DataFileStream.Header}.  Does not call {@link
