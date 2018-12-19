@@ -2139,6 +2139,7 @@ public class SchemaBuilder {
       Field field = new Field(name(), schema, doc(), defaultVal, order);
       addPropsTo(field);
       addAliasesTo(field);
+      names().put(schema);
       return fields.addField(field);
     }
 
