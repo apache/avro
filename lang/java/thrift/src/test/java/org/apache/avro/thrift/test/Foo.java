@@ -31,21 +31,21 @@ public class Foo {
 
   public interface Iface {
 
-    public void ping() throws org.apache.thrift.TException;
+    void ping() throws org.apache.thrift.TException;
 
-    public int add(int num1, int num2) throws org.apache.thrift.TException;
+    int add(int num1, int num2) throws org.apache.thrift.TException;
 
-    public void zip() throws org.apache.thrift.TException;
+    void zip() throws org.apache.thrift.TException;
 
   }
 
   public interface AsyncIface {
 
-    public void ping(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    void ping(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
-    public void add(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    void add(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
-    public void zip(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    void zip(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -160,13 +160,14 @@ public class Foo {
         prot.writeMessageEnd();
       }
 
-      public void getResult() throws org.apache.thrift.TException {
+      public Object getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
         (new Client(prot)).recv_ping();
+        return null;
       }
     }
 
@@ -195,7 +196,7 @@ public class Foo {
         prot.writeMessageEnd();
       }
 
-      public int getResult() throws org.apache.thrift.TException {
+      public Object getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
@@ -213,7 +214,7 @@ public class Foo {
     }
 
     public static class zip_call extends org.apache.thrift.async.TAsyncMethodCall {
-      public zip_call(org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public zip_call(org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport)  {
         super(client, protocolFactory, transport, resultHandler, true);
       }
 
@@ -224,12 +225,13 @@ public class Foo {
         prot.writeMessageEnd();
       }
 
-      public void getResult() throws org.apache.thrift.TException {
+      public Object getResult()  {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return prot;
       }
     }
 
