@@ -267,6 +267,19 @@ public class GenericData {
       Arrays.fill(elements, 0, size, null);
       size = 0;
     }
+
+    @Override
+    public void reset() {
+      size = 0;
+    }
+
+    @Override
+    public void prune() {
+      if (size<elements.length) {
+        Arrays.fill(elements, size, elements.length, null);
+      }
+    }
+
     @Override public Iterator<T> iterator() {
       return new Iterator<T>() {
         private int position = 0;

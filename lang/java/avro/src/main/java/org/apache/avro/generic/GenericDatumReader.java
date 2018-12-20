@@ -100,6 +100,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
     RESOLVER_CACHE =
     new ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>() {
+    @Override
     protected Map<Schema,Map<Schema,ResolvingDecoder>> initialValue() {
       return new WeakIdentityHashMap<>();
     }
@@ -269,10 +270,18 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         }
         base += l;
       } while ((l = in.arrayNext()) > 0);
-      return array;
+      return pruneArray(array);
     } else {
-      return newArray(old, 0, expected);
+      return pruneArray(newArray(old, 0, expected));
     }
+  }
+
+
+  private Object pruneArray(Object object) {
+    if (object instanceof GenericArray<?>) {
+      ((GenericArray<?>)object).prune();
+    }
+    return object;
   }
 
   /** Called by the default implementation of {@link #readArray} to retrieve a
@@ -385,7 +394,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * GenericData.Array}.*/
   @SuppressWarnings("unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof Collection) {
+    if (old instanceof GenericArray) {
+      ((GenericArray)old).reset();
+      return old;
+    } else if (old instanceof Collection) {
       ((Collection) old).clear();
       return old;
     } else return new GenericData.Array(size, schema);
