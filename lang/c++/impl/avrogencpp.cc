@@ -121,6 +121,23 @@ public:
 
 static string decorate(const avro::Name& name)
 {
+    static const char * cppReservedWords[] = {
+        "alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break",
+        "case", "catch", "char", "char8_t", "char16_t", "char32_t", "class", "compl", "concept",
+        "const", "consteval", "constexpr", "const_cast", "continue", "co_await", "co_return",
+        "co_yield", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else",
+        "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if",
+        "import", "inline", "int", "long", "module", "mutable", "namespace", "new", "noexcept", "not",
+        "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected", "public", "reflexpr",
+        "register", "reinterpret_cast", "requires", "return", "short", "signed", "sizeof", "static",
+        "static_assert", "static_cast", "struct", "switch", "synchronized", "template", "this",
+        "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned",
+        "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq"
+    };
+
+    for (size_t i = 0; i < sizeof(cppReservedWords)/sizeof(cppReservedWords[0]); i++)
+        if (strcmp(name.simpleName().c_str(), cppReservedWords[i]) == 0)
+            return name.simpleName() + '_';
     return name.simpleName();
 }
 
@@ -132,10 +149,10 @@ string CodeGen::fullname(const string& name) const
 string CodeGen::generateEnumType(const NodePtr& n)
 {
     string s = decorate(n->name());
-    os_ << "enum " << s << " {\n";
+    os_ << "enum class " << s << ": unsigned {\n";
     size_t c = n->names();
     for (size_t i = 0; i < c; ++i) {
-        os_ << "    " << n->nameAt(i) << ",\n";
+        os_ << "    " << decorate(n->nameAt(i)) << ",\n";
     }
     os_ << "};\n\n";
     return s;
@@ -503,35 +520,21 @@ void CodeGen::generateEnumTraits(const NodePtr& n)
 {
 	string dname = decorate(n->name());
 	string fn = fullname(dname);
-	size_t c = n->names();
-	string first;
-	string last;
-	if (!ns_.empty())
-	{
-		first = ns_;
-		first += "::";
-		first += n->nameAt(0);
+	string last = n->nameAt(n->names() - 1);
 
-		last = ns_;
-		last += "::";
-		last += n->nameAt(c-1);
-	} else {
-		first = n->nameAt(0);
-		last = n->nameAt(c-1);
-	}
 	os_ << "template<> struct codec_traits<" << fn << "> {\n"
 		<< "    static void encode(Encoder& e, " << fn << " v) {\n"
-		<< "		if (v < "  << first << " || v > " << last << ")\n"
+		<< "		if (v > " << fn << "::" << last << ")\n"
 		<< "		{\n"
 		<< "			std::ostringstream error;\n"
-		<< "			error << \"enum value \" << v << \" is out of bound for " << fn << " and cannot be encoded\";\n"
+		<< "			error << \"enum value \" << static_cast<unsigned>(v) << \" is out of bound for " << fn << " and cannot be encoded\";\n"
 		<< "			throw avro::Exception(error.str());\n"
 		<< "		}\n"
-		<< "        e.encodeEnum(v);\n"
+		<< "        e.encodeEnum(static_cast<size_t>(v));\n"
 		<< "    }\n"
 		<< "    static void decode(Decoder& d, " << fn << "& v) {\n"
 		<< "		size_t index = d.decodeEnum();\n"
-		<< "		if (index > " << last << ")\n"
+		<< "		if (index > static_cast<size_t>(" << fn << "::" << last << "))\n"
 		<< "		{\n"
 		<< "			std::ostringstream error;\n"
 		<< "			error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
