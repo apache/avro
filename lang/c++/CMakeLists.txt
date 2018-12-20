@@ -40,9 +40,6 @@ set (AVRO_VERSION_MINOR "0")
 project (Avro-cpp)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 if (WIN32 AND NOT CYGWIN AND NOT MSYS)
     add_definitions (/EHa)
     add_definitions (
@@ -54,7 +51,7 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
         -DBOOST_PROGRAM_OPTIONS_DYN_LINK
         -DBOOST_ALL_NO_LIB)
 else()
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    add_definitions(-std=c++11 -fPIC)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
