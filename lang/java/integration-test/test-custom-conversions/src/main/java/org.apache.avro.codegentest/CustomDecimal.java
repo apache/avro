@@ -20,6 +20,7 @@ package org.apache.avro.codegentest;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 
 /**
  * Wraps a BigDecimal just to demonstrate that it is possible to use custom implementation classes with custom conversions.
@@ -35,7 +36,7 @@ public class CustomDecimal implements Comparable<CustomDecimal> {
     public byte[] toByteArray(int scale) {
         final BigDecimal correctlyScaledValue;
         if (scale != internalValue.scale()) {
-            correctlyScaledValue = internalValue.setScale(scale, BigDecimal.ROUND_HALF_UP);
+            correctlyScaledValue = internalValue.setScale(scale, RoundingMode.HALF_UP);
         } else {
             correctlyScaledValue = internalValue;
         }

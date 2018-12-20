@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.*;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -100,7 +101,7 @@ public class TestSpecificLogicalTypes {
         LocalDate.now(),
         LocalTime.now(),
         DateTime.now().withZone(DateTimeZone.UTC),
-        new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
     );
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
@@ -121,7 +122,7 @@ public class TestSpecificLogicalTypes {
         java.time.LocalDate.now(),
         java.time.LocalTime.now(),
         java.time.Instant.now(),
-        new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
     );
 
     File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), record);
@@ -147,7 +148,7 @@ public class TestSpecificLogicalTypes {
             // for granularity less than one second second.
             new DateTime((System.currentTimeMillis() / 1000) * 1000,
                     ISOChronology.getInstance()).withZone(DateTimeZone.UTC),
-            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+            new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
     );
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), withJoda);
@@ -182,7 +183,7 @@ public class TestSpecificLogicalTypes {
             java.time.LocalDate.now(),
             java.time.LocalTime.now(),
             java.time.Instant.now(),
-            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN)
+            new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
     );
 
     File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), withJsr310);
@@ -225,7 +226,7 @@ public class TestSpecificLogicalTypes {
         new TimestampConversion().toLong(
             DateTime.now().withZone(DateTimeZone.UTC), null, null),
         new Conversions.DecimalConversion().toBytes(
-            new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN), null,
+            new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN), null,
             LogicalTypes.decimal(9, 2))
     );
 
@@ -241,7 +242,7 @@ public class TestSpecificLogicalTypes {
     LocalDate date = LocalDate.now();
     LocalTime time = LocalTime.now();
     DateTime timestamp = DateTime.now().withZone(DateTimeZone.UTC);
-    BigDecimal decimal = new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN);
+    BigDecimal decimal = new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN);
 
     TestRecordWithoutLogicalTypes record = new TestRecordWithoutLogicalTypes(
         true,
@@ -282,7 +283,7 @@ public class TestSpecificLogicalTypes {
     LocalDate date = LocalDate.now();
     LocalTime time = LocalTime.now();
     DateTime timestamp = DateTime.now().withZone(DateTimeZone.UTC);
-    BigDecimal decimal = new BigDecimal(123.45f).setScale(2, BigDecimal.ROUND_HALF_DOWN);
+    BigDecimal decimal = new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN);
 
     TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
         true,
