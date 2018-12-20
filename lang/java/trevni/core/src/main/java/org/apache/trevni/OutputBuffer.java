@@ -92,18 +92,18 @@ class OutputBuffer extends ByteArrayOutputStream {
     write(bytes, 0, bytes.length);
   }
 
-  public void writeBytes(ByteBuffer bytes) throws IOException {
+  public void writeBytes(ByteBuffer bytes) {
     int pos = bytes.position();
     int start = bytes.arrayOffset() + pos;
     int len = bytes.limit() - pos;
     writeBytes(bytes.array(), start, len);
   }
 
-  public void writeBytes(byte[] bytes) throws IOException {
+  public void writeBytes(byte[] bytes) {
     writeBytes(bytes, 0, bytes.length);
   }
 
-  public void writeBytes(byte[] bytes, int start, int len) throws IOException {
+  public void writeBytes(byte[] bytes, int start, int len) {
     writeInt(len);
     write(bytes, start, len);
   }
@@ -140,7 +140,7 @@ class OutputBuffer extends ByteArrayOutputStream {
     count += 8;
   }
 
-  public void writeInt(int n) throws IOException {
+  public void writeInt(int n) {
     ensure(5);
     n = (n << 1) ^ (n >> 31);                     // move sign to low-order bit
     if ((n & ~0x7F) != 0) {
