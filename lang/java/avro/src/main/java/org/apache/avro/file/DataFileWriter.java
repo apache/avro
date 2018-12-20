@@ -40,6 +40,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.commons.compress.utils.IOUtils;
 
 /** Stores in a file a sequence of data conforming to a schema.  The schema is
  * stored in the file with the data.  Each datum in a file is of the same
@@ -126,7 +127,13 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a new file for data matching a schema with a random sync. */
   public DataFileWriter<D> create(Schema schema, File file) throws IOException {
-    return create(schema, new SyncableFileOutputStream(file), null);
+    SyncableFileOutputStream sfos = new SyncableFileOutputStream(file);
+    try {
+      return create(schema, sfos, null);
+    } catch (final Throwable e) {
+      IOUtils.closeQuietly(sfos);
+      throw e;
+    }
   }
 
   /** Open a new file for data matching a schema with a random sync. */
