@@ -27,6 +27,14 @@ public interface GenericArray<T> extends List<T>, GenericContainer {
    * without allocating new objects. */
   T peek();
 
+  /** reset size counter of array to zero */
+  default void reset() {
+    clear();
+  }
+
+  /** clean up reusable objects from array (if reset didn't already) */
+  default void prune() {}
+
   /** Reverses the order of the elements in this array. */
   void reverse();
 }

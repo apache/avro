@@ -695,4 +695,26 @@ public class TestGenericData {
       fail("StackOverflowError occurred");
     }
   }
+
+  @Test
+  /** check that GenericArray.reset() retains reusable elements and that GenericArray.prune() cleans
+   * them up properly.
+   */
+  public void testGenericArrayPeek() {
+    Schema elementSchema = SchemaBuilder.record("element").fields().requiredString("value").endRecord();
+    Schema arraySchema = Schema.createArray(elementSchema);
+
+    GenericRecord record = new GenericData.Record( elementSchema );
+    record.put("value", "string");
+
+    GenericArray<GenericRecord> list = new GenericData.Array<GenericRecord>(1, arraySchema);
+    list.add(record);
+
+    list.reset();
+    assertTrue( record == list.peek() );
+
+    list.prune();
+    assertNull( list.peek() );
+  }
+
 }
