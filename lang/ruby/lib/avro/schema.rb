@@ -115,6 +115,7 @@ module Avro
         datum.is_a?(Array) &&
           datum.all?{|d| validate(expected_schema.items, d) }
       when :map
+        datum.is_a?(Hash) &&
           datum.keys.all?{|k| k.is_a? String } &&
           datum.values.all?{|v| validate(expected_schema.values, v) }
       when :union
