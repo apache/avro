@@ -150,7 +150,7 @@ public:
 
     DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema& schema,
         size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
-        base_(new DataFileWriterBase(outputStream, schema, syncInterval, codec)) { }
+        base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) { }
 
     /**
      * Writes the given piece of data into the file.
@@ -305,7 +305,7 @@ public:
     }
 
     DataFileReader(std::unique_ptr<InputStream> inputStream, const ValidSchema& readerSchema) :
-        base_(new DataFileReaderBase(inputStream)) {
+        base_(new DataFileReaderBase(std::move(inputStream))) {
         base_->init(readerSchema);
     }
 
@@ -319,7 +319,7 @@ public:
     }
 
     DataFileReader(std::unique_ptr<InputStream> inputStream) :
-        base_(new DataFileReaderBase(inputStream)) {
+        base_(new DataFileReaderBase(std::move(inputStream))) {
         base_->init();
     }
 

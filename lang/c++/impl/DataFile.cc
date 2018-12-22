@@ -71,7 +71,7 @@ DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& 
     syncInterval_(syncInterval),
     codec_(codec),
     stream_(fileOutputStream(filename)),
-    buffer_(std::move(memoryOutputStream())),
+    buffer_(memoryOutputStream()),
     sync_(makeSync()),
     objectCount_(0)
 {
@@ -86,7 +86,7 @@ DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStrea
     syncInterval_(syncInterval),
     codec_(codec),
     stream_(std::move(outputStream)),
-    buffer_(std::move(memoryOutputStream())),
+    buffer_(memoryOutputStream()),
     sync_(makeSync()),
     objectCount_(0)
 {
@@ -214,7 +214,7 @@ void DataFileWriterBase::sync()
     encoderPtr_->flush();
 
 
-    buffer_ = std::move(memoryOutputStream());
+    buffer_ = memoryOutputStream();
     encoderPtr_->init(*buffer_);
     objectCount_ = 0;
 }
