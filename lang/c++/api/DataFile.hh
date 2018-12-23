@@ -206,7 +206,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     std::string uncompressed;
     void readHeader();
 
-    bool readDataBlock();
+    void readDataBlock();
     void doSeek(int64_t position);
 public:
     /**

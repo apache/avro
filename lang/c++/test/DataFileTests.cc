@@ -47,7 +47,7 @@ using avro::GenericDatum;
 using avro::GenericRecord;
 using avro::NodePtr;
 
-const int count = 1000;
+const int DEFAULT_COUNT = 1000;
 
 template <typename T>
 struct Complex {
@@ -169,11 +169,13 @@ class DataFileTest {
     const char* filename;
     const ValidSchema writerSchema;
     const ValidSchema readerSchema;
+    const int count;
 
 public:
-    DataFileTest(const char* f, const char* wsch, const char* rsch) :
+    DataFileTest(const char* f, const char* wsch, const char* rsch,
+            int count = DEFAULT_COUNT) :
         filename(f), writerSchema(makeValidSchema(wsch)),
-        readerSchema(makeValidSchema(rsch)) { }
+        readerSchema(makeValidSchema(rsch)), count(count) { }
 
     typedef pair<ValidSchema, GenericDatum> Pair;
 
@@ -189,6 +191,8 @@ public:
             ComplexInteger c(re, im);
             df.write(c);
         }
+        // Simulate writing an empty block.
+        df.flush();
         df.close();
     }
 
@@ -399,8 +403,16 @@ public:
         std::set<int64_t> sync_points_syncing;
         std::set<int64_t> sync_points_reading;
         {
+            /*
+             * sync() will stop at a block with 0 objects. But read()
+             * will transparently skip such blocks. So this test will
+             * fail if there are blocks with zero objects. In order to
+             * avoid such failures, we read one object after sync.
+             */
             avro::DataFileReader<ComplexInteger> df(filename, writerSchema);
+            ComplexInteger ci;
             for (int64_t prev = 0; prev != df.previousSync(); df.sync(prev)) {
+                df.read(ci);
                 prev = df.previousSync();
                 sync_points_syncing.insert(prev);
             }
@@ -631,6 +643,13 @@ void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
 test_suite*
 init_unit_test_suite(int argc, char *argv[])
 {
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test0.df");
+        shared_ptr<DataFileTest> t1(new DataFileTest("test1.d0", sch, isch, 0));
+        ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testWrite, t1));
+        addReaderTests(ts, t1);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
     {
         test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.df");
         shared_ptr<DataFileTest> t1(new DataFileTest("test1.df", sch, isch));
