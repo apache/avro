@@ -208,6 +208,15 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}",
     "{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}",
     "{\"type\":\"fixed\",\"name\":\"test\",\"size\":12,\"logicalType\":\"duration\"}"
+
+    // Custom fields
+    "{\"type\":\"string\",\"logicalType\":\"foo\",\"sqlType\":\"datetime\"}",
+    "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":12,\"scale\":6,\"sqlType\":\"datetime\"}",
+    "{\"type\":\"null\",\"extra attribute\":\"custom field\"}",
+    "{\"type\":\"boolean\",\"extra1\":1,\"extra2\":2,\"extra3\":3}",
+    "{\"type\":\"fixed\",\"name\":\"Test\",\"size\":1,\"extra attribute\":1}",
+    "[\"null\",{\"type\":\"string\",\"extra attribute\":\"custom field\"}]",
+    "[{\"type\":\"string\",\"extra attribute\":\"custom field\"},\"null\"]",
 };
 
 const char* malformedLogicalTypes[] = {

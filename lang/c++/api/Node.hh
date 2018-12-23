@@ -22,9 +22,11 @@
 #include "Config.hh"
 
 #include <cassert>
+#include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "../impl/json/JsonDom.hh"
 #include "Exception.hh"
 #include "LogicalType.hh"
 #include "Types.hh"
@@ -36,6 +38,7 @@ class Node;
 class GenericDatum;
 
 typedef boost::shared_ptr<Node> NodePtr;
+typedef std::map<std::string, json::Entity> CustomFields;
 
 class AVRO_DECL Name {
     std::string ns_;
@@ -107,6 +110,19 @@ class AVRO_DECL Node : private boost::noncopyable
     }
 
     void setLogicalType(LogicalType logicalType);
+
+    const CustomFields &customFields() const {
+        return customFields_;
+    }
+
+    void addCustomField(const std::string& fieldName,
+                        const json::Entity& fieldValue);
+
+    void addCustomField(const std::string& fieldName,
+                        const std::string& fieldValue) {
+        addCustomField(fieldName,
+                       json::Entity(boost::make_shared<std::string>(fieldValue)));
+    }
 
     void lock() {
         locked_ = true;
@@ -194,6 +210,7 @@ class AVRO_DECL Node : private boost::noncopyable
 
     const Type type_;
     LogicalType logicalType_;
+    CustomFields customFields_;
     bool locked_;
 };
 

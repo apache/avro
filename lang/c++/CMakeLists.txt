@@ -104,6 +104,8 @@ add_library (avrocpp SHARED ${AVRO_SOURCE_FILES})
 set_property (TARGET avrocpp
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_DYN_LINK)
 
+set_property(TARGET avrocpp PROPERTY CXX_STANDARD 98)
+
 add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
 
 set_property (TARGET avrocpp avrocpp_s
