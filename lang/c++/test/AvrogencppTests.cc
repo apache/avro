@@ -209,7 +209,7 @@ void testResolution()
     s_r.toJson(oss);
     ValidSchema s_rs = avro::compileJsonSchemaFromString(oss.str());
 
-    std::unique_ptr<InputStream> is2 = std::move(memoryInputStream(*os));
+    std::unique_ptr<InputStream> is2 = memoryInputStream(*os);
     dd->init(*is2);
     rd = resolvingDecoder(s_w, s_rs, dd);
     testgen_r::RootRecord t4;
