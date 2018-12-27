@@ -54,6 +54,12 @@ using boost::lexical_cast;
 using avro::ValidSchema;
 using avro::compileJsonSchema;
 
+#if __cplusplus >= 201703L
+#define ANY_NS  "std"
+#else
+#define ANY_NS  "boost"
+#endif
+
 struct PendingSetterGetter {
     string structName;
     string type;
@@ -326,7 +332,7 @@ static void generateGetterAndSetter(ostream& os,
         << "        throw avro::Exception(\"Invalid type for "
             << "union\");\n"
         << "    }\n"
-        << "    return boost::any_cast<" << type << " >(value_);\n"
+        << "    return " << ANY_NS << "::any_cast<" << type << " >(value_);\n"
         << "}\n\n";
 
     os << "inline\n"
@@ -384,7 +390,7 @@ string CodeGen::generateUnionType(const NodePtr& n)
     os_ << "struct " << result << " {\n"
         << "private:\n"
         << "    size_t idx_;\n"
-        << "    boost::any value_;\n"
+        << "    " << ANY_NS << "::any value_;\n"
         << "public:\n"
         << "    size_t idx() const { return idx_; }\n";
 
@@ -396,7 +402,7 @@ string CodeGen::generateUnionType(const NodePtr& n)
                 << "    }\n"
                 << "    void set_null() {\n"
                 << "        idx_ = " << i << ";\n"
-                << "        value_ = boost::any();\n"
+                << "        value_ = " << ANY_NS << "::any();\n"
                 << "    }\n";
         } else {
             const string& type = types[i];
@@ -720,7 +726,11 @@ void CodeGen::generate(const ValidSchema& schema)
     os_ << "#define " << h << "\n\n\n";
 
     os_ << "#include <sstream>\n"
+#if __cplusplus >= 201703L
+        << "#include <any>\n"
+#else
         << "#include \"boost/any.hpp\"\n"
+#endif
         << "#include \"" << includePrefix_ << "Specific.hh\"\n"
         << "#include \"" << includePrefix_ << "Encoder.hh\"\n"
         << "#include \"" << includePrefix_ << "Decoder.hh\"\n"
