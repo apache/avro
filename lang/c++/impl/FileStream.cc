@@ -62,7 +62,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
     }
 
     void seek(ssize_t len) {
-        if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) != INVALID_SET_FILE_POINTER) {
+        if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER && ::GetLastError() != NO_ERROR) {
             throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
         }
     }
