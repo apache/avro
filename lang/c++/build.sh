@@ -88,6 +88,14 @@ case "$target" in
       && ./build/SchemaTests)
     ;;
 
+  xcode-test)
+    mkdir -p build.xcode
+    (cd build.xcode \
+        && cmake -G Xcode .. \
+        && xcodebuild -configuration Release \
+        && ctest -C Release)
+    ;;
+
   dist)
     (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ..)
     do_dist

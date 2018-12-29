@@ -51,6 +51,7 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
         -DBOOST_PROGRAM_OPTIONS_DYN_LINK
         -DBOOST_ALL_NO_LIB)
 else()
+# Replease c++11 with c++17 below in case C++ 17 should be used
     add_definitions(-std=c++11 -fPIC)
 endif()
 
