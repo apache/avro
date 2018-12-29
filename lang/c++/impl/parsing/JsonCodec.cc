@@ -316,7 +316,7 @@ void JsonDecoder<P>::decodeBytes(vector<uint8_t>& value )
 {
     parser_.advance(Symbol::sBytes);
     expect(JsonParser::tkString);
-    value = toBytes(in_.stringValue());
+    value = toBytes(in_.bytesValue());
 }
 
 template <typename P>
@@ -332,7 +332,7 @@ void JsonDecoder<P>::decodeFixed(size_t n, vector<uint8_t>& value)
     parser_.advance(Symbol::sFixed);
     parser_.assertSize(n);
     expect(JsonParser::tkString);
-    value = toBytes(in_.stringValue());
+    value = toBytes(in_.bytesValue());
     if (value.size() != n) {
         throw Exception("Incorrect value for fixed");
     }
@@ -344,7 +344,7 @@ void JsonDecoder<P>::skipFixed(size_t n)
     parser_.advance(Symbol::sFixed);
     parser_.assertSize(n);
     expect(JsonParser::tkString);
-    vector<uint8_t> result = toBytes(in_.stringValue());
+    vector<uint8_t> result = toBytes(in_.bytesValue());
     if (result.size() != n) {
         throw Exception("Incorrect value for fixed");
     }

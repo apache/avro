@@ -314,7 +314,7 @@ public:
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                 throw Exception(boost::format(
-                    "Cannot add duplicate name: %1%") %
+                    "Cannot add duplicate field: %1%") %
                     leafNameAttributes_.get(i));
             }
         }
@@ -328,7 +328,7 @@ public:
         for (size_t i = 0; i < leafNameAttributes_.size(); ++i) {
             if (!nameIndex_.add(leafNameAttributes_.get(i), i)) {
                 throw Exception(boost::format(
-                    "Cannot add duplicate name: %1%") %
+                    "Cannot add duplicate field: %1%") %
                     leafNameAttributes_.get(i));
             }
         }
@@ -368,7 +368,7 @@ class AVRO_DECL NodeEnum : public NodeImplEnum
     {
         for(size_t i=0; i < leafNameAttributes_.size(); ++i) {
             if(!nameIndex_.add(leafNameAttributes_.get(i), i)) {
-                 throw Exception(boost::format("Cannot add duplicate name: %1%") % leafNameAttributes_.get(i));
+                 throw Exception(boost::format("Cannot add duplicate enum: %1%") % leafNameAttributes_.get(i));
             }
         }
     }

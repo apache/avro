@@ -62,7 +62,7 @@ Entity readEntity(JsonParser& p)
         return Entity(p.doubleValue(), p.line());
     case JsonParser::tkString:
         p.advance();
-        return Entity(boost::make_shared<String>(p.stringValue()), p.line());
+        return Entity(boost::make_shared<String>(p.rawString()), p.line());
     case JsonParser::tkArrayStart:
         {
             size_t l = p.line();
@@ -164,6 +164,15 @@ void Entity::ensureType(EntityType type) const
     }
 }
     
+String Entity::stringValue() const {
+    ensureType(etString);
+    return JsonParser::toStringValue(**boost::any_cast<boost::shared_ptr<String> >(&value_));
+}
+
+String Entity::bytesValue() const {
+    ensureType(etString);
+    return JsonParser::toBytesValue(**boost::any_cast<boost::shared_ptr<String> >(&value_));
+}
 
 std::string Entity::toString() const
 {

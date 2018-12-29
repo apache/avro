@@ -84,6 +84,8 @@ private:
     Exception unexpected(unsigned char ch);
     char next();
 
+    static std::string decodeString(const std::string& s, bool binary);
+
 public:
     JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) { }
 
@@ -110,24 +112,47 @@ public:
 
     void expectToken(Token tk);
 
-    bool boolValue() {
+    bool boolValue() const {
         return bv;
     }
 
-    Token cur() {
+    Token cur() const {
         return curToken;
     }
 
-    double doubleValue() {
+    double doubleValue() const {
         return dv;
     }
 
-    int64_t longValue() {
+    int64_t longValue() const {
         return lv;
     }
 
-    std::string stringValue() {
+    const std::string& rawString() const {
         return sv;
+    }
+
+    std::string stringValue() const {
+        return decodeString(sv, false);
+    }
+
+    std::string bytesValue() const {
+        return decodeString(sv, true);
+    }
+
+    /**
+     * Return UTF-8 encoded string value.
+     */
+    static std::string toStringValue(const std::string& sv) {
+        return decodeString(sv, false);
+    }
+
+    /**
+     * Return byte-encoded string value. It is an error if the input
+     * JSON string contained unicode characters more than "\u00ff'.
+     */
+    static std::string toBytesValue(const std::string& sv) {
+        return decodeString(sv, true);
     }
 
     static const char* const tokenNames[];
@@ -215,47 +240,88 @@ class AVRO_DECL JsonGenerator {
     }
 
     void escapeCtl(char c) {
-        out_.write('\\');
-        out_.write('u');
-        out_.write('0');
-        out_.write('0');
+        escapeUnicode(static_cast<uint8_t>(c));
+    }
+
+    void writeHex(char c) {
         out_.write(toHex((static_cast<unsigned char>(c)) / 16));
         out_.write(toHex((static_cast<unsigned char>(c)) % 16));
     }
 
-    void doEncodeString(const std::string& s) {
-        const char* b = &s[0];
-        const char* e = b + s.size();
+    void escapeUnicode(uint32_t c) {
+        out_.write('\\');
+        out_.write('u');
+        writeHex((c >> 8) & 0xff);
+        writeHex(c & 0xff);
+    }
+    void doEncodeString(const char* b, size_t len, bool binary) {
+        const char* e = b + len;
         out_.write('"');
         for (const char* p = b; p != e; p++) {
-            switch (*p) {
-            case '\\':
-            case '"':
-            case '/':
-                escape(*p, b, p);
-                break;
-            case '\b':
-                escape('b', b, p);
-                break;
-            case '\f':
-                escape('f', b, p);
-                break;
-            case '\n':
-                escape('n', b, p);
-                break;
-            case '\r':
-                escape('r', b, p);
-                break;
-            case '\t':
-                escape('t', b, p);
-                break;
-            default:
-                if (! std::iscntrl(*p, std::locale::classic())) {
-                    continue;
-                }
+            if ((*p & 0x80) != 0) {
                 write(b, p);
-                escapeCtl(*p);
-                break;
+                if (binary) {
+                    escapeCtl(*p);
+                } else if ((*p & 0x40) == 0) {
+                    throw Exception("Invalid UTF-8 sequence");
+                } else {
+                    int more = 1;
+                    uint32_t value = 0;
+                    if ((*p & 0x20) != 0) {
+                        more++;
+                        if ((*p & 0x10) != 0) {
+                            more++;
+                            if ((*p & 0x08) != 0) {
+                                throw Exception("Invalid UTF-8 sequence");
+                            } else {
+                                value = *p & 0x07;
+                            }
+                        } else {
+                            value = *p & 0x0f;
+                        }
+                    } else {
+                        value = *p & 0x1f;
+                    }
+                    for (int i = 0; i < more; ++i) {
+                        if (++p == e || (*p & 0xc0) != 0x80) {
+                            throw Exception("Invalid UTF-8 sequence");
+                        }
+                        value <<= 6;
+                        value |= *p & 0x3f;
+                    }
+                    escapeUnicode(value);
+                }
+            } else {
+                switch (*p) {
+                case '\\':
+                case '"':
+                case '/':
+                    escape(*p, b, p);
+                    break;
+                case '\b':
+                    escape('b', b, p);
+                    break;
+                case '\f':
+                    escape('f', b, p);
+                    break;
+                case '\n':
+                    escape('n', b, p);
+                    break;
+                case '\r':
+                    escape('r', b, p);
+                    break;
+                case '\t':
+                    escape('t', b, p);
+                    break;
+                default:
+                    if (std::iscntrl(*p, std::locale::classic())) {
+                        write(b, p);
+                        escapeCtl(*p);
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
             }
             b = p + 1;
         }
@@ -345,7 +411,7 @@ public:
         } else {
             sep();
         }
-        doEncodeString(s);
+        doEncodeString(s.c_str(), s.size(), false);
         if (top == stKey) {
             out_.write(':');
             formatter_.handleColon();
@@ -354,12 +420,7 @@ public:
 
     void encodeBinary(const uint8_t* bytes, size_t len) {
         sep();
-        out_.write('"');
-        const uint8_t* e = bytes + len;
-        while (bytes != e) {
-            escapeCtl(*bytes++);
-        }
-        out_.write('"');
+        doEncodeString(reinterpret_cast<const char *>(bytes), len, true);
         sep2();
     }
 

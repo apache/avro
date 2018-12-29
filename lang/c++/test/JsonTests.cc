@@ -68,6 +68,7 @@ TestData<const char*> stringData[] = {
     { "\"\\u000a\"", etString, "\n" },
     { "\"\\\"\"", etString, "\"" },
     { "\"\\/\"", etString, "/" },
+    { "\"\\u20ac\"", etString, "\xe2\x82\xac" },
 };
 
 void testBool(const TestData<bool>& d)

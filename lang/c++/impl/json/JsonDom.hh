@@ -95,10 +95,9 @@ public:
         return boost::any_cast<Double>(value_);
     }
 
-    const String& stringValue() const {
-        ensureType(etString);
-        return **boost::any_cast<boost::shared_ptr<String> >(&value_);
-    }
+    String stringValue() const;
+
+    String bytesValue() const;
     
     const Array& arrayValue() const {
         ensureType(etArray);
