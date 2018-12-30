@@ -175,7 +175,7 @@ void DataFileWriterBase::sync()
             const uint8_t* data;
             size_t len;
 
-            std::unique_ptr<InputStream> input = std::move(memoryInputStream(*buffer_));
+            std::unique_ptr<InputStream> input = memoryInputStream(*buffer_);
             while (input->next(&data, &len)) {
                 boost::iostreams::write(os, reinterpret_cast<const char*>(data),
                         len);
@@ -200,8 +200,8 @@ void DataFileWriterBase::sync()
         temp.push_back((checksum >> 16) & 0xFF);
         temp.push_back((checksum >> 8) & 0xFF);
         temp.push_back(checksum & 0xFF);
-        std::unique_ptr<InputStream> in = std::move(memoryInputStream(
-                reinterpret_cast<const uint8_t*>(&temp[0]), temp.size()));
+        std::unique_ptr<InputStream> in = memoryInputStream(
+                reinterpret_cast<const uint8_t*>(&temp[0]), temp.size());
         int64_t byteCount = temp.size();
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
