@@ -136,7 +136,7 @@ void checkRecord(const T1& r1, const T2& r2)
 
 void checkDefaultValues(const testgen_r::RootRecord& r)
 {
-    BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "\"sval\"");
+    BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "\"sval\\u8352\"");
     BOOST_CHECK_EQUAL(r.withDefaultValue.i1, 99);
     BOOST_CHECK_CLOSE(r.withDefaultValue.d1, 5.67, 1e-10);
     BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[0], 2);

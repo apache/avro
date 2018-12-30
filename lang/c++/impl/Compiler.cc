@@ -128,7 +128,7 @@ template <typename T> void ensureType(const Entity &e, const string &name)
     }
 }
 
-const string& getStringField(const Entity &e, const Object &m,
+string getStringField(const Entity &e, const Object &m,
                              const string &fieldName)
 {
     Object::const_iterator it = findField(e, m, fieldName);
@@ -166,7 +166,7 @@ const string getDocField(const Entity& e, const Object& m)
 }
 
 struct Field {
-    const string& name;
+    const string name;
     const NodePtr schema;
     const GenericDatum defaultValue;
     Field(const string& n, const NodePtr& v, GenericDatum dv) :
@@ -208,7 +208,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
         return GenericDatum(e.stringValue());
     case AVRO_BYTES:
         assertType(e, json::etString);
-        return GenericDatum(toBin(e.stringValue()));
+        return GenericDatum(toBin(e.bytesValue()));
     case AVRO_INT:
         assertType(e, json::etLong);
         return GenericDatum(static_cast<int32_t>(e.longValue()));
@@ -284,7 +284,7 @@ static GenericDatum makeGenericDatum(NodePtr n,
     }
     case AVRO_FIXED:
         assertType(e, json::etString);
-        return GenericDatum(n, GenericFixed(n, toBin(e.stringValue())));
+        return GenericDatum(n, GenericFixed(n, toBin(e.bytesValue())));
     default:
         throw Exception(boost::format("Unknown type: %1%") % t);
     }
