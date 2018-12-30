@@ -1654,6 +1654,44 @@ static void testJson(const JsonData& data)
     EncoderPtr e = jsonEncoder(schema);
 }
 
+static void testJsonCodecReinit() {
+    const char *schemaStr = "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
+      "{\"name\":\"f1\", \"type\":\"boolean\"},"
+      "{\"name\":\"f2\", \"type\":\"long\"}"
+      "]}";
+    ValidSchema schema = parsing::makeValidSchema(schemaStr);
+    OutputStreamPtr os1 = memoryOutputStream();
+    OutputStreamPtr os2 = memoryOutputStream();
+    {
+        EncoderPtr e = jsonEncoder(schema);
+        e->init(*os1);
+        e->encodeBool(false);
+        e->encodeLong(100);
+        e->flush();
+
+        e->init(*os2);
+        e->encodeBool(true);
+        e->encodeLong(200);
+        e->flush();
+    }
+
+    InputStreamPtr is1 = memoryInputStream(*os1);
+    InputStreamPtr is2 = memoryInputStream(*os2);
+    DecoderPtr d = jsonDecoder(schema);
+    {
+        d->init(*is1);
+        BOOST_CHECK_EQUAL(d->decodeBool(), false);
+        BOOST_CHECK_EQUAL(d->decodeLong(), 100);
+    }
+
+    // Reinit
+    {
+        d->init(*is2);
+        BOOST_CHECK_EQUAL(d->decodeBool(), true);
+        BOOST_CHECK_EQUAL(d->decodeLong(), 200);
+    }
+}
+
 }   // namespace avro
 
 boost::unit_test::test_suite*
@@ -1668,6 +1706,7 @@ init_unit_test_suite( int argc, char* argv[] )
     ts->add(BOOST_TEST_CASE(avro::testLimitsJsonCodec));
     ts->add(BOOST_PARAM_TEST_CASE(&avro::testJson, avro::jsonData,
         ENDOF(avro::jsonData)));
+    ts->add(BOOST_TEST_CASE(avro::testJsonCodecReinit));
 
     return ts;
 }

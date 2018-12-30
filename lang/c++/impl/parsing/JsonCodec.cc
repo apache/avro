@@ -227,6 +227,7 @@ template <typename P>
 void JsonDecoder<P>::init(InputStream& is)
 {
     in_.init(is);
+    parser_.reset();
 }
 
 template <typename P>

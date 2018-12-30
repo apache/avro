@@ -75,6 +75,8 @@ public:
     virtual size_t byteCount() const = 0;
 };
 
+typedef std::unique_ptr<InputStream> InputStreamPtr;
+
 /** 
  * An InputStream which also supports seeking to a specific offset.
  */
@@ -99,6 +101,8 @@ public:
      */
     virtual void seek(int64_t position) = 0;
 };
+
+typedef std::unique_ptr<SeekableInputStream> SeekableInputStreamPtr;
 
 /**
  * A no-copy output stream.
@@ -144,17 +148,19 @@ public:
     virtual void flush() = 0;
 };
 
+typedef std::unique_ptr<OutputStream> OutputStreamPtr;
+
 /**
  * Returns a new OutputStream, which grows in memory chunks of specified size.
  */
-AVRO_DECL std::unique_ptr<OutputStream> memoryOutputStream(size_t chunkSize = 4 * 1024);
+AVRO_DECL OutputStreamPtr memoryOutputStream(size_t chunkSize = 4 * 1024);
 
 /**
  * Returns a new InputStream, with the data from the given byte array.
  * It does not copy the data, the byte array should remain valid
  * until the InputStream is used.
  */
-AVRO_DECL std::unique_ptr<InputStream> memoryInputStream(const uint8_t* data, size_t len);
+AVRO_DECL InputStreamPtr memoryInputStream(const uint8_t* data, size_t len);
 
 /**
  * Returns a new InputStream with the contents written into an
@@ -163,7 +169,7 @@ AVRO_DECL std::unique_ptr<InputStream> memoryInputStream(const uint8_t* data, si
  * input stream are the snapshot of the outputstream. One can construct
  * any number of memory input stream from a single memory output stream.
  */
-AVRO_DECL std::unique_ptr<InputStream> memoryInputStream(const OutputStream& source);
+AVRO_DECL InputStreamPtr memoryInputStream(const OutputStream& source);
 
 /**
  * Returns the contents written so far into the output stream, which should
@@ -179,16 +185,16 @@ AVRO_DECL boost::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& 
  * If there is a file with the given name, it is truncated and overwritten.
  * If there is no file with the given name, it is created.
  */
-AVRO_DECL std::unique_ptr<OutputStream> fileOutputStream(const char* filename,
+AVRO_DECL OutputStreamPtr fileOutputStream(const char* filename,
     size_t bufferSize = 8 * 1024);
 
 /**
  * Returns a new InputStream whose contents come from the given file.
  * Data is read in chunks of given buffer size.
  */
-AVRO_DECL std::unique_ptr<InputStream> fileInputStream(
+AVRO_DECL InputStreamPtr fileInputStream(
     const char *filename, size_t bufferSize = 8 * 1024);
-AVRO_DECL std::unique_ptr<SeekableInputStream> fileSeekableInputStream(
+AVRO_DECL SeekableInputStreamPtr fileSeekableInputStream(
     const char *filename, size_t bufferSize = 8 * 1024);
 
 /**
@@ -196,7 +202,7 @@ AVRO_DECL std::unique_ptr<SeekableInputStream> fileSeekableInputStream(
  * std::ostream. The std::ostream object should outlive the returned
  * OutputStream.
  */
-AVRO_DECL std::unique_ptr<OutputStream> ostreamOutputStream(std::ostream& os,
+AVRO_DECL OutputStreamPtr ostreamOutputStream(std::ostream& os,
     size_t bufferSize = 8 * 1024);
 
 /**
@@ -204,7 +210,7 @@ AVRO_DECL std::unique_ptr<OutputStream> ostreamOutputStream(std::ostream& os,
  * std::istream. The std::istream object should outlive the returned
  * InputStream.
  */
-AVRO_DECL std::unique_ptr<InputStream> istreamInputStream(
+AVRO_DECL InputStreamPtr istreamInputStream(
     std::istream &in, size_t bufferSize = 8 * 1024);
 
 /** A convenience class for reading from an InputStream */
