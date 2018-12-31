@@ -67,7 +67,7 @@ static const unsigned int count = 10;
  * 2. While reading resolve against a reader's schema. The resolver may
  * promote data type, convert from union to plain data type and vice versa,
  * insert or remove fields in records or reorder fields in a record.
- * 
+ *
  * To test Json encoder and decoder, we use the same technqiue with only
  * one difference - we use JsonEncoder and JsonDecoder.
  *
@@ -543,7 +543,7 @@ void testEncoder(const EncoderPtr& e, const char* writerCalls,
     p = generate(*e, writerCalls, v);
 }
 
-static void testDecoder(const DecoderPtr& d, 
+static void testDecoder(const DecoderPtr& d,
     const vector<string>& values, InputStream& data,
     const char* readerCalls, unsigned int skipLevel)
 {
@@ -604,7 +604,32 @@ struct TestData4 {
     const char* readerCalls;
     const char* readerValues[100];
     unsigned int depth;
+    size_t recordCount;
 };
+
+void appendSentinel(OutputStream& os)
+{
+    uint8_t *buf;
+    size_t len;
+    os.next(&buf, &len);
+    *buf = '~';
+    os.backup(len - 1);
+}
+
+void assertSentinel(InputStream& is)
+{
+    const uint8_t *buf;
+    size_t len;
+    is.next(&buf, &len);
+    if (len > 1) {
+        for (size_t i = 0; i < len; i++) {
+            std::cout << static_cast<int>(buf[i]) << std::endl;
+        }
+    }
+    BOOST_REQUIRE_EQUAL(len, 1);
+    BOOST_CHECK_EQUAL(*buf, '~');
+}
+
 
 template<typename CodecFactory>
 void testCodec(const TestData& td) {
@@ -617,23 +642,21 @@ void testCodec(const TestData& td) {
         vector<string> v;
         unique_ptr<OutputStream> p;
         testEncoder(CodecFactory::newEncoder(vs), td.calls, v, p);
+        appendSentinel(*p);
+
         // dump(*p);
 
         for (unsigned int i = 0; i <= td.depth; ++i) {
             unsigned int skipLevel = td.depth - i;
-            /*
-            std::cout << "Test: " << testNo << ' '
-                << " schema: " << td.schema
-                << " calls: " << td.calls
-                << " skip-level: " << skipLevel << std::endl;
-                */
             BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
                 << " schema: " << td.schema
                 << " calls: " << td.calls
                 << " skip-level: " << skipLevel);
             unique_ptr<InputStream> in = memoryInputStream(*p);
-            testDecoder(CodecFactory::newDecoder(vs), v, *in,
-                td.calls, skipLevel);
+            DecoderPtr d = CodecFactory::newDecoder(vs);
+            testDecoder(d, v, *in, td.calls, skipLevel);
+            d->drain();
+            assertSentinel(*in);
         }
     }
 }
@@ -655,6 +678,7 @@ void testCodecResolving(const TestData3& td) {
         vector<string> v;
         unique_ptr<OutputStream> p;
         testEncoder(CodecFactory::newEncoder(vs), td.writerCalls, v, p);
+        appendSentinel(*p);
         // dump(*p);
 
         ValidSchema rvs = makeValidSchema(td.readerSchema);
@@ -667,8 +691,10 @@ void testCodecResolving(const TestData3& td) {
                 << " reader calls: " << td.readerCalls
                 << " skip-level: " << skipLevel);
             unique_ptr<InputStream> in = memoryInputStream(*p);
-            testDecoder(CodecFactory::newDecoder(vs, rvs), v, *in,
-                td.readerCalls, skipLevel);
+            DecoderPtr d = CodecFactory::newDecoder(vs, rvs);
+            testDecoder(d, v, *in, td.readerCalls, skipLevel);
+            d->drain();
+            assertSentinel(*in);
         }
     }
 }
@@ -698,6 +724,7 @@ void testCodecResolving2(const TestData4& td) {
     vector<string> wd = mkValues(td.writerValues);
     unique_ptr<OutputStream> p =
         generate(*CodecFactory::newEncoder(vs), td.writerCalls, wd);
+    appendSentinel(*p);
     // dump(*p);
 
     ValidSchema rvs = makeValidSchema(td.readerSchema);
@@ -711,8 +738,10 @@ void testCodecResolving2(const TestData4& td) {
             << " reader calls: " << td.readerCalls
             << " skip-level: " << skipLevel);
         unique_ptr<InputStream> in = memoryInputStream(*p);
-        testDecoder(CodecFactory::newDecoder(vs, rvs), rd, *in,
-            td.readerCalls, skipLevel);
+        DecoderPtr d = CodecFactory::newDecoder(vs, rvs);
+        testDecoder(d, rd, *in, td.readerCalls, skipLevel);
+        d->drain();
+        assertSentinel(*in);
     }
 }
 
@@ -730,10 +759,11 @@ void testReaderFail(const TestData2& td) {
     vector<string> v;
     unique_ptr<OutputStream> p;
     testEncoder(CodecFactory::newEncoder(vs), td.correctCalls, v, p);
+    appendSentinel(*p);
     unique_ptr<InputStream> in = memoryInputStream(*p);
+    DecoderPtr d = CodecFactory::newDecoder(vs);
     BOOST_CHECK_THROW(
-        testDecoder(CodecFactory::newDecoder(vs), v, *in,
-            td.incorrectCalls, td.depth), Exception);
+        testDecoder(d, v, *in, td.incorrectCalls, td.depth), Exception);
 }
 
 template<typename CodecFactory>
@@ -765,12 +795,15 @@ void testGeneric(const TestData& td) {
         vector<string> v;
         unique_ptr<OutputStream> p;
         testEncoder(CodecFactory::newEncoder(vs), td.calls, v, p);
+        appendSentinel(*p);
         // dump(*p);
         DecoderPtr d1 = CodecFactory::newDecoder(vs);
         unique_ptr<InputStream> in1 = memoryInputStream(*p);
         d1->init(*in1);
         GenericDatum datum(vs);
         avro::decode(*d1, datum);
+        d1->drain();
+        assertSentinel(*in1);
 
         EncoderPtr e2 = CodecFactory::newEncoder(vs);
         unique_ptr<OutputStream> ob = memoryOutputStream();
@@ -778,13 +811,16 @@ void testGeneric(const TestData& td) {
 
         avro::encode(*e2, datum);
         e2->flush();
+        appendSentinel(*ob);
 
         BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
             << " schema: " << td.schema
             << " calls: " << td.calls);
         unique_ptr<InputStream> in2 = memoryInputStream(*ob);
-        testDecoder(CodecFactory::newDecoder(vs), v, *in2,
-            td.calls, td.depth);
+        DecoderPtr d2 = CodecFactory::newDecoder(vs);
+        testDecoder(d2, v, *in2, td.calls, td.depth);
+        d2->drain();
+        assertSentinel(*in2);
     }
 }
 
@@ -806,6 +842,7 @@ void testGenericResolving(const TestData3& td) {
         vector<string> v;
         unique_ptr<OutputStream> p;
         testEncoder(CodecFactory::newEncoder(wvs), td.writerCalls, v, p);
+        appendSentinel(*p);
         // dump(*p);
         DecoderPtr d1 = CodecFactory::newDecoder(wvs);
         unique_ptr<InputStream> in1 = memoryInputStream(*p);
@@ -814,16 +851,20 @@ void testGenericResolving(const TestData3& td) {
         GenericReader gr(wvs, rvs, d1);
         GenericDatum datum;
         gr.read(datum);
+        d1->drain();
+        assertSentinel(*in1);
 
         EncoderPtr e2 = CodecFactory::newEncoder(rvs);
         unique_ptr<OutputStream> ob = memoryOutputStream();
         e2->init(*ob);
         avro::encode(*e2, datum);
         e2->flush();
+        appendSentinel(*ob);
 
         BOOST_TEST_CHECKPOINT("Test: " << testNo << ' '
             << " writer-schemai " << td.writerSchema
-            << " writer-calls: " << td.writerCalls 
+            << " writer-calls: " << td.writerCalls
+                       << " writer-calls: " << td.writerCalls
             << " reader-schema: " << td.readerSchema
             << " calls: " << td.readerCalls);
         unique_ptr<InputStream> in2 = memoryInputStream(*ob);
@@ -868,7 +909,6 @@ void testGenericResolving2(const TestData4& td) {
     // the resolving decoder and hence could be in a different order than
     // the "normal" data.
 }
-
 
 static const TestData data[] = {
     { "\"null\"", "N", 1 },
@@ -962,7 +1002,6 @@ static const TestData data[] = {
       "{\"name\":\"f6\", \"type\":\"string\"},"
       "{\"name\":\"f7\", \"type\":\"bytes\"}]}",
         "NBILFDS10b25", 1 },
-    
     // record of records
     { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
       "{\"name\":\"f1\", \"type\":{\"type\":\"record\", "
@@ -976,13 +1015,13 @@ static const TestData data[] = {
     // record with name references
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
       "{\"name\":\"f1\", \"type\":{\"type\":\"fixed\", "
-      "\"name\":\"f\", \"size\":10 }}," 
+      "\"name\":\"f\", \"size\":10 }},"
       "{\"name\":\"f2\", \"type\":\"f\"},"
       "{\"name\":\"f3\", \"type\":\"f\"}]}",
       "f10f10f10", 1 },
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
       "{\"name\":\"f1\", \"type\":{\"type\":\"enum\", "
-      "\"name\": \"e\", \"symbols\":[\"s1\", \"s2\"] }}," 
+      "\"name\": \"e\", \"symbols\":[\"s1\", \"s2\"] }},"
       "{\"name\":\"f2\", \"type\":\"e\"},"
       "{\"name\":\"f3\", \"type\":\"e\"}]}",
       "e1e0e1", 1 },
@@ -1007,7 +1046,6 @@ static const TestData data[] = {
       "{\"name\":\"f1\", \"type\":\"long\"},"
       "{\"name\":\"f2\", \"type\":\"null\"}]}}",
         "[c2sLNsLN]", 2 },
-        
 
     { "{\"type\":\"array\", \"items\":"
         "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
@@ -1044,14 +1082,14 @@ static const TestData data[] = {
 
     { "[\"boolean\", {\"type\":\"array\", \"items\":\"int\"} ]",
         "U1[c1sI]", 2 },
-      
+
     // Recursion
     { "{\"type\": \"record\", \"name\": \"Node\", \"fields\": ["
       "{\"name\":\"label\", \"type\":\"string\"},"
       "{\"name\":\"children\", \"type\":"
       "{\"type\": \"array\", \"items\": \"Node\" }}]}",
       "S10[c1sS10[]]", 3 },
-      
+
     { "{\"type\": \"record\", \"name\": \"Lisp\", \"fields\": ["
       "{\"name\":\"value\", \"type\":[\"null\", \"string\","
       "{\"type\": \"record\", \"name\": \"Cons\", \"fields\": ["
@@ -1233,7 +1271,7 @@ static const TestData4 data4[] = {
         "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
         "{\"name\":\"f1\", \"type\":\"string\" },"
         "{\"name\":\"f2\", \"type\":\"string\"}]}", "RS10S10RS10S10",
-        { "s1", "s2", "t1", "t2", NULL }, 1 },
+        { "s1", "s2", "t1", "t2", NULL }, 1, 2 },
 
     // Reordered fields
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
@@ -1243,14 +1281,14 @@ static const TestData4 data4[] = {
         "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
         "{\"name\":\"f2\", \"type\":\"string\" },"
         "{\"name\":\"f1\", \"type\":\"long\"}]}", "RLS10",
-        { "10", "hello", NULL }, 1 },
+        { "10", "hello", NULL }, 1, 1 },
 
     // Default values
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
         { NULL },
         "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
         "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]}", "RI",
-        { "100", NULL }, 1 },
+        { "100", NULL }, 1, 1 },
 
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
         "{\"name\":\"f2\", \"type\":\"int\"}]}", "I",
@@ -1258,10 +1296,10 @@ static const TestData4 data4[] = {
         "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
         "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
         "{\"name\":\"f2\", \"type\":\"int\"}]}", "RII",
-        { "10", "101", NULL }, 1 },
+        { "10", "101", NULL }, 1, 1 },
 
     { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
-        "{\"name\": \"g1\", " 
+        "{\"name\": \"g1\", "
             "\"type\":{\"type\":\"record\",\"name\":\"inner\",\"fields\":["
             "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
             "{\"name\": \"g2\", \"type\": \"long\"}]}", "IL",
@@ -1272,7 +1310,7 @@ static const TestData4 data4[] = {
             "{\"name\":\"f1\", \"type\":\"int\", \"default\": 101},"
             "{\"name\":\"f2\", \"type\":\"int\"}]}}, "
             "{\"name\": \"g2\", \"type\": \"long\"}]}}", "RRIIL",
-        { "10", "101", "11", NULL }, 1 },
+        { "10", "101", "11", NULL }, 1, 1 },
 
     // Default value for a record.
     { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
@@ -1294,7 +1332,7 @@ static const TestData4 data4[] = {
             "{\"name\":\"f2\", \"type\":\"int\"}] }, "
             "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
             "RRLILRLI",
-        { "10", "12", "13", "15", "101", NULL}, 1 },
+        { "10", "12", "13", "15", "101", NULL}, 1, 1 },
 
     { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
         "{\"name\": \"g1\", "
@@ -1313,14 +1351,14 @@ static const TestData4 data4[] = {
             "\"type\":\"inner1\", "
             "\"default\": { \"f1\": 15, \"f2\": 101 } }] } ",
             "RRLILRLI",
-        { "10", "12", "13", "15", "101", NULL}, 1 },
+        { "10", "12", "13", "15", "101", NULL}, 1, 1 },
 
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":[]}", "",
         { NULL },
         "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
         "{\"name\":\"f\", \"type\":{ \"type\": \"array\", \"items\": \"int\" },"
         "\"default\": [100]}]}", "[c1sI]",
-        { "100", NULL }, 1 },
+        { "100", NULL }, 1, 1 },
 
     { "{ \"type\": \"array\", \"items\": {\"type\":\"record\","
         "\"name\":\"r\",\"fields\":["
@@ -1330,7 +1368,7 @@ static const TestData4 data4[] = {
         "\"name\":\"r\",\"fields\":["
         "{\"name\":\"f\", \"type\":\"int\", \"default\": 100}]} }",
         "[Rc1sI]",
-        { "100", NULL }, 1 },
+        { "100", NULL }, 1, 1 },
 
     // Record of array of record with deleted field as last field
     { "{\"type\":\"record\",\"name\":\"outer\",\"fields\":["
@@ -1345,7 +1383,7 @@ static const TestData4 data4[] = {
             "\"type\":{\"type\":\"array\",\"items\":{"
                 "\"name\":\"item\",\"type\":\"record\",\"fields\":["
                 "{\"name\":\"f1\", \"type\":\"int\"}]}}}]}", "R[c1sI]",
-        { "10", NULL }, 2 },
+        { "10", NULL }, 2, 1 },
 
     // Enum resolution
     { "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"x\",\"y\",\"z\"]}",
@@ -1353,41 +1391,41 @@ static const TestData4 data4[] = {
         { NULL },
         "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
         "e1",
-        { NULL }, 1 },
+        { NULL }, 1, 1 },
 
     { "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"x\", \"y\" ]}",
         "e1",
         { NULL },
         "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[ \"y\", \"z\" ]}",
         "e0",
-        { NULL }, 1 },
+        { NULL }, 1, 1 },
 
 
     // Union
     { "\"int\"", "I", { "100", NULL },
-        "[ \"long\", \"int\"]", "U1I", { "100", NULL }, 1 },
+        "[ \"long\", \"int\"]", "U1I", { "100", NULL }, 1, 1 },
 
     { "[ \"long\", \"int\"]", "U1I", { "100", NULL } ,
-        "\"int\"", "I", { "100", NULL }, 1 },
+        "\"int\"", "I", { "100", NULL }, 1, 1 },
 
     // Arrray of unions
     { "{\"type\":\"array\", \"items\":[ \"long\", \"int\"]}",
         "[c2sU1IsU1I]", { "100", "100", NULL } ,
         "{\"type\":\"array\", \"items\": \"int\"}",
-            "[c2sIsI]", { "100", "100", NULL }, 2 },
+            "[c2sIsI]", { "100", "100", NULL }, 2, 1 },
 
     // Map of unions
     { "{\"type\":\"map\", \"values\":[ \"long\", \"int\"]}",
         "{c2sS10U1IsS10U1I}", { "k1", "100", "k2", "100", NULL } ,
         "{\"type\":\"map\", \"values\": \"int\"}",
-            "{c2sS10IsS10I}", { "k1", "100", "k2", "100", NULL }, 2 },
+            "{c2sS10IsS10I}", { "k1", "100", "k2", "100", NULL }, 2, 1 },
 
     // Union + promotion
     { "\"int\"", "I", { "100", NULL },
-        "[ \"long\", \"string\"]", "U0L", { "100", NULL }, 1 },
+        "[ \"long\", \"string\"]", "U0L", { "100", NULL }, 1, 1 },
 
     { "[ \"int\", \"string\"]", "U0I", { "100", NULL },
-        "\"long\"", "L", { "100", NULL }, 1 },
+        "\"long\"", "L", { "100", NULL }, 1, 1 },
 
     // Record where union field is skipped.
     { "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
@@ -1401,7 +1439,7 @@ static const TestData4 data4[] = {
         "{\"name\":\"f0\", \"type\":\"boolean\"},"
         "{\"name\":\"f1\", \"type\":\"long\"},"
         "{\"name\":\"f3\", \"type\":\"double\"}]}", "BLD",
-        { "1", "100", "10.75", NULL }, 1 },
+        { "1", "100", "10.75", NULL }, 1, 1 },
 };
 
 static const TestData4 data4BinaryOnly[] = {
@@ -1695,7 +1733,7 @@ static void testJsonCodecReinit() {
 }   // namespace avro
 
 boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite(int argc, char* argv[])
 {
     using namespace boost::unit_test;
 

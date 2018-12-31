@@ -215,6 +215,7 @@ class JsonDecoder : public Decoder {
 
     void expect(JsonParser::Token tk);
     void skipComposite();
+    void drain();
 public:
 
     JsonDecoder(const ValidSchema& s) :
@@ -404,6 +405,13 @@ void JsonDecoder<P>::skipComposite()
             continue;
         }
     }
+}
+
+template<typename P>
+void JsonDecoder<P>::drain()
+{
+    parser_.processImplicitActions();
+    in_.drain();
 }
 
 template <typename P>

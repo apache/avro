@@ -146,6 +146,14 @@ public:
         return decodeString(sv, true);
     }
 
+    void drain() {
+        if (!stateStack.empty() || peeked) {
+            throw Exception("Invalid state for draining");
+        }
+        in_.drain(hasNext);
+        hasNext = false;
+    }
+
     /**
      * Return UTF-8 encoded string value.
      */

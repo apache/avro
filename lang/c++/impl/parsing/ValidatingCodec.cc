@@ -196,6 +196,9 @@ class ValidatingDecoder : public Decoder {
     size_t mapNext();
     size_t skipMap();
     size_t decodeUnionIndex();
+    void drain() {
+        base->drain();
+    }
 
 public:
 

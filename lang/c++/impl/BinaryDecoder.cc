@@ -59,6 +59,7 @@ class BinaryDecoder : public Decoder {
     int64_t doDecodeLong();
     size_t doDecodeItemCount();
     size_t doDecodeLength();
+    void drain();
     void more();
 };
 
@@ -124,6 +125,11 @@ size_t BinaryDecoder::doDecodeLength()
             boost::format("Cannot have negative length: %1%") % len);
     }
     return len;
+}
+
+void BinaryDecoder::drain()
+{
+    in_.drain(false);
 }
 
 void BinaryDecoder::decodeString(std::string& value)
