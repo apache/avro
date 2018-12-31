@@ -90,6 +90,12 @@ public:
     JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) { }
 
     void init(InputStream& is) {
+        // Clear by swapping with an empty stack
+        std::stack<State>().swap(stateStack);
+        curState = stValue;
+        hasNext = false;
+        peeked = false;
+        line_ = 1;
         in_.reset(is);
     }
 
