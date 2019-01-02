@@ -528,7 +528,7 @@ static NodePtr makeNode(const json::Entity& e, SymbolTable& st, const string& ns
     }
 }
 
-AVRO_DECL ValidSchema compileJsonSchemaFromStream(InputStream& is)
+ValidSchema compileJsonSchemaFromStream(InputStream& is)
 {
     json::Entity e = json::loadEntity(is);
     SymbolTable st;
@@ -565,7 +565,7 @@ static ValidSchema compile(std::istream& is)
     return compileJsonSchemaFromStream(*in);
 }
 
-AVRO_DECL void compileJsonSchema(std::istream &is, ValidSchema &schema)
+void compileJsonSchema(std::istream &is, ValidSchema &schema)
 {
     if (!is.good()) {
         throw Exception("Input stream is not good");
