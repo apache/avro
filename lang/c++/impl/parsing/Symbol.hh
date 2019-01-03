@@ -460,7 +460,7 @@ public:
                             throw Exception(
                                 "Empty item count stack in repeater advance");
                         }
-			if (ns.top() == 0) {
+                        if (ns.top() == 0) {
                             throw Exception(
                                 "Zero item count in repeater advance");
                         }
@@ -510,7 +510,7 @@ public:
         }
         while (parsingStack.size() >= sz) {
             Symbol& t = parsingStack.top();
-	    // std::cout << "skip: " << Symbol::toString(t.kind()) << '\n';
+            // std::cout << "skip: " << Symbol::toString(t.kind()) << '\n';
             switch (t.kind()) {
             case Symbol::sNull:
                 d.decodeNull();
@@ -540,7 +540,7 @@ public:
                 {
                     parsingStack.pop();
                     size_t n = d.skipArray();
-		    processImplicitActions();
+                    processImplicitActions();
                     assertMatch(Symbol::sRepeater, parsingStack.top().kind());
                     if (n == 0) {
                         break;
@@ -556,7 +556,7 @@ public:
                 {
                     parsingStack.pop();
                     size_t n = d.skipMap();
-		    processImplicitActions();
+                    processImplicitActions();
                     assertMatch(Symbol::sRepeater, parsingStack.top().kind());
                     if (n == 0) {
                         break;
@@ -706,23 +706,23 @@ public:
     }
 
     void pushRepeatCount(size_t n) {
-	processImplicitActions();
+        processImplicitActions();
         Symbol& s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
-	RepeaterInfo *p = s.extrap<RepeaterInfo>();
+        RepeaterInfo *p = s.extrap<RepeaterInfo>();
         std::stack<ssize_t> &nn = boost::tuples::get<0>(*p);
         nn.push(n);
     }
 
     void nextRepeatCount(size_t n) {
-	processImplicitActions();
+        processImplicitActions();
         Symbol& s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
-	RepeaterInfo *p = s.extrap<RepeaterInfo>();
+        RepeaterInfo *p = s.extrap<RepeaterInfo>();
         std::stack<ssize_t> &nn = boost::tuples::get<0>(*p);
         if (nn.empty() || nn.top() != 0) {
-	  throw Exception("Wrong number of items");
-	}
+          throw Exception("Wrong number of items");
+        }
         nn.top() = n;
     }
 
@@ -730,7 +730,7 @@ public:
         processImplicitActions();
         Symbol& s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
-	RepeaterInfo *p = s.extrap<RepeaterInfo>();
+        RepeaterInfo *p = s.extrap<RepeaterInfo>();
         std::stack<ssize_t> &ns = boost::tuples::get<0>(*p);
         if (ns.empty()) {
             throw Exception("Incorrect number of items (empty)");

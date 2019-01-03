@@ -513,6 +513,10 @@ class ResolvingDecoderImpl : public ResolvingDecoder
     size_t skipMap();
     size_t decodeUnionIndex();
     const vector<size_t>& fieldOrder();
+    void drain() {
+        parser_.processImplicitActions();
+        base_->drain();
+    }
 public:
     ResolvingDecoderImpl(const ValidSchema& writer, const ValidSchema& reader,
         const DecoderPtr& base) :

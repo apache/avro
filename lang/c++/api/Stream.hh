@@ -329,6 +329,18 @@ struct StreamReader {
     bool hasMore() {
         return (next_ == end_) ? fill() : true;
     }
+
+    /**
+     * Returns unused bytes back to the underlying stream.
+     * If unRead is true the last byte read is also pushed back.
+     */
+    void drain(bool unRead) {
+        if (unRead) {
+            --next_;
+        }
+        in_->backup(end_ - next_);
+        end_ = next_;
+    }
 };
 
 /**

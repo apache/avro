@@ -57,6 +57,14 @@ public:
     void read(GenericDatum& datum) const;
 
     /**
+     * Drains any residual bytes in the input stream (e.g. because
+     * reader's schema has no use of them) and return unused bytes
+     * back to the underlying input stream.
+     */
+    void drain() {
+        decoder_->drain();
+    }
+    /**
      * Reads a generic datum from the stream, using the given schema.
      */
     static void read(Decoder& d, GenericDatum& g);

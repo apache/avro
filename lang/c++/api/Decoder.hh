@@ -153,6 +153,23 @@ public:
 
     /// Decodes a branch of a union. The actual value is to follow.
     virtual size_t decodeUnionIndex() = 0;
+
+    /// Drains any additional data at the end of the current entry in a stream.
+    /// It also returns any unused bytes back to any underlying input stream.
+    /// One situation this happens is when the reader's schema and
+    /// the writer's schema are records but are different and the writer's 
+    /// record has more fields at the end of the record.
+    /// Leaving such data unread is usually not a problem. If multiple
+    /// records are stored consecutively in a stream (e.g. Avro data file)
+    /// any attempt to read the next record will automatically skip
+    /// those extra fields of the current record. It would still leave
+    /// the extra fields at the end of the last record in the stream.
+    /// This would mean that the stream is not in a good state. For example,
+    /// if some non-avro information is stored at the end of the stream,
+    /// the consumers of such data would see the bytes left behind
+    /// by the avro decoder. Similar set of problems occur if the Decoder
+    /// consumes more than what it should.
+    virtual void drain() = 0;
 };
 
 /**
