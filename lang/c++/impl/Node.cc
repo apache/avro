@@ -59,7 +59,7 @@ bool Name::operator < (const Name& n) const
 
 static bool invalidChar1(char c)
 {
-    return !isalnum(c) && c != '_' && c != '.';
+    return !isalnum(c) && c != '_' && c != '.' && c != '$';
 }
 
 static bool invalidChar2(char c)

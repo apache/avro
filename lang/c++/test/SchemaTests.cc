@@ -100,8 +100,11 @@ const char* basicSchemas[] = {
     // default double -  long
     "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : 2 }]}",
     // default double - double
-    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : 1.2 }]}"
+    "{ \"name\":\"test\", \"type\": \"record\", \"fields\": [ {\"name\": \"double\",\"type\": \"double\",\"default\" : 1.2 }]}",
 
+    // namespace with '$' in it.
+    "{\"type\":\"record\",\"name\":\"Test\",\"namespace\":\"a.b$\",\"fields\":"
+        "[{\"name\":\"f\",\"type\":\"long\"}]}",
 };
 
 const char* basicSchemaErrors[] = {
@@ -207,7 +210,11 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"long\",\"logicalType\":\"time-micros\"}",
     "{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}",
     "{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}",
-    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":12,\"logicalType\":\"duration\"}"
+    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":12,\"logicalType\":\"duration\"}",
+
+    // namespace with '$' in it.
+    "{\"type\":\"record\",\"namespace\":\"a.b$\",\"name\":\"Test\",\"fields\":"
+        "[{\"name\":\"f\",\"type\":\"long\"}]}",
 };
 
 const char* malformedLogicalTypes[] = {
