@@ -15,20 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-headline(){
-  echo -e "\e[1;34m#################################################################"
-  echo -e "##### $1 \e[1;37m"
-  echo -e "\e[1;34m#################################################################\e[0m"
-}
-
 set -e
 
-for lang in /avro/lang/*/
-do
-  headline "Run tests: $lang"
-  if [ $lang != "ruby" ]
-  then
-    cd "$lang"
-    ./build.sh test
-  fi
-done
+./build.sh test
