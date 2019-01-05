@@ -17,7 +17,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net35;net40;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
     <AssemblyName>Avro</AssemblyName>
     <RootNamespace>Avro</RootNamespace>
     <ProjectGuid>{A0A5CA3C-F58C-4D07-98B0-2C7B62AB20F0}</ProjectGuid>

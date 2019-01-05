@@ -18,7 +18,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net35;net40;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net40;netcoreapp2.0</TargetFrameworks>
     <AssemblyName>avrogen</AssemblyName>
     <RootNamespace>Avro.codegen</RootNamespace>
     <ProjectGuid>{BF0D313C-1AA3-4900-B277-B0F5F9DDCDA8}</ProjectGuid>
