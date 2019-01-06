@@ -198,7 +198,7 @@ class AVRO_DECL JsonPrettyFormatter {
         if (indent_.size() < charsToIndent) {
             indent_.resize(charsToIndent * 2, ' ');
         }
-        out_.writeBytes(&(indent_[0]), charsToIndent);
+        out_.writeBytes(indent_.data(), charsToIndent);
     }
 public:
     JsonPrettyFormatter(StreamWriter& out) : out_(out), level_(0), indent_(10, ' ') { }
@@ -391,7 +391,7 @@ public:
         std::ostringstream oss;
         oss << boost::lexical_cast<std::string>(t);
         const std::string& s = oss.str();
-        out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
+        out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
         sep2();
     }
 
@@ -408,7 +408,7 @@ public:
             oss << "-Infinity";
         }
         const std::string& s = oss.str();
-        out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
+        out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
         sep2();
     }
 

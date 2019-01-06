@@ -213,6 +213,20 @@ AVRO_DECL OutputStreamPtr ostreamOutputStream(std::ostream& os,
 AVRO_DECL InputStreamPtr istreamInputStream(
     std::istream &in, size_t bufferSize = 8 * 1024);
 
+/**
+ * Returns a new InputStream whose contents come from the given
+ * std::istream. Use this instead of istreamInputStream if
+ * the istream does not support seekg (e.g. compressed streams).
+ * The returned InputStream would read off bytes instead of seeking.
+ * Of, course it has a performance penalty when reading instead of seeking;
+ * So, use this only when seekg does not work.
+ * The std::istream object should outlive the returned
+ * InputStream.
+ */
+AVRO_DECL InputStreamPtr nonSeekableIstreamInputStream(
+    std::istream& is, size_t bufferSize = 8 * 1024);
+
+
 /** A convenience class for reading from an InputStream */
 struct StreamReader {
     /**

@@ -97,7 +97,7 @@ public:
      */
     void encodeBytes(const std::vector<uint8_t>& bytes) {
         uint8_t b = 0; 
-        encodeBytes(bytes.empty() ? &b : &bytes[0], bytes.size());
+        encodeBytes(bytes.empty() ? &b : bytes.data(), bytes.size());
     }
 
     /// Encodes fixed length binary to the current stream.
@@ -109,7 +109,7 @@ public:
      * of fixed.
      */
     void encodeFixed(const std::vector<uint8_t>& bytes) {
-        encodeFixed(&bytes[0], bytes.size());
+        encodeFixed(bytes.data(), bytes.size());
     }
 
     /// Encodes enum to the current stream.

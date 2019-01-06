@@ -187,7 +187,7 @@ static vector<uint8_t> toBin(const string& s)
 {
     vector<uint8_t> result(s.size());
     if (s.size() > 0) {
-        std::copy(s.c_str(), s.c_str() + s.size(), &result[0]);
+        std::copy(s.c_str(), s.c_str() + s.size(), result.data());
     }
     return result;
 }
@@ -556,7 +556,7 @@ AVRO_DECL ValidSchema compileJsonSchemaFromString(const char* input)
 AVRO_DECL ValidSchema compileJsonSchemaFromString(const string& input)
 {
     return compileJsonSchemaFromMemory(
-        reinterpret_cast<const uint8_t*>(&input[0]), input.size());
+        reinterpret_cast<const uint8_t*>(input.data()), input.size());
 }
 
 static ValidSchema compile(std::istream& is)

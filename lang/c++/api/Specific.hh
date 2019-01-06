@@ -205,7 +205,7 @@ template <size_t N> struct codec_traits<boost::array<uint8_t, N> > {
      * Encodes a given value.
      */
     static void encode(Encoder& e, const boost::array<uint8_t, N>& b) {
-        e.encodeFixed(&b[0], N);
+        e.encodeFixed(b.data(), N);
     }
 
     /**
@@ -214,7 +214,7 @@ template <size_t N> struct codec_traits<boost::array<uint8_t, N> > {
     static void decode(Decoder& d, boost::array<uint8_t, N>& s) {
         std::vector<uint8_t> v(N);
         d.decodeFixed(N, v);
-        std::copy(&v[0], &v[0] + N, &s[0]);
+        std::copy(v.data(), v.data() + N, s.data());
     }
 };
 
