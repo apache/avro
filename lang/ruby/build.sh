@@ -25,7 +25,7 @@ export GEM_HOME=.gem/
 export PATH="$PATH:.gem/bin"
 
 # bootstrap bundler
-gem install --no-rdoc --no-ri bundler
+gem install --no-document -v 1.17.3 bundler
 bundle install
 
 case "$1" in
