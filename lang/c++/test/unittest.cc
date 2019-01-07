@@ -20,7 +20,6 @@
 #include <fstream>
 #include <sstream>
 #include <boost/test/included/unit_test_framework.hpp>
-#include <boost/make_shared.hpp>
 
 #include "Zigzag.hh"
 #include "Node.hh"

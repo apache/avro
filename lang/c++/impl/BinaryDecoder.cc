@@ -23,8 +23,6 @@
 #include "Zigzag.hh"
 #include "Exception.hh"
 
-#include <boost/array.hpp>
-
 namespace avro {
 
 using std::make_shared;

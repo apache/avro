@@ -26,7 +26,6 @@
 #include <sstream>
 
 #include <boost/any.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/tuple/tuple.hpp>
 
 #include "Node.hh"

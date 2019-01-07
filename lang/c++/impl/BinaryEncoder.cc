@@ -19,7 +19,6 @@
 #include "Encoder.hh"
 #include "Zigzag.hh"
 #include <array>
-#include <boost/make_shared.hpp>
 
 namespace avro {
 

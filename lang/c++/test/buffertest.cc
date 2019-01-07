@@ -20,7 +20,6 @@
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <boost/scoped_array.hpp>
 
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio.hpp>
@@ -793,7 +792,7 @@ void TestSplitOnBorder()
         BOOST_CHECK_EQUAL(buf.numDataChunks(), 2);
         size_t bufsize = buf.size();
     
-        boost::scoped_array<char> datain(new char[firstChunkSize]);
+        std::unique_ptr<char[]> datain(new char[firstChunkSize]);
         avro::istream is(buf);
         size_t in = static_cast<size_t>(is.readsome(&datain[0], firstChunkSize));
         BOOST_CHECK_EQUAL(in, firstChunkSize);

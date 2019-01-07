@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "boost/scoped_array.hpp"
+#include <memory>
 #include "Resolver.hh"
 #include "Layout.hh"
 #include "NodeImpl.hh"
@@ -27,10 +27,11 @@
 #include "AvroTraits.hh"
 
 namespace avro {
+using std::unique_ptr;
 
 class ResolverFactory;
 typedef std::shared_ptr<Resolver> ResolverPtr;
-typedef boost::ptr_vector<Resolver> ResolverPtrVector;
+typedef std::vector<std::unique_ptr<Resolver> > ResolverPtrVector;
 
 // #define DEBUG_VERBOSE
 
@@ -174,7 +175,7 @@ class RecordSkipper : public Resolver
         reader.readRecord();
         size_t steps = resolvers_.size();
         for(size_t i = 0; i < steps; ++i) {
-            resolvers_[i].parse(reader, address);
+            resolvers_[i]->parse(reader, address);
         }
     }
 
@@ -195,7 +196,7 @@ class RecordParser : public Resolver
         reader.readRecord();
         size_t steps = resolvers_.size();
         for(size_t i = 0; i < steps; ++i) {
-            resolvers_[i].parse(reader, address);
+            resolvers_[i]->parse(reader, address);
         }
     }
 
@@ -404,7 +405,7 @@ class UnionSkipper : public Resolver
     {
         DEBUG_OUT("Skipping union");
         size_t choice = static_cast<size_t>(reader.readUnion());
-        resolvers_[choice].parse(reader, address);
+        resolvers_[choice]->parse(reader, address);
     }
 
   protected:
@@ -432,7 +433,7 @@ class UnionParser : public Resolver
         uint8_t *value = reinterpret_cast<uint8_t *> (address + offset_);
         uint8_t *location = (*setter)(value, *readerChoice);
 
-        resolvers_[writerChoice].parse(reader, location);
+        resolvers_[writerChoice]->parse(reader, location);
     }
 
   protected:
@@ -456,7 +457,7 @@ class UnionToNonUnionParser : public Resolver
     {
         DEBUG_OUT("Reading union to non-union");
         size_t choice = static_cast<size_t>(reader.readUnion());
-        resolvers_[choice].parse(reader, address);
+        resolvers_[choice]->parse(reader, address);
     }
 
   protected:
@@ -507,7 +508,7 @@ class FixedSkipper : public Resolver
     virtual void parse(Reader &reader, uint8_t *address) const
     {
         DEBUG_OUT("Skipping fixed");
-        boost::scoped_array<uint8_t> val(new uint8_t[size_]);
+        std::unique_ptr<uint8_t[]> val(new uint8_t[size_]);
         reader.readFixed(&val[0], size_);
     }
 
@@ -546,42 +547,42 @@ class FixedParser : public Resolver
 class ResolverFactory : private boost::noncopyable {
 
     template<typename T>
-    Resolver*
+    unique_ptr<Resolver>
     constructPrimitiveSkipper(const NodePtr &writer) 
     {
-        return new PrimitiveSkipper<T>();
+        return unique_ptr<Resolver>(new PrimitiveSkipper<T>());
     }
 
     template<typename T>
-    Resolver*
+    unique_ptr<Resolver>
     constructPrimitive(const NodePtr &writer, const NodePtr &reader, const Layout &offset)
     {
-        Resolver *instruction = 0;
+        unique_ptr<Resolver> instruction;
 
         SchemaResolution match = writer->resolve(*reader);
 
         if (match == RESOLVE_NO_MATCH) {
-            instruction = new PrimitiveSkipper<T>();
+            instruction = unique_ptr<Resolver>(new PrimitiveSkipper<T>());
         } 
         else if (reader->type() == AVRO_UNION) {
             const CompoundLayout &compoundLayout = static_cast<const CompoundLayout &>(offset);
-            instruction = new NonUnionToUnionParser(*this, writer, reader, compoundLayout);
+            instruction = unique_ptr<Resolver>(new NonUnionToUnionParser(*this, writer, reader, compoundLayout));
         }
         else if (match == RESOLVE_MATCH) {
             const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
-            instruction = new PrimitiveParser<T>(primitiveLayout);
+            instruction = unique_ptr<Resolver>(new PrimitiveParser<T>(primitiveLayout));
         }
         else if(match == RESOLVE_PROMOTABLE_TO_LONG) {
             const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
-            instruction = new PrimitivePromoter<T, int64_t>(primitiveLayout);
+            instruction = unique_ptr<Resolver>(new PrimitivePromoter<T, int64_t>(primitiveLayout));
         }
         else if(match == RESOLVE_PROMOTABLE_TO_FLOAT) {
             const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
-            instruction = new PrimitivePromoter<T, float>(primitiveLayout);
+            instruction = unique_ptr<Resolver>(new PrimitivePromoter<T, float>(primitiveLayout));
         }
         else if(match == RESOLVE_PROMOTABLE_TO_DOUBLE) {
             const PrimitiveLayout &primitiveLayout = static_cast<const PrimitiveLayout &>(offset);
-            instruction = new PrimitivePromoter<T, double>(primitiveLayout);
+            instruction = unique_ptr<Resolver>(new PrimitivePromoter<T, double>(primitiveLayout));
         }
         else {
             assert(0);
@@ -590,36 +591,36 @@ class ResolverFactory : private boost::noncopyable {
     }
 
     template<typename Skipper>
-    Resolver*
+    unique_ptr<Resolver>
     constructCompoundSkipper(const NodePtr &writer) 
     {
-        return new Skipper(*this, writer);
+        return unique_ptr<Resolver>(new Skipper(*this, writer));
     }
 
 
     template<typename Parser, typename Skipper>
-    Resolver*
+    unique_ptr<Resolver>
     constructCompound(const NodePtr &writer, const NodePtr &reader, const Layout &offset)
     {
-        Resolver *instruction;
+        unique_ptr<Resolver> instruction;
 
         SchemaResolution match = RESOLVE_NO_MATCH;
 
         match = writer->resolve(*reader);
 
         if (match == RESOLVE_NO_MATCH) {
-            instruction = new Skipper(*this, writer);
+            instruction = unique_ptr<Resolver>(new Skipper(*this, writer));
         }
         else if(writer->type() != AVRO_UNION && reader->type() == AVRO_UNION) {
             const CompoundLayout &compoundLayout = dynamic_cast<const CompoundLayout &>(offset);
-            instruction = new NonUnionToUnionParser(*this, writer, reader, compoundLayout);
+            instruction = unique_ptr<Resolver>(new NonUnionToUnionParser(*this, writer, reader, compoundLayout));
         }
         else if(writer->type() == AVRO_UNION && reader->type() != AVRO_UNION) {
-            instruction = new UnionToNonUnionParser(*this, writer, reader, offset);
+            instruction = unique_ptr<Resolver>(new UnionToNonUnionParser(*this, writer, reader, offset));
         }
         else {
             const CompoundLayout &compoundLayout = dynamic_cast<const CompoundLayout &>(offset);
-            instruction = new Parser(*this, writer, reader, compoundLayout);
+            instruction = unique_ptr<Resolver>(new Parser(*this, writer, reader, compoundLayout));
         } 
 
         return instruction;
@@ -627,11 +628,11 @@ class ResolverFactory : private boost::noncopyable {
 
   public:
 
-    Resolver *
+    unique_ptr<Resolver>
     construct(const NodePtr &writer, const NodePtr &reader, const Layout &offset)
     {
 
-        typedef Resolver* (ResolverFactory::*BuilderFunc)(const NodePtr &writer, const NodePtr &reader, const Layout &offset);
+        typedef unique_ptr<Resolver> (ResolverFactory::*BuilderFunc)(const NodePtr &writer, const NodePtr &reader, const Layout &offset);
 
         NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ?
             resolveSymbol(writer) : writer;
@@ -665,11 +666,11 @@ class ResolverFactory : private boost::noncopyable {
         return  ((this)->*(func))(currentWriter, currentReader, offset);
     }
 
-    Resolver *
+    unique_ptr<Resolver>
     skipper(const NodePtr &writer) 
     {
 
-        typedef Resolver* (ResolverFactory::*BuilderFunc)(const NodePtr &writer);
+        typedef unique_ptr<Resolver> (ResolverFactory::*BuilderFunc)(const NodePtr &writer);
 
         NodePtr currentWriter = (writer->type() == AVRO_SYMBOLIC) ?
             writer->leafAt(0) : writer;
@@ -847,7 +848,7 @@ NonUnionToUnionParser::NonUnionToUnionParser(ResolverFactory &factory, const Nod
 #endif
     checkUnionMatch(writer, reader, choice_);
     assert(bestMatch != RESOLVE_NO_MATCH);
-    resolver_.reset(factory.construct(writer, reader->leafAt(choice_), offsets.at(choice_+2)));
+    resolver_ = factory.construct(writer, reader->leafAt(choice_), offsets.at(choice_+2));
 }
 
 UnionToNonUnionParser::UnionToNonUnionParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const Layout &offsets) :
@@ -861,7 +862,7 @@ UnionToNonUnionParser::UnionToNonUnionParser(ResolverFactory &factory, const Nod
     }
 }
 
-Resolver *constructResolver(const ValidSchema &writerSchema,
+unique_ptr<Resolver> constructResolver(const ValidSchema &writerSchema,
                                     const ValidSchema &readerSchema,
                                     const Layout &readerLayout)
 {

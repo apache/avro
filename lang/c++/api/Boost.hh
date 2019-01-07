@@ -19,10 +19,5 @@
 #ifndef avro_Boost_hh__
 #define avro_Boost_hh__
 
-#include <boost/version.hpp>
-
-#include <boost/any.hpp>
-
-#include <boost/ptr_container/ptr_vector.hpp>
 
 #endif // avro_Boost_hh__

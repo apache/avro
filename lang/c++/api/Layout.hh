@@ -66,17 +66,17 @@ class AVRO_DECL CompoundLayout : public Layout {
         Layout(offset)
     {}
 
-    void add(Layout *layout) {
-        layouts_.push_back(layout);
+    void add(std::unique_ptr<Layout> &layout) {
+        layouts_.push_back(std::move(layout));
     }
 
     const Layout &at (size_t idx) const {
-        return layouts_.at(idx);
+        return *layouts_.at(idx);
     }
 
   private:
 
-    boost::ptr_vector<Layout> layouts_;
+    std::vector<std::unique_ptr<Layout> > layouts_;
 };
 
 } // namespace avro
