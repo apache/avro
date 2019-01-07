@@ -18,7 +18,7 @@
 
 #include "Encoder.hh"
 #include "Zigzag.hh"
-#include <boost/array.hpp>
+#include <array>
 #include <boost/make_shared.hpp>
 
 namespace avro {
@@ -157,7 +157,7 @@ void BinaryEncoder::encodeUnionIndex(size_t e)
 
 void BinaryEncoder::doEncodeLong(int64_t l)
 {
-    boost::array<uint8_t, 10> bytes;
+    std::array<uint8_t, 10> bytes;
     size_t size = encodeInt64(l, bytes);
     out_.writeBytes(bytes.data(), size);
 }

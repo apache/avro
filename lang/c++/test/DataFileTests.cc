@@ -36,8 +36,8 @@ using std::vector;
 using std::map;
 using std::istringstream;
 using std::ostringstream;
+using std::array;
 
-using boost::array;
 using boost::shared_ptr;
 using boost::unit_test::test_suite;
 
@@ -389,11 +389,10 @@ public:
         for (int i = sync_points.size() - 2; i >= 0; --i) {
             df.seek(sync_points[i]);
             ComplexInteger ci;
-            // Subtract DataFileSync::static_size here because sync and pastSync
+            // Subtract avro::SyncSize here because sync and pastSync
             // expect a point *at or before* the sync marker, whereas seek
             // expects the point right *after* the sync marker.
-            while (!df.pastSync(sync_points[i + 1] -
-                                avro::DataFileSync::static_size)) {
+            while (!df.pastSync(sync_points[i + 1] - avro::SyncSize)) {
                 BOOST_CHECK(df.read(ci));
                 ++num;
                 actual.insert(std::make_pair(ci.re, ci.im));

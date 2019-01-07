@@ -19,6 +19,7 @@
 #ifndef avro_Writer_hh__
 #define avro_Writer_hh__
 
+#include <array>
 #include <boost/noncopyable.hpp>
 
 #include "Config.hh"
@@ -55,7 +56,7 @@ class WriterImpl : private boost::noncopyable
 
     void writeValue(int32_t val) {
         validator_.checkTypeExpected(AVRO_INT);
-        boost::array<uint8_t, 5> bytes;
+        std::array<uint8_t, 5> bytes;
         size_t size = encodeInt32(val, bytes);
         buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);
     }
@@ -104,7 +105,7 @@ class WriterImpl : private boost::noncopyable
     }
 
     template <size_t N>
-    void writeFixed(const boost::array<uint8_t, N> &val) {
+    void writeFixed(const std::array<uint8_t, N> &val) {
         validator_.checkFixedSizeExpected(val.size());
         buffer_.writeTo(reinterpret_cast<const char *>(val.data()), val.size());
     }
@@ -156,7 +157,7 @@ class WriterImpl : private boost::noncopyable
   private:
 
     void putLong(int64_t val) {
-        boost::array<uint8_t, 10> bytes;
+        std::array<uint8_t, 10> bytes;
         size_t size = encodeInt64(val, bytes);
         buffer_.writeTo(reinterpret_cast<const char *>(bytes.data()), size);
     }

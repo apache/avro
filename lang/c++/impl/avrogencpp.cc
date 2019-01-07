@@ -192,7 +192,7 @@ string CodeGen::cppTypeOf(const NodePtr& n)
     case avro::AVRO_MAP:
         return "std::map<std::string, " + cppTypeOf(n->leafAt(1)) + " >";
     case avro::AVRO_FIXED:
-        return "boost::array<uint8_t, " +
+        return "std::array<uint8_t, " +
             lexical_cast<string>(n->fixedSize()) + ">";
     case avro::AVRO_SYMBOLIC:
         return cppTypeOf(resolveSymbol(n));

@@ -40,7 +40,7 @@ using std::vector;
 using std::copy;
 using std::string;
 
-using boost::array;
+using std::array;
 
 namespace {
 const string AVRO_SCHEMA_KEY("avro.schema");
@@ -545,13 +545,13 @@ void DataFileReaderBase::sync(int64_t position)
     const uint8_t *p = 0;
     size_t n = 0;
     int i = 0;
-    while (i < DataFileSync::static_size) {
+    while (i < std::tuple_size<DataFileSync>::value) {
         if (n == 0 && !stream_->next(&p, &n)) {
             eof_ = true;
             return;
         }
         int len =
-            std::min(static_cast<size_t>(DataFileSync::static_size - i), n);
+            std::min(static_cast<size_t>(std::tuple_size<DataFileSync>::value - i), n);
         memcpy(&sync_buffer[i], p, len);
         p += len;
         n -= len;
@@ -559,12 +559,12 @@ void DataFileReaderBase::sync(int64_t position)
     }
     for (;;) {
         int j = 0;
-        for (; j < DataFileSync::static_size; ++j) {
-            if (sync_[j] != sync_buffer[(i + j) % DataFileSync::static_size]) {
+        for (; j < std::tuple_size<DataFileSync>::value; ++j) {
+            if (sync_[j] != sync_buffer[(i + j) % std::tuple_size<DataFileSync>::value]) {
                 break;
             }
         }
-        if (j == DataFileSync::static_size) {
+        if (j == std::tuple_size<DataFileSync>::value) {
             // Found the sync marker!
             break;
         }
@@ -572,7 +572,7 @@ void DataFileReaderBase::sync(int64_t position)
             eof_ = true;
             return;
         }
-        sync_buffer[i++ % DataFileSync::static_size] = *p++;
+        sync_buffer[i++ % std::tuple_size<DataFileSync>::value] = *p++;
         --n;
     }
     stream_->backup(n);
@@ -580,7 +580,7 @@ void DataFileReaderBase::sync(int64_t position)
 }
 
 bool DataFileReaderBase::pastSync(int64_t position) {
-  return !hasMore() || blockStart_ >= position + DataFileSync::static_size;
+  return !hasMore() || blockStart_ >= position + std::tuple_size<DataFileSync>::value;
 }
 
 int64_t DataFileReaderBase::previousSync() {

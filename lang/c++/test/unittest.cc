@@ -335,7 +335,7 @@ struct TestSchema
     template <typename Parser>
     void readFixed(Parser &p) {
 
-        boost::array<uint8_t, 16> input;
+        std::array<uint8_t, 16> input;
         p.readFixed(input);
         BOOST_CHECK_EQUAL(input.size(), 16U);
 

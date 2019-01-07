@@ -26,7 +26,7 @@ using std::unique_ptr;
 using std::string;
 using std::vector;
 using std::map;
-using boost::array;
+using std::array;
 
 namespace avro {
 
