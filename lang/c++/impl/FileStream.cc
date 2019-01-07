@@ -42,7 +42,7 @@ namespace avro {
 namespace {
 struct BufferCopyIn {
     virtual ~BufferCopyIn() { }
-    virtual void seek(ssize_t len) = 0;
+    virtual void seek(size_t len) = 0;
     virtual bool read(uint8_t* b, size_t toRead, size_t& actual) = 0;
 
 };
@@ -61,7 +61,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::CloseHandle(h_);
     }
 
-    void seek(ssize_t len) {
+    void seek(size_t len) {
         if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER && ::GetLastError() != NO_ERROR) {
             throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
         }
@@ -90,7 +90,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         ::close(fd_);
     }
 
-    void seek(ssize_t len) {
+    void seek(size_t len) {
         off_t r = ::lseek(fd_, len, SEEK_CUR);
         if (r == static_cast<off_t>(-1)) {
             throw Exception(boost::format("Cannot skip file: %1%") %
@@ -116,7 +116,7 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
     IStreamBufferCopyIn(istream& is) : is_(is) {
     }
 
-    void seek(ssize_t len) {
+    void seek(size_t len) {
         if (! is_.seekg(len, std::ios_base::cur)) {
             throw Exception("Cannot skip stream");
         }
@@ -131,6 +131,27 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
         return (! is_.eof() || actual != 0);
     }
 
+};
+
+struct NonSeekableIStreamBufferCopyIn : public IStreamBufferCopyIn {
+    NonSeekableIStreamBufferCopyIn(istream& is) : IStreamBufferCopyIn(is) { }
+
+    void seek(size_t len) {
+        const size_t bufSize = 4096;
+        uint8_t buf[bufSize];
+        while (len > 0) {
+            size_t n = std::min(len, bufSize);
+            is_.read(reinterpret_cast<char*>(buf), n);
+            if (is_.bad()) {
+                throw Exception("Cannot skip stream");
+            }
+            size_t actual = static_cast<size_t>(is_.gcount());
+            if (is_.eof() && actual == 0) {
+                throw Exception("Cannot skip stream");
+            }
+            len -= n;
+        }
+    }
 };
 
 }
@@ -345,10 +366,16 @@ unique_ptr<SeekableInputStream> fileSeekableInputStream(const char* filename,
                                                                         bufferSize));
 }
 
-unique_ptr<InputStream> istreamInputStream(istream& is,
-    size_t bufferSize)
+unique_ptr<InputStream> istreamInputStream(istream& is, size_t bufferSize)
 {
     unique_ptr<BufferCopyIn> in(new IStreamBufferCopyIn(is));
+    return unique_ptr<InputStream>( new BufferCopyInInputStream(std::move(in), bufferSize));
+}
+
+unique_ptr<InputStream> nonSeekableIstreamInputStream(
+        istream& is, size_t bufferSize)
+{
+    unique_ptr<BufferCopyIn> in(new NonSeekableIStreamBufferCopyIn(is));
     return unique_ptr<InputStream>( new BufferCopyInInputStream(std::move(in), bufferSize));
 }
 

@@ -104,7 +104,7 @@ class ReaderImpl : private boost::noncopyable
         validator_.checkTypeExpected(AVRO_BYTES);
         size_t size = static_cast<size_t>(readSize());
         val.resize(size);
-        reader_.read(reinterpret_cast<char *>(&val[0]), size);
+        reader_.read(reinterpret_cast<char *>(val.data()), size);
     }
 
     void readFixed(uint8_t *val, size_t size) {

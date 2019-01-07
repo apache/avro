@@ -137,7 +137,8 @@ void BinaryDecoder::decodeString(std::string& value)
     size_t len = doDecodeLength();
     value.resize(len);
     if (len > 0) {
-        in_.readBytes(reinterpret_cast<uint8_t*>(&value[0]), len);
+        in_.readBytes(const_cast<uint8_t*>(
+                    reinterpret_cast<const uint8_t*>(value.c_str())), len);
     }
 }
 
@@ -152,7 +153,7 @@ void BinaryDecoder::decodeBytes(std::vector<uint8_t>& value)
     size_t len = doDecodeLength();
     value.resize(len);
     if (len > 0) {
-        in_.readBytes(&value[0], len);
+        in_.readBytes(value.data(), len);
     }
 }
 
@@ -166,7 +167,7 @@ void BinaryDecoder::decodeFixed(size_t n, std::vector<uint8_t>& value)
 {
     value.resize(n);
     if (n > 0) {
-        in_.readBytes(&value[0], n);
+        in_.readBytes(value.data(), n);
     }
 }
 

@@ -159,7 +159,7 @@ void DataFileWriterBase::sync()
             }
         } // make sure all is flushed
         std::unique_ptr<InputStream> in = memoryInputStream(
-           reinterpret_cast<const uint8_t*>(&buf[0]), buf.size());
+           reinterpret_cast<const uint8_t*>(buf.data()), buf.size());
         int64_t byteCount = buf.size();
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
@@ -182,13 +182,14 @@ void DataFileWriterBase::sync()
             }
         } // make sure all is flushed
 
-        crc.process_bytes(reinterpret_cast<const char*>(&temp[0]), temp.size());
+        crc.process_bytes(reinterpret_cast<const char*>(temp.data()),
+                temp.size());
         // For Snappy, add the CRC32 checksum
         int32_t checksum = crc();
 
         // Now compress
         size_t compressed_size = snappy::Compress(
-                reinterpret_cast<const char*>(&temp[0]), temp.size(),
+                reinterpret_cast<const char*>(temp.data()), temp.size(),
                 &compressed);
         temp.clear();
         {
@@ -201,7 +202,7 @@ void DataFileWriterBase::sync()
         temp.push_back((checksum >> 8) & 0xFF);
         temp.push_back(checksum & 0xFF);
         std::unique_ptr<InputStream> in = memoryInputStream(
-                reinterpret_cast<const uint8_t*>(&temp[0]), temp.size());
+                reinterpret_cast<const uint8_t*>(temp.data()), temp.size());
         int64_t byteCount = temp.size();
         avro::encode(*encoderPtr_, byteCount);
         encoderPtr_->flush();
@@ -418,7 +419,7 @@ void DataFileReaderBase::readDataBlock()
         int b4 = compressed_[len - 1] & 0xFF;
 
         checksum = (b1 << 24) + (b2 << 16) + (b3 << 8) + (b4);
-        if (!snappy::Uncompress(reinterpret_cast<const char*>(&compressed_[0]),
+        if (!snappy::Uncompress(reinterpret_cast<const char*>(compressed_.data()),
                 len - 4, &uncompressed)) {
             throw Exception(
                     "Snappy Compression reported an error when decompressing");
@@ -448,9 +449,9 @@ void DataFileReaderBase::readDataBlock()
         os_.reset(new boost::iostreams::filtering_istream());
         os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
         os_->push(boost::iostreams::basic_array_source<char>(
-                                                             &compressed_[0], compressed_.size()));
+                                                             compressed_.data(), compressed_.size()));
         
-        std::unique_ptr<InputStream> in = istreamInputStream(*os_);
+        std::unique_ptr<InputStream> in = nonSeekableIstreamInputStream(*os_);
         dataDecoder_->init(*in);
         dataStream_ = std::move(in);
     }

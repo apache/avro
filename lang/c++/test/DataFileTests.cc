@@ -184,6 +184,20 @@ public:
     }
 
     void testWrite() {
+        testWriteWithCodec(avro::NULL_CODEC);
+    }
+
+    void testWriteWithDeflateCodec() {
+        testWriteWithCodec(avro::DEFLATE_CODEC);
+    }
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+    void testWriteWithSnappyCodec() {
+        testWriteWithCodec(avro::SNAPPY_CODEC);
+#endif
+    }
+
+    void testWriteWithCodec(avro::Codec codec) {
         avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100);
         int64_t re = 3;
         int64_t im = 5;
@@ -640,6 +654,109 @@ void addReaderTests(test_suite* ts, const shared_ptr<DataFileTest>& t)
     ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
 }
 
+struct WriterObj {
+    std::string s1;
+    std::string s2;
+    WriterObj(const char* s1, const char* s2): s1(s1), s2(s2) {}
+};
+
+struct ReaderObj {
+    std::string s2;
+    ReaderObj(const char* s2): s2(s2) {}
+};
+
+namespace avro {
+template<> struct codec_traits<WriterObj> {
+    static void encode(Encoder& e, const WriterObj& v) {
+        avro::encode(e, v.s1);
+        avro::encode(e, v.s2);
+    }
+};
+
+template<> struct codec_traits<ReaderObj> {
+    static void decode(Decoder& d, ReaderObj& v) {
+        if (avro::ResolvingDecoder *rd =
+            dynamic_cast<avro::ResolvingDecoder *>(&d)) {
+            const std::vector<size_t> fo = rd->fieldOrder();
+            for (std::vector<size_t>::const_iterator it = fo.begin();
+                it != fo.end(); ++it) {
+                switch (*it) {
+                case 0:
+                    avro::decode(d, v.s2);
+                    break;
+                default:
+                    break;
+                }
+            }
+        } else {
+            avro::decode(d, v.s2);
+        }
+    }
+};
+}   // namespace avro
+
+void testSkipString(avro::Codec codec) {
+    const char *writerSchemaStr = "{"
+        "\"type\": \"record\", \"name\": \"R\", \"fields\":["
+        "{\"name\": \"s1\", \"type\": \"string\"},"
+        "{\"name\": \"s2\", \"type\": \"string\"}"
+        "]}";
+    const char *readerSchemaStr = "{"
+        "\"type\": \"record\", \"name\": \"R\", \"fields\":["
+        "{\"name\": \"s2\", \"type\": \"string\"}"
+        "]}";
+    avro::ValidSchema writerSchema =
+        avro::compileJsonSchemaFromString(writerSchemaStr);
+    avro::ValidSchema readerSchema =
+        avro::compileJsonSchemaFromString(readerSchemaStr);
+    const size_t stringLen = 10240;
+    char largeString[stringLen + 1];
+
+    for (size_t i = 0; i < stringLen; i++) {
+        largeString[i] = 'a';
+    }
+    largeString[stringLen] = '\0';
+
+    const char *filename = "test_skip.df";
+    {
+        avro::DataFileWriter<WriterObj> df(filename,
+                writerSchema, 100, codec);
+        df.write(WriterObj(largeString, "b1"));
+        df.write(WriterObj(largeString, "b2"));
+        df.flush();
+        df.close();
+    }
+    {
+        avro::DataFileReader<ReaderObj> df(filename, readerSchema);
+        ReaderObj ro("");
+        BOOST_CHECK_EQUAL(df.read(ro), true);
+        BOOST_CHECK_EQUAL(ro.s2, "b1");
+        BOOST_CHECK_EQUAL(df.read(ro), true);
+        BOOST_CHECK_EQUAL(ro.s2, "b2");
+        BOOST_CHECK_EQUAL(df.read(ro), false);
+    }
+}
+
+void testSkipStringNullCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testSkipString(avro::NULL_CODEC);
+}
+
+void testSkipStringDeflateCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testSkipString(avro::DEFLATE_CODEC);
+}
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+void testSkipStringSnappyCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testSkipString(avro::SNAPPY_CODEC);
+}
+#endif
+
 test_suite*
 init_unit_test_suite(int argc, char *argv[])
 {
@@ -657,6 +774,24 @@ init_unit_test_suite(int argc, char *argv[])
         addReaderTests(ts, t1);
         boost::unit_test::framework::master_test_suite().add(ts);
     }
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.defalate.df");
+        shared_ptr<DataFileTest> t1(new DataFileTest("test1.deflate.df", sch, isch));
+        ts->add(BOOST_CLASS_TEST_CASE(
+                    &DataFileTest::testWriteWithDeflateCodec, t1));
+        addReaderTests(ts, t1);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+#ifdef SNAPPY_CODEC_AVAILABLE
+    {
+        test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test1.snappy.df");
+        shared_ptr<DataFileTest> t1(new DataFileTest("test1.snappy.df", sch, isch));
+        ts->add(BOOST_CLASS_TEST_CASE(
+                    &DataFileTest::testWriteWithSnappyCodec, t1));
+        addReaderTests(ts, t1);
+        boost::unit_test::framework::master_test_suite().add(ts);
+    }
+#endif
     {
         test_suite *ts = BOOST_TEST_SUITE("DataFile tests: test2.df");
         shared_ptr<DataFileTest> t2(new DataFileTest("test2.df", sch, isch));
@@ -745,6 +880,14 @@ init_unit_test_suite(int argc, char *argv[])
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testSkipStringNullCodec));
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testSkipStringDeflateCodec));
+#ifdef SNAPPY_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testSkipStringSnappyCodec));
+#endif
 
     return 0;
 }
