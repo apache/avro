@@ -20,7 +20,6 @@
 #define avro_AvroParse_hh__
 
 #include "Config.hh"
-#include <boost/static_assert.hpp>
 #include "AvroTraits.hh"
 #include "ResolvingReader.hh"
 
@@ -50,13 +49,13 @@ void parse(ResolvingReader &p, T& val)
 template <typename Reader, typename T>
 void parse(Reader &p, T& val, const boost::false_type &)
 {
-    BOOST_STATIC_ASSERT(sizeof(T)==0);
+    static_assert(sizeof(T) == 0, "Not a valid type to parse");
 }
 
 template <typename Reader, typename T>
 void translatingParse(Reader &p, T& val, const boost::false_type &)
 {
-    BOOST_STATIC_ASSERT(sizeof(T)==0);
+    static_assert(sizeof(T) == 0, "Not a valid type to parse");
 }
 
 // @{

@@ -255,7 +255,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
     template<typename T>
     bool read(T &val, const boost::false_type&)
     {
-        BOOST_STATIC_ASSERT(sizeof(T)==0);
+        static_assert(sizeof(T) == 0, "Not a valid type to read");
         return false;
     }
 

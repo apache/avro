@@ -656,7 +656,8 @@ class ResolverFactory : private boost::noncopyable {
             &ResolverFactory::constructCompound<FixedParser, FixedSkipper>
         };
 
-        BOOST_STATIC_ASSERT( (sizeof(funcs)/sizeof(BuilderFunc)) == (AVRO_NUM_TYPES) );
+        static_assert((sizeof(funcs)/sizeof(BuilderFunc)) == (AVRO_NUM_TYPES),
+                "Invalid number of builder functions");
 
         BuilderFunc func = funcs[currentWriter->type()];
         assert(func);
@@ -690,7 +691,8 @@ class ResolverFactory : private boost::noncopyable {
             &ResolverFactory::constructCompoundSkipper<FixedSkipper>
         };
 
-        BOOST_STATIC_ASSERT( (sizeof(funcs)/sizeof(BuilderFunc)) == (AVRO_NUM_TYPES) );
+        static_assert((sizeof(funcs)/sizeof(BuilderFunc)) == (AVRO_NUM_TYPES),
+            "Invalid number of builder functions");
 
         BuilderFunc func = funcs[currentWriter->type()];
         assert(func);
