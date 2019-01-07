@@ -23,6 +23,7 @@
 #include "Boost.hh"
 #include "Types.hh"
 #include <stdint.h>
+#include <type_traits>
 
 /** @file
  *
@@ -35,10 +36,10 @@ namespace avro {
  * New types will need to define the trait as well.
  */
 template <typename T>
-struct is_serializable : public boost::false_type{};
+struct is_serializable : public std::false_type{};
 
 template <typename T>
-struct is_promotable : public boost::false_type{};
+struct is_promotable : public std::false_type{};
 
 template <typename T>
 struct type_to_avro {
@@ -88,7 +89,7 @@ struct is_not_defined {
 
 #define DEFINE_PRIMITIVE(CTYPE, AVROTYPE) \
 template <> \
-struct is_serializable<CTYPE> : public boost::true_type{}; \
+struct is_serializable<CTYPE> : public std::true_type{}; \
 \
 template <> \
 struct type_to_avro<CTYPE> { \
@@ -97,7 +98,7 @@ struct type_to_avro<CTYPE> { \
 
 #define DEFINE_PROMOTABLE_PRIMITIVE(CTYPE, AVROTYPE) \
 template <> \
-struct is_promotable<CTYPE> : public boost::true_type{}; \
+struct is_promotable<CTYPE> : public std::true_type{}; \
 \
 DEFINE_PRIMITIVE(CTYPE, AVROTYPE)
 

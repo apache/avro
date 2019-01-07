@@ -34,6 +34,8 @@
 #include "Decoder.hh"
 #include "buffer/BufferStream.hh"
 #include "buffer/BufferPrint.hh"
+#include "boost/shared_ptr.hpp"
+#include "boost/make_shared.hpp"
 
 #include "AvroSerialize.hh"
 

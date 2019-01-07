@@ -47,7 +47,7 @@ enum Codec {
 
 };
 
-const size_t SyncSize = 16;
+const int SyncSize = 16;
 /**
  * The sync value.
  */

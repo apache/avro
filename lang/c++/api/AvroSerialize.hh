@@ -40,7 +40,7 @@ void serialize(Writer &s, const T& val)
 /// Type trait should be set to is_serializable in otherwise force the compiler to complain.
 
 template <typename Writer, typename T>
-void serialize(Writer &s, const T& val, const boost::false_type &)
+void serialize(Writer &s, const T& val, const std::false_type &)
 {
     static_assert(sizeof(T) == 0, "Not a valid type to serialize");
 }
@@ -50,12 +50,12 @@ void serialize(Writer &s, const T& val, const boost::false_type &)
 // @{
 
 template <typename Writer, typename T>
-void serialize(Writer &s, T val, const boost::true_type &) {
+void serialize(Writer &s, T val, const std::true_type &) {
     s.writeValue(val);
 }
 
 template <typename Writer>
-void serialize(Writer &s, const std::vector<uint8_t> &val, const boost::true_type &) {
+void serialize(Writer &s, const std::vector<uint8_t> &val, const std::true_type &) {
     s.writeBytes(val.data(), val.size());
 }
 

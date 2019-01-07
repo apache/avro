@@ -544,27 +544,27 @@ void DataFileReaderBase::sync(int64_t position)
     DataFileSync sync_buffer;
     const uint8_t *p = 0;
     size_t n = 0;
-    int i = 0;
-    while (i < std::tuple_size<DataFileSync>::value) {
+    size_t i = 0;
+    while (i < SyncSize) {
         if (n == 0 && !stream_->next(&p, &n)) {
             eof_ = true;
             return;
         }
         int len =
-            std::min(static_cast<size_t>(std::tuple_size<DataFileSync>::value - i), n);
+            std::min(static_cast<size_t>(SyncSize - i), n);
         memcpy(&sync_buffer[i], p, len);
         p += len;
         n -= len;
         i += len;
     }
     for (;;) {
-        int j = 0;
-        for (; j < std::tuple_size<DataFileSync>::value; ++j) {
-            if (sync_[j] != sync_buffer[(i + j) % std::tuple_size<DataFileSync>::value]) {
+        size_t j = 0;
+        for (; j < SyncSize; ++j) {
+            if (sync_[j] != sync_buffer[(i + j) % SyncSize]) {
                 break;
             }
         }
-        if (j == std::tuple_size<DataFileSync>::value) {
+        if (j == SyncSize) {
             // Found the sync marker!
             break;
         }
@@ -572,7 +572,7 @@ void DataFileReaderBase::sync(int64_t position)
             eof_ = true;
             return;
         }
-        sync_buffer[i++ % std::tuple_size<DataFileSync>::value] = *p++;
+        sync_buffer[i++ % SyncSize] = *p++;
         --n;
     }
     stream_->backup(n);
@@ -580,7 +580,7 @@ void DataFileReaderBase::sync(int64_t position)
 }
 
 bool DataFileReaderBase::pastSync(int64_t position) {
-  return !hasMore() || blockStart_ >= position + std::tuple_size<DataFileSync>::value;
+  return !hasMore() || blockStart_ >= position + SyncSize;
 }
 
 int64_t DataFileReaderBase::previousSync() {

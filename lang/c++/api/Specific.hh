@@ -255,7 +255,7 @@ template <typename T> struct codec_traits<std::vector<T> > {
 
 typedef codec_traits<std::vector<bool>::const_reference> bool_codec_traits;
 
-template <> struct codec_traits<boost::conditional<avro::is_not_defined<bool_codec_traits>::value,
+template <> struct codec_traits<std::conditional<avro::is_not_defined<bool_codec_traits>::value,
          std::vector<bool>::const_reference, void>::type> {
    /**
     * Encodes a given value.

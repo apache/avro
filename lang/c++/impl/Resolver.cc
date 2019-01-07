@@ -102,7 +102,7 @@ class PrimitivePromoter : public Resolver
 
   private:
 
-    void parseIt(Reader &reader, uint8_t *address, const boost::true_type &) const
+    void parseIt(Reader &reader, uint8_t *address, const std::true_type &) const
     {
         WT val;
         reader.readValue(val);
@@ -111,7 +111,7 @@ class PrimitivePromoter : public Resolver
         DEBUG_OUT("Promoting " << val);
     }
 
-    void parseIt(Reader &reader, uint8_t *address, const boost::false_type &) const
+    void parseIt(Reader &reader, uint8_t *address, const std::false_type &) const
     { }
 
     template<typename T>

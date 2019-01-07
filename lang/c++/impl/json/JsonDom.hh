@@ -24,6 +24,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "boost/any.hpp"
 #include "Config.hh"

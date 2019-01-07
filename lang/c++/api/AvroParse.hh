@@ -47,13 +47,13 @@ void parse(ResolvingReader &p, T& val)
 /// Type trait should be set to is_serializable in otherwise force the compiler to complain.
 
 template <typename Reader, typename T>
-void parse(Reader &p, T& val, const boost::false_type &)
+void parse(Reader &p, T& val, const std::false_type &)
 {
     static_assert(sizeof(T) == 0, "Not a valid type to parse");
 }
 
 template <typename Reader, typename T>
-void translatingParse(Reader &p, T& val, const boost::false_type &)
+void translatingParse(Reader &p, T& val, const std::false_type &)
 {
     static_assert(sizeof(T) == 0, "Not a valid type to parse");
 }
@@ -64,17 +64,17 @@ void translatingParse(Reader &p, T& val, const boost::false_type &)
 
 
 template <typename Reader, typename T>
-void parse(Reader &p, T &val, const boost::true_type &) {
+void parse(Reader &p, T &val, const std::true_type &) {
     p.readValue(val);
 }
 
 template <typename Reader>
-void parse(Reader &p, std::vector<uint8_t> &val, const boost::true_type &) {
+void parse(Reader &p, std::vector<uint8_t> &val, const std::true_type &) {
     p.readBytes(val);
 }
 
 template<typename T>
-void translatingParse(ResolvingReader &p, T& val, const boost::true_type &) {
+void translatingParse(ResolvingReader &p, T& val, const std::true_type &) {
     p.parse(val);
 }
 
