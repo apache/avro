@@ -56,8 +56,7 @@ do
       (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh test)
-# Disabling until the issue triggered by ruby bundler is fixed: AVRO-2297
-#      (cd lang/ruby; ./build.sh test)
+      (cd lang/ruby; ./build.sh test)
       (cd lang/php; ./build.sh test)
       (cd lang/perl; ./build.sh test)
 
