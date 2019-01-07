@@ -21,6 +21,7 @@
 #include <boost/test/included/unit_test_framework.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <sstream>
 

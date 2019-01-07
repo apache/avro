@@ -24,10 +24,10 @@
 
 #include <limits>
 #include <set>
-#include <boost/weak_ptr.hpp>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #include "Node.hh"
 #include "NodeConcepts.hh"
@@ -255,7 +255,7 @@ class AVRO_DECL NodePrimitive : public NodeImplPrimitive
 
 class AVRO_DECL NodeSymbolic : public NodeImplSymbolic
 {
-    typedef boost::weak_ptr<Node> NodeWeakPtr;
+    typedef std::weak_ptr<Node> NodeWeakPtr;
 
   public:
 
@@ -600,7 +600,7 @@ inline NodePtr resolveSymbol(const NodePtr &node)
     if(node->type() != AVRO_SYMBOLIC) {
         throw Exception("Only symbolic nodes may be resolved");
     }
-    boost::shared_ptr<NodeSymbolic> symNode = boost::static_pointer_cast<NodeSymbolic>(node);
+    std::shared_ptr<NodeSymbolic> symNode = std::static_pointer_cast<NodeSymbolic>(node);
     return symNode->getNode();
 }
 

@@ -29,7 +29,7 @@
 namespace avro {
 
 class ResolverFactory;
-typedef boost::shared_ptr<Resolver> ResolverPtr;
+typedef std::shared_ptr<Resolver> ResolverPtr;
 typedef boost::ptr_vector<Resolver> ResolverPtrVector;
 
 // #define DEBUG_VERBOSE

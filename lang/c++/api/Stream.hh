@@ -176,7 +176,7 @@ AVRO_DECL InputStreamPtr memoryInputStream(const OutputStream& source);
  * be a memory output stream. That is it must have been returned by a pervious
  * call to memoryOutputStream().
  */
-AVRO_DECL boost::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source);
+AVRO_DECL std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source);
 
 /**
  * Returns a new OutputStream whose contents would be stored in a file.

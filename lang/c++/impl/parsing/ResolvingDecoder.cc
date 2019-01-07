@@ -22,12 +22,8 @@
 #include <stack>
 #include <map>
 #include <algorithm>
+#include <memory>
 #include <ctype.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/any.hpp>
-#include <boost/utility.hpp>
 
 #include "ValidatingCodec.hh"
 #include "Symbol.hh"
@@ -41,13 +37,13 @@
 
 namespace avro {
 
-using boost::make_shared;
+using std::make_shared;
 
 namespace parsing {
 
-using boost::shared_ptr;
-using boost::static_pointer_cast;
-using boost::make_shared;
+using std::shared_ptr;
+using std::static_pointer_cast;
+using std::make_shared;
 
 using std::unique_ptr;
 using std::map;

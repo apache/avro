@@ -22,10 +22,7 @@
 #include <map>
 #include <algorithm>
 #include <ctype.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/any.hpp>
+#include <memory>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 #include "ValidatingCodec.hh"
@@ -41,9 +38,7 @@ namespace avro {
 
 namespace parsing {
 
-using boost::shared_ptr;
-using boost::make_shared;
-using boost::static_pointer_cast;
+using std::make_shared;
 
 using std::map;
 using std::vector;
@@ -696,19 +691,19 @@ void JsonEncoder<P, F>::encodeUnionIndex(size_t e)
 
 DecoderPtr jsonDecoder(const ValidSchema& s)
 {
-    return boost::make_shared<parsing::JsonDecoder<
+    return std::make_shared<parsing::JsonDecoder<
         parsing::SimpleParser<parsing::JsonDecoderHandler> > >(s);
 }
 
 EncoderPtr jsonEncoder(const ValidSchema& schema)
 {
-    return boost::make_shared<parsing::JsonEncoder<
+    return std::make_shared<parsing::JsonEncoder<
         parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonNullFormatter> >, avro::json::JsonNullFormatter> >(schema);
 }
 
 EncoderPtr jsonPrettyEncoder(const ValidSchema& schema)
 {
-    return boost::make_shared<parsing::JsonEncoder<
+    return std::make_shared<parsing::JsonEncoder<
         parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonPrettyFormatter> >, avro::json::JsonPrettyFormatter> >(schema);
 }
 

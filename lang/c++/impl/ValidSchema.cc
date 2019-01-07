@@ -28,8 +28,8 @@ using std::string;
 using std::ostringstream;
 using std::make_pair;
 using boost::format;
-using boost::shared_ptr;
-using boost::static_pointer_cast;
+using std::shared_ptr;
+using std::static_pointer_cast;
 
 namespace avro {
 typedef std::map<Name, NodePtr> SymbolMap;
