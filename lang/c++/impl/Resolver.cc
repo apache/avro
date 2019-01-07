@@ -23,7 +23,6 @@
 #include "NodeImpl.hh"
 #include "ValidSchema.hh"
 #include "Reader.hh"
-#include "Boost.hh"
 #include "AvroTraits.hh"
 
 namespace avro {

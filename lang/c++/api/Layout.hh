@@ -21,7 +21,6 @@
 
 #include <boost/noncopyable.hpp>
 #include "Config.hh"
-#include "Boost.hh"
 
 /// \file Layout.hh
 ///

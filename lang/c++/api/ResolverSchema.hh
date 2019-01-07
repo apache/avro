@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "Config.hh"
-#include "Boost.hh"
 #include "Reader.hh"
 
 /// \file ResolverSchema.hh

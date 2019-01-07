@@ -20,7 +20,6 @@
 #define avro_AvroTraits_hh__
 
 #include "Config.hh"
-#include "Boost.hh"
 #include "Types.hh"
 #include <stdint.h>
 #include <type_traits>
