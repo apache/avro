@@ -193,7 +193,7 @@
           <version>${javadoc-plugin.version}</version>
           <configuration>
             <links>
-              <link>http://java.sun.com/products/servlet/2.3/javadoc/</link>
+              <link>https://docs.oracle.com/javaee/7/api/</link>
               <link>http://hadoop.apache.org/common/docs/current/api/</link>
             </links>
             <tagletArtifacts>
@@ -204,6 +204,11 @@
               </tagletArtifact>
             </tagletArtifacts>
             <excludePackageNames>org.apache.avro.compiler.idl,*.internal</excludePackageNames>
+            <quiet>true</quiet>
+            <encoding>UTF-8</encoding>
+            <additionalJOption>-Xdoclint:none</additionalJOption>
+            <detectOfflineLinks>false</detectOfflineLinks>
+            <notimestamp>true</notimestamp>
           </configuration>
         </plugin>
         <plugin>
