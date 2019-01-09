@@ -30,10 +30,9 @@
 #include <string>
 #include <vector>
 
-#include "boost/array.hpp"
+#include "array"
 #include "boost/utility.hpp"
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/scoped_ptr.hpp>
 
 namespace avro {
 
@@ -48,10 +47,11 @@ enum Codec {
 
 };
 
+const int SyncSize = 16;
 /**
  * The sync value.
  */
-typedef boost::array<uint8_t, 16> DataFileSync;
+typedef std::array<uint8_t, SyncSize> DataFileSync;
 
 /**
  * Type-independent portion of DataFileWriter.
@@ -201,7 +201,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     DataFileSync sync_;
 
     // for compressed buffer
-    boost::scoped_ptr<boost::iostreams::filtering_istream> os_;
+    std::unique_ptr<boost::iostreams::filtering_istream> os_;
     std::vector<char> compressed_;
     std::string uncompressed;
     void readHeader();

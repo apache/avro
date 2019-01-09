@@ -19,6 +19,7 @@
 #ifndef avro_Serializer_hh__
 #define avro_Serializer_hh__
 
+#include <array>
 #include <boost/noncopyable.hpp>
 
 #include "Config.hh"
@@ -79,7 +80,7 @@ class Serializer : private boost::noncopyable
     }
 
     template <size_t N>
-    void writeFixed(const boost::array<uint8_t, N> &val) {
+    void writeFixed(const std::array<uint8_t, N> &val) {
         writer_.writeFixed(val);
     }
 

@@ -21,9 +21,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 #include <boost/any.hpp>
 
 #include "ValidSchema.hh"
@@ -33,12 +31,12 @@
 
 namespace avro {
 
+using std::make_shared;
+
 namespace parsing {
 
-using boost::shared_ptr;
-using boost::weak_ptr;
-using boost::static_pointer_cast;
-using boost::make_shared;
+using std::shared_ptr;
+using std::static_pointer_cast;
 
 using std::map;
 using std::vector;
@@ -574,14 +572,12 @@ void ValidatingEncoder<P>::encodeUnionIndex(size_t e)
 DecoderPtr validatingDecoder(const ValidSchema& s,
     const DecoderPtr& base)
 {
-    return boost::make_shared<parsing::ValidatingDecoder<
-        parsing::SimpleParser<parsing::DummyHandler> > >(s, base);
+    return make_shared<parsing::ValidatingDecoder<parsing::SimpleParser<parsing::DummyHandler> > >(s, base);
 }
 
 EncoderPtr validatingEncoder(const ValidSchema& schema, const EncoderPtr& base)
 {
-    return boost::make_shared<parsing::ValidatingEncoder<
-        parsing::SimpleParser<parsing::DummyHandler> > >(schema, base);
+    return make_shared<parsing::ValidatingEncoder<parsing::SimpleParser<parsing::DummyHandler> > >(schema, base);
 }
 
 }   // namespace avro

@@ -23,11 +23,10 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "ValidSchema.hh"
 #include "Stream.hh"
-
-#include <boost/shared_ptr.hpp>
 
 /// \file
 ///
@@ -175,7 +174,7 @@ public:
 /**
  * Shared pointer to Decoder.
  */
-typedef boost::shared_ptr<Decoder> DecoderPtr;
+typedef std::shared_ptr<Decoder> DecoderPtr;
 
 /**
  * ResolvingDecoder is derived from \ref Decoder, with an additional
@@ -194,7 +193,7 @@ public:
 /**
  * Shared pointer to ResolvingDecoder.
  */
-typedef boost::shared_ptr<ResolvingDecoder> ResolvingDecoderPtr;
+typedef std::shared_ptr<ResolvingDecoder> ResolvingDecoderPtr;
 /**
  *  Returns an decoder that can decode binary Avro standard.
  */

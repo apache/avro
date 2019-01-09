@@ -22,7 +22,6 @@
 #ifndef _WIN32
 #include <sys/uio.h>
 #endif
-#include <boost/type_traits.hpp>
 #include <vector>
 
 #include "../Config.hh"
@@ -135,7 +134,7 @@ class AVRO_DECL OutputBuffer
 
     template<typename T>
     void writeTo(T val) {
-        pimpl_->writeTo(val, boost::is_fundamental<T>());
+        pimpl_->writeTo(val, std::is_fundamental<T>());
     }
 
     /** 

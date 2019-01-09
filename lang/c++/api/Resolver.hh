@@ -19,6 +19,7 @@
 #ifndef avro_Resolver_hh__
 #define avro_Resolver_hh__
 
+#include <memory>
 #include <boost/noncopyable.hpp>
 #include <stdint.h>
 
@@ -43,7 +44,7 @@ class AVRO_DECL Resolver : private boost::noncopyable
 
 };
 
-Resolver *constructResolver(
+std::unique_ptr<Resolver> constructResolver(
         const ValidSchema &rwriterSchema,
         const ValidSchema &readerSchema,
         const Layout &readerLayout

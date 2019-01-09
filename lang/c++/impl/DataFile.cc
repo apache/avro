@@ -40,7 +40,7 @@ using std::vector;
 using std::copy;
 using std::string;
 
-using boost::array;
+using std::array;
 
 namespace {
 const string AVRO_SCHEMA_KEY("avro.schema");
@@ -544,27 +544,27 @@ void DataFileReaderBase::sync(int64_t position)
     DataFileSync sync_buffer;
     const uint8_t *p = 0;
     size_t n = 0;
-    int i = 0;
-    while (i < DataFileSync::static_size) {
+    size_t i = 0;
+    while (i < SyncSize) {
         if (n == 0 && !stream_->next(&p, &n)) {
             eof_ = true;
             return;
         }
         int len =
-            std::min(static_cast<size_t>(DataFileSync::static_size - i), n);
+            std::min(static_cast<size_t>(SyncSize - i), n);
         memcpy(&sync_buffer[i], p, len);
         p += len;
         n -= len;
         i += len;
     }
     for (;;) {
-        int j = 0;
-        for (; j < DataFileSync::static_size; ++j) {
-            if (sync_[j] != sync_buffer[(i + j) % DataFileSync::static_size]) {
+        size_t j = 0;
+        for (; j < SyncSize; ++j) {
+            if (sync_[j] != sync_buffer[(i + j) % SyncSize]) {
                 break;
             }
         }
-        if (j == DataFileSync::static_size) {
+        if (j == SyncSize) {
             // Found the sync marker!
             break;
         }
@@ -572,7 +572,7 @@ void DataFileReaderBase::sync(int64_t position)
             eof_ = true;
             return;
         }
-        sync_buffer[i++ % DataFileSync::static_size] = *p++;
+        sync_buffer[i++ % SyncSize] = *p++;
         --n;
     }
     stream_->backup(n);
@@ -580,7 +580,7 @@ void DataFileReaderBase::sync(int64_t position)
 }
 
 bool DataFileReaderBase::pastSync(int64_t position) {
-  return !hasMore() || blockStart_ >= position + DataFileSync::static_size;
+  return !hasMore() || blockStart_ >= position + SyncSize;
 }
 
 int64_t DataFileReaderBase::previousSync() {

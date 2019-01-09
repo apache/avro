@@ -21,7 +21,6 @@
 #include <stdexcept>
 
 #include <string.h>
-#include <boost/make_shared.hpp>
 
 #include "Stream.hh"
 #include "JsonIO.hh"
@@ -62,12 +61,12 @@ Entity readEntity(JsonParser& p)
         return Entity(p.doubleValue(), p.line());
     case JsonParser::tkString:
         p.advance();
-        return Entity(boost::make_shared<String>(p.rawString()), p.line());
+        return Entity(std::make_shared<String>(p.rawString()), p.line());
     case JsonParser::tkArrayStart:
         {
             size_t l = p.line();
             p.advance();
-            boost::shared_ptr<Array> v = boost::make_shared<Array>();
+            std::shared_ptr<Array> v = std::make_shared<Array>();
             while (p.peek() != JsonParser::tkArrayEnd) {
                 v->push_back(readEntity(p));
             }
@@ -78,7 +77,7 @@ Entity readEntity(JsonParser& p)
         {
             size_t l = p.line();
             p.advance();
-            boost::shared_ptr<Object> v = boost::make_shared<Object>();
+            std::shared_ptr<Object> v = std::make_shared<Object>();
             while (p.peek() != JsonParser::tkObjectEnd) {
                 p.advance();
                 std::string k = p.stringValue();
@@ -166,12 +165,12 @@ void Entity::ensureType(EntityType type) const
     
 String Entity::stringValue() const {
     ensureType(etString);
-    return JsonParser::toStringValue(**boost::any_cast<boost::shared_ptr<String> >(&value_));
+    return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String> >(&value_));
 }
 
 String Entity::bytesValue() const {
     ensureType(etString);
-    return JsonParser::toBytesValue(**boost::any_cast<boost::shared_ptr<String> >(&value_));
+    return JsonParser::toBytesValue(**boost::any_cast<std::shared_ptr<String> >(&value_));
 }
 
 std::string Entity::toString() const

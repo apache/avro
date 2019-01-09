@@ -20,7 +20,6 @@
 #include <fstream>
 #include <sstream>
 #include <boost/test/included/unit_test_framework.hpp>
-#include <boost/make_shared.hpp>
 
 #include "Zigzag.hh"
 #include "Node.hh"
@@ -35,6 +34,8 @@
 #include "Decoder.hh"
 #include "buffer/BufferStream.hh"
 #include "buffer/BufferPrint.hh"
+#include "boost/shared_ptr.hpp"
+#include "boost/make_shared.hpp"
 
 #include "AvroSerialize.hh"
 
@@ -335,7 +336,7 @@ struct TestSchema
     template <typename Parser>
     void readFixed(Parser &p) {
 
-        boost::array<uint8_t, 16> input;
+        std::array<uint8_t, 16> input;
         p.readFixed(input);
         BOOST_CHECK_EQUAL(input.size(), 16U);
 

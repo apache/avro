@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include <boost/static_assert.hpp>
-
 #include "Validator.hh"
 #include "ValidSchema.hh"
 #include "NodeImpl.hh"
@@ -168,7 +166,8 @@ Validator::doAdvance()
         &Validator::unionAdvance,
         &Validator::fixedAdvance
     };
-    BOOST_STATIC_ASSERT( (sizeof(funcs)/sizeof(AdvanceFunc)) == (AVRO_NUM_TYPES) );
+    static_assert((sizeof(funcs)/sizeof(AdvanceFunc)) == (AVRO_NUM_TYPES),
+            "Invalid number of advance functions");
 
     expectedTypesFlag_ = 0;
     // loop until we encounter a next expected type, or we've exited all compound types 
@@ -232,7 +231,8 @@ Validator::setupFlag(Type type)
         typeToFlag(AVRO_UNION),
         typeToFlag(AVRO_FIXED)
     };
-    BOOST_STATIC_ASSERT( (sizeof(flags)/sizeof(flag_t)) == (AVRO_NUM_TYPES) );
+    static_assert((sizeof(flags)/sizeof(flag_t)) == (AVRO_NUM_TYPES),
+            "Invalid number of avro type flags");
 
     expectedTypesFlag_ = flags[type];
 }

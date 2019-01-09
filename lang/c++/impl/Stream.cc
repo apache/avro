@@ -178,11 +178,11 @@ std::unique_ptr<InputStream> memoryInputStream(const OutputStream& source)
             (mos.chunkSize_ - mos.available_)));
 }
 
-boost::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source)
+std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source)
 {
     const MemoryOutputStream& mos =
         dynamic_cast<const MemoryOutputStream&>(source);
-    boost::shared_ptr<std::vector<uint8_t> > result(new std::vector<uint8_t>());
+    std::shared_ptr<std::vector<uint8_t> > result(new std::vector<uint8_t>());
     size_t c = mos.byteCount_;
     result->reserve(mos.byteCount_);
     for (vector<uint8_t*>::const_iterator it = mos.data_.begin();

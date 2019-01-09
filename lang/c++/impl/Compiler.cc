@@ -469,13 +469,13 @@ static NodePtr makeNode(const Entity& e, const Object& m,
                 string doc = getDocField(e, m);
 
                 NodePtr r = makeRecordNode(e, nm, &doc, m, st, nm.ns());
-                (boost::dynamic_pointer_cast<NodeRecord>(r))->swap(
-                    *boost::dynamic_pointer_cast<NodeRecord>(result));
+                (std::dynamic_pointer_cast<NodeRecord>(r))->swap(
+                    *std::dynamic_pointer_cast<NodeRecord>(result));
             } else {  // No doc
                 NodePtr r =
                     makeRecordNode(e, nm, NULL, m, st, nm.ns());
-                (boost::dynamic_pointer_cast<NodeRecord>(r))
-                    ->swap(*boost::dynamic_pointer_cast<NodeRecord>(result));
+                (std::dynamic_pointer_cast<NodeRecord>(r))
+                    ->swap(*std::dynamic_pointer_cast<NodeRecord>(result));
             }
         } else {
             result = (type == "enum") ? makeEnumNode(e, nm, m) :
