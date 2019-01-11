@@ -28,10 +28,12 @@ RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
 # Install dependencies from packages
 RUN apt-get -qq update && \
+  # Add the repository for Mono (https://www.mono-project.com/download/stable/#download-lin-debian)
   apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
   apt-get -qq install -y apt-transport-https && \
   echo "deb https://download.mono-project.com/repo/debian stable-jessie main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
   apt-get -qq update && \
+  # END Add the repository for Mono
   apt-get -qq install --no-install-recommends -y \
     ant \
     asciidoc \
@@ -54,6 +56,7 @@ RUN apt-get -qq update && \
     make \
     maven \
     mono-devel \
+    mono-complete \
     nodejs \
     perl \
     php5 \
