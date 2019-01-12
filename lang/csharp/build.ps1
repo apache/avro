@@ -24,7 +24,19 @@ param(
     [Parameter()]
     [ValidateSet('Release', 'Debug')]
     [string]
-    $Configuration = 'Release'
+    $Configuration = 'Release',
+
+    [Parameter()]
+    [int]
+    $BuildNumber = 0,
+
+    [Parameter()]
+    [string]
+    $VersionSuffix,
+
+    [Parameter()]
+    [string]
+    $RepositoryUrl
 )
 
 # Catch any PowerShell errors and exit with a non-zero exit code.
@@ -47,7 +59,18 @@ try {
 
     switch ($Target) {
         "Test" {
-            dotnet build --configuration $Configuration
+            $buildCmd = "dotnet build --configuration $Configuration -p:BuildNumber=$BuildNumber " +
+                "-p:RepositoryCommit=$(git rev-parse HEAD) "
+
+            if ($VersionSuffix) {
+                $buildCmd += "-p:VersionSuffix=$VersionSuffix "
+            }
+
+            if ($RepositoryUrl) {
+                $buildCmd += "-p:RepositoryUrl=$RepositoryUrl "
+            }
+
+            Invoke-Expression $buildCmd
             checkExitCode
 
             dotnet test --configuration $Configuration --no-build ./src/apache/test/Avro.test.csproj
