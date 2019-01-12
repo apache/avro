@@ -264,7 +264,7 @@
                 <exclude>lang/java/tools/src/test/compiler/output-string/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Position.java</exclude>
-                <exclude>lang/csharp/src/apache/test/Ipc/GeneratedFiles/**/*.cs</exclude>
+                <exclude>lang/csharp/src/apache/ipc.test/GeneratedFiles/**/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/perf/com/foo/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/ipc/org/apache/avro/ipc/*.cs</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
@@ -319,7 +319,7 @@
                 <exclude>lang/perl/Changes</exclude>
                 <exclude>lang/c/README.maintaining_win32.txt</exclude>
                 <exclude>lang/c/docs/index.txt</exclude>
-                <exclude>lang/csharp/README</exclude>
+                <exclude>lang/csharp/README.md</exclude>
                 <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/archetype.properties</exclude> <!-- used to generate user projects -->
                 <!-- files and directories covered by LICENSE.txt -->
                 <exclude>lang/py/lib/simplejson/**</exclude>

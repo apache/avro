@@ -44,7 +44,7 @@ namespace Avro
                 if (ReservedProps.Contains(prop.Name))
                     continue;
                 if (!ContainsKey(prop.Name))
-                    Add(prop.Name, prop.Value.ToString());
+                    Add(prop.Name, JsonConvert.SerializeObject(prop.Value));
             }
         }
 

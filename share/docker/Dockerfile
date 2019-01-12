@@ -28,6 +28,12 @@ RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
 # Install dependencies from packages
 RUN apt-get -qq update && \
+  # Add the repository for Mono (https://www.mono-project.com/download/stable/#download-lin-debian)
+  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+  apt-get -qq install -y apt-transport-https && \
+  echo "deb https://download.mono-project.com/repo/debian stable-jessie main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
+  apt-get -qq update && \
+  # END Add the repository for Mono
   apt-get -qq install --no-install-recommends -y \
     ant \
     asciidoc \
@@ -50,8 +56,8 @@ RUN apt-get -qq update && \
     make \
     maven \
     mono-devel \
+    mono-complete \
     nodejs \
-    nunit \
     perl \
     php5 \
     php5-gmp \
@@ -90,15 +96,6 @@ RUN curl -L http://cpanmin.us | perl - --self-upgrade && \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
   Test::Exception Test::Pod
-
-# Install mono modules
-RUN mkdir -p /tmp/nunit/ && \
-  cd /tmp/nunit/ && \
-  curl -L -s -o nunit.zip https://github.com/nunit-legacy/nunitv2/releases/download/2.7.0/NUnit-2.7.0.zip && \
-  unzip nunit.zip && \
-  rm nunit.zip
-
-ENV MONO_PATH /tmp/nunit/bin/lib
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy

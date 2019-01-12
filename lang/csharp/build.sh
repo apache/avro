@@ -23,24 +23,23 @@ cd `dirname "$0"`                  # connect to root
 ROOT=../..
 VERSION=`cat $ROOT/share/VERSION.txt`
 
-export CONFIGURATION=Release
-export TARGETFRAMEWORKVERSION=v3.5
-
 case "$1" in
 
   test)
-    xbuild
-    nunit-console Avro.nunit
+    msbuild /t:"restore;build" /p:"Configuration=Release"
+    mono ${HOME}/.nuget/packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe \
+      --noheader --labels=All \
+      src/apache/test/bin/Release/net40/Avro.test.dll
     ;;
 
   perf)
-    xbuild
+    msbuild /t:"restore;build" /p:"Configuration=Release"
     mono build/perf/Release/Avro.perf.exe
     ;;
 
   dist)
     # build binary tarball
-    xbuild
+    msbuild /t:"restore;build" /p:"Configuration=Release"
     # add the binary LICENSE and NOTICE to the tarball
     cp LICENSE NOTICE build/
     mkdir -p $ROOT/dist/csharp

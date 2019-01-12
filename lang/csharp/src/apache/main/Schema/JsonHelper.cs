@@ -42,8 +42,7 @@ namespace Avro
 
             if (child.Type == JTokenType.String)
             {
-                string value = child.ToString();
-                return value.Trim('\"');
+                return child.Value<string>();
             }
             throw new SchemaParseException("Field " + field + " is not a string");
         }
