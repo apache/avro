@@ -20,7 +20,6 @@
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
     <AssemblyName>Avro.msbuild</AssemblyName>
     <RootNamespace>Avro.msbuild</RootNamespace>
-    <ProjectGuid>{AEB22F94-4ECF-4008-B159-389B3F05D54B}</ProjectGuid>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 

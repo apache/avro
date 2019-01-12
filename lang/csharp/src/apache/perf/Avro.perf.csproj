@@ -1,4 +1,4 @@
-﻿<!--
+<!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
    this work for additional information regarding copyright ownership.
@@ -21,7 +21,6 @@
     <TargetFrameworks>net40;netcoreapp2.0</TargetFrameworks>
     <AssemblyName>Avro.perf</AssemblyName>
     <RootNamespace>Avro.perf</RootNamespace>
-    <ProjectGuid>{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}</ProjectGuid>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
