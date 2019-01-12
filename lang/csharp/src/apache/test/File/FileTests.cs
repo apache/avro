@@ -471,11 +471,11 @@ namespace Avro.Test.File
         [TestCase(specificSchema, Codec.Type.Null, 2, 0, 1)]
         [TestCase(specificSchema, Codec.Type.Null, 10, 1, 4)]
         [TestCase(specificSchema, Codec.Type.Null, 200, 111, 15)]
-        [TestCase(specificSchema, Codec.Type.Null, 1000, 588, 998)]
+        // Disabled due to long runtime [TestCase(specificSchema, Codec.Type.Null, 1000, 588, 998)]
         [TestCase(specificSchema, Codec.Type.Deflate, 2, 0, 1)]
         [TestCase(specificSchema, Codec.Type.Deflate, 10, 1, 4)]
         [TestCase(specificSchema, Codec.Type.Deflate, 200, 111, 15)]
-        [TestCase(specificSchema, Codec.Type.Deflate, 1000, 588, 998)]
+        // Disabled due to long runtime [TestCase(specificSchema, Codec.Type.Deflate, 1000, 588, 998)]
         public void TestSyncAndSeekPositions(string schemaStr, Codec.Type codecType, int iterations, int firstSyncPosition, int secondSyncPosition)
         {
             // create and write out
