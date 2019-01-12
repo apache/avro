@@ -28,7 +28,7 @@ case "$1" in
   test)
     msbuild /t:"restore;build" /p:"Configuration=Release"
     mono ${HOME}/.nuget/packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe \
-      --noheader \
+      --noheader --labels=All \
       src/apache/test/bin/Release/net40/Avro.test.dll
     ;;
 
