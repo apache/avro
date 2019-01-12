@@ -4,16 +4,18 @@
 
 ### Windows
 
-1. Install prerequisites
-    - [Microsoft Visual Studio Community 2017](https://www.visualstudio.com/downloads/)
-2. Open [Avro.sln](./Avro.sln) in Visual Studio
-3. Build the solution
-4. Run unit tests from the Test Explorer pane
+1. Install [Microsoft Visual Studio Community 2017](https://www.visualstudio.com/downloads/)
+2. `./build.ps1 Test`
 
-### Linux
+### Linux with Mono
 
-1. Install prerequisites
-    - [.NET Core SDK 2.1+](https://www.microsoft.com/net/download/linux)
+1. Install [Mono v5.18+](https://www.mono-project.com/download/stable/). Install the **mono-devel**
+   and **mono-complete** packages.
+2. `./build.sh test`
+
+### Linux with .NET Core SDK
+
+1. Install [.NET Core SDK 2.1+](https://www.microsoft.com/net/download/linux)
 2. Build and run unit tests:
     ```
     cd src/apache/test
