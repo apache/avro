@@ -233,15 +233,15 @@ public class TestSpecificCompiler {
     assertFalse(compiler.privateFields());
     compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
-    BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line;
-    while ((line = reader.readLine()) != null) {
-      // No line, once trimmed, should start with a public field declaration
-      line = line.trim();
-      assertFalse("Line started with a public field declaration: " + line,
-        line.startsWith("public int value"));
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        // No line, once trimmed, should start with a public field declaration
+        line = line.trim();
+        assertFalse("Line started with a public field declaration: " + line,
+          line.startsWith("public int value"));
+      }
     }
-    reader.close();
   }
 
   @Test
@@ -253,18 +253,18 @@ public class TestSpecificCompiler {
     assertTrue(compiler.privateFields());
     compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
-    BufferedReader reader = new BufferedReader(new FileReader(this.outputFile));
-    String line = null;
-    while ((line = reader.readLine()) != null) {
-      // No line, once trimmed, should start with a public field declaration
-      // or with a deprecated public field declaration
-      line = line.trim();
-      assertFalse("Line started with a public field declaration: " + line,
-        line.startsWith("public int value"));
-      assertFalse("Line started with a deprecated field declaration: " + line,
-        line.startsWith("@Deprecated public int value"));
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        // No line, once trimmed, should start with a public field declaration
+        // or with a deprecated public field declaration
+        line = line.trim();
+        assertFalse("Line started with a public field declaration: " + line,
+          line.startsWith("public int value"));
+        assertFalse("Line started with a deprecated field declaration: " + line,
+          line.startsWith("@Deprecated public int value"));
+      }
     }
-    reader.close();
   }
 
   @Test
@@ -718,17 +718,12 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
     compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
-    BufferedReader reader = null;
-    try {
-      reader = new BufferedReader(new FileReader(this.outputFile));
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
       while ((line = reader.readLine()) != null) {
         line = line.trim();
         assertFalse(line.contains("Optional"));
       }
-    } finally {
-      if (reader != null)
-        reader.close();
     }
   }
 
@@ -740,10 +735,7 @@ public class TestSpecificCompiler {
     compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
     int optionalFound = 0;
-    BufferedReader reader = null;
-    try {
-      reader = new BufferedReader(new FileReader(this.outputFile));
-
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
       while ((line = reader.readLine()) != null) {
         line = line.trim();
@@ -751,9 +743,6 @@ public class TestSpecificCompiler {
           optionalFound++;
         }
       }
-    } finally {
-      if (reader != null)
-        reader.close();
     }
     assertEquals(9, optionalFound);
   }
@@ -765,10 +754,7 @@ public class TestSpecificCompiler {
     compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
     int optionalFound = 0;
-    BufferedReader reader = null;
-    try {
-      reader = new BufferedReader(new FileReader(this.outputFile));
-
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
       String line;
       while ((line = reader.readLine()) != null) {
         line = line.trim();
@@ -776,9 +762,6 @@ public class TestSpecificCompiler {
           optionalFound++;
         }
       }
-    } finally {
-      if (reader != null)
-        reader.close();
     }
     assertEquals(17, optionalFound);
   }
