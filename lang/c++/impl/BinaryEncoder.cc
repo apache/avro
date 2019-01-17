@@ -29,6 +29,7 @@ class BinaryEncoder : public Encoder {
 
     void init(OutputStream& os);
     void flush();
+    int64_t byteCount() const;
     void encodeNull();
     void encodeBool(bool b);
     void encodeInt(int32_t i);
@@ -152,6 +153,11 @@ void BinaryEncoder::encodeUnionIndex(size_t e)
 {
     doEncodeLong(e);
 }
+
+int64_t BinaryEncoder::byteCount() const {
+    return out_.byteCount();
+}
+
 
 void BinaryEncoder::doEncodeLong(int64_t l)
 {

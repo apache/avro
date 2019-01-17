@@ -440,6 +440,14 @@ struct StreamWriter {
     }
 
     /**
+     * Return the number of bytes written so far. For a meaningful
+     * result, call this after a flush().
+     */
+    int64_t byteCount() const {
+        return out_->byteCount();
+    }
+
+    /**
      * Gets more space to write to. Throws an exception it cannot.
      */
     void more() {
@@ -452,7 +460,6 @@ struct StreamWriter {
         }
         throw Exception("EOF reached");
     }
-
 };
 
 /**

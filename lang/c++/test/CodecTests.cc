@@ -1692,7 +1692,8 @@ static void testJson(const JsonData& data)
     EncoderPtr e = jsonEncoder(schema);
 }
 
-static void testJsonCodecReinit() {
+static void testJsonCodecReinit()
+{
     const char *schemaStr = "{\"type\":\"record\",\"name\":\"r\",\"fields\":["
       "{\"name\":\"f1\", \"type\":\"boolean\"},"
       "{\"name\":\"f2\", \"type\":\"long\"}"
@@ -1730,6 +1731,18 @@ static void testJsonCodecReinit() {
     }
 }
 
+static void testByteCount()
+{
+    OutputStreamPtr os1 = memoryOutputStream();
+    EncoderPtr e1 = binaryEncoder();
+    e1->init(*os1);
+    e1->encodeBool(true);
+    e1->encodeLong(1000);
+    e1->flush();
+    BOOST_CHECK_EQUAL(e1->byteCount(), 3);
+    BOOST_CHECK_EQUAL(os1->byteCount(), 3);
+}
+
 }   // namespace avro
 
 boost::unit_test::test_suite*
@@ -1745,6 +1758,7 @@ init_unit_test_suite(int argc, char* argv[])
     ts->add(BOOST_PARAM_TEST_CASE(&avro::testJson, avro::jsonData,
         ENDOF(avro::jsonData)));
     ts->add(BOOST_TEST_CASE(avro::testJsonCodecReinit));
+    ts->add(BOOST_TEST_CASE(avro::testByteCount));
 
     return ts;
 }

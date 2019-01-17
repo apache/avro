@@ -404,6 +404,7 @@ class ValidatingEncoder : public Encoder {
 
     void init(OutputStream& os);
     void flush();
+    int64_t byteCount() const;
     void encodeNull();
     void encodeBool(bool b);
     void encodeInt(int32_t i);
@@ -565,6 +566,12 @@ void ValidatingEncoder<P>::encodeUnionIndex(size_t e)
     parser_.advance(Symbol::sUnion);
     parser_.selectBranch(e);
     base_->encodeUnionIndex(e);
+}
+
+template<typename P>
+int64_t ValidatingEncoder<P>::byteCount() const
+{
+    return base_->byteCount();
 }
 
 }   // namespace parsing
