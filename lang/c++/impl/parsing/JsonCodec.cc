@@ -502,6 +502,7 @@ class JsonEncoder : public Encoder {
 
     void init(OutputStream& os);
     void flush();
+    int64_t byteCount() const;
     void encodeNull();
     void encodeBool(bool b);
     void encodeInt(int32_t i);
@@ -536,6 +537,12 @@ void JsonEncoder<P, F>::flush()
 {
     parser_.processImplicitActions();
     out_.flush();
+}
+
+template<typename P, typename F>
+int64_t JsonEncoder<P, F>::byteCount() const
+{
+    return out_.byteCount();
 }
 
 template<typename P, typename F>

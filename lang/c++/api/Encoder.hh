@@ -60,6 +60,10 @@ public:
     /// Flushes any data in internal buffers.
     virtual void flush() = 0;
 
+    /// Returns the number of bytes produced so far.
+    /// For a meaningful value, do a flush() before invoking this function.
+    virtual int64_t byteCount() const = 0;
+
     /// Encodes a null to the current stream.
     virtual void encodeNull() = 0;
 

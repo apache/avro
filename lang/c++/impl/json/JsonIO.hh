@@ -369,6 +369,10 @@ public:
         out_.flush();
     }
 
+    int64_t byteCount() const {
+        return out_.byteCount();
+    }
+
     void encodeNull() {
         sep();
         out_.writeBytes(reinterpret_cast<const uint8_t*>("null"), 4);
