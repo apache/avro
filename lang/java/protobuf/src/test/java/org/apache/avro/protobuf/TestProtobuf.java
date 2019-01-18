@@ -86,7 +86,11 @@ public class TestProtobuf {
 
   @Test public void testNestedEnum() throws Exception {
     Schema s = ProtobufData.get().getSchema(N.class);
-    assertEquals(N.class.getName(), SpecificData.getClassName(s));
+    assertEquals(N.class.getName(), SpecificData.get().getClass(s).getName());
   }
 
+  @Test public void testNestedClassNamespace() throws Exception {
+    Schema s = ProtobufData.get().getSchema(Foo.class);
+    assertEquals(org.apache.avro.protobuf.Test.class.getName(), s.getNamespace());
+  }
 }
