@@ -45,7 +45,6 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
-import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.internal.Accessor;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -135,7 +134,7 @@ public class ProtobufData extends GenericData {
   @Override
   public Object newRecord(Object old, Schema schema) {
     try {
-      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
+      Class c = SpecificData.get().getClass(schema);
       if (c == null)
         return newRecord(old, schema);            // punt to generic
       if (c.isInstance(old))
@@ -239,10 +238,10 @@ public class ProtobufData extends GenericData {
     }
     String inner = "";
     while (containing != null) {
-      inner = containing.getName() + "$" + inner;
+      inner = "$" + containing.getName() + inner;
       containing = containing.getContainingType();
     }
-    return p + "." + outer + "$" + inner;
+    return p + "." + outer + inner;
   }
 
   private static String toCamelCase(String s){
