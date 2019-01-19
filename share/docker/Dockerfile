@@ -26,14 +26,17 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Add the repository for node.js 4.x
 RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
 
+# Register Microsoft key and feed for .NET SDK
+# https://dotnet.microsoft.com/download/linux-package-manager/debian8/sdk-current
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
+  mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
+  wget -q https://packages.microsoft.com/config/debian/8/prod.list && \
+  mv prod.list /etc/apt/sources.list.d/microsoft-prod.list && \
+  chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
+  chown root:root /etc/apt/sources.list.d/microsoft-prod.list
+
 # Install dependencies from packages
 RUN apt-get -qq update && \
-  # Add the repository for Mono (https://www.mono-project.com/download/stable/#download-lin-debian)
-  apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-  apt-get -qq install -y apt-transport-https && \
-  echo "deb https://download.mono-project.com/repo/debian stable-jessie main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
-  apt-get -qq update && \
-  # END Add the repository for Mono
   apt-get -qq install --no-install-recommends -y \
     ant \
     asciidoc \
@@ -41,6 +44,7 @@ RUN apt-get -qq update && \
     bzip2 \
     cmake \
     curl \
+    dotnet-sdk-2.1 \
     doxygen \
     flex \
     g++ \
@@ -55,8 +59,6 @@ RUN apt-get -qq update && \
     libsnappy1 \
     make \
     maven \
-    mono-devel \
-    mono-complete \
     nodejs \
     perl \
     php5 \

@@ -26,22 +26,33 @@ VERSION=`cat $ROOT/share/VERSION.txt`
 case "$1" in
 
   test)
-    msbuild /t:"restore;build" /p:"Configuration=Release"
-    mono ${HOME}/.nuget/packages/nunit.consolerunner/3.9.0/tools/nunit3-console.exe \
-      --noheader --labels=All \
-      src/apache/test/bin/Release/net40/Avro.test.dll
+    dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
+    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
+    dotnet test --configuration Release --framework netcoreapp2.0 ./src/apache/test/Avro.test.csproj
     ;;
 
   perf)
-    msbuild /t:"restore;build" /p:"Configuration=Release"
-    mono build/perf/Release/Avro.perf.exe
+    pushd ./src/apache/perf/
+    dotnet run --configuration Release --framework netcoreapp2.0
     ;;
 
   dist)
     # build binary tarball
     msbuild /t:"restore;build" /p:"Configuration=Release"
+
     # add the binary LICENSE and NOTICE to the tarball
+    mkdir build/
     cp LICENSE NOTICE build/
+
+    # add binaries to the tarball
+    mkdir build/main/
+    cp -R src/apache/main/bin/Release/* build/main/
+    mkdir build/codegen/
+    cp -R src/apache/codegen/bin/Release/* build/codegen/
+    mkdir build/ipc/
+    cp -R src/apache/ipc/bin/Release/* build/ipc/
+
+    # build the tarball
     mkdir -p $ROOT/dist/csharp
     (cd build; tar czf $ROOT/../dist/csharp/avro-csharp-$VERSION.tar.gz main codegen ipc LICENSE NOTICE)
 
@@ -52,7 +63,7 @@ case "$1" in
     ;;
 
   clean)
-    rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/obj
+    rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
     rm -rf build
     rm -f  TestResult.xml
     ;;
