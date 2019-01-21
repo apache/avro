@@ -47,7 +47,7 @@ RUN apt-get -qq update && \
     bzip2 \
     cmake \
     curl \
-    dotnet-sdk-2.1 \
+    dotnet-sdk-2.2 \
     doxygen \
     flex \
     g++ \
