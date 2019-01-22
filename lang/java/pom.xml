@@ -76,7 +76,7 @@
     <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
     <source-plugin.version>3.0.1</source-plugin.version>
-    <surefire-plugin.version>2.22.1</surefire-plugin.version>
+    <surefire-plugin.version>3.0.0-M3</surefire-plugin.version>
     <file-management.version>1.2.1</file-management.version>
     <shade-plugin.version>3.2.0</shade-plugin.version>
     <archetype-plugin.version>3.0.1</archetype-plugin.version>
@@ -119,7 +119,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>${jar-plugin.version}</version>
-
           <!--We want to be able to resuse the test-jars for mapred
               to test avro-tool
               see http://maven.apache.org/guides/mini/guide-attached-tests.html
@@ -144,6 +143,13 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire-plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.surefire</groupId>
+              <artifactId>surefire-junit47</artifactId>
+              <version>${surefire-plugin.version}</version>
+            </dependency>
+          </dependencies>
           <executions>
             <execution>
               <id>test-with-custom-coders</id>
@@ -171,9 +177,12 @@
               <exclude>**/apache/avro/test/**</exclude>
             </excludes>
             <enableAssertions>false</enableAssertions>
-            <!-- some IPC tests hang if not run in a separate JVM -->
-            <forkCount>1</forkCount>
-            <reuseForks>false</reuseForks>
+            <trimStackTrace>false</trimStackTrace>
+            <runOrder>random</runOrder>
+            <parallel>all</parallel>
+            <useUnlimitedThreads>true</useUnlimitedThreads>
+            <!--<perCoreThreadCount>true</perCoreThreadCount>-->
+
             <!-- TestSpecificCompiler instantiates a Java compiler to test output results,
                  this does not work with a manifest-only-jar to set the classpath for the javac.
                  This may cause problems on some platforms.

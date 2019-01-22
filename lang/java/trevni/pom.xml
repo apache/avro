@@ -49,6 +49,10 @@
           <version>${surefire-plugin.version}</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
+            <!-- some tests hang if not run in a separate JVM -->
+            <forkCount>1</forkCount>
+            <reuseForks>false</reuseForks>
+            <parallel>none</parallel>
           </configuration>
         </plugin>
         <plugin>
