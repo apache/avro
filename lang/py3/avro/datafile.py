@@ -283,7 +283,7 @@ class DataFileWriter(object):
     self.writer.write(compressed_data)
 
     # Write CRC32 checksum for Snappy
-    if self.GetMeta(CODEC_KEY) == 'snappy':
+    if codec == 'snappy':
       self.encoder.write_crc32(uncompressed_data)
 
     # write sync marker
