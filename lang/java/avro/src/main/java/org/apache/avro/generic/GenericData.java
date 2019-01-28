@@ -301,9 +301,9 @@ public class GenericData {
         throw new IndexOutOfBoundsException("Index " + location + " out of bounds.");
       }
       if (size == elements.length) {
-        Object[] newElements = new Object[(size * 3)/2 + 1];
-        System.arraycopy(elements, 0, newElements, 0, size);
-        elements = newElements;
+        // Increase size by 1.5x + 1
+        final int newSize = size + (size >> 1) + 1;
+        elements = Arrays.copyOf(elements, newSize);
       }
       System.arraycopy(elements, location, elements, location + 1, size - location);
       elements[location] = o;
