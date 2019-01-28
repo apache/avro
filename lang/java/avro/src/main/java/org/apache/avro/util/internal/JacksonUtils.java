@@ -18,7 +18,7 @@
 package org.apache.avro.util.internal;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 public class JacksonUtils {
-  static final String BYTES_CHARSET = "ISO-8859-1";
 
   private JacksonUtils() {
   }
@@ -71,7 +70,7 @@ public class JacksonUtils {
       }
       generator.writeEndArray();
     } else if (datum instanceof byte[]) { // bytes, fixed
-      generator.writeString(new String((byte[]) datum, BYTES_CHARSET));
+      generator.writeString(new String((byte[]) datum, StandardCharsets.ISO_8859_1));
     } else if (datum instanceof CharSequence || datum instanceof Enum<?>) { // string, enum
       generator.writeString(datum.toString());
     } else if (datum instanceof Double) { // double
@@ -123,11 +122,7 @@ public class JacksonUtils {
         return jsonNode.asText();
       } else if (schema.getType().equals(Schema.Type.BYTES)
               || schema.getType().equals(Schema.Type.FIXED)) {
-        try {
-          return jsonNode.textValue().getBytes(BYTES_CHARSET);
-        } catch (UnsupportedEncodingException e) {
-          throw new AvroRuntimeException(e);
-        }
+        return jsonNode.textValue().getBytes(StandardCharsets.ISO_8859_1);
       }
     } else if (jsonNode.isArray()) {
       List l = new ArrayList();

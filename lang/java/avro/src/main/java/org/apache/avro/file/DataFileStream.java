@@ -21,8 +21,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Closeable;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -165,11 +165,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     if (value == null) {
       return null;
     }
-    try {
-      return new String(value, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return new String(value, StandardCharsets.UTF_8);
   }
   /** Return the value of a metadata property. */
   public long getMetaLong(String key) {

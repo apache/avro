@@ -20,7 +20,7 @@ package org.apache.avro;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -89,18 +89,14 @@ public class SchemaNormalization {
   public static byte[] parsingFingerprint(String fpName, Schema s)
     throws NoSuchAlgorithmException
   {
-    try {
-      return fingerprint(fpName, toParsingForm(s).getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) { throw new RuntimeException(e); }
+    return fingerprint(fpName,
+        toParsingForm(s).getBytes(StandardCharsets.UTF_8));
   }
 
   /** Returns {@link #fingerprint64} applied to the parsing canonical form
     * of the supplied schema. */
   public static long parsingFingerprint64(Schema s) {
-    try {
-      return fingerprint64(toParsingForm(s).getBytes("UTF-8"));
-    } catch (java.io.UnsupportedEncodingException e)
-      { throw new RuntimeException(e); }
+    return fingerprint64(toParsingForm(s).getBytes(StandardCharsets.UTF_8));
   }
 
   private static Appendable build(Map<String,String> env, Schema s,

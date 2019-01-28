@@ -19,6 +19,7 @@ package org.apache.trevni;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
@@ -131,11 +132,7 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
     for (Map.Entry<String,byte[]> e : entrySet()) {
       builder.append(e.getKey());
       builder.append('=');
-      try {
-        builder.append(new String(e.getValue(), "ISO-8859-1"));
-      } catch (java.io.UnsupportedEncodingException error) {
-        throw new TrevniRuntimeException(error);
-      }
+      builder.append(new String(e.getValue(), StandardCharsets.ISO_8859_1));
       builder.append(' ');
     }
     builder.append('}');

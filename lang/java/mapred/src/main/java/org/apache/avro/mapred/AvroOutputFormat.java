@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.fs.FileSystem;
@@ -95,8 +96,8 @@ public class AvroOutputFormat <T>
                        e.getValue());
       if (e.getKey().startsWith(AvroJob.BINARY_PREFIX))
         writer.setMeta(e.getKey().substring(AvroJob.BINARY_PREFIX.length()),
-                       URLDecoder.decode(e.getValue(), "ISO-8859-1")
-                       .getBytes("ISO-8859-1"));
+            URLDecoder.decode(e.getValue(), StandardCharsets.ISO_8859_1.name())
+                .getBytes(StandardCharsets.ISO_8859_1));
     }
   }
 

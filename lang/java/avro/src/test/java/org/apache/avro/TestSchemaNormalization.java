@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
@@ -106,12 +107,10 @@ public class TestSchemaNormalization {
     // by 64 zero bits).  This both deals with the fact that
     // CRCs ignore leading zeros, and also ensures some degree of
     // randomness for small inputs
-    try {
-      long tmp = altExtend(SchemaNormalization.EMPTY64, 64, ONE,
-                           s.getBytes("UTF-8"));
-      return altExtend(SchemaNormalization.EMPTY64, 64, tmp, POSTFIX);
-    } catch (java.io.UnsupportedEncodingException e)
-      { throw new RuntimeException(e); }
+
+    long tmp = altExtend(SchemaNormalization.EMPTY64, 64, ONE,
+        s.getBytes(StandardCharsets.UTF_8));
+    return altExtend(SchemaNormalization.EMPTY64, 64, tmp, POSTFIX);
   }
 
   private static long altExtend(long poly, int degree, long fp, byte[] b) {

@@ -18,9 +18,9 @@
 package org.apache.avro.file;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.Closeable;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -113,11 +113,7 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     if (value == null) {
       return null;
     }
-    try {
-      return new String(value, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return new String(value, StandardCharsets.UTF_8);
   }
   /** Return the value of a metadata property. */
   public synchronized long getMetaLong(String key) {
