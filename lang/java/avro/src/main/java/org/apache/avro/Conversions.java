@@ -114,13 +114,9 @@ public class Conversions {
       byte[] bytes = new byte[schema.getFixedSize()];
       int offset = bytes.length - unscaled.length;
 
-      for (int i = 0; i < bytes.length; i += 1) {
-        if (i < offset) {
-          bytes[i] = fillByte;
-        } else {
-          bytes[i] = unscaled[i - offset];
-        }
-      }
+      // Fill the front of the array and copy remaining with unscaled values
+      Arrays.fill(bytes, 0, offset, fillByte);
+      System.arraycopy(unscaled, 0, bytes, offset, bytes.length - offset);
 
       return new GenericData.Fixed(schema, bytes);
     }
