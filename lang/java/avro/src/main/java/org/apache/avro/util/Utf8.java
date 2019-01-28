@@ -17,7 +17,7 @@
  */
 package org.apache.avro.util;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.BinaryData;
@@ -30,7 +30,6 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   private static final String MAX_LENGTH_PROPERTY = "org.apache.avro.limits.string.maxLength";
   private static final int MAX_LENGTH;
   private static final byte[] EMPTY = new byte[0];
-  private static final Charset UTF8 = Charset.forName("UTF-8");
 
   static {
     String o = System.getProperty(MAX_LENGTH_PROPERTY);
@@ -116,7 +115,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   public String toString() {
     if (this.length == 0) return "";
     if (this.string == null) {
-      this.string = new String(bytes, 0, length, UTF8);
+      this.string = new String(bytes, 0, length, StandardCharsets.UTF_8);
     }
     return this.string;
   }
@@ -157,7 +156,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   /** Gets the UTF-8 bytes for a String */
   public static final byte[] getBytesFor(String str) {
-    return str.getBytes(UTF8);
+    return str.getBytes(StandardCharsets.UTF_8);
   }
 
 }

@@ -18,7 +18,6 @@
 package org.apache.avro.reflect;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -28,6 +27,7 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -472,14 +472,9 @@ public class ReflectData extends SpecificData {
     }
 
     String name = keySchema.getFullName() + valueSchema.getFullName();
-    long fingerprint = 0;
-    try {
-      fingerprint = SchemaNormalization.fingerprint64(name.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      String msg = "Unable to create fingerprint for ("
-                   + keyType + ", "  + valueType + ") pair";
-      throw new AvroRuntimeException(msg, e);
-    }
+    long fingerprint = SchemaNormalization
+        .fingerprint64(name.getBytes(StandardCharsets.UTF_8));
+
     if (fingerprint < 0) fingerprint = -fingerprint;  // ignore sign
     String fpString = Long.toString(fingerprint, 16); // hex
     return NS_MAP_ARRAY_RECORD + fpString;

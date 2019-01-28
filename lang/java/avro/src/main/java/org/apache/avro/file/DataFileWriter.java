@@ -25,8 +25,8 @@ import java.io.FilterOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -268,11 +268,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
   }
 
   private DataFileWriter<D> setMetaInternal(String key, String value) {
-    try {
-      return setMetaInternal(key, value.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return setMetaInternal(key, value.getBytes(StandardCharsets.UTF_8));
   }
 
   /** Set a metadata property. */
@@ -289,11 +285,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, String value) {
-    try {
-      return setMeta(key, value.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return setMeta(key, value.getBytes(StandardCharsets.UTF_8));
   }
   /** Set a metadata property. */
   public DataFileWriter<D> setMeta(String key, long value) {

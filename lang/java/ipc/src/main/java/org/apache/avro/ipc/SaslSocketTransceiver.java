@@ -21,9 +21,9 @@ package org.apache.avro.ipc;
 
 import java.io.IOException;
 import java.io.EOFException;
-import java.io.UnsupportedEncodingException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -169,12 +169,8 @@ public class SaslSocketTransceiver extends Transceiver {
     dataIsWrapped = (qop != null && !qop.equalsIgnoreCase("auth"));
   }
 
-  private String toString(ByteBuffer buffer) throws IOException {
-    try {
-      return new String(buffer.array(), "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new IOException(e.toString(), e);
-    }
+  private String toString(ByteBuffer buffer) {
+    return new String(buffer.array(), StandardCharsets.UTF_8);
   }
 
   @Override public synchronized List<ByteBuffer> readBuffers()

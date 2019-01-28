@@ -21,6 +21,7 @@ package org.apache.avro.mapred;
 import java.util.Collection;
 import java.lang.reflect.Constructor;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -110,10 +111,9 @@ public class AvroJob {
   public static void setOutputMeta(JobConf job, String key, byte[] value) {
     try {
       job.set(BINARY_PREFIX+key,
-              URLEncoder.encode(new String(value, "ISO-8859-1"),
-                                "ISO-8859-1"));
+              URLEncoder.encode(new String(value, StandardCharsets.ISO_8859_1),
+                                StandardCharsets.ISO_8859_1.name()));
     } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
     }
   }
 
