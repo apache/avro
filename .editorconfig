@@ -25,6 +25,11 @@ indent_style = space
 indent_size = 2
 trim_trailing_whitespace=true
 
+[*.{cs,ps1}]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace=true
+
 #[*.scala]
 #indent_style = space
 #indent_size = 2

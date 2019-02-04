@@ -16,13 +16,30 @@
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="../../../common.props" />
+
   <PropertyGroup>
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
     <AssemblyName>Avro</AssemblyName>
     <RootNamespace>Avro</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- NuGet Package Settings -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>Apache.Avro</PackageId>
+    <Description>
+      Avro provides:
+
+      Rich data structures.
+      A compact, fast, binary data format.
+      A container file, to store persistent data.
+      Remote procedure call (RPC).
+      Simple integration with dynamic languages. Code generation is not required to read or write data files nor to use or implement RPC protocols. Code generation as an optional optimization, only worth implementing for statically typed languages.
+    </Description>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
