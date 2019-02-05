@@ -19,10 +19,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <prerequisites>
-    <maven>3.0.5</maven>
-  </prerequisites>
-
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
@@ -52,7 +48,8 @@
 
     <!-- plugin versions -->
     <antrun-plugin.version>1.8</antrun-plugin.version>
-    <enforcer-plugin.version>1.3.1</enforcer-plugin.version>
+    <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
+    <extra-enforcer-rules.version>1.1</extra-enforcer-rules.version>
     <rat.version>0.13</rat.version>
     <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
@@ -108,20 +105,56 @@
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>${enforcer-plugin.version}</version>
         <inherited>false</inherited>
-        <configuration>
-          <rules>
-            <requireProperty>
-              <property>avro.version</property>
-              <message>*****!!!!!! Must have property avro.version set to enforce version. !!!!!!*****</message>
-            </requireProperty>
-            <requireProperty>
-              <property>project.version</property>
-              <regex>${avro.version}</regex>
-              <regexMessage>*****!!!!! Version of project must be ${avro.version} !!!!!*****</regexMessage>
-            </requireProperty>
-          </rules>
-          <fail>true</fail>
-        </configuration>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireProperty>
+                  <property>project.version</property>
+                  <regex>${env.VERSION}</regex>
+                  <regexMessage>*****!!!!! Version of project must be ${env.VERSION} !!!!!*****</regexMessage>
+                </requireProperty>
+                <enforceBytecodeVersion>
+                  <maxJdkVersion>1.8</maxJdkVersion>
+                </enforceBytecodeVersion>
+                <requireJavaVersion>
+                  <version>[1.8,)</version>
+                </requireJavaVersion>
+                <requireMavenVersion>
+                  <version>[3.3.9,)</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+          <execution>
+            <id>enforce-banned-dependencies</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <excludes>
+                    <exclude>com.google.guava:guava</exclude>
+                    <exclude>org.hamcrest:hamcrest-all</exclude>
+                    <exclude>com.google.code.findbugs:*</exclude>  <!-- GPL -->
+                  </excludes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>extra-enforcer-rules</artifactId>
+            <version>${extra-enforcer-rules.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
