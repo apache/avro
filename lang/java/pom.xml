@@ -61,7 +61,7 @@
     <grpc.version>1.17.1</grpc.version>
     <netty-codec-http2.version>4.1.30.Final</netty-codec-http2.version>
     <xz.version>1.8</xz.version>
-    <zstd-jni.version>1.3.7-3</zstd-jni.version>
+    <zstd-jni.version>1.3.8-3</zstd-jni.version>
 
     <!-- version properties for plugins -->
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
