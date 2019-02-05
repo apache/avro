@@ -56,7 +56,7 @@
     <commons-compress.version>1.18</commons-compress.version>
     <commons-lang.version>3.8.1</commons-lang.version>
     <easymock.version>4.0.2</easymock.version>
-    <hamcrest.version>1.3</hamcrest.version>
+    <hamcrest.version>2.1</hamcrest.version>
     <joda.version>2.10.1</joda.version>
     <grpc.version>1.17.1</grpc.version>
     <netty-codec-http2.version>4.1.30.Final</netty-codec-http2.version>
@@ -515,11 +515,6 @@
         <groupId>org.easymock</groupId>
         <artifactId>easymock</artifactId>
         <version>${easymock.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-all</artifactId>
-        <version>${hamcrest.version}</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
