@@ -148,20 +148,6 @@
               <version>${surefire-plugin.version}</version>
             </dependency>
           </dependencies>
-          <executions>
-            <execution>
-              <id>test-with-custom-coders</id>
-              <phase>test</phase>
-              <goals>
-                <goal>test</goal>
-              </goals>
-              <configuration>
-                <systemPropertyVariables>
-                  <org.apache.avro.specific.use_custom_coders>true</org.apache.avro.specific.use_custom_coders>
-                </systemPropertyVariables>
-              </configuration>
-            </execution>
-          </executions>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
