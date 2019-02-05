@@ -128,6 +128,23 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- hadoop's execution environment provides its own jars, usurping any others.
+      So we should not include it here -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapreduce-client-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>${commons-codec.version}</version>
+    </dependency>
+
+    <!-- tests -->
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>avro</artifactId>
@@ -151,16 +168,8 @@
       <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>${commons-codec.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <!-- hadoop's execution environment provides its own jars, usurping any others.
-        So we should not include it here -->
-      <scope>provided</scope>
     </dependency>
     <dependency>
         <groupId>org.xerial.snappy</groupId>
@@ -169,5 +178,6 @@
     </dependency>
 
   </dependencies>
+
 </project>
 

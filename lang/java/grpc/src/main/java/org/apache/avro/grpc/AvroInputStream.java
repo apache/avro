@@ -24,19 +24,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
-
 import io.grpc.Drainable;
 
 /** An {@link InputStream} backed by Avro RPC request/response that can drained to
  * a{@link OutputStream}. */
-@NotThreadSafe
 public abstract class AvroInputStream extends InputStream implements Drainable {
   /**
    * Container to hold the serialized Avro payload when its read before draining it.
    */
-  @Nullable
   private ByteArrayInputStream partial;
 
   @Override

@@ -161,7 +161,7 @@
               <rules>
                 <bannedDependencies>
                   <excludes>
-                    <exclude>com.google.code.findbugs:jsr305</exclude> <!-- GPL -->
+                    <exclude>com.google.code.findbugs:*</exclude> <!-- GPL -->
                   </excludes>
                 </bannedDependencies>
               </rules>
@@ -274,23 +274,19 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <optional>true</optional>
-      <exclusions>
-        <exclusion> <!-- GPL -->
-          <groupId>com.google.code.findbugs</groupId>
-          <artifactId>jsr305</artifactId>
-        </exclusion>
-      </exclusions>
+      <artifactId>hadoop-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-mapreduce-client-core</artifactId>
     </dependency>
     <dependency>
       <groupId>net.sf.jopt-simple</groupId>
       <artifactId>jopt-simple</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.github.stephenc.findbugs</groupId>
-      <artifactId>findbugs-annotations</artifactId>
-      <version>${findbugs-annotations.version}</version>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
     </dependency>
   </dependencies>
 

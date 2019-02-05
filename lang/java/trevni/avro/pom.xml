@@ -37,20 +37,15 @@
       <artifactId>trevni-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- hadoop's execution environment provides its own jars, usurping any others.
+      So we should not include it here -->
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>trevni-core</artifactId>
-      <classifier>tests</classifier>
-      <version>${project.version}</version>
-      <scope>test</scope>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-client</artifactId>
-      <version>${hadoop2.version}</version>
-      <!-- hadoop's execution environment provides its own jars, usurping any others.
-        So we should not include it here -->
-      <scope>provided</scope>
+      <artifactId>hadoop-mapreduce-client-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.avro</groupId>
@@ -61,6 +56,10 @@
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
     </dependency>
   </dependencies>
 
