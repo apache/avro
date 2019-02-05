@@ -195,8 +195,8 @@ public:
 #ifdef SNAPPY_CODEC_AVAILABLE
     void testWriteWithSnappyCodec() {
         testWriteWithCodec(avro::SNAPPY_CODEC);
-#endif
     }
+#endif
 
     void testWriteWithCodec(avro::Codec codec) {
         avro::DataFileWriter<ComplexInteger> df(filename, writerSchema, 100);
