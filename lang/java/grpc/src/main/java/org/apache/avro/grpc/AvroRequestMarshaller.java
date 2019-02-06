@@ -32,8 +32,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.annotation.Nullable;
-
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.grpc.internal.IoUtils;
@@ -75,10 +73,9 @@ public class AvroRequestMarshaller implements MethodDescriptor.Marshaller<Object
 
   private class AvroRequestInputStream extends AvroInputStream {
     private final Protocol.Message message;
-    @Nullable
     private Object[] args;
 
-    AvroRequestInputStream(@Nullable Object[] args, Protocol.Message message) {
+    AvroRequestInputStream(Object[] args, Protocol.Message message) {
       this.args = args;
       this.message = message;
     }
