@@ -82,10 +82,6 @@ do
     ;;
 
     dist)
-      # ensure version matches
-      # FIXME: enforcer is broken:MENFORCER-42
-      # mvn enforcer:enforce -Davro.version=$VERSION
-
       # build source tarball
       mkdir -p build
 
