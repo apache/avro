@@ -58,7 +58,7 @@
     <commons-logging.version>1.2</commons-logging.version>
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.0.2</easymock.version>
-    <hamcrest.version>1.3</hamcrest.version>
+    <hamcrest.version>2.1</hamcrest.version>
     <joda.version>2.10.1</joda.version>
     <grpc.version>1.17.1</grpc.version>
     <netty-codec-http2.version>4.1.30.Final</netty-codec-http2.version>
@@ -487,7 +487,7 @@
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-all</artifactId>
+        <artifactId>hamcrest-library</artifactId>
         <version>${hamcrest.version}</version>
       </dependency>
       <dependency>

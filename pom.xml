@@ -145,6 +145,7 @@
                   <excludes>
                     <exclude>com.google.code.findbugs:*</exclude>  <!-- GPL -->
                     <exclude>com.google.guava:guava</exclude>
+                    <exclude>org.hamcrest:hamcrest-all</exclude>
                   </excludes>
                 </bannedDependencies>
               </rules>
