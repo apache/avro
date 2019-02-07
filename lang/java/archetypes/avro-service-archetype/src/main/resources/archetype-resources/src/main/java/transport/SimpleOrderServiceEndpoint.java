@@ -24,8 +24,8 @@ package ${package}.transport;
 import java.net.InetSocketAddress;
 
 import ${package}.service.SimpleOrderService;
-import org.apache.avro.ipc.NettyServer;
 import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.netty.NettyServer;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

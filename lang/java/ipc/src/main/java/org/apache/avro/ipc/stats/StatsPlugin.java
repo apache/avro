@@ -43,7 +43,7 @@ import org.apache.avro.ipc.stats.Stopwatch.Ticks;
  */
 public class StatsPlugin extends RPCPlugin {
   /** Static declaration of histogram buckets. */
-  static final Segmenter<String, Float> LATENCY_SEGMENTER =
+  public static final Segmenter<String, Float> LATENCY_SEGMENTER =
       new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0f,
            25f,
@@ -61,7 +61,7 @@ public class StatsPlugin extends RPCPlugin {
         60000f, // 1 minute
        600000f)));
 
-  static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
+  public static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
       new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(
             0,
            25,
@@ -102,7 +102,7 @@ public class StatsPlugin extends RPCPlugin {
   private Segmenter<?, Integer> integerSegmenter;
 
   /** Construct a plugin with custom Ticks and Segmenter implementations. */
-  StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter,
+  public StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter,
       Segmenter<?, Integer> integerSegmenter) {
     this.floatSegmenter = floatSegmenter;
     this.integerSegmenter = integerSegmenter;
@@ -209,14 +209,12 @@ public class StatsPlugin extends RPCPlugin {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private FloatHistogram<?> createNewFloatHistogram() {
-    return new FloatHistogram(floatSegmenter);
+    return new FloatHistogram<>(floatSegmenter);
   }
 
-  @SuppressWarnings("unchecked")
   private IntegerHistogram<?> createNewIntegerHistogram() {
-    return new IntegerHistogram(integerSegmenter);
+    return new IntegerHistogram<>(integerSegmenter);
   }
 
   /** Converts nanoseconds to milliseconds. */

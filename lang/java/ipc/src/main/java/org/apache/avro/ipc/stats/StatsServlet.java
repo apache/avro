@@ -125,7 +125,7 @@ public class StatsServlet extends HttpServlet {
     }
   }
 
-  void writeStats(Writer w) throws IOException {
+  public void writeStats(Writer w) throws IOException {
     VelocityContext context = new VelocityContext();
     context.put("title", "Avro RPC Stats");
 
