@@ -48,6 +48,11 @@
       <version>\${avro.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-ipc-netty</artifactId>
+      <version>\${avro.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
       <version>\${jackson.version}</version>

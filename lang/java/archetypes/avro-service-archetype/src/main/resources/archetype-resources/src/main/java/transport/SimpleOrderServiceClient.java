@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import org.apache.avro.AvroRemoteException;
-import org.apache.avro.ipc.NettyTransceiver;
 import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.netty.NettyTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

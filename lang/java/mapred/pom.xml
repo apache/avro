@@ -123,6 +123,11 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>avro-ipc-jetty</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>avro-ipc</artifactId>
       <classifier>tests</classifier>
       <version>${project.version}</version>

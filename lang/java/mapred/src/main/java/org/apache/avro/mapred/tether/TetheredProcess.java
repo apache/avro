@@ -44,7 +44,7 @@ import org.apache.avro.ipc.SaslSocketServer;
 import org.apache.avro.ipc.SaslSocketTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
-import org.apache.avro.ipc.HttpServer;
+import org.apache.avro.ipc.jetty.HttpServer;
 import org.apache.avro.ipc.HttpTransceiver;
 
 import org.slf4j.Logger;

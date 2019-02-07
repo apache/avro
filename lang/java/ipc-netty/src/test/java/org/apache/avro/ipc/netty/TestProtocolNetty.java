@@ -15,21 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.avro.ipc.stats;
 
-import org.apache.avro.ipc.stats.Stopwatch.Ticks;
+package org.apache.avro.ipc.netty;
 
-/** Implements Ticks with manual time-winding. */
-public class FakeTicks implements Ticks {
-  long time = 0;
+import java.net.InetSocketAddress;
+
+import org.apache.avro.TestProtocolSpecific;
+import org.apache.avro.ipc.Responder;
+import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.Transceiver;
+
+/**
+ * Protocol test with Netty server and transceiver
+ */
+public class TestProtocolNetty extends TestProtocolSpecific {
+  @Override
+  public Server createServer(Responder testResponder) throws Exception {
+    return new NettyServer(responder, new InetSocketAddress(0));
+  }
 
   @Override
-  public long ticks() {
-    return time;
+  public Transceiver createTransceiver() throws Exception{
+    return new NettyTransceiver(new InetSocketAddress(server.getPort()), 2000L);
   }
 
-  public void passTime(long nanos) {
-    time += nanos;
+  @Override
+  protected int getExpectedHandshakeCount() {
+    return REPEATING;
   }
-
 }

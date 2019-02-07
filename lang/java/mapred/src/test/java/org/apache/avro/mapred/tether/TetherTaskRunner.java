@@ -25,10 +25,10 @@ import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.ipc.SaslSocketServer;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.jetty.HttpServer;
 
 /** Java implementation of a tether executable.  Useless except for testing,
  * since it's already possible to write Java MapReduce programs without
