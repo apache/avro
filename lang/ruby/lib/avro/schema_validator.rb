@@ -149,7 +149,7 @@ module Avro
       end
 
       def fixed_string_message(size, datum)
-        "expected fixed with size #{size}, got \"#{datum}\" with size #{datum.size}"
+        "expected fixed with size #{size}, got \"#{datum}\" with size #{datum.bytesize}"
       end
 
       def enum_message(symbols, datum)
