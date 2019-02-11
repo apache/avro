@@ -52,8 +52,10 @@ public class SchemaNormalization {
     return toCanonicalForm(s, new LinkedHashSet<>());
   }
 
-  /** Returns "Standard Canonical Form" of a schema as defined by Avro
-    * spec with additional user standard properties. */
+  /**
+   * Returns "Standard Canonical Form" of a schema as defined by Avro
+   * spec with additional user standard properties.
+   */
   public static String toCanonicalForm(Schema s, LinkedHashSet<String> properties) {
     LinkedHashSet<String> reservedProperties = new LinkedHashSet<>(
       Arrays.asList("name", "type", "fields", "symbols", "items", "values",
