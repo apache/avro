@@ -1,0 +1,99 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+// NOTE: the Java implementation provides a slow-but-direct implementation
+// of the fingerpriting algorithm which is used to cross-check the
+// "fingerprint" values below.  Thus, the Java unit-tests provide validation
+// for these values, so other languages can just assume they are correct.
+
+
+// 01
+<<INPUT
+{ "fields":[{"type":"boolean", "aliases":[], "name":"f1", "default":true},
+            {"order":"descending","name":"f2","doc":"Hello","type":"int", "format": null}],
+  "type":"record", "name":"foo"
+}
+INPUT
+<<canonical {"name":"foo","type":"record","fields":[{"name":"f1","type":"boolean","order":"ASCENDING","default":true},{"name":"f2","type":"int","order":"DESCENDING","doc":"Hello","format":null}]}
+
+// 02
+<<INPUT {"type":"enum", "name":"foo", "symbols":["A1"], "format": null}
+<<canonical {"name":"foo","type":"enum","symbols":["A1"],"format":null}
+
+// 03
+<<INPUT {"namespace":"x.y.z", "type":"enum", "name":"foo", "doc":"foo bar", "symbols":["A1", "A2"], "format": null}
+<<canonical {"name":"x.y.z.foo","type":"enum","symbols":["A1","A2"],"doc":"foo bar","format":null}
+
+// 04
+// <<INPUT {"type":"fixed", "name":"foo", "size":015} -- Avro parser broken???
+<<INPUT {"name":"foo","type":"fixed","size":15, "format": null}
+<<canonical {"name":"foo","type":"fixed","size":15,"format":null}
+
+// 05
+<<INPUT {"namespace":"x.y.z", "type":"fixed", "name":"foo", "doc":"foo bar", "size":32, "format": null}
+<<canonical {"name":"x.y.z.foo","type":"fixed","size":32,"doc":"foo bar","format":null}
+
+// 06
+<<INPUT { "items":{"type":"null"}, "type":"array", "format": null}
+<<canonical {"type":"array","items":"null","format":null}
+
+// 07
+<<INPUT { "values":"string", "type":"map", "format": null}
+<<canonical {"type":"map","values":"string","format":null}
+
+// 08
+<<INPUT
+  {"name":"PigValue","type":"record",
+   "fields":[{"name":"value", "type":["null", "int", "long", "PigValue"], "format": null}]}
+INPUT
+<<canonical {"name":"PigValue","type":"record","fields":[{"name":"value","type":["null","int","long","PigValue"],"order":"ASCENDING","format":null}]}
+
+// 09
+<<INPUT
+  {"name":"PigValue","type":"record","fields":[{"name":"value", "type":"string", "format": "dd-mm-yyyy"}]}
+INPUT
+<<canonical {"name":"PigValue","type":"record","fields":[{"name":"value","type":"string","order":"ASCENDING","format":"dd-mm-yyyy"}]}
+
+// 010
+<<INPUT
+  {"name":"PigValue","type":"record","fields":[{"name":"value", "type":"string", "format": { "key": "value" }}]}
+INPUT
+<<canonical {"name":"PigValue","type":"record","fields":[{"name":"value","type":"string","order":"ASCENDING","format":{"key":"value"}}]}
+
+// 011
+<<INPUT
+  {"name":"PigValue","type":"record","fields":[{"name":"value", "type":"string", "format": { "key": "value" }, "aliases": ["B", "A"]}]}
+INPUT
+<<canonical {"name":"PigValue","type":"record","fields":[{"name":"value","type":"string","order":"ASCENDING","aliases":["A","B"],"format":{"key":"value"}}]}
+
+// 012
+<<INPUT
+  {"namespace":"com.avro","name":"PigValue","type":"record","aliases":["sample", "com.sample.PVal"],"fields":[{"name":"value", "type":"string", "format": { "key": "value" }}]}
+INPUT
+<<canonical {"name":"com.avro.PigValue","type":"record","fields":[{"name":"value","type":"string","order":"ASCENDING","format":{"key":"value"}}],"aliases":["com.avro.sample","com.sample.PVal"]}
+
+// 013
+<<INPUT
+  {"aliases":["sample", "com.sample.PVal"],"name":"PigValue","type":"record","fields":[{"name":"value", "aliases": ["B", "A"], "type":"string", "format": { "key": "value" }}]}
+INPUT
+<<canonical {"name":"PigValue","type":"record","fields":[{"name":"value","type":"string","order":"ASCENDING","aliases":["A","B"],"format":{"key":"value"}}],"aliases":["com.sample.PVal","sample"]}
+
+// 014
+<<INPUT
+  {"namespace":"com.avro","name":"PigValue","type":"record","aliases":["sample", "com.sample.PVal"],"fields":[{"name":"value", "type":"string", "format": { "key": "value" }},{"name":"nested","type":{"type":"record","name":"Nested","fields":[ ],"aliases":["L","A"]}}]}
+INPUT
+<<canonical {"name":"com.avro.PigValue","type":"record","fields":[{"name":"value","type":"string","order":"ASCENDING","format":{"key":"value"}},{"name":"nested","type":{"name":"com.avro.Nested","type":"record","fields":[],"aliases":["com.avro.A","com.avro.L"]},"order":"ASCENDING"}],"aliases":["com.avro.sample","com.sample.PVal"]}
+

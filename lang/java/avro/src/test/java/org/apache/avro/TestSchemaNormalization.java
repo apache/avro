@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.LinkedHashSet;
+import java.util.Arrays;
 
 import org.apache.avro.util.CaseFinder;
 import org.junit.Test;
@@ -39,17 +41,58 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Enclosed.class)
 public class TestSchemaNormalization {
 
+  private static String PARSER_DATA_FILE =
+    (System.getProperty("share.dir", "../../../share")
+      + "/test/data/schema-tests.txt");
+
+  private static String STANDARD_CANONICAL_DATA_FILE =
+    (System.getProperty("share.dir", "../../../share")
+      + "/test/data/standard-schema-tests.txt");
+
+  private static String CUSTOM_CANONICAL_DATA_FILE =
+    (System.getProperty("share.dir", "../../../share")
+      + "/test/data/custom-schema-tests.txt");
+
   @RunWith(Parameterized.class)
-  public static class TestCanonical {
+  public static class TestParserCanonicalSchema {
     String input, expectedOutput;
-    public TestCanonical(String i, String o) { input=i; expectedOutput=o; }
+    public TestParserCanonicalSchema(String i, String o) { input=i; expectedOutput=o; }
 
     @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(), "canonical", new ArrayList<>()); }
+    { return CaseFinder.find(data(PARSER_DATA_FILE), "canonical", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
       assertEquals(SchemaNormalization.toParsingForm(Schema.parse(input)),
                    expectedOutput);
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class TestStandardCanonicalSchema {
+    String input, expectedOutput;
+    public TestStandardCanonicalSchema(String i, String o) { input=i; expectedOutput=o; }
+
+    @Parameters public static List<Object[]> cases() throws IOException
+    { return CaseFinder.find(data(STANDARD_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
+
+    @Test public void testCanonicalization() throws Exception {
+      assertEquals(SchemaNormalization.toCanonicalForm(Schema.parse(input)),
+        expectedOutput);
+    }
+  }
+
+  @RunWith(Parameterized.class)
+  public static class TestCustomCanonicalSchema {
+    String input, expectedOutput;
+    LinkedHashSet<String> properties = new LinkedHashSet<>(Arrays.asList("format"));
+    public TestCustomCanonicalSchema(String i, String o) { input=i; expectedOutput=o; }
+
+    @Parameters public static List<Object[]> cases() throws IOException
+    { return CaseFinder.find(data(CUSTOM_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
+
+    @Test public void testCanonicalization() throws Exception {
+      assertEquals(SchemaNormalization.toCanonicalForm(Schema.parse(input), properties),
+        expectedOutput);
     }
   }
 
@@ -59,7 +102,7 @@ public class TestSchemaNormalization {
     public TestFingerprint(String i, String o) { input=i; expectedOutput=o; }
 
     @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(),"fingerprint", new ArrayList<>()); }
+    { return CaseFinder.find(data(PARSER_DATA_FILE),"fingerprint", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
       Schema s = Schema.parse(input);
@@ -76,7 +119,7 @@ public class TestSchemaNormalization {
     public TestFingerprintInternationalization(String i, String o) { input=i; expectedOutput=o; }
 
     @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(),"fingerprint", new ArrayList<>()); }
+    { return CaseFinder.find(data(PARSER_DATA_FILE),"fingerprint", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
       Locale originalDefaultLocale = Locale.getDefault();
@@ -89,12 +132,8 @@ public class TestSchemaNormalization {
     }
   }
 
-  private static String DATA_FILE =
-    (System.getProperty("share.dir", "../../../share")
-     + "/test/data/schema-tests.txt");
-
-  private static BufferedReader data() throws IOException
-  { return new BufferedReader(new FileReader(DATA_FILE)); }
+  private static BufferedReader data(String data_file) throws IOException
+  { return new BufferedReader(new FileReader(data_file)); }
 
   /** Compute the fingerprint of <i>bytes[s,s+l)</i> using a slow
       algorithm that's an alternative to that implemented in {@link
