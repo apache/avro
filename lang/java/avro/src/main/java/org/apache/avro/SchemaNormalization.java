@@ -17,16 +17,21 @@
  */
 package org.apache.avro;
 
+import org.apache.avro.util.internal.JacksonUtils;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-/** Collection of static methods for generating the canonical form of
- * schemas (see {@link #toParsingForm}) -- and fingerprints of canonical
- * forms ({@link #fingerprint}).
+/** Collection of static methods for generating the parser canonical form of
+ * schemas (see {@link #toParsingForm}), standard canonical form of schemas
+ * (see {@link #toCanonicalForm(Schema)} or {@link #toCanonicalForm(Schema, LinkedHashSet)})
+ * with user defined properties and fingerprints of canonical forms ({@link #fingerprint}).
  */
 public class SchemaNormalization {
 
@@ -35,13 +40,23 @@ public class SchemaNormalization {
   /** Returns "Parsing Canonical Form" of a schema as defined by Avro
     * spec. */
   public static String toParsingForm(Schema s) {
-    try {
-      Map<String,String> env = new HashMap<>();
-      return build(env, s, new StringBuilder()).toString();
-    } catch (IOException e) {
-      // Shouldn't happen, b/c StringBuilder can't throw IOException
-      throw new RuntimeException(e);
-    }
+    return toNormalizedForm(s, true, new LinkedHashSet<>());
+  }
+
+  /** Returns "Standard Canonical Form" of a schema as defined by Avro
+    * spec. */
+  public static String toCanonicalForm(Schema s) {
+    return toCanonicalForm(s, new LinkedHashSet<>());
+  }
+
+  /** Returns "Standard Canonical Form" of a schema as defined by Avro
+    * spec with additional user standard properties. */
+  public static String toCanonicalForm(Schema s, LinkedHashSet<String> properties) {
+    LinkedHashSet<String> reservedProperties = new LinkedHashSet<>(
+      Arrays.asList("name", "type", "fields", "symbols", "items", "values",
+        "logicalType", "size", "order", "doc", "aliases", "default"));
+    properties.removeAll(reservedProperties);
+    return toNormalizedForm(s, false, properties);
   }
 
   /** Returns a fingerprint of a string of bytes.  This string is
@@ -99,28 +114,42 @@ public class SchemaNormalization {
     return fingerprint64(toParsingForm(s).getBytes(StandardCharsets.UTF_8));
   }
 
-  private static Appendable build(Map<String,String> env, Schema s,
-                                  Appendable o) throws IOException {
+  private static String toNormalizedForm(Schema s, Boolean ps, LinkedHashSet<String> aps) {
+    try {
+      Map<String, String> env = new HashMap<>();
+      return build(env, s, new StringBuilder(), ps, aps).toString();
+    } catch (IOException e) {
+      // Shouldn't happen, b/c StringBuilder can't throw IOException
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static Appendable build(Map<String, String> env, Schema s,
+                                  Appendable o, Boolean ps, LinkedHashSet<String> aps) throws IOException {
     boolean firstTime = true;
     Schema.Type st = s.getType();
+    LogicalType lt = null;
+    if (!ps) lt = s.getLogicalType();
     switch (st) {
     default: // boolean, bytes, double, float, int, long, null, string
-      return o.append('"').append(st.getName()).append('"');
+      if (!ps && lt != null) return writeLogicalType(s, lt, o, aps);
+      else return o.append('"').append(st.getName()).append('"');
 
     case UNION:
       o.append('[');
       for (Schema b: s.getTypes()) {
         if (! firstTime) o.append(','); else firstTime = false;
-        build(env, b, o);
+        build(env, b, o, ps, aps);
       }
       return o.append(']');
 
     case ARRAY:  case MAP:
       o.append("{\"type\":\"").append(st.getName()).append("\"");
       if (st == Schema.Type.ARRAY)
-        build(env, s.getElementType(), o.append(",\"items\":"));
-      else build(env, s.getValueType(), o.append(",\"values\":"));
-      return o.append("}");
+        build(env, s.getElementType(), o.append(",\"items\":"), ps, aps);
+      else build(env, s.getValueType(), o.append(",\"values\":"), ps, aps);
+      if(!ps) writeProps(o, s.getObjectProps(), aps); // adding the reserved property if not parser canonical schema
+        return o.append("}");
 
     case ENUM: case FIXED: case RECORD:
       String name = s.getFullName();
@@ -143,12 +172,53 @@ public class SchemaNormalization {
         for (Schema.Field f: s.getFields()) {
           if (! firstTime) o.append(','); else firstTime = false;
           o.append("{\"name\":\"").append(f.name()).append("\"");
-          build(env, f.schema(), o.append(",\"type\":")).append("}");
+          build(env, f.schema(), o.append(",\"type\":"), ps, aps);
+          if (!ps) writeFieldProps(o, f, aps); // if standard canonical form then add reserved properties
+          o.append("}");
         }
         o.append("]");
       }
+      if(!ps) { writeComplexProps(o, s); writeProps(o, s.getObjectProps(), aps); }// adding the reserved property if not parser canonical schema
       return o.append("}");
     }
+  }
+
+  private static Appendable writeLogicalType(Schema s, LogicalType lt, Appendable o, LinkedHashSet<String> aps) throws IOException {
+    o.append("{\"type\":\"").append(s.getType().getName()).append("\"");
+    o.append("\"").append(LogicalType.LOGICAL_TYPE_PROP).append("\":\"").append(lt.getName()).append("\"");
+    if (lt.getName() == "decimal") {
+      LogicalTypes.Decimal dlt = (LogicalTypes.Decimal) lt;
+      o.append(",\"precision\":").append(Integer.toString(dlt.getPrecision()));
+      if(dlt.getScale() != 0) o.append(",\"scale\":").append(Integer.toString(dlt.getScale()));
+    }
+    // adding the reserved property
+    writeProps(o, s.getObjectProps(), aps);
+    return o.append("}");
+  }
+
+  private static Appendable writeProps(Appendable o, Map<String, Object> schemaProps, LinkedHashSet<String> aps) throws IOException {
+    for (String propKey : aps) {
+      if (schemaProps.containsKey(propKey)) {
+        String propValue = JacksonUtils.toJsonNode(schemaProps.get(propKey)).toString();
+        o.append(",\"").append(propKey).append("\":").append(propValue);
+      }
+    }
+    return o;
+  }
+
+  private static Appendable writeComplexProps(Appendable o, Schema s) throws IOException {
+    if (s.getDoc() !=null && !s.getDoc().isEmpty()) o.append(",\"doc\":\"").append(s.getDoc()).append("\"");
+    if (s.getAliases() !=null && !s.getAliases().isEmpty()) o.append(",\"aliases\":").append(JacksonUtils.toJsonNode(new TreeSet<String>(s.getAliases())).toString());
+    return o;
+  }
+
+  private static Appendable writeFieldProps(Appendable o, Schema.Field f, LinkedHashSet<String> aps) throws IOException {
+    if (f.order() != null) o.append(",\"order\":\"").append(f.order().toString()).append("\"");
+    if (f.doc() != null) o.append(",\"doc\":\"").append(f.doc()).append("\"");
+    if (!f.aliases().isEmpty()) o.append(",\"aliases\":").append(JacksonUtils.toJsonNode(new TreeSet<String>(f.aliases())).toString());
+    if (f.defaultVal() != null) o.append(",\"default\":").append(JacksonUtils.toJsonNode(f.defaultVal()).toString());
+    writeProps(o, f.getObjectProps(), aps);
+    return o;
   }
 
   final static long EMPTY64 = 0xc15d213aa4d7a795L;
