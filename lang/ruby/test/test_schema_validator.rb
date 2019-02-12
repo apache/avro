@@ -110,6 +110,13 @@ class TestSchema < Test::Unit::TestCase
     assert_failed_validation('at . expected fixed with size 3, got null') do
       validate_simple!(schema, nil)
     end
+
+    assert_failed_validation("at . expected fixed with size 3, got \"a\u2014b\" with size 5") do
+      validate!(schema, "a\u2014b")
+    end
+    assert_failed_validation("at . expected fixed with size 3, got \"a\u2014b\" with size 5") do
+      validate_simple!(schema, "a\u2014b")
+    end
   end
 
   def test_original_validate_nil
