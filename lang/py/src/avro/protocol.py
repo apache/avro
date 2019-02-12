@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,12 +62,13 @@ class Protocol(object):
       if message_objects.has_key(name):
         fail_msg = 'Message name "%s" repeated.' % name
         raise ProtocolParseException(fail_msg)
-      elif not(hasattr(body, 'get') and callable(body.get)):
+      try:
+        request = body.get('request')
+        response = body.get('response')
+        errors = body.get('errors')
+      except AttributeError:
         fail_msg = 'Message name "%s" has non-object body %s.' % (name, body)
         raise ProtocolParseException(fail_msg)
-      request = body.get('request')
-      response = body.get('response')
-      errors = body.get('errors')
       message_objects[name] = Message(name, request, response, errors, names)
     return message_objects
 
@@ -79,21 +80,20 @@ class Protocol(object):
     elif not isinstance(name, basestring):
       fail_msg = 'The name property must be a string.'
       raise ProtocolParseException(fail_msg)
-    elif namespace is not None and not isinstance(namespace, basestring):
+    elif not (namespace is None or isinstance(namespace, basestring)):
       fail_msg = 'The namespace property must be a string.'
       raise ProtocolParseException(fail_msg)
-    elif types is not None and not isinstance(types, list):
+    elif not (types is None or isinstance(types, list)):
       fail_msg = 'The types property must be a list.'
       raise ProtocolParseException(fail_msg)
-    elif (messages is not None and 
-          not(hasattr(messages, 'get') and callable(messages.get))):
+    elif not (messages is None or callable(getattr(messages, 'get', None))):
       fail_msg = 'The messages property must be a JSON object.'
       raise ProtocolParseException(fail_msg)
 
     self._props = {}
     self.set_prop('name', name)
     type_names = schema.Names()
-    if namespace is not None: 
+    if namespace is not None:
       self.set_prop('namespace', namespace)
       type_names.default_namespace = namespace
     if types is not None:
@@ -105,7 +105,7 @@ class Protocol(object):
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
   namespace = property(lambda self: self.get_prop('namespace'))
-  fullname = property(lambda self: 
+  fullname = property(lambda self:
                       schema.Name(self.name, self.namespace).fullname)
   types = property(lambda self: self.get_prop('types'))
   types_dict = property(lambda self: dict([(type.name, type)
@@ -118,13 +118,13 @@ class Protocol(object):
   def get_prop(self, key):
     return self.props.get(key)
   def set_prop(self, key, value):
-    self.props[key] = value  
+    self.props[key] = value
 
   def to_json(self):
     to_dump = {}
     to_dump['protocol'] = self.name
     names = schema.Names(default_namespace=self.namespace)
-    if self.namespace: 
+    if self.namespace:
       to_dump['namespace'] = self.namespace
     if self.types:
       to_dump['types'] = [ t.to_json(names) for t in self.types ]
@@ -149,7 +149,7 @@ class Message(object):
       fail_msg = 'Request property not a list: %s' % request
       raise ProtocolParseException(fail_msg)
     return schema.RecordSchema(None, None, request, names, 'request')
-  
+
   def _parse_response(self, response, names):
     if isinstance(response, basestring) and names.has_name(response, None):
       return names.get_name(response, None)
@@ -183,7 +183,7 @@ class Message(object):
   def get_prop(self, key):
     return self.props.get(key)
   def set_prop(self, key, value):
-    self.props[key] = value  
+    self.props[key] = value
 
   def __str__(self):
     return json.dumps(self.to_json())
@@ -200,17 +200,17 @@ class Message(object):
 
   def __eq__(self, that):
     return self.name == that.name and self.props == that.props
-      
+
 def make_avpr_object(json_data):
   """Build Avro Protocol from data parsed out of JSON string."""
-  if hasattr(json_data, 'get') and callable(json_data.get):
+  try:
     name = json_data.get('protocol')
     namespace = json_data.get('namespace')
     types = json_data.get('types')
     messages = json_data.get('messages')
-    return Protocol(name, namespace, types, messages)
-  else:
+  except AttributeError:
     raise ProtocolParseException('Not a JSON object: %s' % json_data)
+  return Protocol(name, namespace, types, messages)
 
 def parse(json_string):
   """Constructs the Protocol from the JSON text."""
@@ -221,4 +221,3 @@ def parse(json_string):
 
   # construct the Avro Protocol object
   return make_avpr_object(json_data)
-
