@@ -17,6 +17,9 @@
 Test the schema parsing logic.
 """
 import unittest
+
+from avro.schema import SchemaParseException, AvroException
+
 import set_avro_test_path
 
 from avro import schema
@@ -295,6 +298,21 @@ OTHER_PROP_EXAMPLES = [
     """, True)
 ]
 
+DECIMAL_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "fixed",
+  "logicalType": "decimal",
+  "name": "TestDecimal",
+  "precision": 4,
+  "size": 10,
+  "scale": 2}""", True),
+  ExampleSchema("""{
+  "type": "bytes",
+  "logicalType": "decimal",
+  "precision": 4,
+  "scale": 2}""", True)
+]
+
 EXAMPLES = PRIMITIVE_EXAMPLES
 EXAMPLES += FIXED_EXAMPLES
 EXAMPLES += ENUM_EXAMPLES
@@ -303,6 +321,7 @@ EXAMPLES += MAP_EXAMPLES
 EXAMPLES += UNION_EXAMPLES
 EXAMPLES += RECORD_EXAMPLES
 EXAMPLES += DOC_EXAMPLES
+EXAMPLES += DECIMAL_LOGICAL_TYPE
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 
@@ -490,6 +509,79 @@ class TestSchema(unittest.TestCase):
         caught_exception = True
 
     self.assertTrue(caught_exception, 'Exception was not caught')
+
+  def test_decimal_invalid_schema(self):
+    invalid_schemas = [
+      ExampleSchema("""{
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": 2,
+      "scale": -2}""", True),
+
+      ExampleSchema("""{
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": -2,
+      "scale": 2}""", True),
+
+      ExampleSchema("""{
+      "type": "bytes",
+      "logicalType": "decimal",
+      "precision": 2,
+      "scale": 3}""", True),
+
+      ExampleSchema("""{
+      "type": "fixed",
+      "logicalType": "decimal",
+      "name": "TestDecimal",
+      "precision": -10,
+      "scale": 2,
+      "size": 5}""", True),
+
+
+      ExampleSchema("""{
+      "type": "fixed",
+      "logicalType": "decimal",
+      "name": "TestDecimal",
+      "precision": 2,
+      "scale": 3,
+      "size": 2}""", True)
+    ]
+
+    for invalid_schema in invalid_schemas:
+      self.assertRaises(SchemaParseException, schema.parse, invalid_schema.schema_string)
+
+    fixed_invalid_schema_size = ExampleSchema("""{
+                                "type": "fixed",
+                                "logicalType": "decimal",
+                                "name": "TestDecimal",
+                                "precision": 2,
+                                "scale": 2,
+                                "size": -2}""", True)
+    self.assertRaises(AvroException, schema.parse, fixed_invalid_schema_size.schema_string)
+
+  def test_decimal_valid_type(self):
+    fixed_decimal_schema = ExampleSchema("""{
+    "type": "fixed",
+    "logicalType": "decimal",
+    "name": "TestDecimal",
+    "precision": 4,
+    "scale": 2,
+    "size": 2}""", True)
+
+    bytes_decimal_schema = ExampleSchema("""{
+    "type": "bytes",
+    "logicalType": "decimal",
+    "precision": 4}""", True)
+
+    fixed_decimal = schema.parse(fixed_decimal_schema.schema_string)
+    self.assertEqual(4, fixed_decimal.get_prop('precision'))
+    self.assertEqual(2, fixed_decimal.get_prop('scale'))
+    self.assertEqual(2, fixed_decimal.get_prop('size'))
+
+    bytes_decimal = schema.parse(bytes_decimal_schema.schema_string)
+    self.assertEqual(4, bytes_decimal.get_prop('precision'))
+    self.assertEqual(0, bytes_decimal.get_prop('scale'))
 
 if __name__ == '__main__':
   unittest.main()
