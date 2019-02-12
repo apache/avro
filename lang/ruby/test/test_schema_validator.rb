@@ -461,4 +461,13 @@ class TestSchema < Test::Unit::TestCase
       exception.to_s
     )
   end
+
+  def test_fixed_size_string
+    assert_failed_validation("at . expected fixed with size 3, got \"a\u2014b\" with size 5") do
+      validate!(schema, "a\u2014b")
+    end
+    assert_failed_validation("at . expected fixed with size 3, got \"a\u2014b\" with size 5") do
+      validate_simple!(schema, "a\u2014b")
+    end
+  end
 end
