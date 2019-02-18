@@ -69,7 +69,7 @@
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
     <compiler-plugin.version>3.8.0</compiler-plugin.version>
     <exec-plugin.version>1.6.0</exec-plugin.version>
-    <jar-plugin.version>3.1.0</jar-plugin.version>
+    <jar-plugin.version>3.1.1</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
     <javadoc-plugin.version>3.0.1</javadoc-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
