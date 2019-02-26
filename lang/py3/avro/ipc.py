@@ -602,7 +602,7 @@ class Transceiver(object, metaclass=abc.ABCMeta):
 class HTTPTransceiver(Transceiver):
   """HTTP-based transceiver implementation."""
 
-  def __init__(self, host, port, req_resource='/'):
+  def __init__(self, host, port, req_resource='/', ssl=False):
     """Initializes a new HTTP transceiver.
 
     Args:
@@ -611,7 +611,10 @@ class HTTPTransceiver(Transceiver):
       req_resource: Optional HTTP resource path to use, '/' by default.
     """
     self._req_resource = req_resource
-    self._conn = http.client.HTTPConnection(host, port)
+    if (ssl):
+        self._conn = http.client.HTTPSConnection(host, port)
+    else:
+        self._conn = http.client.HTTPConnection(host, port)
     self._conn.connect()
     self._remote_name = self._conn.sock.getsockname()
 
