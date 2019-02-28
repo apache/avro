@@ -611,7 +611,7 @@ class HTTPTransceiver(Transceiver):
       req_resource: Optional HTTP resource path to use, '/' by default.
     """
     self._req_resource = req_resource
-    if (ssl):
+    if ssl:
         self._conn = http.client.HTTPSConnection(host, port)
     else:
         self._conn = http.client.HTTPConnection(host, port)
