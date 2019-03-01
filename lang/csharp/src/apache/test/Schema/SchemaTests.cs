@@ -159,7 +159,7 @@ namespace Avro.Test
             }
             catch (Exception e)
             {
-                throw new AvroException(e.ToString() + ": " + sc.ToString());
+                throw new AvroException(e.ToString() + ": " + sc.ToString(), e);
             }
         }
 
