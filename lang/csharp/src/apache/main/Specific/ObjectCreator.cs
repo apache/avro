@@ -138,7 +138,16 @@ namespace Avro.Specific
                     if (assembly.FullName.StartsWith("MonoDevelop.NUnit"))
                         continue;
 
-                    types = assembly.GetTypes();
+                    // Loading all types from all assemblies could fail for a variety of non-fatal
+                    // reasons. If we fail to load types from an assembly, continue.
+                    try
+                    {
+                        types = assembly.GetTypes();
+                    }
+                    catch
+                    {
+                        continue;
+                    }
 
                     // Change the search to look for Types by both NAME and FULLNAME
                     foreach (Type t in types)
