@@ -397,7 +397,7 @@ public class GenericData {
 
   /** Default implementation of {@link GenericEnumSymbol}. */
   public static class EnumSymbol
-      implements GenericEnumSymbol, Comparable<GenericEnumSymbol>  {
+      implements GenericEnumSymbol<EnumSymbol> {
     private Schema schema;
     private String symbol;
 
@@ -430,7 +430,7 @@ public class GenericData {
     public String toString() { return symbol; }
 
     @Override
-    public int compareTo(GenericEnumSymbol that) {
+    public int compareTo(EnumSymbol that) {
       return GenericData.get().compare(this, that, schema);
     }
   }
