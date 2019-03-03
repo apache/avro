@@ -197,7 +197,7 @@ public class ProtobufData extends GenericData {
     }
   };
 
-  private Schema getSchema(Descriptor descriptor) {
+  public Schema getSchema(Descriptor descriptor) {
     Map<Descriptor,Schema> seen = SEEN.get();
     if (seen.containsKey(descriptor))             // stop recursion
       return seen.get(descriptor);
@@ -299,7 +299,7 @@ public class ProtobufData extends GenericData {
     }
   }
 
-  private Schema getSchema(EnumDescriptor d) {
+  public Schema getSchema(EnumDescriptor d) {
     List<String> symbols = new ArrayList<>();
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
