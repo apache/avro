@@ -17,13 +17,14 @@
  */
 package org.apache.avro.mapred;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 
@@ -206,13 +207,15 @@ public class AvroMultipleInputs {
   }
 
   private static String toBase64(String rawString) {
-    Base64 base64decoder = new Base64();
-    return new String(base64decoder.encode(rawString.getBytes()));
+    final byte[] buf = rawString.getBytes(StandardCharsets.UTF_8);
+    return new String(Base64.getMimeEncoder().encode(buf),
+        StandardCharsets.UTF_8);
   }
 
   private static String fromBase64(String base64String) {
-    Base64 base64decoder = new Base64();
-    return new String(base64decoder.decode(base64String.getBytes()));
+    final byte[] buf = base64String.getBytes(StandardCharsets.UTF_8);
+    return new String(Base64.getMimeDecoder().decode(buf),
+        StandardCharsets.UTF_8);
   }
 
 }
