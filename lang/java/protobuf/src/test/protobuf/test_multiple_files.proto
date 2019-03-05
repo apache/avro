@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-package org.apache.avro.protobuf.noopt;
+package org.apache.avro.protobuf.multiplefiles;
+
+option java_multiple_files = true;
 
 message Foo {
   // all the primitive types

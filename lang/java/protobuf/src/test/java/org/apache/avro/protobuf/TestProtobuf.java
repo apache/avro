@@ -31,9 +31,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.protobuf.ByteString;
 
-import org.apache.avro.protobuf.Test.Foo;
-import org.apache.avro.protobuf.Test.A;
-import org.apache.avro.protobuf.Test.M.N;
+import org.apache.avro.protobuf.noopt.Test.Foo;
+import org.apache.avro.protobuf.noopt.Test.A;
+import org.apache.avro.protobuf.noopt.Test.M.N;
 
 public class TestProtobuf {
   @Test
@@ -92,6 +92,15 @@ public class TestProtobuf {
   @Test
   public void testNestedClassNamespace() throws Exception {
     Schema s = ProtobufData.get().getSchema(Foo.class);
-    assertEquals(org.apache.avro.protobuf.Test.class.getName(), s.getNamespace());
+    assertEquals(org.apache.avro.protobuf.noopt.Test.class.getName(), s.getNamespace());
+  }
+
+  @Test
+  public void testClassNamespaceInMultipleFiles() throws Exception {
+    Schema fooSchema = ProtobufData.get().getSchema(org.apache.avro.protobuf.multiplefiles.Foo.class);
+    assertEquals(org.apache.avro.protobuf.multiplefiles.Foo.class.getPackage().getName(), fooSchema.getNamespace());
+
+    Schema nSchema = ProtobufData.get().getSchema(org.apache.avro.protobuf.multiplefiles.M.N.class);
+    assertEquals(org.apache.avro.protobuf.multiplefiles.M.class.getName(), nSchema.getNamespace());
   }
 }
