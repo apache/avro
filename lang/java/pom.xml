@@ -56,7 +56,6 @@
     <commons-codec.version>1.12</commons-codec.version>
     <commons-compress.version>1.18</commons-compress.version>
     <commons-lang.version>3.8.1</commons-lang.version>
-    <commons-logging.version>1.2</commons-logging.version>
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.0.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
