@@ -190,7 +190,7 @@
           <version>${javadoc-plugin.version}</version>
           <configuration>
             <links>
-              <link>https://docs.oracle.com/javaee/7/api/</link>
+              <link>https://docs.oracle.com/javase/8/docs/api/</link>
               <link>http://hadoop.apache.org/common/docs/current/api/</link>
             </links>
             <tagletArtifacts>
