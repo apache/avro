@@ -71,7 +71,7 @@
     <exec-plugin.version>1.6.0</exec-plugin.version>
     <jar-plugin.version>3.1.1</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
-    <javadoc-plugin.version>3.0.1</javadoc-plugin.version>
+    <javadoc-plugin.version>3.1.0</javadoc-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
     <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
