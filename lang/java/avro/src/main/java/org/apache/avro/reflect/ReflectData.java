@@ -866,7 +866,7 @@ public class ReflectData extends SpecificData {
                               elementType, equals);
         if (compare != 0) return compare;
       }
-      return l1 - l2;
+      return Integer.compare(l1, l2);
     case BYTES:
       if (!o1.getClass().isArray())
         break;

@@ -90,21 +90,23 @@ public class BinaryData {
           continue;
         }
         int c = compare(d, field.schema());
-        if (c != 0)
+        if (c != 0) {
           return (field.order() != Field.Order.DESCENDING) ? c : -c;
+        }
       }
       return 0;
     }
-    case ENUM: case INT: {
-      int i1 = d1.readInt();
-      int i2 = d2.readInt();
-      return i1 == i2 ? 0 : (i1 > i2 ? 1 : -1);
-    }
-    case LONG: {
-      long l1 = d1.readLong();
-      long l2 = d2.readLong();
-      return l1 == l2 ? 0 : (l1 > l2 ? 1 : -1);
-    }
+    case ENUM:
+    case INT:
+      return Integer.compare(d1.readInt(), d2.readInt());
+    case LONG:
+      return Long.compare(d1.readLong(), d2.readLong());
+    case FLOAT:
+      return Float.compare(d1.readFloat(), d2.readFloat());
+    case DOUBLE:
+      return Double.compare(d1.readDouble(), d2.readDouble());
+    case BOOLEAN:
+      return Boolean.compare(d1.readBoolean(), d2.readBoolean());
     case ARRAY: {
       long i = 0;                                 // position in array
       long r1 = 0, r2 = 0;                        // remaining in current block
@@ -121,7 +123,7 @@ public class BinaryData {
           l2 += r2;
         }
         if (r1 == 0 || r2 == 0)                   // empty block: done
-          return (l1 == l2) ? 0 : ((l1 > l2) ? 1 : -1);
+          return Long.compare(l1, l2);
         long l = Math.min(l1, l2);
         while (i < l) {                           // compare to end of block
           int c = compare(d, schema.getElementType());
@@ -135,11 +137,8 @@ public class BinaryData {
     case UNION: {
       int i1 = d1.readInt();
       int i2 = d2.readInt();
-      if (i1 == i2) {
-        return compare(d, schema.getTypes().get(i1));
-      } else {
-        return i1 - i2;
-      }
+      int c = Integer.compare(i1, i2);
+      return c == 0 ? compare(d, schema.getTypes().get(i1)) : c;
     }
     case FIXED: {
       int size = schema.getFixedSize();
@@ -149,7 +148,8 @@ public class BinaryData {
       d.d2.skipFixed(size);
       return c;
     }
-    case STRING: case BYTES: {
+    case STRING:
+    case BYTES: {
       int l1 = d1.readInt();
       int l2 = d2.readInt();
       int c = compareBytes(d.d1.getBuf(), d.d1.getPos(), l1,
@@ -158,20 +158,6 @@ public class BinaryData {
       d.d2.skipFixed(l2);
       return c;
     }
-    case FLOAT: {
-      float f1 = d1.readFloat();
-      float f2 = d2.readFloat();
-      return (f1 == f2) ? 0 : ((f1 > f2) ? 1 : -1);
-    }
-    case DOUBLE: {
-      double f1 = d1.readDouble();
-      double f2 = d2.readDouble();
-      return (f1 == f2) ? 0 : ((f1 > f2) ? 1 : -1);
-    }
-    case BOOLEAN:
-      boolean b1 = d1.readBoolean();
-      boolean b2 = d2.readBoolean();
-      return (b1 == b2) ? 0 : (b1 ? 1 : -1);
     case NULL:
       return 0;
     default:
@@ -234,28 +220,29 @@ public class BinaryData {
           GenericDatumReader.skip(field.schema(), decoder);
           continue;
         }
-        hashCode = hashCode*31 + hashCode(data, field.schema());
+        hashCode = hashCode * 31 + hashCode(data, field.schema());
       }
       return hashCode;
     }
-    case ENUM: case INT:
+    case ENUM:
+    case INT:
       return decoder.readInt();
+    case BOOLEAN:
+      return Boolean.hashCode(decoder.readBoolean());
     case FLOAT:
-      return Float.floatToIntBits(decoder.readFloat());
-    case LONG: {
-      long l = decoder.readLong();
-      return (int)(l^(l>>>32));
-    }
-    case DOUBLE: {
-      long l = Double.doubleToLongBits(decoder.readDouble());
-      return (int)(l^(l>>>32));
-    }
+      return Float.hashCode(decoder.readFloat());
+    case LONG:
+      return Long.hashCode(decoder.readLong());
+    case DOUBLE:
+      return Double.hashCode(decoder.readDouble());
     case ARRAY: {
       Schema elementType = schema.getElementType();
       int hashCode = 1;
-      for (long l = decoder.readArrayStart(); l != 0; l = decoder.arrayNext())
-        for (long i = 0; i < l; i++)
-          hashCode = hashCode*31 + hashCode(data, elementType);
+      for (long l = decoder.readArrayStart(); l != 0; l = decoder.arrayNext()) {
+        for (long i = 0; i < l; i++) {
+          hashCode = hashCode * 31 + hashCode(data, elementType);
+        }
+      }
       return hashCode;
     }
     case MAP:
@@ -268,8 +255,6 @@ public class BinaryData {
       return hashBytes(0, data, decoder.readInt(), false);
     case BYTES:
       return hashBytes(1, data, decoder.readInt(), true);
-    case BOOLEAN:
-      return decoder.readBoolean() ? 1231 : 1237;
     case NULL:
       return 0;
     default:
