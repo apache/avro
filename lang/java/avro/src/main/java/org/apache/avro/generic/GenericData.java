@@ -989,7 +989,7 @@ public class GenericData {
       int i2 = resolveUnion(s, o2);
       return (i1 == i2)
         ? compare(o1, o2, s.getTypes().get(i1), equals)
-        : i1 - i2;
+        : Integer.compare(i1, i2);
     case NULL:
       return 0;
     case STRING:
