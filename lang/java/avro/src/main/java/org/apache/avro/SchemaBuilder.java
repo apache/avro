@@ -32,7 +32,7 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.internal.JacksonUtils;
 
-import com.fasterxml.jackson.core.io.JsonStringEncoder;
+import com.fasterxml.jackson.core.util.BufferRecyclers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -2600,11 +2600,11 @@ public class SchemaBuilder {
         bytes.get(data);
         bytes.reset(); // put the buffer back the way we got it
         s = new String(data, "ISO-8859-1");
-        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
+        char[] quoted = BufferRecyclers.getJsonStringEncoder().quoteAsString(s);
         s = "\"" + new String(quoted) + "\"";
       } else if (o instanceof byte[]) {
         s = new String((byte[]) o, "ISO-8859-1");
-        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
+        char[] quoted = BufferRecyclers.getJsonStringEncoder().quoteAsString(s);
         s = '\"' + new String(quoted) + '\"';
       } else {
         s = GenericData.get().toString(o);
