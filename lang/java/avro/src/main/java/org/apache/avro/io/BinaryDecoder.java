@@ -21,6 +21,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
@@ -895,6 +896,7 @@ public class BinaryDecoder extends Decoder {
    *
    */
   private static class ByteArrayByteSource extends ByteSource {
+    private static final int MIN_SIZE = 16;
     private byte[] data;
     private int position;
     private int max;
@@ -904,9 +906,8 @@ public class BinaryDecoder extends Decoder {
       super();
       // make sure data is not too small, otherwise getLong may try and
       // read 10 bytes and get index out of bounds.
-      if (data.length < 16 || len < 16) {
-        this.data = new byte[16];
-        System.arraycopy(data, start, this.data, 0, len);
+      if (len < MIN_SIZE) {
+        this.data = Arrays.copyOfRange(data, start, start + MIN_SIZE);
         this.position = 0;
         this.max = len;
       } else {
