@@ -49,7 +49,10 @@ import org.apache.avro.util.Utf8;
 /**
  * Performance tests for various low level operations of Avro encoding and
  * decoding.
+ *
+ * @deprecated Use avro-perf module
  */
+@Deprecated
 public class Perf {
   private static final int COUNT // needs to be a multiple of 4
       = Integer.parseInt(System.getProperty("org.apache.avro.io.perf.count", "250000"));

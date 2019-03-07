@@ -341,6 +341,7 @@
                 <exclude>lang/ruby/Manifest</exclude>
                 <exclude>lang/java/tools/userlogs/**</exclude>
                 <exclude>lang/java/mapred/userlogs/**</exclude>
+                <exclude>lang/java/perf/README.md</exclude>
                 <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
                 <exclude>lang/js/test/mocha.opts</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
