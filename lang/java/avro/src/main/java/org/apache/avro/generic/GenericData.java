@@ -590,6 +590,10 @@ public class GenericData {
       seenObjects.put(datum, datum);
       toString(datum, buffer, seenObjects);
       seenObjects.remove(datum);
+    } else if (datum instanceof org.joda.time.DateTime){
+      buffer.append("\"");
+      buffer.append(datum);
+      buffer.append("\"");
     } else {
       buffer.append(datum);
     }
