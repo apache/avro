@@ -56,31 +56,46 @@ public class LogicalTypes {
     return fromSchemaImpl(schema, false);
   }
 
-  private static LogicalType fromSchemaImpl(Schema schema, boolean throwErrors) {
-    String typeName = schema.getProp(LogicalType.LOGICAL_TYPE_PROP);
+  private static LogicalType fromSchemaImpl(Schema schema,
+      boolean throwErrors) {
+    final LogicalType logicalType;
+    final String typeName = schema.getProp(LogicalType.LOGICAL_TYPE_PROP);
 
-    LogicalType logicalType;
+    if (typeName == null) {
+      return null;
+    }
+
     try {
-      if (typeName == null) {
-        logicalType = null;
-      } else if (TIMESTAMP_MILLIS.equals(typeName)) {
+      switch (typeName) {
+      case TIMESTAMP_MILLIS:
         logicalType = TIMESTAMP_MILLIS_TYPE;
-      } else if (DECIMAL.equals(typeName)) {
+        break;
+      case DECIMAL:
         logicalType = new Decimal(schema);
-      } else if (UUID.equals(typeName)) {
+        break;
+      case UUID:
         logicalType = UUID_TYPE;
-      } else if (DATE.equals(typeName)) {
+        break;
+      case DATE:
         logicalType = DATE_TYPE;
-      } else if (TIMESTAMP_MICROS.equals(typeName)) {
+        break;
+      case TIMESTAMP_MICROS:
         logicalType = TIMESTAMP_MICROS_TYPE;
-      } else if (TIME_MILLIS.equals(typeName)) {
+        break;
+      case TIME_MILLIS:
         logicalType = TIME_MILLIS_TYPE;
-      } else if (TIME_MICROS.equals(typeName)) {
+        break;
+      case TIME_MICROS:
         logicalType = TIME_MICROS_TYPE;
-      } else if (REGISTERED_TYPES.containsKey(typeName)) {
-        logicalType = REGISTERED_TYPES.get(typeName).fromSchema(schema);
-      } else {
-        logicalType = null;
+        break;
+      default:
+        final LogicalTypeFactory typeFactory = REGISTERED_TYPES.get(typeName);
+        if (typeFactory != null) {
+          logicalType = REGISTERED_TYPES.get(typeName).fromSchema(schema);
+        } else {
+          logicalType = null;
+        }
+        break;
       }
 
       // make sure the type is valid before returning it
@@ -94,7 +109,7 @@ public class LogicalTypes {
       }
       LOG.warn("Ignoring invalid logical type for name: {}", typeName);
       // ignore invalid types
-      logicalType = null;
+      return null;
     }
 
     return logicalType;
