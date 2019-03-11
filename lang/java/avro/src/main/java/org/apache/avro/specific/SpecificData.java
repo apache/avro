@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -306,7 +307,8 @@ public class SpecificData extends GenericData {
     }
   };
   // for non-class objects, use a WeakHashMap, but this needs a sync block around it
-  private final Map<java.lang.reflect.Type, Schema> schemaTypeCache = new WeakHashMap<>();
+  private final Map<java.lang.reflect.Type, Schema> schemaTypeCache =
+      Collections.synchronizedMap(new WeakHashMap<>());
 
   /** Find the schema for a Java type. */
   public Schema getSchema(java.lang.reflect.Type type) {
@@ -314,14 +316,8 @@ public class SpecificData extends GenericData {
       if (type instanceof Class) {
         return schemaClassCache.get((Class<?>)type);
       }
-      synchronized (schemaTypeCache) {
-        Schema s = schemaTypeCache.get(type);
-        if (s == null) {
-          s = createSchema(type, new LinkedHashMap<>());
-          schemaTypeCache.put(type, s);
-        }
-        return s;
-      }
+      return schemaTypeCache.computeIfAbsent(type,
+          t -> createSchema(t, new LinkedHashMap<>()));
     } catch (Exception e) {
       throw (e instanceof AvroRuntimeException) ?
           (AvroRuntimeException)e : new AvroRuntimeException(e);
