@@ -264,7 +264,7 @@ public class ThriftData extends GenericData {
   }
 
   private Schema nullable(Schema schema) {
-    return Schema.createUnion(Arrays.asList(new Schema[] {NULL, schema}));
+    return Schema.createUnion(Arrays.asList(NULL, schema));
   }
 
 }

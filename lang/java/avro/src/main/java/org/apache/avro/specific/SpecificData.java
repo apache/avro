@@ -80,7 +80,7 @@ public class SpecificData extends GenericData {
    * combined with the classnames used internally in the generated avro code.
    */
   public static final Set<String> RESERVED_WORDS = new HashSet<>
-    (Arrays.asList(new String[] {
+    (Arrays.asList(
         "abstract", "assert", "boolean", "break", "byte", "case", "catch",
         "char", "class", "const", "continue", "default", "do", "double",
         "else", "enum", "extends", "false", "final", "finally", "float",
@@ -91,7 +91,7 @@ public class SpecificData extends GenericData {
         "transient", "true", "try", "void", "volatile", "while",
         /* classnames use internally by the avro code generator */
         "Builder"
-      }));
+      ));
 
   /** Read/write some common builtin classes as strings.  Representing these as
    * strings isn't always best, as they aren't always ordered ideally, but at

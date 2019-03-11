@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -124,16 +125,13 @@ public abstract class Schema extends JsonProperties {
     }
   }
 
-  private static final Set<String> SCHEMA_RESERVED = new HashSet<>();
-  static {
-    Collections.addAll(SCHEMA_RESERVED,
-                       "doc", "fields", "items", "name", "namespace",
-                       "size", "symbols", "values", "type", "aliases");
-  }
-  private static final Set<String> ENUM_RESERVED = new HashSet<>();
+  private static final Set<String> SCHEMA_RESERVED =
+      new HashSet<>(Arrays.asList("doc", "fields", "items", "name", "namespace",
+          "size", "symbols", "values", "type", "aliases"));
+
+  private static final Set<String> ENUM_RESERVED = new HashSet<>(SCHEMA_RESERVED);
   static {
     ENUM_RESERVED.add("default");
-    ENUM_RESERVED.addAll(SCHEMA_RESERVED);
   }
 
   int hashCode = NO_HASHCODE;

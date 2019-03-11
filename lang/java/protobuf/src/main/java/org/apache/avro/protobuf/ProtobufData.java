@@ -291,7 +291,7 @@ public class ProtobufData extends GenericData {
       result = getSchema(f.getMessageType());
       if (f.isOptional())
         // wrap optional record fields in a union with null
-        result = Schema.createUnion(Arrays.asList(new Schema[] {NULL, result}));
+        result = Schema.createUnion(Arrays.asList(NULL, result));
       return result;
     case GROUP:                                   // groups are deprecated
     default:
