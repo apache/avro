@@ -136,9 +136,7 @@ public class SpecificCompiler {
 
   /* Reserved words for accessor/mutator methods */
   private static final Set<String> ACCESSOR_MUTATOR_RESERVED_WORDS =
-      new HashSet<>(Arrays.asList(new String[]{
-            "class", "schema", "classSchema"
-          }));
+      new HashSet<>(Arrays.asList("class", "schema", "classSchema"));
   static {
     // Add reserved words to accessor/mutator reserved words
     ACCESSOR_MUTATOR_RESERVED_WORDS.addAll(RESERVED_WORDS);
@@ -146,7 +144,7 @@ public class SpecificCompiler {
 
   /* Reserved words for error types */
   private static final Set<String> ERROR_RESERVED_WORDS = new HashSet<>(
-      Arrays.asList(new String[]{"message", "cause"}));
+      Arrays.asList("message", "cause"));
   static {
     // Add accessor/mutator reserved words to error reserved words
     ERROR_RESERVED_WORDS.addAll(ACCESSOR_MUTATOR_RESERVED_WORDS);

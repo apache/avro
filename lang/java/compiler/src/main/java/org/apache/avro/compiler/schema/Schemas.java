@@ -18,7 +18,7 @@
 package org.apache.avro.compiler.schema;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -136,7 +136,7 @@ public final class Schemas {
           Schema.Type type = schema.getType();
           switch (type) {
             case ARRAY:
-              terminate = visitNonTerminal(visitor, schema, dq, Arrays.asList(schema.getElementType()));
+              terminate = visitNonTerminal(visitor, schema, dq, Collections.singleton(schema.getElementType()));
               visited.put(schema, schema);
               break;
             case RECORD:
@@ -151,7 +151,7 @@ public final class Schemas {
               visited.put(schema, schema);
               break;
             case MAP:
-              terminate = visitNonTerminal(visitor, schema, dq, Arrays.asList(schema.getValueType()));
+              terminate = visitNonTerminal(visitor, schema, dq, Collections.singleton(schema.getValueType()));
               visited.put(schema, schema);
               break;
             case NULL:
