@@ -19,7 +19,6 @@ package org.apache.avro.data;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.Iterator;
 
 import org.apache.avro.util.internal.JacksonUtils;
@@ -113,10 +112,7 @@ public class Json {
    */
   public static Object parseJson(String s) {
     try {
-      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createParser(
-          new StringReader(s))));
-    } catch (JsonParseException e) {
-      throw new RuntimeException(e);
+      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createParser(s)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

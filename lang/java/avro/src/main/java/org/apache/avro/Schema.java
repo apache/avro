@@ -20,7 +20,6 @@ package org.apache.avro;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Collections;
@@ -1104,7 +1103,7 @@ public abstract class Schema extends JsonProperties {
      * If named, the schema is added to the names known to this parser. */
     public Schema parse(String s) {
       try {
-        return parse(FACTORY.createParser(new StringReader(s)));
+        return parse(FACTORY.createParser(s));
       } catch (IOException e) {
         throw new SchemaParseException(e);
       }
@@ -1489,9 +1488,7 @@ public abstract class Schema extends JsonProperties {
 
   static JsonNode parseJson(String s) {
     try {
-      return MAPPER.readTree(FACTORY.createParser(new StringReader(s)));
-    } catch (JsonParseException e) {
-      throw new RuntimeException(e);
+      return MAPPER.readTree(FACTORY.createParser(s));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
