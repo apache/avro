@@ -28,6 +28,7 @@ import org.apache.avro.specific.SpecificData;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import com.google.protobuf.ByteString;
 
@@ -93,5 +94,21 @@ public class TestProtobuf {
   public void testNestedClassNamespace() throws Exception {
     Schema s = ProtobufData.get().getSchema(Foo.class);
     assertEquals(org.apache.avro.protobuf.Test.class.getName(), s.getNamespace());
+  }
+
+  @Test public void testGetNonRepeatedSchemaWithLogicalType() throws Exception {
+    ProtoConversions.TimestampConversion conversion = new ProtoConversions.TimestampConversion();
+
+    // Don't convert to logical type if conversion isn't set
+    ProtobufData instance1 = new ProtobufData();
+    Schema s1 = instance1.getSchema(com.google.protobuf.Timestamp.class);
+    assertNotEquals(conversion.getRecommendedSchema(), s1);
+
+    // Convert to logical type if conversion is set
+    ProtobufData instance2 = new ProtobufData();
+    instance2.addLogicalTypeConversion(conversion);
+    instance2.addSchemaConversion(com.google.protobuf.Timestamp.getDescriptor(), conversion.getRecommendedSchema());
+    Schema s2 = instance2.getSchema(com.google.protobuf.Timestamp.class);
+    assertEquals(conversion.getRecommendedSchema(), s2);
   }
 }

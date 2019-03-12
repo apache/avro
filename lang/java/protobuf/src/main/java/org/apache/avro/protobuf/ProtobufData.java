@@ -20,6 +20,7 @@ package org.apache.avro.protobuf;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.IdentityHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -198,6 +199,12 @@ public class ProtobufData extends GenericData {
     if (seen.containsKey(descriptor)) // stop recursion
       return seen.get(descriptor);
     boolean first = seen.isEmpty();
+
+    Schema converted = schemaConversions.get(descriptor);
+    if (converted != null) {
+      return converted;
+    }
+
     try {
       Schema result = Schema.createRecord(descriptor.getName(), null,
           getNamespace(descriptor.getFile(), descriptor.getContainingType()), false);
@@ -357,6 +364,19 @@ public class ProtobufData extends GenericData {
       throw new RuntimeException("Unexpected type: " + f.getType());
     }
 
+  }
+
+  private Map<Descriptor, Schema> schemaConversions
+    = new HashMap<>();
+
+  /**
+   * Set proto descriptor -> avro schema conversion to handle logical type
+   *
+   * @param descriptor message descriptor in protobuf
+   * @param avroSchema avro schema might have logical type
+   */
+  public void addSchemaConversion(Descriptor descriptor, Schema avroSchema) {
+    schemaConversions.put(descriptor, avroSchema);
   }
 
 }
