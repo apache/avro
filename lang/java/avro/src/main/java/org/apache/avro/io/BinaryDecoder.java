@@ -441,32 +441,31 @@ public class BinaryDecoder extends Decoder {
   }
 
   /**
-   * Returns true if the current BinaryDecoder is at the end of its source data and
-   * cannot read any further without throwing an EOFException or other
+   * Returns true if the current BinaryDecoder is at the end of its source data
+   * and cannot read any further without throwing an EOFException or other
    * IOException.
    * <p/>
-   * Not all implementations of BinaryDecoder support isEnd(). Implementations that do
-   * not support isEnd() will throw a
+   * Not all implementations of BinaryDecoder support isEnd(). Implementations
+   * that do not support isEnd() will throw a
    * {@link java.lang.UnsupportedOperationException}.
+   *
+   * @throws IOException If the first byte cannot be read for any reason other
+   *           than the end of the file, if the input stream has been closed, or
+   *           if some other I/O error occurs.
    */
   public boolean isEnd() throws IOException {
-    if (limit - pos > 0) {
-      // buffer not empty, not at end.
-      return false;
-    } else {
-      if (source.isEof()) {
-        return true;
-      }
-      // read from source.
-      int read = source.tryReadRaw(buf, 0, buf.length);
-      pos = 0;
-      limit = read;
-      if (0 == read) {
-        // nothing left
-        return true;
-      }
+    if (pos < limit) {
       return false;
     }
+    if (source.isEof()) {
+      return true;
+    }
+
+    // read from source.
+    final int read = source.tryReadRaw(buf, 0, buf.length);
+    pos = 0;
+    limit = read;
+    return (0 == read);
   }
 
   /**
