@@ -28,6 +28,7 @@ import org.apache.avro.specific.SpecificData;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import com.google.protobuf.ByteString;
 
@@ -64,6 +65,9 @@ public class TestProtobuf {
     Foo fooInArray = builder.build();
     builder = Foo.newBuilder(fooInArray);
     builder.addFooArray(fooInArray);
+
+    com.google.protobuf.Timestamp ts = com.google.protobuf.Timestamp.newBuilder().setSeconds(1L).setNanos(2).build();
+    builder.setTimestamp(ts);
 
     builder = Foo.newBuilder(fooInner);
     builder.setFoo(fooInner);
@@ -102,5 +106,21 @@ public class TestProtobuf {
 
     Schema nSchema = ProtobufData.get().getSchema(org.apache.avro.protobuf.multiplefiles.M.N.class);
     assertEquals(org.apache.avro.protobuf.multiplefiles.M.class.getName(), nSchema.getNamespace());
+  }
+
+  @Test
+  public void testGetNonRepeatedSchemaWithLogicalType() throws Exception {
+    ProtoConversions.TimestampMillisConversion conversion = new ProtoConversions.TimestampMillisConversion();
+
+    // Don't convert to logical type if conversion isn't set
+    ProtobufData instance1 = new ProtobufData();
+    Schema s1 = instance1.getSchema(com.google.protobuf.Timestamp.class);
+    assertNotEquals(conversion.getRecommendedSchema(), s1);
+
+    // Convert to logical type if conversion is set
+    ProtobufData instance2 = new ProtobufData();
+    instance2.addLogicalTypeConversion(conversion);
+    Schema s2 = instance2.getSchema(com.google.protobuf.Timestamp.class);
+    assertEquals(conversion.getRecommendedSchema(), s2);
   }
 }

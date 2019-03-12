@@ -383,6 +383,33 @@ public final class Test {
      * <code>optional .org.apache.avro.protobuf.noopt.Foo foo = 18;</code>
      */
     org.apache.avro.protobuf.noopt.Test.FooOrBuilder getFooOrBuilder();
+
+    /**
+     * <pre>
+     * a predefined message type
+     * </pre>
+     *
+     * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     */
+    boolean hasTimestamp();
+
+    /**
+     * <pre>
+     * a predefined message type
+     * </pre>
+     *
+     * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     */
+    com.google.protobuf.Timestamp getTimestamp();
+
+    /**
+     * <pre>
+     * a predefined message type
+     * </pre>
+     *
+     * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     */
+    com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder();
   }
 
   /**
@@ -607,6 +634,19 @@ public final class Test {
               mutable_bitField0_ |= 0x00020000;
             }
             fooArray_.add(input.readMessage(org.apache.avro.protobuf.noopt.Test.Foo.PARSER, extensionRegistry));
+            break;
+          }
+          case 170: {
+            com.google.protobuf.Timestamp.Builder subBuilder = null;
+            if (((bitField0_ & 0x00020000) == 0x00020000)) {
+              subBuilder = timestamp_.toBuilder();
+            }
+            timestamp_ = input.readMessage(com.google.protobuf.Timestamp.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(timestamp_);
+              timestamp_ = subBuilder.buildPartial();
+            }
+            bitField0_ |= 0x00020000;
             break;
           }
           }
@@ -1087,6 +1127,42 @@ public final class Test {
       return foo_ == null ? org.apache.avro.protobuf.noopt.Test.Foo.getDefaultInstance() : foo_;
     }
 
+    public static final int TIMESTAMP_FIELD_NUMBER = 21;
+    private com.google.protobuf.Timestamp timestamp_;
+
+    /**
+     * <pre>
+     * a predefined message type
+     * </pre>
+     *
+     * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00020000) == 0x00020000);
+    }
+
+    /**
+     * <pre>
+     * a predefined message type
+     * </pre>
+     *
+     * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     */
+    public com.google.protobuf.Timestamp getTimestamp() {
+      return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+    }
+
+    /**
+     * <pre>
+     * a predefined message type
+     * </pre>
+     *
+     * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+     */
+    public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
+      return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+    }
+
     private byte memoizedIsInitialized = -1;
 
     public final boolean isInitialized() {
@@ -1177,6 +1253,9 @@ public final class Test {
       for (int i = 0; i < fooArray_.size(); i++) {
         output.writeMessage(20, fooArray_.get(i));
       }
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+        output.writeMessage(21, getTimestamp());
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1255,6 +1334,9 @@ public final class Test {
       }
       for (int i = 0; i < fooArray_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream.computeMessageSize(20, fooArray_.get(i));
+      }
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+        size += com.google.protobuf.CodedOutputStream.computeMessageSize(21, getTimestamp());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1344,6 +1426,10 @@ public final class Test {
       result = result && (hasFoo() == other.hasFoo());
       if (hasFoo()) {
         result = result && getFoo().equals(other.getFoo());
+      }
+      result = result && (hasTimestamp() == other.hasTimestamp());
+      if (hasTimestamp()) {
+        result = result && getTimestamp().equals(other.getTimestamp());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -1435,6 +1521,10 @@ public final class Test {
       if (hasFoo()) {
         hash = (37 * hash) + FOO_FIELD_NUMBER;
         hash = (53 * hash) + getFoo().hashCode();
+      }
+      if (hasTimestamp()) {
+        hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + getTimestamp().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -1556,6 +1646,7 @@ public final class Test {
         if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
           getFooArrayFieldBuilder();
           getFooFieldBuilder();
+          getTimestampFieldBuilder();
         }
       }
 
@@ -1609,6 +1700,12 @@ public final class Test {
           fooBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00080000);
+        if (timestampBuilder_ == null) {
+          timestamp_ = null;
+        } else {
+          timestampBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00100000);
         return this;
       }
 
@@ -1722,6 +1819,14 @@ public final class Test {
           result.foo_ = foo_;
         } else {
           result.foo_ = fooBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
+          to_bitField0_ |= 0x00020000;
+        }
+        if (timestampBuilder_ == null) {
+          result.timestamp_ = timestamp_;
+        } else {
+          result.timestamp_ = timestampBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -1863,6 +1968,9 @@ public final class Test {
         }
         if (other.hasFoo()) {
           mergeFoo(other.getFoo());
+        }
+        if (other.hasTimestamp()) {
+          mergeTimestamp(other.getTimestamp());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3112,6 +3220,159 @@ public final class Test {
         return fooBuilder_;
       }
 
+      private com.google.protobuf.Timestamp timestamp_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> timestampBuilder_;
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00100000) == 0x00100000);
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public com.google.protobuf.Timestamp getTimestamp() {
+        if (timestampBuilder_ == null) {
+          return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+        } else {
+          return timestampBuilder_.getMessage();
+        }
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public Builder setTimestamp(com.google.protobuf.Timestamp value) {
+        if (timestampBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          timestamp_ = value;
+          onChanged();
+        } else {
+          timestampBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00100000;
+        return this;
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public Builder setTimestamp(com.google.protobuf.Timestamp.Builder builderForValue) {
+        if (timestampBuilder_ == null) {
+          timestamp_ = builderForValue.build();
+          onChanged();
+        } else {
+          timestampBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00100000;
+        return this;
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public Builder mergeTimestamp(com.google.protobuf.Timestamp value) {
+        if (timestampBuilder_ == null) {
+          if (((bitField0_ & 0x00100000) == 0x00100000) && timestamp_ != null
+              && timestamp_ != com.google.protobuf.Timestamp.getDefaultInstance()) {
+            timestamp_ = com.google.protobuf.Timestamp.newBuilder(timestamp_).mergeFrom(value).buildPartial();
+          } else {
+            timestamp_ = value;
+          }
+          onChanged();
+        } else {
+          timestampBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00100000;
+        return this;
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public Builder clearTimestamp() {
+        if (timestampBuilder_ == null) {
+          timestamp_ = null;
+          onChanged();
+        } else {
+          timestampBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00100000);
+        return this;
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public com.google.protobuf.Timestamp.Builder getTimestampBuilder() {
+        bitField0_ |= 0x00100000;
+        onChanged();
+        return getTimestampFieldBuilder().getBuilder();
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
+        if (timestampBuilder_ != null) {
+          return timestampBuilder_.getMessageOrBuilder();
+        } else {
+          return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+        }
+      }
+
+      /**
+       * <pre>
+       * a predefined message type
+       * </pre>
+       *
+       * <code>optional .google.protobuf.Timestamp timestamp = 21;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> getTimestampFieldBuilder() {
+        if (timestampBuilder_ == null) {
+          timestampBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>(
+              getTimestamp(), getParentForChildren(), isClean());
+          timestamp_ = null;
+        }
+        return timestampBuilder_;
+      }
+
       public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
@@ -3626,18 +3887,20 @@ public final class Test {
   private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
   static {
     java.lang.String[] descriptorData = { "\n\034src/test/protobuf/test.proto\022\036org.apac"
-        + "he.avro.protobuf.noopt\"\325\003\n\003Foo\022\r\n\005int32\030"
-        + "\001 \002(\005\022\r\n\005int64\030\002 \001(\003\022\016\n\006uint32\030\003 \001(\r\022\016\n\006"
-        + "uint64\030\004 \001(\004\022\016\n\006sint32\030\005 \001(\021\022\016\n\006sint64\030\006"
-        + " \001(\022\022\017\n\007fixed32\030\007 \001(\007\022\017\n\007fixed64\030\010 \001(\006\022\020"
-        + "\n\010sfixed32\030\t \001(\017\022\020\n\010sfixed64\030\n \001(\020\022\r\n\005fl"
-        + "oat\030\013 \001(\002\022\016\n\006double\030\014 \001(\001\022\014\n\004bool\030\r \001(\010\022"
-        + "\016\n\006string\030\016 \001(\t\022\r\n\005bytes\030\017 \001(\014\0222\n\004enum\030\020"
-        + " \001(\0162!.org.apache.avro.protobuf.noopt.A:"
-        + "\001Z\022\020\n\010intArray\030\021 \003(\005\0225\n\010fooArray\030\024 \003(\0132#"
-        + ".org.apache.avro.protobuf.noopt.Foo\022/\n\004s" + "yms\030\023 \003(\0162!.org.apache.avro.protobuf.noo"
-        + "pt.A\0220\n\003foo\030\022 \001(\0132#.org.apache.avro.prot"
-        + "obuf.noopt.Foo\"\017\n\001M\"\n\n\001N\022\005\n\001A\020\001*\030\n\001A\022\005\n\001"
+        + "he.avro.protobuf.noopt\032\037google/protobuf/"
+        + "timestamp.proto\"\204\004\n\003Foo\022\r\n\005int32\030\001 \002(\005\022\r"
+        + "\n\005int64\030\002 \001(\003\022\016\n\006uint32\030\003 \001(\r\022\016\n\006uint64\030"
+        + "\004 \001(\004\022\016\n\006sint32\030\005 \001(\021\022\016\n\006sint64\030\006 \001(\022\022\017\n"
+        + "\007fixed32\030\007 \001(\007\022\017\n\007fixed64\030\010 \001(\006\022\020\n\010sfixe"
+        + "d32\030\t \001(\017\022\020\n\010sfixed64\030\n \001(\020\022\r\n\005float\030\013 \001"
+        + "(\002\022\016\n\006double\030\014 \001(\001\022\014\n\004bool\030\r \001(\010\022\016\n\006stri"
+        + "ng\030\016 \001(\t\022\r\n\005bytes\030\017 \001(\014\0222\n\004enum\030\020 \001(\0162!."
+        + "org.apache.avro.protobuf.noopt.A:\001Z\022\020\n\010i"
+        + "ntArray\030\021 \003(\005\0225\n\010fooArray\030\024 \003(\0132#.org.ap"
+        + "ache.avro.protobuf.noopt.Foo\022/\n\004syms\030\023 \003" + "(\0162!.org.apache.avro.protobuf.noopt.A\0220\n"
+        + "\003foo\030\022 \001(\0132#.org.apache.avro.protobuf.no"
+        + "opt.Foo\022-\n\ttimestamp\030\025 \001(\0132\032.google.prot"
+        + "obuf.Timestamp\"\017\n\001M\"\n\n\001N\022\005\n\001A\020\001*\030\n\001A\022\005\n\001"
         + "X\020\001\022\005\n\001Y\020\002\022\005\n\001Z\020\003" };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
       public com.google.protobuf.ExtensionRegistry assignDescriptors(
@@ -3647,16 +3910,18 @@ public final class Test {
       }
     };
     com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
-        new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        new com.google.protobuf.Descriptors.FileDescriptor[] { com.google.protobuf.TimestampProto.getDescriptor(), },
+        assigner);
     internal_static_org_apache_avro_protobuf_noopt_Foo_descriptor = getDescriptor().getMessageTypes().get(0);
     internal_static_org_apache_avro_protobuf_noopt_Foo_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_apache_avro_protobuf_noopt_Foo_descriptor,
         new java.lang.String[] { "Int32", "Int64", "Uint32", "Uint64", "Sint32", "Sint64", "Fixed32", "Fixed64",
             "Sfixed32", "Sfixed64", "Float", "Double", "Bool", "String", "Bytes", "Enum", "IntArray", "FooArray",
-            "Syms", "Foo", });
+            "Syms", "Foo", "Timestamp", });
     internal_static_org_apache_avro_protobuf_noopt_M_descriptor = getDescriptor().getMessageTypes().get(1);
     internal_static_org_apache_avro_protobuf_noopt_M_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_apache_avro_protobuf_noopt_M_descriptor, new java.lang.String[] {});
+    com.google.protobuf.TimestampProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

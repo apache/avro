@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
 import java.io.File;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
@@ -45,6 +46,7 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
+import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.internal.Accessor;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -198,6 +200,14 @@ public class ProtobufData extends GenericData {
     if (seen.containsKey(descriptor)) // stop recursion
       return seen.get(descriptor);
     boolean first = seen.isEmpty();
+
+    Conversion conversion = getConversionByDescriptor(descriptor);
+    if (conversion != null) {
+      Schema converted = conversion.getRecommendedSchema();
+      seen.put(descriptor, converted);
+      return converted;
+    }
+
     try {
       Schema result = Schema.createRecord(descriptor.getName(), null,
           getNamespace(descriptor.getFile(), descriptor.getContainingType()), false);
@@ -367,4 +377,22 @@ public class ProtobufData extends GenericData {
 
   }
 
+  /**
+   * Get Conversion from protobuf descriptor via protobuf classname.
+   *
+   * @param descriptor protobuf descriptor
+   * @return Conversion | null
+   */
+  private Conversion getConversionByDescriptor(Descriptor descriptor) {
+    String namespace = getNamespace(descriptor.getFile(), descriptor.getContainingType());
+    String name = descriptor.getName();
+    String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
+
+    try {
+      Class clazz = ClassUtils.forName(getClassLoader(), namespace + dot + name);
+      return getConversionByClass(clazz);
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
+  }
 }
