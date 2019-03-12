@@ -291,7 +291,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public void skipString() throws IOException {
-    doSkipBytes(readInt());
+    doSkipBytes(readLong());
   }
 
   @Override
@@ -311,7 +311,7 @@ public class BinaryDecoder extends Decoder {
 
   @Override
   public void skipBytes() throws IOException {
-    doSkipBytes(readInt());
+    doSkipBytes(readLong());
   }
 
   @Override
@@ -370,14 +370,21 @@ public class BinaryDecoder extends Decoder {
   /**
    * Returns the number of items to follow in the current array or map. Returns
    * 0 if there are no more items in the current array and the array/map has
-   * ended.
+   * ended. Arrays are encoded as a series of blocks. Each block consists of a
+   * long count value, followed by that many array items. A block with count
+   * zero indicates the end of the array. If a block's count is negative, its
+   * absolute value is used, and the count is followed immediately by a long
+   * block size indicating the number of bytes in the block.
    *
-   * @throws IOException
+   * @throws IOException If the first byte cannot be read for any reason other
+   *           than the end of the file, if the input stream has been closed, or
+   *           if some other I/O error occurs.
    */
   protected long doReadItemCount() throws IOException {
     long result = readLong();
-    if (result < 0) {
-      readLong(); // Consume byte-count if present
+    if (result < 0L) {
+      // Consume byte-count if present
+      readLong();
       result = -result;
     }
     return result;
@@ -386,21 +393,29 @@ public class BinaryDecoder extends Decoder {
   /**
    * Reads the count of items in the current array or map and skip those items,
    * if possible. If it could skip the items, keep repeating until there are no
-   * more items left in the array or map. If items cannot be skipped (because
-   * byte count to skip is not found in the stream) return the count of the
-   * items found. The client needs to skip the items individually.
+   * more items left in the array or map. Arrays are encoded as a series of
+   * blocks. Each block consists of a long count value, followed by that many
+   * array items. A block with count zero indicates the end of the array. If a
+   * block's count is negative, its absolute value is used, and the count is
+   * followed immediately by a long block size indicating the number of bytes in
+   * the block. If block size is missing, this method return
+   * the count of the items found. The client needs to skip the items
+   * individually.
    *
    * @return Zero if there are no more items to skip and end of array/map is
    *         reached. Positive number if some items are found that cannot be
    *         skipped and the client needs to skip them individually.
-   * @throws IOException
+   *
+   * @throws IOException If the first byte cannot be read for any reason other
+   *           than the end of the file, if the input stream has been closed, or
+   *           if some other I/O error occurs.
    */
   private long doSkipItems() throws IOException {
-    long result = readInt();
-    while (result < 0) {
-      long bytecount = readLong();
+    long result = readLong();
+    while (result < 0L) {
+      final long bytecount = readLong();
       doSkipBytes(bytecount);
-      result = readInt();
+      result = readLong();
     }
     return result;
   }
