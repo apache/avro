@@ -92,8 +92,8 @@ class TetherOutputService implements OutputProtocol {
 
   @Override
   public synchronized void fail(String message) {
-    LOG.warn("Failing: "+message);
-    error = message.toString();
+    LOG.warn("Failing: " + message);
+    error = message;
     notify();
   }
 

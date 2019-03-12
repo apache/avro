@@ -90,18 +90,12 @@ public class Main {
       }
     }
     System.err.print("Version ");
-    InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt");
-    try {
+    try (InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt")) {
       printStream(versionInput);
-    } finally {
-      versionInput.close();
     }
     System.err.print(" of ");
-    InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE");
-    try {
+    try (InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE")) {
       printHead(noticeInput, 5);
-    } finally {
-      noticeInput.close();
     }
     System.err.println("----------------");
 

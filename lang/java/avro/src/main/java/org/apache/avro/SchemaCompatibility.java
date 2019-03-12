@@ -25,9 +25,9 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.slf4j.Logger;
@@ -105,10 +105,7 @@ public class SchemaCompatibility {
       return true;
     }
     // Apply reader aliases:
-    if (reader.getAliases().contains(writerFullName)) {
-      return true;
-    }
-    return false;
+    return reader.getAliases().contains(writerFullName);
   }
 
   /**
@@ -546,9 +543,9 @@ public class SchemaCompatibility {
     private final List<Incompatibility> mIncompatibilities;
     // cached objects for stateless details
     private static final SchemaCompatibilityResult COMPATIBLE = new SchemaCompatibilityResult(
-        SchemaCompatibilityType.COMPATIBLE, Collections.<Incompatibility> emptyList());
+        SchemaCompatibilityType.COMPATIBLE, Collections.emptyList());
     private static final SchemaCompatibilityResult RECURSION_IN_PROGRESS = new SchemaCompatibilityResult(
-        SchemaCompatibilityType.RECURSION_IN_PROGRESS, Collections.<Incompatibility> emptyList());
+        SchemaCompatibilityType.RECURSION_IN_PROGRESS, Collections.emptyList());
 
     private SchemaCompatibilityResult(SchemaCompatibilityType compatibilityType,
         List<Incompatibility> incompatibilities) {
@@ -634,9 +631,7 @@ public class SchemaCompatibility {
           return false;
       } else if (!mIncompatibilities.equals(other.mIncompatibilities))
         return false;
-      if (mCompatibilityType != other.mCompatibilityType)
-        return false;
-      return true;
+      return mCompatibilityType == other.mCompatibilityType;
     }
 
     /** {@inheritDoc} */
@@ -776,13 +771,8 @@ public class SchemaCompatibility {
         return false;
       }
       if (mLocation == null) {
-        if (other.mLocation != null) {
-          return false;
-        }
-      } else if (!mLocation.equals(other.mLocation)) {
-        return false;
-      }
-      return true;
+        return other.mLocation == null;
+      } else return mLocation.equals(other.mLocation);
     }
 
     /** {@inheritDoc} */
@@ -905,7 +895,7 @@ public class SchemaCompatibility {
 
   /** Borrowed from Guava's Objects.equal(a, b) */
   private static boolean objectsEqual(Object obj1, Object obj2) {
-    return (obj1 == obj2) || ((obj1 != null) && obj1.equals(obj2));
+    return Objects.equals(obj1, obj2);
   }
 
   private static List<String> asList(Deque<String> deque) {

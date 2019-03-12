@@ -71,7 +71,7 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
         schemaPaths.entrySet()) {
       Schema schema = schemaEntry.getKey();
       System.out.println(schema);
-      InputFormat format = (InputFormat) ReflectionUtils.newInstance(
+      InputFormat format = ReflectionUtils.newInstance(
          AvroInputFormat.class, conf);
       List<Path> paths = schemaEntry.getValue();
 
@@ -100,8 +100,7 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
          mapperClass = (Class<? extends AvroMapper>) conf.getMapperClass();
        }
 
-       FileInputFormat.setInputPaths(confCopy, paths.toArray(new Path[paths
-           .size()]));
+       FileInputFormat.setInputPaths(confCopy, paths.toArray(new Path[0]));
 
        // Get splits for each input path and tag with InputFormat
        // and Mapper types by wrapping in a TaggedInputSplit.
@@ -113,7 +112,7 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
       }
     }
 
-    return splits.toArray(new InputSplit[splits.size()]);
+    return splits.toArray(new InputSplit[0]);
   }
 
   @SuppressWarnings("unchecked")

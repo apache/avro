@@ -325,7 +325,7 @@ public class TestCatTool {
     assertEquals(0, returnCode);
 
     assertEquals("output should only contain the record at offset",
-      (int) OFFSET, getFirstIntDatum(output));
+      OFFSET, getFirstIntDatum(output));
   }
 
 

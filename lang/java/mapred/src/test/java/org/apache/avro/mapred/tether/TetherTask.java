@@ -63,8 +63,6 @@ public abstract class TetherTask<IN,MID,OUT> {
   private Collector<MID> midCollector;
   private Collector<OUT> outCollector;
 
-  private TetheredProcess.Protocol proto;
-
   private static class Buffer extends ByteArrayOutputStream {
     public ByteBuffer data() {
       return ByteBuffer.wrap(buf, 0, count);
@@ -113,10 +111,11 @@ public abstract class TetherTask<IN,MID,OUT> {
 
     protocol=protocol.trim().toLowerCase();
 
+    TetheredProcess.Protocol proto;
     if (protocol.equals("http")) {
-      proto=TetheredProcess.Protocol.HTTP;
+      proto =TetheredProcess.Protocol.HTTP;
     } else if (protocol.equals("sasl")) {
-      proto=TetheredProcess.Protocol.SASL;
+      proto =TetheredProcess.Protocol.SASL;
     } else {
       throw new RuntimeException("AVROT_TETHER_PROTOCOL="+protocol+" but this protocol is unsupported");
     }

@@ -268,7 +268,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     if (top.noAdjustments) return n;
     Object o = top.adjustments[n];
     if (o instanceof Integer) {
-      return ((Integer) o).intValue();
+      return (Integer) o;
     } else {
       throw new AvroTypeException((String) o);
     }

@@ -187,25 +187,13 @@ public final class Schemas {
     SchemaVisitorAction action = visitor.visitNonTerminal(schema);
     switch (action) {
       case CONTINUE:
-        dq.addLast(new Supplier<SchemaVisitorAction>() {
-          @Override
-          public SchemaVisitorAction get() {
-            return visitor.afterVisitNonTerminal(schema);
-          }
-        });
-        Iterator<Schema> it = itSupp.iterator();
-        while (it.hasNext()) {
-          Schema child = it.next();
+        dq.addLast((Supplier<SchemaVisitorAction>) () -> visitor.afterVisitNonTerminal(schema));
+        for (Schema child : itSupp) {
           dq.addLast(child);
         }
         break;
       case SKIP_SUBTREE:
-        dq.addLast(new Supplier<SchemaVisitorAction>() {
-          @Override
-          public SchemaVisitorAction get() {
-            return visitor.afterVisitNonTerminal(schema);
-          }
-        });
+        dq.addLast((Supplier<SchemaVisitorAction>) () -> visitor.afterVisitNonTerminal(schema));
         break;
       case SKIP_SIBLINGS:
         while (!dq.isEmpty() && dq.getLast() instanceof Schema) {

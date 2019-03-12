@@ -48,21 +48,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
 
   private static final ThreadLocal<byte[]> HEADER_BUFFER =
-      new ThreadLocal<byte[]>() {
-        @Override
-        protected byte[] initialValue() {
-          return new byte[10];
-        }
-      };
+    ThreadLocal.withInitial(() -> new byte[10]);
 
   private static final ThreadLocal<ByteBuffer> FP_BUFFER =
-      new ThreadLocal<ByteBuffer>() {
-        @Override
-        protected ByteBuffer initialValue() {
-          byte[] header = HEADER_BUFFER.get();
-          return ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN);
-        }
-      };
+    ThreadLocal.withInitial(() -> {
+      byte[] header = HEADER_BUFFER.get();
+      return ByteBuffer.wrap(header).order(ByteOrder.LITTLE_ENDIAN);
+    });
 
   private final GenericData model;
   private final Schema readSchema;

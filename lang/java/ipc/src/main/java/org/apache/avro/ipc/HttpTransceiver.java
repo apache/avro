@@ -53,11 +53,8 @@ public class HttpTransceiver extends Transceiver {
 
   @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
-    InputStream in = connection.getInputStream();
-    try {
+    try (InputStream in = connection.getInputStream()) {
       return readBuffers(in);
-    } finally {
-      in.close();
     }
   }
 
@@ -77,11 +74,8 @@ public class HttpTransceiver extends Transceiver {
     connection.setReadTimeout(timeout);
     connection.setConnectTimeout(timeout);
 
-    OutputStream out = connection.getOutputStream();
-    try {
+    try (OutputStream out = connection.getOutputStream()) {
       writeBuffers(buffers, out);
-    } finally {
-      out.close();
     }
   }
 

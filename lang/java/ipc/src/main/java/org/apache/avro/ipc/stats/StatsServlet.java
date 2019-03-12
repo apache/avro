@@ -36,8 +36,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
 
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.ipc.RPCContext;
@@ -159,10 +157,6 @@ public class StatsServlet extends HttpServlet {
     try {
       t = velocityEngine.getTemplate(
           "org/apache/avro/ipc/stats/templates/statsview.vm");
-    } catch (ResourceNotFoundException e) {
-      throw new IOException();
-    } catch (ParseErrorException e) {
-      throw new IOException();
     } catch (Exception e) {
       throw new IOException();
     }

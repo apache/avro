@@ -214,8 +214,8 @@ class TetheredProcess  {
 
     // print an info message about the command
     String imsg="";
-    for (int i=0; i<command.size();i++) {
-      imsg=command.get(i)+" ";
+    for (String s : command) {
+      imsg = s + " ";
     }
     LOG.info("TetheredProcess.startSubprocess: command: "+imsg);
     LOG.info("Tetheredprocess.startSubprocess: stdout logged to: " + stdout.toString()) ;

@@ -157,7 +157,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   }
 
   /** Gets the UTF-8 bytes for a String */
-  public static final byte[] getBytesFor(String str) {
+  public static byte[] getBytesFor(String str) {
     return str.getBytes(StandardCharsets.UTF_8);
   }
 

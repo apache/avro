@@ -56,7 +56,6 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
 
   private Map<String,byte[]> meta = new HashMap<>();
 
-  private long count;                           // # entries in file
   private long blockCount;                      // # entries in block
   private long blockStart;
   private byte[] sync = new byte[SYNC_SIZE];
@@ -90,7 +89,8 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     }
 
     this.sync = getMeta(SYNC);
-    this.count = getMetaLong(COUNT);
+    // # entries in file
+    long count = getMetaLong(COUNT);
     String codec = getMetaString(CODEC);
     if (codec != null && ! codec.equals(NULL_CODEC)) {
       throw new UnknownAvroCodecException("Unknown codec: " + codec);

@@ -29,7 +29,6 @@
 
   <artifactId>trevni-java</artifactId>
   <name>Trevni Java</name>
-  <groupId>org.apache.avro</groupId>
   <description>Trevni Java</description>
   <url>http://avro.apache.org/</url>
   <packaging>pom</packaging>

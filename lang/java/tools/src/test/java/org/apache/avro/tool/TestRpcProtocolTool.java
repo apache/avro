@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -85,7 +86,7 @@ public class TestRpcProtocolTool {
     RpcProtocolTool testObject = new RpcProtocolTool();
 
     testObject.run(null, p2, System.err,
-        Arrays.asList(uriScheme + "://127.0.0.1:" + receive.server.getPort() + "/"));
+      Collections.singletonList(uriScheme + "://127.0.0.1:" + receive.server.getPort() + "/"));
 
     p2.flush();
 

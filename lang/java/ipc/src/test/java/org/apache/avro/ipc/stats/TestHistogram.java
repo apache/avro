@@ -21,11 +21,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.apache.avro.ipc.stats.Histogram.Entry;
 import org.apache.avro.ipc.stats.Histogram.Segmenter;
@@ -108,15 +104,15 @@ public class TestHistogram {
   static class SingleBucketSegmenter implements Segmenter<String, Float >{
     @Override
     public Iterator<String> getBuckets() {
-      return Arrays.asList("X").iterator();
+      return Collections.singletonList("X").iterator();
     }
 
     public List<String> getBoundaryLabels() {
-      return Arrays.asList("X");
+      return Collections.singletonList("X");
     }
 
     public List<String> getBucketLabels() {
-      return Arrays.asList("X");
+      return Collections.singletonList("X");
     }
 
     @Override

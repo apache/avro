@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
@@ -67,8 +68,8 @@ public class TestRecodecTool {
     File deflate9OutputFile = new File(DIR.getRoot(),  "deflate-9-output.avro");
 
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<>());
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null, asList("--codec=null"));
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflateDefaultOutputFile), null, asList("--codec=deflate"));
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null, Collections.singletonList("--codec=null"));
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflateDefaultOutputFile), null, Collections.singletonList("--codec=deflate"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate1OutputFile), null, asList("--codec=deflate", "--level=1"));
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate9OutputFile), null, asList("--codec=deflate", "--level=9"));
 

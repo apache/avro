@@ -38,15 +38,9 @@ public class TestSeekableByteArrayInput {
     private byte[] getSerializedMessage(IndexedRecord message, Schema schema) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(4096);
         SpecificDatumWriter<IndexedRecord> writer = new SpecificDatumWriter<>();
-        DataFileWriter<IndexedRecord> dfw = null;
-        try {
-            dfw = new DataFileWriter<>(writer).create(schema, baos);
-            dfw.append(message);
-        } finally {
-            if (dfw != null) {
-                dfw.close();
-            }
-        }
+      try (DataFileWriter<IndexedRecord> dfw = new DataFileWriter<>(writer).create(schema, baos)) {
+        dfw.append(message);
+      }
         return baos.toByteArray();
     }
 
@@ -67,17 +61,10 @@ public class TestSeekableByteArrayInput {
         byte[] data = getSerializedMessage(message, testSchema);
 
         GenericDatumReader<IndexedRecord> reader = new GenericDatumReader<>(testSchema);
-
-        SeekableInput in = new SeekableByteArrayInput(data);
-        FileReader<IndexedRecord> dfr = null;
-        IndexedRecord result = null;
-        try {
-            dfr = DataFileReader.openReader(in, reader);
-            result = dfr.next();
-        } finally {
-            if (dfr != null) {
-                dfr.close();
-            }
+        final IndexedRecord result;
+        try (SeekableInput in = new SeekableByteArrayInput(data);
+             FileReader<IndexedRecord> dfr = DataFileReader.openReader(in, reader)) {
+          result = dfr.next();
         }
         Assert.assertNotNull(result);
         Assert.assertTrue(result instanceof GenericRecord);

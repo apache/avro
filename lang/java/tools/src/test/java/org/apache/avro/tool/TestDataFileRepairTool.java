@@ -35,7 +35,6 @@ import org.apache.avro.io.BinaryData;
 import org.apache.avro.util.Utf8;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestName;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

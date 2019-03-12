@@ -125,7 +125,7 @@ public class InduceMojo extends AbstractMojo {
       URL[] urls = new URL[classpathElements.size()];
 
       for(int i = 0; i < classpathElements.size(); ++i) {
-        urls[i] = new File((String) classpathElements.get(i)).toURI().toURL();
+        urls[i] = new File(classpathElements.get(i)).toURI().toURL();
       }
       classLoader = new URLClassLoader(urls, getClass().getClassLoader());
     } catch (Exception e) {

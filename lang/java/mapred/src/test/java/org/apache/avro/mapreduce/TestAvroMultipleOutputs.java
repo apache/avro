@@ -20,7 +20,6 @@
 package org.apache.avro.mapreduce;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -120,12 +119,12 @@ public class TestAvroMultipleOutputs {
         sum += count.get();
       }
       record.put("name", new Utf8(line.toString()));
-      record.put("count", new Integer(sum));
+      record.put("count", sum);
       mStats.datum(record);
       context.write(mStats, NullWritable.get());
       amos.write("myavro", mStats, NullWritable.get());
       record2.put("name1", new Utf8(line.toString()));
-      record2.put("count1", new Integer(sum));
+      record2.put("count1", sum);
       mStats.datum(record2);
       amos.write(mStats, NullWritable.get(), STATS_SCHEMA_2, null, "testnewwrite2");
       amos.write("myavro1", mStats);

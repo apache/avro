@@ -81,12 +81,8 @@ public class CustomCodec extends Codec {
     original.rewind();
     ByteBuffer compressedB = other.compress(original);
 
-    if (this.decompress(compressedA).equals(other.decompress((ByteBuffer) compressedA.rewind())) &&
-      this.decompress(compressedB).equals(other.decompress((ByteBuffer) compressedB.rewind()))
-      ) {
-      return true;
-    }
-    return false;
+    return this.decompress(compressedA).equals(other.decompress((ByteBuffer) compressedA.rewind())) &&
+      this.decompress(compressedB).equals(other.decompress((ByteBuffer) compressedB.rewind()));
   }
 
   @Override

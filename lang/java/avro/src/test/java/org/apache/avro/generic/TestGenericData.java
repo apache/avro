@@ -459,7 +459,7 @@ public class TestGenericData {
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
     Field byte_field =
       new Field("bytes", Schema.create(Type.BYTES), null, null);
-    schema.setFields(Arrays.asList(byte_field));
+    schema.setFields(Collections.singletonList(byte_field));
 
     GenericRecord record = new GenericData.Record(schema);
     record.put(byte_field.name(), buffer);
@@ -551,48 +551,48 @@ public class TestGenericData {
   @Test
   public void testToStringSameValues() throws IOException {
     List<Field> fields = new ArrayList<>();
-    fields.add(new Field("nullstring1", Schema.create(Type.STRING), null, (Object)null));
-    fields.add(new Field("nullstring2", Schema.create(Type.STRING), null, (Object)null));
+    fields.add(new Field("nullstring1", Schema.create(Type.STRING), null, null));
+    fields.add(new Field("nullstring2", Schema.create(Type.STRING), null, null));
 
-    fields.add(new Field("string1", Schema.create(Type.STRING  ), null, (Object)null));
-    fields.add(new Field("string2", Schema.create(Type.STRING  ), null, (Object)null));
+    fields.add(new Field("string1", Schema.create(Type.STRING  ), null, null));
+    fields.add(new Field("string2", Schema.create(Type.STRING  ), null, null));
 
-    fields.add(new Field("bytes1",  Schema.create(Type.BYTES   ), null, (Object)null));
-    fields.add(new Field("bytes2",  Schema.create(Type.BYTES   ), null, (Object)null));
+    fields.add(new Field("bytes1",  Schema.create(Type.BYTES   ), null, null));
+    fields.add(new Field("bytes2",  Schema.create(Type.BYTES   ), null, null));
 
-    fields.add(new Field("int1",    Schema.create(Type.INT     ), null, (Object)null));
-    fields.add(new Field("int2",    Schema.create(Type.INT     ), null, (Object)null));
+    fields.add(new Field("int1",    Schema.create(Type.INT     ), null, null));
+    fields.add(new Field("int2",    Schema.create(Type.INT     ), null, null));
 
-    fields.add(new Field("long1",   Schema.create(Type.LONG    ), null, (Object)null));
-    fields.add(new Field("long2",   Schema.create(Type.LONG    ), null, (Object)null));
+    fields.add(new Field("long1",   Schema.create(Type.LONG    ), null, null));
+    fields.add(new Field("long2",   Schema.create(Type.LONG    ), null, null));
 
-    fields.add(new Field("float1",  Schema.create(Type.FLOAT   ), null, (Object)null));
-    fields.add(new Field("float2",  Schema.create(Type.FLOAT   ), null, (Object)null));
+    fields.add(new Field("float1",  Schema.create(Type.FLOAT   ), null, null));
+    fields.add(new Field("float2",  Schema.create(Type.FLOAT   ), null, null));
 
-    fields.add(new Field("double1", Schema.create(Type.DOUBLE  ), null, (Object)null));
-    fields.add(new Field("double2", Schema.create(Type.DOUBLE  ), null, (Object)null));
+    fields.add(new Field("double1", Schema.create(Type.DOUBLE  ), null, null));
+    fields.add(new Field("double2", Schema.create(Type.DOUBLE  ), null, null));
 
-    fields.add(new Field("boolean1",Schema.create(Type.BOOLEAN ), null, (Object)null));
-    fields.add(new Field("boolean2",Schema.create(Type.BOOLEAN ), null, (Object)null));
+    fields.add(new Field("boolean1",Schema.create(Type.BOOLEAN ), null, null));
+    fields.add(new Field("boolean2",Schema.create(Type.BOOLEAN ), null, null));
 
     List<String> enumValues = new ArrayList<>();
     enumValues.add("One");
     enumValues.add("Two");
     Schema enumSchema = Schema.createEnum("myEnum", null, null, enumValues);
-    fields.add(new Field("enum1", enumSchema, null, (Object)null));
-    fields.add(new Field("enum2", enumSchema, null, (Object)null));
+    fields.add(new Field("enum1", enumSchema, null, null));
+    fields.add(new Field("enum2", enumSchema, null, null));
 
     Schema recordSchema = SchemaBuilder.record("aRecord").fields().requiredString("myString").endRecord();
-    fields.add(new Field("record1", recordSchema, null, (Object)null));
-    fields.add(new Field("record2", recordSchema, null, (Object)null));
+    fields.add(new Field("record1", recordSchema, null, null));
+    fields.add(new Field("record2", recordSchema, null, null));
 
     Schema arraySchema = Schema.createArray(Schema.create(Type.STRING));
-    fields.add(new Field("array1", arraySchema, null, (Object)null));
-    fields.add(new Field("array2", arraySchema, null, (Object)null));
+    fields.add(new Field("array1", arraySchema, null, null));
+    fields.add(new Field("array2", arraySchema, null, null));
 
     Schema mapSchema = Schema.createMap(Schema.create(Type.STRING));
-    fields.add(new Field("map1", mapSchema, null, (Object)null));
-    fields.add(new Field("map2", mapSchema, null, (Object)null));
+    fields.add(new Field("map1", mapSchema, null, null));
+    fields.add(new Field("map2", mapSchema, null, null));
 
     Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
     schema.setFields(fields);
@@ -654,7 +654,7 @@ public class TestGenericData {
     Schema placeholderSchema = Schema.createRecord("Placeholder", null, null, false);
     List<Schema.Field> placeholderFields = new ArrayList<>();
     placeholderFields.add( // at least one field is needed to be a valid schema
-      new Schema.Field("id", Schema.create(Schema.Type.LONG), null, (Object)null));
+      new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
     placeholderSchema.setFields(placeholderFields);
 
     Referenceable idRef = new Referenceable("id");
@@ -667,15 +667,15 @@ public class TestGenericData {
     Reference parentRef = new Reference("parent");
 
     List<Schema.Field> childFields = new ArrayList<>();
-    childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, (Object)null));
-    childFields.add(new Schema.Field("parent", parentRefSchema, null, (Object)null));
+    childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, null));
+    childFields.add(new Schema.Field("parent", parentRefSchema, null, null));
     Schema childSchema = parentRef.addToSchema(
       Schema.createRecord("Child", null, null, false, childFields));
 
     List<Schema.Field> parentFields = new ArrayList<>();
-    parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, (Object)null));
-    parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING), null, (Object)null));
-    parentFields.add(new Schema.Field("child", childSchema, null, (Object)null));
+    parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
+    parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING), null, null));
+    parentFields.add(new Schema.Field("child", childSchema, null, null));
     parentSchema.setFields(parentFields);
 
     Schema schema = idRef.addToSchema(parentSchema);
@@ -708,7 +708,7 @@ public class TestGenericData {
     GenericRecord record = new GenericData.Record( elementSchema );
     record.put("value", "string");
 
-    GenericArray<GenericRecord> list = new GenericData.Array<GenericRecord>(1, arraySchema);
+    GenericArray<GenericRecord> list = new GenericData.Array<>(1, arraySchema);
     list.add(record);
 
     list.reset();

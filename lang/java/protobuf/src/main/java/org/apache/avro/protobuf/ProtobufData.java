@@ -191,11 +191,7 @@ public class ProtobufData extends GenericData {
   }
 
   private static final ThreadLocal<Map<Descriptor,Schema>> SEEN
-    = new ThreadLocal<Map<Descriptor,Schema>>() {
-    protected Map<Descriptor,Schema> initialValue() {
-      return new IdentityHashMap<>();
-    }
-  };
+    = ThreadLocal.withInitial(IdentityHashMap::new);
 
   public Schema getSchema(Descriptor descriptor) {
     Map<Descriptor,Schema> seen = SEEN.get();
@@ -236,9 +232,9 @@ public class ProtobufData extends GenericData {
       outer = outer.substring(0, outer.lastIndexOf('.'));
       outer = toCamelCase(outer);
     }
-    String inner = "";
+    StringBuilder inner = new StringBuilder();
     while (containing != null) {
-      inner = "$" + containing.getName() + inner;
+      inner.insert(0, "$" + containing.getName());
       containing = containing.getContainingType();
     }
     return p + "." + outer + inner;
@@ -246,11 +242,11 @@ public class ProtobufData extends GenericData {
 
   private static String toCamelCase(String s){
     String[] parts = s.split("_");
-    String camelCaseString = "";
+    StringBuilder camelCaseString = new StringBuilder();
     for (String part : parts) {
-      camelCaseString = camelCaseString + cap(part);
+      camelCaseString.append(cap(part));
     }
-    return camelCaseString;
+    return camelCaseString.toString();
   }
 
   private static String cap(String s) {

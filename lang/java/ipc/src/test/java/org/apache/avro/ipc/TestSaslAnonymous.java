@@ -58,14 +58,12 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
   @Test
   public void test64kRequest() throws Exception {
     SaslSocketServer s = new SaslSocketServer
-      (new ReflectResponder(ProtoInterface.class, new ProtoInterface() {
-        public byte[] test(byte[] b) { return b; }
-      }), new InetSocketAddress(0));
+      (new ReflectResponder(ProtoInterface.class, (ProtoInterface) b -> b), new InetSocketAddress(0));
     s.start();
     SaslSocketTransceiver client =
       new SaslSocketTransceiver(new InetSocketAddress(s.getPort()));
     ProtoInterface proxy =
-      (ProtoInterface)ReflectRequestor.getClient(ProtoInterface.class, client);
+      ReflectRequestor.getClient(ProtoInterface.class, client);
 
     byte[] result = proxy.test(new byte[64*1024]);
 

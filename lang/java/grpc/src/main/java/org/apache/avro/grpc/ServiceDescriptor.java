@@ -33,7 +33,6 @@ class ServiceDescriptor {
   // cache for service descriptors.
   private static final ConcurrentMap<String, ServiceDescriptor> SERVICE_DESCRIPTORS =
       new ConcurrentHashMap<>();
-  private final Class iface;
   private final String serviceName;
   private final Protocol protocol;
   // cache for method descriptors.
@@ -41,7 +40,7 @@ class ServiceDescriptor {
       new ConcurrentHashMap<>();
 
   private ServiceDescriptor(Class iface, String serviceName) {
-    this.iface = iface;
+    Class iface1 = iface;
     this.serviceName = serviceName;
     this.protocol = AvroGrpcUtils.getProtocol(iface);
   }

@@ -86,11 +86,8 @@ public class AvroTrevniOutputFormat <T>
         new AvroColumnWriter<>(schema, meta, ReflectData.get());
 
       private void flush() throws IOException {
-        OutputStream out = fs.create(new Path(dir, "part-"+(part++)+EXT));
-        try {
+        try (OutputStream out = fs.create(new Path(dir, "part-" + (part++) + EXT))) {
           writer.writeTo(out);
-        } finally {
-          out.close();
         }
         writer = new AvroColumnWriter<>(schema, meta, ReflectData.get());
       }

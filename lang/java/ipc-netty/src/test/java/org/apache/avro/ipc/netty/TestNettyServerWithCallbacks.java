@@ -273,9 +273,8 @@ public class TestNettyServerWithCallbacks {
       int serverPort = server2.getPort();
       System.out.println("server2 port : " + serverPort);
 
-      Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-          serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
-      try {
+      try (Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
+        serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS)) {
         Simple.Callback simpleClient2 =
           SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
 
@@ -321,8 +320,6 @@ public class TestNettyServerWithCallbacks {
           throw e;
         }
         Assert.assertTrue("Expected IOException", ioeCaught);
-      } finally {
-        transceiver2.close();
       }
     } finally {
       server2.close();
@@ -342,9 +339,8 @@ public class TestNettyServerWithCallbacks {
       System.out.println("server2 port : " + serverPort);
 
       CallFuture<Integer> addFuture = new CallFuture<>();
-      Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-          serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
-      try {
+      try (Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
+        serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS)) {
         Simple.Callback simpleClient2 =
           SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
 
@@ -354,11 +350,9 @@ public class TestNettyServerWithCallbacks {
         // Now acquire the semaphore so that the server will block:
         blockingSimpleImpl.acquireRunPermit();
         simpleClient2.add(1, 2, addFuture);
-      } finally {
-        // When the transceiver is closed, the CallFuture should get
-        // an IOException
-        transceiver2.close();
       }
+      // When the transceiver is closed, the CallFuture should get
+      // an IOException
       boolean ioeThrown = false;
       try {
         addFuture.get();
@@ -411,15 +405,12 @@ public class TestNettyServerWithCallbacks {
       blockingSimpleImpl.acquireRunPermit();
 
       // Start client call
-      Future<?> clientFuture = Executors.newSingleThreadExecutor().submit(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            simpleClient2.add(3, 4);
-            Assert.fail("Expected an exception");
-          } catch (Exception e) {
-            // expected
-          }
+      Future<?> clientFuture = Executors.newSingleThreadExecutor().submit(() -> {
+        try {
+          simpleClient2.add(3, 4);
+          Assert.fail("Expected an exception");
+        } catch (Exception e) {
+          // expected
         }
       });
 
@@ -431,12 +422,7 @@ public class TestNettyServerWithCallbacks {
 
       // Stop the server in a separate thread as it blocks the actual thread until the server side
       // method is running
-      new Thread(new Runnable() {
-        @Override
-        public void run() {
-          server2.close();
-        }
-      }).start();
+      new Thread(server2::close).start();
 
       // With the server gone, we expect the client to get some exception and exit
       // Wait for the client call to exit
@@ -509,19 +495,16 @@ public class TestNettyServerWithCallbacks {
     final AtomicBoolean runFlag = new AtomicBoolean(true);
     final CountDownLatch startLatch = new CountDownLatch(threadCount);
     for (int ii = 0; ii < threadCount; ii++) {
-      threadPool.submit(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            startLatch.countDown();
-            startLatch.await(2, TimeUnit.SECONDS);
-            while (runFlag.get()) {
-              rpcCount.incrementAndGet();
-              Assert.assertEquals("Hello, World!", simpleClient.hello("World!"));
-            }
-          } catch (Exception e) {
-            e.printStackTrace();
+      threadPool.submit(() -> {
+        try {
+          startLatch.countDown();
+          startLatch.await(2, TimeUnit.SECONDS);
+          while (runFlag.get()) {
+            rpcCount.incrementAndGet();
+            Assert.assertEquals("Hello, World!", simpleClient.hello("World!"));
           }
+        } catch (Exception e) {
+          e.printStackTrace();
         }
       });
     }

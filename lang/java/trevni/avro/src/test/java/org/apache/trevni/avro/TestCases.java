@@ -70,28 +70,21 @@ public class TestCases {
   }
 
   private void checkRead(Schema s, List<Object> data) throws Exception {
-    AvroColumnReader<Object> reader =
-      new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
-                                   .setSchema(s));
-    try {
+    try (AvroColumnReader<Object> reader = new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
+      .setSchema(s))) {
       for (Object datum : data)
         assertEquals(datum, reader.next());
-    } finally {
-      reader.close();
     }
   }
 
   private List<Object> fromJson(Schema schema, File file) throws Exception {
-    InputStream in = new FileInputStream(file);
     List<Object> data = new ArrayList<>();
-    try {
+    try (InputStream in = new FileInputStream(file)) {
       DatumReader reader = new GenericDatumReader(schema);
       Decoder decoder = DecoderFactory.get().jsonDecoder(schema, in);
       while (true)
         data.add(reader.read(null, decoder));
     } catch (EOFException e) {
-    } finally {
-      in.close();
     }
     return data;
   }

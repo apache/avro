@@ -21,10 +21,7 @@ package org.apache.avro.reflect;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.avro.*;
 import org.apache.avro.file.DataFileReader;
@@ -126,7 +123,7 @@ public class TestReflectLogicalTypes {
 
     File test = write(REFLECT, schema, record);
     Assert.assertEquals("Should match the decimal after round trip",
-        Arrays.asList(record),
+      Collections.singletonList(record),
         read(REFLECT.createDatumReader(schema), test));
   }
 
@@ -185,7 +182,7 @@ public class TestReflectLogicalTypes {
 
     File test = write(REFLECT, schema, record);
     Assert.assertEquals("Should match the decimal after round trip",
-        Arrays.asList(record),
+      Collections.singletonList(record),
         read(REFLECT.createDatumReader(schema), test));
   }
 
@@ -218,14 +215,9 @@ public class TestReflectLogicalTypes {
       }
 
       if (second == null) {
-        if (that.second != null) {
-          return false;
-        }
-      } else if (second.equals(that.second)) {
-        return false;
-      }
+        return that.second == null;
+      } else return !second.equals(that.second);
 
-      return true;
     }
 
     @Override
@@ -696,16 +688,10 @@ public class TestReflectLogicalTypes {
 
   private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
     List<D> data = new ArrayList<>();
-    FileReader<D> fileReader = null;
 
-    try {
-      fileReader = new DataFileReader<>(file, reader);
+    try (FileReader<D> fileReader = new DataFileReader<>(file, reader)) {
       for (D datum : fileReader) {
         data.add(datum);
-      }
-    } finally {
-      if (fileReader != null) {
-        fileReader.close();
       }
     }
 
@@ -720,15 +706,12 @@ public class TestReflectLogicalTypes {
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = model.createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
-    try {
+    try (DataFileWriter<D> fileWriter = new DataFileWriter<>(writer)) {
       fileWriter.create(schema, file);
       for (D datum : data) {
         fileWriter.append(datum);
       }
-    } finally {
-      fileWriter.close();
     }
 
     return file;

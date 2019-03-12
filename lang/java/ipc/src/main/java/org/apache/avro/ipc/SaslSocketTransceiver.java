@@ -252,7 +252,7 @@ public class SaslSocketTransceiver extends Transceiver {
     zeroHeader.flip();                            // zero-terminate
     writes.add(zeroHeader);
 
-    writeFully(writes.toArray(new ByteBuffer[writes.size()]));
+    writeFully(writes.toArray(new ByteBuffer[0]));
   }
 
   private void write(Status status, String prefix, ByteBuffer response)

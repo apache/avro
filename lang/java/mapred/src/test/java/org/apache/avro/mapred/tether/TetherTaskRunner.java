@@ -40,8 +40,6 @@ public class TetherTaskRunner implements InputProtocol {
   private Server inputServer;
   private TetherTask task;
 
-  private TetheredProcess.Protocol proto;
-
   public TetherTaskRunner(TetherTask task) throws IOException {
     this.task = task;
 
@@ -53,12 +51,13 @@ public class TetherTaskRunner implements InputProtocol {
 
     protocol=protocol.trim().toLowerCase();
 
+    TetheredProcess.Protocol proto;
     if (protocol.equals("http")) {
       LOG.info("Use HTTP protocol");
-      proto=TetheredProcess.Protocol.HTTP;
+      proto =TetheredProcess.Protocol.HTTP;
     } else if (protocol.equals("sasl")) {
       LOG.info("Use SASL protocol");
-      proto=TetheredProcess.Protocol.SASL;
+      proto =TetheredProcess.Protocol.SASL;
     } else {
       throw new RuntimeException("AVRO_TETHER_PROTOCOL="+protocol+" but this protocol is unsupported");
     }

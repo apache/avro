@@ -54,11 +54,8 @@ public class Json {
   public static final Schema SCHEMA;
   static {
     try {
-      InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc");
-      try {
+      try (InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc")) {
         SCHEMA = new Schema.Parser().parse(in);
-      } finally {
-        in.close();
       }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);

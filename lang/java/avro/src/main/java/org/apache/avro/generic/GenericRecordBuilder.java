@@ -251,10 +251,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
       return false;
     GenericRecordBuilder other = (GenericRecordBuilder) obj;
     if (record == null) {
-      if (other.record != null)
-        return false;
-    } else if (!record.equals(other.record))
-      return false;
-    return true;
+      return other.record == null;
+    } else return record.equals(other.record);
   }
 }

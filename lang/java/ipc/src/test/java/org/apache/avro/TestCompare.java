@@ -76,26 +76,26 @@ public class TestCompare {
 
   @Test
   public void testInt() throws Exception {
-    check("\"int\"", new Integer(-1), new Integer(0));
-    check("\"int\"", new Integer(0), new Integer(1));
+    check("\"int\"", -1, 0);
+    check("\"int\"", 0, 1);
   }
 
   @Test
   public void testLong() throws Exception {
-    check("\"long\"", new Long(11), new Long(12));
-    check("\"long\"", new Long(-1), new Long(1));
+    check("\"long\"", 11L, 12L);
+    check("\"long\"", (long) -1, 1L);
   }
 
   @Test
   public void testFloat() throws Exception {
-    check("\"float\"", new Float(1.1), new Float(1.2));
-    check("\"float\"", new Float(-1.1), new Float(1.0));
+    check("\"float\"", 1.1f, 1.2f);
+    check("\"float\"", (float) -1.1, 1.0f);
   }
 
   @Test
   public void testDouble() throws Exception {
-    check("\"double\"", new Double(1.2), new Double(1.3));
-    check("\"double\"", new Double(-1.2), new Double(1.3));
+    check("\"double\"", 1.2, 1.3);
+    check("\"double\"", -1.2, 1.3);
   }
 
   @Test
@@ -163,8 +163,8 @@ public class TestCompare {
   @Test
   public void testUnion() throws Exception {
     check("[\"string\", \"long\"]", new Utf8("a"), new Utf8("b"), false);
-    check("[\"string\", \"long\"]", new Long(1), new Long(2), false);
-    check("[\"string\", \"long\"]", new Utf8("a"), new Long(1), false);
+    check("[\"string\", \"long\"]", 1L, 2L, false);
+    check("[\"string\", \"long\"]", new Utf8("a"), 1L, false);
   }
 
   @Test

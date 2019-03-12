@@ -49,11 +49,8 @@ public class AvroWrapper<T> {
       return false;
     AvroWrapper that = (AvroWrapper)obj;
     if (this.datum == null) {
-      if (that.datum != null)
-        return false;
-    } else if (!datum.equals(that.datum))
-      return false;
-    return true;
+      return that.datum == null;
+    } else return datum.equals(that.datum);
   }
 
   /** Get the wrapped datum as JSON. */

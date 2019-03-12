@@ -111,13 +111,12 @@ public class TestAvroProtocolGrpc {
     Boolean val2 = true;
     long val3 = 123321L;
     int val4 = 42;
-    String result = stub.concatenate(val1, val2, val3, val4);
-    assertEquals(val1 + val2 + val3 + val4, result);
+    assertEquals(val1 + val2 + val3 + val4, stub.concatenate(val1, val2, val3, val4));
   }
 
   @Test
   public void testCallbackInterface() throws Exception {
-    CallFuture<TestRecord> future = new CallFuture<TestRecord>();
+    CallFuture<TestRecord> future = new CallFuture<>();
     callbackStub.echo(record, future);
     assertEquals(record, future.get(1, TimeUnit.SECONDS));
   }
@@ -166,8 +165,7 @@ public class TestAvroProtocolGrpc {
         return null;
       }
     });
-    String response = stub.concatenate("foo", true, 42L, 42);
-    assertEquals(null, response);
+    assertEquals(null, stub.concatenate("foo", true, 42L, 42));
   }
 
   @Test(expected = AvroRuntimeException.class)

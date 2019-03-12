@@ -93,7 +93,7 @@ public class TestProtocolSpecific {
     client = createTransceiver();
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     addRpcPlugins(req);
-    proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    proxy = SpecificRequestor.getClient(Simple.class, req);
 
     monitor = new HandshakeMonitor();
     responder.addRPCPlugin(monitor);
@@ -225,7 +225,7 @@ public class TestProtocolSpecific {
     Transceiver client = new HttpTransceiver(new URL("http://localhost:4444"));
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     addRpcPlugins(req);
-    Simple proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    Simple proxy = SpecificRequestor.getClient(Simple.class, req);
     proxy.ack();
   }
 
@@ -247,8 +247,7 @@ public class TestProtocolSpecific {
                              Schema.create(Schema.Type.STRING),
                              Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("hello", message);
-    Transceiver t = createTransceiver();
-    try {
+    try (Transceiver t = createTransceiver()) {
       GenericRequestor r = new GenericRequestor(protocol, t);
       addRpcPlugins(r);
       GenericRecord params = new GenericData.Record(message.getRequest());
@@ -256,8 +255,6 @@ public class TestProtocolSpecific {
       params.put("greeting", "bob");
       String response = r.request("hello", params).toString();
       assertEquals("goodbye", response);
-    } finally {
-      t.close();
     }
   }
 

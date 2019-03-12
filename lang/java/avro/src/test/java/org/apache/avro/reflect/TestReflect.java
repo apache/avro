@@ -116,7 +116,7 @@ public class TestReflect {
     Schema s = new Schema.Parser().parse
       ("[\"null\", {\"type\":\"map\",\"values\":\"float\"}]");
     GenericData data = ReflectData.get();
-    HashMap<Utf8,Float> map = new HashMap<Utf8,Float>();
+    HashMap<Utf8,Float> map = new HashMap<>();
     map.put(new Utf8("foo"), 1.0f);
     assertEquals(1, data.resolveUnion(s, map));
   }
@@ -787,9 +787,7 @@ public class TestReflect {
       final SampleRecord other = (SampleRecord)obj;
       if (x != other.x)
         return false;
-      if (y != other.y)
-        return false;
-      return true;
+      return y == other.y;
     }
 
     public static class AnotherSampleRecord {
@@ -815,13 +813,10 @@ public class TestReflect {
       public boolean equals(Object other) {
         if (other instanceof AnotherSampleRecord) {
           AnotherSampleRecord o = (AnotherSampleRecord) other;
-          if ( (this.a == null && o.a != null) ||
-               (this.a != null && !this.a.equals(o.a)) ||
-               (this.s == null && o.s != null) ||
-               (this.s != null && !this.s.equals(o.s)) ) {
-            return false;
-          }
-          return true;
+          return (this.a != null || o.a == null) &&
+            (this.a == null || this.a.equals(o.a)) &&
+            (this.s != null || o.s == null) &&
+            (this.s == null || this.s.equals(o.s));
         } else {
           return false;
         }

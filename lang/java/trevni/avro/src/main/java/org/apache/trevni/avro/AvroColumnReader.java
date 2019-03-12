@@ -161,11 +161,7 @@ public class AvroColumnReader<D>
 
   private void setDefault(Schema record, Field f) {
     String recordName = record.getFullName();
-    Map<String,Object> recordDefaults = defaults.get(recordName);
-    if (recordDefaults == null) {
-      recordDefaults = new HashMap<>();
-      defaults.put(recordName, recordDefaults);
-    }
+    Map<String, Object> recordDefaults = defaults.computeIfAbsent(recordName, k -> new HashMap<>());
     recordDefaults.put(f.name(), model.getDefaultValue(f));
   }
 
@@ -183,9 +179,9 @@ public class AvroColumnReader<D>
   @Override
   public D next() {
     try {
-      for (int i = 0; i < values.length; i++)
-        if (values[i] != null)
-          values[i].startRow();
+      for (ColumnValues value : values)
+        if (value != null)
+          value.startRow();
       this.column = 0;
       return (D)read(readSchema);
     } catch (IOException e) {
@@ -202,7 +198,7 @@ public class AvroColumnReader<D>
     switch (s.getType()) {
     case MAP:
       int size = values[column].nextLength();
-      Map map = (Map)new HashMap(size);
+      Map map = new HashMap(size);
       for (int i = 0; i < size; i++) {
         this.column = startColumn;
         values[column++].nextValue();                      // null in parent
@@ -223,7 +219,7 @@ public class AvroColumnReader<D>
       return record;
     case ARRAY:
       int length = values[column].nextLength();
-      List elements = (List)new GenericData.Array(length, s);
+      List elements = new GenericData.Array(length, s);
       for (int i = 0; i < length; i++) {
         this.column = startColumn;
         Object value = nextValue(s, column++);

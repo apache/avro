@@ -554,7 +554,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   }
 
   public void setBinaryField(byte[] binaryField) {
-    setBinaryField(binaryField == null ? (ByteBuffer)null : ByteBuffer.wrap(binaryField));
+    setBinaryField(binaryField == null ? null : ByteBuffer.wrap(binaryField));
   }
 
   public void setBinaryField(ByteBuffer binaryField) {
@@ -901,28 +901,28 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case BOOL_FIELD:
-      return Boolean.valueOf(isBoolField());
+      return isBoolField();
 
     case BYTE_FIELD:
-      return Byte.valueOf(getByteField());
+      return getByteField();
 
     case BYTE_OPTIONAL_FIELD:
-      return Byte.valueOf(getByteOptionalField());
+      return getByteOptionalField();
 
     case I16_FIELD:
-      return Short.valueOf(getI16Field());
+      return getI16Field();
 
     case I16_OPTIONAL_FIELD:
-      return Short.valueOf(getI16OptionalField());
+      return getI16OptionalField();
 
     case I32_FIELD:
-      return Integer.valueOf(getI32Field());
+      return getI32Field();
 
     case I64_FIELD:
-      return Long.valueOf(getI64Field());
+      return getI64Field();
 
     case DOUBLE_FIELD:
-      return Double.valueOf(getDoubleField());
+      return getDoubleField();
 
     case STRING_FIELD:
       return getStringField();
@@ -1149,8 +1149,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
     if (this_present_fooOrBar || that_present_fooOrBar) {
       if (!(this_present_fooOrBar && that_present_fooOrBar))
         return false;
-      if (!this.fooOrBar.equals(that.fooOrBar))
-        return false;
+      return this.fooOrBar.equals(that.fooOrBar);
     }
 
     return true;
@@ -1169,7 +1168,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
 
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetBoolField()).compareTo(other.isSetBoolField());
+    lastComparison = Boolean.compare(isSetBoolField(), other.isSetBoolField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1179,7 +1178,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetByteField()).compareTo(other.isSetByteField());
+    lastComparison = Boolean.compare(isSetByteField(), other.isSetByteField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1189,7 +1188,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetByteOptionalField()).compareTo(other.isSetByteOptionalField());
+    lastComparison = Boolean.compare(isSetByteOptionalField(), other.isSetByteOptionalField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1199,7 +1198,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetI16Field()).compareTo(other.isSetI16Field());
+    lastComparison = Boolean.compare(isSetI16Field(), other.isSetI16Field());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1209,7 +1208,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetI16OptionalField()).compareTo(other.isSetI16OptionalField());
+    lastComparison = Boolean.compare(isSetI16OptionalField(), other.isSetI16OptionalField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1219,7 +1218,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetI32Field()).compareTo(other.isSetI32Field());
+    lastComparison = Boolean.compare(isSetI32Field(), other.isSetI32Field());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1229,7 +1228,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetI64Field()).compareTo(other.isSetI64Field());
+    lastComparison = Boolean.compare(isSetI64Field(), other.isSetI64Field());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1239,7 +1238,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetDoubleField()).compareTo(other.isSetDoubleField());
+    lastComparison = Boolean.compare(isSetDoubleField(), other.isSetDoubleField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1249,7 +1248,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetStringField()).compareTo(other.isSetStringField());
+    lastComparison = Boolean.compare(isSetStringField(), other.isSetStringField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1259,7 +1258,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetBinaryField()).compareTo(other.isSetBinaryField());
+    lastComparison = Boolean.compare(isSetBinaryField(), other.isSetBinaryField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1269,7 +1268,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetMapField()).compareTo(other.isSetMapField());
+    lastComparison = Boolean.compare(isSetMapField(), other.isSetMapField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1279,7 +1278,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetListField()).compareTo(other.isSetListField());
+    lastComparison = Boolean.compare(isSetListField(), other.isSetListField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1289,7 +1288,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetSetField()).compareTo(other.isSetSetField());
+    lastComparison = Boolean.compare(isSetSetField(), other.isSetSetField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1299,7 +1298,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetEnumField()).compareTo(other.isSetEnumField());
+    lastComparison = Boolean.compare(isSetEnumField(), other.isSetEnumField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1309,7 +1308,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetStructField()).compareTo(other.isSetStructField());
+    lastComparison = Boolean.compare(isSetStructField(), other.isSetStructField());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -1319,7 +1318,7 @@ public class Test implements org.apache.thrift.TBase<Test, Test._Fields>, java.i
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetFooOrBar()).compareTo(other.isSetFooOrBar());
+    lastComparison = Boolean.compare(isSetFooOrBar(), other.isSetFooOrBar());
     if (lastComparison != 0) {
       return lastComparison;
     }

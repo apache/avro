@@ -73,12 +73,9 @@ public class TestLogicalType {
     for (final Schema schema : nonBytes) {
       assertThrows("Should reject type: " + schema.getType(),
           IllegalArgumentException.class,
-          "Logical type decimal must be backed by fixed or bytes", new Callable() {
-            @Override
-            public Object call() throws Exception {
-              decimal.addToSchema(schema);
-              return null;
-            }
+          "Logical type decimal must be backed by fixed or bytes", () -> {
+            decimal.addToSchema(schema);
+            return null;
           });
     }
   }
@@ -107,12 +104,9 @@ public class TestLogicalType {
     // 4 bytes can hold up to 9 digits of precision
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "fixed(4) cannot store 10 digits (max 9)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            LogicalTypes.decimal(10).addToSchema(schema);
-            return null;
-          }
+        "fixed(4) cannot store 10 digits (max 9)", () -> {
+          LogicalTypes.decimal(10).addToSchema(schema);
+          return null;
         }
     );
     Assert.assertNull("Invalid logical type should not be set on schema",
@@ -123,12 +117,9 @@ public class TestLogicalType {
   public void testDecimalFailsWithZeroPrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid decimal precision: 0 (must be positive)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            LogicalTypes.decimal(0).addToSchema(schema);
-            return null;
-          }
+        "Invalid decimal precision: 0 (must be positive)", () -> {
+          LogicalTypes.decimal(0).addToSchema(schema);
+          return null;
         });
     Assert.assertNull("Invalid logical type should not be set on schema",
         LogicalTypes.fromSchemaIgnoreInvalid(schema));
@@ -138,12 +129,9 @@ public class TestLogicalType {
   public void testDecimalFailsWithNegativePrecision() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid decimal precision: -9 (must be positive)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            LogicalTypes.decimal(-9).addToSchema(schema);
-            return null;
-          }
+        "Invalid decimal precision: -9 (must be positive)", () -> {
+          LogicalTypes.decimal(-9).addToSchema(schema);
+          return null;
         });
     Assert.assertNull("Invalid logical type should not be set on schema",
         LogicalTypes.fromSchemaIgnoreInvalid(schema));
@@ -154,13 +142,10 @@ public class TestLogicalType {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
         "Invalid decimal scale: 10 (greater than precision: 9)",
-        new Callable() {
-          @Override
-          public Object call() throws Exception {
-            LogicalTypes.decimal(9, 10).addToSchema(schema);
-            return null;
-          }
-        });
+      () -> {
+        LogicalTypes.decimal(9, 10).addToSchema(schema);
+        return null;
+      });
     Assert.assertNull("Invalid logical type should not be set on schema",
         LogicalTypes.fromSchemaIgnoreInvalid(schema));
   }
@@ -169,12 +154,9 @@ public class TestLogicalType {
   public void testDecimalFailsWithNegativeScale() {
     final Schema schema = Schema.createFixed("aDecimal", null, null, 4);
     assertThrows("Should reject precision", IllegalArgumentException.class,
-        "Invalid decimal scale: -2 (must be positive)", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            LogicalTypes.decimal(9, -2).addToSchema(schema);
-            return null;
-          }
+        "Invalid decimal scale: -2 (must be positive)", () -> {
+          LogicalTypes.decimal(9, -2).addToSchema(schema);
+          return null;
         });
     Assert.assertNull("Invalid logical type should not be set on schema",
         LogicalTypes.fromSchemaIgnoreInvalid(schema));
@@ -186,12 +168,9 @@ public class TestLogicalType {
     LogicalTypes.decimal(9).addToSchema(schema);
     assertThrows("Should reject second logical type",
         AvroRuntimeException.class,
-        "Can't overwrite property: scale", new Callable() {
-          @Override
-          public Object call() throws Exception {
-            LogicalTypes.decimal(9, 2).addToSchema(schema);
-            return null;
-          }
+        "Can't overwrite property: scale", () -> {
+          LogicalTypes.decimal(9, 2).addToSchema(schema);
+          return null;
         }
     );
     Assert.assertEquals("First logical type should still be set on schema",

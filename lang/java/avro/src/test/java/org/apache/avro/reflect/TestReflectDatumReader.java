@@ -121,11 +121,8 @@ public class TestReflectDatumReader {
       if (id != other.id)
         return false;
       if (relatedIds == null) {
-        if (other.relatedIds != null)
-          return false;
-      } else if (!relatedIds.equals(other.relatedIds))
-        return false;
-      return true;
+        return other.relatedIds == null;
+      } else return relatedIds.equals(other.relatedIds);
     }
   }
 
@@ -169,9 +166,7 @@ public class TestReflectDatumReader {
       PojoWithArray other = (PojoWithArray) obj;
       if (id != other.id)
         return false;
-      if (!Arrays.equals(relatedIds, other.relatedIds))
-        return false;
-      return true;
+      return Arrays.equals(relatedIds, other.relatedIds);
     }
 
   }

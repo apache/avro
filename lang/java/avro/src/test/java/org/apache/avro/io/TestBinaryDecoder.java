@@ -152,13 +152,12 @@ public class TestBinaryDecoder {
   }
 
   private static byte[] data = null;
-  private static int seed = -1;
   private static Schema schema = null;
   private static int count = 200;
   private static ArrayList<Object> records = new ArrayList<>(count);
   @BeforeClass
   public static void generateData() throws IOException {
-    seed = (int)System.currentTimeMillis();
+    int seed = (int) System.currentTimeMillis();
     // note some tests (testSkipping) rely on this explicitly
     String jsonSchema =
       "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["

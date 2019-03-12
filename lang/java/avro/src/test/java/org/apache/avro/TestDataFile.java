@@ -148,9 +148,7 @@ public class TestDataFile {
   }
 
   private void testGenericRead() throws IOException {
-    DataFileReader<Object> reader =
-      new DataFileReader<>(makeFile(), new GenericDatumReader<>());
-    try {
+    try (DataFileReader<Object> reader = new DataFileReader<>(makeFile(), new GenericDatumReader<>())) {
       Object datum = null;
       if (VALIDATE) {
         for (Object expected : new RandomData(SCHEMA, COUNT, SEED)) {
@@ -162,43 +160,35 @@ public class TestDataFile {
           datum = reader.next(datum);
         }
       }
-    } finally {
-      reader.close();
     }
   }
 
   private void testSplits() throws IOException {
     File file = makeFile();
-    DataFileReader<Object> reader =
-      new DataFileReader<>(file, new GenericDatumReader<>());
-    Random rand = new Random(SEED);
-    try {
+    try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
+      Random rand = new Random(SEED);
       int splits = 10;                            // number of splits
-      int length = (int)file.length();            // length of file
+      int length = (int) file.length();            // length of file
       int end = length;                           // end of split
       int remaining = end;                        // bytes remaining
       int count = 0;                              // count of entries
       while (remaining > 0) {
-        int start = Math.max(0, end - rand.nextInt(2*length/splits));
+        int start = Math.max(0, end - rand.nextInt(2 * length / splits));
         reader.sync(start);                       // count entries in split
         while (!reader.pastSync(end)) {
           reader.next();
           count++;
         }
-        remaining -= end-start;
+        remaining -= end - start;
         end = start;
       }
       assertEquals(COUNT, count);
-    } finally {
-      reader.close();
     }
   }
 
   private void testSyncDiscovery() throws IOException {
     File file = makeFile();
-    DataFileReader<Object> reader =
-      new DataFileReader<>(file, new GenericDatumReader<>());
-    try {
+    try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
       // discover the sync points
       ArrayList<Long> syncs = new ArrayList<>();
       long previousSync = -1;
@@ -211,37 +201,29 @@ public class TestDataFile {
       }
       // confirm that the first point is the one reached by sync(0)
       reader.sync(0);
-      assertEquals(reader.previousSync(), (long)syncs.get(0));
+      assertEquals(reader.previousSync(), (long) syncs.get(0));
       // and confirm that all points are reachable
       for (Long sync : syncs) {
         reader.seek(sync);
         assertNotNull(reader.next());
       }
-    } finally {
-      reader.close();
     }
   }
 
   private void testGenericAppend() throws IOException {
     File file = makeFile();
     long start = file.length();
-    DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>())
-      .appendTo(file);
-    try {
-      for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
+    try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())
+      .appendTo(file)) {
+      for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
         writer.append(datum);
       }
-    } finally {
-      writer.close();
     }
-    DataFileReader<Object> reader =
-      new DataFileReader<>(file, new GenericDatumReader<>());
-    try {
+    try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
       reader.seek(start);
       Object datum = null;
       if (VALIDATE) {
-        for (Object expected : new RandomData(SCHEMA, COUNT, SEED+1)) {
+        for (Object expected : new RandomData(SCHEMA, COUNT, SEED + 1)) {
           datum = reader.next(datum);
           assertEquals(expected, datum);
         }
@@ -250,8 +232,6 @@ public class TestDataFile {
           datum = reader.next(datum);
         }
       }
-    } finally {
-      reader.close();
     }
   }
 
@@ -323,18 +303,13 @@ public class TestDataFile {
   }
 
   private void testFSync(boolean useFile) throws IOException {
-    DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>());
-    try {
+    try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.setFlushOnEveryBlock(false);
       TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
       if (useFile) {
         File f = makeFile();
-        SeekableFileInput in = new SeekableFileInput(f);
-        try {
+        try (SeekableFileInput in = new SeekableFileInput(f)) {
           writer.appendTo(in, out);
-        } finally {
-          in.close();
         }
       } else {
         writer.create(SCHEMA, out);
@@ -351,8 +326,6 @@ public class TestDataFile {
       }
       System.out.println("Total number of syncs: " + out.syncCount);
       assertEquals(syncCounter, out.syncCount);
-    } finally {
-      writer.close();
     }
   }
 

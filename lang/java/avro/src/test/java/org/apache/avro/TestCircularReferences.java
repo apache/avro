@@ -127,18 +127,8 @@ public class TestCircularReferences {
 
   @BeforeClass
   public static void addReferenceTypes() {
-    LogicalTypes.register(Referenceable.REFERENCEABLE, new LogicalTypes.LogicalTypeFactory() {
-      @Override
-      public LogicalType fromSchema(Schema schema) {
-        return new Referenceable(schema);
-      }
-    });
-    LogicalTypes.register(Reference.REFERENCE, new LogicalTypes.LogicalTypeFactory() {
-      @Override
-      public LogicalType fromSchema(Schema schema) {
-        return new Reference(schema);
-      }
-    });
+    LogicalTypes.register(Referenceable.REFERENCEABLE, Referenceable::new);
+    LogicalTypes.register(Reference.REFERENCE, Reference::new);
   }
 
   public static class ReferenceManager {
@@ -231,18 +221,9 @@ public class TestCircularReferences {
             record.put(refField.pos(), references.get(id));
 
           } else {
-            List<Callback> callbacks = callbacksById.get(id);
-            if (callbacks == null) {
-              callbacks = new ArrayList<>();
-              callbacksById.put(id, callbacks);
-            }
+            List<Callback> callbacks = callbacksById.computeIfAbsent(id, k -> new ArrayList<>());
             // add a callback to resolve this reference when the id is available
-            callbacks.add(new Callback() {
-              @Override
-              public void set(Object referenceable) {
-                record.put(refField.pos(), referenceable);
-              }
-            });
+            callbacks.add(referenceable -> record.put(refField.pos(), referenceable));
           }
         }
 
@@ -365,16 +346,10 @@ public class TestCircularReferences {
   private <D> List<D> read(GenericData model, Schema schema, File file) throws IOException {
     DatumReader<D> reader = newReader(model, schema);
     List<D> data = new ArrayList<>();
-    FileReader<D> fileReader = null;
 
-    try {
-      fileReader = new DataFileReader<>(file, reader);
+    try (FileReader<D> fileReader = new DataFileReader<>(file, reader)) {
       for (D datum : fileReader) {
         data.add(datum);
-      }
-    } finally {
-      if (fileReader != null) {
-        fileReader.close();
       }
     }
 
@@ -390,15 +365,12 @@ public class TestCircularReferences {
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = model.createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<>(writer);
 
-    try {
+    try (DataFileWriter<D> fileWriter = new DataFileWriter<>(writer)) {
       fileWriter.create(schema, file);
       for (D datum : data) {
         fileWriter.append(datum);
       }
-    } finally {
-      fileWriter.close();
     }
 
     return file;

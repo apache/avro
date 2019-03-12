@@ -845,7 +845,7 @@ public class SpecificCompiler {
     * logic in record.vm can handle the schema being presented. */
   public boolean isCustomCodable(Schema schema) {
     if (schema.isError()) return false;
-    return isCustomCodable(schema, new HashSet<Schema>());
+    return isCustomCodable(schema, new HashSet<>());
   }
 
   private boolean isCustomCodable(Schema schema, Set<Schema> seen) {
@@ -909,10 +909,10 @@ public class SpecificCompiler {
       return new String[] { value.toString() };
     if (value instanceof List) {
       List<?> list = (List<?>) value;
-      List<String> annots = new ArrayList<String>();
+      List<String> annots = new ArrayList<>();
       for (Object o : list)
         annots.add(o.toString());
-      return annots.toArray(new String[annots.size()]);
+      return annots.toArray(new String[0]);
     }
     return new String[0];
   }

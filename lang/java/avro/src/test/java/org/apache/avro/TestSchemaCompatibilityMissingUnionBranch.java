@@ -21,7 +21,6 @@ import static java.util.Arrays.asList;
 import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
 import static org.apache.avro.TestSchemas.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -61,27 +60,27 @@ public class TestSchemaCompatibilityMissingUnionBranch {
   @Parameters(name = "r: {0} | w: {1}")
   public static Iterable<Object[]> data() {
     Object[][] fields = { //
-        { INT_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, asList("reader union lacking writer type: STRING"), asList("/1") },
-        { STRING_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, asList("reader union lacking writer type: INT"), asList("/0") },
-        { INT_UNION_SCHEMA, UNION_INT_RECORD1, asList("reader union lacking writer type: RECORD"), asList("/1") },
-        { INT_UNION_SCHEMA, UNION_INT_RECORD2, asList("reader union lacking writer type: RECORD"), asList("/1") },
+        { INT_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, Collections.singletonList("reader union lacking writer type: STRING"), Collections.singletonList("/1")},
+        { STRING_UNION_SCHEMA, INT_STRING_UNION_SCHEMA, Collections.singletonList("reader union lacking writer type: INT"), Collections.singletonList("/0")},
+        { INT_UNION_SCHEMA, UNION_INT_RECORD1, Collections.singletonList("reader union lacking writer type: RECORD"), Collections.singletonList("/1")},
+        { INT_UNION_SCHEMA, UNION_INT_RECORD2, Collections.singletonList("reader union lacking writer type: RECORD"), Collections.singletonList("/1")},
         // more info in the subset schemas
-        { UNION_INT_RECORD1, UNION_INT_RECORD2, asList("reader union lacking writer type: RECORD"), asList("/1") },
-        { INT_UNION_SCHEMA, UNION_INT_ENUM1_AB, asList("reader union lacking writer type: ENUM"), asList("/1") },
-        { INT_UNION_SCHEMA, UNION_INT_FIXED_4_BYTES, asList("reader union lacking writer type: FIXED"), asList("/1") },
-        { INT_UNION_SCHEMA, UNION_INT_BOOLEAN, asList("reader union lacking writer type: BOOLEAN"), asList("/1") },
-        { INT_UNION_SCHEMA, LONG_UNION_SCHEMA, asList("reader union lacking writer type: LONG"), asList("/0") },
-        { INT_UNION_SCHEMA, FLOAT_UNION_SCHEMA, asList("reader union lacking writer type: FLOAT"), asList("/0") },
-        { INT_UNION_SCHEMA, DOUBLE_UNION_SCHEMA, asList("reader union lacking writer type: DOUBLE"), asList("/0") },
-        { INT_UNION_SCHEMA, BYTES_UNION_SCHEMA, asList("reader union lacking writer type: BYTES"), asList("/0") },
-        { INT_UNION_SCHEMA, UNION_INT_ARRAY_INT, asList("reader union lacking writer type: ARRAY"), asList("/1") },
-        { INT_UNION_SCHEMA, UNION_INT_MAP_INT, asList("reader union lacking writer type: MAP"), asList("/1") },
-        { INT_UNION_SCHEMA, UNION_INT_NULL, asList("reader union lacking writer type: NULL"), asList("/1") },
+        { UNION_INT_RECORD1, UNION_INT_RECORD2, Collections.singletonList("reader union lacking writer type: RECORD"), Collections.singletonList("/1")},
+        { INT_UNION_SCHEMA, UNION_INT_ENUM1_AB, Collections.singletonList("reader union lacking writer type: ENUM"), Collections.singletonList("/1")},
+        { INT_UNION_SCHEMA, UNION_INT_FIXED_4_BYTES, Collections.singletonList("reader union lacking writer type: FIXED"), Collections.singletonList("/1")},
+        { INT_UNION_SCHEMA, UNION_INT_BOOLEAN, Collections.singletonList("reader union lacking writer type: BOOLEAN"), Collections.singletonList("/1")},
+        { INT_UNION_SCHEMA, LONG_UNION_SCHEMA, Collections.singletonList("reader union lacking writer type: LONG"), Collections.singletonList("/0")},
+        { INT_UNION_SCHEMA, FLOAT_UNION_SCHEMA, Collections.singletonList("reader union lacking writer type: FLOAT"), Collections.singletonList("/0")},
+        { INT_UNION_SCHEMA, DOUBLE_UNION_SCHEMA, Collections.singletonList("reader union lacking writer type: DOUBLE"), Collections.singletonList("/0")},
+        { INT_UNION_SCHEMA, BYTES_UNION_SCHEMA, Collections.singletonList("reader union lacking writer type: BYTES"), Collections.singletonList("/0")},
+        { INT_UNION_SCHEMA, UNION_INT_ARRAY_INT, Collections.singletonList("reader union lacking writer type: ARRAY"), Collections.singletonList("/1")},
+        { INT_UNION_SCHEMA, UNION_INT_MAP_INT, Collections.singletonList("reader union lacking writer type: MAP"), Collections.singletonList("/1")},
+        { INT_UNION_SCHEMA, UNION_INT_NULL, Collections.singletonList("reader union lacking writer type: NULL"), Collections.singletonList("/1")},
         { INT_UNION_SCHEMA, INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA,
               asList("reader union lacking writer type: LONG", "reader union lacking writer type: FLOAT", "reader union lacking writer type: DOUBLE"),
               asList("/1", "/2", "/3") },
         { A_DINT_B_DINT_UNION_RECORD1, A_DINT_B_DINT_STRING_UNION_RECORD1,
-              asList("reader union lacking writer type: STRING"), asList("/fields/1/type/1") } };
+          Collections.singletonList("reader union lacking writer type: STRING"), Collections.singletonList("/fields/1/type/1")} };
     return Arrays.asList(fields);
   }
 

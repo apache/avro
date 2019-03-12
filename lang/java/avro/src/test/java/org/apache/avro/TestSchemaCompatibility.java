@@ -152,7 +152,7 @@ public class TestSchemaCompatibility {
             invalidReader,
             STRING_ARRAY_SCHEMA,
             "reader type: MAP not compatible with writer type: ARRAY",
-            asList("")),
+              Collections.singletonList("")),
             invalidReader,
             STRING_ARRAY_SCHEMA,
             String.format(
@@ -185,7 +185,7 @@ public class TestSchemaCompatibility {
             INT_SCHEMA,
             STRING_SCHEMA,
             "reader type: INT not compatible with writer type: STRING",
-            asList("")),
+              Collections.singletonList("")),
             INT_SCHEMA,
             STRING_SCHEMA,
             String.format(
@@ -330,9 +330,9 @@ public class TestSchemaCompatibility {
     validateIncompatibleSchemas(
         reader,
         writer,
-        asList(incompatibility),
-        asList(message),
-        asList(location)
+      Collections.singletonList(incompatibility),
+      Collections.singletonList(message),
+      Collections.singletonList(location)
     );
   }
 
@@ -489,7 +489,7 @@ public class TestSchemaCompatibility {
 
       LOG.debug(
           "Decode datum {} whose writer is {} with reader {}.",
-          new Object[]{datum, writerSchema, readerSchema});
+        datum, writerSchema, readerSchema);
       final byte[] bytes = baos.toByteArray();
       final Decoder decoder = DecoderFactory.get().resolvingDecoder(
           writerSchema, readerSchema,

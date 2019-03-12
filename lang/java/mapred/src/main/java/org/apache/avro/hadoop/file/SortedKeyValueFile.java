@@ -253,9 +253,7 @@ public class SortedKeyValueFile {
       mDataFileReader.seek(indexEntry.getValue());
 
       // Scan from this position of the file until we find it or pass it.
-      Iterator<AvroKeyValue<K, V>> iter = iterator();
-      while (iter.hasNext()) {
-        AvroKeyValue<K, V> record = iter.next();
+      for (AvroKeyValue<K, V> record : this) {
         int comparison = model.compare(record.getKey(), key, mKeySchema);
         if (0 == comparison) {
           // We've found it!
@@ -307,28 +305,23 @@ public class SortedKeyValueFile {
         Configuration conf, Path path, Schema keySchema) throws IOException {
       DatumReader<GenericRecord> datumReader = model.createDatumReader(
           AvroKeyValue.getSchema(keySchema, Schema.create(Schema.Type.LONG)));
-      DataFileReader<GenericRecord> fileReader = new DataFileReader<>(
-        new FsInput(path, conf), datumReader);
 
-      NavigableMap<K, Long> index;
-      if (Schema.create(Schema.Type.STRING).equals(keySchema)) {
-        // Because Avro STRING types are mapped to the Java CharSequence class that does not
-        // mandate the implementation of Comparable, we need to specify a special
-        // CharSequence comparator if the key type is a string.  This hack only fixes the
-        // problem for primitive string types.  If, for example, you tried to use a record
-        // type as the key, any string fields inside of it would not be compared correctly
-        // against java.lang.Strings.
-        index = new TreeMap<>(new AvroCharSequenceComparator<>());
-      } else {
-        index = new TreeMap<>();
-      }
-      try {
+      NavigableMap<K, Long> index = new TreeMap<>();
+      try (DataFileReader<GenericRecord> fileReader = new DataFileReader<>(
+        new FsInput(path, conf), datumReader)) {
+        if (Schema.create(Schema.Type.STRING).equals(keySchema)) {
+          // Because Avro STRING types are mapped to the Java CharSequence class that does not
+          // mandate the implementation of Comparable, we need to specify a special
+          // CharSequence comparator if the key type is a string.  This hack only fixes the
+          // problem for primitive string types.  If, for example, you tried to use a record
+          // type as the key, any string fields inside of it would not be compared correctly
+          // against java.lang.Strings.
+          index = new TreeMap<>(new AvroCharSequenceComparator<>());
+        }
         for (GenericRecord genericRecord : fileReader) {
           AvroKeyValue<K, Long> indexRecord = new AvroKeyValue<>(genericRecord);
           index.put(indexRecord.getKey(), indexRecord.getValue());
         }
-      } finally {
-        fileReader.close();
       }
       return index;
     }

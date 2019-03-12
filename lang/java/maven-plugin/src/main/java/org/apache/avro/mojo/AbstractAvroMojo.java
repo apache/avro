@@ -299,7 +299,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected URLClassLoader createClassLoader() throws DependencyResolutionRequiredException, MalformedURLException {
     List<URL> urls = appendElements(project.getRuntimeClasspathElements());
     urls.addAll(appendElements(project.getTestClasspathElements()));
-    return new URLClassLoader(urls.toArray(new URL[urls.size()]),
+    return new URLClassLoader(urls.toArray(new URL[0]),
             Thread.currentThread().getContextClassLoader());
   }
 

@@ -164,7 +164,7 @@ public class TestSchemaBuilder {
 
   @Test
   public void testArrayObjectProp() {
-    List<Object> values = new ArrayList<Object>();
+    List<Object> values = new ArrayList<>();
     values.add(true);
     values.add(Integer.MAX_VALUE);
     values.add(Long.MAX_VALUE);
@@ -198,7 +198,7 @@ public class TestSchemaBuilder {
 
   @Test
   public void testFieldArrayObjectProp() {
-    List<Object> values = new ArrayList<Object>();
+    List<Object> values = new ArrayList<>();
     values.add(true);
     values.add(Integer.MAX_VALUE);
     values.add(Long.MAX_VALUE);
@@ -237,7 +237,7 @@ public class TestSchemaBuilder {
 
   @Test
   public void testMapObjectProp() {
-    Map<String, Object> values = new HashMap<String, Object>();
+    Map<String, Object> values = new HashMap<>();
     values.put("booleanKey", true);
     values.put("intKey", Integer.MAX_VALUE);
     values.put("longKey", Long.MAX_VALUE);
@@ -277,7 +277,7 @@ public class TestSchemaBuilder {
 
   @Test
   public void testFieldMapObjectProp() {
-    Map<String, Object> values = new HashMap<String, Object>();
+    Map<String, Object> values = new HashMap<>();
     values.put("booleanKey", true);
     values.put("intKey", Integer.MAX_VALUE);
     values.put("longKey", Long.MAX_VALUE);

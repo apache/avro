@@ -116,8 +116,8 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   private void writeObjectArray(Schema element, Object[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
-      this.write(element, data[i], out);
+    for (Object datum : data) {
+      this.write(element, datum, out);
     }
   }
 

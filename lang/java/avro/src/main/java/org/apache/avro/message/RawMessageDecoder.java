@@ -46,8 +46,6 @@ public class RawMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
   private static final ThreadLocal<BinaryDecoder> DECODER =
       new ThreadLocal<>();
 
-  private final Schema writeSchema;
-  private final Schema readSchema;
   private final DatumReader<D> reader;
 
   /**
@@ -82,9 +80,9 @@ public class RawMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
    */
   public RawMessageDecoder(GenericData model, Schema writeSchema,
                            Schema readSchema) {
-    this.writeSchema = writeSchema;
-    this.readSchema = readSchema;
-    this.reader = model.createDatumReader(this.writeSchema, this.readSchema);
+    Schema writeSchema1 = writeSchema;
+    Schema readSchema1 = readSchema;
+    this.reader = model.createDatumReader(writeSchema1, readSchema1);
   }
 
   @Override

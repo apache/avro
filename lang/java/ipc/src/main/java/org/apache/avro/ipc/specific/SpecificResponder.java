@@ -95,9 +95,7 @@ public class SpecificResponder extends GenericResponder {
       } else {
         throw new Exception(e.getTargetException());
       }
-    } catch (NoSuchMethodException e) {
-      throw new AvroRuntimeException(e);
-    } catch (IllegalAccessException e) {
+    } catch (NoSuchMethodException | IllegalAccessException e) {
       throw new AvroRuntimeException(e);
     }
   }

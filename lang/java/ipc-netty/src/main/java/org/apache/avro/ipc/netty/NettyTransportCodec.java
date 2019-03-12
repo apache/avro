@@ -92,7 +92,7 @@ public class NettyTransportCodec {
       }
 
       return ChannelBuffers
-          .wrappedBuffer(bbs.toArray(new ByteBuffer[bbs.size()]));
+          .wrappedBuffer(bbs.toArray(new ByteBuffer[0]));
     }
 
     private ByteBuffer getPackHeader(NettyDataPack dataPack) {

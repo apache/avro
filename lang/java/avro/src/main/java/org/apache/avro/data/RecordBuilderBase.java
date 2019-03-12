@@ -80,10 +80,8 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
    */
   protected void validate(Field field, Object value) {
     if (isValidValue(field, value)) {
-      return;
     }
     else if (field.defaultVal() != null) {
-      return;
     }
     else {
       throw new AvroRuntimeException(
@@ -157,10 +155,9 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     if (!Arrays.equals(fieldSetFlags, other.fieldSetFlags))
       return false;
     if (schema == null) {
-      if (other.schema != null)
-        return false;
-    } else if (!schema.equals(other.schema))
-      return false;
-    return true;
+      return other.schema == null;
+    } else {
+      return schema.equals(other.schema);
+    }
   }
 }

@@ -80,14 +80,12 @@ public class TestNonStringMapKeys {
     log ("Read: " + co);
     assertNotNull (co.getEmployees());
     assertEquals (2, co.getEmployees().size());
-    Iterator<Entry<EmployeeId, EmployeeInfo>> itr = co.getEmployees().entrySet().iterator();
-    while (itr.hasNext()) {
-      Entry<EmployeeId, EmployeeInfo> e = itr.next();
+    for (Entry<EmployeeId, EmployeeInfo> e : co.getEmployees().entrySet()) {
       id = e.getKey().getId();
       name = e.getValue().getName();
-      assertTrue (
+      assertTrue(
         (id.equals(1) && name.equals("Foo")) ||
-        (id.equals(2) && name.equals("Bar"))
+          (id.equals(2) && name.equals("Bar"))
       );
     }
 
@@ -141,13 +139,11 @@ public class TestNonStringMapKeys {
     log ("Read: " + co);
     assertNotNull (co.getEmployees());
     assertEquals (1, co.getEmployees().size());
-    Iterator<Entry<Integer, EmployeeInfo2>> itr = co.getEmployees().entrySet().iterator();
-    while (itr.hasNext()) {
-      Entry<Integer, EmployeeInfo2> e = itr.next();
+    for (Entry<Integer, EmployeeInfo2> e : co.getEmployees().entrySet()) {
       Integer id = e.getKey();
       name = e.getValue().getName();
-      assertTrue (id.equals(11) && name.equals("Foo"));
-      assertEquals ("CompanyFoo", e.getValue().companyMap.values().iterator().next());
+      assertTrue(id.equals(11) && name.equals("Foo"));
+      assertEquals("CompanyFoo", e.getValue().companyMap.values().iterator().next());
     }
 
 
@@ -187,13 +183,11 @@ public class TestNonStringMapKeys {
     log ("Read: " + entity);
     assertNotNull (entity.getMap1());
     assertEquals (1, entity.getMap1().size());
-    Iterator<Entry<Integer, String>> itr = entity.getMap1().entrySet().iterator();
-    while (itr.hasNext()) {
-      Entry<Integer, String> e = itr.next();
+    for (Entry<Integer, String> e : entity.getMap1().entrySet()) {
       key = e.getKey();
       value = e.getValue();
-      assertEquals (1, key);
-      assertEquals ("Foo", value.toString());
+      assertEquals(1, key);
+      assertEquals("Foo", value.toString());
     }
     assertEquals (entity.getMap1(), entity.getMap2());
     assertEquals (entity.getMap1(), entity.getMap3());

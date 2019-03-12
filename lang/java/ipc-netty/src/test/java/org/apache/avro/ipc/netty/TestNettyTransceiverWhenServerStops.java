@@ -51,22 +51,19 @@ public class TestNettyTransceiverWhenServerStops {
 
     // Start a bunch of client threads that use the transceiver to send messages
     for (int i = 0; i < 100; i++) {
-      Thread thread = new Thread(new Runnable() {
-          @Override
-            public void run() {
-            while (true) {
-              try {
-                mail.send(createMessage());
-                successes.incrementAndGet();
-              } catch (Exception e) {
-                failures.incrementAndGet();
-                if (quitOnFailure.get()) {
-                  return;
-                }
-              }
+      Thread thread = new Thread(() -> {
+        while (true) {
+          try {
+            mail.send(createMessage());
+            successes.incrementAndGet();
+          } catch (Exception e) {
+            failures.incrementAndGet();
+            if (quitOnFailure.get()) {
+              return;
             }
           }
-        });
+        }
+      });
       threads.add(thread);
       thread.start();
     }

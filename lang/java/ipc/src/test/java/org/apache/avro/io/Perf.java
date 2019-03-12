@@ -251,8 +251,7 @@ public class Perf {
 
     TestResult tr = new TestResult();
 
-    for (int k = 0; k < tests.size(); k++) {
-      Test t = tests.get(k);
+    for (Test t : tests) {
       try {
         // get everything to compile once
         t.init();
@@ -271,17 +270,16 @@ public class Perf {
 
     if (csvFormat == null) printHeader();
 
-    for (int k = 0; k < tests.size(); k++) {
-      Test t = tests.get(k);
+    for (Test t : tests) {
       // warmup JVM
       t.init();
       if (t.isReadTest() && readTests) {
-        for (int i = 0; i < t.cycles/2; i++) {
+        for (int i = 0; i < t.cycles / 2; i++) {
           t.readTest();
         }
       }
       if (t.isWriteTest() && writeTests) {
-        for (int i = 0; i < t.cycles/2; i++) {
+        for (int i = 0; i < t.cycles / 2; i++) {
           t.writeTest();
         }
       }
@@ -320,15 +318,15 @@ public class Perf {
     }
   }
 
-  private static final void printHeader() {
+  private static void printHeader() {
     String header = String.format(
         "%60s     time    M entries/sec   M bytes/sec  bytes/cycle",
         "test name");
     System.out.println(header.toString());
   }
 
-  private static final void printResult(PrintStream o, boolean[] csv,
-                                        TestResult tr, Test t, String name)
+  private static void printResult(PrintStream o, boolean[] csv,
+                                  TestResult tr, Test t, String name)
   {
     long s = tr.totalTime / 1000;
     double entries = (t.cycles * (double) t.count);
@@ -1004,8 +1002,7 @@ public class Perf {
     }
     @Override
     void writeInternal(Encoder e) throws IOException {
-      for (int i = 0; i < sourceData.length; i++) {
-        Rec r = sourceData[i];
+      for (Rec r : sourceData) {
         e.writeDouble(r.f1);
         e.writeDouble(r.f2);
         e.writeDouble(r.f3);
@@ -1100,23 +1097,22 @@ public class Perf {
       ResolvingDecoder r = (ResolvingDecoder) d;
       Field[] ff = r.readFieldOrder();
       for (int i = 0; i < count; i++) {
-        for (int j = 0; j < ff.length; j++) {
-          Field f = ff[j];
+        for (Field f : ff) {
           switch (f.pos()) {
-          case 0:
-          case 1:
-          case 2:
-            r.readDouble();
-            break;
-          case 3:
-          case 4:
-          case 5:
-            r.readInt();
-            break;
-          case 6:
-          case 7:
-            r.readString(null);
-            break;
+            case 0:
+            case 1:
+            case 2:
+              r.readDouble();
+              break;
+            case 3:
+            case 4:
+            case 5:
+              r.readInt();
+              break;
+            case 6:
+            case 7:
+              r.readString(null);
+              break;
           }
         }
       }
@@ -1142,19 +1138,18 @@ public class Perf {
       ResolvingDecoder r = (ResolvingDecoder) d;
       Field[] ff = r.readFieldOrder();
       for (int i = 0; i < count; i++) {
-        for (int j = 0; j < ff.length; j++) {
-          Field f = ff[j];
+        for (Field f : ff) {
           switch (f.pos()) {
-          case 0:
-          case 1:
-          case 3:
-            r.readDouble();
-            break;
-          case 2:
-          case 4:
-          case 5:
-            r.readInt();
-            break;
+            case 0:
+            case 1:
+            case 3:
+              r.readDouble();
+              break;
+            case 2:
+            case 4:
+            case 5:
+              r.readInt();
+              break;
           }
         }
       }
@@ -1180,19 +1175,18 @@ public class Perf {
       ResolvingDecoder r = (ResolvingDecoder) d;
       Field[] ff = r.readFieldOrder();
       for (int i = 0; i < count; i++) {
-        for (int j = 0; j < ff.length; j++) {
-          Field f = ff[j];
+        for (Field f : ff) {
           switch (f.pos()) {
-          case 0:
-          case 1:
-          case 2:
-            r.readDouble();
-            break;
-          case 3:
-          case 4:
-          case 5:
-            r.readLong();
-            break;
+            case 0:
+            case 1:
+            case 2:
+              r.readDouble();
+              break;
+            case 3:
+            case 4:
+            case 5:
+              r.readLong();
+              break;
           }
         }
       }
@@ -1242,8 +1236,7 @@ public class Perf {
     @Override
     void writeInternal(Encoder e) throws IOException {
       GenericDatumWriter<Object> writer = new GenericDatumWriter<>(schema);
-      for (int i = 0; i < sourceData.length; i++) {
-        GenericRecord rec = sourceData[i];
+      for (GenericRecord rec : sourceData) {
         writer.write(rec, e);
       }
     }
@@ -1341,18 +1334,17 @@ public class Perf {
     }
     @Override
     void writeInternal(Encoder e) throws IOException {
-      for (int i = 0; i < sourceData.length; i++) {
-        GenericRecord rec = sourceData[i];
+      for (GenericRecord rec : sourceData) {
         GenericRecord inner;
-        inner = (GenericRecord)rec.get(0);
-        e.writeDouble((Double)inner.get(0));
-        inner = (GenericRecord)rec.get(1);
-        e.writeDouble((Double)inner.get(0));
-        inner = (GenericRecord)rec.get(2);
-        e.writeDouble((Double)inner.get(0));
-        e.writeInt((Integer)rec.get(3));
-        e.writeInt((Integer)rec.get(4));
-        e.writeInt((Integer)rec.get(5));
+        inner = (GenericRecord) rec.get(0);
+        e.writeDouble((Double) inner.get(0));
+        inner = (GenericRecord) rec.get(1);
+        e.writeDouble((Double) inner.get(0));
+        inner = (GenericRecord) rec.get(2);
+        e.writeDouble((Double) inner.get(0));
+        e.writeInt((Integer) rec.get(3));
+        e.writeInt((Integer) rec.get(4));
+        e.writeInt((Integer) rec.get(5));
       }
     }
     @Override
@@ -1484,9 +1476,9 @@ public class Perf {
     }
     @Override
     void writeInternal(Encoder e) throws IOException {
-      for (int i = 0; i < sourceData.length; i++) {
+      for (Object sourceDatum : sourceData) {
         @SuppressWarnings("unchecked")
-        T rec = (T) sourceData[i];
+        T rec = (T) sourceDatum;
         writer.write(rec, e);
       }
     }
@@ -1515,7 +1507,7 @@ public class Perf {
         String[] nicknames = { randomString(r), randomString(r) };
         return FooBarSpecificRecord.newBuilder().setId(r.nextInt())
             .setName(randomString(r))
-            .setNicknames(new ArrayList<String>(Arrays.asList(nicknames)))
+            .setNicknames(new ArrayList<>(Arrays.asList(nicknames)))
             .setTypeEnum(typeEnums[r.nextInt(typeEnums.length)])
             .setRelatedids(relatedIds).build();
       } catch (Exception e) {
@@ -1559,8 +1551,8 @@ public class Perf {
 
     @Override
     protected final void writeInternal(Encoder e) throws IOException {
-      for (int i = 0; i < sourceData.length; i++) {
-        writer.write(sourceData[i], e);
+      for (T sourceDatum : sourceData) {
+        writer.write(sourceDatum, e);
       }
     }
 
@@ -1876,8 +1868,8 @@ public class Perf {
     @Override
     void writeInternal(Encoder e) throws IOException {
       GenericDatumWriter<Object> writer = new GenericDatumWriter<>(writeSchema);
-      for (int i = 0; i < sourceData.length; i++) {
-        writer.write(sourceData[i], e);
+      for (GenericRecord sourceDatum : sourceData) {
+        writer.write(sourceDatum, e);
       }
     }
 
@@ -1928,7 +1920,7 @@ public class Perf {
       for (int i = 0; i < sourceData.length; i++) {
         GenericRecord rec = new GenericData.Record(writeSchema);
         int val = r.nextInt(1000000);
-        Integer v = (val < 750000 ? new Integer(val) : null);
+        Integer v = (val < 750000 ? val : null);
         rec.put("f", v);
         sourceData[i] = rec;
       }

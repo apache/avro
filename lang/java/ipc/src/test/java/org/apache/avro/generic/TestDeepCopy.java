@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ public class TestDeepCopy {
     // Set all non-default fields in an Interop instance:
     Interop.Builder interopBuilder = Interop.newBuilder();
     interopBuilder.setArrayField(
-        Arrays.asList(new Double[] { 1.1, 1.2, 1.3, 1.4 }));
+        Arrays.asList(1.1, 1.2, 1.3, 1.4));
     interopBuilder.setBoolField(true);
     interopBuilder.setBytesField(ByteBuffer.wrap(new byte[] { 1, 2, 3, 4 }));
     interopBuilder.setDoubleField(3.14d);
@@ -65,12 +66,11 @@ public class TestDeepCopy {
     Node.Builder rootBuilder = Node.newBuilder().setLabel("/");
     Node.Builder homeBuilder = Node.newBuilder().setLabel("home");
     homeBuilder.setChildren(new ArrayList<>(0));
-    rootBuilder.setChildren(Arrays.asList(new Node[] { homeBuilder.build() }));
+    rootBuilder.setChildren(Collections.singletonList(homeBuilder.build()));
     interopBuilder.setRecordField(rootBuilder.build());
 
     interopBuilder.setStringField("Hello");
-    interopBuilder.setUnionField(Arrays.asList(new ByteBuffer[] {
-        ByteBuffer.wrap(new byte[] { 1, 2 }) }));
+    interopBuilder.setUnionField(Collections.singletonList(ByteBuffer.wrap(new byte[]{1, 2})));
 
     Interop interop = interopBuilder.build();
 

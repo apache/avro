@@ -51,8 +51,7 @@ public class ByteBufferRecord {
     if (this.getPayload() == null) return that.getPayload() == null;
     if (!this.getPayload().equals(that.getPayload())) return false;
     if (this.getTp() == null) return that.getTp() == null;
-    if (!this.getTp().equals(that.getTp())) return false;
-    return true;
+    return this.getTp().equals(that.getTp());
   }
 
   @Override

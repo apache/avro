@@ -76,13 +76,12 @@ public class ProtocolTask extends Task {
       compile(src);
 
     Project myProject = getProject();
-    for (int i = 0; i < filesets.size(); i++) {
-      FileSet fs = filesets.get(i);
+    for (FileSet fs : filesets) {
       DirectoryScanner ds = fs.getDirectoryScanner(myProject);
       File dir = fs.getDir(myProject);
       String[] srcs = ds.getIncludedFiles();
-      for (int j = 0; j < srcs.length; j++) {
-        compile(new File(dir, srcs[j]));
+      for (String src1 : srcs) {
+        compile(new File(dir, src1));
       }
     }
   }
@@ -97,9 +96,7 @@ public class ProtocolTask extends Task {
   private void compile(File file) {
     try {
       doCompile(file, dest);
-    } catch (AvroRuntimeException e) {
-      throw new BuildException(e);
-    } catch (IOException e) {
+    } catch (AvroRuntimeException | IOException e) {
       throw new BuildException(e);
     }
   }

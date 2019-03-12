@@ -40,7 +40,6 @@ public class TrevniToJsonTool implements Tool {
   static final JsonFactory FACTORY = new JsonFactory();
 
   private JsonGenerator generator;
-  private ColumnFileReader reader;
   private ColumnValues[] values;
   private String[] shortNames;
 
@@ -86,9 +85,9 @@ public class TrevniToJsonTool implements Tool {
       generator.setPrettyPrinter(pp);
     }
 
-    this.reader = new ColumnFileReader(input);
+    ColumnFileReader reader = new ColumnFileReader(input);
 
-    int columnCount = (int)reader.getColumnCount();
+    int columnCount = (int) reader.getColumnCount();
     this.values = new ColumnValues[columnCount];
     this.shortNames = new String[columnCount];
     for (int i = 0; i < columnCount; i++) {

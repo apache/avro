@@ -75,12 +75,9 @@ public class TestGenericDatumWriter {
 
     // call write in another thread
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    Future<Void> result = executor.submit(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        w.write(a, e);
-        return null;
-      }
+    Future<Void> result = executor.submit(() -> {
+      w.write(a, e);
+      return null;
     });
     sizeWrittenSignal.await();
     // size has been written so now add an element to the array
@@ -113,12 +110,9 @@ public class TestGenericDatumWriter {
 
     // call write in another thread
     ExecutorService executor = Executors.newSingleThreadExecutor();
-    Future<Void> result = executor.submit(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        w.write(m, e);
-        return null;
-      }
+    Future<Void> result = executor.submit(() -> {
+      w.write(m, e);
+      return null;
     });
     sizeWrittenSignal.await();
     // size has been written so now add an entry to the map

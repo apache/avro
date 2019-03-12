@@ -111,20 +111,10 @@ public interface MessageDecoder<D> {
   abstract class BaseDecoder<D> implements MessageDecoder<D> {
 
     private static final ThreadLocal<ReusableByteArrayInputStream>
-        BYTE_ARRAY_IN = new ThreadLocal<ReusableByteArrayInputStream>() {
-          @Override
-          protected ReusableByteArrayInputStream initialValue() {
-            return new ReusableByteArrayInputStream();
-          }
-        };
+        BYTE_ARRAY_IN = ThreadLocal.withInitial(ReusableByteArrayInputStream::new);
 
     private static final ThreadLocal<ReusableByteBufferInputStream>
-        BYTE_BUFFER_IN = new ThreadLocal<ReusableByteBufferInputStream>() {
-          @Override
-          protected ReusableByteBufferInputStream initialValue() {
-            return new ReusableByteBufferInputStream();
-          }
-        };
+        BYTE_BUFFER_IN = ThreadLocal.withInitial(ReusableByteBufferInputStream::new);
 
     @Override
     public D decode(InputStream stream) throws IOException {
