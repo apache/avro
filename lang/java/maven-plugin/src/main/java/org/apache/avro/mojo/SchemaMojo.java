@@ -89,9 +89,7 @@ public class SchemaMojo extends AbstractAvroMojo {
       for (String customConversion : customConversions) {
         compiler.addCustomConversion(classLoader.loadClass(customConversion));
       }
-    } catch (ClassNotFoundException e) {
-      throw new IOException(e);
-    } catch (DependencyResolutionRequiredException e) {
+    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
       throw new IOException(e);
     }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));

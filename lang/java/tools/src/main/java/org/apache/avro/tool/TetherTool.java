@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.Schema;
@@ -142,10 +143,7 @@ public class TetherTool implements Tool {
 
       if (line.hasOption("exec_args")) {
         String[] splitargs = line.getOptionValue("exec_args").split(" ");
-        exargs = new ArrayList<>();
-        for (String item: splitargs){
-          exargs.add(item);
-        }
+        exargs = new ArrayList<>(Arrays.asList(splitargs));
       }
       if (line.hasOption("exec_cached")) {
         cached = Boolean.parseBoolean(line.getOptionValue("exec_cached"));

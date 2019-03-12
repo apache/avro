@@ -126,7 +126,7 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
     if (!serializations.contains(AvroSerialization.class.getName())) {
       serializations.add(AvroSerialization.class.getName());
       conf.setStrings("io.serializations",
-          serializations.toArray(new String[serializations.size()]));
+          serializations.toArray(new String[0]));
     }
   }
 

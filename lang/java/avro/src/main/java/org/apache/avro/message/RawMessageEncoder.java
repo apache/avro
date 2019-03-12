@@ -38,17 +38,11 @@ import java.nio.ByteBuffer;
 public class RawMessageEncoder<D> implements MessageEncoder<D> {
 
   private static final ThreadLocal<BufferOutputStream> TEMP =
-      new ThreadLocal<BufferOutputStream>() {
-        @Override
-        protected BufferOutputStream initialValue() {
-          return new BufferOutputStream();
-        }
-      };
+    ThreadLocal.withInitial(BufferOutputStream::new);
 
   private static final ThreadLocal<BinaryEncoder> ENCODER =
       new ThreadLocal<>();
 
-  private final Schema writeSchema;
   private final boolean copyOutputBytes;
   private final DatumWriter<D> writer;
 
@@ -86,9 +80,9 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * @param shouldCopy whether to copy buffers before returning encoded results
    */
   public RawMessageEncoder(GenericData model, Schema schema, boolean shouldCopy) {
-    this.writeSchema = schema;
+    Schema writeSchema = schema;
     this.copyOutputBytes = shouldCopy;
-    this.writer = model.createDatumWriter(this.writeSchema);
+    this.writer = model.createDatumWriter(writeSchema);
   }
 
   @Override

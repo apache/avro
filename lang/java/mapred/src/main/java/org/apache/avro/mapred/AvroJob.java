@@ -205,7 +205,7 @@ public class AvroJob {
 
   /** Return the job's data model implementation class. */
   public static Class<? extends GenericData> getDataModelClass(Configuration conf) {
-    return (Class<? extends GenericData>) conf.getClass(
+    return conf.getClass(
         CONF_DATA_MODEL, ReflectData.class, GenericData.class);
   }
 

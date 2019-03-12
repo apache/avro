@@ -22,9 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -118,11 +116,11 @@ public class TestSchemaNormalization {
 
   private static long altExtend(long poly, int degree, long fp, byte[] b) {
     final long overflowBit = 1L<<(64-degree);
-    for (int i = 0; i < b.length; i++) {
-      for (int j = 1; j < 129; j = j<<1) {
+    for (byte b1 : b) {
+      for (int j = 1; j < 129; j = j << 1) {
         boolean overflow = (0 != (fp & overflowBit));
         fp >>>= 1;
-        if (0 != (j&b[i])) fp |= ONE; // shift in the input bit
+        if (0 != (j & b1)) fp |= ONE; // shift in the input bit
         if (overflow) {
           fp ^= poly; // hi-order coeff of poly kills overflow bit
         }

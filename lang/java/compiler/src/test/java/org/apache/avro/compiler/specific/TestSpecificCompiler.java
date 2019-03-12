@@ -109,7 +109,7 @@ public class TestSpecificCompiler {
     };
     JavaCompiler.CompilationTask cTask = compiler.getTask(null, fileManager,
             diagnosticListener, Collections.singletonList("-Xlint:all"), null,
-            fileManager.getJavaFileObjects(javaFiles.toArray(new File[javaFiles.size()])));
+            fileManager.getJavaFileObjects(javaFiles.toArray(new File[0])));
     boolean compilesWithoutError = cTask.call();
     assertTrue(compilesWithoutError);
     assertEquals("Warnings produced when compiling generated code with -Xlint:all", 0, warnings.size());

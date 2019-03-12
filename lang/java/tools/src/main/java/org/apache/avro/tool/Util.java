@@ -243,13 +243,9 @@ class Util {
 
   /** Reads and returns the first datum in a data file. */
   static Object datumFromFile(Schema schema, String file) throws IOException {
-    DataFileReader<Object> in =
-        new DataFileReader<>(new File(file),
-                             new GenericDatumReader<>(schema));
-    try {
+    try (DataFileReader<Object> in = new DataFileReader<>(new File(file),
+      new GenericDatumReader<>(schema))) {
       return in.next();
-    } finally {
-      in.close();
     }
   }
 

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 import org.apache.avro.FooBarSpecificRecord;
@@ -64,7 +65,7 @@ public class TestSpecificDatumReader {
     Builder newBuilder = FooBarSpecificRecord.newBuilder();
     newBuilder.setId(42);
     newBuilder.setName("foo");
-    newBuilder.setNicknames(Arrays.asList("bar"));
+    newBuilder.setNicknames(Collections.singletonList("bar"));
     newBuilder.setRelatedids(Arrays.asList(1,2,3));
     FooBarSpecificRecord specificRecord = newBuilder.build();
 

@@ -137,9 +137,7 @@ public class ReflectData extends SpecificData {
     }
     try {
       getAccessorForField(record, name, pos, state).set(record, o);
-    } catch (IllegalAccessException e) {
-      throw new AvroRuntimeException(e);
-    } catch (IOException e) {
+    } catch (IllegalAccessException | IOException e) {
       throw new AvroRuntimeException(e);
     }
   }
@@ -379,9 +377,7 @@ public class ReflectData extends SpecificData {
       Map m = (Map)datum;
       if (m.size() > 0) {
         Class keyClass = m.keySet().iterator().next().getClass();
-        if (isStringable(keyClass) || isStringType(keyClass))
-          return false;
-        return true;
+        return !isStringable(keyClass) && !isStringType(keyClass);
       }
     }
     return false;
@@ -484,8 +480,7 @@ public class ReflectData extends SpecificData {
   static boolean isNonStringMapSchema(Schema s) {
     if (s != null && s.getType() == Schema.Type.ARRAY) {
       Class c = getClassProp(s, CLASS_PROP);
-      if (c != null && Map.class.isAssignableFrom (c))
-        return true;
+      return c != null && Map.class.isAssignableFrom(c);
     }
     return false;
   }
@@ -586,8 +581,7 @@ public class ReflectData extends SpecificData {
         } else if (c.isEnum()) {                             // Enum
           List<String> symbols = new ArrayList<>();
           Enum[] constants = (Enum[])c.getEnumConstants();
-          for (int i = 0; i < constants.length; i++)
-            symbols.add(constants[i].name());
+          for (Enum constant : constants) symbols.add(constant.name());
           schema = Schema.createEnum(name, doc, space, symbols);
           consumeAvroAliasAnnotation(c, schema);
         } else if (GenericFixed.class.isAssignableFrom(c)) { // fixed

@@ -67,7 +67,7 @@ public class TestNestedRecords {
     final ByteArrayInputStream inputStream = new ByteArrayInputStream(inputAsExpected.getBytes(UTF_8));
 
     final JsonDecoder decoder = DecoderFactory.get().jsonDecoder(parent, inputStream);
-    final DatumReader<Object> reader = new GenericDatumReader<Object>(parent);
+    final DatumReader<Object> reader = new GenericDatumReader<>(parent);
 
     final GenericData.Record  decoded = (GenericData.Record) reader.read(null, decoder);
 
@@ -113,7 +113,7 @@ public class TestNestedRecords {
     final ByteArrayInputStream inputStream = new ByteArrayInputStream(inputAsExpected.getBytes());
 
     final JsonDecoder decoder = DecoderFactory.get().jsonDecoder(parent, inputStream);
-    final DatumReader<Object> reader = new GenericDatumReader<Object>(parent);
+    final DatumReader<Object> reader = new GenericDatumReader<>(parent);
 
     final GenericData.Record decoded = (GenericData.Record) reader.read(null, decoder);
 

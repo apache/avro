@@ -57,10 +57,10 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
   private Writable key, spareKey, value;
 
   private Converter<K> keyConverter =
-    new Converter<K>() { public K convert(Writable o) { return (K)o; } };
+    o -> (K)o;
 
   private Converter<V> valConverter =
-    new Converter<V>() { public V convert(Writable o) { return (V)o; } };
+    o -> (V)o;
 
   public SequenceFileReader(File file) throws IOException {
     this(file.toURI(), new Configuration());
@@ -200,48 +200,30 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
   static {
     WRITABLE_CONVERTERS.put
       (NullWritable.class,
-       new Converter<Void>() {
-         @Override public Void convert(Writable o) { return null; }
-      });
+        (Converter<Void>) o -> null);
     WRITABLE_CONVERTERS.put
       (BooleanWritable.class,
-       new Converter<Boolean>() {
-         @Override public Boolean convert(Writable o) {return ((BooleanWritable)o).get();}
-      });
+        (Converter<Boolean>) o -> ((BooleanWritable)o).get());
     WRITABLE_CONVERTERS.put
       (IntWritable.class,
-       new Converter<Integer>() {
-         @Override public Integer convert(Writable o) { return ((IntWritable)o).get(); }
-      });
+        (Converter<Integer>) o -> ((IntWritable)o).get());
     WRITABLE_CONVERTERS.put
       (LongWritable.class,
-       new Converter<Long>() {
-         @Override public Long convert(Writable o) { return ((LongWritable)o).get(); }
-      });
+        (Converter<Long>) o -> ((LongWritable)o).get());
     WRITABLE_CONVERTERS.put
       (FloatWritable.class,
-       new Converter<Float>() {
-        @Override  public Float convert(Writable o) { return ((FloatWritable)o).get(); }
-      });
+        (Converter<Float>) o -> ((FloatWritable)o).get());
     WRITABLE_CONVERTERS.put
       (DoubleWritable.class,
-       new Converter<Double>() {
-         @Override public Double convert(Writable o) { return ((DoubleWritable)o).get(); }
-      });
+        (Converter<Double>) o -> ((DoubleWritable)o).get());
     WRITABLE_CONVERTERS.put
       (BytesWritable.class,
-       new Converter<ByteBuffer>() {
-         @Override
-         public ByteBuffer convert(Writable o) {
-          BytesWritable b = (BytesWritable)o;
-          return ByteBuffer.wrap(b.getBytes(), 0, b.getLength());
-        }
-      });
+        (Converter<ByteBuffer>) o -> {
+         BytesWritable b = (BytesWritable)o;
+         return ByteBuffer.wrap(b.getBytes(), 0, b.getLength());
+       });
     WRITABLE_CONVERTERS.put
       (Text.class,
-       new Converter<String>() {
-         @Override
-         public String convert(Writable o) { return o.toString(); }
-      });
+        (Converter<String>) Object::toString);
   }
 }

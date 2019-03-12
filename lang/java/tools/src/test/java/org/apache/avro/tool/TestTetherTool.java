@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.FileWriter;
-import java.nio.file.Files;
 
 
 import org.apache.avro.Schema;

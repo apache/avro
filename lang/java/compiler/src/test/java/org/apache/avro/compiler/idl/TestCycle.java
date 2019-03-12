@@ -19,7 +19,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +79,7 @@ public class TestCycle {
 
     GenericRecordBuilder rb = new GenericRecordBuilder(schemas.get("SampleNode"));
     rb.set("count", 10);
-    rb.set("subNodes", Arrays.asList(sp));
+    rb.set("subNodes", Collections.singletonList(sp));
     GenericData.Record record = rb.build();
 
     serDeserRecord(record);

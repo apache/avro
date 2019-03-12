@@ -101,11 +101,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
         compiler.compileToDestination(null, outputDirectory);
       }
-    } catch (ParseException e) {
-      throw new IOException(e);
-    } catch (DependencyResolutionRequiredException drre) {
-      throw new IOException(drre);
-    } catch (ClassNotFoundException e) {
+    } catch (ParseException | ClassNotFoundException | DependencyResolutionRequiredException e) {
       throw new IOException(e);
     }
   }

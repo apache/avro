@@ -78,7 +78,7 @@ public class AvroCharSequenceComparator<T> implements Comparator<T> {
    */
   private int compareCharacter(CharSequence o1, CharSequence o2, int index) {
     if (index < o1.length() && index < o2.length()) {
-      return Character.valueOf(o1.charAt(index)).compareTo(Character.valueOf(o2.charAt(index)));
+      return Character.compare(o1.charAt(index), o2.charAt(index));
     }
     if (index >= o1.length() && index >= o2.length()) {
       return 0;

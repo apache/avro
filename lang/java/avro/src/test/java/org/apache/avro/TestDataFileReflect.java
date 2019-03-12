@@ -131,7 +131,7 @@ public class TestDataFileReflect {
     bbr.setTp(TypeEnum.b);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ReflectDatumWriter<ByteBufferRecord> writer = new ReflectDatumWriter<ByteBufferRecord>(ByteBufferRecord.class);
+    ReflectDatumWriter<ByteBufferRecord> writer = new ReflectDatumWriter<>(ByteBufferRecord.class);
     BinaryEncoder avroEncoder = EncoderFactory.get().blockingBinaryEncoder(outputStream, null);
     writer.write(bbr, avroEncoder);
     avroEncoder.flush();
@@ -139,7 +139,7 @@ public class TestDataFileReflect {
     byte[] bytes = outputStream.toByteArray();
 
     ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-    ReflectDatumReader<ByteBufferRecord> datumReader = new ReflectDatumReader<ByteBufferRecord>(ByteBufferRecord.class);
+    ReflectDatumReader<ByteBufferRecord> datumReader = new ReflectDatumReader<>(ByteBufferRecord.class);
     BinaryDecoder avroDecoder = DecoderFactory.get().binaryDecoder(inputStream, null);
     ByteBufferRecord deserialized = datumReader.read(null, avroDecoder);
 
@@ -156,7 +156,7 @@ public class TestDataFileReflect {
     CheckList<BazRecord> check = new CheckList<>();
     try(FileOutputStream fos = new FileOutputStream(file)) {
       Schema schema = ReflectData.get().getSchema(BazRecord.class);
-      try (DataFileWriter<BazRecord> writer = new DataFileWriter<>(new ReflectDatumWriter<BazRecord>(schema))) {
+      try (DataFileWriter<BazRecord> writer = new DataFileWriter<>(new ReflectDatumWriter<>(schema))) {
         writer.create(schema, fos);
 
         // test writing to a file

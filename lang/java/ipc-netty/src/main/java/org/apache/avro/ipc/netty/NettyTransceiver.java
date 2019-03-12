@@ -46,7 +46,6 @@ import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelState;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
@@ -186,15 +185,12 @@ public class NettyTransceiver extends Transceiver {
     remoteAddr = addr;
 
     // Configure the event pipeline factory.
-    bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-      @Override
-      public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline p = Channels.pipeline();
-        p.addLast("frameDecoder", new NettyFrameDecoder());
-        p.addLast("frameEncoder", new NettyFrameEncoder());
-        p.addLast("handler", createNettyClientAvroHandler());
-        return p;
-      }
+    bootstrap.setPipelineFactory(() -> {
+      ChannelPipeline p = Channels.pipeline();
+      p.addLast("frameDecoder", new NettyFrameDecoder());
+      p.addLast("frameEncoder", new NettyFrameEncoder());
+      p.addLast("handler", createNettyClientAvroHandler());
+      return p;
     });
 
     if (nettyClientBootstrapOptions != null) {
@@ -459,10 +455,7 @@ public class NettyTransceiver extends Transceiver {
       CallFuture<List<ByteBuffer>> transceiverFuture = new CallFuture<>();
       transceive(request, transceiverFuture);
       return transceiverFuture.get();
-    } catch (InterruptedException e) {
-      LOG.debug("failed to get the response", e);
-      return null;
-    } catch (ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       LOG.debug("failed to get the response", e);
       return null;
     }

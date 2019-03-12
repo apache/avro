@@ -18,10 +18,7 @@
 package org.apache.avro.specific;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
+import java.util.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -123,7 +120,7 @@ public class TestSpecificData {
     FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder()
       .setId(123)
       .setName("foo")
-      .setNicknames(Arrays.asList("bar"))
+      .setNicknames(Collections.singletonList("bar"))
       .setRelatedids(Arrays.asList(1, 2, 3))
       .setTypeEnum(TypeEnum.c)
       .build();

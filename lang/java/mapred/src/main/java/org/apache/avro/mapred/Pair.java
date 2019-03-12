@@ -81,11 +81,7 @@ public class Pair<K,V>
   public static Schema getPairSchema(Schema key, Schema value) {
     Map<Schema,Schema> valueSchemas;
     synchronized (SCHEMA_CACHE) {
-      valueSchemas = SCHEMA_CACHE.get(key);
-      if (valueSchemas == null) {
-        valueSchemas = new WeakHashMap<>();
-        SCHEMA_CACHE.put(key, valueSchemas);
-      }
+      valueSchemas = SCHEMA_CACHE.computeIfAbsent(key, k -> new WeakHashMap<>());
       Schema result;
       result = valueSchemas.get(value);
       if (result == null) {

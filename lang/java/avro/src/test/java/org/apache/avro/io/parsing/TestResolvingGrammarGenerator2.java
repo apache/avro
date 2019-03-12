@@ -18,6 +18,7 @@
 package org.apache.avro.io.parsing;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -75,7 +76,7 @@ public class TestResolvingGrammarGenerator2 {
         point3dNoDefault));
 
     new SchemaValidatorBuilder().canBeReadStrategy().validateAll()
-        .validate(point2dFullname, Arrays.asList(read));
+        .validate(point2dFullname, Collections.singletonList(read));
   }
 
   @Test

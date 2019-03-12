@@ -18,8 +18,6 @@
 
 package org.apache.avro;
 
-import java.util.Iterator;
-
 /**
  * <p>
  * A {@link SchemaValidator} for validating the provided schema against all
@@ -45,9 +43,7 @@ public final class ValidateAll implements SchemaValidator {
   @Override
   public void validate(Schema toValidate, Iterable<Schema> schemasInOrder)
       throws SchemaValidationException {
-    Iterator<Schema> schemas = schemasInOrder.iterator();
-    while (schemas.hasNext()) {
-      Schema existing = schemas.next();
+    for (Schema existing : schemasInOrder) {
       strategy.validate(toValidate, existing);
     }
   }

@@ -38,7 +38,6 @@ public class TrevniMetadataTool implements Tool {
   static final JsonFactory FACTORY = new JsonFactory();
 
   private JsonGenerator generator;
-  private ColumnFileReader reader;
 
   @Override
   public String getName() {
@@ -82,7 +81,7 @@ public class TrevniMetadataTool implements Tool {
       generator.setPrettyPrinter(pp);
     }
 
-    this.reader = new ColumnFileReader(input);
+    ColumnFileReader reader = new ColumnFileReader(input);
 
     generator.writeStartObject();
     generator.writeNumberField("rowCount", reader.getRowCount());

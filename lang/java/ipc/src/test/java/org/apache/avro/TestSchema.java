@@ -486,7 +486,7 @@ public class TestSchema {
     Schema inner =
       new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);
-    outer.setFields(Arrays.asList(new Field("f", inner, null, null)));
+    outer.setFields(Collections.singletonList(new Field("f", inner, null, null)));
     assertEquals(outer, new Schema.Parser().parse(outer.toString()));
   }
 
@@ -513,7 +513,7 @@ public class TestSchema {
 
   @Test
   public void testNestedNonNullNamespace1() {
-    Schema inner1 = Schema.createEnum("InnerEnum", null, "space", Arrays.asList("x"));
+    Schema inner1 = Schema.createEnum("InnerEnum", null, "space", Collections.singletonList("x"));
     Schema inner2 = new Schema.Parser().parse("{\"type\":\"record\",\"namespace\":\"space\",\"name\":"
       +"\"InnerRecord\",\"fields\":[]}");
     Schema nullOuter = Schema.createRecord("Outer", null, null, false);
@@ -930,7 +930,7 @@ public class TestSchema {
   @Test(expected=AvroRuntimeException.class)
   public void testImmutability2() {
     Schema s = enumSchema();
-    s.addProp("p1", (String)null);
+    s.addProp("p1", null);
   }
 
   private static List<String> lockedArrayList() {

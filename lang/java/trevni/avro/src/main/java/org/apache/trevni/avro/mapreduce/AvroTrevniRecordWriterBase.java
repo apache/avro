@@ -20,7 +20,6 @@ package org.apache.trevni.avro.mapreduce;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Iterator;
 import java.util.Map.Entry;
 
 import org.apache.avro.Schema;
@@ -104,11 +103,8 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
    * @throws IOException
    */
   public void flush() throws IOException {
-    OutputStream out = fs.create(new Path(dirPath, "part-" + (part++) + EXT));
-    try {
+    try (OutputStream out = fs.create(new Path(dirPath, "part-" + (part++) + EXT))) {
       writer.writeTo(out);
-    } finally {
-      out.close();
     }
     writer = new AvroColumnWriter<>(schema, meta, ReflectData.get());
   }
@@ -122,13 +118,11 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
 
   static ColumnFileMetaData filterMetadata(final Configuration configuration) {
     final ColumnFileMetaData meta = new ColumnFileMetaData();
-    Iterator<Entry<String, String>> keyIterator = configuration.iterator();
 
-    while (keyIterator.hasNext()) {
-      Entry<String, String> confEntry = keyIterator.next();
+    for (Entry<String, String> confEntry : configuration) {
       if (confEntry.getKey().startsWith(META_PREFIX))
         meta.put(confEntry.getKey().substring(META_PREFIX.length()), confEntry
-            .getValue().getBytes(MetaData.UTF8));
+          .getValue().getBytes(MetaData.UTF8));
     }
 
     return meta;

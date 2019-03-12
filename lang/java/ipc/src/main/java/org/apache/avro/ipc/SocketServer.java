@@ -120,10 +120,7 @@ public class SocketServer extends Thread implements Server {
           while (true) {
             xc.writeBuffers(responder.respond(xc.readBuffers(), xc));
           }
-        } catch (EOFException e) {
-          return;
-        } catch (ClosedChannelException e) {
-          return;
+        } catch (EOFException | ClosedChannelException e) {
         } finally {
           xc.close();
         }

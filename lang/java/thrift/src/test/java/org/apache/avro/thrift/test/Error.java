@@ -212,8 +212,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     if (this_present_message || that_present_message) {
       if (!(this_present_message && that_present_message))
         return false;
-      if (!this.message.equals(that.message))
-        return false;
+      return this.message.equals(that.message);
     }
 
     return true;
@@ -232,7 +231,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
 
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetMessage()).compareTo(other.isSetMessage());
+    lastComparison = Boolean.compare(isSetMessage(), other.isSetMessage());
     if (lastComparison != 0) {
       return lastComparison;
     }

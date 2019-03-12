@@ -59,14 +59,13 @@ public class ColumnFileWriter {
 
   private void checkColumns(ColumnMetaData[] columnMeta) {
     Set<String> seen = new HashSet<>();
-    for (int i = 0; i < columnMeta.length; i++) {
-      ColumnMetaData c = columnMeta[i];
+    for (ColumnMetaData c : columnMeta) {
       String name = c.getName();
       if (seen.contains(name))
-        throw new TrevniRuntimeException("Duplicate column name: "+name);
+        throw new TrevniRuntimeException("Duplicate column name: " + name);
       ColumnMetaData parent = c.getParent();
       if (parent != null && !seen.contains(parent.getName()))
-        throw new TrevniRuntimeException("Parent must precede child: "+name);
+        throw new TrevniRuntimeException("Parent must precede child: " + name);
       seen.add(name);
     }
   }
@@ -122,11 +121,8 @@ public class ColumnFileWriter {
 
   /** Write all rows added to the named file. */
   public void writeTo(File file) throws IOException {
-    OutputStream out = new FileOutputStream(file);
-    try {
+    try (OutputStream out = new FileOutputStream(file)) {
       writeTo(out);
-    } finally {
-      out.close();
     }
   }
 

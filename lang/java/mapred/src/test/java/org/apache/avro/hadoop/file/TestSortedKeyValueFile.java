@@ -64,16 +64,10 @@ public class TestSortedKeyValueFile {
         .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"))
         .withIndexInterval(2);  // Index every other record.
 
-    SortedKeyValueFile.Writer<CharSequence, CharSequence> writer
-        = new SortedKeyValueFile.Writer<>(options);
-
-    Utf8 key = new Utf8();                        // re-use key, to test copied
-
-    try {
+    try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options)) {
+      Utf8 key = new Utf8();                        // re-use key, to test copied
       writer.append(key.set("banana"), "Banana");
       writer.append(key.set("apple"), "Apple");  // Ruh, roh!
-    } finally {
-      writer.close();
     }
   }
 
@@ -166,16 +160,11 @@ public class TestSortedKeyValueFile {
         .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"))
         .withIndexInterval(2);  // Index every other record.
 
-    SortedKeyValueFile.Writer<CharSequence, CharSequence> writer
-        = new SortedKeyValueFile.Writer<>(options);
-
-    try {
+    try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options)) {
       writer.append("apple", "Apple");  // Will be indexed.
       writer.append("banana", "Banana");
       writer.append("carrot", "Carrot");  // Will be indexed.
       writer.append("durian", "Durian");
-    } finally {
-      writer.close();
     }
 
 
@@ -188,16 +177,12 @@ public class TestSortedKeyValueFile {
     File indexFile = new File(directory, SortedKeyValueFile.INDEX_FILENAME);
     DatumReader<GenericRecord> indexReader = new GenericDatumReader<>(
         AvroKeyValue.getSchema(options.getKeySchema(), Schema.create(Schema.Type.LONG)));
-    FileReader<GenericRecord> indexFileReader = DataFileReader.openReader(indexFile, indexReader);
 
-    List<AvroKeyValue<CharSequence, Long>> indexRecords
-        = new ArrayList<>();
-    try {
+    List<AvroKeyValue<CharSequence, Long>> indexRecords = new ArrayList<>();
+    try (FileReader<GenericRecord> indexFileReader = DataFileReader.openReader(indexFile, indexReader)) {
       for (GenericRecord indexRecord : indexFileReader) {
         indexRecords.add(new AvroKeyValue<>(indexRecord));
       }
-    } finally {
-      indexFileReader.close();
     }
 
     assertEquals(2, indexRecords.size());
@@ -210,31 +195,27 @@ public class TestSortedKeyValueFile {
     File dataFile = new File(directory, SortedKeyValueFile.DATA_FILENAME);
     DatumReader<GenericRecord> dataReader = new GenericDatumReader<>(
         AvroKeyValue.getSchema(options.getKeySchema(), options.getValueSchema()));
-    DataFileReader<GenericRecord> dataFileReader
-        = new DataFileReader<>(dataFile, dataReader);
 
-    try {
+    try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(dataFile, dataReader)) {
       dataFileReader.seek(indexRecords.get(0).getValue());
       assertTrue(dataFileReader.hasNext());
       AvroKeyValue<CharSequence, CharSequence> appleRecord
-          = new AvroKeyValue<>(dataFileReader.next());
+        = new AvroKeyValue<>(dataFileReader.next());
       assertEquals("apple", appleRecord.getKey().toString());
       assertEquals("Apple", appleRecord.getValue().toString());
 
       dataFileReader.seek(indexRecords.get(1).getValue());
       assertTrue(dataFileReader.hasNext());
       AvroKeyValue<CharSequence, CharSequence> carrotRecord
-          = new AvroKeyValue<>(dataFileReader.next());
+        = new AvroKeyValue<>(dataFileReader.next());
       assertEquals("carrot", carrotRecord.getKey().toString());
       assertEquals("Carrot", carrotRecord.getValue().toString());
 
       assertTrue(dataFileReader.hasNext());
       AvroKeyValue<CharSequence, CharSequence> durianRecord
-          = new AvroKeyValue<>(dataFileReader.next());
+        = new AvroKeyValue<>(dataFileReader.next());
       assertEquals("durian", durianRecord.getKey().toString());
       assertEquals("Durian", durianRecord.getValue().toString());
-    } finally {
-      dataFileReader.close();
     }
   }
 
@@ -248,16 +229,11 @@ public class TestSortedKeyValueFile {
         .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"))
         .withIndexInterval(2);  // Index every other record.
 
-    SortedKeyValueFile.Writer<CharSequence, CharSequence> writer
-        = new SortedKeyValueFile.Writer<>(writerOptions);
-
-    try {
+    try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(writerOptions)) {
       writer.append("apple", "Apple");  // Will be indexed.
       writer.append("banana", "Banana");
       writer.append("carrot", "Carrot");  // Will be indexed.
       writer.append("durian", "Durian");
-    } finally {
-      writer.close();
     }
 
     LOG.debug("Reading the file back using a reader...");
@@ -267,17 +243,12 @@ public class TestSortedKeyValueFile {
         .withConfiguration(conf)
         .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"));
 
-    SortedKeyValueFile.Reader<CharSequence, CharSequence> reader
-        = new SortedKeyValueFile.Reader<>(readerOptions);
-
-    try {
+    try (SortedKeyValueFile.Reader<CharSequence, CharSequence> reader = new SortedKeyValueFile.Reader<>(readerOptions)) {
       assertEquals("Carrot", reader.get("carrot").toString());
       assertEquals("Banana", reader.get("banana").toString());
       assertNull(reader.get("a-vegetable"));
       assertNull(reader.get("beet"));
       assertNull(reader.get("zzz"));
-    } finally {
-      reader.close();
     }
   }
 
@@ -310,16 +281,11 @@ public class TestSortedKeyValueFile {
       .withDataModel(model)
       .withIndexInterval(2);
 
-    SortedKeyValueFile.Writer<Stringy,Stringy> writer
-        = new SortedKeyValueFile.Writer<>(options);
-
-    try {
+    try (SortedKeyValueFile.Writer<Stringy, Stringy> writer = new SortedKeyValueFile.Writer<>(options)) {
       writer.append(new Stringy("apple"), new Stringy("Apple"));
       writer.append(new Stringy("banana"), new Stringy("Banana"));
       writer.append(new Stringy("carrot"), new Stringy("Carrot"));
       writer.append(new Stringy("durian"), new Stringy("Durian"));
-    } finally {
-      writer.close();
     }
 
     LOG.debug("Reading the file back using a reader...");
@@ -331,17 +297,12 @@ public class TestSortedKeyValueFile {
       .withPath(new Path(mTempDir.getRoot().getPath(), "reflect"))
       .withDataModel(model);
 
-    SortedKeyValueFile.Reader<Stringy,Stringy> reader
-      = new SortedKeyValueFile.Reader<>(readerOptions);
-
-    try {
+    try (SortedKeyValueFile.Reader<Stringy, Stringy> reader = new SortedKeyValueFile.Reader<>(readerOptions)) {
       assertEquals(new Stringy("Carrot"), reader.get(new Stringy("carrot")));
       assertEquals(new Stringy("Banana"), reader.get(new Stringy("banana")));
       assertNull(reader.get(new Stringy("a-vegetable")));
       assertNull(reader.get(new Stringy("beet")));
       assertNull(reader.get(new Stringy("zzz")));
-    } finally {
-      reader.close();
     }
 
   }

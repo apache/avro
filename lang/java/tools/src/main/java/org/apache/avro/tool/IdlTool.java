@@ -42,7 +42,7 @@ public class IdlTool implements Tool {
         (args.size() == 1 && (args.get(0).equals("--help") ||
                               args.get(0).equals("-help")))) {
       err.println("Usage: idl [in] [out]");
-      err.println("");
+      err.println();
       err.println("If an output path is not specified, outputs to stdout.");
       err.println("If no input or output is specified, takes input from");
       err.println("stdin and outputs to stdin.");

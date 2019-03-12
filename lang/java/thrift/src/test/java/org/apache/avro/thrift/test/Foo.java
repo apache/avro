@@ -86,7 +86,6 @@ public class Foo {
     {
       ping_result result = new ping_result();
       receiveBase(result, "ping");
-      return;
     }
 
     @Override
@@ -625,10 +624,7 @@ public class Foo {
     }
 
     public boolean equals(ping_args that) {
-      if (that == null)
-        return false;
-
-      return true;
+      return that != null;
     }
 
     @Override
@@ -661,11 +657,9 @@ public class Foo {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("ping_args(");
       boolean first = true;
 
-      sb.append(")");
-      return sb.toString();
+      return "ping_args(" + ")";
     }
 
     public void validate() throws org.apache.thrift.TException {
@@ -869,10 +863,7 @@ public class Foo {
     }
 
     public boolean equals(ping_result that) {
-      if (that == null)
-        return false;
-
-      return true;
+      return that != null;
     }
 
     @Override
@@ -905,11 +896,9 @@ public class Foo {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("ping_result(");
       boolean first = true;
 
-      sb.append(")");
-      return sb.toString();
+      return "ping_result(" + ")";
     }
 
     public void validate() throws org.apache.thrift.TException {
@@ -1185,10 +1174,10 @@ public class Foo {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case NUM1:
-        return Integer.valueOf(getNum1());
+        return getNum1();
 
       case NUM2:
-        return Integer.valueOf(getNum2());
+        return getNum2();
 
       }
       throw new IllegalStateException();
@@ -1236,8 +1225,7 @@ public class Foo {
       if (this_present_num2 || that_present_num2) {
         if (!(this_present_num2 && that_present_num2))
           return false;
-        if (this.num2 != that.num2)
-          return false;
+        return this.num2 == that.num2;
       }
 
       return true;
@@ -1256,7 +1244,7 @@ public class Foo {
 
       int lastComparison = 0;
 
-      lastComparison = Boolean.valueOf(isSetNum1()).compareTo(other.isSetNum1());
+      lastComparison = Boolean.compare(isSetNum1(), other.isSetNum1());
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1266,7 +1254,7 @@ public class Foo {
           return lastComparison;
         }
       }
-      lastComparison = Boolean.valueOf(isSetNum2()).compareTo(other.isSetNum2());
+      lastComparison = Boolean.compare(isSetNum2(), other.isSetNum2());
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1583,7 +1571,7 @@ public class Foo {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case SUCCESS:
-        return Integer.valueOf(getSuccess());
+        return getSuccess();
 
       }
       throw new IllegalStateException();
@@ -1620,8 +1608,7 @@ public class Foo {
       if (this_present_success || that_present_success) {
         if (!(this_present_success && that_present_success))
           return false;
-        if (this.success != that.success)
-          return false;
+        return this.success == that.success;
       }
 
       return true;
@@ -1640,7 +1627,7 @@ public class Foo {
 
       int lastComparison = 0;
 
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      lastComparison = Boolean.compare(isSetSuccess(), other.isSetSuccess());
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1906,10 +1893,7 @@ public class Foo {
     }
 
     public boolean equals(zip_args that) {
-      if (that == null)
-        return false;
-
-      return true;
+      return that != null;
     }
 
     @Override
@@ -1942,11 +1926,9 @@ public class Foo {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("zip_args(");
       boolean first = true;
 
-      sb.append(")");
-      return sb.toString();
+      return "zip_args(" + ")";
     }
 
     public void validate() throws org.apache.thrift.TException {

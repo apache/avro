@@ -24,7 +24,6 @@ import static org.junit.Assert.assertNotNull;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -740,7 +739,7 @@ public class TestSpecificCompiler {
 
     CompilationTask cTask = compiler.getTask(null, fileManager, null, null,
         null,
-        fileManager.getJavaFileObjects(javaFiles.toArray(new File[javaFiles.size()]))
+        fileManager.getJavaFileObjects(javaFiles.toArray(new File[0]))
     );
     assertTrue(cTask.call());
   }

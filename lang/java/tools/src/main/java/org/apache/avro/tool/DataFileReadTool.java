@@ -61,7 +61,7 @@ public class DataFileReadTool implements Tool {
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean pretty = optionSet.has(prettyOption);
-    List<String> nargs = new ArrayList<String>((List<String>)optionSet.nonOptionArguments());
+    List<String> nargs = new ArrayList<>((List<String>) optionSet.nonOptionArguments());
 
     long headCount = getHeadCount(optionSet, headOption, nargs);
 
@@ -75,20 +75,17 @@ public class DataFileReadTool implements Tool {
     BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
 
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
-    DataFileStream<Object> streamReader = new DataFileStream<>(inStream, reader);
-    try {
+    try (DataFileStream<Object> streamReader = new DataFileStream<>(inStream, reader)) {
       Schema schema = streamReader.getSchema();
       DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
-      for(long recordCount = 0; streamReader.hasNext() && recordCount < headCount; recordCount++) {
+      for (long recordCount = 0; streamReader.hasNext() && recordCount < headCount; recordCount++) {
         Object datum = streamReader.next();
         writer.write(datum, encoder);
       }
       encoder.flush();
       out.println();
       out.flush();
-    } finally {
-      streamReader.close();
     }
     return 0;
   }

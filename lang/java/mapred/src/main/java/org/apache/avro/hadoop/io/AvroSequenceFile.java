@@ -723,14 +723,8 @@ public class AvroSequenceFile {
    */
   private static Metadata getMetadata(FileSystem fs, Path path, Configuration conf)
       throws IOException {
-    SequenceFile.Reader metadataReader = null;
-    try {
-      metadataReader = new SequenceFile.Reader(fs, path, conf);
+    try (SequenceFile.Reader metadataReader = new SequenceFile.Reader(fs, path, conf)) {
       return metadataReader.getMetadata();
-    } finally {
-      if (null != metadataReader) {
-        metadataReader.close();
-      }
     }
   }
 }

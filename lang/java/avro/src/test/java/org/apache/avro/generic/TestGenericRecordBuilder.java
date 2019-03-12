@@ -19,6 +19,7 @@ package org.apache.avro.generic;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.AvroRuntimeException;
@@ -48,7 +49,7 @@ public class TestGenericRecordBuilder {
 
     // Set field in builder:
     builder.set("intField", 1);
-    List<String> anArray = Arrays.asList(new String[] { "one", "two", "three" });
+    List<String> anArray = Arrays.asList("one", "two", "three");
     builder.set("anArray", anArray);
     Assert.assertTrue("anArray should be set", builder.has("anArray"));
     Assert.assertEquals(anArray, builder.get("anArray"));
@@ -57,7 +58,7 @@ public class TestGenericRecordBuilder {
 
     // Build the record, and verify that fields are set:
     Record record = builder.build();
-    Assert.assertEquals(Integer.valueOf(1), record.get("intField"));
+    Assert.assertEquals(1, record.get("intField"));
     Assert.assertEquals(anArray, record.get("anArray"));
     Assert.assertNotNull(record.get("id"));
     Assert.assertEquals("0", record.get("id").toString());
@@ -86,7 +87,7 @@ public class TestGenericRecordBuilder {
   public void buildWithoutSettingRequiredFields2() {
     try {
       new GenericRecordBuilder(recordSchema()).
-      set("anArray", Arrays.asList(new String[] { "one" })).
+      set("anArray", Collections.singletonList("one")).
       build();
       Assert.fail("Should have thrown " +
           AvroRuntimeException.class.getCanonicalName());

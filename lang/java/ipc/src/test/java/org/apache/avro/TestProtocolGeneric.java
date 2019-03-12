@@ -199,17 +199,13 @@ public class TestProtocolGeneric {
                              Schema.create(Schema.Type.STRING),
                              Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("hello", message);
-    Transceiver t
-      = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    try {
+    try (Transceiver t = new SocketTransceiver(new InetSocketAddress(server.getPort()))) {
       GenericRequestor r = new GenericRequestor(protocol, t);
       GenericRecord params = new GenericData.Record(message.getRequest());
       params.put("extra", Boolean.TRUE);
       params.put("greeting", new Utf8("bob"));
-      Utf8 response = (Utf8)r.request("hello", params);
+      Utf8 response = (Utf8) r.request("hello", params);
       assertEquals(new Utf8("goodbye"), response);
-    } finally {
-      t.close();
     }
   }
 
@@ -237,24 +233,20 @@ public class TestProtocolGeneric {
                              record,
                              Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("echo", message);
-    Transceiver t
-      = new SocketTransceiver(new InetSocketAddress(server.getPort()));
-    try {
+    try (Transceiver t = new SocketTransceiver(new InetSocketAddress(server.getPort()))) {
       GenericRequestor r = new GenericRequestor(protocol, t);
       GenericRecord args = new GenericData.Record(message.getRequest());
       GenericRecord rec = new GenericData.Record(record);
       rec.put("name", new Utf8("foo"));
       rec.put("kind", new GenericData.EnumSymbol
-              (PROTOCOL.getType("Kind"), "BAR"));
+        (PROTOCOL.getType("Kind"), "BAR"));
       rec.put("hash", new GenericData.Fixed
-              (PROTOCOL.getType("MD5"),
-               new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+        (PROTOCOL.getType("MD5"),
+          new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5}));
       rec.put("extra", Boolean.TRUE);
       args.put("record", rec);
-      GenericRecord response = (GenericRecord)r.request("echo", args);
+      GenericRecord response = (GenericRecord) r.request("echo", args);
       assertEquals(rec, response);
-    } finally {
-      t.close();
     }
   }
 

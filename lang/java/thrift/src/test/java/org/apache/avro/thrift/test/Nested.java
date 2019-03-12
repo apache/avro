@@ -176,7 +176,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case X:
-      return Integer.valueOf(getX());
+      return getX();
 
     }
     throw new IllegalStateException();
@@ -214,8 +214,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     if (this_present_x || that_present_x) {
       if (!(this_present_x && that_present_x))
         return false;
-      if (this.x != that.x)
-        return false;
+      return this.x == that.x;
     }
 
     return true;
@@ -234,7 +233,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
 
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetX()).compareTo(other.isSetX());
+    lastComparison = Boolean.compare(isSetX(), other.isSetX());
     if (lastComparison != 0) {
       return lastComparison;
     }

@@ -66,7 +66,7 @@ public class WordCountUtil {
       StringTokenizer tokens = new StringTokenizer(line);
       while (tokens.hasMoreTokens()) {
         String word = tokens.nextToken();
-        long count = COUNTS.containsKey(word) ? COUNTS.get(word) : 0L;
+        long count = COUNTS.getOrDefault(word, 0L);
         count++;
         total++;
         COUNTS.put(word, count);
@@ -109,7 +109,7 @@ public class WordCountUtil {
           new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
     for (GenericRecord  wc : reader) {
-      assertEquals((String)wc.get("key"), COUNTS.get(wc.get("key")), (Long)wc.get("value"));
+      assertEquals((String)wc.get("key"), COUNTS.get(wc.get("key")), wc.get("value"));
       //assertEquals(wc.getKey(), COUNTS.get(wc.getKey()), wc.getValue());
       numWords++;
     }

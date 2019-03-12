@@ -62,8 +62,6 @@ public class TestBZip2Codec {
 
     //Every byte in the outputByteArray should equal every byte in the input array
     byte[] outputByteArray = decompressedBuffer.array();
-    for (int i = 0; i < inputByteSize; i++) {
-      inputByteArray[i] = outputByteArray[i];
-    }
+    System.arraycopy(outputByteArray, 0, inputByteArray, 0, inputByteSize);
   }
 }

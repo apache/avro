@@ -77,7 +77,7 @@ public class TestAvroDatumConverterFactory {
   public void testConvertBooleanWritable() {
     AvroDatumConverter<BooleanWritable, Boolean> converter
         = mFactory.create(BooleanWritable.class);
-    assertEquals(true, converter.convert(new BooleanWritable(true)).booleanValue());
+    assertEquals(true, converter.convert(new BooleanWritable(true)));
   }
 
   @Test
@@ -98,13 +98,13 @@ public class TestAvroDatumConverterFactory {
   @Test
   public void testConvertDoubleWritable() {
     AvroDatumConverter<DoubleWritable, Double> converter = mFactory.create(DoubleWritable.class);
-    assertEquals(2.0, converter.convert(new DoubleWritable(2.0)).doubleValue(), 0.00001);
+    assertEquals(2.0, converter.convert(new DoubleWritable(2.0)), 0.00001);
   }
 
   @Test
   public void testConvertFloatWritable() {
     AvroDatumConverter<FloatWritable, Float> converter = mFactory.create(FloatWritable.class);
-    assertEquals(2.2f, converter.convert(new FloatWritable(2.2f)).floatValue(), 0.00001);
+    assertEquals(2.2f, converter.convert(new FloatWritable(2.2f)), 0.00001);
   }
 
   @Test

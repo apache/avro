@@ -76,7 +76,7 @@ class InputBuffer {
   public <T extends Comparable> T readValue(ValueType type) throws IOException {
     switch (type) {
     case NULL:
-      return (T)null;
+      return null;
     case BOOLEAN:
       return (T)Boolean.valueOf(readBoolean());
     case INT:

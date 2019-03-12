@@ -129,12 +129,9 @@ public class TestResolvingGrammarGenerator {
   private byte[] writeRecord(Schema schema, GenericData.Record record) throws Exception {
     ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
     GenericDatumWriter<GenericData.Record> datumWriter = new GenericDatumWriter<>(schema);
-    DataFileWriter<GenericData.Record> writer = new DataFileWriter<>(datumWriter);
-    try {
+    try (DataFileWriter<GenericData.Record> writer = new DataFileWriter<>(datumWriter)) {
       writer.create(schema, byteStream);
       writer.append(record);
-    } finally {
-      writer.close();
     }
     return byteStream.toByteArray();
   }
@@ -142,11 +139,8 @@ public class TestResolvingGrammarGenerator {
   private GenericData.Record readRecord(Schema schema, byte[] data) throws Exception {
     ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
     GenericDatumReader<GenericData.Record> datumReader = new GenericDatumReader<>(schema);
-    DataFileStream<GenericData.Record> reader = new DataFileStream<>(byteStream, datumReader);
-    try {
+    try (DataFileStream<GenericData.Record> reader = new DataFileStream<>(byteStream, datumReader)) {
       return reader.next();
-    } finally {
-      reader.close();
     }
   }
 }

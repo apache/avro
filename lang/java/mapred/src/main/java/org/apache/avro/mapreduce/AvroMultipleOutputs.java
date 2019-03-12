@@ -486,8 +486,8 @@ public class AvroMultipleOutputs{
       //FileOutputFormat.setOutputName(taskContext, baseFileName);
       taskContext.getConfiguration().set("avro.mo.config.namedOutput",baseFileName);
       try {
-        writer = ((OutputFormat) ReflectionUtils.newInstance(
-          taskContext.getOutputFormatClass(), taskContext.getConfiguration()))
+        writer = ReflectionUtils.newInstance(
+          taskContext.getOutputFormatClass(), taskContext.getConfiguration())
           .getRecordWriter(taskContext);
       } catch (ClassNotFoundException e) {
         throw new IOException(e);

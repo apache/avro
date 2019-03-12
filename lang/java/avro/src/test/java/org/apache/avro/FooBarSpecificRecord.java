@@ -35,10 +35,10 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
   private static SpecificData MODEL$ = new SpecificData();
 
   private static final BinaryMessageEncoder<FooBarSpecificRecord> ENCODER =
-      new BinaryMessageEncoder<FooBarSpecificRecord>(MODEL$, SCHEMA$);
+    new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
   private static final BinaryMessageDecoder<FooBarSpecificRecord> DECODER =
-      new BinaryMessageDecoder<FooBarSpecificRecord>(MODEL$, SCHEMA$);
+    new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageDecoder instance used by this class.
@@ -54,7 +54,7 @@ public class FooBarSpecificRecord extends org.apache.avro.specific.SpecificRecor
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<FooBarSpecificRecord> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<FooBarSpecificRecord>(MODEL$, SCHEMA$, resolver);
+    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**

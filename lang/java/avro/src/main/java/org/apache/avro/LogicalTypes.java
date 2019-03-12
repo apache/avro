@@ -280,9 +280,7 @@ public class LogicalTypes {
       Decimal decimal = (Decimal) o;
 
       if (precision != decimal.precision) return false;
-      if (scale != decimal.scale) return false;
-
-      return true;
+      return scale == decimal.scale;
     }
 
     @Override

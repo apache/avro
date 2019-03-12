@@ -939,7 +939,6 @@ public class BinaryDecoder extends Decoder {
       decoder.minPos = this.position;
       decoder.limit = this.max;
       this.ba = new BufferAccessor(decoder);
-      return;
     }
 
     @Override

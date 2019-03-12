@@ -20,7 +20,6 @@ package org.apache.avro;
 import static org.apache.avro.TestSchemas.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -310,16 +309,16 @@ public class TestSchemaValidation {
 
   @Test
   public void testUnionWithIncompatibleElements() throws SchemaValidationException {
-    Schema union1 = Schema.createUnion(Arrays.asList(rec));
-    Schema union2 = Schema.createUnion(Arrays.asList(rec4));
+    Schema union1 = Schema.createUnion(Collections.singletonList(rec));
+    Schema union2 = Schema.createUnion(Collections.singletonList(rec4));
     testValidatorFails(builder.canReadStrategy().validateAll(),
         union2, union1);
   }
 
   @Test
   public void testUnionWithCompatibleElements() throws SchemaValidationException {
-    Schema union1 = Schema.createUnion(Arrays.asList(rec));
-    Schema union2 = Schema.createUnion(Arrays.asList(rec3));
+    Schema union1 = Schema.createUnion(Collections.singletonList(rec));
+    Schema union2 = Schema.createUnion(Collections.singletonList(rec3));
     testValidatorPasses(builder.canReadStrategy().validateAll(),
         union2, union1);
   }
@@ -381,6 +380,6 @@ public class TestSchemaValidation {
   public void testRecursiveSchemaValidation() throws SchemaValidationException {
     // before AVRO-2122, this would cause a StackOverflowError
     final SchemaValidator backwardValidator = builder.canReadStrategy().validateLatest();
-    backwardValidator.validate(recursiveSchema, Arrays.asList(recursiveSchema));
+    backwardValidator.validate(recursiveSchema, Collections.singletonList(recursiveSchema));
   }
 }

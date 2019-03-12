@@ -191,10 +191,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
         return false;
       }
       IdentityWeakReference ref = (IdentityWeakReference)o;
-      if (this.get() == ref.get()) {
-        return true;
-      }
-      return false;
+      return this.get() == ref.get();
     }
   }
 }

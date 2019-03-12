@@ -62,7 +62,7 @@ public class TestCustomSchemaStore {
     // Should work
     assertEquals(nestedEvolve1.getRootName(), "RootName");
     assertEquals(nestedEvolve1.getNested().getName(), "Name");
-    assertEquals((long) nestedEvolve1.getNested().getValue(), 1);
+    assertEquals(nestedEvolve1.getNested().getValue(), 1);
   }
 
   @Test(expected = MissingSchemaException.class)

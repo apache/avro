@@ -99,12 +99,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
 
   private static final ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>
     RESOLVER_CACHE =
-    new ThreadLocal<Map<Schema,Map<Schema,ResolvingDecoder>>>() {
-    @Override
-    protected Map<Schema,Map<Schema,ResolvingDecoder>> initialValue() {
-      return new WeakIdentityHashMap<>();
-    }
-  };
+    ThreadLocal.withInitial(WeakIdentityHashMap::new);
 
   /** Gets a resolving decoder for use by this GenericDatumReader.
    *  Unstable API.
@@ -481,13 +476,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
         stringCtorCache.put(c, ctor);
       }
       return ctor.newInstance(s);
-    } catch (NoSuchMethodException e) {
-      throw new AvroRuntimeException(e);
-    } catch (InstantiationException e) {
-      throw new AvroRuntimeException(e);
-    } catch (IllegalAccessException e) {
-      throw new AvroRuntimeException(e);
-    } catch (InvocationTargetException e) {
+    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | InstantiationException e) {
       throw new AvroRuntimeException(e);
     }
   }

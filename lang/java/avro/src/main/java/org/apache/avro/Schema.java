@@ -17,29 +17,6 @@
  */
 package org.apache.avro;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.avro.util.internal.Accessor;
-import org.apache.avro.util.internal.Accessor.FieldAccessor;
-import org.apache.avro.util.internal.JacksonUtils;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -47,6 +24,28 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.DoubleNode;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.FieldAccessor;
+import org.apache.avro.util.internal.JacksonUtils;
 
 /** An abstract data type.
  * <p>A schema may be one of:
@@ -477,7 +476,7 @@ public abstract class Schema extends JsonProperties {
       this(field.name, schema, field.doc, field.defaultValue, field.order);
       putAll(field);
       if (field.aliases != null)
-        aliases = new LinkedHashSet<String>(field.aliases);
+        aliases = new LinkedHashSet<>(field.aliases);
     }
     /**
      * @param defaultValue the default value for this field specified using the mapping
@@ -576,7 +575,7 @@ public abstract class Schema extends JsonProperties {
       if (o == this) return true;
       if (!(o instanceof Name)) return false;
       Name that = (Name)o;
-      return full==null ? that.full==null : full.equals(that.full);
+      return Objects.equals(full, that.full);
     }
     @Override public int hashCode() {
       return full==null ? 0 : full.hashCode();
@@ -672,12 +671,8 @@ public abstract class Schema extends JsonProperties {
     }
   }
 
-  private static final ThreadLocal<Set> SEEN_EQUALS = new ThreadLocal<Set>() {
-    @Override protected Set initialValue() { return new HashSet(); }
-  };
-  private static final ThreadLocal<Map> SEEN_HASHCODE = new ThreadLocal<Map>() {
-    @Override protected Map initialValue() { return new IdentityHashMap(); }
-  };
+  private static final ThreadLocal<Set> SEEN_EQUALS = ThreadLocal.withInitial(HashSet::new);
+  private static final ThreadLocal<Map> SEEN_HASHCODE = ThreadLocal.withInitial(IdentityHashMap::new);
 
   @SuppressWarnings(value="unchecked")
   private static class RecordSchema extends NamedSchema {
@@ -1196,10 +1191,10 @@ public abstract class Schema extends JsonProperties {
       if (primitive != null) {
         return Schema.create(primitive);
       }
-      Name name = new Name((String) o, space);
+      Name name = new Name(o, space);
       if (!containsKey(name)) {
         // if not in default try anonymous
-        name = new Name((String) o, "");
+        name = new Name(o, "");
       }
       return super.get(name);
     }
@@ -1219,11 +1214,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   private static ThreadLocal<Boolean> validateNames
-    = new ThreadLocal<Boolean>() {
-    @Override protected Boolean initialValue() {
-      return true;
-    }
-  };
+    = ThreadLocal.withInitial(() -> true);
 
   private static String validateName(String name) {
     if (!validateNames.get()) return name;        // not validating names
@@ -1242,11 +1233,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   private static final ThreadLocal<Boolean> VALIDATE_DEFAULTS
-    = new ThreadLocal<Boolean>() {
-    @Override protected Boolean initialValue() {
-      return true;
-    }
-  };
+    = ThreadLocal.withInitial(() -> true);
 
   private static JsonNode validateDefault(String fieldName, Schema schema,
                                           JsonNode defaultValue) {
@@ -1599,10 +1586,7 @@ public abstract class Schema extends JsonProperties {
       for (Field field : schema.getFields()) {
         if (field.aliases != null)
           for (String fieldAlias : field.aliases) {
-            Map<String,String> recordAliases = fieldAliases.get(record.name);
-            if (recordAliases == null)
-              fieldAliases.put(record.name,
-                               recordAliases = new HashMap<>());
+            Map<String, String> recordAliases = fieldAliases.computeIfAbsent(record.name, k -> new HashMap<>());
             recordAliases.put(fieldAlias, field.name);
           }
         getAliases(field.schema, seen, aliases, fieldAliases);

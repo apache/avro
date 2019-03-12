@@ -162,7 +162,7 @@ public class TestWordCount {
         sum += count.get();
       }
       record.put("name", new Utf8(line.toString()));
-      record.put("count", new Integer(sum));
+      record.put("count", sum);
       mStats.datum(record);
       context.write(mStats, NullWritable.get());
     }
@@ -507,15 +507,12 @@ public class TestWordCount {
     Path filePath = outputFiles[0].getPath();
     InputStream inputStream = filePath.getFileSystem(job.getConfiguration()).open(filePath);
     Assert.assertNotNull(inputStream);
-    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-    try {
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
       Assert.assertTrue(reader.ready());
       Assert.assertEquals("apple\t3", reader.readLine());
       Assert.assertEquals("banana\t2", reader.readLine());
       Assert.assertEquals("carrot\t1", reader.readLine());
       Assert.assertFalse(reader.ready());
-    } finally {
-      reader.close();
     }
   }
 }

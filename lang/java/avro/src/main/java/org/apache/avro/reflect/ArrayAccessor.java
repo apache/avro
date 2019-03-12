@@ -32,9 +32,9 @@ class ArrayAccessor {
   static void writeArray(boolean[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (boolean datum : data) {
       out.startItem();
-      out.writeBoolean(data[i]);
+      out.writeBoolean(datum);
     }
   }
 
@@ -43,54 +43,54 @@ class ArrayAccessor {
   static void writeArray(short[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (short datum : data) {
       out.startItem();
-      out.writeInt(data[i]);
+      out.writeInt(datum);
     }
   }
 
   static void writeArray(char[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (char datum : data) {
       out.startItem();
-      out.writeInt(data[i]);
+      out.writeInt(datum);
     }
   }
 
   static void writeArray(int[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (int datum : data) {
       out.startItem();
-      out.writeInt(data[i]);
+      out.writeInt(datum);
     }
   }
 
   static void writeArray(long[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (long datum : data) {
       out.startItem();
-      out.writeLong(data[i]);
+      out.writeLong(datum);
     }
   }
 
   static void writeArray(float[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (float datum : data) {
       out.startItem();
-      out.writeFloat(data[i]);
+      out.writeFloat(datum);
     }
   }
 
   static void writeArray(double[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (double datum : data) {
       out.startItem();
-      out.writeDouble(data[i]);
+      out.writeDouble(datum);
     }
   }
 

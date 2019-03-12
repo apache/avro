@@ -73,9 +73,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
       for (String customConversion : customConversions) {
         compiler.addCustomConversion(classLoader.loadClass(customConversion));
       }
-    } catch (DependencyResolutionRequiredException e) {
-      throw new IOException(e);
-    } catch (ClassNotFoundException e) {
+    } catch (DependencyResolutionRequiredException | ClassNotFoundException e) {
       throw new IOException(e);
     }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));

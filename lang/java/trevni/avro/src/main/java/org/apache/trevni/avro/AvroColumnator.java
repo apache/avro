@@ -32,19 +32,17 @@ import org.apache.avro.Schema.Field;
 /** Utility that computes the column layout of a schema. */
 class AvroColumnator {
 
-  private Schema schema;
-
   private List<ColumnMetaData> columns = new ArrayList<>();
   private List<Integer> arrayWidths = new ArrayList<>();
 
   public AvroColumnator(Schema schema) {
-    this.schema = schema;
+    Schema schema1 = schema;
     columnize(null, schema, null, false);
   }
 
   /** Return columns for the schema. */
   public ColumnMetaData[] getColumns() {
-    return columns.toArray(new ColumnMetaData[columns.size()]);
+    return columns.toArray(new ColumnMetaData[0]);
   }
 
   /** Return array giving the number of columns immediately following each

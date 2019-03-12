@@ -198,16 +198,11 @@ public class DataFileWriter<D> implements Closeable, Flushable {
 
   /** Open a writer appending to an existing file. */
   public DataFileWriter<D> appendTo(File file) throws IOException {
-    SeekableInput input = null;
-    try {
-      input = new SeekableFileInput(file);
+    try (SeekableInput input = new SeekableFileInput(file)) {
       OutputStream output = new SyncableFileOutputStream(file, true);
       return appendTo(input, output);
-    } finally {
-      if (input != null)
-        input.close();
-      // output does not need to be closed here. It will be closed by invoking close() of this writer.
     }
+    // output does not need to be closed here. It will be closed by invoking close() of this writer.
   }
 
   /** Open a writer appending to an existing file.
@@ -308,12 +303,9 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     int usedBuffer = bufferInUse();
     try {
       dout.write(datum, bufOut);
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
       resetBufferTo(usedBuffer);
       throw new AppendWriteException(e);
-    } catch (RuntimeException re) {
-      resetBufferTo(usedBuffer);
-      throw new AppendWriteException(re);
     }
     blockCount++;
     writeIfBlockFull();

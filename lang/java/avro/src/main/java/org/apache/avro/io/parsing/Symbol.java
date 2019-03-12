@@ -396,7 +396,7 @@ public abstract class Symbol {
    * for some inputs.
    */
   public static boolean hasErrors(Symbol symbol) {
-    return hasErrors(symbol, new HashSet<Symbol>());
+    return hasErrors(symbol, new HashSet<>());
   }
 
   private static boolean hasErrors(Symbol symbol, Set<Symbol> visited) {

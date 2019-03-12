@@ -47,9 +47,7 @@ public class BinaryData {
   }                     // no public ctor
 
   private static final ThreadLocal<Decoders> DECODERS
-    = new ThreadLocal<Decoders>() {
-    @Override protected Decoders initialValue() { return new Decoders(); }
-  };
+    = ThreadLocal.withInitial(Decoders::new);
 
   /** Compare binary encoded data.  If equal, return zero.  If greater-than,
    * return 1, if less than return -1. Order is consistent with that of {@link
@@ -192,9 +190,7 @@ public class BinaryData {
   }
 
   private static final ThreadLocal<HashData> HASH_DATA
-    = new ThreadLocal<HashData>() {
-    @Override protected HashData initialValue() { return new HashData(); }
-  };
+    = ThreadLocal.withInitial(HashData::new);
 
   /** Hash binary encoded data. Consistent with {@link
    * org.apache.avro.generic.GenericData#hashCode(Object, Schema)}.*/

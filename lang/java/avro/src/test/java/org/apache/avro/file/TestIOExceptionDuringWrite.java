@@ -58,8 +58,7 @@ public class TestIOExceptionDuringWrite {
 
   @Test
   public void testNoWritingAfterException() throws IOException {
-    DataFileWriter<Object> writer = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-    try {
+    try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())) {
       writer.create(SCHEMA, new FailingOutputStream(100000));
       int recordCnt = 0;
       for (Object datum : new RandomData(SCHEMA, 100000, 42)) {
@@ -70,8 +69,6 @@ public class TestIOExceptionDuringWrite {
       }
     } catch (IOException e) {
       return;
-    } finally {
-      writer.close();
     }
     fail("IOException should have been thrown");
   }
