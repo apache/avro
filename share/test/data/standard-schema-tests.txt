@@ -114,11 +114,11 @@
 
 // 023
 <<INPUT {"fields":[], "type":"record", "name":"foo", "aliases":["foo","bar"]}
-<<canonical {"name":"foo","type":"record","fields":[],"aliases":["foo","bar"]}
+<<canonical {"name":"foo","type":"record","fields":[],"aliases":["bar","foo"]}
 
 // 024
 <<INPUT {"fields":[], "type":"record", "name":"foo", "doc":"foo", "aliases":["foo","bar"]}
-<<canonical {"name":"foo","type":"record","fields":[],"doc":"foo","aliases":["foo","bar"]}
+<<canonical {"name":"foo","type":"record","fields":[],"doc":"foo","aliases":["bar","foo"]}
 
 // 025
 <<INPUT {"fields":[{"type":{"type":"boolean"}, "name":"f1"}], "type":"record", "name":"foo"}

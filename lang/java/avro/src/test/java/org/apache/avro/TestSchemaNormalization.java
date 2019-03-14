@@ -83,7 +83,7 @@ public class TestSchemaNormalization {
     { return CaseFinder.find(data(STANDARD_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(Schema.parse(input)),
+      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input)),
         expectedOutput);
     }
   }
@@ -98,7 +98,7 @@ public class TestSchemaNormalization {
     { return CaseFinder.find(data(CUSTOM_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(Schema.parse(input), properties),
+      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input), properties),
         expectedOutput);
     }
   }
