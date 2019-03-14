@@ -22,9 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -80,7 +78,7 @@ public class TestSchemaNormalization {
     { return CaseFinder.find(data(STANDARD_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(Schema.parse(input)),
+      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input)),
         expectedOutput);
     }
   }
@@ -95,7 +93,7 @@ public class TestSchemaNormalization {
     { return CaseFinder.find(data(CUSTOM_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
 
     @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(Schema.parse(input), properties),
+      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input), properties),
         expectedOutput);
     }
   }
@@ -137,7 +135,7 @@ public class TestSchemaNormalization {
   }
 
   private static BufferedReader data(String data_file) throws IOException
-  { return new BufferedReader(new FileReader(data_file), UTF_8); }
+  { return Files.newBufferedReader(Paths.get(data_file), UTF_8); }
 
   /** Compute the fingerprint of <i>bytes[s,s+l)</i> using a slow
       algorithm that's an alternative to that implemented in {@link
