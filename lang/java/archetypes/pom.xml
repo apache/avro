@@ -33,6 +33,7 @@
   <description>Archetypes parent defining configuration for generating archetype poms with the correct Avro version</description>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <maven.archetype.version>2.1</maven.archetype.version>
   </properties>
 

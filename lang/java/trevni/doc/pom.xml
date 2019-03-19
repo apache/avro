@@ -33,6 +33,10 @@
   <name>Trevni Specification</name>
   <url>http://avro.apache.org/</url>
 
+  <properties>
+    <main.basedir>${project.parent.parent.parent.basedir}</main.basedir>
+  </properties>
+
   <build>
     <pluginManagement>
       <plugins>

@@ -19,10 +19,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <prerequisites>
-    <maven>3.0.5</maven>
-  </prerequisites>
-
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
@@ -45,6 +41,7 @@
        -->
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <main.basedir>${project.basedir}</main.basedir>
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
     <!-- dependency plugin versions -->
@@ -52,12 +49,12 @@
 
     <!-- plugin versions -->
     <antrun-plugin.version>1.8</antrun-plugin.version>
+    <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
     <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.1</extra-enforcer-rules.version>
-    <rat.version>0.13</rat.version>
-    <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
     <javadoc-plugin.version>3.0.1</javadoc-plugin.version>
+    <rat.version>0.13</rat.version>
     <source-plugin.version>3.0.1</source-plugin.version>
   </properties>
 

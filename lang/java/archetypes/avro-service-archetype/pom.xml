@@ -33,6 +33,10 @@
   <name>Apache Avro Maven Service Archetype</name>
   <description>Archetype that generates a simple example Avro service</description>
 
+  <properties>
+    <main.basedir>${project.parent.parent.parent.basedir}</main.basedir>
+  </properties>
+
   <build>
     <resources>
       <resource>

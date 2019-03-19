@@ -35,6 +35,7 @@
   <packaging>bundle</packaging>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <osgi.import>
       !org.apache.avro.ipc.jetty*,
       org.apache.avro*;version="${project.version}",

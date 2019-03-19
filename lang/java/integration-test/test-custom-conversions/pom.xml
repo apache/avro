@@ -33,8 +33,10 @@
   <packaging>jar</packaging>
   <url>http://avro.apache.org</url>
   <description>Contains dependencies for the maven plugin used in avro-codegen-test</description>
+
   <properties>
-      <maven.javadoc.skip>true</maven.javadoc.skip>
+    <main.basedir>${project.parent.parent.parent.basedir}</main.basedir>
+    <maven.javadoc.skip>true</maven.javadoc.skip>
   </properties>
 
   <dependencies>

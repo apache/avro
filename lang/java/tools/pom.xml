@@ -33,6 +33,10 @@
   <url>http://avro.apache.org</url>
   <description>Avro command line tools and utilities</description>
 
+  <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
+  </properties>
+
   <build>
     <resources>
       <resource>
