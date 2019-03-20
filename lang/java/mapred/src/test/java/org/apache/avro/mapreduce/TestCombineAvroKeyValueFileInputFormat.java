@@ -107,14 +107,14 @@ public class TestCombineAvroKeyValueFileInputFormat {
     AvroKeyValue<Integer, CharSequence> mapRecord1
       = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(mapRecord1.get());
-    assertEquals(2, mapRecord1.getKey().intValue());
-    assertEquals("apple banana", mapRecord1.getValue().toString());
+    assertEquals(1, mapRecord1.getKey().intValue());
+    assertEquals("apple banana carrot", mapRecord1.getValue().toString());
 
     assertTrue(avroFileReader.hasNext());
     AvroKeyValue<Integer, CharSequence> mapRecord2
       = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(mapRecord2.get());
-    assertEquals(1, mapRecord2.getKey().intValue());
-    assertEquals("apple banana carrot", mapRecord2.getValue().toString());
+    assertEquals(2, mapRecord2.getKey().intValue());
+    assertEquals("apple banana", mapRecord2.getValue().toString());
   }
 }
