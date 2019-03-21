@@ -70,7 +70,10 @@ public class TestDataFile {
     r.add(new Object[] { CodecFactory.xzCodec(0) });
     r.add(new Object[] { CodecFactory.xzCodec(1) });
     r.add(new Object[] { CodecFactory.xzCodec(6) });
-    r.add(new Object[] { CodecFactory.zstandardCodec() });
+    r.add(new Object[] { CodecFactory.zstandardCodec(-5) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(0, true) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(5, false) });
+    r.add(new Object[] { CodecFactory.zstandardCodec(18, true) });
     return r;
   }
 

@@ -84,7 +84,7 @@ public class TestAvroKeyOutputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.ZSTANDARD_CODEC);
-    testGetRecordWriter(conf, CodecFactory.zstandardCodec(), DataFileConstants.DEFAULT_SYNC_INTERVAL);
+    testGetRecordWriter(conf, CodecFactory.zstandardCodec(3), DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
   @Test

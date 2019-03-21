@@ -24,21 +24,37 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream;
-import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 public class ZstandardCodec extends Codec {
 
   static class Option extends CodecFactory {
+    private final int compressionLevel;
+    private final boolean useChecksum;
+
+    Option(int compressionLevel, boolean useChecksum) {
+      this.compressionLevel = compressionLevel;
+      this.useChecksum = useChecksum;
+    }
 
     @Override
     protected Codec createInstance() {
-      return new ZstandardCodec();
+      return new ZstandardCodec(compressionLevel, useChecksum);
     }
   }
 
+  private final int compressionLevel;
+  private final boolean useChecksum;
   private ByteArrayOutputStream outputBuffer;
+
+  /**
+   * Create a ZstandardCodec instance with the given compressionLevel and checksum
+   * option
+   **/
+  public ZstandardCodec(int compressionLevel, boolean useChecksum) {
+    this.compressionLevel = compressionLevel;
+    this.useChecksum = useChecksum;
+  }
 
   @Override
   public String getName() {
@@ -48,7 +64,7 @@ public class ZstandardCodec extends Codec {
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    try (OutputStream outputStream = new ZstdCompressorOutputStream(baos)) {
+    try (OutputStream outputStream = ZstandardLoader.output(baos, compressionLevel, useChecksum)) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
     return ByteBuffer.wrap(baos.toByteArray());
@@ -59,7 +75,7 @@ public class ZstandardCodec extends Codec {
     ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
     InputStream bytesIn = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
         compressedData.remaining());
-    try (InputStream ios = new ZstdCompressorInputStream(bytesIn)) {
+    try (InputStream ios = ZstandardLoader.input(bytesIn)) {
       IOUtils.copy(ios, baos);
     }
     return ByteBuffer.wrap(baos.toByteArray());
@@ -81,8 +97,11 @@ public class ZstandardCodec extends Codec {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
-      return true;
-    return obj != null && obj.getClass() == getClass();
+    return (this == obj) || (obj != null && obj.getClass() == this.getClass());
+  }
+
+  @Override
+  public String toString() {
+    return getName() + "[" + compressionLevel + "]";
   }
 }
