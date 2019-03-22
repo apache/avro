@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Collection;
 
 import org.apache.avro.AvroRuntimeException;
@@ -67,6 +68,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   }
 
   public void write(D datum, Encoder out) throws IOException {
+    Objects.requireNonNull(out, "Encoder cannot be null");
     write(root, datum, out);
   }
 
