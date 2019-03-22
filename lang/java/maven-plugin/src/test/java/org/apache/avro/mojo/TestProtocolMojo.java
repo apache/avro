@@ -28,10 +28,8 @@ import java.io.File;
  */
 public class TestProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File jodaTestPom = new File(getBasedir(),
-          "src/test/resources/unit/protocol/pom-joda.xml");
-  protected File jsr310TestPom = new File(getBasedir(),
-          "src/test/resources/unit/protocol/pom-jsr310.xml");
+  protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-joda.xml");
+  protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-jsr310.xml");
 
   public void testProtocolMojoJoda() throws Exception {
     ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jodaTestPom);
@@ -40,8 +38,7 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     File outputDir = new File(getBasedir(), "target/test-harness/protocol-joda/test");
-    String[] generatedFiles = new String[]{"ProtocolPrivacy.java",
-      "ProtocolTest.java", "ProtocolUser.java"};
+    String[] generatedFiles = new String[] { "ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java" };
 
     assertFilesExist(outputDir, generatedFiles);
 
@@ -56,8 +53,7 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
     mojo.execute();
 
     File outputDir = new File(getBasedir(), "target/test-harness/protocol-jsr310/test");
-    String[] generatedFiles = new String[]{"ProtocolPrivacy.java",
-            "ProtocolTest.java", "ProtocolUser.java"};
+    String[] generatedFiles = new String[] { "ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java" };
 
     assertFilesExist(outputDir, generatedFiles);
 

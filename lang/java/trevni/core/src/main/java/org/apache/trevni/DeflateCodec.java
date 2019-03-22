@@ -46,8 +46,7 @@ class DeflateCodec extends Codec {
     return ByteBuffer.wrap(baos.toByteArray());
   }
 
-  private void writeAndClose(ByteBuffer data, OutputStream out)
-    throws IOException {
+  private void writeAndClose(ByteBuffer data, OutputStream out) throws IOException {
     out.write(data.array(), data.position(), data.remaining());
     out.close();
   }

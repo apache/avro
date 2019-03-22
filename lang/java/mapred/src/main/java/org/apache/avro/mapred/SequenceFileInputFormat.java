@@ -29,13 +29,11 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RecordReader;
 
 /** An {@link org.apache.hadoop.mapred.InputFormat} for sequence files. */
-public class SequenceFileInputFormat<K,V>
-  extends FileInputFormat<AvroWrapper<Pair<K,V>>, NullWritable> {
+public class SequenceFileInputFormat<K, V> extends FileInputFormat<AvroWrapper<Pair<K, V>>, NullWritable> {
 
   @Override
-  public RecordReader<AvroWrapper<Pair<K,V>>, NullWritable>
-      getRecordReader(InputSplit split, JobConf job, Reporter reporter)
-    throws IOException {
+  public RecordReader<AvroWrapper<Pair<K, V>>, NullWritable> getRecordReader(InputSplit split, JobConf job,
+      Reporter reporter) throws IOException {
     reporter.setStatus(split.toString());
     return new SequenceFileRecordReader<>(job, (FileSplit) split);
   }

@@ -44,14 +44,14 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.Version;
 
-/** A {@link Decoder} for Avro's JSON data encoding.
+/**
+ * A {@link Decoder} for Avro's JSON data encoding.
  * </p>
  * Construct using {@link DecoderFactory}.
  * </p>
  * JsonDecoder is not thread-safe.
- * */
-public class JsonDecoder extends ParsingDecoder
-  implements Parser.ActionHandler {
+ */
+public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler {
   private JsonParser in;
   private static JsonFactory jsonFactory = new JsonFactory();
   Stack<ReorderBuffer> reorderBuffers = new Stack<>();
@@ -94,10 +94,10 @@ public class JsonDecoder extends ParsingDecoder
    * <p/>
    * If the InputStream provided is null, a NullPointerException is thrown.
    * <p/>
-   * Otherwise, this JsonDecoder will reset its state and then
-   * reconfigure its input.
-   * @param in
-   *   The InputStream to read from. Cannot be null.
+   * Otherwise, this JsonDecoder will reset its state and then reconfigure its
+   * input.
+   * 
+   * @param in The InputStream to read from. Cannot be null.
    * @throws IOException
    * @return this JsonDecoder
    */
@@ -118,10 +118,10 @@ public class JsonDecoder extends ParsingDecoder
    * <p/>
    * If the String provided is null, a NullPointerException is thrown.
    * <p/>
-   * Otherwise, this JsonDecoder will reset its state and then
-   * reconfigure its input.
-   * @param in
-   *   The String to read from. Cannot be null.
+   * Otherwise, this JsonDecoder will reset its state and then reconfigure its
+   * input.
+   * 
+   * @param in The String to read from. Cannot be null.
    * @throws IOException
    * @return this JsonDecoder
    */
@@ -285,8 +285,7 @@ public class JsonDecoder extends ParsingDecoder
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     if (size != top.size) {
       throw new AvroTypeException(
-        "Incorrect length for fixed binary: expected " +
-        top.size + " but received " + size + " bytes.");
+          "Incorrect length for fixed binary: expected " + top.size + " but received " + size + " bytes.");
     }
   }
 
@@ -297,8 +296,7 @@ public class JsonDecoder extends ParsingDecoder
       byte[] result = readByteArray();
       in.nextToken();
       if (result.length != len) {
-        throw new AvroTypeException("Expected fixed length " + len
-            + ", but got" + result.length);
+        throw new AvroTypeException("Expected fixed length " + len + ", but got" + result.length);
       }
       System.arraycopy(result, 0, bytes, start, len);
     } else {
@@ -317,8 +315,7 @@ public class JsonDecoder extends ParsingDecoder
       byte[] result = readByteArray();
       in.nextToken();
       if (result.length != length) {
-        throw new AvroTypeException("Expected fixed length " + length
-            + ", but got" + result.length);
+        throw new AvroTypeException("Expected fixed length " + length + ", but got" + result.length);
       }
     } else {
       throw error("fixed");
@@ -437,8 +434,7 @@ public class JsonDecoder extends ParsingDecoder
     String label;
     if (in.getCurrentToken() == JsonToken.VALUE_NULL) {
       label = "null";
-    } else if (in.getCurrentToken() == JsonToken.START_OBJECT &&
-               in.nextToken() == JsonToken.FIELD_NAME) {
+    } else if (in.getCurrentToken() == JsonToken.START_OBJECT && in.nextToken() == JsonToken.FIELD_NAME) {
       label = in.getText();
       in.nextToken();
       parser.pushSymbol(Symbol.UNION_END);
@@ -455,8 +451,8 @@ public class JsonDecoder extends ParsingDecoder
   @Override
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldAdjustAction) {
-        Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
-        String name = fa.fname;
+      Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
+      String name = fa.fname;
       if (currentReorderBuffer != null) {
         List<JsonElement> node = currentReorderBuffer.savedFields.get(name);
         if (node != null) {
@@ -495,8 +491,8 @@ public class JsonDecoder extends ParsingDecoder
         throw error("record-start");
       }
     } else if (top == Symbol.RECORD_END || top == Symbol.UNION_END) {
-      //AVRO-2034 advance to the end of our object
-      while(in.getCurrentToken() != JsonToken.END_OBJECT){
+      // AVRO-2034 advance to the end of our object
+      while (in.getCurrentToken() != JsonToken.END_OBJECT) {
         in.nextToken();
       }
 
@@ -507,7 +503,7 @@ public class JsonDecoder extends ParsingDecoder
         currentReorderBuffer = reorderBuffers.pop();
       }
 
-      //AVRO-2034 advance beyond the end object for the next record.
+      // AVRO-2034 advance beyond the end object for the next record.
       in.nextToken();
 
     } else {
@@ -519,6 +515,7 @@ public class JsonDecoder extends ParsingDecoder
   private static class JsonElement {
     public final JsonToken token;
     public final String value;
+
     public JsonElement(JsonToken t, String value) {
       this.token = t;
       this.value = value;
@@ -591,7 +588,7 @@ public class JsonDecoder extends ParsingDecoder
         JsonToken tkn = elements.get(pos).token;
         int level = (tkn == JsonToken.START_ARRAY || tkn == JsonToken.END_ARRAY) ? 1 : 0;
         while (level > 0) {
-          switch(elements.get(++pos).token) {
+          switch (elements.get(++pos).token) {
           case START_ARRAY:
           case START_OBJECT:
             level++;
@@ -691,8 +688,7 @@ public class JsonDecoder extends ParsingDecoder
       }
 
       @Override
-      public byte[] getBinaryValue(Base64Variant b64variant)
-        throws IOException {
+      public byte[] getBinaryValue(Base64Variant b64variant) throws IOException {
         throw new UnsupportedOperationException();
       }
 
@@ -759,9 +755,7 @@ public class JsonDecoder extends ParsingDecoder
   }
 
   private AvroTypeException error(String type) {
-    return new AvroTypeException("Expected " + type +
-        ". Got " + in.getCurrentToken());
+    return new AvroTypeException("Expected " + type + ". Got " + in.getCurrentToken());
   }
 
 }
-

@@ -41,8 +41,7 @@ import org.junit.rules.TemporaryFolder;
 
 @SuppressWarnings("deprecation")
 public class TestTextFileTools {
-  private static final int COUNT =
-    Integer.parseInt(System.getProperty("test.count", "10"));
+  private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "10"));
 
   private static final byte[] LINE_SEP = System.getProperty("line.separator").getBytes();
   private static File linesFile;
@@ -58,17 +57,16 @@ public class TestTextFileTools {
     lines = new ByteBuffer[COUNT];
     linesFile = new File(DIR.getRoot(), "random.lines");
 
-    OutputStream out =
-      new BufferedOutputStream(new FileOutputStream(linesFile));
+    OutputStream out = new BufferedOutputStream(new FileOutputStream(linesFile));
     Random rand = new Random();
     for (int j = 0; j < COUNT; j++) {
       byte[] line = new byte[rand.nextInt(512)];
-      System.out.println("Creating line = "+line.length);
+      System.out.println("Creating line = " + line.length);
       for (int i = 0; i < line.length; i++) {
         int b = rand.nextInt(256);
         while (b == '\n' || b == '\r')
           b = rand.nextInt(256);
-        line[i] = (byte)b;
+        line[i] = (byte) b;
       }
       out.write(line);
       out.write(LINE_SEP);
@@ -87,11 +85,10 @@ public class TestTextFileTools {
     new FromTextTool().run(null, null, null, arglist);
 
     // Read it back, and make sure it's valid.
-    DataFileReader<ByteBuffer> file = new DataFileReader<>
-      (avroFile, new GenericDatumReader<>());
+    DataFileReader<ByteBuffer> file = new DataFileReader<>(avroFile, new GenericDatumReader<>());
     int i = 0;
     for (ByteBuffer line : file) {
-      System.out.println("Reading line = "+line.remaining());
+      System.out.println("Reading line = " + line.remaining());
       assertEquals(line, lines[i]);
       i++;
     }
@@ -123,7 +120,7 @@ public class TestTextFileTools {
     new ToTextTool().run(null, null, null, arglist);
 
     // Read it back, and make sure it's valid.
-    try(InputStream orig = new BufferedInputStream(new FileInputStream(linesFile))) {
+    try (InputStream orig = new BufferedInputStream(new FileInputStream(linesFile))) {
       try (InputStream after = new BufferedInputStream(new FileInputStream(outFile))) {
         int b;
         while ((b = orig.read()) != -1) {

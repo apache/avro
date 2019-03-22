@@ -45,22 +45,25 @@ public class TestByteBuffer {
   @Rule
   public TemporaryFolder DIR = new TemporaryFolder();
 
-  static class X{
+  static class X {
     String name = "";
     ByteBuffer content;
   }
+
   File content;
 
-  @Before public void before() throws IOException{
-    content = new File(DIR.getRoot().getPath(),"test-content");
-    try(FileOutputStream out = new FileOutputStream(content)) {
+  @Before
+  public void before() throws IOException {
+    content = new File(DIR.getRoot().getPath(), "test-content");
+    try (FileOutputStream out = new FileOutputStream(content)) {
       for (int i = 0; i < 100000; i++) {
         out.write("hello world\n".getBytes(UTF_8));
       }
     }
   }
 
-  @Test public void test() throws Exception{
+  @Test
+  public void test() throws Exception {
     Schema schema = ReflectData.get().getSchema(X.class);
     ByteArrayOutputStream bout = new ByteArrayOutputStream();
     writeOneXAsAvro(schema, bout);
@@ -68,32 +71,30 @@ public class TestByteBuffer {
 
     String expected = getmd5(content);
     String actual = getmd5(record.content);
-    assertEquals("md5 for result differed from input",expected,actual);
+    assertEquals("md5 for result differed from input", expected, actual);
   }
 
-  private X readOneXFromAvro(Schema schema, ByteArrayOutputStream bout)
-    throws IOException {
+  private X readOneXFromAvro(Schema schema, ByteArrayOutputStream bout) throws IOException {
     SeekableByteArrayInput input = new SeekableByteArrayInput(bout.toByteArray());
     ReflectDatumReader<X> datumReader = new ReflectDatumReader<>(schema);
     FileReader<X> reader = DataFileReader.openReader(input, datumReader);
     Iterator<X> it = reader.iterator();
-    assertTrue("missing first record",it.hasNext());
+    assertTrue("missing first record", it.hasNext());
     X record = it.next();
-    assertFalse("should be no more records - only wrote one out",it.hasNext());
+    assertFalse("should be no more records - only wrote one out", it.hasNext());
     return record;
   }
 
-  private void writeOneXAsAvro(Schema schema, ByteArrayOutputStream bout)
-    throws IOException, FileNotFoundException {
+  private void writeOneXAsAvro(Schema schema, ByteArrayOutputStream bout) throws IOException, FileNotFoundException {
     DatumWriter<X> datumWriter = new ReflectDatumWriter<>(schema);
-    try(DataFileWriter<X> writer = new DataFileWriter<>(datumWriter)) {
+    try (DataFileWriter<X> writer = new DataFileWriter<>(datumWriter)) {
       writer.create(schema, bout);
       X x = new X();
       x.name = "xxx";
       try (FileInputStream fis = new FileInputStream(content)) {
         try (FileChannel channel = fis.getChannel()) {
           long contentLength = content.length();
-          //set the content to be a file channel.
+          // set the content to be a file channel.
           ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, contentLength);
           x.content = buffer;
           writer.append(x);
@@ -103,7 +104,7 @@ public class TestByteBuffer {
     }
   }
 
-  private String getmd5(File content) throws Exception{
+  private String getmd5(File content) throws Exception {
     try (FileInputStream fis = new FileInputStream(content)) {
       try (FileChannel channel = fis.getChannel()) {
         long contentLength = content.length();
@@ -113,7 +114,7 @@ public class TestByteBuffer {
     }
   }
 
-  String getmd5(ByteBuffer buffer) throws NoSuchAlgorithmException{
+  String getmd5(ByteBuffer buffer) throws NoSuchAlgorithmException {
     MessageDigest mdEnc = MessageDigest.getInstance("MD5");
     mdEnc.reset();
     mdEnc.update(buffer);

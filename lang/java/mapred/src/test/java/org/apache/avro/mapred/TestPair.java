@@ -27,7 +27,8 @@ import static org.junit.Assert.*;
 
 public class TestPair {
 
-  @Test public void testCollectionFailure() throws Exception {
+  @Test
+  public void testCollectionFailure() throws Exception {
     try {
       new Pair("foo", new ArrayList());
     } catch (AvroRuntimeException e) {

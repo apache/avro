@@ -54,10 +54,13 @@ public class ThriftData extends GenericData {
 
   private static final ThriftData INSTANCE = new ThriftData();
 
-  protected ThriftData() {}
+  protected ThriftData() {
+  }
 
   /** Return the singleton instance. */
-  public static ThriftData get() { return INSTANCE; }
+  public static ThriftData get() {
+    return INSTANCE;
+  }
 
   @Override
   public DatumReader createDatumReader(Schema schema) {
@@ -81,33 +84,32 @@ public class ThriftData extends GenericData {
 
   @Override
   protected void setField(Object r, String n, int pos, Object v, Object state) {
-    if (v == null && r instanceof TUnion) return;
-    ((TBase)r).setFieldValue(((TFieldIdEnum[])state)[pos], v);
+    if (v == null && r instanceof TUnion)
+      return;
+    ((TBase) r).setFieldValue(((TFieldIdEnum[]) state)[pos], v);
   }
 
   @Override
   protected Object getField(Object record, String name, int pos, Object state) {
-    TFieldIdEnum f = ((TFieldIdEnum[])state)[pos];
-    TBase struct = (TBase)record;
+    TFieldIdEnum f = ((TFieldIdEnum[]) state)[pos];
+    TBase struct = (TBase) record;
     if (struct.isSet(f))
       return struct.getFieldValue(f);
     return null;
   }
 
-  private final Map<Schema,TFieldIdEnum[]> fieldCache =
-    new ConcurrentHashMap<>();
+  private final Map<Schema, TFieldIdEnum[]> fieldCache = new ConcurrentHashMap<>();
 
   @Override
   @SuppressWarnings("unchecked")
   protected Object getRecordState(Object r, Schema s) {
     TFieldIdEnum[] fields = fieldCache.get(s);
-    if (fields == null) {                           // cache miss
+    if (fields == null) { // cache miss
       fields = new TFieldIdEnum[s.getFields().size()];
       Class c = r.getClass();
-      for (TFieldIdEnum f :
-          FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).keySet())
+      for (TFieldIdEnum f : FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).keySet())
         fields[s.getField(f.getFieldName()).pos()] = f;
-      fieldCache.put(s, fields);                  // update cache
+      fieldCache.put(s, fields); // update cache
     }
     return fields;
   }
@@ -144,8 +146,10 @@ public class ThriftData extends GenericData {
   @Override
   // setFieldValue takes ByteBuffer but getFieldValue returns byte[]
   protected boolean isBytes(Object datum) {
-    if (datum instanceof ByteBuffer) return true;
-    if (datum == null) return false;
+    if (datum instanceof ByteBuffer)
+      return true;
+    if (datum == null)
+      return false;
     Class c = datum.getClass();
     return c.isArray() && c.getComponentType() == Byte.TYPE;
   }
@@ -155,10 +159,10 @@ public class ThriftData extends GenericData {
     try {
       Class c = ClassUtils.forName(SpecificData.getClassName(schema));
       if (c == null)
-        return newRecord(old, schema);            // punt to generic
+        return newRecord(old, schema); // punt to generic
       if (c.isInstance(old))
-        return old;                               // reuse instance
-      return c.newInstance();                     // create new instance
+        return old; // reuse instance
+      return c.newInstance(); // create new instance
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -169,41 +173,37 @@ public class ThriftData extends GenericData {
     return getSchema(record.getClass());
   }
 
-  private final Map<Class,Schema> schemaCache
-    = new ConcurrentHashMap<>();
+  private final Map<Class, Schema> schemaCache = new ConcurrentHashMap<>();
 
   /** Return a record schema given a thrift generated class. */
   @SuppressWarnings("unchecked")
   public Schema getSchema(Class c) {
     Schema schema = schemaCache.get(c);
 
-    if (schema == null) {                         // cache miss
+    if (schema == null) { // cache miss
       try {
-        if (TEnum.class.isAssignableFrom(c)) {    // enum
+        if (TEnum.class.isAssignableFrom(c)) { // enum
           List<String> symbols = new ArrayList<>();
-          for (Enum e : ((Class<? extends Enum>)c).getEnumConstants())
+          for (Enum e : ((Class<? extends Enum>) c).getEnumConstants())
             symbols.add(e.name());
           schema = Schema.createEnum(c.getName(), null, null, symbols);
         } else if (TBase.class.isAssignableFrom(c)) { // struct
-          schema = Schema.createRecord(c.getName(), null, null,
-                                       Throwable.class.isAssignableFrom(c));
+          schema = Schema.createRecord(c.getName(), null, null, Throwable.class.isAssignableFrom(c));
           List<Field> fields = new ArrayList<>();
-          for (FieldMetaData f :
-                 FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).values()) {
+          for (FieldMetaData f : FieldMetaData.getStructMetaDataMap((Class<? extends TBase>) c).values()) {
             Schema s = getSchema(f.valueMetaData);
-            if (f.requirementType == TFieldRequirementType.OPTIONAL
-                && (s.getType() != Schema.Type.UNION))
+            if (f.requirementType == TFieldRequirementType.OPTIONAL && (s.getType() != Schema.Type.UNION))
               s = nullable(s);
             fields.add(new Field(f.fieldName, s, null, null));
           }
           schema.setFields(fields);
         } else {
-          throw new RuntimeException("Not a Thrift-generated class: "+c);
+          throw new RuntimeException("Not a Thrift-generated class: " + c);
         }
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
-      schemaCache.put(c, schema);                 // update cache
+      schemaCache.put(c, schema); // update cache
     }
     return schema;
   }
@@ -229,20 +229,20 @@ public class ThriftData extends GenericData {
     case TType.DOUBLE:
       return Schema.create(Schema.Type.DOUBLE);
     case TType.ENUM:
-      EnumMetaData enumMeta = (EnumMetaData)f;
+      EnumMetaData enumMeta = (EnumMetaData) f;
       return nullable(getSchema(enumMeta.enumClass));
     case TType.LIST:
-      ListMetaData listMeta = (ListMetaData)f;
+      ListMetaData listMeta = (ListMetaData) f;
       return nullable(Schema.createArray(getSchema(listMeta.elemMetaData)));
     case TType.MAP:
-      MapMetaData mapMeta = (MapMetaData)f;
+      MapMetaData mapMeta = (MapMetaData) f;
       if (mapMeta.keyMetaData.type != TType.STRING)
-        throw new AvroRuntimeException("Map keys must be strings: "+f);
+        throw new AvroRuntimeException("Map keys must be strings: " + f);
       Schema map = Schema.createMap(getSchema(mapMeta.valueMetaData));
       GenericData.setStringType(map, GenericData.StringType.String);
       return nullable(map);
     case TType.SET:
-      SetMetaData setMeta = (SetMetaData)f;
+      SetMetaData setMeta = (SetMetaData) f;
       Schema set = Schema.createArray(getSchema(setMeta.elemMetaData));
       set.addProp(THRIFT_PROP, "set");
       return nullable(set);
@@ -253,13 +253,13 @@ public class ThriftData extends GenericData {
       GenericData.setStringType(string, GenericData.StringType.String);
       return nullable(string);
     case TType.STRUCT:
-      StructMetaData structMeta = (StructMetaData)f;
+      StructMetaData structMeta = (StructMetaData) f;
       Schema record = getSchema(structMeta.structClass);
       return nullable(record);
     case TType.VOID:
       return NULL;
     default:
-      throw new RuntimeException("Unexpected type in field: "+f);
+      throw new RuntimeException("Unexpected type in field: " + f);
     }
   }
 

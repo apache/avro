@@ -17,14 +17,21 @@
  */
 package org.apache.avro.generic;
 
-/** A record implementation that permits field access by integer index.*/
+/** A record implementation that permits field access by integer index. */
 public interface IndexedRecord extends GenericContainer {
-  /** Set the value of a field given its position in the schema.
-   * <p>This method is not meant to be called by user code, but only by {@link
-   * org.apache.avro.io.DatumReader} implementations. */
+  /**
+   * Set the value of a field given its position in the schema.
+   * <p>
+   * This method is not meant to be called by user code, but only by
+   * {@link org.apache.avro.io.DatumReader} implementations.
+   */
   void put(int i, Object v);
-  /** Return the value of a field given its position in the schema.
-   * <p>This method is not meant to be called by user code, but only by {@link
-   * org.apache.avro.io.DatumWriter} implementations. */
+
+  /**
+   * Return the value of a field given its position in the schema.
+   * <p>
+   * This method is not meant to be called by user code, but only by
+   * {@link org.apache.avro.io.DatumWriter} implementations.
+   */
   Object get(int i);
 }

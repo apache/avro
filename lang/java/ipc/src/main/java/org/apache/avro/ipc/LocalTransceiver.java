@@ -35,8 +35,7 @@ public class LocalTransceiver extends Transceiver {
   }
 
   @Override
-  public List<ByteBuffer> transceive(List<ByteBuffer> request)
-      throws IOException {
+  public List<ByteBuffer> transceive(List<ByteBuffer> request) throws IOException {
     return responder.respond(request);
   }
 

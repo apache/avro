@@ -27,14 +27,15 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.util.Utf8;
 
-/** An {@link Decoder} for binary-format data.
+/**
+ * An {@link Decoder} for binary-format data.
  * <p/>
  * Instances are created using {@link DecoderFactory}.
  * <p/>
  * This class may read-ahead and buffer bytes from the source beyond what is
- * required to serve its read methods.
- * The number of unused bytes in the buffer can be accessed by
- * inputStream().remaining(), if the BinaryDecoder is not 'direct'.
+ * required to serve its read methods. The number of unused bytes in the buffer
+ * can be accessed by inputStream().remaining(), if the BinaryDecoder is not
+ * 'direct'.
  *
  * @see Encoder
  */
@@ -42,10 +43,9 @@ import org.apache.avro.util.Utf8;
 public class BinaryDecoder extends Decoder {
 
   /**
-   * The maximum size of array to allocate.
-   * Some VMs reserve some header words in an array.
-   * Attempts to allocate larger arrays may result in
-   * OutOfMemoryError: Requested array size exceeds VM limit
+   * The maximum size of array to allocate. Some VMs reserve some header words in
+   * an array. Attempts to allocate larger arrays may result in OutOfMemoryError:
+   * Requested array size exceeds VM limit
    */
   private static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
 
@@ -62,16 +62,27 @@ public class BinaryDecoder extends Decoder {
   private int pos = 0;
   private int limit = 0;
 
-  byte[] getBuf() { return buf; }
-  int getPos() { return pos; }
-  int getLimit() { return limit; }
+  byte[] getBuf() {
+    return buf;
+  }
+
+  int getPos() {
+    return pos;
+  }
+
+  int getLimit() {
+    return limit;
+  }
 
   void setBuf(byte[] buf, int pos, int len) {
     this.buf = buf;
     this.pos = pos;
-    this.limit = pos+len;
+    this.limit = pos + len;
   }
-  void clearBuf() { this.buf = null; }
+
+  void clearBuf() {
+    this.buf = null;
+  }
 
   /** protected constructor for child classes */
   protected BinaryDecoder() {
@@ -93,8 +104,7 @@ public class BinaryDecoder extends Decoder {
   }
 
   BinaryDecoder configure(byte[] data, int offset, int length) {
-    configureSource(DecoderFactory.DEFAULT_BUFFER_SIZE, new ByteArrayByteSource(
-        data, offset, length));
+    configureSource(DecoderFactory.DEFAULT_BUFFER_SIZE, new ByteArrayByteSource(data, offset, length));
     return this;
   }
 
@@ -104,9 +114,9 @@ public class BinaryDecoder extends Decoder {
    * this Decoder and its InputStream interface will continue to drain the
    * remaining buffer and source data.
    * <p/>
-   * The decoder will read from the new source. The source will generally
-   * replace the buffer with its own. If the source allocates a new buffer, it
-   * will create it with size bufferSize.
+   * The decoder will read from the new source. The source will generally replace
+   * the buffer with its own. If the source allocates a new buffer, it will create
+   * it with size bufferSize.
    */
   private void configureSource(int bufferSize, ByteSource source) {
     if (null != this.source) {
@@ -184,7 +194,7 @@ public class BinaryDecoder extends Decoder {
           if (b > 0x7f) {
             // only the low 28 bits can be set, so this won't carry
             // the sign bit to the long
-            l = innerLongDecode((long)n);
+            l = innerLongDecode((long) n);
           } else {
             l = n;
           }
@@ -240,8 +250,8 @@ public class BinaryDecoder extends Decoder {
   public float readFloat() throws IOException {
     ensureBounds(4);
     int len = 1;
-    int n = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
-        | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
+    int n = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8) | ((buf[pos + len++] & 0xff) << 16)
+        | ((buf[pos + len++] & 0xff) << 24);
     if ((pos + 4) > limit) {
       throw new EOFException();
     }
@@ -253,16 +263,15 @@ public class BinaryDecoder extends Decoder {
   public double readDouble() throws IOException {
     ensureBounds(8);
     int len = 1;
-    int n1 = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
-        | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
-    int n2 = (buf[pos + len++] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
-        | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
+    int n1 = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8) | ((buf[pos + len++] & 0xff) << 16)
+        | ((buf[pos + len++] & 0xff) << 24);
+    int n2 = (buf[pos + len++] & 0xff) | ((buf[pos + len++] & 0xff) << 8) | ((buf[pos + len++] & 0xff) << 16)
+        | ((buf[pos + len++] & 0xff) << 24);
     if ((pos + 8) > limit) {
       throw new EOFException();
     }
     pos += 8;
-    return Double.longBitsToDouble((((long) n1) & 0xffffffffL)
-        | (((long) n2) << 32));
+    return Double.longBitsToDouble((((long) n1) & 0xffffffffL) | (((long) n2) << 32));
   }
 
   @Override
@@ -343,15 +352,12 @@ public class BinaryDecoder extends Decoder {
   /**
    * Reads <tt>length</tt> bytes into <tt>bytes</tt> starting at <tt>start</tt>.
    *
-   * @throws EOFException
-   *           If there are not enough number of bytes in the source.
+   * @throws EOFException If there are not enough number of bytes in the source.
    * @throws IOException
    */
-  protected void doReadBytes(byte[] bytes, int start, int length)
-      throws IOException {
+  protected void doReadBytes(byte[] bytes, int start, int length) throws IOException {
     if (length < 0)
-      throw new AvroRuntimeException("Malformed data. Length is negative: "
-                                     + length);
+      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
     int remaining = limit - pos;
     if (length <= remaining) {
       System.arraycopy(buf, pos, bytes, start, length);
@@ -368,17 +374,17 @@ public class BinaryDecoder extends Decoder {
   }
 
   /**
-   * Returns the number of items to follow in the current array or map. Returns
-   * 0 if there are no more items in the current array and the array/map has
-   * ended. Arrays are encoded as a series of blocks. Each block consists of a
-   * long count value, followed by that many array items. A block with count
-   * zero indicates the end of the array. If a block's count is negative, its
-   * absolute value is used, and the count is followed immediately by a long
-   * block size indicating the number of bytes in the block.
+   * Returns the number of items to follow in the current array or map. Returns 0
+   * if there are no more items in the current array and the array/map has ended.
+   * Arrays are encoded as a series of blocks. Each block consists of a long count
+   * value, followed by that many array items. A block with count zero indicates
+   * the end of the array. If a block's count is negative, its absolute value is
+   * used, and the count is followed immediately by a long block size indicating
+   * the number of bytes in the block.
    *
    * @throws IOException If the first byte cannot be read for any reason other
-   *           than the end of the file, if the input stream has been closed, or
-   *           if some other I/O error occurs.
+   *                     than the end of the file, if the input stream has been
+   *                     closed, or if some other I/O error occurs.
    */
   protected long doReadItemCount() throws IOException {
     long result = readLong();
@@ -391,24 +397,23 @@ public class BinaryDecoder extends Decoder {
   }
 
   /**
-   * Reads the count of items in the current array or map and skip those items,
-   * if possible. If it could skip the items, keep repeating until there are no
-   * more items left in the array or map. Arrays are encoded as a series of
-   * blocks. Each block consists of a long count value, followed by that many
-   * array items. A block with count zero indicates the end of the array. If a
-   * block's count is negative, its absolute value is used, and the count is
-   * followed immediately by a long block size indicating the number of bytes in
-   * the block. If block size is missing, this method return
-   * the count of the items found. The client needs to skip the items
-   * individually.
+   * Reads the count of items in the current array or map and skip those items, if
+   * possible. If it could skip the items, keep repeating until there are no more
+   * items left in the array or map. Arrays are encoded as a series of blocks.
+   * Each block consists of a long count value, followed by that many array items.
+   * A block with count zero indicates the end of the array. If a block's count is
+   * negative, its absolute value is used, and the count is followed immediately
+   * by a long block size indicating the number of bytes in the block. If block
+   * size is missing, this method return the count of the items found. The client
+   * needs to skip the items individually.
    *
    * @return Zero if there are no more items to skip and end of array/map is
    *         reached. Positive number if some items are found that cannot be
    *         skipped and the client needs to skip them individually.
    *
    * @throws IOException If the first byte cannot be read for any reason other
-   *           than the end of the file, if the input stream has been closed, or
-   *           if some other I/O error occurs.
+   *                     than the end of the file, if the input stream has been
+   *                     closed, or if some other I/O error occurs.
    */
   private long doSkipItems() throws IOException {
     long result = readLong();
@@ -465,8 +470,8 @@ public class BinaryDecoder extends Decoder {
    * {@link java.lang.UnsupportedOperationException}.
    *
    * @throws IOException If the first byte cannot be read for any reason other
-   *           than the end of the file, if the input stream has been closed, or
-   *           if some other I/O error occurs.
+   *                     than the end of the file, if the input stream has been
+   *                     closed, or if some other I/O error occurs.
    */
   public boolean isEnd() throws IOException {
     if (pos < limit) {
@@ -488,10 +493,10 @@ public class BinaryDecoder extends Decoder {
    * However, buf[pos + num -1] may be >= limit if there is not enough data left
    * in the source to fill the array with num bytes.
    * <p/>
-   * This method allows readers to read ahead by num bytes safely without
-   * checking for EOF at each byte. However, readers must ensure that their
-   * reads are valid by checking that their read did not advance past the limit
-   * before adjusting pos.
+   * This method allows readers to read ahead by num bytes safely without checking
+   * for EOF at each byte. However, readers must ensure that their reads are valid
+   * by checking that their read did not advance past the limit before adjusting
+   * pos.
    * <p/>
    * num must be less than the buffer size and greater than 0
    */
@@ -508,8 +513,8 @@ public class BinaryDecoder extends Decoder {
   /**
    * Returns an {@link java.io.InputStream} that is aware of any buffering that
    * may occur in this BinaryDecoder. Readers that need to interleave decoding
-   * Avro data with other reads must access this InputStream to do so unless
-   * the implementation is 'direct' and does not read beyond the minimum bytes
+   * Avro data with other reads must access this InputStream to do so unless the
+   * implementation is 'direct' and does not read beyond the minimum bytes
    * necessary from the source.
    */
   public InputStream inputStream() {
@@ -517,16 +522,16 @@ public class BinaryDecoder extends Decoder {
   }
 
   /**
-   * BufferAccessor is used by BinaryEncoder to enable {@link ByteSource}s and
-   * the InputStream returned by {@link BinaryDecoder.inputStream} to access the
-   * BinaryEncoder's buffer. When a BufferAccessor is created, it is attached to
-   * a BinaryDecoder and its buffer. Its accessors directly reference the
-   * BinaryDecoder's buffer. When detach() is called, it stores references to
-   * the BinaryDecoder's buffer directly. The BinaryDecoder only detaches a
+   * BufferAccessor is used by BinaryEncoder to enable {@link ByteSource}s and the
+   * InputStream returned by {@link BinaryDecoder.inputStream} to access the
+   * BinaryEncoder's buffer. When a BufferAccessor is created, it is attached to a
+   * BinaryDecoder and its buffer. Its accessors directly reference the
+   * BinaryDecoder's buffer. When detach() is called, it stores references to the
+   * BinaryDecoder's buffer directly. The BinaryDecoder only detaches a
    * BufferAccessor when it is initializing to a new ByteSource. Therefore, a
    * client that is using the InputStream returned by BinaryDecoder.inputStream
-   * can continue to use that stream after a BinaryDecoder has been
-   * reinitialized to read from new data.
+   * can continue to use that stream after a BinaryDecoder has been reinitialized
+   * to read from new data.
    */
   static class BufferAccessor {
     private final BinaryDecoder decoder;
@@ -613,18 +618,18 @@ public class BinaryDecoder extends Decoder {
    * <p/>
    * {@link skipSourceBytes} and {@link readRaw} are guaranteed to have read or
    * skipped as many bytes as possible, or throw EOFException.
-   * {@link trySkipBytes} and {@link tryRead} are guaranteed to attempt to read
-   * or skip as many bytes as possible and never throw EOFException, while
-   * returning the exact number of bytes skipped or read. {@link isEof} returns
-   * true if all the source bytes have been read or skipped. This condition can
-   * also be detected by a client if an EOFException is thrown from
+   * {@link trySkipBytes} and {@link tryRead} are guaranteed to attempt to read or
+   * skip as many bytes as possible and never throw EOFException, while returning
+   * the exact number of bytes skipped or read. {@link isEof} returns true if all
+   * the source bytes have been read or skipped. This condition can also be
+   * detected by a client if an EOFException is thrown from
    * {@link skipSourceBytes} or {@link readRaw}, or if {@link trySkipBytes} or
    * {@link tryRead} return 0;
    * <p/>
    * A ByteSource also implements the InputStream contract for use by APIs that
-   * require it. The InputStream interface must take into account buffering in
-   * any decoder that this ByteSource is attached to. The other methods do not
-   * account for buffering.
+   * require it. The InputStream interface must take into account buffering in any
+   * decoder that this ByteSource is attached to. The other methods do not account
+   * for buffering.
    */
 
   abstract static class ByteSource extends InputStream {
@@ -652,61 +657,52 @@ public class BinaryDecoder extends Decoder {
     }
 
     /**
-     * Skips length bytes from the source. If length bytes cannot be skipped due
-     * to end of file/stream/channel/etc an EOFException is thrown
+     * Skips length bytes from the source. If length bytes cannot be skipped due to
+     * end of file/stream/channel/etc an EOFException is thrown
      *
-     * @param length
-     *          the number of bytes to attempt to skip
-     * @throws IOException
-     *           if an error occurs
-     * @throws EOFException
-     *           if length bytes cannot be skipped
+     * @param length the number of bytes to attempt to skip
+     * @throws IOException  if an error occurs
+     * @throws EOFException if length bytes cannot be skipped
      */
     protected abstract void skipSourceBytes(long length) throws IOException;
 
     /**
-     * Attempts to skip <i>skipLength</i> bytes from the source. Returns the
-     * actual number of bytes skipped. This method must attempt to skip as many
-     * bytes as possible up to <i>skipLength</i> bytes. Skipping 0 bytes signals
-     * end of stream/channel/file/etc
+     * Attempts to skip <i>skipLength</i> bytes from the source. Returns the actual
+     * number of bytes skipped. This method must attempt to skip as many bytes as
+     * possible up to <i>skipLength</i> bytes. Skipping 0 bytes signals end of
+     * stream/channel/file/etc
      *
-     * @param skipLength
-     *          the number of bytes to attempt to skip
+     * @param skipLength the number of bytes to attempt to skip
      * @return the count of actual bytes skipped.
      */
     protected abstract long trySkipBytes(long skipLength) throws IOException;
 
     /**
-     * Reads raw from the source, into a byte[]. Used for reads that are larger
-     * than the buffer, or otherwise unbuffered. This is a mandatory read -- if
-     * there is not enough bytes in the source, EOFException is thrown.
+     * Reads raw from the source, into a byte[]. Used for reads that are larger than
+     * the buffer, or otherwise unbuffered. This is a mandatory read -- if there is
+     * not enough bytes in the source, EOFException is thrown.
      *
-     * @throws IOException
-     *           if an error occurs
-     * @throws EOFException
-     *           if len bytes cannot be read
-     * */
-    protected abstract void readRaw(byte[] data, int off, int len)
-        throws IOException;
+     * @throws IOException  if an error occurs
+     * @throws EOFException if len bytes cannot be read
+     */
+    protected abstract void readRaw(byte[] data, int off, int len) throws IOException;
 
     /**
-     * Attempts to copy up to <i>len</i> bytes from the source into data,
-     * starting at index <i>off</i>. Returns the actual number of bytes copied
-     * which may be between 0 and <i>len</i>.
+     * Attempts to copy up to <i>len</i> bytes from the source into data, starting
+     * at index <i>off</i>. Returns the actual number of bytes copied which may be
+     * between 0 and <i>len</i>.
      * <p/>
-     * This method must attempt to read as much as possible from the source.
-     * Returns 0 when at the end of stream/channel/file/etc.
+     * This method must attempt to read as much as possible from the source. Returns
+     * 0 when at the end of stream/channel/file/etc.
      *
-     * @throws IOException
-     *           if an error occurs reading
+     * @throws IOException if an error occurs reading
      **/
-    protected abstract int tryReadRaw(byte[] data, int off, int len)
-        throws IOException;
+    protected abstract int tryReadRaw(byte[] data, int off, int len) throws IOException;
 
     /**
-     * If this source buffers, compacts the buffer by placing the
-     * <i>remaining</i> bytes starting at <i>pos</i> at <i>minPos</i>. This may
-     * be done in the current buffer, or may replace the buffer with a new one.
+     * If this source buffers, compacts the buffer by placing the <i>remaining</i>
+     * bytes starting at <i>pos</i> at <i>minPos</i>. This may be done in the
+     * current buffer, or may replace the buffer with a new one.
      *
      * The end result must be a buffer with at least 16 bytes of remaining space.
      *
@@ -715,12 +711,10 @@ public class BinaryDecoder extends Decoder {
      * @param remaining
      * @throws IOException
      */
-    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining)
-        throws IOException {
+    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining) throws IOException {
       System.arraycopy(buf, pos, buf, minPos, remaining);
       ba.setPos(minPos);
-      int newLimit = remaining
-          + tryReadRaw(buf, minPos + remaining, buf.length - remaining);
+      int newLimit = remaining + tryReadRaw(buf, minPos + remaining, buf.length - remaining);
       ba.setLimit(newLimit);
     }
 
@@ -741,8 +735,7 @@ public class BinaryDecoder extends Decoder {
         pos = pos + remaining;
         ba.setPos(pos);
         // get the rest from the stream (skip array)
-        int inputRead = remaining
-            + tryReadRaw(b, off + remaining, len - remaining);
+        int inputRead = remaining + tryReadRaw(b, off + remaining, len - remaining);
         if (inputRead == 0) {
           return -1;
         } else {
@@ -769,8 +762,8 @@ public class BinaryDecoder extends Decoder {
     }
 
     /**
-     * returns the number of bytes remaining that this BinaryDecoder has
-     * buffered from its source
+     * returns the number of bytes remaining that this BinaryDecoder has buffered
+     * from its source
      */
     @Override
     public int available() throws IOException {
@@ -904,8 +897,8 @@ public class BinaryDecoder extends Decoder {
   }
 
   /**
-   * This byte source is special. It will avoid copying data by using the
-   * source's byte[] as a buffer in the decoder.
+   * This byte source is special. It will avoid copying data by using the source's
+   * byte[] as a buffer in the decoder.
    *
    */
   private static class ByteArrayByteSource extends ByteSource {
@@ -981,8 +974,7 @@ public class BinaryDecoder extends Decoder {
     }
 
     @Override
-    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining)
-        throws IOException {
+    protected void compactAndFill(byte[] buf, int pos, int minPos, int remaining) throws IOException {
       // this implementation does not want to mutate the array passed in,
       // so it makes a new tiny buffer unless it has been compacted once before
       if (!compacted) {

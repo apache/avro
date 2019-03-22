@@ -45,7 +45,8 @@ import org.apache.avro.io.ResolvingDecoder;
 
 /** Utilities for reading and writing arbitrary Json data in Avro format. */
 public class Json {
-  private Json() {}                               // singleton: no public ctor
+  private Json() {
+  } // singleton: no public ctor
 
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
@@ -62,13 +63,16 @@ public class Json {
     }
   }
 
-  /** {@link DatumWriter} for arbitrary Json data using the object model described
-   *  in {@link org.apache.avro.JsonProperties}. */
+  /**
+   * {@link DatumWriter} for arbitrary Json data using the object model described
+   * in {@link org.apache.avro.JsonProperties}.
+   */
   public static class ObjectWriter implements DatumWriter<Object> {
 
-    @Override public void setSchema(Schema schema) {
+    @Override
+    public void setSchema(Schema schema) {
       if (!SCHEMA.equals(schema))
-        throw new RuntimeException("Not the Json schema: "+schema);
+        throw new RuntimeException("Not the Json schema: " + schema);
     }
 
     @Override
@@ -77,19 +81,22 @@ public class Json {
     }
   }
 
-  /** {@link DatumReader} for arbitrary Json data using the object model described
-   *  in {@link org.apache.avro.JsonProperties}. */
+  /**
+   * {@link DatumReader} for arbitrary Json data using the object model described
+   * in {@link org.apache.avro.JsonProperties}.
+   */
   public static class ObjectReader implements DatumReader<Object> {
     private Schema written;
     private ResolvingDecoder resolver;
 
-    @Override public void setSchema(Schema schema) {
+    @Override
+    public void setSchema(Schema schema) {
       this.written = SCHEMA.equals(written) ? null : schema;
     }
 
     @Override
     public Object read(Object reuse, Decoder in) throws IOException {
-      if (written == null)                        // same schema
+      if (written == null) // same schema
         return Json.readObject(in);
 
       // use a resolver to adapt alternate version of Json schema
@@ -123,13 +130,15 @@ public class Json {
   }
 
   /** Note: this enum must be kept aligned with the union in Json.avsc. */
-  private enum JsonType { LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT }
+  private enum JsonType {
+    LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT
+  }
 
   /**
    * Write Json data as Avro data.
    */
   private static void write(JsonNode node, Encoder out) throws IOException {
-    switch(node.asToken()) {
+    switch (node.asToken()) {
     case VALUE_NUMBER_INT:
       out.writeIndex(JsonType.LONG.ordinal());
       out.writeLong(node.longValue());
@@ -178,7 +187,7 @@ public class Json {
       out.writeMapEnd();
       break;
     default:
-      throw new AvroRuntimeException(node.asToken()+" unexpected: "+node);
+      throw new AvroRuntimeException(node.asToken() + " unexpected: " + node);
     }
   }
 

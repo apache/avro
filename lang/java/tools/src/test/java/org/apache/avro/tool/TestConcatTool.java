@@ -60,12 +60,12 @@ public class TestConcatTool {
 
   private Object aDatum(Type ofType, int forRow) {
     switch (ofType) {
-      case STRING:
-        return String.valueOf(forRow % 100);
-      case INT:
-        return forRow;
-      default:
-        throw new AssertionError("I can't generate data for this type");
+    case STRING:
+      return String.valueOf(forRow % 100);
+    case INT:
+      return forRow;
+    default:
+      throw new AssertionError("I can't generate data for this type");
     }
   }
 
@@ -87,9 +87,8 @@ public class TestConcatTool {
   }
 
   private CodecFactory getCodec(File output) throws Exception {
-    try (DataFileStream<GenericRecord> reader = new DataFileStream<>(
-            new FileInputStream(output),
-            new GenericDatumReader<>())) {
+    try (DataFileStream<GenericRecord> reader = new DataFileStream<>(new FileInputStream(output),
+        new GenericDatumReader<>())) {
       String codec = reader.getMetaString(DataFileConstants.CODEC);
 
       return codec == null ? CodecFactory.nullCodec() : CodecFactory.fromString(codec);
@@ -116,15 +115,8 @@ public class TestConcatTool {
 
     File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
 
-    List<String> args = asList(
-            INPUT_DIR.getRoot().getAbsolutePath(),
-            output.getAbsolutePath()
-    );
-    int returnCode = new ConcatTool().run(
-            System.in,
-            System.out,
-            System.err,
-            args);
+    List<String> args = asList(INPUT_DIR.getRoot().getAbsolutePath(), output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
 
     assertEquals(0, returnCode);
     assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
@@ -140,14 +132,8 @@ public class TestConcatTool {
 
     File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
 
-    List<String> args = asList(
-            new File(INPUT_DIR.getRoot(), "/*").getAbsolutePath(),
-            output.getAbsolutePath());
-    int returnCode = new ConcatTool().run(
-            System.in,
-            System.out,
-            System.err,
-            args);
+    List<String> args = asList(new File(INPUT_DIR.getRoot(), "/*").getAbsolutePath(), output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
 
     assertEquals(0, returnCode);
     assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
@@ -157,14 +143,9 @@ public class TestConcatTool {
   public void testFileDoesNotExist() throws Exception {
     File output = new File(INPUT_DIR.getRoot(), name.getMethodName() + ".avro");
 
-    List<String> args = asList(
-            new File(INPUT_DIR.getRoot(), "/doNotExist").getAbsolutePath(),
-            output.getAbsolutePath());
-    new ConcatTool().run(
-            System.in,
-            System.out,
-            System.err,
-            args);
+    List<String> args = asList(new File(INPUT_DIR.getRoot(), "/doNotExist").getAbsolutePath(),
+        output.getAbsolutePath());
+    new ConcatTool().run(System.in, System.out, System.err, args);
   }
 
   @Test
@@ -178,16 +159,9 @@ public class TestConcatTool {
 
     File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
 
-    List<String> args = asList(
-            input1.getAbsolutePath(),
-            input2.getAbsolutePath(),
-            input3.getAbsolutePath(),
-            output.getAbsolutePath());
-    int returnCode = new ConcatTool().run(
-            System.in,
-            System.out,
-            System.err,
-            args);
+    List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), input3.getAbsolutePath(),
+        output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
     assertEquals(0, returnCode);
 
     assertEquals(ROWS_IN_INPUT_FILES * 3, numRowsInFile(output));
@@ -204,15 +178,8 @@ public class TestConcatTool {
 
     File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
 
-    List<String> args = asList(
-            input1.getAbsolutePath(),
-            input2.getAbsolutePath(),
-            output.getAbsolutePath());
-    int returnCode = new ConcatTool().run(
-            System.in,
-            System.out,
-            System.err,
-            args);
+    List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
     assertEquals(1, returnCode);
   }
 
@@ -228,15 +195,8 @@ public class TestConcatTool {
 
     File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
 
-    List<String> args = asList(
-            input1.getAbsolutePath(),
-            input2.getAbsolutePath(),
-            output.getAbsolutePath());
-    int returnCode = new ConcatTool().run(
-            System.in,
-            System.out,
-            System.err,
-            args);
+    List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
     assertEquals(2, returnCode);
   }
 
@@ -250,15 +210,8 @@ public class TestConcatTool {
 
     File output = new File(OUTPUT_DIR.getRoot(), name.getMethodName() + ".avro");
 
-    List<String> args = asList(
-            input1.getAbsolutePath(),
-            input2.getAbsolutePath(),
-            output.getAbsolutePath());
-    int returnCode = new ConcatTool().run(
-            System.in,
-            System.out,
-            System.err,
-            args);
+    List<String> args = asList(input1.getAbsolutePath(), input2.getAbsolutePath(), output.getAbsolutePath());
+    int returnCode = new ConcatTool().run(System.in, System.out, System.err, args);
     assertEquals(3, returnCode);
   }
 
@@ -267,15 +220,9 @@ public class TestConcatTool {
     int returnCode;
     try (ByteArrayOutputStream buffer = new ByteArrayOutputStream(1024)) {
       try (PrintStream out = new PrintStream(buffer)) {
-        returnCode = new ConcatTool().run(
-                System.in,
-                out,
-                System.err,
-                Collections.emptyList());
+        returnCode = new ConcatTool().run(System.in, out, System.err, Collections.emptyList());
       }
-      assertTrue(
-              "should have lots of help",
-              buffer.toString().trim().length() > 200);
+      assertTrue("should have lots of help", buffer.toString().trim().length() > 200);
     }
     assertEquals(0, returnCode);
   }

@@ -27,9 +27,11 @@ import java.net.InetSocketAddress;
 
 public class TestProtocolReflectMeta extends TestProtocolReflect {
 
-  @Before @Override
+  @Before
+  @Override
   public void testStartServer() throws Exception {
-    if (server != null) return;
+    if (server != null)
+      return;
     ReflectResponder rresp = new ReflectResponder(Simple.class, new TestImpl());
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key2"));

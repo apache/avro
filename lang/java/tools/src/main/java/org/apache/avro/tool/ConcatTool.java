@@ -43,15 +43,14 @@ import org.apache.hadoop.fs.Path;
  */
 public class ConcatTool implements Tool {
   /**
-   * @return 0 for success, 1 if the schemas of the input files differ, 2 if
-   *         the non-reserved input metadata differs, 3 if the input files are
-   *         encoded with more than one codec.
+   * @return 0 for success, 1 if the schemas of the input files differ, 2 if the
+   *         non-reserved input metadata differs, 3 if the input files are encoded
+   *         with more than one codec.
    */
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
-    if(args.isEmpty()) {
+    if (args.isEmpty()) {
       printHelp(out);
       return 0;
     }
@@ -62,16 +61,14 @@ public class ConcatTool implements Tool {
       args = args.subList(0, args.size() - 1);
     }
 
-    DataFileWriter<GenericRecord> writer = new DataFileWriter<>(
-      new GenericDatumWriter<>());
+    DataFileWriter<GenericRecord> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     Schema schema = null;
     Map<String, byte[]> metadata = new TreeMap<>();
     String inputCodec = null;
 
     for (String inFile : expandsInputFiles(args)) {
       InputStream input = Util.fileOrStdin(inFile, in);
-      DataFileStream<GenericRecord> reader = new DataFileStream<>(
-        input, new GenericDatumReader<>());
+      DataFileStream<GenericRecord> reader = new DataFileStream<>(input, new GenericDatumReader<>());
 
       if (schema == null) {
         // this is the first file - set up the writer, and store the
@@ -85,7 +82,7 @@ public class ConcatTool implements Tool {
           }
         }
         inputCodec = reader.getMetaString(DataFileConstants.CODEC);
-        if(inputCodec == null) {
+        if (inputCodec == null) {
           inputCodec = DataFileConstants.NULL_CODEC;
         }
         writer.setCodec(CodecFactory.fromString(inputCodec));
@@ -101,7 +98,7 @@ public class ConcatTool implements Tool {
           if (!DataFileWriter.isReservedMeta(key)) {
             byte[] metadatum = reader.getMeta(key);
             byte[] writersMetadatum = metadata.get(key);
-            if(!Arrays.equals(metadatum, writersMetadatum)) {
+            if (!Arrays.equals(metadatum, writersMetadatum)) {
               err.println("input files have different non-reserved metadata");
               reader.close();
               return 2;
@@ -109,7 +106,7 @@ public class ConcatTool implements Tool {
           }
         }
         String thisCodec = reader.getMetaString(DataFileConstants.CODEC);
-        if(thisCodec == null) {
+        if (thisCodec == null) {
           thisCodec = DataFileConstants.NULL_CODEC;
         }
         if (!inputCodec.equals(thisCodec)) {
@@ -119,7 +116,7 @@ public class ConcatTool implements Tool {
         }
       }
 
-      writer.appendAllFrom(reader, /*recompress*/ false);
+      writer.appendAllFrom(reader, /* recompress */ false);
       reader.close();
     }
 
@@ -162,7 +159,7 @@ public class ConcatTool implements Tool {
     out.println("are used.");
   }
 
-@Override
+  @Override
   public String getName() {
     return "concat";
   }

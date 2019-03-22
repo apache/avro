@@ -23,9 +23,11 @@ import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.BinaryData;
 import org.slf4j.LoggerFactory;
 
-/** A Utf8 string.  Unlike {@link String}, instances are mutable.  This is more
+/**
+ * A Utf8 string. Unlike {@link String}, instances are mutable. This is more
  * efficient than {@link String} when reading or writing a sequence of values,
- * as a single instance may be reused. */
+ * as a single instance may be reused.
+ */
 public class Utf8 implements Comparable<Utf8>, CharSequence {
   private static final String MAX_LENGTH_PROPERTY = "org.apache.avro.limits.string.maxLength";
   private static final int MAX_LENGTH;
@@ -38,8 +40,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
       try {
         i = Integer.parseUnsignedInt(o);
       } catch (NumberFormatException nfe) {
-        LoggerFactory.getLogger(Utf8.class)
-          .warn("Could not parse property " + MAX_LENGTH_PROPERTY + ": " + o, nfe);
+        LoggerFactory.getLogger(Utf8.class).warn("Could not parse property " + MAX_LENGTH_PROPERTY + ": " + o, nfe);
       }
     }
     MAX_LENGTH = i;
@@ -49,7 +50,8 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   private int length;
   private String string;
 
-  public Utf8() {}
+  public Utf8() {
+  }
 
   public Utf8(String string) {
     this.bytes = getBytesFor(string);
@@ -69,28 +71,43 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     this.length = bytes.length;
   }
 
-  /** Return UTF-8 encoded bytes.
-   * Only valid through {@link #getByteLength()}. */
-  public byte[] getBytes() { return bytes; }
+  /**
+   * Return UTF-8 encoded bytes. Only valid through {@link #getByteLength()}.
+   */
+  public byte[] getBytes() {
+    return bytes;
+  }
 
-  /** Return length in bytes.
-   * @deprecated call {@link #getByteLength()} instead. */
+  /**
+   * Return length in bytes.
+   * 
+   * @deprecated call {@link #getByteLength()} instead.
+   */
   @Deprecated
-  public int getLength() { return length; }
+  public int getLength() {
+    return length;
+  }
 
   /** Return length in bytes. */
-  public int getByteLength() { return length; }
+  public int getByteLength() {
+    return length;
+  }
 
-  /** Set length in bytes.  Should called whenever byte content changes, even
-   * if the length does not change, as this also clears the cached String.
-   * @deprecated call {@link #setByteLength(int)} instead. */
+  /**
+   * Set length in bytes. Should called whenever byte content changes, even if the
+   * length does not change, as this also clears the cached String.
+   * 
+   * @deprecated call {@link #setByteLength(int)} instead.
+   */
   @Deprecated
   public Utf8 setLength(int newLength) {
     return setByteLength(newLength);
   }
 
-  /** Set length in bytes.  Should called whenever byte content changes, even
-   * if the length does not change, as this also clears the cached String. */
+  /**
+   * Set length in bytes. Should called whenever byte content changes, even if the
+   * length does not change, as this also clears the cached String.
+   */
   public Utf8 setByteLength(int newLength) {
     if (newLength > MAX_LENGTH) {
       throw new AvroRuntimeException("String length " + newLength + " exceeds maximum allowed");
@@ -115,7 +132,8 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   @Override
   public String toString() {
-    if (this.length == 0) return "";
+    if (this.length == 0)
+      return "";
     if (this.string == null) {
       this.string = new String(bytes, 0, length, StandardCharsets.UTF_8);
     }
@@ -124,10 +142,13 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   @Override
   public boolean equals(Object o) {
-    if (o == this) return true;
-    if (!(o instanceof Utf8)) return false;
-    Utf8 that = (Utf8)o;
-    if (!(this.length == that.length)) return false;
+    if (o == this)
+      return true;
+    if (!(o instanceof Utf8))
+      return false;
+    Utf8 that = (Utf8) o;
+    if (!(this.length == that.length))
+      return false;
     byte[] thatBytes = that.bytes;
     for (int i = 0; i < this.length; i++)
       if (bytes[i] != thatBytes[i])
@@ -139,20 +160,28 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   public int hashCode() {
     int hash = 0;
     for (int i = 0; i < this.length; i++)
-      hash = hash*31 + bytes[i];
+      hash = hash * 31 + bytes[i];
     return hash;
   }
 
   @Override
   public int compareTo(Utf8 that) {
-    return BinaryData.compareBytes(this.bytes, 0, this.length,
-                                   that.bytes, 0, that.length);
+    return BinaryData.compareBytes(this.bytes, 0, this.length, that.bytes, 0, that.length);
   }
 
   // CharSequence implementation
-  @Override public char charAt(int index) { return toString().charAt(index); }
-  @Override public int length() { return toString().length(); }
-  @Override public CharSequence subSequence(int start, int end) {
+  @Override
+  public char charAt(int index) {
+    return toString().charAt(index);
+  }
+
+  @Override
+  public int length() {
+    return toString().length();
+  }
+
+  @Override
+  public CharSequence subSequence(int start, int end) {
     return toString().subSequence(start, end);
   }
 

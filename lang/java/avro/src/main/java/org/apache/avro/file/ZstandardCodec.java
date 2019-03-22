@@ -30,61 +30,59 @@ import org.apache.commons.compress.utils.IOUtils;
 
 public class ZstandardCodec extends Codec {
 
-    static class Option extends CodecFactory {
-
-        @Override
-        protected Codec createInstance() {
-          return new ZstandardCodec();
-        }
-      }
-
-    private ByteArrayOutputStream outputBuffer;
+  static class Option extends CodecFactory {
 
     @Override
-    public String getName() {
-        return DataFileConstants.ZSTANDARD_CODEC;
+    protected Codec createInstance() {
+      return new ZstandardCodec();
     }
+  }
 
-    @Override
-    public ByteBuffer compress(ByteBuffer data) throws IOException {
-        ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-        try (OutputStream outputStream = new ZstdCompressorOutputStream(baos)) {
-           outputStream.write(data.array(), computeOffset(data), data.remaining());
-        }
-        return ByteBuffer.wrap(baos.toByteArray());
-    }
+  private ByteArrayOutputStream outputBuffer;
 
-    @Override
-    public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-        ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
-        InputStream bytesIn = new ByteArrayInputStream(
-          compressedData.array(),
-          computeOffset(compressedData),
-          compressedData.remaining());
-        try (InputStream ios = new ZstdCompressorInputStream(bytesIn)) {
-            IOUtils.copy(ios, baos);
-        }
-        return ByteBuffer.wrap(baos.toByteArray());
-    }
+  @Override
+  public String getName() {
+    return DataFileConstants.ZSTANDARD_CODEC;
+  }
 
-    // get and initialize the output buffer for use.
-    private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
-      if (outputBuffer == null) {
-        outputBuffer = new ByteArrayOutputStream(suggestedLength);
-      }
-      outputBuffer.reset();
-      return outputBuffer;
+  @Override
+  public ByteBuffer compress(ByteBuffer data) throws IOException {
+    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    try (OutputStream outputStream = new ZstdCompressorOutputStream(baos)) {
+      outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
+    return ByteBuffer.wrap(baos.toByteArray());
+  }
 
-    @Override
-    public int hashCode() {
-      return getName().hashCode();
+  @Override
+  public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
+    ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
+    InputStream bytesIn = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
+        compressedData.remaining());
+    try (InputStream ios = new ZstdCompressorInputStream(bytesIn)) {
+      IOUtils.copy(ios, baos);
     }
+    return ByteBuffer.wrap(baos.toByteArray());
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-      return obj != null && obj.getClass() == getClass();
+  // get and initialize the output buffer for use.
+  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
+    if (outputBuffer == null) {
+      outputBuffer = new ByteArrayOutputStream(suggestedLength);
     }
+    outputBuffer.reset();
+    return outputBuffer;
+  }
+
+  @Override
+  public int hashCode() {
+    return getName().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    return obj != null && obj.getClass() == getClass();
+  }
 }

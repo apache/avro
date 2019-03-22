@@ -40,12 +40,10 @@ public class TestReflectData {
     }
 
     // Reflect the number of schemas currently in the cache
-    ReflectData.ClassAccessorData classData = ReflectData.ACCESSOR_CACHE
-        .get(Object.class);
+    ReflectData.ClassAccessorData classData = ReflectData.ACCESSOR_CACHE.get(Object.class);
 
     System.gc(); // Not guaranteed, but seems to be reliable enough
 
-    assertThat("ReflectData cache should release references",
-        classData.bySchema.size(), lessThan(numSchemas));
+    assertThat("ReflectData cache should release references", classData.bySchema.size(), lessThan(numSchemas));
   }
 }

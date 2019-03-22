@@ -47,23 +47,15 @@ public class DataFileRepairTool implements Tool {
   }
 
   private void printInfo(PrintStream output) {
-    output.println("Insufficient arguments.  Arguments:  [-o option] "
-        + "input_file output_file \n"
-        + "   Where option is one of the following: \n"
-        + "      " + ALL
-        + " (default) recover as many records as possible.\n"
-        + "      " + PRIOR
-        + "         recover only records prior to the first instance"
-        + " of corruption \n"
-        + "      " + AFTER
-        + "         recover only records after the first instance of"
-        + " corruption.\n"
-        + "      " + REPORT
+    output.println("Insufficient arguments.  Arguments:  [-o option] " + "input_file output_file \n"
+        + "   Where option is one of the following: \n" + "      " + ALL
+        + " (default) recover as many records as possible.\n" + "      " + PRIOR
+        + "         recover only records prior to the first instance" + " of corruption \n" + "      " + AFTER
+        + "         recover only records after the first instance of" + " corruption.\n" + "      " + REPORT
         + "        print the corruption report only, reporting the\n"
         + "                    number of valid and corrupted blocks and records\n"
         + "   input_file is the file to read from.  output_file is the file to\n"
-        + "   create and write recovered data to.  output_file is ignored if\n"
-        + "   using the report option.");
+        + "   create and write recovered data to.  output_file is ignored if\n" + "   using the report option.");
   }
 
   private static final Set<String> OPTIONS = new HashSet<>();
@@ -79,8 +71,7 @@ public class DataFileRepairTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.size() < 2) {
       printInfo(err);
       return 1;
@@ -116,9 +107,8 @@ public class DataFileRepairTool implements Tool {
     }
   }
 
-  private int recover(String input, String output, PrintStream out,
-      PrintStream err, boolean recoverPrior, boolean recoverAfter)
-      throws IOException {
+  private int recover(String input, String output, PrintStream out, PrintStream err, boolean recoverPrior,
+      boolean recoverAfter) throws IOException {
     File infile = new File(input);
     if (!infile.canRead()) {
       err.println("cannot read file: " + input);
@@ -126,8 +116,7 @@ public class DataFileRepairTool implements Tool {
     }
     out.println("Recovering file: " + input);
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
-    try (DataFileReader<Object> fileReader = new DataFileReader<>(infile,
-      reader)) {
+    try (DataFileReader<Object> fileReader = new DataFileReader<>(infile, reader)) {
       Schema schema = fileReader.getSchema();
       String codecStr = fileReader.getMetaString(DataFileConstants.CODEC);
       CodecFactory codecFactory = CodecFactory.fromString("" + codecStr);
@@ -144,24 +133,21 @@ public class DataFileRepairTool implements Tool {
             }
           }
           fileWriter.setCodec(codecFactory);
-          int result = innerRecover(fileReader, fileWriter, out, err, recoverPrior,
-            recoverAfter, schema, outfile);
+          int result = innerRecover(fileReader, fileWriter, out, err, recoverPrior, recoverAfter, schema, outfile);
           return result;
         } catch (Exception e) {
           e.printStackTrace(err);
           return 1;
         }
       } else {
-        return innerRecover(fileReader, null, out, err, recoverPrior,
-          recoverAfter, null, null);
+        return innerRecover(fileReader, null, out, err, recoverPrior, recoverAfter, null, null);
       }
 
     }
   }
 
-  private int innerRecover(DataFileReader<Object> fileReader,
-      DataFileWriter<Object> fileWriter, PrintStream out, PrintStream err,
-      boolean recoverPrior, boolean recoverAfter, Schema schema, File outfile) {
+  private int innerRecover(DataFileReader<Object> fileReader, DataFileWriter<Object> fileWriter, PrintStream out,
+      PrintStream err, boolean recoverPrior, boolean recoverAfter, Schema schema, File outfile) {
     int numBlocks = 0;
     int numCorruptBlocks = 0;
     int numRecords = 0;
@@ -176,10 +162,8 @@ public class DataFileRepairTool implements Tool {
         try {
           if (!fileReader.hasNext()) {
             out.println("File Summary: ");
-            out.println("  Number of blocks: " + numBlocks
-                + " Number of corrupt blocks: " + numCorruptBlocks);
-            out.println("  Number of records: " + numRecords
-                + " Number of corrupt records: " + numCorruptRecords);
+            out.println("  Number of blocks: " + numBlocks + " Number of corrupt blocks: " + numCorruptBlocks);
+            out.println("  Number of records: " + numRecords + " Number of corrupt records: " + numCorruptRecords);
             if (recoverAfter || recoverPrior) {
               out.println("  Number of records written " + recordsWritten);
             }
@@ -197,8 +181,7 @@ public class DataFileRepairTool implements Tool {
           while (blockRemaining > 0) {
             try {
               Object datum = fileReader.next();
-              if ((recoverPrior && numCorruptBlocks == 0)
-                  || (recoverAfter && numCorruptBlocks > 0)) {
+              if ((recoverPrior && numCorruptBlocks == 0) || (recoverAfter && numCorruptBlocks > 0)) {
                 if (!fileWritten) {
                   try {
                     fileWriter.create(schema, outfile);
@@ -223,18 +206,16 @@ public class DataFileRepairTool implements Tool {
               if (badRecordsInBlock == 0) {
                 // first corrupt record
                 numCorruptBlocks++;
-                err.println("Corrupt block: " + numBlocks + " Records in block: "
-                    + blockCount + " uncompressed block size: " + blockSize);
-                err.println("Corrupt record at position: "
-                    + (pos));
+                err.println("Corrupt block: " + numBlocks + " Records in block: " + blockCount
+                    + " uncompressed block size: " + blockSize);
+                err.println("Corrupt record at position: " + (pos));
               } else {
                 // second bad record in block, if consecutive skip block.
-                err.println("Corrupt record at position: "
-                    + (pos));
+                err.println("Corrupt record at position: " + (pos));
                 if (lastRecordWasBad) {
                   // consecutive bad record
-                  err.println("Second consecutive bad record in block: " + numBlocks
-                      + ". Skipping remainder of block. ");
+                  err.println(
+                      "Second consecutive bad record in block: " + numBlocks + ". Skipping remainder of block. ");
                   numCorruptRecords += blockRemaining;
                   badRecordsInBlock += blockRemaining;
                   try {
@@ -247,20 +228,19 @@ public class DataFileRepairTool implements Tool {
                   break;
                 }
               }
-              blockRemaining --;
+              blockRemaining--;
               lastRecordWasBad = true;
               numCorruptRecords++;
               badRecordsInBlock++;
             }
           }
           if (badRecordsInBlock != 0) {
-            err.println("** Number of unrecoverable records in block: "
-                + (badRecordsInBlock));
+            err.println("** Number of unrecoverable records in block: " + (badRecordsInBlock));
           }
           position = fileReader.previousSync();
         } catch (Exception e) {
-          err.println("Failed to read block " + numBlocks + ". Unknown record "
-              + "count in block.  Skipping. Reason: " + e.getMessage());
+          err.println("Failed to read block " + numBlocks + ". Unknown record " + "count in block.  Skipping. Reason: "
+              + e.getMessage());
           numCorruptBlocks++;
           try {
             fileReader.sync(position);
@@ -283,23 +263,19 @@ public class DataFileRepairTool implements Tool {
     }
   }
 
-  private int reportOnly(String input, PrintStream out, PrintStream err)
-      throws IOException {
+  private int reportOnly(String input, PrintStream out, PrintStream err) throws IOException {
     return recover(input, null, out, err, false, false);
   }
 
-  private int recoverAfter(String input, String output, PrintStream out,
-      PrintStream err) throws IOException {
+  private int recoverAfter(String input, String output, PrintStream out, PrintStream err) throws IOException {
     return recover(input, output, out, err, false, true);
   }
 
-  private int recoverPrior(String input, String output, PrintStream out,
-      PrintStream err) throws IOException {
+  private int recoverPrior(String input, String output, PrintStream out, PrintStream err) throws IOException {
     return recover(input, output, out, err, true, false);
   }
 
-  private int recoverAll(String input, String output, PrintStream out,
-      PrintStream err) throws IOException {
+  private int recoverAll(String input, String output, PrintStream out, PrintStream err) throws IOException {
     return recover(input, output, out, err, true, true);
   }
 }

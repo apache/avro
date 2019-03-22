@@ -185,7 +185,7 @@ public class TestCircularReferences {
         long id = getId(value, schema);
 
         // keep track of this for later references
-        //references.put(id, value);
+        // references.put(id, value);
         ids.put(value, id);
 
         return value;
@@ -284,17 +284,14 @@ public class TestCircularReferences {
 
     Schema parentSchema = Schema.createRecord("Parent", null, null, false);
 
-    Schema parentRefSchema = Schema.createUnion(
-        Schema.create(Schema.Type.NULL),
-        Schema.create(Schema.Type.LONG),
+    Schema parentRefSchema = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.LONG),
         parentSchema);
     Reference parentRef = new Reference("parent");
 
     List<Schema.Field> childFields = new ArrayList<>();
     childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, null));
     childFields.add(new Schema.Field("parent", parentRefSchema, null, null));
-    Schema childSchema = parentRef.addToSchema(
-        Schema.createRecord("Child", null, null, false, childFields));
+    Schema childSchema = parentRef.addToSchema(Schema.createRecord("Child", null, null, false, childFields));
 
     List<Schema.Field> parentFields = new ArrayList<>();
     parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
@@ -324,23 +321,17 @@ public class TestCircularReferences {
     Record actual = records.get(0);
 
     // because the record is a recursive structure, equals won't work
-    Assert.assertEquals("Should correctly read back the parent id",
-        1L, actual.get("id"));
-    Assert.assertEquals("Should correctly read back the parent data",
-        new Utf8("parent data!"), actual.get("p"));
+    Assert.assertEquals("Should correctly read back the parent id", 1L, actual.get("id"));
+    Assert.assertEquals("Should correctly read back the parent data", new Utf8("parent data!"), actual.get("p"));
 
     Record actualChild = (Record) actual.get("child");
-    Assert.assertEquals("Should correctly read back the child data",
-        new Utf8("child data!"), actualChild.get("c"));
+    Assert.assertEquals("Should correctly read back the child data", new Utf8("child data!"), actualChild.get("c"));
     Object childParent = actualChild.get("parent");
-    Assert.assertTrue("Should have a parent Record object",
-        childParent instanceof Record);
+    Assert.assertTrue("Should have a parent Record object", childParent instanceof Record);
 
     Record childParentRecord = (Record) actualChild.get("parent");
-    Assert.assertEquals("Should have the right parent id",
-        1L, childParentRecord.get("id"));
-    Assert.assertEquals("Should have the right parent data",
-        new Utf8("parent data!"), childParentRecord.get("p"));
+    Assert.assertEquals("Should have the right parent id", 1L, childParentRecord.get("id"));
+    Assert.assertEquals("Should have the right parent data", new Utf8("parent data!"), childParentRecord.get("p"));
   }
 
   private <D> List<D> read(GenericData model, Schema schema, File file) throws IOException {

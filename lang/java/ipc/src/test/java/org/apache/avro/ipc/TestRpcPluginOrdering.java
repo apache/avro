@@ -23,9 +23,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.avro.AvroRemoteException;
-import org.apache.avro.ipc.LocalTransceiver;
-import org.apache.avro.ipc.RPCContext;
-import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
@@ -36,7 +33,7 @@ public class TestRpcPluginOrdering {
 
   private static AtomicInteger orderCounter = new AtomicInteger();
 
-  public class OrderPlugin extends RPCPlugin{
+  public class OrderPlugin extends RPCPlugin {
 
     public void clientStartConnect(RPCContext context) {
       assertEquals(0, orderCounter.getAndIncrement());
@@ -82,18 +79,16 @@ public class TestRpcPluginOrdering {
   }
 
   private Message createTestMessage() {
-    Message message = Message.newBuilder().
-      setTo("me@test.com").
-      setFrom("you@test.com").
-      setBody("plugin testing").
-      build();
+    Message message = Message.newBuilder().setTo("me@test.com").setFrom("you@test.com").setBody("plugin testing")
+        .build();
     return message;
   }
 
-  private static class TestMailImpl implements Mail{
+  private static class TestMailImpl implements Mail {
     public String send(Message message) throws AvroRemoteException {
       return "Received";
     }
+
     public void fireandforget(Message message) {
     }
   }

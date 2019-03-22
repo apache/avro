@@ -67,16 +67,16 @@ public class TestAvroKeyValueRecordWriter {
     AvroDatumConverter<Text, ?> keyConverter = factory.create(Text.class);
     AvroValue<TextStats> avroValue = new AvroValue<>(null);
     @SuppressWarnings("unchecked")
-    AvroDatumConverter<AvroValue<TextStats>, ?> valueConverter
-        = factory.create((Class<AvroValue<TextStats>>) avroValue.getClass());
+    AvroDatumConverter<AvroValue<TextStats>, ?> valueConverter = factory
+        .create((Class<AvroValue<TextStats>>) avroValue.getClass());
     CodecFactory compressionCodec = CodecFactory.nullCodec();
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
     // Use a writer to generate a Avro container file in memory.
-    // Write two records: <'apple', TextStats('apple')> and <'banana', TextStats('banana')>.
-    AvroKeyValueRecordWriter<Text, AvroValue<TextStats>> writer
-        = new AvroKeyValueRecordWriter<>(keyConverter, valueConverter,
-            new ReflectData(), compressionCodec, outputStream);
+    // Write two records: <'apple', TextStats('apple')> and <'banana',
+    // TextStats('banana')>.
+    AvroKeyValueRecordWriter<Text, AvroValue<TextStats>> writer = new AvroKeyValueRecordWriter<>(keyConverter,
+        valueConverter, new ReflectData(), compressionCodec, outputStream);
     TextStats appleStats = new TextStats();
     appleStats.setName("apple");
     writer.write(new Text("apple"), new AvroValue<>(appleStats));
@@ -88,25 +88,20 @@ public class TestAvroKeyValueRecordWriter {
     verify(context);
 
     ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-    Schema readerSchema = AvroKeyValue.getSchema(
-        Schema.create(Schema.Type.STRING), TextStats.SCHEMA$);
-    DatumReader<GenericRecord> datumReader
-        = new SpecificDatumReader<>(readerSchema);
-    DataFileStream<GenericRecord> avroFileReader
-        = new DataFileStream<>(inputStream, datumReader);
+    Schema readerSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING), TextStats.SCHEMA$);
+    DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(readerSchema);
+    DataFileStream<GenericRecord> avroFileReader = new DataFileStream<>(inputStream, datumReader);
 
     // Verify that the first record was written.
     assertTrue(avroFileReader.hasNext());
-    AvroKeyValue<CharSequence, TextStats> firstRecord
-        = new AvroKeyValue<>(avroFileReader.next());
+    AvroKeyValue<CharSequence, TextStats> firstRecord = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(firstRecord.get());
     assertEquals("apple", firstRecord.getKey().toString());
     assertEquals("apple", firstRecord.getValue().getName().toString());
 
     // Verify that the second record was written;
     assertTrue(avroFileReader.hasNext());
-    AvroKeyValue<CharSequence, TextStats> secondRecord
-        = new AvroKeyValue<>(avroFileReader.next());
+    AvroKeyValue<CharSequence, TextStats> secondRecord = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(secondRecord.get());
     assertEquals("banana", secondRecord.getKey().toString());
     assertEquals("banana", secondRecord.getValue().getName().toString());
@@ -119,7 +114,9 @@ public class TestAvroKeyValueRecordWriter {
   public static class R1 {
     String attribute;
   }
-  @Test public void testUsingReflection() throws Exception {
+
+  @Test
+  public void testUsingReflection() throws Exception {
     Job job = Job.getInstance();
     Schema schema = ReflectData.get().getSchema(R1.class);
     AvroJob.setOutputValueSchema(job, schema);
@@ -131,19 +128,15 @@ public class TestAvroKeyValueRecordWriter {
     AvroValue<R1> avroValue = new AvroValue<>(record);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    AvroDatumConverterFactory factory =
-      new AvroDatumConverterFactory(job.getConfiguration());
+    AvroDatumConverterFactory factory = new AvroDatumConverterFactory(job.getConfiguration());
 
     AvroDatumConverter<Text, ?> keyConverter = factory.create(Text.class);
 
     @SuppressWarnings("unchecked")
-    AvroDatumConverter<AvroValue<R1>, R1> valueConverter =
-      factory.create((Class<AvroValue<R1>>) avroValue.getClass());
+    AvroDatumConverter<AvroValue<R1>, R1> valueConverter = factory.create((Class<AvroValue<R1>>) avroValue.getClass());
 
-    AvroKeyValueRecordWriter<Text, AvroValue<R1>> writer =
-      new AvroKeyValueRecordWriter<>(
-        keyConverter, valueConverter, new ReflectData(),
-        CodecFactory.nullCodec(), outputStream);
+    AvroKeyValueRecordWriter<Text, AvroValue<R1>> writer = new AvroKeyValueRecordWriter<>(keyConverter, valueConverter,
+        new ReflectData(), CodecFactory.nullCodec(), outputStream);
 
     writer.write(new Text("reflectionData"), avroValue);
     writer.close(context);
@@ -151,19 +144,15 @@ public class TestAvroKeyValueRecordWriter {
     verify(context);
 
     ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-    Schema readerSchema = AvroKeyValue.getSchema(
-      Schema.create(Schema.Type.STRING), schema);
-    DatumReader<GenericRecord> datumReader =
-      new ReflectDatumReader<>(readerSchema);
-    DataFileStream<GenericRecord> avroFileReader =
-      new DataFileStream<>(inputStream, datumReader);
+    Schema readerSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.STRING), schema);
+    DatumReader<GenericRecord> datumReader = new ReflectDatumReader<>(readerSchema);
+    DataFileStream<GenericRecord> avroFileReader = new DataFileStream<>(inputStream, datumReader);
 
     // Verify that the first record was written.
     assertTrue(avroFileReader.hasNext());
 
     // Verify that the record holds the same data that we've written
-    AvroKeyValue<CharSequence, R1> firstRecord =
-      new AvroKeyValue<>(avroFileReader.next());
+    AvroKeyValue<CharSequence, R1> firstRecord = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(firstRecord.get());
     assertEquals("reflectionData", firstRecord.getKey().toString());
     assertEquals(record.attribute, firstRecord.getValue().attribute);
@@ -181,15 +170,15 @@ public class TestAvroKeyValueRecordWriter {
     AvroDatumConverter<Text, ?> keyConverter = factory.create(Text.class);
     AvroValue<TextStats> avroValue = new AvroValue<>(null);
     @SuppressWarnings("unchecked")
-    AvroDatumConverter<AvroValue<TextStats>, ?> valueConverter
-        = factory.create((Class<AvroValue<TextStats>>) avroValue.getClass());
+    AvroDatumConverter<AvroValue<TextStats>, ?> valueConverter = factory
+        .create((Class<AvroValue<TextStats>>) avroValue.getClass());
     CodecFactory compressionCodec = CodecFactory.nullCodec();
     FileOutputStream outputStream = new FileOutputStream(new File("target/temp.avro"));
 
-    // Write a marker followed by each record: <'apple', TextStats('apple')> and <'banana', TextStats('banana')>.
-    AvroKeyValueRecordWriter<Text, AvroValue<TextStats>> writer
-        = new AvroKeyValueRecordWriter<>(keyConverter, valueConverter,
-            new ReflectData(), compressionCodec, outputStream);
+    // Write a marker followed by each record: <'apple', TextStats('apple')> and
+    // <'banana', TextStats('banana')>.
+    AvroKeyValueRecordWriter<Text, AvroValue<TextStats>> writer = new AvroKeyValueRecordWriter<>(keyConverter,
+        valueConverter, new ReflectData(), compressionCodec, outputStream);
     TextStats appleStats = new TextStats();
     appleStats.setName("apple");
     long pointOne = writer.sync();
@@ -205,29 +194,24 @@ public class TestAvroKeyValueRecordWriter {
     Configuration conf = new Configuration();
     conf.set("fs.default.name", "file:///");
     Path avroFile = new Path("target/temp.avro");
-    DataFileReader<GenericData.Record> avroFileReader = new DataFileReader<>(new FsInput(avroFile,
-      conf), new SpecificDatumReader<>());
-
+    DataFileReader<GenericData.Record> avroFileReader = new DataFileReader<>(new FsInput(avroFile, conf),
+        new SpecificDatumReader<>());
 
     avroFileReader.seek(pointTwo);
     // Verify that the second record was written;
     assertTrue(avroFileReader.hasNext());
-    AvroKeyValue<CharSequence, TextStats> secondRecord
-        = new AvroKeyValue<>(avroFileReader.next());
+    AvroKeyValue<CharSequence, TextStats> secondRecord = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(secondRecord.get());
     assertEquals("banana", secondRecord.getKey().toString());
     assertEquals("banana", secondRecord.getValue().getName().toString());
 
-
     avroFileReader.seek(pointOne);
     // Verify that the first record was written.
     assertTrue(avroFileReader.hasNext());
-    AvroKeyValue<CharSequence, TextStats> firstRecord
-        = new AvroKeyValue<>(avroFileReader.next());
+    AvroKeyValue<CharSequence, TextStats> firstRecord = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(firstRecord.get());
     assertEquals("apple", firstRecord.getKey().toString());
     assertEquals("apple", firstRecord.getValue().getName().toString());
-
 
     // That's all, folks.
     avroFileReader.close();

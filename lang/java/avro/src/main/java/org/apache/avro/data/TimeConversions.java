@@ -83,7 +83,7 @@ public class TimeConversions {
     public Schema getRecommendedSchema() {
       return LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     }
-}
+  }
 
   public static class TimeMicrosConversion extends Conversion<LocalTime> {
     @Override
@@ -161,7 +161,7 @@ public class TimeConversions {
     public Schema getRecommendedSchema() {
       return LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     }
-}
+  }
 
   public static class LossyTimestampMicrosConversion extends TimestampMicrosConversion {
     @Override

@@ -36,7 +36,8 @@ import org.apache.avro.protobuf.Test.A;
 import org.apache.avro.protobuf.Test.M.N;
 
 public class TestProtobuf {
-  @Test public void testMessage() throws Exception {
+  @Test
+  public void testMessage() throws Exception {
 
     System.out.println(ProtobufData.get().getSchema(Foo.class).toString(true));
     Foo.Builder builder = Foo.newBuilder();
@@ -76,20 +77,20 @@ public class TestProtobuf {
     w.write(foo, e);
     e.flush();
 
-    Object o = new ProtobufDatumReader<>(Foo.class).read
-      (null,
-       DecoderFactory.get().binaryDecoder
-       (new ByteArrayInputStream(bao.toByteArray()), null));
+    Object o = new ProtobufDatumReader<>(Foo.class).read(null,
+        DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(bao.toByteArray()), null));
 
     assertEquals(foo, o);
   }
 
-  @Test public void testNestedEnum() throws Exception {
+  @Test
+  public void testNestedEnum() throws Exception {
     Schema s = ProtobufData.get().getSchema(N.class);
     assertEquals(N.class.getName(), SpecificData.get().getClass(s).getName());
   }
 
-  @Test public void testNestedClassNamespace() throws Exception {
+  @Test
+  public void testNestedClassNamespace() throws Exception {
     Schema s = ProtobufData.get().getSchema(Foo.class);
     assertEquals(org.apache.avro.protobuf.Test.class.getName(), s.getNamespace());
   }

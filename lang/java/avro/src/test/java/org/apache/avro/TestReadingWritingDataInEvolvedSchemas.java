@@ -81,8 +81,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
       .endRecord();
   private static final Schema UNION_STRING_BYTES_RECORD = SchemaBuilder.record(RECORD_A) //
       .fields() //
-      .name(FIELD_A).type().unionOf().stringType().and().bytesType().endUnion()
-      .noDefault() //
+      .name(FIELD_A).type().unionOf().stringType().and().bytesType().endUnion().noDefault() //
       .endRecord();
   private static final Schema ENUM_AB_RECORD = SchemaBuilder.record(RECORD_A) //
       .fields() //
@@ -119,9 +118,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @Parameters(name = "encoder = {0}")
   public static Collection<Object[]> data() {
-    return Arrays.asList(new EncoderType[][]{
-      {EncoderType.BINARY}, {EncoderType.JSON}
-    });
+    return Arrays.asList(new EncoderType[][] { { EncoderType.BINARY }, { EncoderType.JSON } });
   }
 
   public TestReadingWritingDataInEvolvedSchemas(EncoderType encoderType) {
@@ -290,7 +287,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
     ByteBuffer buf = ByteBuffer.wrap("42".getBytes("UTF-8"));
     Record record = defaultRecordWithSchema(writer, FIELD_A, buf);
     byte[] encoded = encodeGenericBlob(record);
-    CharSequence read =  (CharSequence) decodeGenericBlob(STRING_RECORD, writer, encoded).get(FIELD_A);
+    CharSequence read = (CharSequence) decodeGenericBlob(STRING_RECORD, writer, encoded).get(FIELD_A);
     assertEquals("42", read.toString());
   }
 
@@ -300,7 +297,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Schema writer = UNION_STRING_BYTES_RECORD;
     Record record = defaultRecordWithSchema(writer, FIELD_A, goeran);
     byte[] encoded = encodeGenericBlob(record);
-    CharSequence read =  (CharSequence) decodeGenericBlob(STRING_RECORD, writer, encoded).get(FIELD_A);
+    CharSequence read = (CharSequence) decodeGenericBlob(STRING_RECORD, writer, encoded).get(FIELD_A);
     assertEquals(goeran, read.toString());
   }
 
@@ -377,14 +374,12 @@ public class TestReadingWritingDataInEvolvedSchemas {
 
   @Test
   public void aliasesInSchema() throws Exception {
-    Schema writer = new Schema.Parser().parse(
-      "{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": [" +
-        "{\"name\": \"name\", \"type\": \"int\"}\n" +
-        "]}\n");
-    Schema reader = new Schema.Parser().parse(
-      "{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": [" +
-        "{\"name\": \"fname\", \"type\": \"int\", \"aliases\" : [ \"name\" ]}\n" +
-        "]}\n");
+    Schema writer = new Schema.Parser()
+        .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
+            + "{\"name\": \"name\", \"type\": \"int\"}\n" + "]}\n");
+    Schema reader = new Schema.Parser()
+        .parse("{\"namespace\": \"example.avro\", \"type\": \"record\", \"name\": \"User\", \"fields\": ["
+            + "{\"name\": \"fname\", \"type\": \"int\", \"aliases\" : [ \"name\" ]}\n" + "]}\n");
 
     GenericData.Record record = defaultRecordWithSchema(writer, "name", 1);
     byte[] encoded = encodeGenericBlob(record);
@@ -402,9 +397,8 @@ public class TestReadingWritingDataInEvolvedSchemas {
   private byte[] encodeGenericBlob(GenericRecord data) throws IOException {
     DatumWriter<GenericRecord> writer = new GenericDatumWriter<>(data.getSchema());
     ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-    Encoder encoder = encoderType == EncoderType.BINARY ?
-      EncoderFactory.get().binaryEncoder(outStream, null) :
-      EncoderFactory.get().jsonEncoder(data.getSchema(), outStream);
+    Encoder encoder = encoderType == EncoderType.BINARY ? EncoderFactory.get().binaryEncoder(outStream, null)
+        : EncoderFactory.get().jsonEncoder(data.getSchema(), outStream);
     writer.write(data, encoder);
     encoder.flush();
     outStream.close();
@@ -418,9 +412,8 @@ public class TestReadingWritingDataInEvolvedSchemas {
     GenericDatumReader<Record> reader = new GenericDatumReader<>();
     reader.setExpected(expectedSchema);
     reader.setSchema(schemaOfBlob);
-    Decoder decoder = encoderType == EncoderType.BINARY ?
-      DecoderFactory.get().binaryDecoder(blob, null) :
-      DecoderFactory.get().jsonDecoder(schemaOfBlob, new ByteArrayInputStream(blob));
+    Decoder decoder = encoderType == EncoderType.BINARY ? DecoderFactory.get().binaryDecoder(blob, null)
+        : DecoderFactory.get().jsonDecoder(schemaOfBlob, new ByteArrayInputStream(blob));
     return reader.read(null, decoder);
   }
 }

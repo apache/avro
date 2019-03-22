@@ -35,7 +35,7 @@ public class TestProtocolNetty extends TestProtocolSpecific {
   }
 
   @Override
-  public Transceiver createTransceiver() throws Exception{
+  public Transceiver createTransceiver() throws Exception {
     return new NettyTransceiver(new InetSocketAddress(server.getPort()), 2000L);
   }
 

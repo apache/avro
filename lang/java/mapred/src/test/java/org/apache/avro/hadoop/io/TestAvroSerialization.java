@@ -60,8 +60,7 @@ public class TestAvroSerialization {
     AvroJob.setMapOutputKeySchema(job, writerSchema);
 
     // Get a serializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Serializer<AvroWrapper> serializer = serialization.getSerializer(AvroKey.class);
     assertTrue(serializer instanceof AvroSerializer);
@@ -79,8 +78,7 @@ public class TestAvroSerialization {
     AvroJob.setMapOutputValueSchema(job, writerSchema);
 
     // Get a serializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Serializer<AvroWrapper> serializer = serialization.getSerializer(AvroValue.class);
     assertTrue(serializer instanceof AvroSerializer);
@@ -98,8 +96,7 @@ public class TestAvroSerialization {
     AvroJob.setMapOutputKeySchema(job, readerSchema);
 
     // Get a deserializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Deserializer<AvroWrapper> deserializer = serialization.getDeserializer(AvroKey.class);
     assertTrue(deserializer instanceof AvroKeyDeserializer);
@@ -117,8 +114,7 @@ public class TestAvroSerialization {
     AvroJob.setMapOutputValueSchema(job, readerSchema);
 
     // Get a deserializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Deserializer<AvroWrapper> deserializer = serialization.getDeserializer(AvroValue.class);
     assertTrue(deserializer instanceof AvroValueDeserializer);
@@ -128,15 +124,14 @@ public class TestAvroSerialization {
     assertEquals(readerSchema, avroDeserializer.getReaderSchema());
   }
 
-  @Test public void testClassPath() throws Exception {
+  @Test
+  public void testClassPath() throws Exception {
     Configuration conf = new Configuration();
     ClassLoader loader = conf.getClass().getClassLoader();
     AvroSerialization serialization = new AvroSerialization();
     serialization.setConf(conf);
-    AvroDeserializer des =
-      (AvroDeserializer)serialization.getDeserializer(AvroKey.class);
-    ReflectData data =
-      (ReflectData)((ReflectDatumReader)des.mAvroDatumReader).getData();
+    AvroDeserializer des = (AvroDeserializer) serialization.getDeserializer(AvroKey.class);
+    ReflectData data = (ReflectData) ((ReflectDatumReader) des.mAvroDatumReader).getData();
     Assert.assertEquals(loader, data.getClassLoader());
   }
 
@@ -145,8 +140,7 @@ public class TestAvroSerialization {
     AvroJob.setMapOutputKeySchema(job, schema);
     if (modelClass != null)
       AvroJob.setDataModelClass(job, modelClass);
-    AvroSerialization serialization =
-      ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     Serializer<AvroKey<T>> serializer = serialization.getSerializer(AvroKey.class);
     Deserializer<AvroKey<O>> deserializer = serialization.getDeserializer(AvroKey.class);
 

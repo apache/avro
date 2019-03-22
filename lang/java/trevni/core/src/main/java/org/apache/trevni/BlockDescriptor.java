@@ -24,7 +24,8 @@ class BlockDescriptor {
   int uncompressedSize;
   int compressedSize;
 
-  BlockDescriptor() {}
+  BlockDescriptor() {
+  }
 
   BlockDescriptor(int rowCount, int uncompressedSize, int compressedSize) {
     this.rowCount = rowCount;

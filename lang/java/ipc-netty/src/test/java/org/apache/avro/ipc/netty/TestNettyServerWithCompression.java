@@ -34,25 +34,19 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.compression.ZlibDecoder;
 import org.jboss.netty.handler.codec.compression.ZlibEncoder;
 
-public class TestNettyServerWithCompression extends TestNettyServer{
-
+public class TestNettyServerWithCompression extends TestNettyServer {
 
   protected static Server initializeServer(Responder responder) {
-    ChannelFactory channelFactory = new NioServerSocketChannelFactory(
-        Executors.newCachedThreadPool(),
-        Executors.newCachedThreadPool()
-    );
-    return  new NettyServer(responder, new InetSocketAddress(0),
-        channelFactory, new CompressionChannelPipelineFactory(),
+    ChannelFactory channelFactory = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(),
+        Executors.newCachedThreadPool());
+    return new NettyServer(responder, new InetSocketAddress(0), channelFactory, new CompressionChannelPipelineFactory(),
         null);
   }
 
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
-    return  new NettyTransceiver(new InetSocketAddress(serverPort),
-        new CompressionChannelFactory(),
+    return new NettyTransceiver(new InetSocketAddress(serverPort), new CompressionChannelFactory(),
         CONNECT_TIMEOUT_MILLIS);
   }
-
 
   /**
    * Factory of Compression-enabled client channels
@@ -75,13 +69,10 @@ public class TestNettyServerWithCompression extends TestNettyServer{
     }
   }
 
-
-
   /**
    * Factory of Compression-enabled server worker channel pipelines
    */
-  private static class CompressionChannelPipelineFactory
-      implements ChannelPipelineFactory {
+  private static class CompressionChannelPipelineFactory implements ChannelPipelineFactory {
 
     @Override
     public ChannelPipeline getPipeline() throws Exception {

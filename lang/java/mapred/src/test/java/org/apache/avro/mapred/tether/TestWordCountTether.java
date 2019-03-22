@@ -46,7 +46,8 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * See also TestTetherTool for an example of how to submit jobs using the thether tool.
+ * See also TestTetherTool for an example of how to submit jobs using the
+ * thether tool.
  */
 public class TestWordCountTether {
 
@@ -75,7 +76,7 @@ public class TestWordCountTether {
 
     File exec = new File(System.getProperty("java.home") + "/bin/java");
 
-    //create a string of the arguments
+    // create a string of the arguments
     List<String> execargs = new ArrayList<>();
     execargs.add("-classpath");
     execargs.add(System.getProperty("java.class.path"));

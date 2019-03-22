@@ -25,8 +25,10 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Utility to collect data written to an {@link OutputStream} in {@link
- * ByteBuffer}s.*/
+/**
+ * Utility to collect data written to an {@link OutputStream} in
+ * {@link ByteBuffer}s.
+ */
 public class ByteBufferOutputStream extends OutputStream {
   public static final int BUFFER_SIZE = 8192;
 
@@ -40,13 +42,14 @@ public class ByteBufferOutputStream extends OutputStream {
   public List<ByteBuffer> getBufferList() {
     List<ByteBuffer> result = buffers;
     reset();
-    for (ByteBuffer buffer : result) buffer.flip();
+    for (ByteBuffer buffer : result)
+      buffer.flip();
     return result;
   }
 
   /** Prepend a list of ByteBuffers to this stream. */
   public void prepend(List<ByteBuffer> lists) {
-    for (ByteBuffer buffer: lists) {
+    for (ByteBuffer buffer : lists) {
       buffer.position(buffer.limit());
     }
     buffers.addAll(0, lists);
@@ -54,7 +57,7 @@ public class ByteBufferOutputStream extends OutputStream {
 
   /** Append a list of ByteBuffers to this stream. */
   public void append(List<ByteBuffer> lists) {
-    for (ByteBuffer buffer: lists) {
+    for (ByteBuffer buffer : lists) {
       buffer.position(buffer.limit());
     }
     buffers.addAll(lists);
@@ -71,17 +74,17 @@ public class ByteBufferOutputStream extends OutputStream {
 
   @Override
   public void write(int b) {
-    ByteBuffer buffer = buffers.get(buffers.size()-1);
+    ByteBuffer buffer = buffers.get(buffers.size() - 1);
     if (buffer.remaining() < 1) {
       buffer = ByteBuffer.allocate(BUFFER_SIZE);
       buffers.add(buffer);
     }
-    buffer.put((byte)b);
+    buffer.put((byte) b);
   }
 
   @Override
   public void write(byte[] b, int off, int len) {
-    ByteBuffer buffer = buffers.get(buffers.size()-1);
+    ByteBuffer buffer = buffers.get(buffers.size() - 1);
     int remaining = buffer.remaining();
     while (len > remaining) {
       buffer.put(b, off, remaining);
@@ -98,9 +101,9 @@ public class ByteBufferOutputStream extends OutputStream {
   public void writeBuffer(ByteBuffer buffer) throws IOException {
     if (buffer.remaining() < BUFFER_SIZE) {
       write(buffer.array(), buffer.position(), buffer.remaining());
-    } else {                                      // append w/o copying bytes
+    } else { // append w/o copying bytes
       ByteBuffer dup = buffer.duplicate();
-      dup.position(buffer.limit());               // ready for flip
+      dup.position(buffer.limit()); // ready for flip
       buffers.add(dup);
     }
   }

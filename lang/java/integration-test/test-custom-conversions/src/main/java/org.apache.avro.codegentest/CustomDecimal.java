@@ -23,44 +23,47 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 
 /**
- * Wraps a BigDecimal just to demonstrate that it is possible to use custom implementation classes with custom conversions.
+ * Wraps a BigDecimal just to demonstrate that it is possible to use custom
+ * implementation classes with custom conversions.
  */
 public class CustomDecimal implements Comparable<CustomDecimal> {
 
-    private final BigDecimal internalValue;
+  private final BigDecimal internalValue;
 
-    public CustomDecimal(BigInteger value, int scale) {
-        internalValue = new BigDecimal(value, scale);
+  public CustomDecimal(BigInteger value, int scale) {
+    internalValue = new BigDecimal(value, scale);
+  }
+
+  public byte[] toByteArray(int scale) {
+    final BigDecimal correctlyScaledValue;
+    if (scale != internalValue.scale()) {
+      correctlyScaledValue = internalValue.setScale(scale, RoundingMode.HALF_UP);
+    } else {
+      correctlyScaledValue = internalValue;
     }
+    return correctlyScaledValue.unscaledValue().toByteArray();
 
-    public byte[] toByteArray(int scale) {
-        final BigDecimal correctlyScaledValue;
-        if (scale != internalValue.scale()) {
-            correctlyScaledValue = internalValue.setScale(scale, RoundingMode.HALF_UP);
-        } else {
-            correctlyScaledValue = internalValue;
-        }
-        return correctlyScaledValue.unscaledValue().toByteArray();
+  }
 
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    CustomDecimal that = (CustomDecimal) o;
 
-        CustomDecimal that = (CustomDecimal) o;
+    return internalValue.equals(that.internalValue);
+  }
 
-        return internalValue.equals(that.internalValue);
-    }
+  @Override
+  public int hashCode() {
+    return internalValue.hashCode();
+  }
 
-    @Override
-    public int hashCode() {
-        return internalValue.hashCode();
-    }
-
-    @Override
-    public int compareTo(CustomDecimal o) {
-        return this.internalValue.compareTo(o.internalValue);
-    }
+  @Override
+  public int compareTo(CustomDecimal o) {
+    return this.internalValue.compareTo(o.internalValue);
+  }
 }

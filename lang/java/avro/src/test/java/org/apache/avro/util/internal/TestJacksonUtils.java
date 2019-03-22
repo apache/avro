@@ -67,12 +67,11 @@ public class TestJacksonUtils {
     assertEquals(2L, toObject(IntNode.valueOf(2), Schema.create(Schema.Type.LONG)));
     assertEquals(1.0f, toObject(DoubleNode.valueOf(1.0), Schema.create(Schema.Type.FLOAT)));
     assertEquals(2.0, toObject(DoubleNode.valueOf(2.0)));
-    assertEquals(TextNode.valueOf("\u0001\u0002"), toJsonNode(new byte[]{1, 2}));
-    assertArrayEquals(new byte[]{1, 2},
+    assertEquals(TextNode.valueOf("\u0001\u0002"), toJsonNode(new byte[] { 1, 2 }));
+    assertArrayEquals(new byte[] { 1, 2 },
         (byte[]) toObject(TextNode.valueOf("\u0001\u0002"), Schema.create(Schema.Type.BYTES)));
     assertEquals("a", toObject(TextNode.valueOf("a")));
-    assertEquals("UP", toObject(TextNode.valueOf("UP"),
-        SchemaBuilder.enumeration("Direction").symbols("UP", "DOWN")));
+    assertEquals("UP", toObject(TextNode.valueOf("UP"), SchemaBuilder.enumeration("Direction").symbols("UP", "DOWN")));
 
     ArrayNode an = JsonNodeFactory.instance.arrayNode();
     an.add(1);
@@ -81,14 +80,13 @@ public class TestJacksonUtils {
     ObjectNode on = JsonNodeFactory.instance.objectNode();
     on.put("a", 1);
     assertEquals(Collections.singletonMap("a", 1), toObject(on));
-    assertEquals(Collections.singletonMap("a", 1L), toObject(on,
-        SchemaBuilder.record("r").fields().requiredLong("a").endRecord()));
+    assertEquals(Collections.singletonMap("a", 1L),
+        toObject(on, SchemaBuilder.record("r").fields().requiredLong("a").endRecord()));
 
-    assertEquals(JsonProperties.NULL_VALUE, toObject(NullNode.getInstance(),
-        SchemaBuilder.unionOf().nullType().and().intType().endUnion()));
+    assertEquals(JsonProperties.NULL_VALUE,
+        toObject(NullNode.getInstance(), SchemaBuilder.unionOf().nullType().and().intType().endUnion()));
 
-    assertEquals("a", toObject(TextNode.valueOf("a"),
-        SchemaBuilder.unionOf().stringType().and().intType().endUnion()));
+    assertEquals("a", toObject(TextNode.valueOf("a"), SchemaBuilder.unionOf().stringType().and().intType().endUnion()));
   }
 
 }

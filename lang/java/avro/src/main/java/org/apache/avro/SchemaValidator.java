@@ -38,7 +38,8 @@ public interface SchemaValidator {
    * schema(s).
    *
    * @param toValidate The schema to validate
-   * @param existing The schemas to validate against, in order from most recent to latest if applicable
+   * @param existing   The schemas to validate against, in order from most recent
+   *                   to latest if applicable
    * @throws SchemaValidationException if the schema fails to validate.
    */
   void validate(Schema toValidate, Iterable<Schema> existing) throws SchemaValidationException;

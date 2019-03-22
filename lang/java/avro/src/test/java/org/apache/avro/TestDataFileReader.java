@@ -47,16 +47,16 @@ public class TestDataFileReader {
     }
     Files.delete(emptyFile);
 
-    assertEquals("File descriptor leaked from new DataFileReader()", openFilesBeforeOperation, getNumberOfOpenFileDescriptors());
+    assertEquals("File descriptor leaked from new DataFileReader()", openFilesBeforeOperation,
+        getNumberOfOpenFileDescriptors());
   }
 
   private long getNumberOfOpenFileDescriptors() {
     OperatingSystemMXBean osMxBean = ManagementFactory.getOperatingSystemMXBean();
     if (osMxBean instanceof UnixOperatingSystemMXBean) {
-      return ((UnixOperatingSystemMXBean)osMxBean).getOpenFileDescriptorCount();
+      return ((UnixOperatingSystemMXBean) osMxBean).getOpenFileDescriptorCount();
     }
     return 0;
   }
-
 
 }

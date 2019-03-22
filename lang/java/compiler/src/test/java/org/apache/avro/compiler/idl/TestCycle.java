@@ -45,8 +45,7 @@ public class TestCycle {
   @Test
   public void testCycleGeneration() throws ParseException, IOException {
     final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-    Idl idl = new Idl(cl.getResourceAsStream("input/cycle.avdl"),
-            "UTF-8");
+    Idl idl = new Idl(cl.getResourceAsStream("input/cycle.avdl"), "UTF-8");
     Protocol protocol = idl.CompilationUnit();
     String json = protocol.toString();
     LOG.info(json);

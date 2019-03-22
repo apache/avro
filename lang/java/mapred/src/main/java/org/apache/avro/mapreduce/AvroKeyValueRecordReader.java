@@ -27,17 +27,18 @@ import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 
 /**
- * Reads Avro generic records from an Avro container file, where the records contain two
- * fields: 'key' and 'value'.
+ * Reads Avro generic records from an Avro container file, where the records
+ * contain two fields: 'key' and 'value'.
  *
- * <p>The contents of the 'key' field will be parsed into an AvroKey object. The contents
- * of the 'value' field will be parsed into an AvroValue object.</p>
+ * <p>
+ * The contents of the 'key' field will be parsed into an AvroKey object. The
+ * contents of the 'value' field will be parsed into an AvroValue object.
+ * </p>
  *
  * @param <K> The type of the Avro key to read.
  * @param <V> The type of the Avro value to read.
  */
-public class AvroKeyValueRecordReader<K, V>
-    extends AvroRecordReaderBase<AvroKey<K>, AvroValue<V>, GenericRecord> {
+public class AvroKeyValueRecordReader<K, V> extends AvroRecordReaderBase<AvroKey<K>, AvroValue<V>, GenericRecord> {
   /** The current key the reader is on. */
   private final AvroKey<K> mCurrentKey;
 
@@ -47,8 +48,10 @@ public class AvroKeyValueRecordReader<K, V>
   /**
    * Constructor.
    *
-   * @param keyReaderSchema The reader schema for the key within the generic record.
-   * @param valueReaderSchema The reader schema for the value within the generic record.
+   * @param keyReaderSchema   The reader schema for the key within the generic
+   *                          record.
+   * @param valueReaderSchema The reader schema for the value within the generic
+   *                          record.
    */
   public AvroKeyValueRecordReader(Schema keyReaderSchema, Schema valueReaderSchema) {
     super(AvroKeyValue.getSchema(keyReaderSchema, valueReaderSchema));

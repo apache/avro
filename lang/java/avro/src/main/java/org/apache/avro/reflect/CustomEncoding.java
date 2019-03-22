@@ -24,18 +24,17 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
 /**
- * Expert:  a custom encoder and decoder that writes
- * an object directly to avro.
+ * Expert: a custom encoder and decoder that writes an object directly to avro.
  * No validation is performed to check that the encoding conforms to the schema.
- * Invalid implementations may result in an unreadable file.
- * The use of {@link org.apache.avro.io.ValidatingEncoder} is recommended.
+ * Invalid implementations may result in an unreadable file. The use of
+ * {@link org.apache.avro.io.ValidatingEncoder} is recommended.
  *
- * @param <T> The class of objects that can be serialized with this encoder / decoder.
+ * @param <T> The class of objects that can be serialized with this encoder /
+ *        decoder.
  */
 public abstract class CustomEncoding<T> {
 
   protected Schema schema;
-
 
   protected abstract void write(Object datum, Encoder out) throws IOException;
 
@@ -48,6 +47,5 @@ public abstract class CustomEncoding<T> {
   protected Schema getSchema() {
     return schema;
   }
-
 
 }

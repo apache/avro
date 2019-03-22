@@ -26,20 +26,21 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapred.Reporter;
 
-/** A mapper for Avro data.
+/**
+ * A mapper for Avro data.
  *
- * <p>Applications subclass this class and pass their subclass to {@link
- * AvroJob#setMapperClass(JobConf, Class)}, overriding {@link #map(Object, AvroCollector, Reporter)}.
+ * <p>
+ * Applications subclass this class and pass their subclass to
+ * {@link AvroJob#setMapperClass(JobConf, Class)}, overriding
+ * {@link #map(Object, AvroCollector, Reporter)}.
  */
 public class AvroMapper<IN, OUT> extends Configured implements JobConfigurable, Closeable {
 
-  /** Called with each map input datum.  By default, collects inputs. */
+  /** Called with each map input datum. By default, collects inputs. */
   @SuppressWarnings("unchecked")
-  public void map(IN datum, AvroCollector<OUT> collector, Reporter reporter)
-    throws IOException {
-    collector.collect((OUT)datum);
+  public void map(IN datum, AvroCollector<OUT> collector, Reporter reporter) throws IOException {
+    collector.collect((OUT) datum);
   }
-
 
   /** Subclasses can override this as desired. */
   @Override

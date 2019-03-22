@@ -28,10 +28,9 @@ import java.lang.annotation.Target;
  * {@link org.apache.avro.generic.GenericFixed GenericFixed}.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Documented
 public @interface FixedSize {
   /** The declared size of instances of classes with this annotation. */
   int value();
 }
-

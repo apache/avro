@@ -26,7 +26,6 @@ import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.Transceiver;
 
-
 public class TestProtocolSpecificMeta extends TestProtocolSpecific {
 
   @Override
@@ -41,7 +40,7 @@ public class TestProtocolSpecificMeta extends TestProtocolSpecific {
     return new SocketTransceiver(new InetSocketAddress(server.getPort()));
   }
 
-  public void addRpcPlugins(Requestor req){
+  public void addRpcPlugins(Requestor req) {
     req.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     req.addRPCPlugin(new RPCMetaTestPlugin("key2"));
   }

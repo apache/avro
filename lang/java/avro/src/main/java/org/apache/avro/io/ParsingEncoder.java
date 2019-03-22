@@ -22,12 +22,14 @@ import java.util.Arrays;
 
 import org.apache.avro.AvroTypeException;
 
-/** Base class for <a href="parsing/package-summary.html">parser</a>-based
- * {@link Encoder}s. */
+/**
+ * Base class for <a href="parsing/package-summary.html">parser</a>-based
+ * {@link Encoder}s.
+ */
 public abstract class ParsingEncoder extends Encoder {
   /**
-   * Tracks the number of items that remain to be written in
-   * the collections (array or map).
+   * Tracks the number of items that remain to be written in the collections
+   * (array or map).
    */
   private long[] counts = new long[10];
 
@@ -36,8 +38,7 @@ public abstract class ParsingEncoder extends Encoder {
   @Override
   public void setItemCount(long itemCount) throws IOException {
     if (counts[pos] != 0) {
-      throw new AvroTypeException("Incorrect number of items written. " +
-          counts[pos] + " more required.");
+      throw new AvroTypeException("Incorrect number of items written. " + counts[pos] + " more required.");
     }
     counts[pos] = itemCount;
   }
@@ -57,8 +58,7 @@ public abstract class ParsingEncoder extends Encoder {
 
   protected final void pop() {
     if (counts[pos] != 0) {
-      throw new AvroTypeException("Incorrect number of items written. " +
-          counts[pos] + " more required.");
+      throw new AvroTypeException("Incorrect number of items written. " + counts[pos] + " more required.");
     }
     pos--;
   }
@@ -67,4 +67,3 @@ public abstract class ParsingEncoder extends Encoder {
     return pos;
   }
 }
-

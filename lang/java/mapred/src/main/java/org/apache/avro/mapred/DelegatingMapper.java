@@ -30,15 +30,14 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * An {@link Mapper} that delegates behaviour of paths to multiple other
- * mappers. Similar to {@link HadoopMapper}, but instantiates map classes
- * in the map() call instead of during configure(), as we rely on the split
- * object to provide us that information.
+ * mappers. Similar to {@link HadoopMapper}, but instantiates map classes in the
+ * map() call instead of during configure(), as we rely on the split object to
+ * provide us that information.
  *
  * @see {@link AvroMultipleInputs#addInputPath(JobConf, Path, Class, Schema)}
  */
-class DelegatingMapper<IN,OUT,K,V,KO,VO> extends MapReduceBase
-implements Mapper<AvroWrapper<IN>,NullWritable,KO,VO>
-{
+class DelegatingMapper<IN, OUT, K, V, KO, VO> extends MapReduceBase
+    implements Mapper<AvroWrapper<IN>, NullWritable, KO, VO> {
   AvroMapper<IN, OUT> mapper;
   JobConf conf;
   boolean isMapOnly;
@@ -51,17 +50,15 @@ implements Mapper<AvroWrapper<IN>,NullWritable,KO,VO>
   }
 
   @Override
-  public void map(AvroWrapper<IN> wrapper, NullWritable value,
-      OutputCollector<KO, VO> collector, Reporter reporter)
-          throws IOException {
+  public void map(AvroWrapper<IN> wrapper, NullWritable value, OutputCollector<KO, VO> collector, Reporter reporter)
+      throws IOException {
     if (mapper == null) {
       TaggedInputSplit is = (TaggedInputSplit) reporter.getInputSplit();
       Class<? extends AvroMapper> mapperClass = is.getMapperClass();
-      mapper = (AvroMapper<IN,OUT>)
-          ReflectionUtils.newInstance(mapperClass, conf);
+      mapper = (AvroMapper<IN, OUT>) ReflectionUtils.newInstance(mapperClass, conf);
     }
     if (out == null)
-      out = new MapCollector<OUT,K,V,KO,VO>(collector, isMapOnly);
+      out = new MapCollector<OUT, K, V, KO, VO>(collector, isMapOnly);
     mapper.map(wrapper.datum(), out, reporter);
   }
 }

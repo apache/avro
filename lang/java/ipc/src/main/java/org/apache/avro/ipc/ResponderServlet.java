@@ -38,12 +38,9 @@ public class ResponderServlet extends HttpServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest request,
-                        HttpServletResponse response)
-    throws IOException, ServletException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
     response.setContentType(HttpTransceiver.CONTENT_TYPE);
-    List<ByteBuffer> requestBufs =
-      HttpTransceiver.readBuffers(request.getInputStream());
+    List<ByteBuffer> requestBufs = HttpTransceiver.readBuffers(request.getInputStream());
     try {
       List<ByteBuffer> responseBufs = responder.respond(requestBufs);
       response.setContentLength(HttpTransceiver.getLength(responseBufs));
@@ -53,4 +50,3 @@ public class ResponderServlet extends HttpServlet {
     }
   }
 }
-

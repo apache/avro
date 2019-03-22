@@ -32,8 +32,6 @@ import org.junit.Assert;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.ipc.netty.NettyServer;
-import org.apache.avro.ipc.netty.NettyTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
@@ -55,9 +53,8 @@ public class TestNettyServer {
 
     // in this simple example just return details of the message
     public String send(Message message) {
-      return "Sent message to ["+ message.getTo() +
-          "] from [" + message.getFrom() + "] with body [" +
-        message.getBody() + "]";
+      return "Sent message to [" + message.getTo() + "] from [" + message.getFrom() + "] with body ["
+          + message.getBody() + "]";
     }
 
     public void fireandforget(Message message) {
@@ -78,7 +75,7 @@ public class TestNettyServer {
   }
 
   @BeforeClass
-  public static void initializeConnections()throws Exception {
+  public static void initializeConnections() throws Exception {
     // start server
     System.out.println("starting server...");
     mailService = new MailImpl();
@@ -98,27 +95,24 @@ public class TestNettyServer {
   }
 
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
-    return new NettyTransceiver(new InetSocketAddress(
-        serverPort), CONNECT_TIMEOUT_MILLIS);
+    return new NettyTransceiver(new InetSocketAddress(serverPort), CONNECT_TIMEOUT_MILLIS);
   }
 
   @AfterClass
-  public static void tearDownConnections() throws Exception{
+  public static void tearDownConnections() throws Exception {
     transceiver.close();
     server.close();
   }
 
   @Test
   public void testRequestResponse() throws Exception {
-      for(int x = 0; x < 5; x++) {
-        verifyResponse(proxy.send(createMessage()));
-      }
+    for (int x = 0; x < 5; x++) {
+      verifyResponse(proxy.send(createMessage()));
+    }
   }
 
   private void verifyResponse(String result) {
-    Assert.assertEquals(
-        "Sent message to [wife] from [husband] with body [I love you!]",
-        result);
+    Assert.assertEquals("Sent message to [wife] from [husband] with body [I love you!]", result);
   }
 
   @Test
@@ -145,8 +139,7 @@ public class TestNettyServer {
 
   @Test
   public void testConnectionsCount() throws Exception {
-    Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-            server.getPort()), CONNECT_TIMEOUT_MILLIS);
+    Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(server.getPort()), CONNECT_TIMEOUT_MILLIS);
     Mail proxy2 = SpecificRequestor.getClient(Mail.class, transceiver2);
     proxy.fireandforget(createMessage());
     proxy2.fireandforget(createMessage());
@@ -165,11 +158,7 @@ public class TestNettyServer {
   }
 
   private Message createMessage() {
-    Message msg = Message.newBuilder().
-      setTo("wife").
-      setFrom("husband").
-      setBody("I love you!").
-      build();
+    Message msg = Message.newBuilder().setTo("wife").setFrom("husband").setBody("I love you!").build();
     return msg;
   }
 

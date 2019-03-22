@@ -41,7 +41,8 @@ public class NettyTransportCodec {
     private int serial; // to track each call in client side
     private List<ByteBuffer> datas;
 
-    public NettyDataPack() {}
+    public NettyDataPack() {
+    }
 
     public NettyDataPack(int serial, List<ByteBuffer> datas) {
       this.serial = serial;
@@ -67,22 +68,21 @@ public class NettyTransportCodec {
   }
 
   /**
-   * Protocol encoder which converts NettyDataPack which contains the
-   * Responder's output List&lt;ByteBuffer&gt; to ChannelBuffer needed
-   * by Netty.
+   * Protocol encoder which converts NettyDataPack which contains the Responder's
+   * output List&lt;ByteBuffer&gt; to ChannelBuffer needed by Netty.
    */
   public static class NettyFrameEncoder extends OneToOneEncoder {
 
     /**
      * encode msg to ChannelBuffer
-     * @param msg NettyDataPack from
-     *            NettyServerAvroHandler/NettyClientAvroHandler in the pipeline
+     * 
+     * @param msg NettyDataPack from NettyServerAvroHandler/NettyClientAvroHandler
+     *            in the pipeline
      * @return encoded ChannelBuffer
      */
     @Override
-    protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg)
-        throws Exception {
-      NettyDataPack dataPack = (NettyDataPack)msg;
+    protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {
+      NettyDataPack dataPack = (NettyDataPack) msg;
       List<ByteBuffer> origs = dataPack.getDatas();
       List<ByteBuffer> bbs = new ArrayList<>(origs.size() * 2 + 1);
       bbs.add(getPackHeader(dataPack)); // prepend a pack header including serial number and list size
@@ -91,8 +91,7 @@ public class NettyTransportCodec {
         bbs.add(b);
       }
 
-      return ChannelBuffers
-          .wrappedBuffer(bbs.toArray(new ByteBuffer[0]));
+      return ChannelBuffers.wrappedBuffer(bbs.toArray(new ByteBuffer[0]));
     }
 
     private ByteBuffer getPackHeader(NettyDataPack dataPack) {
@@ -112,9 +111,8 @@ public class NettyTransportCodec {
   }
 
   /**
-   * Protocol decoder which converts Netty's ChannelBuffer to
-   * NettyDataPack which contains a List&lt;ByteBuffer&gt; needed
-   * by Avro Responder.
+   * Protocol decoder which converts Netty's ChannelBuffer to NettyDataPack which
+   * contains a List&lt;ByteBuffer&gt; needed by Avro Responder.
    */
   public static class NettyFrameDecoder extends FrameDecoder {
     private boolean packHeaderRead = false;
@@ -122,7 +120,6 @@ public class NettyTransportCodec {
     private NettyDataPack dataPack;
     private final long maxMem;
     private static final long SIZEOF_REF = 8L; // mem usage of 64-bit pointer
-
 
     public NettyFrameDecoder() {
       maxMem = Runtime.getRuntime().maxMemory();
@@ -132,8 +129,7 @@ public class NettyTransportCodec {
      * decode buffer to NettyDataPack
      */
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel,
-        ChannelBuffer buffer) throws Exception {
+    protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
 
       if (!packHeaderRead) {
         if (decodePackHeader(ctx, channel, buffer)) {
@@ -151,9 +147,9 @@ public class NettyTransportCodec {
 
     }
 
-    private boolean decodePackHeader(ChannelHandlerContext ctx, Channel channel,
-        ChannelBuffer buffer) throws Exception {
-      if (buffer.readableBytes()<8) {
+    private boolean decodePackHeader(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer)
+        throws Exception {
+      if (buffer.readableBytes() < 8) {
         return false;
       }
 
@@ -164,8 +160,8 @@ public class NettyTransportCodec {
       // Only allow 10% of available memory to go towards this list (too much!)
       if (listSize * SIZEOF_REF > 0.1 * maxMem) {
         channel.close().await();
-        throw new AvroRuntimeException("Excessively large list allocation " +
-            "request detected: " + listSize + " items! Connection closed.");
+        throw new AvroRuntimeException(
+            "Excessively large list allocation " + "request detected: " + listSize + " items! Connection closed.");
       }
 
       this.listSize = listSize;
@@ -174,8 +170,7 @@ public class NettyTransportCodec {
       return true;
     }
 
-    private boolean decodePackBody(ChannelHandlerContext ctx, Channel channel,
-        ChannelBuffer buffer) throws Exception {
+    private boolean decodePackBody(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
       if (buffer.readableBytes() < 4) {
         return false;
       }
@@ -194,7 +189,7 @@ public class NettyTransportCodec {
       bb.flip();
       dataPack.getDatas().add(bb);
 
-      return dataPack.getDatas().size()==listSize;
+      return dataPack.getDatas().size() == listSize;
     }
 
   }

@@ -27,8 +27,7 @@ import org.apache.avro.io.BinaryData;
 import org.apache.avro.reflect.ReflectData;
 
 /** The {@link RawComparator} used by jobs configured with {@link AvroJob}. */
-public class AvroKeyComparator<T>
-  extends Configured implements RawComparator<AvroWrapper<T>> {
+public class AvroKeyComparator<T> extends Configured implements RawComparator<AvroWrapper<T>> {
 
   private Schema schema;
 

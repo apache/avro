@@ -44,7 +44,7 @@ public abstract class AbstractAvroMojoTest extends AbstractMojoTestCase {
    * Assert the existence files in the given given directory.
    *
    * @param directory the directory being checked
-   * @param files the files whose existence is being checked.
+   * @param files     the files whose existence is being checked.
    */
   protected void assertFilesExist(File directory, String... files) {
     assertNotNull(directory);

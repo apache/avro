@@ -58,10 +58,8 @@ public class TestGenericLogicalTypes {
     UUID u2 = UUID.randomUUID();
     List<UUID> expected = Arrays.asList(u1, u2);
 
-    File test = write(Schema.create(Schema.Type.STRING),
-        u1.toString(), u2.toString());
-    Assert.assertEquals("Should convert Strings to UUIDs",
-        expected, read(GENERIC.createDatumReader(uuidSchema), test));
+    File test = write(Schema.create(Schema.Type.STRING), u1.toString(), u2.toString());
+    Assert.assertEquals("Should convert Strings to UUIDs", expected, read(GENERIC.createDatumReader(uuidSchema), test));
   }
 
   @Test
@@ -76,29 +74,26 @@ public class TestGenericLogicalTypes {
     List<String> expected = Arrays.asList(u1.toString(), u2.toString());
 
     File test = write(GENERIC, uuidSchema, u1, u2);
-    Assert.assertEquals("Should read UUIDs as Strings",
-        expected, read(GenericData.get().createDatumReader(stringSchema), test));
+    Assert.assertEquals("Should read UUIDs as Strings", expected,
+        read(GenericData.get().createDatumReader(stringSchema), test));
   }
 
   @Test
   public void testWriteNullableUUID() throws IOException {
     Schema stringSchema = Schema.create(Schema.Type.STRING);
     stringSchema.addProp(GenericData.STRING_PROP, "String");
-    Schema nullableStringSchema = Schema.createUnion(
-        Schema.create(Schema.Type.NULL), stringSchema);
+    Schema nullableStringSchema = Schema.createUnion(Schema.create(Schema.Type.NULL), stringSchema);
 
     Schema uuidSchema = Schema.create(Schema.Type.STRING);
     LogicalTypes.uuid().addToSchema(uuidSchema);
-    Schema nullableUuidSchema = Schema.createUnion(
-        Schema.create(Schema.Type.NULL), uuidSchema);
+    Schema nullableUuidSchema = Schema.createUnion(Schema.create(Schema.Type.NULL), uuidSchema);
 
     UUID u1 = UUID.randomUUID();
     UUID u2 = UUID.randomUUID();
     List<String> expected = Arrays.asList(u1.toString(), u2.toString());
 
     File test = write(GENERIC, nullableUuidSchema, u1, u2);
-    Assert.assertEquals("Should read UUIDs as Strings",
-        expected,
+    Assert.assertEquals("Should read UUIDs as Strings", expected,
         read(GenericData.get().createDatumReader(nullableStringSchema), test));
   }
 
@@ -106,8 +101,7 @@ public class TestGenericLogicalTypes {
   public void testReadDecimalFixed() throws IOException {
     LogicalType decimal = LogicalTypes.decimal(9, 2);
     Schema fixedSchema = Schema.createFixed("aFixed", null, null, 4);
-    Schema decimalSchema = decimal.addToSchema(
-        Schema.createFixed("aFixed", null, null, 4));
+    Schema decimalSchema = decimal.addToSchema(Schema.createFixed("aFixed", null, null, 4));
 
     BigDecimal d1 = new BigDecimal("-34.34");
     BigDecimal d2 = new BigDecimal("117230.00");
@@ -120,16 +114,15 @@ public class TestGenericLogicalTypes {
     GenericFixed d2fixed = conversion.toFixed(d2, fixedSchema, decimal);
 
     File test = write(fixedSchema, d1fixed, d2fixed);
-    Assert.assertEquals("Should convert fixed to BigDecimals",
-        expected, read(GENERIC.createDatumReader(decimalSchema), test));
+    Assert.assertEquals("Should convert fixed to BigDecimals", expected,
+        read(GENERIC.createDatumReader(decimalSchema), test));
   }
 
   @Test
   public void testWriteDecimalFixed() throws IOException {
     LogicalType decimal = LogicalTypes.decimal(9, 2);
     Schema fixedSchema = Schema.createFixed("aFixed", null, null, 4);
-    Schema decimalSchema = decimal.addToSchema(
-        Schema.createFixed("aFixed", null, null, 4));
+    Schema decimalSchema = decimal.addToSchema(Schema.createFixed("aFixed", null, null, 4));
 
     BigDecimal d1 = new BigDecimal("-34.34");
     BigDecimal d2 = new BigDecimal("117230.00");
@@ -141,8 +134,8 @@ public class TestGenericLogicalTypes {
     List<GenericFixed> expected = Arrays.asList(d1fixed, d2fixed);
 
     File test = write(GENERIC, decimalSchema, d1, d2);
-    Assert.assertEquals("Should read BigDecimals as fixed",
-        expected, read(GenericData.get().createDatumReader(fixedSchema), test));
+    Assert.assertEquals("Should read BigDecimals as fixed", expected,
+        read(GenericData.get().createDatumReader(fixedSchema), test));
   }
 
   @Test
@@ -162,8 +155,8 @@ public class TestGenericLogicalTypes {
     ByteBuffer d2bytes = conversion.toBytes(d2, bytesSchema, decimal);
 
     File test = write(bytesSchema, d1bytes, d2bytes);
-    Assert.assertEquals("Should convert bytes to BigDecimals",
-        expected, read(GENERIC.createDatumReader(decimalSchema), test));
+    Assert.assertEquals("Should convert bytes to BigDecimals", expected,
+        read(GENERIC.createDatumReader(decimalSchema), test));
   }
 
   @Test
@@ -183,8 +176,8 @@ public class TestGenericLogicalTypes {
     List<ByteBuffer> expected = Arrays.asList(d1bytes, d2bytes);
 
     File test = write(GENERIC, decimalSchema, d1bytes, d2bytes);
-    Assert.assertEquals("Should read BigDecimals as bytes",
-        expected, read(GenericData.get().createDatumReader(bytesSchema), test));
+    Assert.assertEquals("Should read BigDecimals as bytes", expected,
+        read(GenericData.get().createDatumReader(bytesSchema), test));
   }
 
   private <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
@@ -220,30 +213,27 @@ public class TestGenericLogicalTypes {
 
   @Test
   public void testCopyUuid() {
-    testCopy(LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)),
-             UUID.randomUUID(),
-             GENERIC);
+    testCopy(LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)), UUID.randomUUID(), GENERIC);
   }
 
   @Test
   public void testCopyUuidRaw() {
-    testCopy(LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)),
-             UUID.randomUUID().toString(),        // use raw type
-             GenericData.get());                  // with no conversions
+    testCopy(LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)), UUID.randomUUID().toString(), // use
+                                                                                                               // raw
+                                                                                                               // type
+        GenericData.get()); // with no conversions
   }
 
   @Test
   public void testCopyDecimal() {
-    testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
-             new BigDecimal("-34.34"),
-             GENERIC);
+    testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)), new BigDecimal("-34.34"),
+        GENERIC);
   }
 
   @Test
   public void testCopyDecimalRaw() {
     testCopy(LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES)),
-             ByteBuffer.wrap(new BigDecimal("-34.34").unscaledValue().toByteArray()),
-             GenericData.get());                  // no conversions
+        ByteBuffer.wrap(new BigDecimal("-34.34").unscaledValue().toByteArray()), GenericData.get()); // no conversions
   }
 
   private void testCopy(Schema schema, Object value, GenericData model) {

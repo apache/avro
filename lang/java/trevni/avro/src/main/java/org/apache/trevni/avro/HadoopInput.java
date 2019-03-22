@@ -37,15 +37,18 @@ public class HadoopInput implements Input {
     this.len = path.getFileSystem(conf).getFileStatus(path).getLen();
   }
 
-  @Override public long length() {
+  @Override
+  public long length() {
     return len;
   }
 
-  @Override public int read(long p, byte[] b, int s, int l) throws IOException {
+  @Override
+  public int read(long p, byte[] b, int s, int l) throws IOException {
     return stream.read(p, b, s, l);
   }
 
-  @Override public void close() throws IOException {
+  @Override
+  public void close() throws IOException {
     stream.close();
   }
 }

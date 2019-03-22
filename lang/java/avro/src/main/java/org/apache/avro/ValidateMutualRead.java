@@ -38,31 +38,26 @@ class ValidateMutualRead implements SchemaValidationStrategy {
    * @throws SchemaValidationException if the schemas are not mutually compatible.
    */
   @Override
-  public void validate(Schema toValidate, Schema existing)
-      throws SchemaValidationException {
+  public void validate(Schema toValidate, Schema existing) throws SchemaValidationException {
     canRead(toValidate, existing);
     canRead(existing, toValidate);
   }
 
   /**
-   * Validates that data written with one schema can be read using another,
-   * based on the default Avro schema resolution rules.
+   * Validates that data written with one schema can be read using another, based
+   * on the default Avro schema resolution rules.
    *
-   * @param writtenWith
-   *          The "writer's" schema, representing data to be read.
-   * @param readUsing
-   *          The "reader's" schema, representing how the reader will interpret
-   *          data.
-   * @throws SchemaValidationException
-   *           if the schema <b>readUsing<b/> cannot be used to read data
-   *           written with <b>writtenWith<b/>
+   * @param writtenWith The "writer's" schema, representing data to be read.
+   * @param readUsing   The "reader's" schema, representing how the reader will
+   *                    interpret data.
+   * @throws SchemaValidationException if the schema <b>readUsing<b/> cannot be
+   *                                   used to read data written with
+   *                                   <b>writtenWith<b/>
    */
-  static void canRead(Schema writtenWith, Schema readUsing)
-      throws SchemaValidationException {
+  static void canRead(Schema writtenWith, Schema readUsing) throws SchemaValidationException {
     boolean error;
     try {
-      error = Symbol.hasErrors(new ResolvingGrammarGenerator().generate(
-          writtenWith, readUsing));
+      error = Symbol.hasErrors(new ResolvingGrammarGenerator().generate(writtenWith, readUsing));
     } catch (IOException e) {
       throw new SchemaValidationException(readUsing, writtenWith, e);
     }

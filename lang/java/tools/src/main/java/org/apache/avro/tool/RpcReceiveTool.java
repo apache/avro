@@ -40,8 +40,7 @@ import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.generic.GenericResponder;
 
 /**
- * Receives one RPC call and responds.  (The moral equivalent
- * of "netcat".)
+ * Receives one RPC call and responds. (The moral equivalent of "netcat".)
  */
 public class RpcReceiveTool implements Tool {
   private PrintStream out;
@@ -68,21 +67,18 @@ public class RpcReceiveTool implements Tool {
     }
 
     @Override
-    public Object respond(Message message, Object request)
-    throws AvroRemoteException {
+    public Object respond(Message message, Object request) throws AvroRemoteException {
       if (!message.equals(expectedMessage)) {
-        out.println(String.format("Expected message '%s' but received '%s'.",
-            expectedMessage.getName(), message.getName()));
+        out.println(
+            String.format("Expected message '%s' but received '%s'.", expectedMessage.getName(), message.getName()));
         latch.countDown();
         throw new IllegalArgumentException("Unexpected message.");
       }
       out.print(message.getName());
       out.print("\t");
       try {
-        JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(message.getRequest(),
-            out);
-        GenericDatumWriter<Object> writer = new GenericDatumWriter<>(
-            message.getRequest());
+        JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(message.getRequest(), out);
+        GenericDatumWriter<Object> writer = new GenericDatumWriter<>(message.getRequest());
         writer.write(request, jsonEncoder);
         jsonEncoder.flush();
         out.flush();
@@ -93,7 +89,8 @@ public class RpcReceiveTool implements Tool {
       new Thread(() -> {
         try {
           Thread.sleep(1000);
-        } catch (InterruptedException e) {}
+        } catch (InterruptedException e) {
+        }
         latch.countDown();
       }).start();
       return response;
@@ -101,8 +98,7 @@ public class RpcReceiveTool implements Tool {
   }
 
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     // Split up into two functions for easier testing.
     int r = run1(in, out, err, args);
     if (r != 0) {
@@ -111,19 +107,13 @@ public class RpcReceiveTool implements Tool {
     return run2(err);
   }
 
-  int run1(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  int run1(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser p = new OptionParser();
-    OptionSpec<String> file =
-      p.accepts("file", "Data file containing response datum.")
-      .withRequiredArg()
-      .ofType(String.class);
-    OptionSpec<String> data =
-      p.accepts("data", "JSON-encoded response datum.")
-      .withRequiredArg()
-      .ofType(String.class);
+    OptionSpec<String> file = p.accepts("file", "Data file containing response datum.").withRequiredArg()
+        .ofType(String.class);
+    OptionSpec<String> data = p.accepts("data", "JSON-encoded response datum.").withRequiredArg().ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
-    args = (List<String>)opts.nonOptionArguments();
+    args = (List<String>) opts.nonOptionArguments();
 
     if (args.size() != 3) {
       err.println("Usage: uri protocol_file message_name (-data d | -file f)");
@@ -136,17 +126,13 @@ public class RpcReceiveTool implements Tool {
     String messageName = args.get(2);
     expectedMessage = protocol.getMessages().get(messageName);
     if (expectedMessage == null) {
-      err.println(String.format("No message named '%s' found in protocol '%s'.",
-          messageName, protocol));
+      err.println(String.format("No message named '%s' found in protocol '%s'.", messageName, protocol));
       return 1;
     }
     if (data.value(opts) != null) {
-      this.response =
-        Util.jsonToGenericDatum(expectedMessage.getResponse(),
-                                data.value(opts));
+      this.response = Util.jsonToGenericDatum(expectedMessage.getResponse(), data.value(opts));
     } else if (file.value(opts) != null) {
-      this.response = Util.datumFromFile(expectedMessage.getResponse(),
-                                         file.value(opts));
+      this.response = Util.datumFromFile(expectedMessage.getResponse(), file.value(opts));
     } else {
       err.println("One of -data or -file must be specified.");
       return 1;

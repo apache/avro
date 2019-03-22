@@ -37,14 +37,14 @@ class ReflectionUtil {
   static {
     resetFieldAccess();
   }
+
   static void resetFieldAccess() {
     // load only one implementation of FieldAccess
     // so it is monomorphic and the JIT can inline
     FieldAccess access = null;
     try {
       if (null == System.getProperty("avro.disable.unsafe")) {
-        FieldAccess unsafeAccess = load(
-            "org.apache.avro.reflect.FieldAccessUnsafe", FieldAccess.class);
+        FieldAccess unsafeAccess = load("org.apache.avro.reflect.FieldAccessUnsafe", FieldAccess.class);
         if (validate(unsafeAccess)) {
           access = unsafeAccess;
         }
@@ -53,22 +53,20 @@ class ReflectionUtil {
     }
     if (access == null) {
       try {
-        FieldAccess reflectAccess = load(
-            "org.apache.avro.reflect.FieldAccessReflect", FieldAccess.class);
+        FieldAccess reflectAccess = load("org.apache.avro.reflect.FieldAccessReflect", FieldAccess.class);
         if (validate(reflectAccess)) {
           access = reflectAccess;
         }
       } catch (Throwable oops) {
-        throw new AvroRuntimeException(
-            "Unable to load a functional FieldAccess class!");
+        throw new AvroRuntimeException("Unable to load a functional FieldAccess class!");
       }
     }
     fieldAccess = access;
   }
 
   private static <T> T load(String name, Class<T> type) throws Exception {
-    return ReflectionUtil.class.getClassLoader().loadClass(name)
-        .asSubclass(type).getDeclaredConstructor().newInstance();
+    return ReflectionUtil.class.getClassLoader().loadClass(name).asSubclass(type).getDeclaredConstructor()
+        .newInstance();
   }
 
   public static FieldAccess getFieldAccess() {
@@ -106,8 +104,7 @@ class ReflectionUtil {
       return valid;
     }
 
-    private boolean validField(FieldAccess access, String name,
-        Object original, Object toSet) throws Exception {
+    private boolean validField(FieldAccess access, String name, Object original, Object toSet) throws Exception {
       FieldAccessor a;
       boolean valid = true;
       a = accessor(access, name);
@@ -117,8 +114,7 @@ class ReflectionUtil {
       return valid;
     }
 
-    private FieldAccessor accessor(FieldAccess access, String name)
-        throws Exception {
+    private FieldAccessor accessor(FieldAccess access, String name) throws Exception {
       return access.getAccessor(this.getClass().getDeclaredField(name));
     }
   }

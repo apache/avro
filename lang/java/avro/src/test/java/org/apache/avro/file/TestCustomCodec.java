@@ -18,7 +18,6 @@
 
 package org.apache.avro.file;
 
-
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.*;
 

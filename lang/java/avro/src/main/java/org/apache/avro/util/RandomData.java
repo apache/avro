@@ -67,45 +67,51 @@ public class RandomData implements Iterable<Object> {
     return new Iterator<Object>() {
       private int n;
       private Random random = new Random(seed);
-      @Override public boolean hasNext() { return n < count; }
-      @Override public Object next() {
+
+      @Override
+      public boolean hasNext() {
+        return n < count;
+      }
+
+      @Override
+      public Object next() {
         n++;
         return generate(root, random, 0);
       }
-      @Override public void remove() { throw new UnsupportedOperationException(); }
+
+      @Override
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
     };
   }
 
-  @SuppressWarnings(value="unchecked")
+  @SuppressWarnings(value = "unchecked")
   private Object generate(Schema schema, Random random, int d) {
     switch (schema.getType()) {
     case RECORD:
       GenericRecord record = new GenericData.Record(schema);
       for (Schema.Field field : schema.getFields()) {
-        Object value = (field.getObjectProp(USE_DEFAULT) == null) ?
-                        generate(field.schema(), random, d+1) :
-                        GenericData.get().getDefaultValue(field);
+        Object value = (field.getObjectProp(USE_DEFAULT) == null) ? generate(field.schema(), random, d + 1)
+            : GenericData.get().getDefaultValue(field);
         record.put(field.name(), value);
       }
       return record;
     case ENUM:
       List<String> symbols = schema.getEnumSymbols();
-      return new GenericData.EnumSymbol
-        (schema, symbols.get(random.nextInt(symbols.size())));
+      return new GenericData.EnumSymbol(schema, symbols.get(random.nextInt(symbols.size())));
     case ARRAY:
-      int length = (random.nextInt(5)+2)-d;
+      int length = (random.nextInt(5) + 2) - d;
       @SuppressWarnings("rawtypes")
-      GenericArray<Object> array =
-        new GenericData.Array(length<=0?0:length, schema);
+      GenericArray<Object> array = new GenericData.Array(length <= 0 ? 0 : length, schema);
       for (int i = 0; i < length; i++)
-        array.add(generate(schema.getElementType(), random, d+1));
+        array.add(generate(schema.getElementType(), random, d + 1));
       return array;
     case MAP:
-      length = (random.nextInt(5)+2)-d;
-      Map<Object,Object> map = new HashMap<>(length <= 0 ? 0 : length);
+      length = (random.nextInt(5) + 2) - d;
+      Map<Object, Object> map = new HashMap<>(length <= 0 ? 0 : length);
       for (int i = 0; i < length; i++) {
-        map.put(randomString(random, 40),
-                generate(schema.getValueType(), random, d+1));
+        map.put(randomString(random, 40), generate(schema.getValueType(), random, d + 1));
       }
       return map;
     case UNION:
@@ -115,15 +121,24 @@ public class RandomData implements Iterable<Object> {
       byte[] bytes = new byte[schema.getFixedSize()];
       random.nextBytes(bytes);
       return new GenericData.Fixed(schema, bytes);
-    case STRING:  return randomString(random, 40);
-    case BYTES:   return randomBytes(random, 40);
-    case INT:     return random.nextInt();
-    case LONG:    return random.nextLong();
-    case FLOAT:   return random.nextFloat();
-    case DOUBLE:  return random.nextDouble();
-    case BOOLEAN: return random.nextBoolean();
-    case NULL:    return null;
-    default: throw new RuntimeException("Unknown type: "+schema);
+    case STRING:
+      return randomString(random, 40);
+    case BYTES:
+      return randomBytes(random, 40);
+    case INT:
+      return random.nextInt();
+    case LONG:
+      return random.nextLong();
+    case FLOAT:
+      return random.nextFloat();
+    case DOUBLE:
+      return random.nextDouble();
+    case BOOLEAN:
+      return random.nextBoolean();
+    case NULL:
+      return null;
+    default:
+      throw new RuntimeException("Unknown type: " + schema);
     }
   }
 
@@ -133,7 +148,7 @@ public class RandomData implements Iterable<Object> {
     int length = random.nextInt(maxLength);
     byte[] bytes = new byte[length];
     for (int i = 0; i < length; i++) {
-      bytes[i] = (byte)('a'+random.nextInt('z'-'a'));
+      bytes[i] = (byte) ('a' + random.nextInt('z' - 'a'));
     }
     return utf8ForString ? new Utf8(bytes) : new String(bytes, UTF8);
   }
@@ -151,8 +166,7 @@ public class RandomData implements Iterable<Object> {
       System.exit(-1);
     }
     Schema sch = new Schema.Parser().parse(new File(args[0]));
-    DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>());
+    DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(CodecFactory.fromString(args.length >= 4 ? args[3] : "null"));
     writer.create(sch, new File(args[1]));
     try {

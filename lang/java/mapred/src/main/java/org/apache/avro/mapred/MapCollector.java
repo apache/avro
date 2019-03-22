@@ -24,14 +24,14 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.OutputCollector;
 
 @SuppressWarnings("unchecked")
-class MapCollector<OUT,K,V,KO,VO> extends AvroCollector<OUT> {
+class MapCollector<OUT, K, V, KO, VO> extends AvroCollector<OUT> {
   private final AvroWrapper<OUT> wrapper = new AvroWrapper<>(null);
   private final AvroKey<K> keyWrapper = new AvroKey<>(null);
   private final AvroValue<V> valueWrapper = new AvroValue<>(null);
-  private OutputCollector<KO,VO> collector;
+  private OutputCollector<KO, VO> collector;
   private boolean isMapOnly;
 
-  public MapCollector(OutputCollector<KO,VO> collector, boolean isMapOnly) {
+  public MapCollector(OutputCollector<KO, VO> collector, boolean isMapOnly) {
     this.collector = collector;
     this.isMapOnly = isMapOnly;
   }
@@ -40,13 +40,13 @@ class MapCollector<OUT,K,V,KO,VO> extends AvroCollector<OUT> {
   public void collect(OUT datum) throws IOException {
     if (isMapOnly) {
       wrapper.datum(datum);
-      collector.collect((KO)wrapper, (VO)NullWritable.get());
+      collector.collect((KO) wrapper, (VO) NullWritable.get());
     } else {
       // split a pair
-      Pair<K,V> pair = (Pair<K,V>)datum;
+      Pair<K, V> pair = (Pair<K, V>) datum;
       keyWrapper.datum(pair.key());
       valueWrapper.datum(pair.value());
-      collector.collect((KO)keyWrapper, (VO)valueWrapper);
+      collector.collect((KO) keyWrapper, (VO) valueWrapper);
     }
   }
 }

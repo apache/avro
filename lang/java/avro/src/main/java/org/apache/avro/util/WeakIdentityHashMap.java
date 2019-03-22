@@ -28,26 +28,23 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Implements a combination of WeakHashMap and IdentityHashMap.
- * Useful for caches that need to key off of a == comparison
- * instead of a .equals.
+ * Implements a combination of WeakHashMap and IdentityHashMap. Useful for
+ * caches that need to key off of a == comparison instead of a .equals.
  *
- * <b>
- * This class is not a general-purpose Map implementation! While
- * this class implements the Map interface, it intentionally violates
- * Map's general contract, which mandates the use of the equals method
- * when comparing objects. This class is designed for use only in the
- * rare cases wherein reference-equality semantics are required.
+ * <b> This class is not a general-purpose Map implementation! While this class
+ * implements the Map interface, it intentionally violates Map's general
+ * contract, which mandates the use of the equals method when comparing objects.
+ * This class is designed for use only in the rare cases wherein
+ * reference-equality semantics are required.
  *
- * Note that this implementation is not synchronized.
- * </b>
+ * Note that this implementation is not synchronized. </b>
  */
 public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   private final ReferenceQueue<K> queue = new ReferenceQueue<>();
-  private Map<IdentityWeakReference, V> backingStore
-    = new HashMap<>();
+  private Map<IdentityWeakReference, V> backingStore = new HashMap<>();
 
-  public WeakIdentityHashMap() {}
+  public WeakIdentityHashMap() {
+  }
 
   @Override
   public void clear() {
@@ -62,7 +59,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   }
 
   @Override
-  public boolean containsValue(Object value)  {
+  public boolean containsValue(Object value) {
     reap();
     return backingStore.containsValue(value);
   }
@@ -79,10 +76,12 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
         public K getKey() {
           return key;
         }
+
         @Override
         public V getValue() {
           return value;
         }
+
         @Override
         public V setValue(V value) {
           throw new UnsupportedOperationException();
@@ -108,7 +107,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
     if (!(o instanceof WeakIdentityHashMap)) {
       return false;
     }
-    return backingStore.equals(((WeakIdentityHashMap)o).backingStore);
+    return backingStore.equals(((WeakIdentityHashMap) o).backingStore);
   }
 
   @Override
@@ -159,21 +158,21 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
   }
 
   private synchronized void reap() {
-      Object zombie = queue.poll();
+    Object zombie = queue.poll();
 
-      while (zombie != null) {
-        IdentityWeakReference victim = (IdentityWeakReference)zombie;
-        backingStore.remove(victim);
-        zombie = queue.poll();
-      }
+    while (zombie != null) {
+      IdentityWeakReference victim = (IdentityWeakReference) zombie;
+      backingStore.remove(victim);
+      zombie = queue.poll();
     }
+  }
 
   class IdentityWeakReference extends WeakReference<K> {
     int hash;
 
     @SuppressWarnings("unchecked")
-      IdentityWeakReference(Object obj) {
-      super((K)obj, queue);
+    IdentityWeakReference(Object obj) {
+      super((K) obj, queue);
       hash = System.identityHashCode(obj);
     }
 
@@ -190,7 +189,7 @@ public class WeakIdentityHashMap<K, V> implements Map<K, V> {
       if (!(o instanceof WeakIdentityHashMap.IdentityWeakReference)) {
         return false;
       }
-      IdentityWeakReference ref = (IdentityWeakReference)o;
+      IdentityWeakReference ref = (IdentityWeakReference) o;
       return this.get() == ref.get();
     }
   }

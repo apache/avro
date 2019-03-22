@@ -23,8 +23,9 @@ import java.io.IOException;
 public interface Syncable {
 
   /**
-   * Return the current position as a value that may be passed to DataFileReader.seek(long).
-   * Forces the end of the current block, emitting a synchronization marker.
+   * Return the current position as a value that may be passed to
+   * DataFileReader.seek(long). Forces the end of the current block, emitting a
+   * synchronization marker.
    *
    * @throws IOException - if an error occurred while attempting to sync.
    */

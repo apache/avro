@@ -41,8 +41,8 @@ public final class SchemaValidatorBuilder {
   }
 
   /**
-   * Use a strategy that validates that a schema can be read by existing
-   * schema(s) according to the Avro default schema resolution.
+   * Use a strategy that validates that a schema can be read by existing schema(s)
+   * according to the Avro default schema resolution.
    */
   public SchemaValidatorBuilder canBeReadStrategy() {
     this.strategy = new ValidateCanBeRead();
@@ -50,8 +50,8 @@ public final class SchemaValidatorBuilder {
   }
 
   /**
-   * Use a strategy that validates that a schema can read existing schema(s),
-   * and vice-versa, according to the Avro default schema resolution.
+   * Use a strategy that validates that a schema can read existing schema(s), and
+   * vice-versa, according to the Avro default schema resolution.
    */
   public SchemaValidatorBuilder mutualReadStrategy() {
     this.strategy = new ValidateMutualRead();
@@ -69,7 +69,7 @@ public final class SchemaValidatorBuilder {
   }
 
   private void valid() {
-    if(null == strategy) {
+    if (null == strategy) {
       throw new AvroRuntimeException("SchemaValidationStrategy not specified in builder");
     }
   }

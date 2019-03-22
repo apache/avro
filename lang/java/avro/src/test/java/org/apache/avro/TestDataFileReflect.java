@@ -48,20 +48,18 @@ public class TestDataFileReflect {
   public TemporaryFolder DIR = new TemporaryFolder();
 
   /*
-   * Test that using multiple schemas in a file works doing a union before
-   * writing any records.
+   * Test that using multiple schemas in a file works doing a union before writing
+   * any records.
    */
   @Test
   public void testMultiReflectWithUnionBeforeWriting() throws IOException {
     File file = new File(DIR.getRoot().getPath(), "testMultiReflectWithUnionBeforeWriting.avro");
     CheckList<Object> check = new CheckList<>();
-    try(FileOutputStream fos = new FileOutputStream(file)) {
+    try (FileOutputStream fos = new FileOutputStream(file)) {
 
       ReflectData reflectData = ReflectData.get();
-      List<Schema> schemas = Arrays.asList(
-              reflectData.getSchema(FooRecord.class),
-              reflectData.getSchema(BarRecord.class)
-      );
+      List<Schema> schemas = Arrays.asList(reflectData.getSchema(FooRecord.class),
+          reflectData.getSchema(BarRecord.class));
       Schema union = Schema.createUnion(schemas);
 
       try (DataFileWriter<Object> writer = new DataFileWriter<>(new ReflectDatumWriter<>(union))) {
@@ -74,10 +72,10 @@ public class TestDataFileReflect {
         write(writer, new FooRecord(20), check);
       }
     }
-    //new File(DIR.getRoot().getPath(), "test.avro");
+    // new File(DIR.getRoot().getPath(), "test.avro");
     ReflectDatumReader<Object> din = new ReflectDatumReader<>();
     SeekableFileInput sin = new SeekableFileInput(file);
-    try(DataFileReader<Object> reader = new DataFileReader<>(sin, din)) {
+    try (DataFileReader<Object> reader = new DataFileReader<>(sin, din)) {
       int count = 0;
       for (Object datum : reader) {
         check.assertEquals(datum, count++);
@@ -94,10 +92,11 @@ public class TestDataFileReflect {
     File file = new File(DIR.getRoot().getPath(), "testNull.avro");
     CheckList<BarRecord> check = new CheckList<>();
 
-    try(FileOutputStream fos = new FileOutputStream(file)) {
+    try (FileOutputStream fos = new FileOutputStream(file)) {
       ReflectData reflectData = ReflectData.AllowNull.get();
       Schema schema = reflectData.getSchema(BarRecord.class);
-      try(DataFileWriter<BarRecord> writer = new DataFileWriter<>(new ReflectDatumWriter<>(BarRecord.class, reflectData))) {
+      try (DataFileWriter<BarRecord> writer = new DataFileWriter<>(
+          new ReflectDatumWriter<>(BarRecord.class, reflectData))) {
         writer.create(schema, fos);
         // test writing to a file
         write(writer, new BarRecord("One beer please"), check);
@@ -108,7 +107,7 @@ public class TestDataFileReflect {
     }
 
     ReflectDatumReader<BarRecord> din = new ReflectDatumReader<>();
-    try(SeekableFileInput sin = new SeekableFileInput(file)) {
+    try (SeekableFileInput sin = new SeekableFileInput(file)) {
       try (DataFileReader<BarRecord> reader = new DataFileReader<>(sin, din)) {
         int count = 0;
         for (BarRecord datum : reader) {
@@ -154,7 +153,7 @@ public class TestDataFileReflect {
     File file = new File(DIR.getRoot().getPath(), "testNull.avro");
 
     CheckList<BazRecord> check = new CheckList<>();
-    try(FileOutputStream fos = new FileOutputStream(file)) {
+    try (FileOutputStream fos = new FileOutputStream(file)) {
       Schema schema = ReflectData.get().getSchema(BazRecord.class);
       try (DataFileWriter<BazRecord> writer = new DataFileWriter<>(new ReflectDatumWriter<>(schema))) {
         writer.create(schema, fos);
@@ -166,7 +165,7 @@ public class TestDataFileReflect {
     }
 
     ReflectDatumReader<BazRecord> din = new ReflectDatumReader<>();
-    try(SeekableFileInput sin = new SeekableFileInput(file)) {
+    try (SeekableFileInput sin = new SeekableFileInput(file)) {
       try (DataFileReader<BazRecord> reader = new DataFileReader<>(sin, din)) {
         int count = 0;
         for (BazRecord datum : reader) {
@@ -177,8 +176,7 @@ public class TestDataFileReflect {
     }
   }
 
-  private <T> void write(DataFileWriter<T> writer, T o, CheckList<T> l)
-      throws IOException {
+  private <T> void write(DataFileWriter<T> writer, T o, CheckList<T> l) throws IOException {
     writer.append(l.addAndReturn(o));
   }
 

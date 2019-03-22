@@ -50,7 +50,7 @@ import static org.junit.Assert.fail;
 
 public class TestAvroProtocolGrpc {
   private final TestRecord record = TestRecord.newBuilder().setName("foo").setKind(Kind.FOO)
-      .setArrayOfLongs(Arrays.asList(42L, 424L, 4242L)).setHash(new MD5(new byte[]{4, 2, 4, 2}))
+      .setArrayOfLongs(Arrays.asList(42L, 424L, 4242L)).setHash(new MD5(new byte[] { 4, 2, 4, 2 }))
       .setNullableHash(null).build();
   private final String declaredErrMsg = "Declared error";
   private final String undeclaredErrMsg = "Undeclared error";
@@ -77,8 +77,7 @@ public class TestAvroProtocolGrpc {
     if (channel != null && !channel.isShutdown()) {
       channel.shutdownNow();
     }
-    server = ServerBuilder.forPort(0)
-        .addService(AvroGrpcServer.createServiceDefinition(TestService.class, serviceImpl))
+    server = ServerBuilder.forPort(0).addService(AvroGrpcServer.createServiceDefinition(TestService.class, serviceImpl))
         .build();
     server.start();
     int port = server.getPort();
@@ -128,7 +127,7 @@ public class TestAvroProtocolGrpc {
     oneWayCount = new AtomicInteger();
     stub.ping();
     stub.ping();
-    //client is not stalled while server is waiting for processing requests
+    // client is not stalled while server is waiting for processing requests
     assertEquals(0, oneWayCount.get());
     oneWayStart.countDown();
     stub.ping();
@@ -160,8 +159,7 @@ public class TestAvroProtocolGrpc {
   public void testNullableResponse() throws Exception {
     setUpServerAndClient(new TestServiceImplBase() {
       @Override
-      public String concatenate(String val1, boolean val2, long val3, int val4)
-          throws AvroRemoteException {
+      public String concatenate(String val1, boolean val2, long val3, int val4) throws AvroRemoteException {
         return null;
       }
     });
@@ -170,7 +168,7 @@ public class TestAvroProtocolGrpc {
 
   @Test(expected = AvroRuntimeException.class)
   public void testGrpcConnectionError() throws Exception {
-    //close the channel and initiate request
+    // close the channel and initiate request
     channel.shutdownNow();
     stub.add(0, 1, 2);
   }
@@ -192,13 +190,13 @@ public class TestAvroProtocolGrpc {
     ExecutorService es = Executors.newCachedThreadPool();
     Future<TestRecord>[] records = new Future[5];
     Future<Integer>[] adds = new Future[5];
-    //submit requests in parallel
+    // submit requests in parallel
     for (int i = 0; i < 5; i++) {
       records[i] = es.submit(() -> stub.echo(record));
       int j = i;
       adds[i] = es.submit(() -> stub.add(j, 2 * j, 3 * j));
     }
-    //validate all results
+    // validate all results
     for (int i = 0; i < 5; i++) {
       assertEquals(record, records[i].get());
       assertEquals(6 * i, (long) adds[i].get());
@@ -207,19 +205,19 @@ public class TestAvroProtocolGrpc {
 
   @Test
   public void testConcurrentChannels() throws Exception {
-    ManagedChannel otherChannel = ManagedChannelBuilder.forAddress("localhost", server.getPort())
-        .usePlaintext().build();
+    ManagedChannel otherChannel = ManagedChannelBuilder.forAddress("localhost", server.getPort()).usePlaintext()
+        .build();
     TestService otherStub = AvroGrpcClient.create(otherChannel, TestService.class);
     Future<Integer>[] adds = new Future[5];
     Future<Integer>[] otherAdds = new Future[5];
     ExecutorService es = Executors.newCachedThreadPool();
-    //submit requests on clients with different channels
+    // submit requests on clients with different channels
     for (int i = 0; i < 5; i++) {
       int j = i;
       adds[i] = es.submit(() -> stub.add(j, j - 1, j - 2));
       otherAdds[i] = es.submit(() -> otherStub.add(j, j + 1, j + 2));
     }
-    //validate all results
+    // validate all results
     for (int i = 0; i < 5; i++) {
       assertEquals((3 * i) - 3, (long) adds[i].get());
       assertEquals((3 * i) + 3, (long) otherAdds[i].get());

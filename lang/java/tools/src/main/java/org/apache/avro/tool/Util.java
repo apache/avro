@@ -50,83 +50,80 @@ import joptsimple.OptionSpec;
 /** Static utility methods for tools. */
 class Util {
   /**
-   * Returns stdin if filename is "-", else opens the File in the owning filesystem
-   * and returns an InputStream for it.
-   * Relative paths will be opened in the default filesystem.
+   * Returns stdin if filename is "-", else opens the File in the owning
+   * filesystem and returns an InputStream for it. Relative paths will be opened
+   * in the default filesystem.
+   * 
    * @param filename The filename to be opened
    * @throws IOException
    */
-  static BufferedInputStream fileOrStdin(String filename, InputStream stdin)
-      throws IOException {
-    return new BufferedInputStream(filename.equals("-")
-        ? stdin
-        : openFromFS(filename));
+  static BufferedInputStream fileOrStdin(String filename, InputStream stdin) throws IOException {
+    return new BufferedInputStream(filename.equals("-") ? stdin : openFromFS(filename));
   }
 
   /**
-   * Returns stdout if filename is "-", else opens the file from the owning filesystem
-   * and returns an OutputStream for it.
-   * Relative paths will be opened in the default filesystem.
+   * Returns stdout if filename is "-", else opens the file from the owning
+   * filesystem and returns an OutputStream for it. Relative paths will be opened
+   * in the default filesystem.
+   * 
    * @param filename The filename to be opened
    * @throws IOException
    */
-  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout)
-      throws IOException {
-    return new BufferedOutputStream(filename.equals("-")
-        ? stdout
-        : createFromFS(filename));
+  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout) throws IOException {
+    return new BufferedOutputStream(filename.equals("-") ? stdout : createFromFS(filename));
   }
 
   /**
-   * Returns an InputStream for the file using the owning filesystem,
-   * or the default if none is given.
+   * Returns an InputStream for the file using the owning filesystem, or the
+   * default if none is given.
+   * 
    * @param filename The filename to be opened
    * @throws IOException
    */
-  static InputStream openFromFS(String filename)
-      throws IOException {
+  static InputStream openFromFS(String filename) throws IOException {
     Path p = new Path(filename);
     return p.getFileSystem(new Configuration()).open(p);
   }
 
   /**
-   * Returns an InputStream for the file using the owning filesystem,
-   * or the default if none is given.
+   * Returns an InputStream for the file using the owning filesystem, or the
+   * default if none is given.
+   * 
    * @param filename The filename to be opened
    * @throws IOException
    */
-  static InputStream openFromFS(Path filename)
-      throws IOException {
+  static InputStream openFromFS(Path filename) throws IOException {
     return filename.getFileSystem(new Configuration()).open(filename);
   }
 
   /**
-   * Returns a seekable FsInput using the owning filesystem,
-   * or the default if none is given.
+   * Returns a seekable FsInput using the owning filesystem, or the default if
+   * none is given.
+   * 
    * @param filename The filename to be opened
    * @throws IOException
    */
-  static FsInput openSeekableFromFS(String filename)
-      throws IOException {
+  static FsInput openSeekableFromFS(String filename) throws IOException {
     return new FsInput(new Path(filename), new Configuration());
   }
 
   /**
-   * Opens the file for writing in the owning filesystem,
-   * or the default if none is given.
+   * Opens the file for writing in the owning filesystem, or the default if none
+   * is given.
+   * 
    * @param filename The filename to be opened.
    * @return An OutputStream to the specified file.
    * @throws IOException
    */
-  static OutputStream createFromFS(String filename)
-      throws IOException {
+  static OutputStream createFromFS(String filename) throws IOException {
     Path p = new Path(filename);
     return new BufferedOutputStream(p.getFileSystem(new Configuration()).create(p));
   }
 
   /**
-   * Closes the inputstream created from {@link Util.fileOrStdin}
-   * unless it is System.in.
+   * Closes the inputstream created from {@link Util.fileOrStdin} unless it is
+   * System.in.
+   * 
    * @param in The inputstream to be closed.
    */
   static void close(InputStream in) {
@@ -140,8 +137,9 @@ class Util {
   }
 
   /**
-   * Closes the outputstream created from {@link Util.fileOrStdout}
-   * unless it is System.out.
+   * Closes the outputstream created from {@link Util.fileOrStdout} unless it is
+   * System.out.
+   * 
    * @param out The outputStream to be closed.
    */
   static void close(OutputStream out) {
@@ -156,6 +154,7 @@ class Util {
 
   /**
    * Parses a schema from the specified file.
+   * 
    * @param filename The file name to parse
    * @return The parsed schema
    * @throws IOException
@@ -170,13 +169,15 @@ class Util {
   }
 
   /**
-   * If pathname is a file, this method returns a list with a single absolute Path to that file.
-   * If pathname is a directory, this method returns a list of Pathes to all the files within
-   * this directory. Only files inside that directory are included, no subdirectories or files
-   * in subdirectories will be added.
-   * If pathname is a glob pattern, all files matching the pattern are included.
+   * If pathname is a file, this method returns a list with a single absolute Path
+   * to that file. If pathname is a directory, this method returns a list of
+   * Pathes to all the files within this directory. Only files inside that
+   * directory are included, no subdirectories or files in subdirectories will be
+   * added. If pathname is a glob pattern, all files matching the pattern are
+   * included.
    *
    * The List is sorted alphabetically.
+   * 
    * @param fileOrDirName filename, directoryname or a glob pattern
    * @return A Path List
    * @throws IOException
@@ -190,7 +191,7 @@ class Util {
       pathList.add(path);
     } else if (fs.isDirectory(path)) {
       for (FileStatus status : fs.listStatus(path)) {
-        if(!status.isDirectory()) {
+        if (!status.isDirectory()) {
           pathList.add(status.getPath());
         }
       }
@@ -209,18 +210,19 @@ class Util {
   }
 
   /**
-   * Concatenate the result of {@link #getFiles(String)} applied to all file or directory names.
-   * The list is sorted alphabetically and contains no subdirectories or files within those.
+   * Concatenate the result of {@link #getFiles(String)} applied to all file or
+   * directory names. The list is sorted alphabetically and contains no
+   * subdirectories or files within those.
    *
    * The list is sorted alphabetically.
+   * 
    * @param fileOrDirNames A list of filenames, directorynames or glob patterns
    * @return A list of Paths, one for each file
    * @throws IOException
    */
-  static List<Path> getFiles(List<String> fileOrDirNames)
-      throws IOException {
+  static List<Path> getFiles(List<String> fileOrDirNames) throws IOException {
     ArrayList<Path> pathList = new ArrayList<>();
-    for(String name : fileOrDirNames) {
+    for (String name : fileOrDirNames) {
       pathList.addAll(getFiles(name));
     }
     Collections.sort(pathList);
@@ -230,55 +232,43 @@ class Util {
   /**
    * Converts a String JSON object into a generic datum.
    *
-   * This is inefficient (creates extra objects), so should be used
-   * sparingly.
+   * This is inefficient (creates extra objects), so should be used sparingly.
    */
-  static Object jsonToGenericDatum(Schema schema, String jsonData)
-      throws IOException {
+  static Object jsonToGenericDatum(Schema schema, String jsonData) throws IOException {
     GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
-    Object datum = reader.read(null,
-        DecoderFactory.get().jsonDecoder(schema, jsonData));
+    Object datum = reader.read(null, DecoderFactory.get().jsonDecoder(schema, jsonData));
     return datum;
   }
 
   /** Reads and returns the first datum in a data file. */
   static Object datumFromFile(Schema schema, String file) throws IOException {
-    try (DataFileReader<Object> in = new DataFileReader<>(new File(file),
-      new GenericDatumReader<>(schema))) {
+    try (DataFileReader<Object> in = new DataFileReader<>(new File(file), new GenericDatumReader<>(schema))) {
       return in.next();
     }
   }
 
   static OptionSpec<String> compressionCodecOption(OptionParser optParser) {
-    return optParser
-      .accepts("codec", "Compression codec")
-      .withRequiredArg()
-      .ofType(String.class)
-      .defaultsTo("null");
-}
+    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class).defaultsTo("null");
+  }
 
   static OptionSpec<Integer> compressionLevelOption(OptionParser optParser) {
-    return optParser
-      .accepts("level", "Compression level (only applies to deflate and xz)")
-      .withRequiredArg()
-      .ofType(Integer.class)
-      .defaultsTo(Deflater.DEFAULT_COMPRESSION);
+    return optParser.accepts("level", "Compression level (only applies to deflate and xz)").withRequiredArg()
+        .ofType(Integer.class).defaultsTo(Deflater.DEFAULT_COMPRESSION);
   }
 
   static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level) {
     return codecFactory(opts, codec, level, DEFLATE_CODEC);
   }
 
-  static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level, String defaultCodec) {
-      String codecName = opts.hasArgument(codec)
-        ? codec.value(opts)
-        : defaultCodec;
-      if(codecName.equals(DEFLATE_CODEC)) {
-        return CodecFactory.deflateCodec(level.value(opts));
-      } else if(codecName.equals(DataFileConstants.XZ_CODEC)) {
-        return CodecFactory.xzCodec(level.value(opts));
-      } else {
-        return CodecFactory.fromString(codec.value(opts));
-      }
+  static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level,
+      String defaultCodec) {
+    String codecName = opts.hasArgument(codec) ? codec.value(opts) : defaultCodec;
+    if (codecName.equals(DEFLATE_CODEC)) {
+      return CodecFactory.deflateCodec(level.value(opts));
+    } else if (codecName.equals(DataFileConstants.XZ_CODEC)) {
+      return CodecFactory.xzCodec(level.value(opts));
+    } else {
+      return CodecFactory.fromString(codec.value(opts));
+    }
   }
 }

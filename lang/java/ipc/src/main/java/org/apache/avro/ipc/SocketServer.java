@@ -33,8 +33,10 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.ipc.generic.GenericResponder;
 
-/** A socket-based server implementation. This uses a simple, non-standard wire
+/**
+ * A socket-based server implementation. This uses a simple, non-standard wire
  * protocol and is not intended for production services.
+ * 
  * @deprecated use {@link SaslSocketServer} instead.
  */
 @Deprecated
@@ -45,9 +47,8 @@ public class SocketServer extends Thread implements Server {
   private ServerSocketChannel channel;
   private ThreadGroup group;
 
-  public SocketServer(Responder responder, SocketAddress addr)
-    throws IOException {
-    String name = "SocketServer on "+addr;
+  public SocketServer(Responder responder, SocketAddress addr) throws IOException {
+    String name = "SocketServer on " + addr;
 
     this.responder = responder;
     this.group = new ThreadGroup(name);
@@ -60,11 +61,13 @@ public class SocketServer extends Thread implements Server {
   }
 
   @Override
-  public int getPort() { return channel.socket().getLocalPort(); }
+  public int getPort() {
+    return channel.socket().getLocalPort();
+  }
 
   @Override
   public void run() {
-    LOG.info("starting "+channel.socket().getInetAddress());
+    LOG.info("starting " + channel.socket().getInetAddress());
     try {
       while (true) {
         try {
@@ -77,7 +80,7 @@ public class SocketServer extends Thread implements Server {
         }
       }
     } finally {
-      LOG.info("stopping "+channel.socket().getInetAddress());
+      LOG.info("stopping " + channel.socket().getInetAddress());
       try {
         channel.close();
       } catch (IOException e) {
@@ -91,10 +94,11 @@ public class SocketServer extends Thread implements Server {
     group.interrupt();
   }
 
-  /** Creates an appropriate {@link Transceiver} for this server.
-   * Returns a {@link SocketTransceiver} by default. */
-  protected Transceiver getTransceiver(SocketChannel channel)
-    throws IOException {
+  /**
+   * Creates an appropriate {@link Transceiver} for this server. Returns a
+   * {@link SocketTransceiver} by default.
+   */
+  protected Transceiver getTransceiver(SocketChannel channel) throws IOException {
     return new SocketTransceiver(channel);
   }
 
@@ -107,7 +111,7 @@ public class SocketServer extends Thread implements Server {
       this.channel = channel;
 
       Thread thread = new Thread(group, this);
-      thread.setName("Connection to "+channel.socket().getRemoteSocketAddress());
+      thread.setName("Connection to " + channel.socket().getRemoteSocketAddress());
       thread.setDaemon(true);
       thread.start();
     }
@@ -132,17 +136,15 @@ public class SocketServer extends Thread implements Server {
   }
 
   public static void main(String[] arg) throws Exception {
-    Responder responder =
-      new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {
-        @Override
-        public Object respond(Message message, Object request)
-          throws Exception {
-          throw new IOException("no messages!");
-        }
-      };
+    Responder responder = new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {
+      @Override
+      public Object respond(Message message, Object request) throws Exception {
+        throw new IOException("no messages!");
+      }
+    };
     SocketServer server = new SocketServer(responder, new InetSocketAddress(0));
     server.start();
-    System.out.println("server started on port: "+server.getPort());
+    System.out.println("server started on port: " + server.getPort());
     server.join();
   }
 }

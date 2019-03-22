@@ -36,8 +36,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
- * A sequence file output format that knows how to write AvroKeys and AvroValues in
- * addition to Writables.
+ * A sequence file output format that knows how to write AvroKeys and AvroValues
+ * in addition to Writables.
  *
  * @param <K> The job output key type (may be a Writable, AvroKey).
  * @param <V> The job output value type (may be a Writable, AvroValue).
@@ -45,8 +45,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
   /** {@inheritDoc} */
   @Override
-  public RecordWriter<K, V> getRecordWriter(TaskAttemptContext context)
-      throws IOException, InterruptedException {
+  public RecordWriter<K, V> getRecordWriter(TaskAttemptContext context) throws IOException, InterruptedException {
     Configuration conf = context.getConfiguration();
 
     // Configure compression if requested.
@@ -66,14 +65,9 @@ public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
     FileSystem fs = outputFile.getFileSystem(conf);
 
     // Configure the writer.
-    AvroSequenceFile.Writer.Options options = new AvroSequenceFile.Writer.Options()
-        .withFileSystem(fs)
-        .withConfiguration(conf)
-        .withOutputPath(outputFile)
-        .withKeyClass(context.getOutputKeyClass())
-        .withValueClass(context.getOutputValueClass())
-        .withProgressable(context)
-        .withCompressionType(compressionType)
+    AvroSequenceFile.Writer.Options options = new AvroSequenceFile.Writer.Options().withFileSystem(fs)
+        .withConfiguration(conf).withOutputPath(outputFile).withKeyClass(context.getOutputKeyClass())
+        .withValueClass(context.getOutputValueClass()).withProgressable(context).withCompressionType(compressionType)
         .withCompressionCodec(codec);
     Schema keySchema = AvroJob.getOutputKeySchema(conf);
     if (null != keySchema) {
@@ -101,7 +95,7 @@ public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
   /**
    * Sets the type of compression for the output sequence file.
    *
-   * @param job The job configuration.
+   * @param job             The job configuration.
    * @param compressionType The compression type for the target sequence file.
    */
   public static void setOutputCompressionType(Job job, CompressionType compressionType) {
