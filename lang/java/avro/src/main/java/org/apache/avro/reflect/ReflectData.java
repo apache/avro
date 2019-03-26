@@ -26,6 +26,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -769,13 +770,15 @@ public class ReflectData extends SpecificData {
         iface.getPackage() == null ? "" : iface.getPackage().getName());
     Map<String, Schema> names = new LinkedHashMap<>();
     Map<String, Message> messages = protocol.getMessages();
-    for (Method method : iface.getMethods())
+    Map<TypeVariable<?>, Type> genericTypeVariableMap = ReflectionUtil.resolveTypeVariables(iface);
+    for (Method method : iface.getMethods()) {
       if ((method.getModifiers() & Modifier.STATIC) == 0) {
         String name = method.getName();
         if (messages.containsKey(name))
           throw new AvroTypeException("Two methods with same name: " + name);
-        messages.put(name, getMessage(method, protocol, names));
+        messages.put(name, getMessage(method, protocol, names, genericTypeVariableMap));
       }
+    }
 
     // reverse types, since they were defined in reference order
     List<Schema> types = new ArrayList<>(names.values());
@@ -785,24 +788,13 @@ public class ReflectData extends SpecificData {
     return protocol;
   }
 
-  private String[] getParameterNames(Method m) {
-    Parameter[] parameters = m.getParameters();
-    String[] paramNames = new String[parameters.length];
-    for (int i = 0; i < parameters.length; i++) {
-      paramNames[i] = parameters[i].getName();
-    }
-    return paramNames;
-  }
-
-  private Message getMessage(Method method, Protocol protocol, Map<String, Schema> names) {
+  private Message getMessage(Method method, Protocol protocol, Map<String, Schema> names,
+      Map<? extends Type, Type> genericTypeMap) {
     List<Schema.Field> fields = new ArrayList<>();
-    String[] paramNames = getParameterNames(method);
-    Type[] paramTypes = method.getGenericParameterTypes();
-    Annotation[][] annotations = method.getParameterAnnotations();
-    for (int i = 0; i < paramTypes.length; i++) {
-      Schema paramSchema = getSchema(paramTypes[i], names);
-      for (int j = 0; j < annotations[i].length; j++) {
-        Annotation annotation = annotations[i][j];
+    for (Parameter parameter : method.getParameters()) {
+      Schema paramSchema = getSchema(genericTypeMap.getOrDefault(parameter.getParameterizedType(), parameter.getType()),
+          names);
+      for (Annotation annotation : parameter.getAnnotations()) {
         if (annotation instanceof AvroSchema) // explicit schema
           paramSchema = new Schema.Parser().parse(((AvroSchema) annotation).value());
         else if (annotation instanceof Union) // union
@@ -810,13 +802,15 @@ public class ReflectData extends SpecificData {
         else if (annotation instanceof Nullable) // nullable
           paramSchema = makeNullable(paramSchema);
       }
-      String paramName = paramNames.length == paramTypes.length ? paramNames[i] : paramSchema.getName() + i;
-      fields.add(new Schema.Field(paramName, paramSchema, null /* doc */, null));
+      fields.add(new Schema.Field(parameter.getName(), paramSchema, null /* doc */, null));
     }
+
     Schema request = Schema.createRecord(fields);
 
+    Type genericReturnType = method.getGenericReturnType();
+    Type returnType = genericTypeMap.getOrDefault(genericReturnType, genericReturnType);
     Union union = method.getAnnotation(Union.class);
-    Schema response = union == null ? getSchema(method.getGenericReturnType(), names) : getAnnotatedUnion(union, names);
+    Schema response = union == null ? getSchema(returnType, names) : getAnnotatedUnion(union, names);
     if (method.isAnnotationPresent(Nullable.class)) // nullable
       response = makeNullable(response);
 
