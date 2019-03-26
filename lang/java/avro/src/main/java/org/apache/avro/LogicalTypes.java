@@ -86,6 +86,12 @@ public class LogicalTypes {
       case TIME_MICROS:
         logicalType = TIME_MICROS_TYPE;
         break;
+      case LOCAL_DATE_TIME_TIMESTAMP_MICROS:
+        logicalType = LOCAL_DATE_TIME_TIMESTAMP_MICROS_TYPE;
+        break;
+      case LOCAL_DATE_TIME_TIMESTAMP_MILLIS:
+        logicalType = LOCAL_DATE_TIME_TIMESTAMP_MILLIS_TYPE;
+        break;
       default:
         final LogicalTypeFactory typeFactory = REGISTERED_TYPES.get(typeName);
         if (typeFactory != null) {
@@ -120,6 +126,8 @@ public class LogicalTypes {
   private static final String TIME_MICROS = "time-micros";
   private static final String TIMESTAMP_MILLIS = "timestamp-millis";
   private static final String TIMESTAMP_MICROS = "timestamp-micros";
+  private static final String LOCAL_DATE_TIME_TIMESTAMP_MILLIS = "local-date-time-timestamp-millis";
+  private static final String LOCAL_DATE_TIME_TIMESTAMP_MICROS = "local-date-time-timestamp-micros";
 
   /** Create a Decimal LogicalType with the given precision and scale 0 */
   public static Decimal decimal(int precision) {
@@ -165,6 +173,20 @@ public class LogicalTypes {
 
   public static TimestampMicros timestampMicros() {
     return TIMESTAMP_MICROS_TYPE;
+  }
+
+  private static final LocalDateTimeTimestampMillis LOCAL_DATE_TIME_TIMESTAMP_MILLIS_TYPE =
+    new LocalDateTimeTimestampMillis();
+
+  public static LocalDateTimeTimestampMillis localDateTimeTimestampMillis() {
+    return LOCAL_DATE_TIME_TIMESTAMP_MILLIS_TYPE;
+  }
+
+  private static final LocalDateTimeTimestampMicros LOCAL_DATE_TIME_TIMESTAMP_MICROS_TYPE =
+    new LocalDateTimeTimestampMicros();
+
+  public static LocalDateTimeTimestampMicros localDateTimeTimestampMicros() {
+    return LOCAL_DATE_TIME_TIMESTAMP_MICROS_TYPE;
   }
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers */
@@ -348,6 +370,36 @@ public class LogicalTypes {
   public static class TimestampMicros extends LogicalType {
     private TimestampMicros() {
       super(TIMESTAMP_MICROS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException(
+            "Timestamp (micros) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  public static class LocalDateTimeTimestampMillis extends LogicalType {
+    private LocalDateTimeTimestampMillis() {
+      super(LOCAL_DATE_TIME_TIMESTAMP_MILLIS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException(
+          "Timestamp (millis) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  public static class LocalDateTimeTimestampMicros extends LogicalType {
+    private LocalDateTimeTimestampMicros() {
+      super(LOCAL_DATE_TIME_TIMESTAMP_MICROS);
     }
 
     @Override

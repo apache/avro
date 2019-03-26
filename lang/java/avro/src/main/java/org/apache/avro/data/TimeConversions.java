@@ -25,7 +25,9 @@ import org.apache.avro.Schema;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
 public class TimeConversions {
@@ -199,6 +201,64 @@ public class TimeConversions {
     @Override
     public Schema getRecommendedSchema() {
       return LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
+  public static class LocalDateTimeTimestampMillisConversion extends Conversion<LocalDateTime> {
+    @Override
+    public Class<LocalDateTime> getConvertedType() {
+      return LocalDateTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "local-date-time-timestamp-millis";
+    }
+
+    @Override
+    public LocalDateTime fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
+      Instant instant = new Jsr310TimeConversions.TimestampMillisConversion().fromLong(millisFromEpoch, schema, type);
+      return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    @Override
+    public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
+      Instant instant = timestamp.toInstant(ZoneOffset.UTC);
+      return new Jsr310TimeConversions.TimestampMillisConversion().toLong(instant, schema, type);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.localDateTimeTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
+  public static class LocalDateTimeTimestampMicrosConversion extends Conversion<LocalDateTime> {
+    @Override
+    public Class<LocalDateTime> getConvertedType() {
+      return LocalDateTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "local-date-time-timestamp-micros";
+    }
+
+    @Override
+    public LocalDateTime fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
+      Instant instant = new Jsr310TimeConversions.TimestampMicrosConversion().fromLong(microsFromEpoch, schema, type);
+      return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    @Override
+    public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
+      Instant instant = timestamp.toInstant(ZoneOffset.UTC);
+      return new Jsr310TimeConversions.TimestampMicrosConversion().toLong(instant, schema, type);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.localDateTimeTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 }
