@@ -39,37 +39,34 @@ import org.apache.avro.mapred.AvroWrapper;
 import org.apache.trevni.MetaData;
 import org.apache.trevni.ColumnFileMetaData;
 
-/** An {@link org.apache.hadoop.mapred.OutputFormat} that writes Avro data to
+/**
+ * An {@link org.apache.hadoop.mapred.OutputFormat} that writes Avro data to
  * Trevni files.
  *
- * <p>Writes a directory of files per task, each comprising a single filesystem
- * block.  To reduce the number of files, increase the default filesystem block
- * size for the job.  Each task also requires enough memory to buffer a
+ * <p>
+ * Writes a directory of files per task, each comprising a single filesystem
+ * block. To reduce the number of files, increase the default filesystem block
+ * size for the job. Each task also requires enough memory to buffer a
  * filesystem block.
  */
-public class AvroTrevniOutputFormat <T>
-  extends FileOutputFormat<AvroWrapper<T>, NullWritable> {
+public class AvroTrevniOutputFormat<T> extends FileOutputFormat<AvroWrapper<T>, NullWritable> {
 
   /** The file name extension for trevni files. */
   public final static String EXT = ".trv";
 
   public static final String META_PREFIX = "trevni.meta.";
 
-  /** Add metadata to job output files.*/
+  /** Add metadata to job output files. */
   public static void setMeta(JobConf job, String key, String value) {
-    job.set(META_PREFIX+key, value);
+    job.set(META_PREFIX + key, value);
   }
 
   @Override
-  public RecordWriter<AvroWrapper<T>, NullWritable>
-    getRecordWriter(FileSystem ignore, final JobConf job,
-                    final String name, Progressable prog)
-    throws IOException {
+  public RecordWriter<AvroWrapper<T>, NullWritable> getRecordWriter(FileSystem ignore, final JobConf job,
+      final String name, Progressable prog) throws IOException {
 
     boolean isMapOnly = job.getNumReduceTasks() == 0;
-    final Schema schema = isMapOnly
-      ? AvroJob.getMapOutputSchema(job)
-      : AvroJob.getOutputSchema(job);
+    final Schema schema = isMapOnly ? AvroJob.getMapOutputSchema(job) : AvroJob.getOutputSchema(job);
 
     final ColumnFileMetaData meta = filterMetadata(job);
 
@@ -82,8 +79,7 @@ public class AvroTrevniOutputFormat <T>
     return new RecordWriter<AvroWrapper<T>, NullWritable>() {
       private int part = 0;
 
-      private AvroColumnWriter<T> writer =
-        new AvroColumnWriter<>(schema, meta, ReflectData.get());
+      private AvroColumnWriter<T> writer = new AvroColumnWriter<>(schema, meta, ReflectData.get());
 
       private void flush() throws IOException {
         try (OutputStream out = fs.create(new Path(dir, "part-" + (part++) + EXT))) {
@@ -93,24 +89,23 @@ public class AvroTrevniOutputFormat <T>
       }
 
       @Override
-      public void write(AvroWrapper<T> wrapper, NullWritable ignore)
-        throws IOException {
+      public void write(AvroWrapper<T> wrapper, NullWritable ignore) throws IOException {
         writer.write(wrapper.datum());
-        if (writer.sizeEstimate() >= blockSize)              // block full
+        if (writer.sizeEstimate() >= blockSize) // block full
           flush();
       }
+
       public void close(Reporter reporter) throws IOException {
         flush();
       }
     };
   }
 
-   static ColumnFileMetaData filterMetadata(final JobConf job) {
+  static ColumnFileMetaData filterMetadata(final JobConf job) {
     final ColumnFileMetaData meta = new ColumnFileMetaData();
-    for (Map.Entry<String,String> e : job)
+    for (Map.Entry<String, String> e : job)
       if (e.getKey().startsWith(META_PREFIX))
-        meta.put(e.getKey().substring(META_PREFIX.length()),
-                 e.getValue().getBytes(MetaData.UTF8));
+        meta.put(e.getKey().substring(META_PREFIX.length()), e.getValue().getBytes(MetaData.UTF8));
     return meta;
   }
 

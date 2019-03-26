@@ -47,7 +47,7 @@ class FieldAccessUnsafe extends FieldAccess {
     AvroEncode enc = field.getAnnotation(AvroEncode.class);
     if (enc != null)
       try {
-        return new UnsafeCustomEncodedField(field, enc.using().getDeclaredConstructor().newInstance() );
+        return new UnsafeCustomEncodedField(field, enc.using().getDeclaredConstructor().newInstance());
       } catch (Exception e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }

@@ -27,9 +27,8 @@ import org.junit.Test;
 public class TestSpecificErrorBuilder {
   @Test
   public void testSpecificErrorBuilder() {
-    TestError.Builder testErrorBuilder = TestError.newBuilder().
-      setValue("value").setCause(new NullPointerException()).
-      setMessage$("message$");
+    TestError.Builder testErrorBuilder = TestError.newBuilder().setValue("value").setCause(new NullPointerException())
+        .setMessage$("message$");
 
     // Test has methods
     Assert.assertTrue(testErrorBuilder.hasValue());
@@ -45,15 +44,13 @@ public class TestSpecificErrorBuilder {
     Assert.assertEquals("message$", testError.getMessage$());
 
     // Test copy constructor
-    Assert.assertEquals(testErrorBuilder,
-        TestError.newBuilder(testErrorBuilder));
+    Assert.assertEquals(testErrorBuilder, TestError.newBuilder(testErrorBuilder));
     Assert.assertEquals(testErrorBuilder, TestError.newBuilder(testError));
 
     TestError error = new TestError("value", new NullPointerException());
     error.setMessage$("message");
     Assert.assertEquals(error,
-        TestError.newBuilder().setValue("value").
-          setCause(new NullPointerException()).setMessage$("message").build());
+        TestError.newBuilder().setValue("value").setCause(new NullPointerException()).setMessage$("message").build());
 
     // Test clear
     testErrorBuilder.clearValue();
@@ -67,7 +64,7 @@ public class TestSpecificErrorBuilder {
     Assert.assertNull(testErrorBuilder.getMessage$());
   }
 
-  @Test(expected=org.apache.avro.AvroRuntimeException.class)
+  @Test(expected = org.apache.avro.AvroRuntimeException.class)
   public void attemptToSetNonNullableFieldToNull() {
     TestError.newBuilder().setMessage$(null);
   }

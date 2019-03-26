@@ -23,12 +23,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Adds the given key:Value pair as metadata into the schema,
- * at the corresponding node.
+ * Adds the given key:Value pair as metadata into the schema, at the
+ * corresponding node.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.FIELD})
+@Target({ ElementType.TYPE, ElementType.FIELD })
 public @interface AvroMeta {
   String key();
+
   String value();
 }

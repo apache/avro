@@ -34,10 +34,14 @@ import org.apache.avro.SchemaNormalization;
  */
 public class SchemaNormalizationTool implements Tool {
   @Override
-  public String getName() { return "canonical"; }
+  public String getName() {
+    return "canonical";
+  }
 
   @Override
-  public String getShortDescription() { return "Converts an Avro Schema to its canonical form"; }
+  public String getShortDescription() {
+    return "Converts an Avro Schema to its canonical form";
+  }
 
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {

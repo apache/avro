@@ -83,8 +83,11 @@ public class TestSpecificData {
   }
 
   static class Reflection {
-    public void primitive(int i) {}
-    public void primitiveWrapper(Integer i) {}
+    public void primitive(int i) {
+    }
+
+    public void primitiveWrapper(Integer i) {
+    }
   }
 
   public static class TestRecord extends SpecificRecordBase {
@@ -103,17 +106,24 @@ public class TestSpecificData {
     @Override
     public void put(int i, Object v) {
       switch (i) {
-      case 0: x = (Integer) v; break;
-      case 1: y = (String) v; break;
-      default: throw new RuntimeException();
+      case 0:
+        x = (Integer) v;
+        break;
+      case 1:
+        y = (String) v;
+        break;
+      default:
+        throw new RuntimeException();
       }
     }
 
     @Override
     public Object get(int i) {
       switch (i) {
-      case 0: return x;
-      case 1: return y;
+      case 0:
+        return x;
+      case 1:
+        return y;
       }
       throw new RuntimeException();
     }
@@ -134,7 +144,8 @@ public class TestSpecificData {
     assertEquals("str", record.get("y"));
   }
 
-  @Test public void testExternalizeable() throws Exception {
+  @Test
+  public void testExternalizeable() throws Exception {
     final TestRecord before = new TestRecord();
     before.put("x", 1);
     before.put("y", "str");
@@ -143,9 +154,8 @@ public class TestSpecificData {
     out.writeObject(before);
     out.close();
 
-    ObjectInputStream in =
-      new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
-    TestRecord after = (TestRecord)in.readObject();
+    ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    TestRecord after = (TestRecord) in.readObject();
 
     assertEquals(before, after);
   }

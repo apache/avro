@@ -37,7 +37,9 @@ public class TestReflectionUtil {
   }
 
   public static final class Tester {
-    public Tester() {}
+    public Tester() {
+    }
+
     public void checkUnsafe() {
       ReflectionUtil.getFieldAccess();
     }
@@ -48,8 +50,7 @@ public class TestReflectionUtil {
     private ClassLoader parent = TestReflectionUtil.class.getClassLoader();
 
     @Override
-    public java.lang.Class<?> loadClass(String name)
-        throws ClassNotFoundException {
+    public java.lang.Class<?> loadClass(String name) throws ClassNotFoundException {
       Class<?> clazz = findLoadedClass(name);
       if (clazz != null) {
         return clazz;
@@ -61,8 +62,7 @@ public class TestReflectionUtil {
         return parent.loadClass(name);
       }
 
-      InputStream data = parent.getResourceAsStream(name.replace('.', '/')
-          + ".class");
+      InputStream data = parent.getResourceAsStream(name.replace('.', '/') + ".class");
       byte[] buf = new byte[10240]; // big enough, too lazy to loop
       int size;
       try {

@@ -43,8 +43,7 @@ public class TestCreateRandomFileTool {
   private static final String COUNT = System.getProperty("test.count", "200");
   private static final File DIR = new File("/tmp");
   private static final File OUT_FILE = new File(DIR, "random.avro");
-  private static final File SCHEMA_FILE =
-    new File("../../../share/test/schemas/weather.avsc");
+  private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
   private final Schema.Parser schemaParser = new Schema.Parser();
 
@@ -82,19 +81,15 @@ public class TestCreateRandomFileTool {
 
   private void check(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
-    args.addAll(Arrays.asList(OUT_FILE.toString(),
-      "--count", COUNT,
-      "--schema-file", SCHEMA_FILE.toString(),
-      "--seed", Long.toString(SEED)));
+    args.addAll(Arrays.asList(OUT_FILE.toString(), "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed",
+        Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
 
-    DataFileReader<Object> reader =
-      new DataFileReader<>(OUT_FILE, new GenericDatumReader<>());
+    DataFileReader<Object> reader = new DataFileReader<>(OUT_FILE, new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected :
-           new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
+    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();
@@ -102,9 +97,8 @@ public class TestCreateRandomFileTool {
 
   private void checkMissingCount(String... extraArgs) throws Exception {
     ArrayList<String> args = new ArrayList<>();
-    args.addAll(Arrays.asList(OUT_FILE.toString(),
-      "--schema-file", SCHEMA_FILE.toString(),
-      "--seed", Long.toString(SEED)));
+    args.addAll(
+        Arrays.asList(OUT_FILE.toString(), "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
     args.addAll(Arrays.asList(extraArgs));
     run(args);
     assertTrue(err.toString().contains("Need count (--count)"));
@@ -128,18 +122,14 @@ public class TestCreateRandomFileTool {
   @Test
   public void testStdOut() throws Exception {
     TestUtil.resetRandomSeed();
-    run(Arrays.asList("-", "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(),
-      "--seed", Long.toString(SEED)));
+    run(Arrays.asList("-", "--count", COUNT, "--schema-file", SCHEMA_FILE.toString(), "--seed", Long.toString(SEED)));
 
     byte[] file = out.toByteArray();
 
-    DataFileStream<Object> reader =
-      new DataFileStream<>(new ByteArrayInputStream(file),
-        new GenericDatumReader<>());
+    DataFileStream<Object> reader = new DataFileStream<>(new ByteArrayInputStream(file), new GenericDatumReader<>());
 
     Iterator<Object> found = reader.iterator();
-    for (Object expected :
-           new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
+    for (Object expected : new RandomData(schemaParser.parse(SCHEMA_FILE), Integer.parseInt(COUNT), SEED))
       assertEquals(expected, found.next());
 
     reader.close();

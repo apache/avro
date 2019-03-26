@@ -46,13 +46,13 @@ import org.slf4j.LoggerFactory;
 
 @RunWith(Parameterized.class)
 public class TestDataFile {
-  private static final Logger LOG =
-    LoggerFactory.getLogger(TestDataFile.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestDataFile.class);
 
   @Rule
   public TemporaryFolder DIR = new TemporaryFolder();
 
   private final CodecFactory codec;
+
   public TestDataFile(CodecFactory codec) {
     this.codec = codec;
     LOG.info("Running with codec: " + codec);
@@ -74,24 +74,20 @@ public class TestDataFile {
     return r;
   }
 
-  private static final int COUNT =
-    Integer.parseInt(System.getProperty("test.count", "200"));
-  private static final boolean VALIDATE =
-    !"false".equals(System.getProperty("test.validate", "true"));
-
+  private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "200"));
+  private static final boolean VALIDATE = !"false".equals(System.getProperty("test.validate", "true"));
 
   private static final long SEED = System.currentTimeMillis();
-  private static final String SCHEMA_JSON =
-    "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
-    +"{\"name\":\"stringField\", \"type\":\"string\"},"
-    +"{\"name\":\"longField\", \"type\":\"long\"}]}";
+  private static final String SCHEMA_JSON = "{\"type\": \"record\", \"name\": \"Test\", \"fields\": ["
+      + "{\"name\":\"stringField\", \"type\":\"string\"}," + "{\"name\":\"longField\", \"type\":\"long\"}]}";
   private static final Schema SCHEMA = new Schema.Parser().parse(SCHEMA_JSON);
 
   private File makeFile() {
     return new File(DIR.getRoot().getPath(), "test-" + codec + ".avro");
   }
 
-  @Test public void runTestsInOrder() throws Exception {
+  @Test
+  public void runTestsInOrder() throws Exception {
     testGenericWrite();
     testGenericRead();
     testSplits();
@@ -103,9 +99,7 @@ public class TestDataFile {
   }
 
   private void testGenericWrite() throws IOException {
-    DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>())
-      .setSyncInterval(100);
+    DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).setSyncInterval(100);
     if (codec != null) {
       writer.setCodec(codec);
     }
@@ -114,8 +108,8 @@ public class TestDataFile {
       int count = 0;
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED)) {
         writer.append(datum);
-        if (++count%(COUNT/3) == 0)
-          writer.sync();                          // force some syncs mid-file
+        if (++count % (COUNT / 3) == 0)
+          writer.sync(); // force some syncs mid-file
         if (count == 5) {
           // force a write of an invalid record
           boolean threwProperly = false;
@@ -126,7 +120,7 @@ public class TestDataFile {
             writer.append(record);
             threwProperly = false;
           } catch (DataFileWriter.AppendWriteException e) {
-            System.out.println("Ignoring: "+e);
+            System.out.println("Ignoring: " + e);
           }
           assertTrue("failed to throw when expected", threwProperly);
         }
@@ -167,14 +161,14 @@ public class TestDataFile {
     File file = makeFile();
     try (DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>())) {
       Random rand = new Random(SEED);
-      int splits = 10;                            // number of splits
-      int length = (int) file.length();            // length of file
-      int end = length;                           // end of split
-      int remaining = end;                        // bytes remaining
-      int count = 0;                              // count of entries
+      int splits = 10; // number of splits
+      int length = (int) file.length(); // length of file
+      int end = length; // end of split
+      int remaining = end; // bytes remaining
+      int count = 0; // count of entries
       while (remaining > 0) {
         int start = Math.max(0, end - rand.nextInt(2 * length / splits));
-        reader.sync(start);                       // count entries in split
+        reader.sync(start); // count entries in split
         while (!reader.pastSync(end)) {
           reader.next();
           count++;
@@ -213,8 +207,7 @@ public class TestDataFile {
   private void testGenericAppend() throws IOException {
     File file = makeFile();
     long start = file.length();
-    try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>())
-      .appendTo(file)) {
+    try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>()).appendTo(file)) {
       for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
         writer.append(datum);
       }
@@ -237,50 +230,46 @@ public class TestDataFile {
 
   private void testReadWithHeader() throws IOException {
     File file = makeFile();
-    DataFileReader<Object> reader =
-      new DataFileReader<>(file, new GenericDatumReader<>());
+    DataFileReader<Object> reader = new DataFileReader<>(file, new GenericDatumReader<>());
     // get a header for this file
     DataFileStream.Header header = reader.getHeader();
     // re-open to an arbitrary position near the middle, with sync == true
     SeekableFileInput sin = new SeekableFileInput(file);
     sin.seek(sin.length() / 2);
-    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(),
-        header, true);
+    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(), header, true);
     assertNotNull("Should be able to reopen from arbitrary point", reader.next());
     long validPos = reader.previousSync();
     // post sync, we know of a valid sync point: re-open with seek (sync == false)
     sin.seek(validPos);
-    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(),
-        header, false);
+    reader = DataFileReader.openReader(sin, new GenericDatumReader<>(), header, false);
     assertEquals("Should not move from sync point on reopen", validPos, sin.tell());
     assertNotNull("Should be able to reopen at sync point", reader.next());
   }
 
-  @Test public void testSyncInHeader() throws IOException {
-    DataFileReader<Object> reader = new DataFileReader<>
-      (new File("../../../share/test/data/syncInMeta.avro"),
-       new GenericDatumReader<>());
+  @Test
+  public void testSyncInHeader() throws IOException {
+    DataFileReader<Object> reader = new DataFileReader<>(new File("../../../share/test/data/syncInMeta.avro"),
+        new GenericDatumReader<>());
     reader.sync(0);
     for (Object datum : reader)
       assertNotNull(datum);
   }
 
-  @Test public void test12() throws IOException {
-    readFile(new File("../../../share/test/data/test.avro12"),
-             new GenericDatumReader<>());
+  @Test
+  public void test12() throws IOException {
+    readFile(new File("../../../share/test/data/test.avro12"), new GenericDatumReader<>());
   }
 
   @Test
   public void testFlushCount() throws IOException {
-    DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>());
+    DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setFlushOnEveryBlock(false);
     TestingByteArrayOutputStream out = new TestingByteArrayOutputStream();
     writer.create(SCHEMA, out);
     int currentCount = 0;
     int flushCounter = 0;
     try {
-      for (Object datum : new RandomData(SCHEMA, COUNT, SEED+1)) {
+      for (Object datum : new RandomData(SCHEMA, COUNT, SEED + 1)) {
         currentCount++;
         writer.append(datum);
         writer.sync();
@@ -298,8 +287,7 @@ public class TestDataFile {
     // accurately do is that each sync did not lead to a flush and that the
     // file was flushed at least as many times as we called flush. Generally
     // noticed that out.flushCount is almost always 24 though.
-    assertTrue(out.flushCount < currentCount &&
-      out.flushCount >= flushCounter);
+    assertTrue(out.flushCount < currentCount && out.flushCount >= flushCounter);
   }
 
   private void testFSync(boolean useFile) throws IOException {
@@ -329,9 +317,7 @@ public class TestDataFile {
     }
   }
 
-
-  static void readFile(File f, DatumReader<? extends Object> datumReader)
-    throws IOException {
+  static void readFile(File f, DatumReader<? extends Object> datumReader) throws IOException {
     FileReader<? extends Object> reader = DataFileReader.openReader(f, datumReader);
     for (Object datum : reader) {
       assertNotNull(datum);
@@ -347,11 +333,10 @@ public class TestDataFile {
     long start = System.currentTimeMillis();
     for (int i = 0; i < 4; i++)
       TestDataFile.readFile(input, new GenericDatumReader<>(null, projection));
-    System.out.println("Time: "+(System.currentTimeMillis()-start));
+    System.out.println("Time: " + (System.currentTimeMillis() - start));
   }
 
-  private static class TestingByteArrayOutputStream extends ByteArrayOutputStream
-    implements Syncable {
+  private static class TestingByteArrayOutputStream extends ByteArrayOutputStream implements Syncable {
     private int flushCount = 0;
     private int syncCount = 0;
 

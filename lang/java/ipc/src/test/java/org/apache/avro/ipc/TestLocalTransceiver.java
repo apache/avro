@@ -33,10 +33,8 @@ import org.junit.Test;
 
 public class TestLocalTransceiver {
 
-  Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", "
-      + "\"messages\": { \"m\": {"
-      + "   \"request\": [{\"name\": \"x\", \"type\": \"string\"}], "
-      + "   \"response\": \"string\"} } }");
+  Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", " + "\"messages\": { \"m\": {"
+      + "   \"request\": [{\"name\": \"x\", \"type\": \"string\"}], " + "   \"response\": \"string\"} } }");
 
   static class TestResponder extends GenericResponder {
     public TestResponder(Protocol local) {
@@ -44,8 +42,7 @@ public class TestLocalTransceiver {
     }
 
     @Override
-    public Object respond(Message message, Object request)
-        throws AvroRemoteException {
+    public Object respond(Message message, Object request) throws AvroRemoteException {
       assertEquals(new Utf8("hello"), ((GenericRecord) request).get("x"));
       return new Utf8("there");
     }
@@ -55,12 +52,11 @@ public class TestLocalTransceiver {
   @Test
   public void testSingleRpc() throws IOException {
     Transceiver t = new LocalTransceiver(new TestResponder(protocol));
-    GenericRecord params = new GenericData.Record(protocol.getMessages().get(
-        "m").getRequest());
+    GenericRecord params = new GenericData.Record(protocol.getMessages().get("m").getRequest());
     params.put("x", new Utf8("hello"));
     GenericRequestor r = new GenericRequestor(protocol, t);
 
-    for(int x = 0; x < 5; x++)
+    for (int x = 0; x < 5; x++)
       assertEquals(new Utf8("there"), r.request("m", params));
   }
 

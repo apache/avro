@@ -31,34 +31,39 @@ import io.grpc.ServerServiceDefinition;
 import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
 
-/** Provides components to set up a gRPC Server for Avro's IDL and serialization. */
+/**
+ * Provides components to set up a gRPC Server for Avro's IDL and serialization.
+ */
 public abstract class AvroGrpcServer {
 
   private AvroGrpcServer() {
   }
 
   /**
-   * Creates a {@link ServerServiceDefinition} for Avro Interface and its implementation that can
-   * be passed a gRPC Server.
+   * Creates a {@link ServerServiceDefinition} for Avro Interface and its
+   * implementation that can be passed a gRPC Server.
    *
-   * @param iface Avro generated RPC service interface for which service defintion is created.
-   * @param impl  Implementation of the service interface to be invoked for requests.
+   * @param iface Avro generated RPC service interface for which service defintion
+   *              is created.
+   * @param impl  Implementation of the service interface to be invoked for
+   *              requests.
    * @return a new server service definition.
    */
   public static ServerServiceDefinition createServiceDefinition(Class iface, Object impl) {
     Protocol protocol = AvroGrpcUtils.getProtocol(iface);
     ServiceDescriptor serviceDescriptor = ServiceDescriptor.create(iface);
-    ServerServiceDefinition.Builder serviceDefinitionBuilder = ServerServiceDefinition.builder
-        (serviceDescriptor.getServiceName());
+    ServerServiceDefinition.Builder serviceDefinitionBuilder = ServerServiceDefinition
+        .builder(serviceDescriptor.getServiceName());
     Map<String, Protocol.Message> messages = protocol.getMessages();
     for (Method method : iface.getMethods()) {
       Protocol.Message msg = messages.get(method.getName());
-      //setup a method handler only if corresponding message exists in avro protocol.
+      // setup a method handler only if corresponding message exists in avro protocol.
       if (msg != null) {
-        UnaryMethodHandler methodHandler = msg.isOneWay() ? new OneWayUnaryMethodHandler(impl,
-            method) : new UnaryMethodHandler(impl, method);
-        serviceDefinitionBuilder.addMethod(serviceDescriptor.getMethod(method.getName(),
-            MethodDescriptor.MethodType.UNARY), ServerCalls.asyncUnaryCall(methodHandler));
+        UnaryMethodHandler methodHandler = msg.isOneWay() ? new OneWayUnaryMethodHandler(impl, method)
+            : new UnaryMethodHandler(impl, method);
+        serviceDefinitionBuilder.addMethod(
+            serviceDescriptor.getMethod(method.getName(), MethodDescriptor.MethodType.UNARY),
+            ServerCalls.asyncUnaryCall(methodHandler));
       }
     }
     return serviceDefinitionBuilder.build();
@@ -105,10 +110,11 @@ public abstract class AvroGrpcServer {
 
     @Override
     public void invoke(Object[] request, StreamObserver<Object> responseObserver) {
-      //first respond back with a fixed void response in order for call to be complete
+      // first respond back with a fixed void response in order for call to be
+      // complete
       responseObserver.onNext(null);
       responseObserver.onCompleted();
-      //process the rpc request
+      // process the rpc request
       try {
         getMethod().invoke(getServiceImpl(), request);
       } catch (Exception e) {

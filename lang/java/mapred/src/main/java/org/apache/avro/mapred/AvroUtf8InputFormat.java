@@ -38,23 +38,19 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
 /**
- * An {@link org.apache.hadoop.mapred.InputFormat} for text files.
- * Each line is a {@link Utf8} key; values are null.
+ * An {@link org.apache.hadoop.mapred.InputFormat} for text files. Each line is
+ * a {@link Utf8} key; values are null.
  */
-public class AvroUtf8InputFormat
-  extends FileInputFormat<AvroWrapper<Utf8>, NullWritable>
-  implements JobConfigurable {
+public class AvroUtf8InputFormat extends FileInputFormat<AvroWrapper<Utf8>, NullWritable> implements JobConfigurable {
 
-  static class Utf8LineRecordReader implements
-    RecordReader<AvroWrapper<Utf8>, NullWritable> {
+  static class Utf8LineRecordReader implements RecordReader<AvroWrapper<Utf8>, NullWritable> {
 
     private LineRecordReader lineRecordReader;
 
     private LongWritable currentKeyHolder = new LongWritable();
     private Text currentValueHolder = new Text();
 
-    public Utf8LineRecordReader(Configuration job,
-        FileSplit split) throws IOException {
+    public Utf8LineRecordReader(Configuration job, FileSplit split) throws IOException {
       this.lineRecordReader = new LineRecordReader(job, split);
     }
 
@@ -74,13 +70,10 @@ public class AvroUtf8InputFormat
     }
 
     @Override
-    public boolean next(AvroWrapper<Utf8> key, NullWritable value)
-      throws IOException {
-      boolean success = lineRecordReader.next(currentKeyHolder,
-          currentValueHolder);
+    public boolean next(AvroWrapper<Utf8> key, NullWritable value) throws IOException {
+      boolean success = lineRecordReader.next(currentKeyHolder, currentValueHolder);
       if (success) {
-        key.datum(new Utf8(currentValueHolder.getBytes())
-            .setByteLength(currentValueHolder.getLength()));
+        key.datum(new Utf8(currentValueHolder.getBytes()).setByteLength(currentValueHolder.getLength()));
       } else {
         key.datum(null);
       }
@@ -112,9 +105,8 @@ public class AvroUtf8InputFormat
   }
 
   @Override
-  public RecordReader<AvroWrapper<Utf8>, NullWritable>
-    getRecordReader(InputSplit split, JobConf job, Reporter reporter)
-    throws IOException {
+  public RecordReader<AvroWrapper<Utf8>, NullWritable> getRecordReader(InputSplit split, JobConf job, Reporter reporter)
+      throws IOException {
 
     reporter.setStatus(split.toString());
     return new Utf8LineRecordReader(job, (FileSplit) split);

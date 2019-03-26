@@ -50,8 +50,7 @@ public class TrevniMetadataTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-                 List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     String filename;
     boolean pretty = false;
     if (args.size() == 2 && "-pretty".equals(args.get(0))) {
@@ -70,12 +69,11 @@ public class TrevniMetadataTool implements Tool {
   }
 
   /** Read a Trevni file and print each row as a JSON object. */
-  public void dump(Input input, PrintStream out, boolean pretty)
-    throws IOException {
+  public void dump(Input input, PrintStream out, boolean pretty) throws IOException {
     this.generator = FACTORY.createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       generator.useDefaultPrettyPrinter();
-    } else {                                      // ensure newline separation
+    } else { // ensure newline separation
       MinimalPrettyPrinter pp = new MinimalPrettyPrinter();
       pp.setRootValueSeparator(System.getProperty("line.separator"));
       generator.setPrettyPrinter(pp);
@@ -105,9 +103,8 @@ public class TrevniMetadataTool implements Tool {
 
   private void dump(MetaData<?> meta) throws IOException {
     generator.writeStartObject();
-    for (Map.Entry<String,byte[]> e : meta.entrySet())
-      generator.writeStringField(e.getKey(),
-                                 new String(e.getValue(), "ISO-8859-1"));
+    for (Map.Entry<String, byte[]> e : meta.entrySet())
+      generator.writeStringField(e.getKey(), new String(e.getValue(), "ISO-8859-1"));
     generator.writeEndObject();
   }
 

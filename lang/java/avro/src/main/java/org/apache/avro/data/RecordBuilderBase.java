@@ -27,22 +27,33 @@ import org.apache.avro.generic.IndexedRecord;
 import java.io.IOException;
 import java.util.Arrays;
 
-/** Abstract base class for RecordBuilder implementations.  Not thread-safe. */
-public abstract class RecordBuilderBase<T extends IndexedRecord>
-  implements RecordBuilder<T> {
+/** Abstract base class for RecordBuilder implementations. Not thread-safe. */
+public abstract class RecordBuilderBase<T extends IndexedRecord> implements RecordBuilder<T> {
   private static final Field[] EMPTY_FIELDS = new Field[0];
   private final Schema schema;
   private final Field[] fields;
   private final boolean[] fieldSetFlags;
   private final GenericData data;
 
-  protected final Schema schema() { return schema; }
-  protected final Field[] fields() { return fields; }
-  protected final boolean[] fieldSetFlags() { return fieldSetFlags; }
-  protected final GenericData data() { return data; }
+  protected final Schema schema() {
+    return schema;
+  }
+
+  protected final Field[] fields() {
+    return fields;
+  }
+
+  protected final boolean[] fieldSetFlags() {
+    return fieldSetFlags;
+  }
+
+  protected final GenericData data() {
+    return data;
+  }
 
   /**
    * Creates a RecordBuilderBase for building records of the given type.
+   * 
    * @param schema the schema associated with the record class.
    */
   protected RecordBuilderBase(Schema schema, GenericData data) {
@@ -53,8 +64,9 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
   }
 
   /**
-   * RecordBuilderBase copy constructor.
-   * Makes a deep copy of the values in the other builder.
+   * RecordBuilderBase copy constructor. Makes a deep copy of the values in the
+   * other builder.
+   * 
    * @param other RecordBuilderBase instance to copy.
    */
   protected RecordBuilderBase(RecordBuilderBase<T> other, GenericData data) {
@@ -62,36 +74,32 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
     this.data = data;
     fields = schema.getFields().toArray(EMPTY_FIELDS);
     fieldSetFlags = new boolean[other.fieldSetFlags.length];
-    System.arraycopy(
-        other.fieldSetFlags, 0, fieldSetFlags, 0, fieldSetFlags.length);
+    System.arraycopy(other.fieldSetFlags, 0, fieldSetFlags, 0, fieldSetFlags.length);
   }
 
   /**
-   * Validates that a particular value for a given field is valid according to
-   * the following algorithm:
-   * 1. If the value is not null, or the field type is null, or the field type
-   * is a union which accepts nulls, returns.
-   * 2. Else, if the field has a default value, returns.
-   * 3. Otherwise throws AvroRuntimeException.
+   * Validates that a particular value for a given field is valid according to the
+   * following algorithm: 1. If the value is not null, or the field type is null,
+   * or the field type is a union which accepts nulls, returns. 2. Else, if the
+   * field has a default value, returns. 3. Otherwise throws AvroRuntimeException.
+   * 
    * @param field the field to validate.
    * @param value the value to validate.
-   * @throws NullPointerException if value is null and the given field does
-   * not accept null values.
+   * @throws NullPointerException if value is null and the given field does not
+   *                              accept null values.
    */
   protected void validate(Field field, Object value) {
     if (isValidValue(field, value)) {
-    }
-    else if (field.defaultVal() != null) {
-    }
-    else {
-      throw new AvroRuntimeException(
-          "Field " + field + " does not accept null values");
+    } else if (field.defaultVal() != null) {
+    } else {
+      throw new AvroRuntimeException("Field " + field + " does not accept null values");
     }
   }
 
   /**
    * Tests whether a value is valid for a specified field.
-   * @param f the field for which to test the value.
+   * 
+   * @param f     the field for which to test the value.
    * @param value the value to test.
    * @return true if the value is valid for the given field; false otherwise.
    */
@@ -123,9 +131,10 @@ public abstract class RecordBuilderBase<T extends IndexedRecord>
 
   /**
    * Gets the default value of the given field, if any.
+   * 
    * @param field the field whose default value should be retrieved.
-   * @return the default value associated with the given field,
-   * or null if none is specified in the schema.
+   * @return the default value associated with the given field, or null if none is
+   *         specified in the schema.
    * @throws IOException
    */
   @SuppressWarnings({ "rawtypes", "unchecked" })

@@ -41,14 +41,16 @@ public class BZip2Codec extends Codec {
   }
 
   @Override
-  public String getName() { return DataFileConstants.BZIP2_CODEC; }
+  public String getName() {
+    return DataFileConstants.BZIP2_CODEC;
+  }
 
   @Override
   public ByteBuffer compress(ByteBuffer uncompressedData) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(uncompressedData.remaining());
 
     try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos)) {
-        outputStream.write(uncompressedData.array(), computeOffset(uncompressedData), uncompressedData.remaining());
+      outputStream.write(uncompressedData.array(), computeOffset(uncompressedData), uncompressedData.remaining());
     }
 
     return ByteBuffer.wrap(baos.toByteArray());
@@ -56,8 +58,9 @@ public class BZip2Codec extends Codec {
 
   @Override
   public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-    ByteArrayInputStream bais = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData), compressedData.remaining());
-    try(BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais)) {
+    ByteArrayInputStream bais = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
+        compressedData.remaining());
+    try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais)) {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
       int readCount = -1;
@@ -69,7 +72,10 @@ public class BZip2Codec extends Codec {
     }
   }
 
-  @Override public int hashCode() { return getName().hashCode(); }
+  @Override
+  public int hashCode() {
+    return getName().hashCode();
+  }
 
   @Override
   public boolean equals(Object obj) {
@@ -78,7 +84,7 @@ public class BZip2Codec extends Codec {
     return obj != null && obj.getClass() == getClass();
   }
 
-  //get and initialize the output buffer for use.
+  // get and initialize the output buffer for use.
   private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
     if (null == outputBuffer) {
       outputBuffer = new ByteArrayOutputStream(suggestedLength);

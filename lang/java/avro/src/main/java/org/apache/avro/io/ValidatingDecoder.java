@@ -28,18 +28,18 @@ import org.apache.avro.io.parsing.ValidatingGrammarGenerator;
 import org.apache.avro.util.Utf8;
 
 /**
- * An implementation of {@link Decoder} that ensures that the sequence
- * of operations conforms to a schema.
+ * An implementation of {@link Decoder} that ensures that the sequence of
+ * operations conforms to a schema.
  * <p/>
  * Use {@link DecoderFactory#validatingDecoder(Schema, Decoder)} to construct
  * and configure.
  * <p/>
  * ValidatingDecoder is not thread-safe.
+ * 
  * @see Decoder
  * @see DecoderFactory
  */
-public class ValidatingDecoder extends ParsingDecoder
-  implements Parser.ActionHandler {
+public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHandler {
   protected Decoder in;
 
   ValidatingDecoder(Symbol root, Decoder in) throws IOException {
@@ -136,8 +136,7 @@ public class ValidatingDecoder extends ParsingDecoder
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     if (size != top.size) {
       throw new AvroTypeException(
-        "Incorrect length for fixed binary: expected " +
-        top.size + " but received " + size + " bytes.");
+          "Incorrect length for fixed binary: expected " + top.size + " but received " + size + " bytes.");
     }
   }
 
@@ -166,9 +165,7 @@ public class ValidatingDecoder extends ParsingDecoder
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     int result = in.readEnum();
     if (result < 0 || result >= top.size) {
-      throw new AvroTypeException(
-          "Enumeration out of range: max is " +
-          top.size + " but received " + result);
+      throw new AvroTypeException("Enumeration out of range: max is " + top.size + " but received " + result);
     }
     return result;
   }
@@ -251,4 +248,3 @@ public class ValidatingDecoder extends ParsingDecoder
     return null;
   }
 }
-

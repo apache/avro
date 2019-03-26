@@ -18,8 +18,7 @@
 package org.apache.avro.generic;
 
 /** An enum symbol. */
-public interface GenericEnumSymbol<E extends GenericEnumSymbol<E>>
-    extends GenericContainer, Comparable<E> {
+public interface GenericEnumSymbol<E extends GenericEnumSymbol<E>> extends GenericContainer, Comparable<E> {
   /** Return the symbol. */
   @Override
   String toString();

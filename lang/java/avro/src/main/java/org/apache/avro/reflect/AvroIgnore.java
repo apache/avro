@@ -23,11 +23,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a field as transient.
- * Such a field will not get written into or read from a schema,
- * when using reflection.
+ * Marks a field as transient. Such a field will not get written into or read
+ * from a schema, when using reflection.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
+@Target({ ElementType.FIELD })
 public @interface AvroIgnore {
 }

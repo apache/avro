@@ -31,8 +31,8 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
- * An {@link InputSplit} that tags another InputSplit with extra data for use
- * by {@link DelegatingInputFormat}s and {@link DelegatingMapper}s.
+ * An {@link InputSplit} that tags another InputSplit with extra data for use by
+ * {@link DelegatingInputFormat}s and {@link DelegatingMapper}s.
  */
 class TaggedInputSplit implements Configurable, InputSplit {
 
@@ -57,15 +57,13 @@ class TaggedInputSplit implements Configurable, InputSplit {
   /**
    * Creates a new TaggedInputSplit.
    *
-   * @param inputSplit The InputSplit to be tagged
-   * @param conf The configuration to use
+   * @param inputSplit       The InputSplit to be tagged
+   * @param conf             The configuration to use
    * @param inputFormatClass The InputFormat class to use for this job
-   * @param mapperClass The Mapper class to use for this job
+   * @param mapperClass      The Mapper class to use for this job
    */
-  public TaggedInputSplit(InputSplit inputSplit, Configuration conf,
-      Class<? extends InputFormat> inputFormatClass,
-      Class<? extends AvroMapper> mapperClass,
-      Schema inputSchema) {
+  public TaggedInputSplit(InputSplit inputSplit, Configuration conf, Class<? extends InputFormat> inputFormatClass,
+      Class<? extends AvroMapper> mapperClass, Schema inputSchema) {
     this.inputSplitClass = inputSplit.getClass();
     this.inputSplit = inputSplit;
     this.conf = conf;
@@ -124,8 +122,7 @@ class TaggedInputSplit implements Configurable, InputSplit {
   @Override
   public void readFields(DataInput in) throws IOException {
     inputSplitClass = (Class<? extends InputSplit>) readClass(in);
-    inputSplit = ReflectionUtils
-       .newInstance(inputSplitClass, conf);
+    inputSplit = ReflectionUtils.newInstance(inputSplitClass, conf);
     inputSplit.readFields(in);
     inputFormatClass = (Class<? extends InputFormat>) readClass(in);
     mapperClass = (Class<? extends AvroMapper>) readClass(in);

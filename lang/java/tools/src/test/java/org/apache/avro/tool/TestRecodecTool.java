@@ -48,10 +48,8 @@ public class TestRecodecTool {
     File inputFile = new File(DIR.getRoot(), "input.avro");
 
     Schema schema = Schema.create(Type.STRING);
-    DataFileWriter<String> writer = new DataFileWriter<>(
-        new GenericDatumWriter<String>(schema))
-        .setMeta(metaKey, metaValue)
-        .create(schema, inputFile);
+    DataFileWriter<String> writer = new DataFileWriter<>(new GenericDatumWriter<String>(schema))
+        .setMeta(metaKey, metaValue).create(schema, inputFile);
     // We write some garbage which should be quite compressible by deflate,
     // but is complicated enough that deflate-9 will work better than deflate-1.
     // These values were plucked from thin air and worked on the first try, so
@@ -62,23 +60,25 @@ public class TestRecodecTool {
     writer.close();
 
     File defaultOutputFile = new File(DIR.getRoot(), "default-output.avro");
-    File nullOutputFile = new File(DIR.getRoot(),  "null-output.avro");
-    File deflateDefaultOutputFile = new File(DIR.getRoot(),  "deflate-default-output.avro");
-    File deflate1OutputFile = new File(DIR.getRoot(),  "deflate-1-output.avro");
-    File deflate9OutputFile = new File(DIR.getRoot(),  "deflate-9-output.avro");
+    File nullOutputFile = new File(DIR.getRoot(), "null-output.avro");
+    File deflateDefaultOutputFile = new File(DIR.getRoot(), "deflate-default-output.avro");
+    File deflate1OutputFile = new File(DIR.getRoot(), "deflate-1-output.avro");
+    File deflate9OutputFile = new File(DIR.getRoot(), "deflate-9-output.avro");
 
     new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(defaultOutputFile), null, new ArrayList<>());
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null, Collections.singletonList("--codec=null"));
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflateDefaultOutputFile), null, Collections.singletonList("--codec=deflate"));
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate1OutputFile), null, asList("--codec=deflate", "--level=1"));
-    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate9OutputFile), null, asList("--codec=deflate", "--level=9"));
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(nullOutputFile), null,
+        Collections.singletonList("--codec=null"));
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflateDefaultOutputFile), null,
+        Collections.singletonList("--codec=deflate"));
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate1OutputFile), null,
+        asList("--codec=deflate", "--level=1"));
+    new RecodecTool().run(new FileInputStream(inputFile), new PrintStream(deflate9OutputFile), null,
+        asList("--codec=deflate", "--level=9"));
 
     // We assume that metadata copying is orthogonal to codec selection, and
     // so only test it for a single file.
-    Assert.assertEquals(
-      metaValue,
-      new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<>())
-        .getMetaString(metaKey));
+    Assert.assertEquals(metaValue,
+        new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<>()).getMetaString(metaKey));
 
     // The "default" codec should be the same as null.
     Assert.assertEquals(defaultOutputFile.length(), nullOutputFile.length());

@@ -33,10 +33,8 @@ import org.apache.avro.generic.GenericDatumReader;
 
 /** Reads an avro data file into a plain text file. */
 public class ToTextTool implements Tool {
-  private static final String TEXT_FILE_SCHEMA =
-        "\"bytes\"";
-  private static final byte[] LINE_SEPARATOR =
-        System.getProperty("line.separator").getBytes();
+  private static final String TEXT_FILE_SCHEMA = "\"bytes\"";
+  private static final byte[] LINE_SEPARATOR = System.getProperty("line.separator").getBytes();
 
   @Override
   public String getName() {
@@ -49,8 +47,7 @@ public class ToTextTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     OptionParser p = new OptionParser();
     OptionSet opts = p.parse(args.toArray(new String[0]));
@@ -64,8 +61,7 @@ public class ToTextTool implements Tool {
     BufferedOutputStream outStream = Util.fileOrStdout(args.get(1), out);
 
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
-    DataFileStream<Object> fileReader =
-        new DataFileStream<>(inStream, reader);
+    DataFileStream<Object> fileReader = new DataFileStream<>(inStream, reader);
 
     if (!fileReader.getSchema().equals(new Schema.Parser().parse(TEXT_FILE_SCHEMA))) {
       err.println("Avro file is not generic text schema");

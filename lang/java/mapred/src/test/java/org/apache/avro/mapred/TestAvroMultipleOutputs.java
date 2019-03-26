@@ -72,9 +72,8 @@ public class TestAvroMultipleOutputs {
     }
 
     @Override
-    public void reduce(Utf8 word, Iterable<Long> counts,
-                       AvroCollector<Pair<Utf8, Long>> collector,
-                       Reporter reporter) throws IOException {
+    public void reduce(Utf8 word, Iterable<Long> counts, AvroCollector<Pair<Utf8, Long>> collector, Reporter reporter)
+        throws IOException {
       long sum = 0;
       for (long count : counts)
         sum += count;
@@ -119,8 +118,7 @@ public class TestAvroMultipleOutputs {
     job.setJobName("AvroMultipleOutputs");
 
     AvroJob.setInputSchema(job, Schema.create(Schema.Type.STRING));
-    AvroJob.setOutputSchema(job,
-            new Pair<Utf8, Long>(new Utf8(""), 0L).getSchema());
+    AvroJob.setOutputSchema(job, new Pair<Utf8, Long>(new Utf8(""), 0L).getSchema());
 
     AvroJob.setMapperClass(job, MapImpl.class);
     AvroJob.setReducerClass(job, ReduceImpl.class);
@@ -128,7 +126,8 @@ public class TestAvroMultipleOutputs {
     FileInputFormat.setInputPaths(job, pathIn);
     FileOutputFormat.setOutputPath(job, outputPath);
     FileOutputFormat.setCompressOutput(job, false);
-    AvroMultipleOutputs.addNamedOutput(job, "myavro", AvroOutputFormat.class, new Pair<Utf8, Long>(new Utf8(""), 0L).getSchema());
+    AvroMultipleOutputs.addNamedOutput(job, "myavro", AvroOutputFormat.class,
+        new Pair<Utf8, Long>(new Utf8(""), 0L).getSchema());
     AvroMultipleOutputs.addNamedOutput(job, "myavro1", AvroOutputFormat.class, Schema.create(Schema.Type.STRING));
     AvroMultipleOutputs.addNamedOutput(job, "myavro2", AvroOutputFormat.class, Schema.create(Schema.Type.STRING));
     WordCountUtil.setMeta(job);
@@ -144,13 +143,8 @@ public class TestAvroMultipleOutputs {
 
     Integer defaultRank = -1;
 
-    String jsonSchema =
-            "{\"type\":\"record\"," +
-                    "\"name\":\"org.apache.avro.mapred.Pair\"," +
-                    "\"fields\": [ " +
-                    "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," +
-                    "{\"name\":\"value\", \"type\":\"long\"}" +
-                    "]}";
+    String jsonSchema = "{\"type\":\"record\"," + "\"name\":\"org.apache.avro.mapred.Pair\"," + "\"fields\": [ "
+        + "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," + "{\"name\":\"value\", \"type\":\"long\"}" + "]}";
 
     Schema readerSchema = Schema.parse(jsonSchema);
 
@@ -189,13 +183,8 @@ public class TestAvroMultipleOutputs {
 
     Integer defaultRank = -1;
 
-    String jsonSchema =
-            "{\"type\":\"record\"," +
-                    "\"name\":\"org.apache.avro.mapred.Pair\"," +
-                    "\"fields\": [ " +
-                    "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," +
-                    "{\"name\":\"value\", \"type\":\"long\"}" +
-                    "]}";
+    String jsonSchema = "{\"type\":\"record\"," + "\"name\":\"org.apache.avro.mapred.Pair\"," + "\"fields\": [ "
+        + "{\"name\":\"rank\", \"type\":\"int\", \"default\": -1}," + "{\"name\":\"value\", \"type\":\"long\"}" + "]}";
 
     Schema readerSchema = Schema.parse(jsonSchema);
 
@@ -291,7 +280,7 @@ public class TestAvroMultipleOutputs {
     Path outputPath = new Path(OUTPUT_DIR.getRoot().getPath());
     outputPath.getFileSystem(job).delete(outputPath);
 
-    WordCountUtil.writeLinesFile(new File(INPUT_DIR.getRoot(),"lines.avro"));
+    WordCountUtil.writeLinesFile(new File(INPUT_DIR.getRoot(), "lines.avro"));
 
     job.setJobName("AvroMultipleOutputs_noreducer");
 
@@ -314,7 +303,7 @@ public class TestAvroMultipleOutputs {
     AvroJob.setInputSchema(job, readerSchema);
     Path inputPath = new Path(inputDirectory + "/myavro2-m-00000.avro");
     FileStatus fileStatus = FileSystem.get(job).getFileStatus(inputPath);
-    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), (String[])null);
+    FileSplit fileSplit = new FileSplit(inputPath, 0, fileStatus.getLen(), (String[]) null);
     AvroRecordReader<Utf8> recordReader = new AvroRecordReader<>(job, fileSplit);
     AvroWrapper<Utf8> inputPair = new AvroWrapper<>(null);
     NullWritable ignore = NullWritable.get();

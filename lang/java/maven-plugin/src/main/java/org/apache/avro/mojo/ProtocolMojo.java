@@ -39,8 +39,8 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 public class ProtocolMojo extends AbstractAvroMojo {
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avpr</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avpr</code>
+   * is used to select grammar files.
    *
    * @parameter
    */
@@ -48,8 +48,8 @@ public class ProtocolMojo extends AbstractAvroMojo {
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avpr</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avpr</code>
+   * is used to select grammar files.
    *
    * @parameter
    */

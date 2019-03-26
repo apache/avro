@@ -42,23 +42,20 @@ public class WordCountUtil {
   public File linesFiles;
   public File countFiles;
 
-  public WordCountUtil (String testName) {
+  public WordCountUtil(String testName) {
     this(testName, "part-00000");
   }
 
-  public WordCountUtil (String testName, String partDirName) {
+  public WordCountUtil(String testName, String partDirName) {
     dir = new File("target/wc", testName);
     linesFiles = new File(new File(dir, "in"), "lines.avro");
     countFiles = new File(new File(dir, "out"), partDirName + "/part-0.trv");
   }
 
-  public static final String[] LINES = new String[] {
-    "the quick brown fox jumps over the lazy dog",
-    "the cow jumps over the moon",
-    "the rain in spain falls mainly on the plains"
-  };
+  public static final String[] LINES = new String[] { "the quick brown fox jumps over the lazy dog",
+      "the cow jumps over the moon", "the rain in spain falls mainly on the plains" };
 
-  public static final Map<String,Long> COUNTS = new TreeMap<>();
+  public static final Map<String, Long> COUNTS = new TreeMap<>();
   public static final long TOTAL;
   static {
     long total = 0;
@@ -91,11 +88,10 @@ public class WordCountUtil {
   }
 
   public void validateCountsFile() throws Exception {
-    AvroColumnReader<Pair<String,Long>> reader =
-        new AvroColumnReader<>(
-            new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
+    AvroColumnReader<Pair<String, Long>> reader = new AvroColumnReader<>(
+        new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
-    for (Pair<String,Long> wc : reader) {
+    for (Pair<String, Long> wc : reader) {
       assertEquals(wc.key(), COUNTS.get(wc.key()), wc.value());
       numWords++;
     }
@@ -104,13 +100,12 @@ public class WordCountUtil {
   }
 
   public void validateCountsFileGenericRecord() throws Exception {
-    AvroColumnReader<GenericRecord > reader =
-      new AvroColumnReader<> (
-          new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
+    AvroColumnReader<GenericRecord> reader = new AvroColumnReader<>(
+        new AvroColumnReader.Params(countFiles).setModel(SpecificData.get()));
     int numWords = 0;
-    for (GenericRecord  wc : reader) {
-      assertEquals((String)wc.get("key"), COUNTS.get(wc.get("key")), wc.get("value"));
-      //assertEquals(wc.getKey(), COUNTS.get(wc.getKey()), wc.getValue());
+    for (GenericRecord wc : reader) {
+      assertEquals((String) wc.get("key"), COUNTS.get(wc.get("key")), wc.get("value"));
+      // assertEquals(wc.getKey(), COUNTS.get(wc.getKey()), wc.getValue());
       numWords++;
     }
     reader.close();

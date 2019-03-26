@@ -38,7 +38,8 @@ public class Accessor {
   public abstract static class FieldAccessor {
     protected abstract JsonNode defaultValue(Field field);
 
-    protected abstract Field createField(String name, Schema schema, String doc, JsonNode defaultValue, boolean validate, Order order);
+    protected abstract Field createField(String name, Schema schema, String doc, JsonNode defaultValue,
+        boolean validate, Order order);
 
     protected abstract Field createField(String name, Schema schema, String doc, JsonNode defaultValue);
   }
@@ -108,7 +109,8 @@ public class Accessor {
     resolvingGrammarGeneratorAccessor().encode(e, s, n);
   }
 
-  public static Field createField(String name, Schema schema, String doc, JsonNode defaultValue, boolean validate, Order order) {
+  public static Field createField(String name, Schema schema, String doc, JsonNode defaultValue, boolean validate,
+      Order order) {
     return fieldAccessor().createField(name, schema, doc, defaultValue, validate, order);
   }
 

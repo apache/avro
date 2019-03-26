@@ -39,14 +39,12 @@ public class TestSpecificDatumWriter {
 
     writer.setSchema(schema);
 
-    TestRecordWithUnion c = TestRecordWithUnion.newBuilder().
-      setKind(Kind.BAR).setValue("rab").build();
+    TestRecordWithUnion c = TestRecordWithUnion.newBuilder().setKind(Kind.BAR).setValue("rab").build();
     writer.write(c, encoder);
     encoder.flush();
     out.close();
 
-    String expectedJson = String.format(
-        "{'kind':{'org.apache.avro.test.Kind':'%s'},'value':{'string':'%s'}}",
+    String expectedJson = String.format("{'kind':{'org.apache.avro.test.Kind':'%s'},'value':{'string':'%s'}}",
         c.getKind().toString(), c.getValue()).replace('\'', '"');
 
     assertEquals(expectedJson, out.toString("UTF-8"));

@@ -36,9 +36,11 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  *
  * A MapReduce InputFormat that can handle Trevni container files.
  *
- * <p>Keys are AvroKey wrapper objects that contain the Trevni data.  Since Trevni
- * container files store only records (not key/value pairs), the value from
- * this InputFormat is a NullWritable.</p>
+ * <p>
+ * Keys are AvroKey wrapper objects that contain the Trevni data. Since Trevni
+ * container files store only records (not key/value pairs), the value from this
+ * InputFormat is a NullWritable.
+ * </p>
  *
  * <p>
  * A subset schema to be read may be specified with
@@ -47,9 +49,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 public class AvroTrevniKeyInputFormat<T> extends FileInputFormat<AvroKey<T>, NullWritable> {
 
   @Override
-  public RecordReader<AvroKey<T>, NullWritable> createRecordReader(
-      InputSplit split, TaskAttemptContext context) throws IOException,
-      InterruptedException {
+  public RecordReader<AvroKey<T>, NullWritable> createRecordReader(InputSplit split, TaskAttemptContext context)
+      throws IOException, InterruptedException {
 
     return new AvroTrevniKeyRecordReader<>();
   }

@@ -26,20 +26,17 @@ import java.io.IOException;
 
 public class TestNullableLogicalTypes extends AbstractSpecificRecordTest {
 
-    @Test
-    public void testWithNullValues() throws IOException {
-        NullableLogicalTypes instanceOfGeneratedClass = NullableLogicalTypes.newBuilder()
-                .setNullableDate(null)
-                .build();
-        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
-    }
+  @Test
+  public void testWithNullValues() throws IOException {
+    NullableLogicalTypes instanceOfGeneratedClass = NullableLogicalTypes.newBuilder().setNullableDate(null).build();
+    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
 
-    @Test
-    public void testDate() throws IOException {
-        NullableLogicalTypes instanceOfGeneratedClass = NullableLogicalTypes.newBuilder()
-                .setNullableDate(LocalDate.now())
-                .build();
-        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
-    }
+  @Test
+  public void testDate() throws IOException {
+    NullableLogicalTypes instanceOfGeneratedClass = NullableLogicalTypes.newBuilder().setNullableDate(LocalDate.now())
+        .build();
+    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
 
 }

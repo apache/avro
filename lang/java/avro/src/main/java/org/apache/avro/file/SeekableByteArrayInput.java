@@ -24,7 +24,7 @@ import java.io.IOException;
 public class SeekableByteArrayInput extends ByteArrayInputStream implements SeekableInput {
 
   public SeekableByteArrayInput(byte[] data) {
-      super(data);
+    super(data);
   }
 
   @Override

@@ -25,23 +25,23 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.util.ReflectionUtils;
 
-/** Bridge between a {@link org.apache.hadoop.mapred.Reducer} and an {@link
- * AvroReducer}. */
-class HadoopReducer<K,V,OUT>
-  extends HadoopReducerBase<K,V, OUT, AvroWrapper<OUT>, NullWritable> {
+/**
+ * Bridge between a {@link org.apache.hadoop.mapred.Reducer} and an
+ * {@link AvroReducer}.
+ */
+class HadoopReducer<K, V, OUT> extends HadoopReducerBase<K, V, OUT, AvroWrapper<OUT>, NullWritable> {
 
-  @Override @SuppressWarnings("unchecked")
-  protected AvroReducer<K,V,OUT> getReducer(JobConf conf) {
-    return ReflectionUtils.newInstance
-      (conf.getClass(AvroJob.REDUCER, AvroReducer.class, AvroReducer.class),
-       conf);
+  @Override
+  @SuppressWarnings("unchecked")
+  protected AvroReducer<K, V, OUT> getReducer(JobConf conf) {
+    return ReflectionUtils.newInstance(conf.getClass(AvroJob.REDUCER, AvroReducer.class, AvroReducer.class), conf);
   }
 
   private class ReduceCollector extends AvroCollector<OUT> {
     private final AvroWrapper<OUT> wrapper = new AvroWrapper<>(null);
     private OutputCollector<AvroWrapper<OUT>, NullWritable> out;
 
-    public ReduceCollector(OutputCollector<AvroWrapper<OUT>,NullWritable> out) {
+    public ReduceCollector(OutputCollector<AvroWrapper<OUT>, NullWritable> out) {
       this.out = out;
     }
 
@@ -53,8 +53,7 @@ class HadoopReducer<K,V,OUT>
   }
 
   @Override
-  protected AvroCollector<OUT>
-    getCollector(OutputCollector<AvroWrapper<OUT>, NullWritable> collector) {
+  protected AvroCollector<OUT> getCollector(OutputCollector<AvroWrapper<OUT>, NullWritable> collector) {
     return new ReduceCollector(collector);
   }
 

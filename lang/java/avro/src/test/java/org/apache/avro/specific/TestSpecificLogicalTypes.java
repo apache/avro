@@ -66,69 +66,45 @@ import org.junit.rules.TemporaryFolder;
  * before AVRO-1684, logical types should not be applied by the read or write
  * paths. Those files should behave as they did before.
  *
- * For AVRO-2079 {@link TestRecordWithJsr310LogicalTypes} was generated from
- * the same schema and tests were added to test compatibility between the
- * two versions.
+ * For AVRO-2079 {@link TestRecordWithJsr310LogicalTypes} was generated from the
+ * same schema and tests were added to test compatibility between the two
+ * versions.
  */
 public class TestSpecificLogicalTypes {
 
   // Override the default ISO_LOCAL_TIME to make sure that there are
   // trailing zero's in the format:
   // Expected: is "22:07:33.880"
-  //     but: was "22:07:33.88"
+  // but: was "22:07:33.88"
   private static final DateTimeFormatter ISO_LOCAL_TIME = new DateTimeFormatterBuilder()
-          .appendValue(ChronoField.HOUR_OF_DAY, 2)
-          .appendLiteral(':')
-          .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-          .optionalStart()
-          .appendLiteral(':')
-          .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-          .optionalStart()
-          .appendFraction(ChronoField.NANO_OF_SECOND, 3, 3, true)
-          .toFormatter();
+      .appendValue(ChronoField.HOUR_OF_DAY, 2).appendLiteral(':').appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+      .optionalStart().appendLiteral(':').appendValue(ChronoField.SECOND_OF_MINUTE, 2).optionalStart()
+      .appendFraction(ChronoField.NANO_OF_SECOND, 3, 3, true).toFormatter();
 
   @Rule
   public final TemporaryFolder temp = new TemporaryFolder();
 
   @Test
   public void testRecordWithLogicalTypes() throws IOException {
-    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        null,
-        LocalDate.now(),
-        LocalTime.now(),
-        DateTime.now().withZone(DateTimeZone.UTC),
-        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
-    );
+    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null,
+        LocalDate.now(), LocalTime.now(), DateTime.now().withZone(DateTimeZone.UTC),
+        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN));
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
-    List<TestRecordWithLogicalTypes> actual = read(
-        TestRecordWithLogicalTypes.getClassSchema(), data);
+    List<TestRecordWithLogicalTypes> actual = read(TestRecordWithLogicalTypes.getClassSchema(), data);
 
     Assert.assertEquals("Should match written record", record, actual.get(0));
   }
+
   @Test
   public void testRecordWithJsr310LogicalTypes() throws IOException {
-    TestRecordWithJsr310LogicalTypes record = new TestRecordWithJsr310LogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        null,
-        java.time.LocalDate.now(),
-        java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
+    TestRecordWithJsr310LogicalTypes record = new TestRecordWithJsr310LogicalTypes(true, 34, 35L, 3.14F, 3019.34, null,
+        java.time.LocalDate.now(), java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
         java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
-        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
-    );
+        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN));
 
     File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), record);
-    List<TestRecordWithJsr310LogicalTypes> actual = read(
-        TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
+    List<TestRecordWithJsr310LogicalTypes> actual = read(TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
 
     Assert.assertEquals("Should match written record", record, actual.get(0));
   }
@@ -136,25 +112,16 @@ public class TestSpecificLogicalTypes {
   @Test
   public void testAbilityToReadJsr310RecordWrittenAsJodaRecord() throws IOException {
 
-    TestRecordWithLogicalTypes withJoda = new TestRecordWithLogicalTypes(
-            true,
-            34,
-            35L,
-            3.14F,
-            3019.34,
-            null,
-            LocalDate.now(),
-            LocalTime.now(),
-            // There is no reliable way to get fixed width string from ISO_INSTANT below
-            // for granularity less than one second second.
-            new DateTime((System.currentTimeMillis() / 1000) * 1000,
-                    ISOChronology.getInstance()).withZone(DateTimeZone.UTC),
-            new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
-    );
+    TestRecordWithLogicalTypes withJoda = new TestRecordWithLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null,
+        LocalDate.now(), LocalTime.now(),
+        // There is no reliable way to get fixed width string from ISO_INSTANT below
+        // for granularity less than one second second.
+        new DateTime((System.currentTimeMillis() / 1000) * 1000, ISOChronology.getInstance())
+            .withZone(DateTimeZone.UTC),
+        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN));
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), withJoda);
-    List<TestRecordWithJsr310LogicalTypes> actual = read(
-        TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
+    List<TestRecordWithJsr310LogicalTypes> actual = read(TestRecordWithJsr310LogicalTypes.getClassSchema(), data);
 
     Assert.assertThat(actual, is(not(empty())));
     TestRecordWithJsr310LogicalTypes withJsr310 = actual.get(0);
@@ -168,28 +135,20 @@ public class TestSpecificLogicalTypes {
 
     Assert.assertThat(ISO_LOCAL_DATE.format(withJsr310.getD()), is(ISODateTimeFormat.date().print(withJoda.getD())));
     Assert.assertThat(ISO_LOCAL_TIME.format(withJsr310.getT()), is(ISODateTimeFormat.time().print(withJoda.getT())));
-    Assert.assertThat(ISO_INSTANT.format(withJsr310.getTs()), is(ISODateTimeFormat.dateTimeNoMillis().print(withJoda.getTs())));
+    Assert.assertThat(ISO_INSTANT.format(withJsr310.getTs()),
+        is(ISODateTimeFormat.dateTimeNoMillis().print(withJoda.getTs())));
     Assert.assertThat(withJsr310.getDec(), comparesEqualTo(withJoda.getDec()));
   }
 
   @Test
   public void testAbilityToReadJodaRecordWrittenAsJsr310Record() throws IOException {
-    TestRecordWithJsr310LogicalTypes withJsr310 = new TestRecordWithJsr310LogicalTypes(
-            true,
-            34,
-            35L,
-            3.14F,
-            3019.34,
-            null,
-            java.time.LocalDate.now(),
-            java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
-            java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
-            new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN)
-    );
+    TestRecordWithJsr310LogicalTypes withJsr310 = new TestRecordWithJsr310LogicalTypes(true, 34, 35L, 3.14F, 3019.34,
+        null, java.time.LocalDate.now(), java.time.LocalTime.now().truncatedTo(ChronoUnit.MILLIS),
+        java.time.Instant.now().truncatedTo(ChronoUnit.MILLIS),
+        new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN));
 
     File data = write(TestRecordWithJsr310LogicalTypes.getClassSchema(), withJsr310);
-    List<TestRecordWithLogicalTypes> actual = read(
-        TestRecordWithLogicalTypes.getClassSchema(), data);
+    List<TestRecordWithLogicalTypes> actual = read(TestRecordWithLogicalTypes.getClassSchema(), data);
 
     Assert.assertThat(actual, is(not(empty())));
     TestRecordWithLogicalTypes withJoda = actual.get(0);
@@ -215,25 +174,15 @@ public class TestSpecificLogicalTypes {
     // are only applied if the record was compiled to use those types. this
     // ensures compatibility with already-compiled code.
 
-    TestRecordWithoutLogicalTypes record = new TestRecordWithoutLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        null,
+    TestRecordWithoutLogicalTypes record = new TestRecordWithoutLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null,
         new DateConversion().toInt(LocalDate.now(), null, null),
         new TimeConversion().toInt(LocalTime.now(), null, null),
-        new TimestampConversion().toLong(
-            DateTime.now().withZone(DateTimeZone.UTC), null, null),
-        new Conversions.DecimalConversion().toBytes(
-            new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN), null,
-            LogicalTypes.decimal(9, 2))
-    );
+        new TimestampConversion().toLong(DateTime.now().withZone(DateTimeZone.UTC), null, null),
+        new Conversions.DecimalConversion().toBytes(new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN), null,
+            LogicalTypes.decimal(9, 2)));
 
     File data = write(TestRecordWithoutLogicalTypes.getClassSchema(), record);
-    List<TestRecordWithoutLogicalTypes> actual = read(
-        TestRecordWithoutLogicalTypes.getClassSchema(), data);
+    List<TestRecordWithoutLogicalTypes> actual = read(TestRecordWithoutLogicalTypes.getClassSchema(), data);
 
     Assert.assertEquals("Should match written record", record, actual.get(0));
   }
@@ -245,36 +194,17 @@ public class TestSpecificLogicalTypes {
     DateTime timestamp = DateTime.now().withZone(DateTimeZone.UTC);
     BigDecimal decimal = new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN);
 
-    TestRecordWithoutLogicalTypes record = new TestRecordWithoutLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        null,
-        new DateConversion().toInt(date, null, null),
-        new TimeConversion().toInt(time, null, null),
+    TestRecordWithoutLogicalTypes record = new TestRecordWithoutLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null,
+        new DateConversion().toInt(date, null, null), new TimeConversion().toInt(time, null, null),
         new TimestampConversion().toLong(timestamp, null, null),
-        new Conversions.DecimalConversion().toBytes(decimal, null, LogicalTypes.decimal(9, 2))
-    );
+        new Conversions.DecimalConversion().toBytes(decimal, null, LogicalTypes.decimal(9, 2)));
 
     File data = write(TestRecordWithoutLogicalTypes.getClassSchema(), record);
     // read using the schema with logical types
-    List<TestRecordWithLogicalTypes> actual = read(
-        TestRecordWithLogicalTypes.getClassSchema(), data);
+    List<TestRecordWithLogicalTypes> actual = read(TestRecordWithLogicalTypes.getClassSchema(), data);
 
-    TestRecordWithLogicalTypes expected = new TestRecordWithLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        null,
-        date,
-        time,
-        timestamp,
-        decimal
-    );
+    TestRecordWithLogicalTypes expected = new TestRecordWithLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null, date,
+        time, timestamp, decimal);
 
     Assert.assertEquals("Should match written record", expected, actual.get(0));
   }
@@ -286,42 +216,22 @@ public class TestSpecificLogicalTypes {
     DateTime timestamp = DateTime.now().withZone(DateTimeZone.UTC);
     BigDecimal decimal = new BigDecimal(123.45f).setScale(2, RoundingMode.HALF_DOWN);
 
-    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        null,
-        date,
-        time,
-        timestamp,
-        decimal
-    );
+    TestRecordWithLogicalTypes record = new TestRecordWithLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null, date, time,
+        timestamp, decimal);
 
     File data = write(TestRecordWithLogicalTypes.getClassSchema(), record);
     // read using the schema with logical types
-    List<TestRecordWithoutLogicalTypes> actual = read(
-        TestRecordWithoutLogicalTypes.getClassSchema(), data);
+    List<TestRecordWithoutLogicalTypes> actual = read(TestRecordWithoutLogicalTypes.getClassSchema(), data);
 
-    TestRecordWithoutLogicalTypes expected = new TestRecordWithoutLogicalTypes(
-        true,
-        34,
-        35L,
-        3.14F,
-        3019.34,
-        null,
-        new DateConversion().toInt(date, null, null),
-        new TimeConversion().toInt(time, null, null),
+    TestRecordWithoutLogicalTypes expected = new TestRecordWithoutLogicalTypes(true, 34, 35L, 3.14F, 3019.34, null,
+        new DateConversion().toInt(date, null, null), new TimeConversion().toInt(time, null, null),
         new TimestampConversion().toLong(timestamp, null, null),
-        new Conversions.DecimalConversion().toBytes(decimal, null, LogicalTypes.decimal(9, 2))
-    );
+        new Conversions.DecimalConversion().toBytes(decimal, null, LogicalTypes.decimal(9, 2)));
 
     Assert.assertEquals("Should match written record", expected, actual.get(0));
   }
 
-  private <D> List<D> read(Schema schema, File file)
-      throws IOException {
+  private <D> List<D> read(Schema schema, File file) throws IOException {
     DatumReader<D> reader = newReader(schema);
     List<D> data = new ArrayList<>();
 
@@ -340,8 +250,7 @@ public class TestSpecificLogicalTypes {
   }
 
   @SuppressWarnings("unchecked")
-  private <D extends SpecificRecord> File write(Schema schema, D... data)
-      throws IOException {
+  private <D extends SpecificRecord> File write(Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = SpecificData.get().createDatumWriter(schema);
 

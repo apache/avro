@@ -26,7 +26,8 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
-/** An {@link org.apache.hadoop.mapreduce.OutputFormat} that writes Avro data to
+/**
+ * An {@link org.apache.hadoop.mapreduce.OutputFormat} that writes Avro data to
  * Trevni files.
  *
  * This implement was modeled off
@@ -35,17 +36,20 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  *
  * FileOutputFormat for writing Trevni container files.
  *
- * <p>Since Trevni container files only contain records (not key/value pairs), this output
- * format ignores the value.</p>
+ * <p>
+ * Since Trevni container files only contain records (not key/value pairs), this
+ * output format ignores the value.
+ * </p>
  *
  * @param <T> The (java) type of the Trevni data to write.
  *
- * <p>Writes a directory of files per task, each comprising a single filesystem
- * block.  To reduce the number of files, increase the default filesystem block
- * size for the job.  Each task also requires enough memory to buffer a
- * filesystem block.
+ *        <p>
+ *        Writes a directory of files per task, each comprising a single
+ *        filesystem block. To reduce the number of files, increase the default
+ *        filesystem block size for the job. Each task also requires enough
+ *        memory to buffer a filesystem block.
  */
-public class AvroTrevniKeyOutputFormat <T> extends FileOutputFormat<AvroKey<T>, NullWritable> {
+public class AvroTrevniKeyOutputFormat<T> extends FileOutputFormat<AvroKey<T>, NullWritable> {
 
   @Override
   public RecordWriter<AvroKey<T>, NullWritable> getRecordWriter(TaskAttemptContext context)

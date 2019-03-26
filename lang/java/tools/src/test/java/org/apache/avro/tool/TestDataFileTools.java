@@ -65,12 +65,12 @@ public class TestDataFileTools {
     sampleFile = new File(DIR.getRoot(), TestDataFileTools.class.getName() + ".avro");
     schema = Schema.create(Type.INT);
     schemaFile = new File(DIR.getRoot(), "schema-temp.schema");
-    try(FileWriter fw = new FileWriter(schemaFile)) {
+    try (FileWriter fw = new FileWriter(schemaFile)) {
       fw.append(schema.toString());
     }
 
     StringBuilder builder = new StringBuilder();
-    try(DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>(schema))) {
+    try (DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>(schema))) {
       writer.setMeta(KEY_NEEDING_ESCAPES, "");
       writer.create(schema, sampleFile);
 
@@ -91,9 +91,7 @@ public class TestDataFileTools {
   private String run(Tool tool, InputStream stdin, String... args) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream p = new PrintStream(baos);
-    tool.run(
-        stdin,
-        p, // stdout
+    tool.run(stdin, p, // stdout
         null, // stderr
         Arrays.asList(args));
     return baos.toString("UTF-8").replace("\r", "");
@@ -101,8 +99,7 @@ public class TestDataFileTools {
 
   @Test
   public void testRead() throws Exception {
-    assertEquals(jsonData,
-        run(new DataFileReadTool(), sampleFile.getPath()));
+    assertEquals(jsonData, run(new DataFileReadTool(), sampleFile.getPath()));
   }
 
   @Test
@@ -113,35 +110,30 @@ public class TestDataFileTools {
 
   @Test
   public void testReadToJsonPretty() throws Exception {
-    assertEquals(jsonData,
-        run(new DataFileReadTool(), "--pretty", sampleFile.getPath()));
+    assertEquals(jsonData, run(new DataFileReadTool(), "--pretty", sampleFile.getPath()));
   }
 
   @Test
   public void testReadHeadDefaultCount() throws Exception {
     String expectedJson = jsonData.substring(0, 20); // first 10 numbers
-    assertEquals(expectedJson,
-      run(new DataFileReadTool(), "--head", sampleFile.getPath()));
+    assertEquals(expectedJson, run(new DataFileReadTool(), "--head", sampleFile.getPath()));
   }
 
   @Test
   public void testReadHeadEquals3Count() throws Exception {
     String expectedJson = jsonData.substring(0, 6); // first 3 numbers
-    assertEquals(expectedJson,
-      run(new DataFileReadTool(), "--head=3", sampleFile.getPath()));
+    assertEquals(expectedJson, run(new DataFileReadTool(), "--head=3", sampleFile.getPath()));
   }
 
   @Test
   public void testReadHeadSpace5Count() throws Exception {
     String expectedJson = jsonData.substring(0, 10); // first 5 numbers
-    assertEquals(expectedJson,
-      run(new DataFileReadTool(), "--head", "5", sampleFile.getPath()));
+    assertEquals(expectedJson, run(new DataFileReadTool(), "--head", "5", sampleFile.getPath()));
   }
 
   @Test
   public void testReadHeadLongCount() throws Exception {
-    assertEquals(jsonData,
-      run(new DataFileReadTool(), "--head=3000000000", sampleFile.getPath()));
+    assertEquals(jsonData, run(new DataFileReadTool(), "--head=3000000000", sampleFile.getPath()));
   }
 
   @Test
@@ -157,8 +149,8 @@ public class TestDataFileTools {
   @Test
   public void testGetMeta() throws Exception {
     String output = run(new DataFileGetMetaTool(), sampleFile.getPath());
-    assertTrue(output, output.contains("avro.schema\t"+schema.toString()+"\n"));
-    assertTrue(output, output.contains(ESCAPED_KEY+"\t\n"));
+    assertTrue(output, output.contains("avro.schema\t" + schema.toString() + "\n"));
+    assertTrue(output, output.contains(ESCAPED_KEY + "\t\n"));
   }
 
   @Test
@@ -169,8 +161,7 @@ public class TestDataFileTools {
 
   @Test
   public void testGetSchema() throws Exception {
-    assertEquals(schema.toString() + "\n",
-        run(new DataFileGetSchemaTool(), sampleFile.getPath()));
+    assertEquals(schema.toString() + "\n", run(new DataFileGetSchemaTool(), sampleFile.getPath()));
   }
 
   @Test
@@ -183,26 +174,22 @@ public class TestDataFileTools {
     testWrite("plain", Collections.emptyList(), "null");
   }
 
-  public void testWrite(String name, List<String> extra, String expectedCodec)
-      throws Exception {
-      testWrite(name, extra, expectedCodec, "-schema", schema.toString());
-      testWrite(name, extra, expectedCodec, "-schema-file", schemaFile.toString());
+  public void testWrite(String name, List<String> extra, String expectedCodec) throws Exception {
+    testWrite(name, extra, expectedCodec, "-schema", schema.toString());
+    testWrite(name, extra, expectedCodec, "-schema-file", schemaFile.toString());
   }
 
-  public void testWrite(String name, List<String> extra, String expectedCodec, String... extraArgs)
-  throws Exception {
+  public void testWrite(String name, List<String> extra, String expectedCodec, String... extraArgs) throws Exception {
     File outFile = new File(DIR.getRoot(), TestDataFileTools.class + ".testWrite." + name + ".avro");
-    try(FileOutputStream fout = new FileOutputStream(outFile)) {
-      try(PrintStream out = new PrintStream(fout)) {
+    try (FileOutputStream fout = new FileOutputStream(outFile)) {
+      try (PrintStream out = new PrintStream(fout)) {
         List<String> args = new ArrayList<>();
         Collections.addAll(args, extraArgs);
         args.add("-");
         args.addAll(extra);
-        new DataFileWriteTool().run(
-                new ByteArrayInputStream(jsonData.getBytes("UTF-8")),
-                new PrintStream(out), // stdout
-                null, // stderr
-                args);
+        new DataFileWriteTool().run(new ByteArrayInputStream(jsonData.getBytes("UTF-8")), new PrintStream(out), // stdout
+            null, // stderr
+            args);
       }
     }
 
@@ -224,32 +211,28 @@ public class TestDataFileTools {
     }
   }
 
-  @Test(expected=IOException.class)
+  @Test(expected = IOException.class)
   public void testFailureOnWritingPartialJSONValues() throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     PrintStream out = new PrintStream(baos);
-    new DataFileWriteTool().run(
-        new ByteArrayInputStream("{".getBytes("UTF-8")),
-        new PrintStream(out), // stdout
+    new DataFileWriteTool().run(new ByteArrayInputStream("{".getBytes("UTF-8")), new PrintStream(out), // stdout
         null, // stderr
-        Arrays.asList("-schema", "{ \"type\":\"record\", \"fields\":" +
-                      "[{\"name\":\"foo\", \"type\":\"string\"}], " +
-                      "\"name\":\"boring\" }", "-"));
+        Arrays.asList("-schema", "{ \"type\":\"record\", \"fields\":" + "[{\"name\":\"foo\", \"type\":\"string\"}], "
+            + "\"name\":\"boring\" }", "-"));
   }
 
   @Test
   public void testWritingZeroJsonValues() throws Exception {
-    File outFile = writeToAvroFile("zerojsonvalues",
-        schema.toString(),
-        "");
+    File outFile = writeToAvroFile("zerojsonvalues", schema.toString(), "");
     assertEquals(0, countRecords(outFile));
   }
 
   private int countRecords(File outFile) throws IOException {
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
-    try(DataFileReader<Object> fileReader = new DataFileReader<>(outFile, reader)) {
+    try (DataFileReader<Object> fileReader = new DataFileReader<>(outFile, reader)) {
       int i = 0;
-      for (@SuppressWarnings("unused") Object datum : fileReader) {
+      for (@SuppressWarnings("unused")
+      Object datum : fileReader) {
         i++;
       }
       return i;
@@ -258,22 +241,18 @@ public class TestDataFileTools {
 
   @Test
   public void testDifferentSeparatorsBetweenJsonRecords() throws Exception {
-    File outFile = writeToAvroFile(
-        "separators",
-        "{ \"type\":\"array\", \"items\":\"int\" }",
+    File outFile = writeToAvroFile("separators", "{ \"type\":\"array\", \"items\":\"int\" }",
         "[]    [] []\n[][3]     ");
     assertEquals(5, countRecords(outFile));
   }
 
   public File writeToAvroFile(String testName, String schema, String json) throws Exception {
     File outFile = new File(DIR.getRoot(), TestDataFileTools.class + "." + testName + ".avro");
-    try(FileOutputStream fout = new FileOutputStream(outFile)) {
-      try(PrintStream out = new PrintStream(fout)) {
-        new DataFileWriteTool().run(
-                new ByteArrayInputStream(json.getBytes("UTF-8")),
-                new PrintStream(out), // stdout
-                null, // stderr
-                Arrays.asList("-schema", schema, "-"));
+    try (FileOutputStream fout = new FileOutputStream(outFile)) {
+      try (PrintStream out = new PrintStream(fout)) {
+        new DataFileWriteTool().run(new ByteArrayInputStream(json.getBytes("UTF-8")), new PrintStream(out), // stdout
+            null, // stderr
+            Arrays.asList("-schema", schema, "-"));
       }
     }
     return outFile;

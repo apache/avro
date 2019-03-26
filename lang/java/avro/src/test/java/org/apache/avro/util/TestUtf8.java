@@ -25,16 +25,18 @@ import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 public class TestUtf8 {
-  @Test public void testByteConstructor() throws Exception {
+  @Test
+  public void testByteConstructor() throws Exception {
     byte[] bs = "Foo".getBytes(StandardCharsets.UTF_8);
     Utf8 u = new Utf8(bs);
     assertEquals(bs.length, u.getByteLength());
-    for (int i=0; i<bs.length; i++) {
+    for (int i = 0; i < bs.length; i++) {
       assertEquals(bs[i], u.getBytes()[i]);
     }
   }
 
-  @Test public void testArrayReusedWhenLargerThanRequestedSize() {
+  @Test
+  public void testArrayReusedWhenLargerThanRequestedSize() {
     byte[] bs = "55555".getBytes(StandardCharsets.UTF_8);
     Utf8 u = new Utf8(bs);
     assertEquals(5, u.getByteLength());

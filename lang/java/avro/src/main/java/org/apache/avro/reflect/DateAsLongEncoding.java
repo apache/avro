@@ -25,10 +25,9 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
 /**
- * This encoder/decoder writes a java.util.Date object as a long to
- * avro and reads a Date object from long.
- * The long stores the number of milliseconds since January 1, 1970, 00:00:00 GMT
- * represented by the Date object.
+ * This encoder/decoder writes a java.util.Date object as a long to avro and
+ * reads a Date object from long. The long stores the number of milliseconds
+ * since January 1, 1970, 00:00:00 GMT represented by the Date object.
  */
 public class DateAsLongEncoding extends CustomEncoding<Date> {
   {
@@ -38,16 +37,16 @@ public class DateAsLongEncoding extends CustomEncoding<Date> {
 
   @Override
   protected final void write(Object datum, Encoder out) throws IOException {
-    out.writeLong(((Date)datum).getTime());
+    out.writeLong(((Date) datum).getTime());
   }
 
   @Override
   protected final Date read(Object reuse, Decoder in) throws IOException {
     if (reuse instanceof Date) {
-      ((Date)reuse).setTime(in.readLong());
-      return (Date)reuse;
-    }
-    else return new Date(in.readLong());
+      ((Date) reuse).setTime(in.readLong());
+      return (Date) reuse;
+    } else
+      return new Date(in.readLong());
   }
 
 }

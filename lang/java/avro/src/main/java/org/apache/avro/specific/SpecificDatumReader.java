@@ -25,7 +25,10 @@ import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.util.ClassUtils;
 import java.io.IOException;
 
-/** {@link org.apache.avro.io.DatumReader DatumReader} for generated Java classes. */
+/**
+ * {@link org.apache.avro.io.DatumReader DatumReader} for generated Java
+ * classes.
+ */
 public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   public SpecificDatumReader() {
     this(null, null, SpecificData.get());
@@ -47,10 +50,10 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     this(writer, reader, SpecificData.getForSchema(reader));
   }
 
-  /** Construct given writer's schema, reader's schema, and a {@link
-   * SpecificData}. */
-  public SpecificDatumReader(Schema writer, Schema reader,
-                             SpecificData data) {
+  /**
+   * Construct given writer's schema, reader's schema, and a {@link SpecificData}.
+   */
+  public SpecificDatumReader(Schema writer, Schema reader, SpecificData data) {
     super(writer, reader, data);
   }
 
@@ -60,14 +63,15 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   }
 
   /** Return the contained {@link SpecificData}. */
-  public SpecificData getSpecificData() { return (SpecificData)getData(); }
+  public SpecificData getSpecificData() {
+    return (SpecificData) getData();
+  }
 
   @Override
   public void setSchema(Schema actual) {
     // if expected is unset and actual is a specific record,
     // then default expected to schema of currently loaded class
-    if (getExpected() == null && actual != null
-        && actual.getType() == Schema.Type.RECORD) {
+    if (getExpected() == null && actual != null && actual.getType() == Schema.Type.RECORD) {
       SpecificData data = getSpecificData();
       Class c = data.getClass(actual);
       if (c != null && SpecificRecord.class.isAssignableFrom(c))
@@ -76,7 +80,8 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     super.setSchema(actual);
   }
 
-  @Override protected Class findStringClass(Schema schema) {
+  @Override
+  protected Class findStringClass(Schema schema) {
     Class stringClass = null;
     switch (schema.getType()) {
     case STRING:
@@ -93,7 +98,8 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
   private Class getPropAsClass(Schema schema, String prop) {
     String name = schema.getProp(prop);
-    if (name == null) return null;
+    if (name == null)
+      return null;
     try {
       return ClassUtils.forName(getData().getClassLoader(), name);
     } catch (ClassNotFoundException e) {
@@ -102,8 +108,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   }
 
   @Override
-  protected Object readRecord(Object old, Schema expected, ResolvingDecoder in)
-    throws IOException {
+  protected Object readRecord(Object old, Schema expected, ResolvingDecoder in) throws IOException {
     SpecificData data = getSpecificData();
     if (data.useCustomCoders()) {
       old = data.newRecord(old, expected);
@@ -119,16 +124,14 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   }
 
   @Override
-  protected void readField(Object r, Schema.Field f, Object oldDatum,
-                           ResolvingDecoder in, Object state)
+  protected void readField(Object r, Schema.Field f, Object oldDatum, ResolvingDecoder in, Object state)
       throws IOException {
     if (r instanceof SpecificRecordBase) {
       Conversion<?> conversion = ((SpecificRecordBase) r).getConversion(f.pos());
 
       Object datum;
       if (conversion != null) {
-        datum = readWithConversion(
-            oldDatum, f.schema(), f.schema().getLogicalType(), conversion, in);
+        datum = readWithConversion(oldDatum, f.schema(), f.schema().getLogicalType(), conversion, in);
       } else {
         datum = readWithoutConversion(oldDatum, f.schema(), in);
       }
@@ -140,4 +143,3 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
     }
   }
 }
-

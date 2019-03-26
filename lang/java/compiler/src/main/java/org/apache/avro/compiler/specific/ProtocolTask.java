@@ -42,19 +42,28 @@ public class ProtocolTask extends Task {
   private final ArrayList<FileSet> filesets = new ArrayList<>();
 
   /** Set the schema file. */
-  public void setFile(File file) { this.src = file; }
+  public void setFile(File file) {
+    this.src = file;
+  }
 
   /** Set the output directory */
-  public void setDestdir(File dir) { this.dest = dir; }
+  public void setDestdir(File dir) {
+    this.dest = dir;
+  }
 
   /** Set the string type. */
-  public void setStringType(StringType type) { this.stringType = type; }
+  public void setStringType(StringType type) {
+    this.stringType = type;
+  }
 
   /** Get the string type. */
-  public StringType getStringType() { return this.stringType; }
+  public StringType getStringType() {
+    return this.stringType;
+  }
 
   /** Sets the date/time logical type type (either JODA or JSR310) */
-  public void setDateTimeLogicalTypeImplementation(DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
+  public void setDateTimeLogicalTypeImplementation(
+      DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
     this.dateTimeLogicalTypeImplementation = dateTimeLogicalTypeImplementation;
   }
 
@@ -64,12 +73,14 @@ public class ProtocolTask extends Task {
   }
 
   /** Add a fileset. */
-  public void addFileset(FileSet set) { filesets.add(set); }
+  public void addFileset(FileSet set) {
+    filesets.add(set);
+  }
 
   /** Run the compiler. */
   @Override
   public void execute() {
-    if (src == null && filesets.size()==0)
+    if (src == null && filesets.size() == 0)
       throw new BuildException("No file or fileset specified.");
 
     if (src != null)
@@ -101,4 +112,3 @@ public class ProtocolTask extends Task {
     }
   }
 }
-

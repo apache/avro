@@ -28,22 +28,23 @@ import org.apache.avro.AvroRuntimeException;
 /**
  * An {@link Encoder} for Avro's binary encoding.
  * <p/>
- * This implementation buffers output to enhance performance.
- * Output may not appear on the underlying output until flush() is called.
+ * This implementation buffers output to enhance performance. Output may not
+ * appear on the underlying output until flush() is called.
  * <p/>
  * {@link DirectBinaryEncoder} can be used in place of this implementation if
- * the buffering semantics are not desired, and the performance difference
- * is acceptable.
+ * the buffering semantics are not desired, and the performance difference is
+ * acceptable.
  * <p/>
  * To construct or reconfigure, use
  * {@link EncoderFactory#binaryEncoder(OutputStream, BinaryEncoder)}.
  * <p/>
- * To change the buffer size, configure the factory instance used to
- * create instances with {@link EncoderFactory#configureBufferSize(int)}
- *  @see Encoder
- *  @see EncoderFactory
- *  @see BlockingBinaryEncoder
- *  @see DirectBinaryEncoder
+ * To change the buffer size, configure the factory instance used to create
+ * instances with {@link EncoderFactory#configureBufferSize(int)}
+ * 
+ * @see Encoder
+ * @see EncoderFactory
+ * @see BlockingBinaryEncoder
+ * @see DirectBinaryEncoder
  */
 public class BufferedBinaryEncoder extends BinaryEncoder {
   private byte[] buf;
@@ -59,7 +60,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     if (null == out)
       throw new NullPointerException("OutputStream cannot be null!");
     if (null != this.sink) {
-      if ( pos > 0) {
+      if (pos > 0) {
         try {
           flushBuffer();
         } catch (IOException e) {
@@ -85,8 +86,9 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     sink.innerFlush();
   }
 
-  /** Flushes the internal buffer to the underlying output.
-   * Does not flush the underlying output.
+  /**
+   * Flushes the internal buffer to the underlying output. Does not flush the
+   * underlying output.
    */
   private void flushBuffer() throws IOException {
     if (pos > 0) {
@@ -98,10 +100,12 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     }
   }
 
-  /** Ensures that the buffer has at least num bytes free to write to between its
-   * current position and the end. This will not expand the buffer larger than
-   * its current size, for writes larger than or near to the size of the buffer,
-   * we flush the buffer and write directly to the output, bypassing the buffer.
+  /**
+   * Ensures that the buffer has at least num bytes free to write to between its
+   * current position and the end. This will not expand the buffer larger than its
+   * current size, for writes larger than or near to the size of the buffer, we
+   * flush the buffer and write directly to the output, bypassing the buffer.
+   * 
    * @param num
    * @throws IOException
    */
@@ -148,7 +152,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   @Override
   public void writeFixed(byte[] bytes, int start, int len) throws IOException {
     if (len > bulkLimit) {
-      //too big, write direct
+      // too big, write direct
       flushBuffer();
       sink.innerWrite(bytes, start, len);
       return;
@@ -163,7 +167,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
     ByteBuffer readOnlyBytes = bytes.asReadOnlyBuffer();
     if (!bytes.hasArray() && bytes.remaining() > bulkLimit) {
       flushBuffer();
-      sink.innerWrite(readOnlyBytes);                     // bypass the readOnlyBytes
+      sink.innerWrite(readOnlyBytes); // bypass the readOnlyBytes
     } else {
       super.writeFixed(readOnlyBytes);
     }
@@ -187,8 +191,8 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   }
 
   /**
-   * ByteSink abstracts the destination of written data from the core workings
-   * of BinaryEncoder.
+   * ByteSink abstracts the destination of written data from the core workings of
+   * BinaryEncoder.
    * <p/>
    * Currently the only destination option is an OutputStream, but we may later
    * want to handle other constructs or specialize for certain OutputStream
@@ -196,7 +200,9 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
    * <p/>
    */
   private abstract static class ByteSink {
-    protected ByteSink() {}
+    protected ByteSink() {
+    }
+
     /** Write data from bytes, starting at off, for len bytes **/
     protected abstract void innerWrite(byte[] bytes, int off, int len) throws IOException;
 
@@ -209,20 +215,23 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   static class OutputStreamSink extends ByteSink {
     private final OutputStream out;
     private final WritableByteChannel channel;
+
     private OutputStreamSink(OutputStream out) {
       super();
       this.out = out;
       channel = Channels.newChannel(out);
     }
+
     @Override
-    protected void innerWrite(byte[] bytes, int off, int len)
-        throws IOException {
+    protected void innerWrite(byte[] bytes, int off, int len) throws IOException {
       out.write(bytes, off, len);
     }
+
     @Override
     protected void innerFlush() throws IOException {
       out.flush();
     }
+
     @Override
     protected void innerWrite(ByteBuffer buff) throws IOException {
       channel.write(buff);

@@ -35,16 +35,14 @@ public final class ValidateLatest implements SchemaValidator {
   private final SchemaValidationStrategy strategy;
 
   /**
-   * @param strategy
-   *          The strategy to use for validation of pairwise schemas.
+   * @param strategy The strategy to use for validation of pairwise schemas.
    */
   public ValidateLatest(SchemaValidationStrategy strategy) {
     this.strategy = strategy;
   }
 
   @Override
-  public void validate(Schema toValidate, Iterable<Schema> schemasInOrder)
-      throws SchemaValidationException {
+  public void validate(Schema toValidate, Iterable<Schema> schemasInOrder) throws SchemaValidationException {
     Iterator<Schema> schemas = schemasInOrder.iterator();
     if (schemas.hasNext()) {
       Schema existing = schemas.next();

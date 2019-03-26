@@ -45,17 +45,14 @@ import org.apache.avro.ipc.stats.StatsServlet;
 import org.junit.Test;
 
 public class TestStatsPluginAndServlet {
-  Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", "
-      + "\"messages\": { \"m\": {"
-      + "   \"request\": [{\"name\": \"x\", \"type\": \"int\"}], "
-      + "   \"response\": \"int\"} } }");
+  Protocol protocol = Protocol.parse("" + "{\"protocol\": \"Minimal\", " + "\"messages\": { \"m\": {"
+      + "   \"request\": [{\"name\": \"x\", \"type\": \"int\"}], " + "   \"response\": \"int\"} } }");
   Message message = protocol.getMessages().get("m");
 
-  private static final long MS = 1000*1000L;
+  private static final long MS = 1000 * 1000L;
 
   /** Returns an HTML string. */
-  private String generateServletResponse(StatsPlugin statsPlugin)
-      throws IOException {
+  private String generateServletResponse(StatsPlugin statsPlugin) throws IOException {
     StatsServlet servlet;
     try {
       servlet = new StatsServlet(statsPlugin);
@@ -79,8 +76,7 @@ public class TestStatsPluginAndServlet {
     }
 
     @Override
-    public Object respond(Message message, Object request)
-        throws AvroRemoteException {
+    public Object respond(Message message, Object request) throws AvroRemoteException {
       assertEquals(0, ((GenericRecord) request).get("x"));
       return 1;
     }
@@ -88,8 +84,7 @@ public class TestStatsPluginAndServlet {
   }
 
   private void makeRequest(Transceiver t) throws IOException {
-    GenericRecord params = new GenericData.Record(protocol.getMessages().get(
-        "m").getRequest());
+    GenericRecord params = new GenericData.Record(protocol.getMessages().get("m").getRequest());
     params.put("x", 0);
     GenericRequestor r = new GenericRequestor(protocol, t);
     assertEquals(1, r.request("m", params));
@@ -113,19 +108,18 @@ public class TestStatsPluginAndServlet {
   @Test
   public void testMultipleRPCs() throws IOException {
     org.apache.avro.ipc.stats.FakeTicks t = new org.apache.avro.ipc.stats.FakeTicks();
-    StatsPlugin statsPlugin = new StatsPlugin(t, StatsPlugin.LATENCY_SEGMENTER,
-        StatsPlugin.PAYLOAD_SEGMENTER);
+    StatsPlugin statsPlugin = new StatsPlugin(t, StatsPlugin.LATENCY_SEGMENTER, StatsPlugin.PAYLOAD_SEGMENTER);
     RPCContext context1 = makeContext();
     RPCContext context2 = makeContext();
     statsPlugin.serverReceiveRequest(context1);
-    t.passTime(100*MS); // first takes 100ms
+    t.passTime(100 * MS); // first takes 100ms
     statsPlugin.serverReceiveRequest(context2);
     String r = generateServletResponse(statsPlugin);
     // Check in progress RPCs
     assertTrue(r.contains("m: 0ms"));
     assertTrue(r.contains("m: 100ms"));
     statsPlugin.serverSendResponse(context1);
-    t.passTime(900*MS); // second takes 900ms
+    t.passTime(900 * MS); // second takes 900ms
     statsPlugin.serverSendResponse(context2);
     r = generateServletResponse(statsPlugin);
     assertTrue(r.contains("Average: 500.0ms"));
@@ -157,10 +151,9 @@ public class TestStatsPluginAndServlet {
     }
 
     @Override
-    public Object respond(Message message, Object request)
-        throws AvroRemoteException {
+    public Object respond(Message message, Object request) throws AvroRemoteException {
       try {
-        Thread.sleep((Long)((GenericRecord)request).get("millis"));
+        Thread.sleep((Long) ((GenericRecord) request).get("millis"));
       } catch (InterruptedException e) {
         throw new AvroRemoteException(e);
       }
@@ -169,12 +162,13 @@ public class TestStatsPluginAndServlet {
   }
 
   /**
-   * Demo program for using RPC stats. This automatically generates
-   * client RPC requests. Alternatively a can be used (as below)
-   * to trigger RPCs.
+   * Demo program for using RPC stats. This automatically generates client RPC
+   * requests. Alternatively a can be used (as below) to trigger RPCs.
+   * 
    * <pre>
    * java -jar build/avro-tools-*.jar rpcsend '{"protocol":"sleepy","namespace":null,"types":[],"messages":{"sleep":{"request":[{"name":"millis","type":"long"}],"response":"null"}}}' sleep localhost 7002 '{"millis": 20000}'
    * </pre>
+   * 
    * @param args
    * @throws Exception
    */
@@ -182,11 +176,9 @@ public class TestStatsPluginAndServlet {
     if (args.length == 0) {
       args = new String[] { "7002", "7003" };
     }
-    Protocol protocol = Protocol.parse("{\"protocol\": \"sleepy\", "
-        + "\"messages\": { \"sleep\": {"
-        + "   \"request\": [{\"name\": \"millis\", \"type\": \"long\"}," +
-          "{\"name\": \"data\", \"type\": \"bytes\"}], "
-        + "   \"response\": \"null\"} } }");
+    Protocol protocol = Protocol.parse("{\"protocol\": \"sleepy\", " + "\"messages\": { \"sleep\": {"
+        + "   \"request\": [{\"name\": \"millis\", \"type\": \"long\"},"
+        + "{\"name\": \"data\", \"type\": \"bytes\"}], " + "   \"response\": \"null\"} } }");
     Responder r = new SleepyResponder(protocol);
     StatsPlugin p = new StatsPlugin();
     r.addRPCPlugin(p);
@@ -197,14 +189,12 @@ public class TestStatsPluginAndServlet {
 
     StatsServer ss = new StatsServer(p, 8080);
 
-    HttpTransceiver trans = new HttpTransceiver(
-        new URL("http://localhost:" + Integer.parseInt(args[0])));
+    HttpTransceiver trans = new HttpTransceiver(new URL("http://localhost:" + Integer.parseInt(args[0])));
     GenericRequestor req = new GenericRequestor(protocol, trans);
 
-    while(true) {
+    while (true) {
       Thread.sleep(1000);
-      GenericRecord params = new GenericData.Record(protocol.getMessages().get(
-        "sleep").getRequest());
+      GenericRecord params = new GenericData.Record(protocol.getMessages().get("sleep").getRequest());
       Random rand = new Random();
       params.put("millis", Math.abs(rand.nextLong()) % 1000);
       int payloadSize = Math.abs(rand.nextInt()) % 10000;

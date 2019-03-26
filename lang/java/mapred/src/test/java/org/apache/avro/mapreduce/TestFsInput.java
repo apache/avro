@@ -51,7 +51,8 @@ public class TestFsInput {
     conf.set("fs.default.name", "file:///");
     file = new File(DIR.getRoot(), "file.txt");
 
-    try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8")))) {
+    try (PrintWriter out = new PrintWriter(
+        new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8")))) {
       out.print(FILE_CONTENTS);
     }
     fsInput = new FsInput(new Path(file.getPath()), conf);

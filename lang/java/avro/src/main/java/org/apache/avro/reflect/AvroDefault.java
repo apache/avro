@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * Specifies a default value for a field as a JSON string.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
+@Target({ ElementType.FIELD })
 public @interface AvroDefault {
   String value();
 }

@@ -37,7 +37,8 @@ import org.apache.avro.util.Utf8;
 public abstract class BinaryEncoder extends Encoder {
 
   @Override
-  public void writeNull() throws IOException {}
+  public void writeNull() throws IOException {
+  }
 
   @Override
   public void writeString(Utf8 utf8) throws IOException {
@@ -82,7 +83,8 @@ public abstract class BinaryEncoder extends Encoder {
   }
 
   @Override
-  public void writeArrayStart() throws IOException {}
+  public void writeArrayStart() throws IOException {
+  }
 
   @Override
   public void setItemCount(long itemCount) throws IOException {
@@ -92,7 +94,8 @@ public abstract class BinaryEncoder extends Encoder {
   }
 
   @Override
-  public void startItem() throws IOException {}
+  public void startItem() throws IOException {
+  }
 
   @Override
   public void writeArrayEnd() throws IOException {
@@ -100,7 +103,8 @@ public abstract class BinaryEncoder extends Encoder {
   }
 
   @Override
-  public void writeMapStart() throws IOException {}
+  public void writeMapStart() throws IOException {
+  }
 
   @Override
   public void writeMapEnd() throws IOException {
@@ -124,4 +128,3 @@ public abstract class BinaryEncoder extends Encoder {
   public abstract int bytesBuffered();
 
 }
-

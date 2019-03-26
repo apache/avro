@@ -57,7 +57,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     executeMojo(schemaPom);
 
     File outputDir = new File(getBasedir(), "target/test-harness/schemas/org/apache/avro/entities");
-    for(File file : outputDir.listFiles()) {
+    for (File file : outputDir.listFiles()) {
       assertTrue(file.getName().contains(".avsc"));
     }
   }
@@ -73,7 +73,7 @@ public class TestInduceMojo extends AbstractMojoTestCase {
     executeMojo(protocolPom);
 
     File outputDir = new File(getBasedir(), "target/test-harness/protocol/org/apache/avro/protocols");
-    for(File file : outputDir.listFiles()) {
+    for (File file : outputDir.listFiles()) {
       assertTrue(file.getName().contains(".avpr"));
     }
   }

@@ -39,14 +39,14 @@ import static org.junit.Assert.assertEquals;
 
 public class TestAvroMarshaller {
   private final TestRecord record = TestRecord.newBuilder().setName("foo").setKind(Kind.FOO)
-      .setArrayOfLongs(Arrays.asList(42L, 424L, 4242L)).setHash(new MD5(new byte[]{4, 2, 4, 2}))
+      .setArrayOfLongs(Arrays.asList(42L, 424L, 4242L)).setHash(new MD5(new byte[] { 4, 2, 4, 2 }))
       .setNullableHash(null).build();
   private final Protocol.Message message = TestService.PROTOCOL.getMessages().get("echo");
   private Random random = new Random();
 
-  private void readPratialAndDrain(int partialToRead, InputStream inputStream, OutputStream target)
-      throws IOException {
-    // read specified partial bytes from request InputStream to target and then drain the rest.
+  private void readPratialAndDrain(int partialToRead, InputStream inputStream, OutputStream target) throws IOException {
+    // read specified partial bytes from request InputStream to target and then
+    // drain the rest.
     for (int i = 0; i < partialToRead; i++) {
       int readByte = inputStream.read();
       if (readByte >= 0) {
@@ -62,7 +62,7 @@ public class TestAvroMarshaller {
   @Test
   public void testAvroRequestReadPartialAndDrain() throws IOException {
     AvroRequestMarshaller requestMarshaller = new AvroRequestMarshaller(message);
-    InputStream requestInputStream = requestMarshaller.stream(new Object[]{record});
+    InputStream requestInputStream = requestMarshaller.stream(new Object[] { record });
     ByteArrayOutputStream requestOutputStream = new ByteArrayOutputStream();
     readPratialAndDrain(random.nextInt(7) + 1, requestInputStream, requestOutputStream);
     InputStream serialized = new ByteArrayInputStream(requestOutputStream.toByteArray());

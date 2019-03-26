@@ -27,13 +27,11 @@ public class SchemaValidationException extends Exception {
     super(getMessage(reader, writer));
   }
 
-  public SchemaValidationException(Schema reader, Schema writer,
-      Throwable cause) {
+  public SchemaValidationException(Schema reader, Schema writer, Throwable cause) {
     super(getMessage(reader, writer), cause);
   }
 
   private static String getMessage(Schema reader, Schema writer) {
-    return "Unable to read schema: \n"
-        + writer.toString(true) + "\nusing schema:\n" + reader.toString(true);
+    return "Unable to read schema: \n" + writer.toString(true) + "\nusing schema:\n" + reader.toString(true);
   }
 }

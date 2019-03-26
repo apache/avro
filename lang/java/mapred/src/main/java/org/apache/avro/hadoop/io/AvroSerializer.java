@@ -32,14 +32,18 @@ import org.apache.hadoop.io.serializer.Serializer;
 /**
  * Serializes AvroWrapper objects within Hadoop.
  *
- * <p>Keys and values containing Avro types are more efficiently serialized outside of the
- * WritableSerialization model, so they are wrapped in {@link
- * org.apache.avro.mapred.AvroWrapper} objects and serialization is handled by this
- * class.</p>
+ * <p>
+ * Keys and values containing Avro types are more efficiently serialized outside
+ * of the WritableSerialization model, so they are wrapped in
+ * {@link org.apache.avro.mapred.AvroWrapper} objects and serialization is
+ * handled by this class.
+ * </p>
  *
- * <p>MapReduce jobs that use AvroWrapper objects as keys or values need to be configured
- * with {@link AvroSerialization}.  Use {@link
- * org.apache.avro.mapreduce.AvroJob} to help with Job configuration.</p>
+ * <p>
+ * MapReduce jobs that use AvroWrapper objects as keys or values need to be
+ * configured with {@link AvroSerialization}. Use
+ * {@link org.apache.avro.mapreduce.AvroJob} to help with Job configuration.
+ * </p>
  *
  * @param <T> The Java type of the Avro data.
  */
@@ -77,7 +81,7 @@ public class AvroSerializer<T> implements Serializer<AvroWrapper<T>> {
    * Constructor.
    *
    * @param writerSchema The writer schema for the Avro data being serialized.
-   * @param datumWriter The datum writer to use for serialization.
+   * @param datumWriter  The datum writer to use for serialization.
    */
   public AvroSerializer(Schema writerSchema, DatumWriter<T> datumWriter) {
     if (null == writerSchema) {
@@ -107,8 +111,10 @@ public class AvroSerializer<T> implements Serializer<AvroWrapper<T>> {
   @Override
   public void serialize(AvroWrapper<T> avroWrapper) throws IOException {
     mAvroDatumWriter.write(avroWrapper.datum(), mAvroEncoder);
-    // This would be a lot faster if the Serializer interface had a flush() method and the
-    // Hadoop framework called it when needed.  For now, we'll have to flush on every record.
+    // This would be a lot faster if the Serializer interface had a flush() method
+    // and the
+    // Hadoop framework called it when needed. For now, we'll have to flush on every
+    // record.
     mAvroEncoder.flush();
   }
 

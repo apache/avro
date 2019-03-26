@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-/** Utility to present {@link ByteBuffer} data as an {@link InputStream}.*/
+/** Utility to present {@link ByteBuffer} data as an {@link InputStream}. */
 public class ByteBufferInputStream extends InputStream {
   private List<ByteBuffer> buffers;
   private int current;
@@ -33,18 +33,23 @@ public class ByteBufferInputStream extends InputStream {
     this.buffers = buffers;
   }
 
-  /** @see InputStream#read()
-   * @throws EOFException if EOF is reached. */
+  /**
+   * @see InputStream#read()
+   * @throws EOFException if EOF is reached.
+   */
   @Override
   public int read() throws IOException {
     return getBuffer().get() & 0xff;
   }
 
-  /** @see InputStream#read(byte[], int, int)
-   * @throws EOFException if EOF is reached before reading all the bytes. */
+  /**
+   * @see InputStream#read(byte[], int, int)
+   * @throws EOFException if EOF is reached before reading all the bytes.
+   */
   @Override
   public int read(byte[] b, int off, int len) throws IOException {
-    if (len == 0) return 0;
+    if (len == 0)
+      return 0;
     ByteBuffer buffer = getBuffer();
     int remaining = buffer.remaining();
     if (len > remaining) {
@@ -56,24 +61,30 @@ public class ByteBufferInputStream extends InputStream {
     }
   }
 
-  /** Read a buffer from the input without copying, if possible.
-   * @throws EOFException if EOF is reached before reading all the bytes. */
+  /**
+   * Read a buffer from the input without copying, if possible.
+   * 
+   * @throws EOFException if EOF is reached before reading all the bytes.
+   */
   public ByteBuffer readBuffer(int length) throws IOException {
-    if (length == 0) return ByteBuffer.allocate(0);
+    if (length == 0)
+      return ByteBuffer.allocate(0);
     ByteBuffer buffer = getBuffer();
-    if (buffer.remaining() == length) {           // can return current as-is?
+    if (buffer.remaining() == length) { // can return current as-is?
       current++;
-      return buffer;                              // return w/o copying
+      return buffer; // return w/o copying
     }
     // punt: allocate a new buffer & copy into it
     ByteBuffer result = ByteBuffer.allocate(length);
     int start = 0;
     while (start < length)
-      start += read(result.array(), start, length-start);
+      start += read(result.array(), start, length - start);
     return result;
   }
 
-  /** Returns the next non-empty buffer.
+  /**
+   * Returns the next non-empty buffer.
+   * 
    * @throws EOFException if EOF is reached before reading all the bytes.
    */
   private ByteBuffer getBuffer() throws IOException {
@@ -86,4 +97,3 @@ public class ByteBufferInputStream extends InputStream {
     throw new EOFException();
   }
 }
-

@@ -34,6 +34,7 @@
   <description>Maven plugin for Avro IDL and Specific API Compilers</description>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <pluginTestingVersion>1.3</pluginTestingVersion>
   </properties>
 

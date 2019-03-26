@@ -51,13 +51,10 @@ import org.apache.avro.file.DataFileStream;
 
 public class WordCountUtil {
 
-  public static final String[] LINES = new String[] {
-    "the quick brown fox jumps over the lazy dog",
-    "the cow jumps over the moon",
-    "the rain in spain falls mainly on the plains"
-  };
+  public static final String[] LINES = new String[] { "the quick brown fox jumps over the lazy dog",
+      "the cow jumps over the moon", "the rain in spain falls mainly on the plains" };
 
-  public static final Map<String,Long> COUNTS = new TreeMap<>();
+  public static final Map<String, Long> COUNTS = new TreeMap<>();
   static {
     for (String line : LINES) {
       StringTokenizer tokens = new StringTokenizer(line);
@@ -76,7 +73,7 @@ public class WordCountUtil {
 
   public static void writeLinesFile(File dir) throws IOException {
     DatumWriter<Utf8> writer = new GenericDatumWriter<>();
-    try(DataFileWriter<Utf8> out = new DataFileWriter<>(writer)) {
+    try (DataFileWriter<Utf8> out = new DataFileWriter<>(writer)) {
       out.create(Schema.create(Schema.Type.STRING), dir);
       for (String line : LINES) {
         out.append(new Utf8(line));
@@ -94,7 +91,7 @@ public class WordCountUtil {
     fileLines.getParentFile().mkdirs();
 
     DatumWriter<ByteBuffer> writer = new GenericDatumWriter<>();
-    try(DataFileWriter<ByteBuffer> out = new DataFileWriter<>(writer)) {
+    try (DataFileWriter<ByteBuffer> out = new DataFileWriter<>(writer)) {
       out.create(Schema.create(Schema.Type.BYTES), fileLines);
       for (String line : LINES) {
         out.append(ByteBuffer.wrap(line.getBytes(StandardCharsets.UTF_8)));
@@ -106,7 +103,7 @@ public class WordCountUtil {
     FileUtil.fullyDelete(dir);
     File fileLines = new File(dir, "lines.avro");
     fileLines.getParentFile().mkdirs();
-    try(PrintStream out = new PrintStream(fileLines)) {
+    try (PrintStream out = new PrintStream(fileLines)) {
       for (String line : LINES) {
         out.println(line);
       }
@@ -116,8 +113,8 @@ public class WordCountUtil {
   public static void validateCountsFile(File file) throws Exception {
     int numWords = 0;
 
-    DatumReader<Pair<Utf8,Long>> reader = new SpecificDatumReader<>();
-    try(InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+    DatumReader<Pair<Utf8, Long>> reader = new SpecificDatumReader<>();
+    try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
       try (DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(in, reader)) {
         for (Pair<Utf8, Long> wc : counts) {
           assertEquals(wc.key().toString(), COUNTS.get(wc.key().toString()), wc.value());
@@ -136,18 +133,18 @@ public class WordCountUtil {
 
   public static void validateSortedFile(File file) throws Exception {
     DatumReader<ByteBuffer> reader = new GenericDatumReader<>();
-    try(InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-     try(DataFileStream<ByteBuffer> lines = new DataFileStream<>(in, reader)) {
-       List<String> sortedLines = new ArrayList<>(Arrays.asList(LINES));
-       Collections.sort(sortedLines);
-       for (String expectedLine : sortedLines) {
-         ByteBuffer buf = lines.next();
-         byte[] b = new byte[buf.remaining()];
-         buf.get(b);
-         assertEquals(expectedLine, new String(b, StandardCharsets.UTF_8).trim());
-       }
-       assertFalse(lines.hasNext());
-     }
+    try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+      try (DataFileStream<ByteBuffer> lines = new DataFileStream<>(in, reader)) {
+        List<String> sortedLines = new ArrayList<>(Arrays.asList(LINES));
+        Collections.sort(sortedLines);
+        for (String expectedLine : sortedLines) {
+          ByteBuffer buf = lines.next();
+          byte[] b = new byte[buf.remaining()];
+          buf.get(b);
+          assertEquals(expectedLine, new String(b, StandardCharsets.UTF_8).trim());
+        }
+        assertFalse(lines.hasNext());
+      }
     }
   }
 
@@ -158,7 +155,7 @@ public class WordCountUtil {
 
   private static final String STRING_META_VALUE = "value";
   private static final long LONG_META_VALUE = 666;
-  private static final byte[] BYTES_META_VALUE = new byte[] {(byte)0x00, (byte)0x80, (byte)0xff};
+  private static final byte[] BYTES_META_VALUE = new byte[] { (byte) 0x00, (byte) 0x80, (byte) 0xff };
 
   public static void setMeta(JobConf job) {
     AvroJob.setOutputMeta(job, STRING_KEY, STRING_META_VALUE);

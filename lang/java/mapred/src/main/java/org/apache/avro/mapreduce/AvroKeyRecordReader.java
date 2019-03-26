@@ -27,7 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Reads records from an input split representing a chunk of an Avro container file.
+ * Reads records from an input split representing a chunk of an Avro container
+ * file.
  *
  * @param <T> The (java) type of data in Avro container file.
  */
@@ -40,7 +41,8 @@ public class AvroKeyRecordReader<T> extends AvroRecordReaderBase<AvroKey<T>, Nul
   /**
    * Constructor.
    *
-   * @param readerSchema The reader schema to use for the records in the Avro container file.
+   * @param readerSchema The reader schema to use for the records in the Avro
+   *                     container file.
    */
   public AvroKeyRecordReader(Schema readerSchema) {
     super(readerSchema);

@@ -30,7 +30,8 @@ import org.junit.Test;
 
 public class TestSpecificRequestor {
   public interface SampleSpecificProtocol {
-    public static final Protocol PROTOCOL = Protocol.parse("{\"protocol\":\"SampleSpecificProtocol\",\"namespace\":\"org.apache.avro.ipc.specific\",\"types\":[],\"messages\":{}}");
+    public static final Protocol PROTOCOL = Protocol.parse(
+        "{\"protocol\":\"SampleSpecificProtocol\",\"namespace\":\"org.apache.avro.ipc.specific\",\"types\":[],\"messages\":{}}");
   }
 
   static Object proxy;

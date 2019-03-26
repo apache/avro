@@ -24,4 +24,3 @@ public interface GenericContainer {
   /** The schema of this instance. */
   Schema getSchema();
 }
-

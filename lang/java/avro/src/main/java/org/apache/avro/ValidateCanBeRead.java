@@ -30,12 +30,11 @@ class ValidateCanBeRead implements SchemaValidationStrategy {
    * Validate that data written with first schema provided can be read using the
    * second schema, according to the default Avro schema resolution rules.
    *
-   * @throws SchemaValidationException
-   *           if the second schema cannot read data written by the first.
+   * @throws SchemaValidationException if the second schema cannot read data
+   *                                   written by the first.
    */
   @Override
-  public void validate(Schema toValidate, Schema existing)
-      throws SchemaValidationException {
+  public void validate(Schema toValidate, Schema existing) throws SchemaValidationException {
     ValidateMutualRead.canRead(toValidate, existing);
   }
 

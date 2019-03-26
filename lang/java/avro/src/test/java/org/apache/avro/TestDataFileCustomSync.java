@@ -56,7 +56,7 @@ public class TestDataFileCustomSync {
     try {
       MessageDigest digester = MessageDigest.getInstance("MD5");
       long time = System.currentTimeMillis();
-      digester.update((UUID.randomUUID()+"@"+time).getBytes(UTF_8));
+      digester.update((UUID.randomUUID() + "@" + time).getBytes(UTF_8));
       return digester.digest();
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);

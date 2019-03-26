@@ -36,29 +36,27 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
 
-/** The equivalent of {@link org.apache.hadoop.mapred.TextOutputFormat} for
- * writing to Avro Data Files with a <code>"bytes"</code> schema. */
+/**
+ * The equivalent of {@link org.apache.hadoop.mapred.TextOutputFormat} for
+ * writing to Avro Data Files with a <code>"bytes"</code> schema.
+ */
 public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
   private static final String UTF8 = "UTF-8";
 
   @Override
-  public RecordWriter<K, V>
-    getRecordWriter(FileSystem ignore, JobConf job,
-                    String name, Progressable prog)
-    throws IOException {
+  public RecordWriter<K, V> getRecordWriter(FileSystem ignore, JobConf job, String name, Progressable prog)
+      throws IOException {
 
     Schema schema = Schema.create(Schema.Type.BYTES);
 
-    final byte[] keyValueSeparator =
-      job.get("mapreduce.output.textoutputformat.separator", "\t").getBytes(UTF8);
+    final byte[] keyValueSeparator = job.get("mapreduce.output.textoutputformat.separator", "\t").getBytes(UTF8);
 
-    final DataFileWriter<ByteBuffer> writer =
-      new DataFileWriter<>(new ReflectDatumWriter<>());
+    final DataFileWriter<ByteBuffer> writer = new DataFileWriter<>(new ReflectDatumWriter<>());
 
     AvroOutputFormat.configureDataFileWriter(writer, job);
 
-    Path path = FileOutputFormat.getTaskOutputPath(job, name+EXT);
+    Path path = FileOutputFormat.getTaskOutputPath(job, name + EXT);
     writer.create(schema, path.getFileSystem(job).create(path));
 
     return new AvroTextRecordWriter(writer, keyValueSeparator);
@@ -68,8 +66,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
     private final DataFileWriter<ByteBuffer> writer;
     private final byte[] keyValueSeparator;
 
-    public AvroTextRecordWriter(DataFileWriter<ByteBuffer> writer,
-        byte[] keyValueSeparator) {
+    public AvroTextRecordWriter(DataFileWriter<ByteBuffer> writer, byte[] keyValueSeparator) {
       this.writer = writer;
       this.keyValueSeparator = keyValueSeparator;
     }
@@ -103,8 +100,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       }
     }
 
-    private ByteBuffer toByteBuffer(Object key, byte[] sep, Object value)
-        throws IOException {
+    private ByteBuffer toByteBuffer(Object key, byte[] sep, Object value) throws IOException {
       byte[] keyBytes, valBytes;
       int keyLength, valLength;
       if (key instanceof Text) {

@@ -65,7 +65,7 @@ public class InduceMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException {
     ClassLoader classLoader = getClassLoader();
 
-    for(File inputFile : sourceDirectory.listFiles()) {
+    for (File inputFile : sourceDirectory.listFiles()) {
       String className = parseClassName(inputFile.getPath());
       Class<?> klass = loadClass(classLoader, className);
       String fileName = outputDirectory.getPath() + "/" + parseFileName(klass);
@@ -73,13 +73,13 @@ public class InduceMojo extends AbstractMojo {
       outputFile.getParentFile().mkdirs();
       try {
         PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-        if(klass.isInterface()) {
+        if (klass.isInterface()) {
           writer.println(ReflectData.get().getProtocol(klass).toString(true));
         } else {
           writer.println(ReflectData.get().getSchema(klass).toString(true));
         }
         writer.close();
-      } catch(Exception e) {
+      } catch (Exception e) {
         e.printStackTrace();
       }
     }
@@ -95,7 +95,7 @@ public class InduceMojo extends AbstractMojo {
 
   private String parseFileName(Class klass) {
     String className = klass.getName().replace(".", "/");
-    if(klass.isInterface()) {
+    if (klass.isInterface()) {
       return className.concat(".avpr");
     } else {
       return className.concat(".avsc");
@@ -107,7 +107,7 @@ public class InduceMojo extends AbstractMojo {
 
     try {
       klass = classLoader.loadClass(className);
-    } catch(ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
 
@@ -119,12 +119,12 @@ public class InduceMojo extends AbstractMojo {
 
     try {
       List<String> classpathElements = project.getRuntimeClasspathElements();
-      if(null == classpathElements) {
+      if (null == classpathElements) {
         return Thread.currentThread().getContextClassLoader();
       }
       URL[] urls = new URL[classpathElements.size()];
 
-      for(int i = 0; i < classpathElements.size(); ++i) {
+      for (int i = 0; i < classpathElements.size(); ++i) {
         urls[i] = new File(classpathElements.get(i)).toURI().toURL();
       }
       classLoader = new URLClassLoader(urls, getClass().getClassLoader());

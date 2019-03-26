@@ -39,8 +39,7 @@ public class TestAvroKeyDeserializer {
     Schema writerSchema = Schema.create(Schema.Type.STRING);
     Schema readerSchema = Schema.create(Schema.Type.STRING);
     ClassLoader classLoader = this.getClass().getClassLoader();
-    AvroKeyDeserializer<CharSequence> deserializer =
-        new AvroKeyDeserializer<>(writerSchema, readerSchema, classLoader);
+    AvroKeyDeserializer<CharSequence> deserializer = new AvroKeyDeserializer<>(writerSchema, readerSchema, classLoader);
 
     // Check the schemas.
     assertEquals(writerSchema, deserializer.getWriterSchema());

@@ -40,9 +40,8 @@ import org.apache.avro.mapred.AvroOutputFormat;
  * By default, when pointed at a directory, this will silently skip over any
  * files in it that do not have .avro extension. To instead include all files,
  * set the avro.mapred.ignore.inputs.without.extension property to false.
- * */
-class TetherInputFormat
-  extends FileInputFormat<TetherData, NullWritable> {
+ */
+class TetherInputFormat extends FileInputFormat<TetherData, NullWritable> {
 
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
@@ -59,12 +58,10 @@ class TetherInputFormat
   }
 
   @Override
-  public RecordReader<TetherData, NullWritable>
-    getRecordReader(InputSplit split, JobConf job, Reporter reporter)
-    throws IOException {
+  public RecordReader<TetherData, NullWritable> getRecordReader(InputSplit split, JobConf job, Reporter reporter)
+      throws IOException {
     reporter.setStatus(split.toString());
-    return new TetherRecordReader(job, (FileSplit)split);
+    return new TetherRecordReader(job, (FileSplit) split);
   }
 
 }
-

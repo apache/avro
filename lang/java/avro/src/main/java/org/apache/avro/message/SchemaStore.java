@@ -31,6 +31,7 @@ public interface SchemaStore {
 
   /**
    * Retrieves a fingerprint by its AVRO-CRC-64 fingerprint.
+   * 
    * @param fingerprint an AVRO-CRC-64 fingerprint long
    * @return a Schema with the given fingerprint, or null
    */

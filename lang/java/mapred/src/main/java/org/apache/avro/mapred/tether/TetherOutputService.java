@@ -37,28 +37,29 @@ class TetherOutputService implements OutputProtocol {
 
   // timeout when waiting for messages in seconds.
   // what is a good value?
-  public static final long TIMEOUT=10*1000;
-  public TetherOutputService(OutputCollector<TetherData,NullWritable> collector,
-                             Reporter reporter) {
+  public static final long TIMEOUT = 10 * 1000;
+
+  public TetherOutputService(OutputCollector<TetherData, NullWritable> collector, Reporter reporter) {
     this.reporter = reporter;
     this.collector = collector;
   }
 
   @Override
   public synchronized void configure(int inputPort) {
-    LOG.info("got input port from child: inputport="+inputPort);
+    LOG.info("got input port from child: inputport=" + inputPort);
     this.inputPort = inputPort;
     notify();
   }
 
   public synchronized int inputPort() throws Exception {
-    if (inputPort==0) {
+    if (inputPort == 0) {
       LOG.info("waiting for input port from child");
       wait(TIMEOUT);
     }
 
-    if (inputPort==0) {
-      LOG.error("Parent process timed out waiting for subprocess to send input port. Check the job log files for more info.");
+    if (inputPort == 0) {
+      LOG.error(
+          "Parent process timed out waiting for subprocess to send input port. Check the job log files for more info.");
       throw new Exception("Parent process timed out waiting for subprocess to send input port");
     }
     return inputPort;
@@ -69,7 +70,7 @@ class TetherOutputService implements OutputProtocol {
     try {
       collector.collect(new TetherData(datum), NullWritable.get());
     } catch (Throwable e) {
-      LOG.warn("Error: "+e, e);
+      LOG.warn("Error: " + e, e);
       synchronized (this) {
         error = e.toString();
       }
@@ -83,7 +84,9 @@ class TetherOutputService implements OutputProtocol {
   }
 
   @Override
-  public void status(String message) { reporter.setStatus(message.toString());  }
+  public void status(String message) {
+    reporter.setStatus(message.toString());
+  }
 
   @Override
   public void count(String group, String name, long amount) {
@@ -108,7 +111,9 @@ class TetherOutputService implements OutputProtocol {
     return complete || (error != null);
   }
 
-  public String error() { return error; }
+  public String error() {
+    return error;
+  }
 
   public synchronized boolean waitForFinish() throws InterruptedException {
     while (!isFinished())

@@ -42,25 +42,21 @@ import org.apache.avro.Schema;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-
 public class TestWordCount {
 
-  public static class MapImpl extends AvroMapper<String, Pair<String, Long> > {
+  public static class MapImpl extends AvroMapper<String, Pair<String, Long>> {
     @Override
-      public void map(String text, AvroCollector<Pair<String,Long>> collector,
-                      Reporter reporter) throws IOException {
+    public void map(String text, AvroCollector<Pair<String, Long>> collector, Reporter reporter) throws IOException {
       StringTokenizer tokens = new StringTokenizer(text);
       while (tokens.hasMoreTokens())
         collector.collect(new Pair<>(tokens.nextToken(), 1L));
     }
   }
 
-  public static class ReduceImpl
-    extends AvroReducer<String, Long, Pair<String, Long> > {
+  public static class ReduceImpl extends AvroReducer<String, Long, Pair<String, Long>> {
     @Override
-    public void reduce(String word, Iterable<Long> counts,
-                       AvroCollector<Pair<String,Long>> collector,
-                       Reporter reporter) throws IOException {
+    public void reduce(String word, Iterable<Long> counts, AvroCollector<Pair<String, Long>> collector,
+        Reporter reporter) throws IOException {
       long sum = 0;
       for (long count : counts)
         sum += count;
@@ -68,13 +64,16 @@ public class TestWordCount {
     }
   }
 
-  @Test public void runTestsInOrder() throws Exception {
+  @Test
+  public void runTestsInOrder() throws Exception {
     testOutputFormat();
     testInputFormat();
   }
 
   static final Schema STRING = Schema.create(Schema.Type.STRING);
-  static { GenericData.setStringType(STRING, GenericData.StringType.String); }
+  static {
+    GenericData.setStringType(STRING, GenericData.StringType.String);
+  }
   static final Schema LONG = Schema.create(Schema.Type.LONG);
 
   public void testOutputFormat() throws Exception {
@@ -85,7 +84,7 @@ public class TestWordCount {
     wordCountUtil.writeLinesFile();
 
     AvroJob.setInputSchema(job, STRING);
-    AvroJob.setOutputSchema(job, Pair.getPairSchema(STRING,LONG));
+    AvroJob.setOutputSchema(job, Pair.getPairSchema(STRING, LONG));
 
     AvroJob.setMapperClass(job, MapImpl.class);
     AvroJob.setCombinerClass(job, ReduceImpl.class);
@@ -104,10 +103,10 @@ public class TestWordCount {
 
   private static long total;
 
-  public static class Counter extends AvroMapper<GenericRecord,Void> {
-    @Override public void map(GenericRecord r, AvroCollector<Void> collector,
-                              Reporter reporter) throws IOException {
-      total += (Long)r.get("value");
+  public static class Counter extends AvroMapper<GenericRecord, Void> {
+    @Override
+    public void map(GenericRecord r, AvroCollector<Void> collector, Reporter reporter) throws IOException {
+      total += (Long) r.get("value");
     }
   }
 
@@ -116,24 +115,19 @@ public class TestWordCount {
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapredTest");
 
-
-    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," +
-                                    "\"name\":\"PairValue\","+
-                                    "\"fields\": [ " +
-                                    "{\"name\":\"value\", \"type\":\"long\"}" +
-                                    "]}");
+    Schema subSchema = new Schema.Parser().parse("{\"type\":\"record\"," + "\"name\":\"PairValue\"," + "\"fields\": [ "
+        + "{\"name\":\"value\", \"type\":\"long\"}" + "]}");
     AvroJob.setInputSchema(job, subSchema);
     AvroJob.setMapperClass(job, Counter.class);
     FileInputFormat.setInputPaths(job, new Path(wordCountUtil.getDir().toString() + "/out/*"));
     job.setInputFormat(AvroTrevniInputFormat.class);
 
-    job.setNumReduceTasks(0);                     // map-only
-    job.setOutputFormat(NullOutputFormat.class);  // ignore output
+    job.setNumReduceTasks(0); // map-only
+    job.setOutputFormat(NullOutputFormat.class); // ignore output
 
     total = 0;
     JobClient.runJob(job);
     assertEquals(WordCountUtil.TOTAL, total);
   }
-
 
 }

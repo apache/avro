@@ -22,15 +22,14 @@ package org.apache.avro.file;
  * Constants used in data files.
  */
 public class DataFileConstants {
-  private DataFileConstants() {}                  // no public ctor
+  private DataFileConstants() {
+  } // no public ctor
 
   public static final byte VERSION = 1;
-  public static final byte[] MAGIC = new byte[] {
-    (byte)'O', (byte)'b', (byte)'j', VERSION
-  };
+  public static final byte[] MAGIC = new byte[] { (byte) 'O', (byte) 'b', (byte) 'j', VERSION };
   public static final long FOOTER_BLOCK = -1;
   public static final int SYNC_SIZE = 16;
-  public static final int DEFAULT_SYNC_INTERVAL = 4000*SYNC_SIZE;
+  public static final int DEFAULT_SYNC_INTERVAL = 4000 * SYNC_SIZE;
 
   public static final String SCHEMA = "avro.schema";
   public static final String CODEC = "avro.codec";

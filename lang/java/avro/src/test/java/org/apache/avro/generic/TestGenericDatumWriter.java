@@ -40,15 +40,13 @@ import org.junit.Test;
 public class TestGenericDatumWriter {
   @Test
   public void testWrite() throws IOException {
-    String json = "{\"type\": \"record\", \"name\": \"r\", \"fields\": ["
-      + "{ \"name\": \"f1\", \"type\": \"long\" }"
-      + "]}";
+    String json = "{\"type\": \"record\", \"name\": \"r\", \"fields\": [" + "{ \"name\": \"f1\", \"type\": \"long\" }"
+        + "]}";
     Schema s = new Schema.Parser().parse(json);
     GenericRecord r = new GenericData.Record(s);
     r.put("f1", 100L);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    GenericDatumWriter<GenericRecord> w =
-      new GenericDatumWriter<>(s);
+    GenericDatumWriter<GenericRecord> w = new GenericDatumWriter<>(s);
     Encoder e = EncoderFactory.get().jsonEncoder(s, bao);
     w.write(r, e);
     e.flush();
@@ -64,14 +62,13 @@ public class TestGenericDatumWriter {
     Schema s = new Schema.Parser().parse(json);
     final GenericArray<Integer> a = new GenericData.Array<>(1, s);
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    final GenericDatumWriter<GenericArray<Integer>> w =
-      new GenericDatumWriter<>(s);
+    final GenericDatumWriter<GenericArray<Integer>> w = new GenericDatumWriter<>(s);
 
     CountDownLatch sizeWrittenSignal = new CountDownLatch(1);
     CountDownLatch eltAddedSignal = new CountDownLatch(1);
 
-    final TestEncoder e = new TestEncoder(EncoderFactory.get()
-        .directBinaryEncoder(bao, null), sizeWrittenSignal, eltAddedSignal);
+    final TestEncoder e = new TestEncoder(EncoderFactory.get().directBinaryEncoder(bao, null), sizeWrittenSignal,
+        eltAddedSignal);
 
     // call write in another thread
     ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -92,21 +89,19 @@ public class TestGenericDatumWriter {
     }
   }
 
-
   @Test
   public void testMapConcurrentModification() throws Exception {
     String json = "{\"type\": \"map\", \"values\": \"int\" }";
     Schema s = new Schema.Parser().parse(json);
     final Map<String, Integer> m = new HashMap<>();
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    final GenericDatumWriter<Map<String, Integer>> w =
-      new GenericDatumWriter<>(s);
+    final GenericDatumWriter<Map<String, Integer>> w = new GenericDatumWriter<>(s);
 
     CountDownLatch sizeWrittenSignal = new CountDownLatch(1);
     CountDownLatch eltAddedSignal = new CountDownLatch(1);
 
-    final TestEncoder e = new TestEncoder(EncoderFactory.get()
-        .directBinaryEncoder(bao, null), sizeWrittenSignal, eltAddedSignal);
+    final TestEncoder e = new TestEncoder(EncoderFactory.get().directBinaryEncoder(bao, null), sizeWrittenSignal,
+        eltAddedSignal);
 
     // call write in another thread
     ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -133,8 +128,7 @@ public class TestGenericDatumWriter {
     CountDownLatch sizeWrittenSignal;
     CountDownLatch eltAddedSignal;
 
-    TestEncoder(Encoder encoder, CountDownLatch sizeWrittenSignal,
-        CountDownLatch eltAddedSignal) {
+    TestEncoder(Encoder encoder, CountDownLatch sizeWrittenSignal, CountDownLatch eltAddedSignal) {
       this.e = encoder;
       this.sizeWrittenSignal = sizeWrittenSignal;
       this.eltAddedSignal = eltAddedSignal;
@@ -163,81 +157,122 @@ public class TestGenericDatumWriter {
     }
 
     @Override
-    public void flush() throws IOException { e.flush(); }
+    public void flush() throws IOException {
+      e.flush();
+    }
+
     @Override
-    public void writeNull() throws IOException { e.writeNull(); }
+    public void writeNull() throws IOException {
+      e.writeNull();
+    }
+
     @Override
-    public void writeBoolean(boolean b) throws IOException { e.writeBoolean(b); }
+    public void writeBoolean(boolean b) throws IOException {
+      e.writeBoolean(b);
+    }
+
     @Override
-    public void writeInt(int n) throws IOException { e.writeInt(n); }
+    public void writeInt(int n) throws IOException {
+      e.writeInt(n);
+    }
+
     @Override
-    public void writeLong(long n) throws IOException { e.writeLong(n); }
+    public void writeLong(long n) throws IOException {
+      e.writeLong(n);
+    }
+
     @Override
-    public void writeFloat(float f) throws IOException { e.writeFloat(f); }
+    public void writeFloat(float f) throws IOException {
+      e.writeFloat(f);
+    }
+
     @Override
-    public void writeDouble(double d) throws IOException { e.writeDouble(d); }
+    public void writeDouble(double d) throws IOException {
+      e.writeDouble(d);
+    }
+
     @Override
-    public void writeString(Utf8 utf8) throws IOException { e.writeString(utf8); }
+    public void writeString(Utf8 utf8) throws IOException {
+      e.writeString(utf8);
+    }
+
     @Override
-    public void writeBytes(ByteBuffer bytes) throws IOException { e.writeBytes(bytes); }
+    public void writeBytes(ByteBuffer bytes) throws IOException {
+      e.writeBytes(bytes);
+    }
+
     @Override
-    public void writeBytes(byte[] bytes, int start, int len) throws IOException { e.writeBytes(bytes, start, len); }
+    public void writeBytes(byte[] bytes, int start, int len) throws IOException {
+      e.writeBytes(bytes, start, len);
+    }
+
     @Override
-    public void writeFixed(byte[] bytes, int start, int len) throws IOException { e.writeFixed(bytes, start, len); }
+    public void writeFixed(byte[] bytes, int start, int len) throws IOException {
+      e.writeFixed(bytes, start, len);
+    }
+
     @Override
-    public void writeEnum(int en) throws IOException { e.writeEnum(en); }
+    public void writeEnum(int en) throws IOException {
+      e.writeEnum(en);
+    }
+
     @Override
-    public void setItemCount(long itemCount) throws IOException { e.setItemCount(itemCount); }
+    public void setItemCount(long itemCount) throws IOException {
+      e.setItemCount(itemCount);
+    }
+
     @Override
-    public void startItem() throws IOException { e.startItem(); }
+    public void startItem() throws IOException {
+      e.startItem();
+    }
+
     @Override
-    public void writeArrayEnd() throws IOException { e.writeArrayEnd(); }
+    public void writeArrayEnd() throws IOException {
+      e.writeArrayEnd();
+    }
+
     @Override
-    public void writeMapEnd() throws IOException { e.writeMapEnd(); }
+    public void writeMapEnd() throws IOException {
+      e.writeMapEnd();
+    }
+
     @Override
-    public void writeIndex(int unionIndex) throws IOException { e.writeIndex(unionIndex); }
+    public void writeIndex(int unionIndex) throws IOException {
+      e.writeIndex(unionIndex);
+    }
   };
 
-  @Test(expected=AvroTypeException.class)
+  @Test(expected = AvroTypeException.class)
   public void writeDoesNotAllowStringForGenericEnum() throws IOException {
-    final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," +
-      "\"fields\": [ " +
-        "{\"name\": \"field\", \"type\": " +
-          "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": " +
-            "[\"ONE\",\"TWO\",\"THREE\"] " +
-          "}" +
-        "}" +
-      "]}";
+    final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," + "\"fields\": [ "
+        + "{\"name\": \"field\", \"type\": " + "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": "
+        + "[\"ONE\",\"TWO\",\"THREE\"] " + "}" + "}" + "]}";
     Schema schema = new Schema.Parser().parse(json);
     GenericRecord record = new GenericData.Record(schema);
     record.put("field", "ONE");
 
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    GenericDatumWriter<GenericRecord> writer =
-      new GenericDatumWriter<>(schema);
+    GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
 
     writer.write(record, encoder);
   }
 
-  private enum AnEnum { ONE, TWO, THREE };
-  @Test(expected=AvroTypeException.class)
+  private enum AnEnum {
+    ONE, TWO, THREE
+  };
+
+  @Test(expected = AvroTypeException.class)
   public void writeDoesNotAllowJavaEnumForGenericEnum() throws IOException {
-    final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," +
-      "\"fields\": [ " +
-        "{\"name\": \"field\", \"type\": " +
-          "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": " +
-            "[\"ONE\",\"TWO\",\"THREE\"] " +
-          "}" +
-        "}" +
-      "]}";
+    final String json = "{\"type\": \"record\", \"name\": \"recordWithEnum\"," + "\"fields\": [ "
+        + "{\"name\": \"field\", \"type\": " + "{\"type\": \"enum\", \"name\": \"enum\", \"symbols\": "
+        + "[\"ONE\",\"TWO\",\"THREE\"] " + "}" + "}" + "]}";
     Schema schema = new Schema.Parser().parse(json);
     GenericRecord record = new GenericData.Record(schema);
     record.put("field", AnEnum.ONE);
 
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    GenericDatumWriter<GenericRecord> writer =
-      new GenericDatumWriter<>(schema);
+    GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
     Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
 
     writer.write(record, encoder);
@@ -258,15 +293,15 @@ public class TestGenericDatumWriter {
   }
 
   private Schema schemaWithExplicitNullDefault() {
-    String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\"," +
-            "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\", " +
-            "\"default\":null}]}";
+    String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\","
+        + "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\", "
+        + "\"default\":null}]}";
     return new Schema.Parser().parse(schema);
   }
 
   private Schema schemaWithoutExplicitNullDefault() {
-    String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\"," +
-            "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\"}]}";
+    String schema = "{\"type\":\"record\",\"name\":\"my_record\",\"namespace\":\"mytest.namespace\",\"doc\":\"doc\","
+        + "\"fields\":[{\"name\":\"f\",\"type\":[\"null\",\"string\"],\"doc\":\"field doc doc\"}]}";
     return new Schema.Parser().parse(schema);
   }
 

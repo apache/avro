@@ -35,40 +35,37 @@ import static org.junit.Assert.assertFalse;
  */
 public class NettyTransceiverWhenFailsToConnect {
 
-    @Test(expected = IOException.class)
-    public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
+  @Test(expected = IOException.class)
+  public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
 
-      LastChannelRememberingChannelFactory socketChannelFactory = null;
-      try (ServerSocket serverSocket = new ServerSocket(0)) {
-        socketChannelFactory = new LastChannelRememberingChannelFactory();
+    LastChannelRememberingChannelFactory socketChannelFactory = null;
+    try (ServerSocket serverSocket = new ServerSocket(0)) {
+      socketChannelFactory = new LastChannelRememberingChannelFactory();
 
-        try {
-          new NettyTransceiver(
-            new InetSocketAddress(serverSocket.getLocalPort()),
-            socketChannelFactory,
-            1L
-          );
-        } finally {
-          assertFalse("expected that the channel opened by the transceiver is closed", socketChannelFactory.lastChannel.isOpen());
-        }
+      try {
+        new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), socketChannelFactory, 1L);
       } finally {
+        assertFalse("expected that the channel opened by the transceiver is closed",
+            socketChannelFactory.lastChannel.isOpen());
+      }
+    } finally {
 
-        // closing the server socket will actually free up the open channel in the
-        // transceiver, which would have hung otherwise (pre AVRO-1407)
+      // closing the server socket will actually free up the open channel in the
+      // transceiver, which would have hung otherwise (pre AVRO-1407)
 
-        if (socketChannelFactory != null) {
-          socketChannelFactory.releaseExternalResources();
-        }
+      if (socketChannelFactory != null) {
+        socketChannelFactory.releaseExternalResources();
       }
     }
+  }
 
-    class LastChannelRememberingChannelFactory extends NioClientSocketChannelFactory implements ChannelFactory {
+  class LastChannelRememberingChannelFactory extends NioClientSocketChannelFactory implements ChannelFactory {
 
-        volatile SocketChannel lastChannel;
+    volatile SocketChannel lastChannel;
 
-        @Override
-        public SocketChannel newChannel(ChannelPipeline pipeline) {
-            return lastChannel= super.newChannel(pipeline);
-        }
+    @Override
+    public SocketChannel newChannel(ChannelPipeline pipeline) {
+      return lastChannel = super.newChannel(pipeline);
     }
+  }
 }

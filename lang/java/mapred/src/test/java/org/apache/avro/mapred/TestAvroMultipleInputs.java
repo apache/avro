@@ -116,8 +116,7 @@ public class TestAvroMultipleInputs {
   }
 
   /**
-   * The common map output value record.
-   * Carries a tag specifying what source
+   * The common map output value record. Carries a tag specifying what source
    * record type was.
    */
   public static class JoinableRecord {
@@ -129,11 +128,7 @@ public class TestAvroMultipleInputs {
     public JoinableRecord() {
     }
 
-    public JoinableRecord(
-            CharSequence recType,
-            int id,
-            CharSequence name,
-            long balance) {
+    public JoinableRecord(CharSequence recType, int id, CharSequence name, long balance) {
       this.id = id;
       this.recType = recType;
       this.name = name;
@@ -181,47 +176,33 @@ public class TestAvroMultipleInputs {
     }
   }
 
-  public static class NamesMapImpl
-          extends AvroMapper<NamesRecord, Pair<KeyRecord, JoinableRecord>> {
+  public static class NamesMapImpl extends AvroMapper<NamesRecord, Pair<KeyRecord, JoinableRecord>> {
 
     @Override
-    public void map(
-            NamesRecord nameRecord,
-            AvroCollector<Pair<KeyRecord, JoinableRecord>> collector,
-            Reporter reporter) throws IOException {
-      collector.collect(
-              new Pair<>(
-                      new KeyRecord(nameRecord.id),
-                      new JoinableRecord(nameRecord.getClass().getName(),
-                              nameRecord.id, nameRecord.name, -1L)));
+    public void map(NamesRecord nameRecord, AvroCollector<Pair<KeyRecord, JoinableRecord>> collector, Reporter reporter)
+        throws IOException {
+      collector.collect(new Pair<>(new KeyRecord(nameRecord.id),
+          new JoinableRecord(nameRecord.getClass().getName(), nameRecord.id, nameRecord.name, -1L)));
     }
 
   }
 
-  public static class BalancesMapImpl
-          extends AvroMapper<BalancesRecord, Pair<KeyRecord, JoinableRecord>> {
+  public static class BalancesMapImpl extends AvroMapper<BalancesRecord, Pair<KeyRecord, JoinableRecord>> {
 
     @Override
-    public void map(
-            BalancesRecord balanceRecord,
-            AvroCollector<Pair<KeyRecord, JoinableRecord>> collector,
-            Reporter reporter) throws IOException {
-      collector.collect(
-              new Pair<>(
-                      new KeyRecord(balanceRecord.id),
-                      new JoinableRecord(balanceRecord.getClass().getName(),
-                              balanceRecord.id, "", balanceRecord.balance)));
+    public void map(BalancesRecord balanceRecord, AvroCollector<Pair<KeyRecord, JoinableRecord>> collector,
+        Reporter reporter) throws IOException {
+      collector.collect(new Pair<>(new KeyRecord(balanceRecord.id),
+          new JoinableRecord(balanceRecord.getClass().getName(), balanceRecord.id, "", balanceRecord.balance)));
     }
 
   }
 
-  public static class ReduceImpl
-          extends AvroReducer<KeyRecord, JoinableRecord, CompleteRecord> {
+  public static class ReduceImpl extends AvroReducer<KeyRecord, JoinableRecord, CompleteRecord> {
 
     @Override
-    public void reduce(KeyRecord ID, Iterable<JoinableRecord> joinables,
-                       AvroCollector<CompleteRecord> collector,
-                       Reporter reporter) throws IOException {
+    public void reduce(KeyRecord ID, Iterable<JoinableRecord> joinables, AvroCollector<CompleteRecord> collector,
+        Reporter reporter) throws IOException {
       CompleteRecord rec = new CompleteRecord();
       for (JoinableRecord joinable : joinables) {
         rec.setId(joinable.id);
@@ -250,16 +231,14 @@ public class TestAvroMultipleInputs {
 
     job.setJobName("multiple-inputs-join");
     AvroMultipleInputs.addInputPath(job, inputPath1, NamesMapImpl.class,
-            ReflectData.get().getSchema(NamesRecord.class));
+        ReflectData.get().getSchema(NamesRecord.class));
     AvroMultipleInputs.addInputPath(job, inputPath2, BalancesMapImpl.class,
-            ReflectData.get().getSchema(BalancesRecord.class));
+        ReflectData.get().getSchema(BalancesRecord.class));
 
     Schema keySchema = ReflectData.get().getSchema(KeyRecord.class);
     Schema valueSchema = ReflectData.get().getSchema(JoinableRecord.class);
-    AvroJob.setMapOutputSchema(job,
-            Pair.getPairSchema(keySchema, valueSchema));
-    AvroJob.setOutputSchema(job,
-            ReflectData.get().getSchema(CompleteRecord.class));
+    AvroJob.setMapOutputSchema(job, Pair.getPairSchema(keySchema, valueSchema));
+    AvroJob.setOutputSchema(job, ReflectData.get().getSchema(CompleteRecord.class));
 
     AvroJob.setReducerClass(job, ReduceImpl.class);
     job.setNumReduceTasks(1);
@@ -304,7 +283,7 @@ public class TestAvroMultipleInputs {
   private void validateCompleteFile(File file) throws Exception {
     DatumReader<CompleteRecord> reader = new ReflectDatumReader<>();
     int numRecs = 0;
-    try(InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+    try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
       try (DataFileStream<CompleteRecord> records = new DataFileStream<>(in, reader)) {
         for (CompleteRecord rec : records) {
           assertEquals(rec.id, numRecs);

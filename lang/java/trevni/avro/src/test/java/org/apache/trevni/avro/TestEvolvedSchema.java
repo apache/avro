@@ -35,29 +35,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestEvolvedSchema {
-  private static String writerSchema = "{"
-    + "    \"namespace\": \"org.apache.avro\","
-    + "    \"name\": \"test_evolution\"," + "    \"type\": \"record\","
-    + "    \"fields\": ["
-    + "        { \"name\": \"a\", \"type\":\"string\" },"
-    + "        { \"name\": \"b\", \"type\":\"int\" }"
-    + "     ]"
-    + "}";
-  private static String innerSchema = "{\"name\":\"c1\","
-    + "          \"type\":\"record\","
-    + "          \"fields\":[{\"name\":\"c11\", \"type\":\"int\", \"default\": 2},"
-    + "                      {\"name\":\"c12\", \"type\":\"string\", \"default\":\"goodbye\"}]}";
-  private static String evolvedSchema2 = "{"
-    + "    \"namespace\": \"org.apache.avro\","
-    + "    \"name\": \"test_evolution\"," + "    \"type\": \"record\","
-    + "    \"fields\": ["
-    + "        { \"name\": \"a\", \"type\":\"string\" },"
-    + "        { \"name\": \"b\", \"type\":\"int\" },"
-    + "        { \"name\": \"c\", \"type\":" + innerSchema + ","
-    + "          \"default\":{\"c11\": 1, \"c12\": \"hello\"}"
-    + "        }"
-    + "     ]"
-    + "}";
+  private static String writerSchema = "{" + "    \"namespace\": \"org.apache.avro\","
+      + "    \"name\": \"test_evolution\"," + "    \"type\": \"record\"," + "    \"fields\": ["
+      + "        { \"name\": \"a\", \"type\":\"string\" }," + "        { \"name\": \"b\", \"type\":\"int\" }" + "     ]"
+      + "}";
+  private static String innerSchema = "{\"name\":\"c1\"," + "          \"type\":\"record\","
+      + "          \"fields\":[{\"name\":\"c11\", \"type\":\"int\", \"default\": 2},"
+      + "                      {\"name\":\"c12\", \"type\":\"string\", \"default\":\"goodbye\"}]}";
+  private static String evolvedSchema2 = "{" + "    \"namespace\": \"org.apache.avro\","
+      + "    \"name\": \"test_evolution\"," + "    \"type\": \"record\"," + "    \"fields\": ["
+      + "        { \"name\": \"a\", \"type\":\"string\" }," + "        { \"name\": \"b\", \"type\":\"int\" },"
+      + "        { \"name\": \"c\", \"type\":" + innerSchema + ","
+      + "          \"default\":{\"c11\": 1, \"c12\": \"hello\"}" + "        }" + "     ]" + "}";
 
   GenericData.Record writtenRecord;
   GenericData.Record evolvedRecord;
@@ -85,16 +74,14 @@ public class TestEvolvedSchema {
 
   @Test
   public void testTrevniEvolvedRead() throws IOException {
-    AvroColumnWriter<GenericRecord> acw =
-      new AvroColumnWriter<>(writer, new ColumnFileMetaData());
+    AvroColumnWriter<GenericRecord> acw = new AvroColumnWriter<>(writer, new ColumnFileMetaData());
     acw.write(writtenRecord);
     File serializedTrevni = File.createTempFile("trevni", null);
     acw.writeTo(serializedTrevni);
 
     AvroColumnReader.Params params = new Params(serializedTrevni);
     params.setSchema(evolved);
-    AvroColumnReader<GenericRecord> acr =
-      new AvroColumnReader<>(params);
+    AvroColumnReader<GenericRecord> acr = new AvroColumnReader<>(params);
     GenericRecord readRecord = acr.next();
     Assert.assertEquals(evolvedRecord, readRecord);
     Assert.assertFalse(acr.hasNext());
@@ -103,20 +90,16 @@ public class TestEvolvedSchema {
   @Test
   public void testAvroEvolvedRead() throws IOException {
     File serializedAvro = File.createTempFile("avro", null);
-    DatumWriter<GenericRecord> dw =
-      new GenericDatumWriter<>(writer);
-    DataFileWriter<GenericRecord> dfw =
-      new DataFileWriter<>(dw);
+    DatumWriter<GenericRecord> dw = new GenericDatumWriter<>(writer);
+    DataFileWriter<GenericRecord> dfw = new DataFileWriter<>(dw);
     dfw.create(writer, serializedAvro);
     dfw.append(writtenRecord);
     dfw.flush();
     dfw.close();
 
-    GenericDatumReader<GenericRecord> reader =
-      new GenericDatumReader<>(writer);
+    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(writer);
     reader.setExpected(evolved);
-    DataFileReader<GenericRecord> dfr =
-      new DataFileReader<>(serializedAvro, reader);
+    DataFileReader<GenericRecord> dfr = new DataFileReader<>(serializedAvro, reader);
     GenericRecord readRecord = dfr.next();
     Assert.assertEquals(evolvedRecord, readRecord);
     Assert.assertFalse(dfr.hasNext());

@@ -28,10 +28,6 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.mapred.AvroJob;
-import org.apache.avro.mapred.AvroOutputFormat;
-import org.apache.avro.mapred.AvroWrapper;
-import org.apache.avro.mapred.Pair;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -61,8 +57,7 @@ public class TestGenericJob {
 
     fields.add(new Field("Optional", createArraySchema(), "", new ArrayList<>()));
 
-    Schema recordSchema =
-      Schema.createRecord("Container", "", "org.apache.avro.mapred", false);
+    Schema recordSchema = Schema.createRecord("Container", "", "org.apache.avro.mapred", false);
     recordSchema.setFields(fields);
     return recordSchema;
   }
@@ -79,13 +74,12 @@ public class TestGenericJob {
 
   private static Schema createInnerSchema(String name) {
     Schema innerrecord = Schema.createRecord(name, "", "", false);
-    innerrecord.setFields
-      (Collections.singletonList(new Field(name, Schema.create(Type.LONG), "", 0L)));
+    innerrecord.setFields(Collections.singletonList(new Field(name, Schema.create(Type.LONG), "", 0L)));
     return innerrecord;
   }
 
   @Before
-    public void setup() throws IOException {
+  public void setup() throws IOException {
     // needed to satisfy the framework only - input ignored in mapper
     String dir = DIR.getRoot().getPath();
     File infile = new File(dir + "/in");
@@ -95,32 +89,26 @@ public class TestGenericJob {
     file.close();
   }
 
-  static class AvroTestConverter
-    extends MapReduceBase
-    implements Mapper<LongWritable, Text,
-               AvroWrapper<Pair<Long, GenericData.Record>>, NullWritable> {
+  static class AvroTestConverter extends MapReduceBase
+      implements Mapper<LongWritable, Text, AvroWrapper<Pair<Long, GenericData.Record>>, NullWritable> {
 
     public void map(LongWritable key, Text value,
-                    OutputCollector<AvroWrapper<Pair<Long,GenericData.Record>>,NullWritable> out,
-                    Reporter reporter) throws IOException {
-      GenericData.Record optional_entry =
-          new GenericData.Record(createInnerSchema("optional_field_1"));
+        OutputCollector<AvroWrapper<Pair<Long, GenericData.Record>>, NullWritable> out, Reporter reporter)
+        throws IOException {
+      GenericData.Record optional_entry = new GenericData.Record(createInnerSchema("optional_field_1"));
       optional_entry.put("optional_field_1", 0L);
-      GenericData.Array<GenericData.Record> array =
-          new GenericData.Array<>(1, createArraySchema());
+      GenericData.Array<GenericData.Record> array = new GenericData.Array<>(1, createArraySchema());
       array.add(optional_entry);
 
       GenericData.Record container = new GenericData.Record(createSchema());
       container.put("Optional", array);
 
-      out.collect(new AvroWrapper<>(new Pair<>(key.get(), container)),
-                  NullWritable.get());
+      out.collect(new AvroWrapper<>(new Pair<>(key.get(), container)), NullWritable.get());
     }
   }
 
-
   @Test
-    public void testJob() throws Exception {
+  public void testJob() throws Exception {
     JobConf job = new JobConf();
     Path outputPath = new Path(DIR.getRoot().getPath() + "/out");
     outputPath.getFileSystem(job).delete(outputPath);
@@ -133,13 +121,9 @@ public class TestGenericJob {
 
     FileOutputFormat.setOutputPath(job, outputPath);
     System.out.println(createSchema());
-    AvroJob.setOutputSchema(job,
-                            Pair.getPairSchema(Schema.create(Schema.Type.LONG),
-                                               createSchema()));
+    AvroJob.setOutputSchema(job, Pair.getPairSchema(Schema.create(Schema.Type.LONG), createSchema()));
     job.setOutputFormat(AvroOutputFormat.class);
 
     JobClient.runJob(job);
   }
 }
-
-

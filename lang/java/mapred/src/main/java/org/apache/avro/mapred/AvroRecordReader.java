@@ -29,26 +29,20 @@ import org.apache.avro.file.FileReader;
 import org.apache.avro.file.DataFileReader;
 
 /** An {@link RecordReader} for Avro data files. */
-public class AvroRecordReader<T>
-  implements RecordReader<AvroWrapper<T>, NullWritable> {
+public class AvroRecordReader<T> implements RecordReader<AvroWrapper<T>, NullWritable> {
 
   private FileReader<T> reader;
   private long start;
   private long end;
 
-  public AvroRecordReader(JobConf job, FileSplit split)
-    throws IOException {
-    this(DataFileReader.openReader
-         (new FsInput(split.getPath(), job),
-          AvroJob.createInputDataModel(job)
-          .createDatumReader(AvroJob.getInputSchema(job))),
-         split);
+  public AvroRecordReader(JobConf job, FileSplit split) throws IOException {
+    this(DataFileReader.openReader(new FsInput(split.getPath(), job),
+        AvroJob.createInputDataModel(job).createDatumReader(AvroJob.getInputSchema(job))), split);
   }
 
-  protected AvroRecordReader(FileReader<T> reader, FileSplit split)
-    throws IOException {
+  protected AvroRecordReader(FileReader<T> reader, FileSplit split) throws IOException {
     this.reader = reader;
-    reader.sync(split.getStart());                    // sync to start
+    reader.sync(split.getStart()); // sync to start
     this.start = reader.tell();
     this.end = split.getStart() + split.getLength();
   }
@@ -59,11 +53,12 @@ public class AvroRecordReader<T>
   }
 
   @Override
-  public NullWritable createValue() { return NullWritable.get(); }
+  public NullWritable createValue() {
+    return NullWritable.get();
+  }
 
   @Override
-  public boolean next(AvroWrapper<T> wrapper, NullWritable ignore)
-    throws IOException {
+  public boolean next(AvroWrapper<T> wrapper, NullWritable ignore) throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
       return false;
     wrapper.datum(reader.next(wrapper.datum()));
@@ -75,7 +70,7 @@ public class AvroRecordReader<T>
     if (end == start) {
       return 0.0f;
     } else {
-      return Math.min(1.0f, (getPos() - start) / (float)(end - start));
+      return Math.min(1.0f, (getPos() - start) / (float) (end - start));
     }
   }
 
@@ -85,7 +80,8 @@ public class AvroRecordReader<T>
   }
 
   @Override
-  public void close() throws IOException { reader.close(); }
+  public void close() throws IOException {
+    reader.close();
+  }
 
 }
-

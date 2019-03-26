@@ -63,15 +63,9 @@ public class TestCompare {
 
   @Test
   public void testBytes() throws Exception {
-    check("\"bytes\"",
-          ByteBuffer.wrap(new byte[]{}),
-          ByteBuffer.wrap(new byte[]{1}));
-    check("\"bytes\"",
-          ByteBuffer.wrap(new byte[]{1}),
-          ByteBuffer.wrap(new byte[]{2}));
-    check("\"bytes\"",
-          ByteBuffer.wrap(new byte[]{1,2}),
-          ByteBuffer.wrap(new byte[]{2}));
+    check("\"bytes\"", ByteBuffer.wrap(new byte[] {}), ByteBuffer.wrap(new byte[] { 1 }));
+    check("\"bytes\"", ByteBuffer.wrap(new byte[] { 1 }), ByteBuffer.wrap(new byte[] { 2 }));
+    check("\"bytes\"", ByteBuffer.wrap(new byte[] { 1, 2 }), ByteBuffer.wrap(new byte[] { 2 }));
   }
 
   @Test
@@ -112,11 +106,9 @@ public class TestCompare {
 
   @Test
   public void testRecord() throws Exception {
-    String fields = " \"fields\":["
-      +"{\"name\":\"f\",\"type\":\"int\",\"order\":\"ignore\"},"
-      +"{\"name\":\"g\",\"type\":\"int\",\"order\":\"descending\"},"
-      +"{\"name\":\"h\",\"type\":\"int\"}]}";
-    String recordJson = "{\"type\":\"record\", \"name\":\"Test\","+fields;
+    String fields = " \"fields\":[" + "{\"name\":\"f\",\"type\":\"int\",\"order\":\"ignore\"},"
+        + "{\"name\":\"g\",\"type\":\"int\",\"order\":\"descending\"}," + "{\"name\":\"h\",\"type\":\"int\"}]}";
+    String recordJson = "{\"type\":\"record\", \"name\":\"Test\"," + fields;
     Schema schema = new Schema.Parser().parse(recordJson);
     GenericData.Record r1 = new GenericData.Record(schema);
     r1.put("f", 1);
@@ -132,32 +124,28 @@ public class TestCompare {
     r2.put("h", 42);
     check(recordJson, r1, r2);
 
-    String record2Json = "{\"type\":\"record\", \"name\":\"Test2\","+fields;
+    String record2Json = "{\"type\":\"record\", \"name\":\"Test2\"," + fields;
     Schema schema2 = new Schema.Parser().parse(record2Json);
-    GenericData.Record r3= new GenericData.Record(schema2);
+    GenericData.Record r3 = new GenericData.Record(schema2);
     r3.put("f", 1);
     r3.put("g", 13);
     r3.put("h", 41);
-    assert(!r1.equals(r3));                       // same fields, diff name
+    assert (!r1.equals(r3)); // same fields, diff name
   }
 
   @Test
   public void testEnum() throws Exception {
-    String json =
-      "{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}";
+    String json = "{\"type\":\"enum\", \"name\":\"Test\",\"symbols\": [\"A\", \"B\"]}";
     Schema schema = new Schema.Parser().parse(json);
-    check(json,
-          new GenericData.EnumSymbol(schema, "A"),
-          new GenericData.EnumSymbol(schema, "B"));
+    check(json, new GenericData.EnumSymbol(schema, "A"), new GenericData.EnumSymbol(schema, "B"));
   }
 
   @Test
   public void testFixed() throws Exception {
     String json = "{\"type\": \"fixed\", \"name\":\"Test\", \"size\": 1}";
     Schema schema = new Schema.Parser().parse(json);
-    check(json,
-          new GenericData.Fixed(schema, new byte[]{(byte)'a'}),
-          new GenericData.Fixed(schema, new byte[]{(byte)'b'}));
+    check(json, new GenericData.Fixed(schema, new byte[] { (byte) 'a' }),
+        new GenericData.Fixed(schema, new byte[] { (byte) 'b' }));
   }
 
   @Test
@@ -173,36 +161,27 @@ public class TestCompare {
     TestRecord s2 = new TestRecord();
     s1.setName("foo");
     s1.setKind(Kind.BAZ);
-    s1.setHash(new MD5(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    s1.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
     s2.setName("bar");
     s2.setKind(Kind.BAR);
-    s2.setHash(new MD5(new byte[] {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,6}));
+    s2.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 6 }));
     Schema schema = SpecificData.get().getSchema(TestRecord.class);
 
-    check(schema, s1, s2, true, new SpecificDatumWriter<>(schema),
-          SpecificData.get());
+    check(schema, s1, s2, true, new SpecificDatumWriter<>(schema), SpecificData.get());
     s2.setKind(Kind.BAZ);
-    check(schema, s1, s2, true, new SpecificDatumWriter<>(schema),
-          SpecificData.get());
+    check(schema, s1, s2, true, new SpecificDatumWriter<>(schema), SpecificData.get());
   }
 
-  private static <T> void check(String schemaJson, T o1, T o2)
-    throws Exception {
+  private static <T> void check(String schemaJson, T o1, T o2) throws Exception {
     check(schemaJson, o1, o2, true);
   }
 
-  private static <T> void check(String schemaJson, T o1, T o2,
-                            boolean comparable)
-    throws Exception {
-    check(new Schema.Parser().parse(schemaJson), o1, o2, comparable,
-          new GenericDatumWriter<>(), GenericData.get());
+  private static <T> void check(String schemaJson, T o1, T o2, boolean comparable) throws Exception {
+    check(new Schema.Parser().parse(schemaJson), o1, o2, comparable, new GenericDatumWriter<>(), GenericData.get());
   }
 
-  private static <T> void check(Schema schema, T o1, T o2,
-                            boolean comparable,
-                            DatumWriter<T> writer,
-                            GenericData comparator)
-    throws Exception {
+  private static <T> void check(Schema schema, T o1, T o2, boolean comparable, DatumWriter<T> writer,
+      GenericData comparator) throws Exception {
 
     byte[] b1 = render(o1, schema, writer);
     byte[] b2 = render(o2, schema, writer);
@@ -216,44 +195,35 @@ public class TestCompare {
     assertEquals(0, compare(o1, o1, schema, comparable, comparator));
     assertEquals(0, compare(o2, o2, schema, comparable, comparator));
 
-    assert(o1.equals(o1));
-    assert(o2.equals(o2));
-    assert(!o1.equals(o2));
-    assert(!o2.equals(o1));
-    assert(!o1.equals(new Object()));
-    assert(!o2.equals(new Object()));
-    assert(!o1.equals(null));
-    assert(!o2.equals(null));
+    assert (o1.equals(o1));
+    assert (o2.equals(o2));
+    assert (!o1.equals(o2));
+    assert (!o2.equals(o1));
+    assert (!o1.equals(new Object()));
+    assert (!o2.equals(new Object()));
+    assert (!o1.equals(null));
+    assert (!o2.equals(null));
 
-    assert(o1.hashCode() != o2.hashCode());
+    assert (o1.hashCode() != o2.hashCode());
 
     // check BinaryData.hashCode against Object.hashCode
     if (schema.getType() != Schema.Type.ENUM) {
-      assertEquals(o1.hashCode(),
-                   BinaryData.hashCode(b1, 0, b1.length, schema));
-      assertEquals(o2.hashCode(),
-                   BinaryData.hashCode(b2, 0, b2.length, schema));
+      assertEquals(o1.hashCode(), BinaryData.hashCode(b1, 0, b1.length, schema));
+      assertEquals(o2.hashCode(), BinaryData.hashCode(b2, 0, b2.length, schema));
     }
 
     // check BinaryData.hashCode against GenericData.hashCode
-    assertEquals(comparator.hashCode(o1, schema),
-                 BinaryData.hashCode(b1, 0, b1.length, schema));
-    assertEquals(comparator.hashCode(o2, schema),
-                 BinaryData.hashCode(b2, 0, b2.length, schema));
+    assertEquals(comparator.hashCode(o1, schema), BinaryData.hashCode(b1, 0, b1.length, schema));
+    assertEquals(comparator.hashCode(o2, schema), BinaryData.hashCode(b2, 0, b2.length, schema));
 
   }
 
-  @SuppressWarnings(value="unchecked")
-  private static int compare(Object o1, Object o2, Schema schema,
-                             boolean comparable, GenericData comparator) {
-    return comparable
-      ? ((Comparable<Object>)o1).compareTo(o2)
-      : comparator.compare(o1, o2, schema);
+  @SuppressWarnings(value = "unchecked")
+  private static int compare(Object o1, Object o2, Schema schema, boolean comparable, GenericData comparator) {
+    return comparable ? ((Comparable<Object>) o1).compareTo(o2) : comparator.compare(o1, o2, schema);
   }
 
-  private static <T> byte[] render(T datum, Schema schema,
-                               DatumWriter<T> writer)
-    throws IOException {
+  private static <T> byte[] render(T datum, Schema schema, DatumWriter<T> writer) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     writer.setSchema(schema);
     Encoder enc = new EncoderFactory().directBinaryEncoder(out, null);

@@ -35,8 +35,8 @@ public final class AvroGrpcUtils {
   }
 
   /**
-   * Provides a a unique gRPC service name for Avro RPC interface or its subclass Callback
-   * Interface.
+   * Provides a a unique gRPC service name for Avro RPC interface or its subclass
+   * Callback Interface.
    *
    * @param iface Avro RPC interface.
    * @return unique service name for gRPC.
@@ -68,7 +68,8 @@ public final class AvroGrpcUtils {
       if (stream instanceof KnownLength && stream.available() > 0) {
         stream.skip(stream.available());
       } else {
-        //don't expect this for an inputStream provided by gRPC but just to be on safe side.
+        // don't expect this for an inputStream provided by gRPC but just to be on safe
+        // side.
         byte[] skipBuffer = new byte[4096];
         while (true) {
           int read = stream.read(skipBuffer);

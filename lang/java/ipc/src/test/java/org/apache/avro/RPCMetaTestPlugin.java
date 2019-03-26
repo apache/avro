@@ -30,8 +30,8 @@ import org.apache.avro.ipc.RPCPlugin;
  * This plugin tests handshake and call state by passing a string as metadata,
  * slowly building it up at each instrumentation point, testing it as it goes.
  * Finally, after the call or handshake is complete, the constructed string is
- * tested. It also tests that RPC context data is appropriately filled in
- * along the way by Requestor and Responder classes.
+ * tested. It also tests that RPC context data is appropriately filled in along
+ * the way by Requestor and Responder classes.
  */
 public final class RPCMetaTestPlugin extends RPCPlugin {
 
@@ -55,7 +55,8 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNull(context.getRequestPayload());
     Assert.assertNull(context.getResponsePayload());
 
-    if (!context.requestHandshakeMeta().containsKey(key)) return;
+    if (!context.requestHandshakeMeta().containsKey(key))
+      return;
 
     ByteBuffer buf = context.requestHandshakeMeta().get(key);
     Assert.assertNotNull(buf);
@@ -72,13 +73,14 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
 
   @Override
   public void clientFinishConnect(RPCContext context) {
-    Map<String,ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
+    Map<String, ByteBuffer> handshakeMeta = context.responseHandshakeMeta();
 
     Assert.assertNull(context.getRequestPayload());
     Assert.assertNull(context.getResponsePayload());
     Assert.assertNotNull(handshakeMeta);
 
-    if (!handshakeMeta.containsKey(key)) return;
+    if (!handshakeMeta.containsKey(key))
+      return;
 
     ByteBuffer buf = handshakeMeta.get(key);
     Assert.assertNotNull(buf);
@@ -106,13 +108,14 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
 
   @Override
   public void serverReceiveRequest(RPCContext context) {
-    Map<String,ByteBuffer> meta = context.requestCallMeta();
+    Map<String, ByteBuffer> meta = context.requestCallMeta();
 
     Assert.assertNotNull(meta);
     Assert.assertNotNull(context.getMessage());
     Assert.assertNull(context.getResponsePayload());
 
-    if (!meta.containsKey(key)) return;
+    if (!meta.containsKey(key))
+      return;
 
     ByteBuffer buf = meta.get(key);
     Assert.assertNotNull(buf);
@@ -134,7 +137,8 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
 
     Assert.assertNotNull(context.getResponsePayload());
 
-    if (!context.requestCallMeta().containsKey(key)) return;
+    if (!context.requestCallMeta().containsKey(key))
+      return;
 
     ByteBuffer buf = context.requestCallMeta().get(key);
     Assert.assertNotNull(buf);
@@ -154,7 +158,8 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(context.responseCallMeta());
     Assert.assertNotNull(context.getRequestPayload());
 
-    if (!context.responseCallMeta().containsKey(key)) return;
+    if (!context.responseCallMeta().containsKey(key))
+      return;
 
     ByteBuffer buf = context.responseCallMeta().get(key);
     Assert.assertNotNull(buf);
@@ -171,7 +176,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     checkRPCMetaMap(context.responseCallMeta());
   }
 
-  protected void checkRPCMetaMap(Map<String,ByteBuffer> rpcMeta) {
+  protected void checkRPCMetaMap(Map<String, ByteBuffer> rpcMeta) {
     Assert.assertNotNull(rpcMeta);
     Assert.assertTrue("key not present in map", rpcMeta.containsKey(key));
 

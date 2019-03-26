@@ -43,22 +43,18 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
 
 public class SpecificCompilerTool implements Tool {
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.size() < 3) {
-      System.err
-          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-dateTimeLogicalTypeImpl <dateTimeType>] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
-      System.err
-          .println(" input - input files or directories");
-      System.err
-          .println(" outputdir - directory to write generated java");
-      System.err.println(" -encoding <outputencoding> - set the encoding of " +
-          "output file(s)");
+      System.err.println(
+          "Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-dateTimeLogicalTypeImpl <dateTimeType>] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
+      System.err.println(" input - input files or directories");
+      System.err.println(" outputdir - directory to write generated java");
+      System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
-      System.err.println(" -bigDecimal - use java.math.BigDecimal for " +
-          "decimal type instead of java.nio.ByteBuffer");
-      System.err.println(" -dateTimeLogicalTypeImpl [joda|jsr310] - use either " +
-          "Joda time classes (default) or Java 8 native date/time classes (JSR 310)");
+      System.err
+          .println(" -bigDecimal - use java.math.BigDecimal for " + "decimal type instead of java.nio.ByteBuffer");
+      System.err.println(" -dateTimeLogicalTypeImpl [joda|jsr310] - use either "
+          + "Joda time classes (default) or Java 8 native date/time classes (JSR 310)");
       System.err.println(" -templateDir - directory with custom Velocity templates");
       return 1;
     }
@@ -90,7 +86,8 @@ public class SpecificCompilerTool implements Tool {
     if ("-dateTimeLogicalTypeImpl".equalsIgnoreCase(args.get(arg))) {
       arg++;
       try {
-        dateTimeLogicalTypeImplementation = Optional.of(DateTimeLogicalTypeImplementation.valueOf(args.get(arg).toUpperCase()));
+        dateTimeLogicalTypeImplementation = Optional
+            .of(DateTimeLogicalTypeImplementation.valueOf(args.get(arg).toUpperCase()));
       } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
         System.err.println("Expected one of " + Arrays.toString(DateTimeLogicalTypeImplementation.values()));
         return 1;
@@ -104,12 +101,11 @@ public class SpecificCompilerTool implements Tool {
       arg++;
     }
 
-
     String method = args.get(arg);
     List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
 
-    for (int i = arg+1; i < args.size() - 1; i++) {
+    for (int i = arg + 1; i < args.size() - 1; i++) {
       inputs.add(new File(args.get(i)));
     }
 
@@ -118,14 +114,14 @@ public class SpecificCompilerTool implements Tool {
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(schema,
-          dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
+            dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
         executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(protocol,
-          dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
+            dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
         executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
       }
     } else {
@@ -135,13 +131,8 @@ public class SpecificCompilerTool implements Tool {
     return 0;
   }
 
-  private void executeCompiler(SpecificCompiler compiler,
-                               Optional<String> encoding,
-                               StringType stringType,
-                               boolean enableDecimalLogicalType,
-                               Optional<String> templateDir,
-                               File src,
-                               File output) throws IOException {
+  private void executeCompiler(SpecificCompiler compiler, Optional<String> encoding, StringType stringType,
+      boolean enableDecimalLogicalType, Optional<String> templateDir, File src, File output) throws IOException {
     compiler.setStringType(stringType);
     templateDir.ifPresent(compiler::setTemplateDir);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
@@ -164,7 +155,8 @@ public class SpecificCompilerTool implements Tool {
    * passed as well as each file with a matching extension found in the directory.
    *
    * @param inputs List of File objects that are files or directories
-   * @param filter File extension filter to match on when fetching files from a directory
+   * @param filter File extension filter to match on when fetching files from a
+   *               directory
    * @return Unique array of files
    */
   private static File[] determineInputs(List<File> inputs, FilenameFilter filter) {
@@ -187,18 +179,15 @@ public class SpecificCompilerTool implements Tool {
       for (File file : fileSet) {
         System.err.println("  " + file);
       }
-    }
-    else {
+    } else {
       System.err.println("No input files found.");
     }
 
     return fileSet.toArray(new File[0]);
   }
 
-  private static final FileExtensionFilter SCHEMA_FILTER =
-    new FileExtensionFilter("avsc");
-  private static final FileExtensionFilter PROTOCOL_FILTER =
-    new FileExtensionFilter("avpr");
+  private static final FileExtensionFilter SCHEMA_FILTER = new FileExtensionFilter("avsc");
+  private static final FileExtensionFilter PROTOCOL_FILTER = new FileExtensionFilter("avpr");
 
   private static class FileExtensionFilter implements FilenameFilter {
     private String extension;

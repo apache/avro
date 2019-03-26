@@ -29,12 +29,10 @@ import java.util.zip.InflaterOutputStream;
 /**
  * Implements DEFLATE (RFC1951) compression and decompression.
  *
- * Note that there is a distinction between RFC1951 (deflate)
- * and RFC1950 (zlib).  zlib adds an extra 2-byte header
- * at the front, and a 4-byte checksum at the end.  The
- * code here, by passing "true" as the "nowrap" option to
- * {@link Inflater} and {@link Deflater}, is using
- * RFC1951.
+ * Note that there is a distinction between RFC1951 (deflate) and RFC1950
+ * (zlib). zlib adds an extra 2-byte header at the front, and a 4-byte checksum
+ * at the end. The code here, by passing "true" as the "nowrap" option to
+ * {@link Inflater} and {@link Deflater}, is using RFC1951.
  */
 public class DeflateCodec extends Codec {
 
@@ -54,7 +52,7 @@ public class DeflateCodec extends Codec {
   private ByteArrayOutputStream outputBuffer;
   private Deflater deflater;
   private Inflater inflater;
-  //currently only do 'nowrap' -- RFC 1951, not zlib
+  // currently only do 'nowrap' -- RFC 1951, not zlib
   private boolean nowrap = true;
   private int compressionLevel;
 
@@ -70,7 +68,7 @@ public class DeflateCodec extends Codec {
   @Override
   public ByteBuffer compress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    try(OutputStream outputStream = new DeflaterOutputStream(baos, getDeflater())) {
+    try (OutputStream outputStream = new DeflaterOutputStream(baos, getDeflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
     return ByteBuffer.wrap(baos.toByteArray());
@@ -79,7 +77,7 @@ public class DeflateCodec extends Codec {
   @Override
   public ByteBuffer decompress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    try(OutputStream outputStream = new InflaterOutputStream(baos, getInflater())) {
+    try (OutputStream outputStream = new InflaterOutputStream(baos, getInflater())) {
       outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
     return ByteBuffer.wrap(baos.toByteArray());
@@ -123,7 +121,7 @@ public class DeflateCodec extends Codec {
       return true;
     if (obj == null || obj.getClass() != getClass())
       return false;
-    DeflateCodec other = (DeflateCodec)obj;
+    DeflateCodec other = (DeflateCodec) obj;
     return (this.nowrap == other.nowrap);
   }
 
