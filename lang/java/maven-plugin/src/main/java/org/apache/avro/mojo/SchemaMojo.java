@@ -23,12 +23,14 @@ import org.apache.avro.generic.GenericData.StringType;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLClassLoader;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.avro.Schema;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.reflect.ReflectData;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 
 /**
@@ -36,6 +38,7 @@ import org.apache.maven.plugin.MojoExecutionException;
  *
  * @goal schema
  * @phase generate-sources
+ * @requiresDependencyResolution runtime+test
  * @threadSafe
  */
 public class SchemaMojo extends AbstractAvroMojo {
@@ -43,12 +46,12 @@ public class SchemaMojo extends AbstractAvroMojo {
    * A parser used to parse all schema files. Using a common parser will
    * facilitate the import of external schemas.
    */
-   private Schema.Parser schemaParser = new Schema.Parser();
+  private Schema.Parser schemaParser = new Schema.Parser();
 
-   /**
+  /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avsc</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avsc</code>
+   * is used to select grammar files.
    *
    * @parameter
    */
@@ -56,8 +59,8 @@ public class SchemaMojo extends AbstractAvroMojo {
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avsc</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avsc</code>
+   * is used to select grammar files.
    *
    * @parameter
    */
@@ -68,7 +71,6 @@ public class SchemaMojo extends AbstractAvroMojo {
    */
   private String[] javaImports = new String[] {};
   private Set<Schema> javaImportsSchemas = new HashSet<>();
-
 
   @Override
   public void execute() throws MojoExecutionException {
@@ -119,12 +121,22 @@ public class SchemaMojo extends AbstractAvroMojo {
       schema = schemaParser.parse(src);
     }
 
-    SpecificCompiler compiler = new SpecificCompiler(schema);
+    SpecificCompiler compiler = new SpecificCompiler(schema, getDateTimeLogicalTypeImplementation());
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setCreateOptionalGetters(createOptionalGetters);
+    compiler.setGettersReturnOptional(gettersReturnOptional);
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+    try {
+      final URLClassLoader classLoader = createClassLoader();
+      for (String customConversion : customConversions) {
+        compiler.addCustomConversion(classLoader.loadClass(customConversion));
+      }
+    } catch (ClassNotFoundException | DependencyResolutionRequiredException e) {
+      throw new IOException(e);
+    }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
     Set<Schema> allSchemas = new SpecificCompiler.SchemaQueue(schema);
     allSchemas.removeAll(javaImportsSchemas);
