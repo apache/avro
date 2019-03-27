@@ -36,6 +36,7 @@
 
   <properties>
     <jmh.version>1.21</jmh.version>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
   </properties>
   
   <dependencies>
