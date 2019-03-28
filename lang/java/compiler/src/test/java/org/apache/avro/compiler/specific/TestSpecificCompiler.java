@@ -393,7 +393,9 @@ public class TestSpecificCompiler {
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeMicrosSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
 
     // Date/time types should always use upper level java classes
     Assert.assertEquals("Should use java.time.LocalDate for date type", "java.time.LocalDate",
@@ -402,6 +404,10 @@ public class TestSpecificCompiler {
         compiler.javaType(timeSchema));
     Assert.assertEquals("Should use java.time.Instant for timestamp-millis type", "java.time.Instant",
         compiler.javaType(timestampSchema));
+    Assert.assertEquals("Should use java.time.LocalTime for time-micros type", "java.time.LocalTime",
+        compiler.javaType(timeMicrosSchema));
+    Assert.assertEquals("Should use java.time.Instant for timestamp-micros type", "java.time.Instant",
+        compiler.javaType(timestampMicrosSchema));
   }
 
   @Test
