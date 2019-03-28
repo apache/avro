@@ -19,6 +19,7 @@ package org.apache.avro;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -2708,11 +2709,11 @@ public class SchemaBuilder {
         byte[] data = new byte[bytes.remaining()];
         bytes.get(data);
         bytes.reset(); // put the buffer back the way we got it
-        s = new String(data, "ISO-8859-1");
+        s = new String(data, StandardCharsets.ISO_8859_1);
         char[] quoted = BufferRecyclers.getJsonStringEncoder().quoteAsString(s);
         s = "\"" + new String(quoted) + "\"";
       } else if (o instanceof byte[]) {
-        s = new String((byte[]) o, "ISO-8859-1");
+        s = new String((byte[]) o, StandardCharsets.ISO_8859_1);
         char[] quoted = BufferRecyclers.getJsonStringEncoder().quoteAsString(s);
         s = '\"' + new String(quoted) + '\"';
       } else {

@@ -21,6 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -450,7 +451,7 @@ public class Protocol extends JsonProperties {
   public byte[] getMD5() {
     if (md5 == null)
       try {
-        md5 = MessageDigest.getInstance("MD5").digest(this.toString().getBytes("UTF-8"));
+        md5 = MessageDigest.getInstance("MD5").digest(this.toString().getBytes(StandardCharsets.UTF_8));
       } catch (Exception e) {
         throw new AvroRuntimeException(e);
       }
@@ -478,7 +479,7 @@ public class Protocol extends JsonProperties {
   /** Read a protocol from a Json string. */
   public static Protocol parse(String string) {
     try {
-      return parse(Schema.FACTORY.createParser(new ByteArrayInputStream(string.getBytes("UTF-8"))));
+      return parse(Schema.FACTORY.createParser(new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8))));
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }

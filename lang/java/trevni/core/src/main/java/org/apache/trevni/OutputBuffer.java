@@ -19,8 +19,8 @@ package org.apache.trevni;
 
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /** Used to write values. */
@@ -97,10 +97,8 @@ class OutputBuffer extends ByteArrayOutputStream {
     writeInt(length);
   }
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
-
   public void writeString(String string) throws IOException {
-    byte[] bytes = string.getBytes(UTF8);
+    byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
     writeInt(bytes.length);
     write(bytes, 0, bytes.length);
   }

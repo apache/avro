@@ -21,6 +21,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import joptsimple.OptionParser;
@@ -61,7 +62,7 @@ public class SchemaNormalizationTool implements Tool {
 
     String canonicalForm = SchemaNormalization.toParsingForm(schema);
 
-    outStream.write(canonicalForm.getBytes());
+    outStream.write(canonicalForm.getBytes(StandardCharsets.UTF_8));
 
     Util.close(inStream);
     Util.close(outStream);

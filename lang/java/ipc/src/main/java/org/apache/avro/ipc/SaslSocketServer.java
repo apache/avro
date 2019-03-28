@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
+
 import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslServer;
 import javax.security.sasl.SaslException;
@@ -87,11 +89,7 @@ public class SaslSocketServer extends SocketServer {
 
     @Override
     public byte[] evaluateResponse(byte[] response) throws SaslException {
-      try {
-        this.user = new String(response, "UTF-8");
-      } catch (IOException e) {
-        throw new SaslException(e.toString());
-      }
+      this.user = new String(response, StandardCharsets.UTF_8);
       return null;
     }
 

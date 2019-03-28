@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -268,7 +269,7 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Record record = defaultRecordWithSchema(writer, FIELD_A, "42");
     byte[] encoded = encodeGenericBlob(record);
     ByteBuffer actual = (ByteBuffer) decodeGenericBlob(BYTES_RECORD, writer, encoded).get(FIELD_A);
-    assertArrayEquals("42".getBytes("UTF-8"), actual.array());
+    assertArrayEquals("42".getBytes(StandardCharsets.UTF_8), actual.array());
   }
 
   @Test
@@ -278,13 +279,13 @@ public class TestReadingWritingDataInEvolvedSchemas {
     Record record = defaultRecordWithSchema(writer, FIELD_A, goeran);
     byte[] encoded = encodeGenericBlob(record);
     ByteBuffer actual = (ByteBuffer) decodeGenericBlob(BYTES_RECORD, writer, encoded).get(FIELD_A);
-    assertArrayEquals(goeran.getBytes("UTF-8"), actual.array());
+    assertArrayEquals(goeran.getBytes(StandardCharsets.UTF_8), actual.array());
   }
 
   @Test
   public void asciiBytesWrittenWithUnionSchemaIsConvertedToStringSchema() throws Exception {
     Schema writer = UNION_STRING_BYTES_RECORD;
-    ByteBuffer buf = ByteBuffer.wrap("42".getBytes("UTF-8"));
+    ByteBuffer buf = ByteBuffer.wrap("42".getBytes(StandardCharsets.UTF_8));
     Record record = defaultRecordWithSchema(writer, FIELD_A, buf);
     byte[] encoded = encodeGenericBlob(record);
     CharSequence read = (CharSequence) decodeGenericBlob(STRING_RECORD, writer, encoded).get(FIELD_A);

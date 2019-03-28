@@ -79,7 +79,7 @@ public class TestNestedRecords {
         // this field should be safely ignored
         "    \"extraField\":\"extraValue\"\n" + " },\n" + " \"parentField2\":\"parentValue2\"\n" + "}";
 
-    final ByteArrayInputStream inputStream = new ByteArrayInputStream(inputAsExpected.getBytes());
+    final ByteArrayInputStream inputStream = new ByteArrayInputStream(inputAsExpected.getBytes(UTF_8));
 
     final JsonDecoder decoder = DecoderFactory.get().jsonDecoder(parent, inputStream);
     final DatumReader<Object> reader = new GenericDatumReader<>(parent);

@@ -155,7 +155,7 @@ public class SaslSocketTransceiver extends Transceiver {
           response = sasl.evaluate(frame.array());
           status = sasl.isComplete() ? Status.COMPLETE : Status.CONTINUE;
         } catch (SaslException e) {
-          response = e.toString().getBytes("UTF-8");
+          response = e.toString().getBytes(StandardCharsets.UTF_8);
           status = Status.FAIL;
         }
         write(status, response != null ? ByteBuffer.wrap(response) : EMPTY);
@@ -272,7 +272,7 @@ public class SaslSocketTransceiver extends Transceiver {
   }
 
   private void write(Status status, String response) throws IOException {
-    write(status, ByteBuffer.wrap(response.getBytes("UTF-8")));
+    write(status, ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
   }
 
   private void write(Status status, ByteBuffer response) throws IOException {
@@ -399,11 +399,7 @@ public class SaslSocketTransceiver extends Transceiver {
 
     @Override
     public byte[] evaluateChallenge(byte[] challenge) throws SaslException {
-      try {
-        return System.getProperty("user.name").getBytes("UTF-8");
-      } catch (IOException e) {
-        throw new SaslException(e.toString());
-      }
+      return System.getProperty("user.name").getBytes(StandardCharsets.UTF_8);
     }
 
     @Override

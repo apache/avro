@@ -20,6 +20,7 @@ package org.apache.avro.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 
 import org.apache.avro.AvroTypeException;
@@ -206,7 +207,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   }
 
   private void writeByteArray(byte[] bytes, int start, int len) throws IOException {
-    out.writeString(new String(bytes, start, len, JsonDecoder.CHARSET));
+    out.writeString(new String(bytes, start, len, StandardCharsets.ISO_8859_1));
   }
 
   @Override

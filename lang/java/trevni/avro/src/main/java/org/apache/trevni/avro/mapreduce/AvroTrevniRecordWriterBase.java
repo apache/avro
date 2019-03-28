@@ -20,6 +20,7 @@ package org.apache.trevni.avro.mapreduce;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
 
 import org.apache.avro.Schema;
@@ -31,7 +32,6 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.trevni.ColumnFileMetaData;
-import org.apache.trevni.MetaData;
 import org.apache.trevni.avro.AvroColumnWriter;
 
 /**
@@ -127,7 +127,8 @@ public abstract class AvroTrevniRecordWriterBase<K, V, T> extends RecordWriter<K
 
     for (Entry<String, String> confEntry : configuration) {
       if (confEntry.getKey().startsWith(META_PREFIX))
-        meta.put(confEntry.getKey().substring(META_PREFIX.length()), confEntry.getValue().getBytes(MetaData.UTF8));
+        meta.put(confEntry.getKey().substring(META_PREFIX.length()),
+            confEntry.getValue().getBytes(StandardCharsets.UTF_8));
     }
 
     return meta;

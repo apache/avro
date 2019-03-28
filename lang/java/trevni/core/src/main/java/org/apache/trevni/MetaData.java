@@ -18,7 +18,6 @@
 package org.apache.trevni;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -30,8 +29,6 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String, byte[]> 
 
   static final String CODEC_KEY = RESERVED_KEY_PREFIX + "codec";
   static final String CHECKSUM_KEY = RESERVED_KEY_PREFIX + "checksum";
-
-  public static final Charset UTF8 = Charset.forName("UTF-8");
 
   private MetaData<?> defaults;
 
@@ -68,7 +65,7 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String, byte[]> 
       value = defaults.get(key);
     if (value == null)
       return null;
-    return new String(value, UTF8);
+    return new String(value, StandardCharsets.UTF_8);
   }
 
   /** Return the value of a metadata property as a long. */
@@ -97,11 +94,11 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String, byte[]> 
 
   /** Set a metadata property to a String value. */
   public T set(String key, String value) {
-    return set(key, value.getBytes(UTF8));
+    return set(key, value.getBytes(StandardCharsets.UTF_8));
   }
 
   T setReserved(String key, String value) {
-    put(key, value.getBytes(UTF8));
+    put(key, value.getBytes(StandardCharsets.UTF_8));
     return (T) this;
   }
 

@@ -20,6 +20,7 @@ package org.apache.trevni.avro;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.apache.hadoop.io.NullWritable;
@@ -36,7 +37,6 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.AvroWrapper;
 
-import org.apache.trevni.MetaData;
 import org.apache.trevni.ColumnFileMetaData;
 
 /**
@@ -105,7 +105,7 @@ public class AvroTrevniOutputFormat<T> extends FileOutputFormat<AvroWrapper<T>, 
     final ColumnFileMetaData meta = new ColumnFileMetaData();
     for (Map.Entry<String, String> e : job)
       if (e.getKey().startsWith(META_PREFIX))
-        meta.put(e.getKey().substring(META_PREFIX.length()), e.getValue().getBytes(MetaData.UTF8));
+        meta.put(e.getKey().substring(META_PREFIX.length()), e.getValue().getBytes(StandardCharsets.UTF_8));
     return meta;
   }
 
