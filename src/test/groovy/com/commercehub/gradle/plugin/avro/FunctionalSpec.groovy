@@ -60,7 +60,12 @@ abstract class FunctionalSpec extends Specification {
                     classpath files($pluginClasspath)
                 }
             }
-            repositories { jcenter() }
+            repositories {
+                jcenter()
+                maven {
+                    url 'https://repository.apache.org/content/repositories/snapshots/'
+                }
+            }
         """
     }
 

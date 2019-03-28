@@ -256,11 +256,11 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void compile(Protocol protocol, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(protocol), sourceFile);
+        compile(new SpecificCompiler(protocol, SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT), sourceFile);
     }
 
     private void compile(Schema schema, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(schema), sourceFile);
+        compile(new SpecificCompiler(schema, SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT), sourceFile);
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
