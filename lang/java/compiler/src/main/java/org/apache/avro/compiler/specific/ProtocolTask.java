@@ -37,7 +37,7 @@ public class ProtocolTask extends Task {
   private File src;
   private File dest = new File(".");
   private StringType stringType = StringType.CharSequence;
-  private DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.JODA;
+  private DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.DEFAULT;
 
   private final ArrayList<FileSet> filesets = new ArrayList<>();
 

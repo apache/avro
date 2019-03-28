@@ -164,12 +164,11 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   /**
    * Determines which type of classes to generate for date/time related logical
-   * types. Either 'joda' or 'jsr310'. Defaults to joda for backwards
-   * compatibility reasons.
+   * types. Either 'joda' or 'jsr310'. Defaults to jsr310.
    *
-   * @parameter default-value="joda"
+   * @parameter default-value="jsr310"
    */
-  protected String dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.JODA.name().toLowerCase();
+  protected String dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.JSR310.name().toLowerCase();
 
   /**
    * The current Maven project.

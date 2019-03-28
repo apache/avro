@@ -127,7 +127,7 @@ public class TestSpecificCompiler {
   }
 
   private SpecificCompiler createCompiler() throws IOException {
-    return createCompiler(JODA);
+    return createCompiler(JSR310);
   }
 
   private SpecificCompiler createCompiler(
@@ -338,7 +338,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testJavaTypeWithDecimalLogicalTypeEnabled() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
     compiler.setEnableDecimalLogicalType(true);
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
@@ -363,7 +363,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testJavaTypeWithDecimalLogicalTypeDisabled() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
     compiler.setEnableDecimalLogicalType(false);
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
@@ -405,7 +405,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testJavaUnbox() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
     compiler.setEnableDecimalLogicalType(false);
 
     Schema intSchema = Schema.create(Schema.Type.INT);
@@ -530,7 +530,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInNestedRecord() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
@@ -542,7 +542,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInArray() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NullableLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfLogicalType\",\"type\":{\"type\":\"array\",\"items\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}}]}");
@@ -554,7 +554,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInArrayOfRecords() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesArray\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"arrayOfRecords\",\"type\":{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"RecordInArray\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}}]}");
@@ -566,7 +566,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInUnionOfRecords() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesUnion\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"unionOfRecords\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"RecordInUnion\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}]}]}");
@@ -578,7 +578,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testGetUsedConversionClassesForNullableLogicalTypesInMapOfRecords() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
 
     final Schema schema = new Schema.Parser().parse(
         "{\"type\":\"record\",\"name\":\"NestedLogicalTypesMap\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"mapOfRecords\",\"type\":{\"type\":\"map\",\"values\":{\"type\":\"record\",\"name\":\"RecordInMap\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]},\"avro.java.string\":\"String\"}}]}");
@@ -593,7 +593,7 @@ public class TestSpecificCompiler {
     Schema logicalTypesWithMultipleFields = new Schema.Parser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName()),
-        new SpecificCompiler(logicalTypesWithMultipleFields).compile());
+        new SpecificCompiler(logicalTypesWithMultipleFields, JODA).compile());
   }
 
   @Test
@@ -614,7 +614,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testConversionInstanceWithDecimalLogicalTypeDisabled() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
     compiler.setEnableDecimalLogicalType(false);
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
@@ -637,7 +637,7 @@ public class TestSpecificCompiler {
 
   @Test
   public void testConversionInstanceWithDecimalLogicalTypeEnabled() throws Exception {
-    SpecificCompiler compiler = createCompiler();
+    SpecificCompiler compiler = createCompiler(JODA);
     compiler.setEnableDecimalLogicalType(true);
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));

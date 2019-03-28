@@ -53,8 +53,8 @@ public class SpecificCompilerTool implements Tool {
       System.err.println(" -string - use java.lang.String instead of Utf8");
       System.err
           .println(" -bigDecimal - use java.math.BigDecimal for " + "decimal type instead of java.nio.ByteBuffer");
-      System.err.println(" -dateTimeLogicalTypeImpl [joda|jsr310] - use either "
-          + "Joda time classes (default) or Java 8 native date/time classes (JSR 310)");
+      System.err.println(" -dateTimeLogicalTypeImpl [jsr310|joda] - use either "
+          + "Java 8 native date/time classes (JSR 310)(default) or Joda time classes");
       System.err.println(" -templateDir - directory with custom Velocity templates");
       return 1;
     }
@@ -114,14 +114,14 @@ public class SpecificCompilerTool implements Tool {
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(schema,
-            dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
+            dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.DEFAULT));
         executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
         SpecificCompiler compiler = new SpecificCompiler(protocol,
-            dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.JODA));
+            dateTimeLogicalTypeImplementation.orElse(DateTimeLogicalTypeImplementation.DEFAULT));
         executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
       }
     } else {

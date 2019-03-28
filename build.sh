@@ -197,6 +197,49 @@ do
 
       (cd lang/perl; ./build.sh clean)
       ;;
+    veryclean)
+      rm -rf build dist
+      (cd doc; ant clean)
+
+      (mvn -B clean)
+      rm -rf lang/java/*/userlogs/
+      rm -rf lang/java/*/dependency-reduced-pom.xml
+
+      (cd lang/py; ant clean)
+      rm -rf lang/py/userlogs/
+
+      (cd lang/py3; python3 setup.py clean)
+      rm -rf lang/py3/dist
+      rm -rf lang/py3/avro_python3.egg-info
+      rm -f  lang/py3/avro/*.avsc
+      rm -f  lang/py3/avro/VERSION.txt
+      rm -rf lang/py3/avro/__pycache__/
+      rm -f  lang/py3/avro/tests/interop.avsc
+      rm -rf lang/py3/avro/tests/__pycache__/
+
+      (cd lang/c; ./build.sh clean)
+
+      (cd lang/c++; ./build.sh clean)
+
+      (cd lang/csharp; ./build.sh clean)
+
+      (cd lang/js; ./build.sh clean)
+
+      (cd lang/ruby; ./build.sh clean)
+
+      (cd lang/php; ./build.sh clean)
+
+      (cd lang/perl; ./build.sh clean)
+      rm -rf lang/c++/build
+      rm -rf lang/c++/test?.df
+      rm -rf lang/js/node_modules
+      rm -rf lang/perl/inc/
+      rm -rf lang/ruby/.gem/
+      rm -rf lang/ruby/Gemfile.lock
+      rm -rf lang/py/lib/ivy-2.2.0.jar
+      rm -rf lang/csharp/src/apache/ipc.test/bin/
+      rm -rf lang/csharp/src/apache/ipc.test/obj
+      ;;
 
     docker)
       if [[ $1 =~ ^--args ]]; then

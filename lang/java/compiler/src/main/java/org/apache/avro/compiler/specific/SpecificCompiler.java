@@ -115,7 +115,7 @@ public class SpecificCompiler {
       }
     };
 
-    public static final DateTimeLogicalTypeImplementation DEFAULT = JODA;
+    public static final DateTimeLogicalTypeImplementation DEFAULT = JSR310;
 
     abstract void addLogicalTypeConversions(SpecificData specificData);
   }
@@ -162,7 +162,7 @@ public class SpecificCompiler {
       + " * DO NOT EDIT DIRECTLY\n" + " */\n";
 
   public SpecificCompiler(Protocol protocol) {
-    this(protocol, DateTimeLogicalTypeImplementation.JODA);
+    this(protocol, DateTimeLogicalTypeImplementation.DEFAULT);
   }
 
   public SpecificCompiler(Protocol protocol, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
@@ -175,7 +175,7 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
-    this(schema, DateTimeLogicalTypeImplementation.JODA);
+    this(schema, DateTimeLogicalTypeImplementation.DEFAULT);
   }
 
   public SpecificCompiler(Schema schema, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
@@ -185,13 +185,13 @@ public class SpecificCompiler {
   }
 
   /**
-   * Creates a specific compiler with the default (Joda) type for date/time
+   * Creates a specific compiler with the default (JSR310) type for date/time
    * related logical types.
    *
    * @see #SpecificCompiler(DateTimeLogicalTypeImplementation)
    */
   SpecificCompiler() {
-    this(DateTimeLogicalTypeImplementation.JODA);
+    this(DateTimeLogicalTypeImplementation.DEFAULT);
   }
 
   /**
@@ -465,7 +465,7 @@ public class SpecificCompiler {
 
     for (File src : srcFiles) {
       Schema schema = parser.parse(src);
-      SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeImplementation.JODA);
+      SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeImplementation.DEFAULT);
       compiler.compileToDestination(src, dest);
     }
   }

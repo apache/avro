@@ -18,8 +18,8 @@
 
 package org.apache.avro.codegentest;
 
+import java.time.LocalDate;
 import org.apache.avro.codegentest.testdata.NullableLogicalTypes;
-import org.joda.time.LocalDate;
 import org.junit.Test;
 
 import java.io.IOException;

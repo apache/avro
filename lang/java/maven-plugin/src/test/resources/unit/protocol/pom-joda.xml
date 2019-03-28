@@ -46,6 +46,7 @@
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
           <outputDirectory>${basedir}/target/test-harness/protocol-joda</outputDirectory>
+          <dateTimeLogicalTypeImplementation>joda</dateTimeLogicalTypeImplementation>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>
