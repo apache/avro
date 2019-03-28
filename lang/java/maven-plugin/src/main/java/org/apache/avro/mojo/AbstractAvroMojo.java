@@ -81,7 +81,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * A list of files or directories that should be compiled first thus making them
    * importable by subsequently compiled schemas. Note that imported files should
    * not reference each other.
-   * 
+   *
    * @parameter
    */
   protected String[] imports;
@@ -266,7 +266,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       String upper = String.valueOf(this.fieldVisibility).trim().toUpperCase();
       return SpecificCompiler.FieldVisibility.valueOf(upper);
     } catch (IllegalArgumentException e) {
-      return SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED;
+      return SpecificCompiler.FieldVisibility.PRIVATE;
     }
   }
 

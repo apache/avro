@@ -126,7 +126,7 @@ public class SpecificCompiler {
   private Protocol protocol;
   private VelocityEngine velocityEngine;
   private String templateDir;
-  private FieldVisibility fieldVisibility = FieldVisibility.PUBLIC_DEPRECATED;
+  private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
   private boolean createSetters = true;

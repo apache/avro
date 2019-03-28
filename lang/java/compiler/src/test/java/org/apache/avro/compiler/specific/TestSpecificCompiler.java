@@ -231,6 +231,7 @@ public class TestSpecificCompiler {
   @Test
   public void testPublicDeprecatedFieldVisibility() throws IOException {
     SpecificCompiler compiler = createCompiler();
+    compiler.setFieldVisibility(SpecificCompiler.FieldVisibility.PUBLIC_DEPRECATED);
     assertTrue(compiler.deprecatedFields());
     assertTrue(compiler.publicFields());
     assertFalse(compiler.privateFields());

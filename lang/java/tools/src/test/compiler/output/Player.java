@@ -73,10 +73,10 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   }
 
   /** The number of the player */
-  @Deprecated public int number;
-  @Deprecated public java.lang.CharSequence first_name;
-  @Deprecated public java.lang.CharSequence last_name;
-  @Deprecated public java.util.List<avro.examples.baseball.Position> position;
+   private int number;
+   private java.lang.CharSequence first_name;
+   private java.lang.CharSequence last_name;
+   private java.util.List<avro.examples.baseball.Position> position;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -132,6 +132,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     return number;
   }
 
+
   /**
    * Sets the value of the 'number' field.
    * The number of the player
@@ -149,6 +150,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     return first_name;
   }
 
+
   /**
    * Sets the value of the 'first_name' field.
    * @param value the value to set.
@@ -165,6 +167,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     return last_name;
   }
 
+
   /**
    * Sets the value of the 'last_name' field.
    * @param value the value to set.
@@ -180,6 +183,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public java.util.List<avro.examples.baseball.Position> getPosition() {
     return position;
   }
+
 
   /**
    * Sets the value of the 'position' field.
@@ -297,6 +301,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       return number;
     }
 
+
     /**
       * Sets the value of the 'number' field.
       * The number of the player
@@ -338,6 +343,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       return first_name;
     }
 
+
     /**
       * Sets the value of the 'first_name' field.
       * @param value The value of 'first_name'.
@@ -377,6 +383,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       return last_name;
     }
 
+
     /**
       * Sets the value of the 'last_name' field.
       * @param value The value of 'last_name'.
@@ -415,6 +422,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     public java.util.List<avro.examples.baseball.Position> getPosition() {
       return position;
     }
+
 
     /**
       * Sets the value of the 'position' field.
@@ -574,3 +582,13 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
