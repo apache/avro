@@ -71,6 +71,11 @@ public class Jsr310TimeConversions {
     }
 
     @Override
+    public String adjustAndSetValue(String varName, String valParamName) {
+      return varName + " = " + valParamName + ".truncatedTo(java.time.temporal.ChronoUnit.MILLIS);";
+    }
+
+    @Override
     public LocalTime fromInt(Integer millisFromMidnight, Schema schema, LogicalType type) {
       return LocalTime.ofNanoOfDay(TimeUnit.MILLISECONDS.toNanos(millisFromMidnight));
     }
@@ -95,6 +100,11 @@ public class Jsr310TimeConversions {
     @Override
     public String getLogicalTypeName() {
       return "time-micros";
+    }
+
+    @Override
+    public String adjustAndSetValue(String varName, String valParamName) {
+      return varName + " = " + valParamName + ".truncatedTo(java.time.temporal.ChronoUnit.MICROS);";
     }
 
     @Override
@@ -125,6 +135,11 @@ public class Jsr310TimeConversions {
     }
 
     @Override
+    public String adjustAndSetValue(String varName, String valParamName) {
+      return varName + " = " + valParamName + ".truncatedTo(java.time.temporal.ChronoUnit.MILLIS);";
+    }
+
+    @Override
     public Instant fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
       return Instant.ofEpochMilli(millisFromEpoch);
     }
@@ -149,6 +164,11 @@ public class Jsr310TimeConversions {
     @Override
     public String getLogicalTypeName() {
       return "timestamp-micros";
+    }
+
+    @Override
+    public String adjustAndSetValue(String varName, String valParamName) {
+      return varName + " = " + valParamName + ".truncatedTo(java.time.temporal.ChronoUnit.MICROS);";
     }
 
     @Override

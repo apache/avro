@@ -61,6 +61,19 @@ public abstract class Conversion<T> {
    */
   public abstract String getLogicalTypeName();
 
+  /**
+   * Certain logical types may require adjusting the code within the "setter"
+   * methods to make sure the data that is set is properly formatted. This method
+   * allows teh Conversion to generate custom setter code if required.
+   * 
+   * @param varName
+   * @param valParamName
+   * @return a String for the body of the setter method
+   */
+  public String adjustAndSetValue(String varName, String valParamName) {
+    return varName + " = " + valParamName + ";";
+  }
+
   public Schema getRecommendedSchema() {
     throw new UnsupportedOperationException("No recommended schema for " + getLogicalTypeName());
   }

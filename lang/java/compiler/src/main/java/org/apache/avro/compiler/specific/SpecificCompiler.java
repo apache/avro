@@ -820,6 +820,17 @@ public class SpecificCompiler {
   }
 
   /**
+   * Utility for template use.
+   */
+  public String generateSetterCode(Schema schema, String name, String pname) {
+    Conversion<?> conversion = specificData.getConversionFor(schema.getLogicalType());
+    if (conversion != null) {
+      return conversion.adjustAndSetValue("this." + name, pname);
+    }
+    return "this." + name + " = " + pname + ";";
+  }
+
+  /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
    * @Deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby

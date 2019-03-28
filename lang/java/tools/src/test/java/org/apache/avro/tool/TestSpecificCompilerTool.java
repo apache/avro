@@ -49,6 +49,8 @@ public class TestSpecificCompilerTool {
       "avro/examples/baseball/Position.java");
   private static final File TEST_EXPECTED_STRING_PLAYER = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
       "avro/examples/baseball/Player.java");
+  private static final File TEST_EXPECTED_STRING_FIELDTEST = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
+      "avro/examples/baseball/FieldTest.java");
 
   // where test output goes
   private static final File TEST_OUTPUT_DIR = new File("target/compiler/output");
@@ -60,6 +62,8 @@ public class TestSpecificCompilerTool {
       "avro/examples/baseball/Player.java");
   private static final File TEST_OUTPUT_STRING_POSITION = new File(TEST_OUTPUT_STRING_DIR,
       "avro/examples/baseball/Position.java");
+  private static final File TEST_OUTPUT_STRING_FIELDTEST = new File(TEST_OUTPUT_STRING_DIR,
+      "avro/examples/baseball/FieldTest.java");
 
   @Before
   public void setUp() {
@@ -99,6 +103,14 @@ public class TestSpecificCompilerTool {
         TEST_INPUT_DIR.toString() + "/player.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
     assertFileMatch(TEST_EXPECTED_STRING_POSITION, TEST_OUTPUT_STRING_POSITION);
     assertFileMatch(TEST_EXPECTED_STRING_PLAYER, TEST_OUTPUT_STRING_PLAYER);
+  }
+
+  @Test
+  public void testCompileSchemasWithVariousFieldTypes() throws Exception {
+
+    doCompile(new String[] { "-encoding", "UTF-8", "-string", "schema", TEST_INPUT_DIR.toString() + "/fieldtest.avsc",
+        TEST_INPUT_DIR.toString() + "/fieldtest.avsc", TEST_OUTPUT_STRING_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
   }
 
   // Runs the actual compiler tool with the given input args
