@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.util.Utf8;
 
@@ -51,7 +52,7 @@ public abstract class BinaryEncoder extends Encoder {
       writeZero();
       return;
     }
-    byte[] bytes = string.getBytes("UTF-8");
+    byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
     writeInt(bytes.length);
     writeFixed(bytes, 0, bytes.length);
   }

@@ -28,6 +28,7 @@ import java.io.Flushable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -222,7 +223,7 @@ public class DataFileWriter<D> implements Closeable, Flushable {
     this.meta.putAll(reader.getHeader().meta);
     byte[] codecBytes = this.meta.get(DataFileConstants.CODEC);
     if (codecBytes != null) {
-      String strCodec = new String(codecBytes, "UTF-8");
+      String strCodec = new String(codecBytes, StandardCharsets.UTF_8);
       this.codec = CodecFactory.fromString(strCodec).createInstance();
     } else {
       this.codec = CodecFactory.nullCodec().createInstance();

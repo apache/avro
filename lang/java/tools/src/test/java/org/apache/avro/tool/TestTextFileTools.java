@@ -28,6 +28,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -43,7 +44,7 @@ import org.junit.rules.TemporaryFolder;
 public class TestTextFileTools {
   private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "10"));
 
-  private static final byte[] LINE_SEP = System.getProperty("line.separator").getBytes();
+  private static final byte[] LINE_SEP = System.getProperty("line.separator").getBytes(StandardCharsets.UTF_8);
   private static File linesFile;
   private static ByteBuffer[] lines;
   static Schema schema;

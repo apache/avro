@@ -19,6 +19,7 @@ package org.apache.avro.io.parsing;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -444,7 +445,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     case FIXED:
       if (!n.isTextual())
         throw new AvroTypeException("Non-string default value for fixed: " + n);
-      byte[] bb = n.textValue().getBytes("ISO-8859-1");
+      byte[] bb = n.textValue().getBytes(StandardCharsets.ISO_8859_1);
       if (bb.length != s.getFixedSize()) {
         bb = Arrays.copyOf(bb, s.getFixedSize());
       }
@@ -458,7 +459,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     case BYTES:
       if (!n.isTextual())
         throw new AvroTypeException("Non-string default value for bytes: " + n);
-      e.writeBytes(n.textValue().getBytes("ISO-8859-1"));
+      e.writeBytes(n.textValue().getBytes(StandardCharsets.ISO_8859_1));
       break;
     case INT:
       if (!n.isNumber())

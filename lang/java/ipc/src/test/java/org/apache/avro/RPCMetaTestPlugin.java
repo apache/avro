@@ -18,6 +18,7 @@
 package org.apache.avro;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -43,7 +44,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
 
   @Override
   public void clientStartConnect(RPCContext context) {
-    ByteBuffer buf = ByteBuffer.wrap("ap".getBytes());
+    ByteBuffer buf = ByteBuffer.wrap("ap".getBytes(StandardCharsets.UTF_8));
     context.requestHandshakeMeta().put(key, buf);
   }
 
@@ -62,11 +63,11 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(buf);
     Assert.assertNotNull(buf.array());
 
-    String partialstr = new String(buf.array());
+    String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
     Assert.assertNotNull(partialstr);
     Assert.assertEquals("partial string mismatch", "ap", partialstr);
 
-    buf = ByteBuffer.wrap((partialstr + "ac").getBytes());
+    buf = ByteBuffer.wrap((partialstr + "ac").getBytes(StandardCharsets.UTF_8));
     Assert.assertTrue(buf.remaining() > 0);
     context.responseHandshakeMeta().put(key, buf);
   }
@@ -86,11 +87,11 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(buf);
     Assert.assertNotNull(buf.array());
 
-    String partialstr = new String(buf.array());
+    String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
     Assert.assertNotNull(partialstr);
     Assert.assertEquals("partial string mismatch", "apac", partialstr);
 
-    buf = ByteBuffer.wrap((partialstr + "he").getBytes());
+    buf = ByteBuffer.wrap((partialstr + "he").getBytes(StandardCharsets.UTF_8));
     Assert.assertTrue(buf.remaining() > 0);
     handshakeMeta.put(key, buf);
 
@@ -99,7 +100,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
 
   @Override
   public void clientSendRequest(RPCContext context) {
-    ByteBuffer buf = ByteBuffer.wrap("ap".getBytes());
+    ByteBuffer buf = ByteBuffer.wrap("ap".getBytes(StandardCharsets.UTF_8));
     context.requestCallMeta().put(key, buf);
     Assert.assertNotNull(context.getMessage());
     Assert.assertNotNull(context.getRequestPayload());
@@ -121,11 +122,11 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(buf);
     Assert.assertNotNull(buf.array());
 
-    String partialstr = new String(buf.array());
+    String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
     Assert.assertNotNull(partialstr);
     Assert.assertEquals("partial string mismatch", "ap", partialstr);
 
-    buf = ByteBuffer.wrap((partialstr + "a").getBytes());
+    buf = ByteBuffer.wrap((partialstr + "a").getBytes(StandardCharsets.UTF_8));
     Assert.assertTrue(buf.remaining() > 0);
     meta.put(key, buf);
   }
@@ -144,11 +145,11 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(buf);
     Assert.assertNotNull(buf.array());
 
-    String partialstr = new String(buf.array());
+    String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
     Assert.assertNotNull(partialstr);
     Assert.assertEquals("partial string mismatch", "apa", partialstr);
 
-    buf = ByteBuffer.wrap((partialstr + "c").getBytes());
+    buf = ByteBuffer.wrap((partialstr + "c").getBytes(StandardCharsets.UTF_8));
     Assert.assertTrue(buf.remaining() > 0);
     context.responseCallMeta().put(key, buf);
   }
@@ -165,11 +166,11 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(buf);
     Assert.assertNotNull(buf.array());
 
-    String partialstr = new String(buf.array());
+    String partialstr = new String(buf.array(), StandardCharsets.UTF_8);
     Assert.assertNotNull(partialstr);
     Assert.assertEquals("partial string mismatch", "apac", partialstr);
 
-    buf = ByteBuffer.wrap((partialstr + "he").getBytes());
+    buf = ByteBuffer.wrap((partialstr + "he").getBytes(StandardCharsets.UTF_8));
     Assert.assertTrue(buf.remaining() > 0);
     context.responseCallMeta().put(key, buf);
 
@@ -184,7 +185,7 @@ public final class RPCMetaTestPlugin extends RPCPlugin {
     Assert.assertNotNull(keybuf);
     Assert.assertTrue("key BB had nothing remaining", keybuf.remaining() > 0);
 
-    String str = new String(keybuf.array());
+    String str = new String(keybuf.array(), StandardCharsets.UTF_8);
     Assert.assertEquals("apache", str);
   }
 

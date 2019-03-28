@@ -22,6 +22,7 @@ import static org.apache.avro.mapred.AvroOutputFormat.EXT;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
@@ -42,15 +43,14 @@ import org.apache.hadoop.util.Progressable;
  */
 public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
-  private static final String UTF8 = "UTF-8";
-
   @Override
   public RecordWriter<K, V> getRecordWriter(FileSystem ignore, JobConf job, String name, Progressable prog)
       throws IOException {
 
     Schema schema = Schema.create(Schema.Type.BYTES);
 
-    final byte[] keyValueSeparator = job.get("mapreduce.output.textoutputformat.separator", "\t").getBytes(UTF8);
+    final byte[] keyValueSeparator = job.get("mapreduce.output.textoutputformat.separator", "\t")
+        .getBytes(StandardCharsets.UTF_8);
 
     final DataFileWriter<ByteBuffer> writer = new DataFileWriter<>(new ReflectDatumWriter<>());
 
@@ -96,7 +96,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         Text to = (Text) o;
         return ByteBuffer.wrap(to.getBytes(), 0, to.getLength());
       } else {
-        return ByteBuffer.wrap(o.toString().getBytes(UTF8));
+        return ByteBuffer.wrap(o.toString().getBytes(StandardCharsets.UTF_8));
       }
     }
 
@@ -108,7 +108,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         keyBytes = tkey.getBytes();
         keyLength = tkey.getLength();
       } else {
-        keyBytes = key.toString().getBytes(UTF8);
+        keyBytes = key.toString().getBytes(StandardCharsets.UTF_8);
         keyLength = keyBytes.length;
       }
       if (value instanceof Text) {
@@ -116,7 +116,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
         valBytes = tval.getBytes();
         valLength = tval.getLength();
       } else {
-        valBytes = value.toString().getBytes(UTF8);
+        valBytes = value.toString().getBytes(StandardCharsets.UTF_8);
         valLength = valBytes.length;
       }
       ByteBuffer buf = ByteBuffer.allocate(keyLength + sep.length + valLength);

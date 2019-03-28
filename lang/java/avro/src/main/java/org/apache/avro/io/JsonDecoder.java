@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,8 +62,6 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
     public Map<String, List<JsonElement>> savedFields = new HashMap<>();
     public JsonParser origParser = null;
   }
-
-  static final String CHARSET = "ISO-8859-1";
 
   private JsonDecoder(Symbol root, InputStream in) throws IOException {
     super(root);
@@ -266,7 +265,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
   }
 
   private byte[] readByteArray() throws IOException {
-    byte[] result = in.getText().getBytes(CHARSET);
+    byte[] result = in.getText().getBytes(StandardCharsets.ISO_8859_1);
     return result;
   }
 

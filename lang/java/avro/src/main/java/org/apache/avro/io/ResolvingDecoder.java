@@ -19,7 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -210,13 +210,11 @@ public class ResolvingDecoder extends ValidatingDecoder {
     }
   }
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
-
   @Override
   public String readString() throws IOException {
     Symbol actual = parser.advance(Symbol.STRING);
     if (actual == Symbol.BYTES) {
-      return new String(in.readBytes(null).array(), UTF8);
+      return new String(in.readBytes(null).array(), StandardCharsets.UTF_8);
     } else {
       assert actual == Symbol.STRING;
       return in.readString();

@@ -20,6 +20,7 @@ package org.apache.avro.tool;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -104,7 +105,7 @@ public class TrevniMetadataTool implements Tool {
   private void dump(MetaData<?> meta) throws IOException {
     generator.writeStartObject();
     for (Map.Entry<String, byte[]> e : meta.entrySet())
-      generator.writeStringField(e.getKey(), new String(e.getValue(), "ISO-8859-1"));
+      generator.writeStringField(e.getKey(), new String(e.getValue(), StandardCharsets.ISO_8859_1));
     generator.writeEndObject();
   }
 

@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +36,6 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class TestBlockingIO {
-  private static final String UTF_8 = "UTF-8";
 
   private final int iSize;
   private final int iDepth;
@@ -55,9 +55,9 @@ public class TestBlockingIO {
     public Tests(int bufferSize, int depth, String input) throws IOException {
 
       this.depth = depth;
-      byte[] in = input.getBytes("UTF-8");
+      byte[] in = input.getBytes(StandardCharsets.UTF_8);
       JsonFactory f = new JsonFactory();
-      JsonParser p = f.createParser(new ByteArrayInputStream(input.getBytes("UTF-8")));
+      JsonParser p = f.createParser(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
 
       ByteArrayOutputStream os = new ByteArrayOutputStream();
       EncoderFactory factory = new EncoderFactory().configureBlockSize(bufferSize);
@@ -92,13 +92,13 @@ public class TestBlockingIO {
           continue;
         case VALUE_STRING: {
           String s = parser.getText();
-          int n = s.getBytes(UTF_8).length;
+          int n = s.getBytes(StandardCharsets.UTF_8).length;
           checkString(s, input, n);
           break;
         }
         case FIELD_NAME: {
           String s = parser.getCurrentName();
-          int n = s.getBytes(UTF_8).length;
+          int n = s.getBytes(StandardCharsets.UTF_8).length;
           checkString(s, input, n);
           continue;
         }
@@ -149,14 +149,14 @@ public class TestBlockingIO {
             input.skipBytes();
           } else {
             String s = parser.getText();
-            int n = s.getBytes(UTF_8).length;
+            int n = s.getBytes(StandardCharsets.UTF_8).length;
             checkString(s, input, n);
           }
           break;
         }
         case FIELD_NAME: {
           String s = parser.getCurrentName();
-          int n = s.getBytes(UTF_8).length;
+          int n = s.getBytes(StandardCharsets.UTF_8).length;
           checkString(s, input, n);
           continue;
         }
@@ -261,7 +261,7 @@ public class TestBlockingIO {
   private static void checkString(String s, Decoder input, int n) throws IOException {
     ByteBuffer buf = input.readBytes(null);
     assertEquals(n, buf.remaining());
-    String s2 = new String(buf.array(), buf.position(), buf.remaining(), UTF_8);
+    String s2 = new String(buf.array(), buf.position(), buf.remaining(), StandardCharsets.UTF_8);
     assertEquals(s, s2);
   }
 
@@ -298,7 +298,7 @@ public class TestBlockingIO {
           cos.startItem();
           counts[stackTop]++;
         }
-        byte[] bb = p.getText().getBytes(UTF_8);
+        byte[] bb = p.getText().getBytes(StandardCharsets.UTF_8);
         cos.writeBytes(bb);
         break;
       case START_OBJECT:
@@ -315,7 +315,7 @@ public class TestBlockingIO {
         cos.setItemCount(1);
         cos.startItem();
         counts[stackTop]++;
-        cos.writeBytes(p.getCurrentName().getBytes(UTF_8));
+        cos.writeBytes(p.getCurrentName().getBytes(StandardCharsets.UTF_8));
         break;
       default:
         throw new RuntimeException("Unsupported: " + p.getCurrentToken());

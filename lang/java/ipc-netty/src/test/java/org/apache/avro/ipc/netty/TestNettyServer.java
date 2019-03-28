@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -171,7 +171,7 @@ public class TestNettyServer {
     Socket sock = new Socket();
     sock.connect(sockAddr);
     OutputStream out = sock.getOutputStream();
-    out.write(msg.getBytes(Charset.forName("UTF-8")));
+    out.write(msg.getBytes(StandardCharsets.UTF_8));
     out.flush();
     byte[] buf = new byte[2048];
     int bytesRead = sock.getInputStream().read(buf);

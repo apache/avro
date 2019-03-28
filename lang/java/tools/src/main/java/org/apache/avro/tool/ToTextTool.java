@@ -22,6 +22,7 @@ import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import joptsimple.OptionParser;
@@ -34,7 +35,7 @@ import org.apache.avro.generic.GenericDatumReader;
 /** Reads an avro data file into a plain text file. */
 public class ToTextTool implements Tool {
   private static final String TEXT_FILE_SCHEMA = "\"bytes\"";
-  private static final byte[] LINE_SEPARATOR = System.getProperty("line.separator").getBytes();
+  private static final byte[] LINE_SEPARATOR = System.getProperty("line.separator").getBytes(StandardCharsets.UTF_8);
 
   @Override
   public String getName() {
