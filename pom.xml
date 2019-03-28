@@ -104,7 +104,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -252,7 +251,6 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
-            <version>${rat.version}</version>
             <inherited>false</inherited>
             <executions>
               <execution>

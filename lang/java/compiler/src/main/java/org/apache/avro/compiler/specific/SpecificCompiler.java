@@ -111,6 +111,7 @@ public class SpecificCompiler {
         specificData.addLogicalTypeConversion(new Jsr310TimeConversions.DateConversion());
         specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimeMillisConversion());
         specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimestampMillisConversion());
+        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimestampMicrosConversion());
       }
     };
 
@@ -431,7 +432,7 @@ public class SpecificCompiler {
 
   /**
    * Generates Java interface and classes for a protocol.
-   * 
+   *
    * @param src  the source Avro protocol file
    * @param dest the directory to place generated files in
    */
@@ -441,7 +442,7 @@ public class SpecificCompiler {
 
   /**
    * Generates Java interface and classes for a number of protocol files.
-   * 
+   *
    * @param srcFiles the source Avro protocol files
    * @param dest     the directory to place generated files in
    */
@@ -819,7 +820,7 @@ public class SpecificCompiler {
 
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
-   * 
+   *
    * @Deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
    *             of custom templates
    */
@@ -967,7 +968,7 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Takes a (potentially overly long) string and splits
    * it into a quoted, comma-separted sequence of escaped strings.
-   * 
+   *
    * @param s The string to split
    * @return A sequence of quoted, comma-separated, escaped strings
    */
@@ -1037,7 +1038,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field accessor method.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the accessor name.
    * @return the name of the accessor method for the given field.
@@ -1048,7 +1049,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field accessor method that returns a Java 8 Optional.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the accessor name.
    * @return the name of the accessor method for the given field.
@@ -1059,7 +1060,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field mutator method.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the mutator name.
    * @return the name of the mutator method for the given field.
@@ -1070,7 +1071,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field "has" method.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the "has" method name.
    * @return the name of the has method for the given field.
@@ -1081,7 +1082,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field "clear" method.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the accessor name.
    * @return the name of the has method for the given field.
@@ -1110,7 +1111,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field Builder accessor method.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the Builder accessor name.
    * @return the name of the Builder accessor method for the given field.
@@ -1121,7 +1122,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field Builder mutator method.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the Builder mutator name.
    * @return the name of the Builder mutator method for the given field.
@@ -1132,7 +1133,7 @@ public class SpecificCompiler {
 
   /**
    * Generates the name of a field Builder "has" method.
-   * 
+   *
    * @param schema the schema in which the field is defined.
    * @param field  the field for which to generate the "has" Builder method name.
    * @return the name of the "has" Builder method for the given field.
@@ -1143,7 +1144,7 @@ public class SpecificCompiler {
 
   /**
    * Generates a method name from a field name.
-   * 
+   *
    * @param schema  the schema in which the field is defined.
    * @param field   the field for which to generate the accessor name.
    * @param prefix  method name prefix, e.g. "get" or "set".
@@ -1209,7 +1210,7 @@ public class SpecificCompiler {
 
   /**
    * Sets character encoding for generated java file
-   * 
+   *
    * @param outputCharacterEncoding Character encoding for output files (defaults
    *                                to system encoding)
    */
