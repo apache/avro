@@ -37,20 +37,16 @@
         <artifactId>avro-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>schema</id>
+            <id>idl</id>
             <goals>
-              <goal>schema</goal>
+              <goal>idl-protocol</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/schema-jsr310</outputDirectory>
-          <dateTimeLogicalTypeImplementation>jsr310</dateTimeLogicalTypeImplementation>
-          <imports>
-            <import>${basedir}/src/test/avro/imports</import>
-            <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
-          </imports>
+          <sourceDirectory>${basedir}/src/test</sourceDirectory>
+          <outputDirectory>${basedir}/target/test-harness/idl</outputDirectory>
+          <stringType>String</stringType>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>

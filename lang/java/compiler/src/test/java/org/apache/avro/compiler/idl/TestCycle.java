@@ -86,16 +86,18 @@ public class TestCycle {
   }
 
   private static void serDeserRecord(GenericData.Record data) throws IOException {
-    ByteArrayOutputStream bab = new ByteArrayOutputStream();
-    GenericDatumWriter writer = new GenericDatumWriter(data.getSchema());
-    final BinaryEncoder directBinaryEncoder = EncoderFactory.get().directBinaryEncoder(bab, null);
-    writer.write(data, directBinaryEncoder);
-    directBinaryEncoder.flush();
-    ByteArrayInputStream bis = new ByteArrayInputStream(bab.toByteArray(), 0, bab.size());
-    GenericDatumReader reader = new GenericDatumReader(data.getSchema());
-    BinaryDecoder directBinaryDecoder = DecoderFactory.get().directBinaryDecoder(bis, null);
-    GenericData.Record read = (GenericData.Record) reader.read(null, directBinaryDecoder);
-    Assert.assertEquals(data.toString(), read.toString());
+    try (ByteArrayOutputStream bab = new ByteArrayOutputStream()) {
+      GenericDatumWriter writer = new GenericDatumWriter(data.getSchema());
+      final BinaryEncoder directBinaryEncoder = EncoderFactory.get().directBinaryEncoder(bab, null);
+      writer.write(data, directBinaryEncoder);
+      directBinaryEncoder.flush();
+      try (ByteArrayInputStream bis = new ByteArrayInputStream(bab.toByteArray(), 0, bab.size())) {
+        GenericDatumReader reader = new GenericDatumReader(data.getSchema());
+        BinaryDecoder directBinaryDecoder = DecoderFactory.get().directBinaryDecoder(bis, null);
+        GenericData.Record read = (GenericData.Record) reader.read(null, directBinaryDecoder);
+        Assert.assertEquals(data.toString(), read.toString());
+      }
+    }
   }
 
 }

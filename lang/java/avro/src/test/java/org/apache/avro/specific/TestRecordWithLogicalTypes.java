@@ -7,6 +7,7 @@ package org.apache.avro.specific;
 
 import java.math.BigDecimal;
 
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 
@@ -57,7 +58,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   @Deprecated
   public java.time.LocalTime t;
   @Deprecated
-  public java.time.LocalDateTime ts;
+  public java.time.Instant ts;
   @Deprecated
   public BigDecimal dec;
 
@@ -74,7 +75,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
    */
   public TestRecordWithLogicalTypes(java.lang.Boolean b, java.lang.Integer i32, java.lang.Long i64, java.lang.Float f32,
       java.lang.Double f64, java.lang.CharSequence s, java.time.LocalDate d, java.time.LocalTime t,
-      java.time.LocalDateTime ts, BigDecimal dec) {
+      java.time.Instant ts, BigDecimal dec) {
     this.b = b;
     this.i32 = i32;
     this.i64 = i64;
@@ -151,7 +152,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
       t = (java.time.LocalTime) value$;
       break;
     case 8:
-      ts = (java.time.LocalDateTime) value$;
+      ts = (java.time.Instant) value$;
       break;
     case 9:
       dec = (BigDecimal) value$;
@@ -292,7 +293,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
   /**
    * Gets the value of the 'ts' field.
    */
-  public java.time.LocalDateTime getTs() {
+  public java.time.Instant getTs() {
     return ts;
   }
 
@@ -317,13 +318,13 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
    *
    * @param value the value to set.
    */
-  public void setTs(java.time.LocalDateTime value) {
+  public void setTs(java.time.Instant value) {
     this.ts = value;
   }
 
-  protected static final JodaTimeConversions.DateConversion DATE_CONVERSION = new JodaTimeConversions.DateConversion();
-  protected static final JodaTimeConversions.TimeConversion TIME_CONVERSION = new JodaTimeConversions.TimeConversion();
-  protected static final JodaTimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new JodaTimeConversions.TimestampConversion();
+  protected static final TimeConversions.DateConversion DATE_CONVERSION = new TimeConversions.DateConversion();
+  protected static final TimeConversions.TimeMillisConversion TIME_CONVERSION = new TimeConversions.TimeMillisConversion();
+  protected static final TimeConversions.TimestampMillisConversion TIMESTAMP_CONVERSION = new TimeConversions.TimestampMillisConversion();
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
   private final org.apache.avro.Conversion<?>[] conversions = new org.apache.avro.Conversion<?>[] { null, null, null,
       null, null, null, DATE_CONVERSION, TIME_CONVERSION, TIMESTAMP_CONVERSION, DECIMAL_CONVERSION, null };
@@ -368,7 +369,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     private java.lang.CharSequence s;
     private java.time.LocalDate d;
     private java.time.LocalTime t;
-    private java.time.LocalDateTime ts;
+    private java.time.Instant ts;
     private BigDecimal dec;
 
     /** Creates a new Builder */
@@ -744,7 +745,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
     /**
      * Gets the value of the 'ts' field.
      */
-    public java.time.LocalDateTime getTs() {
+    public java.time.Instant getTs() {
       return ts;
     }
 
@@ -753,7 +754,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
      *
      * @param value the value to set.
      */
-    public TestRecordWithLogicalTypes.Builder setTs(java.time.LocalDateTime value) {
+    public TestRecordWithLogicalTypes.Builder setTs(java.time.Instant value) {
       validate(fields()[8], value);
       this.ts = value;
       fieldSetFlags()[8] = true;
@@ -821,7 +822,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
         record.s = fieldSetFlags()[5] ? this.s : (java.lang.CharSequence) defaultValue(fields()[5]);
         record.d = fieldSetFlags()[6] ? this.d : (java.time.LocalDate) defaultValue(fields()[6]);
         record.t = fieldSetFlags()[7] ? this.t : (java.time.LocalTime) defaultValue(fields()[7]);
-        record.ts = fieldSetFlags()[8] ? this.ts : (java.time.LocalDateTime) defaultValue(fields()[8]);
+        record.ts = fieldSetFlags()[8] ? this.ts : (java.time.Instant) defaultValue(fields()[8]);
         record.dec = fieldSetFlags()[9] ? this.dec : (BigDecimal) defaultValue(fields()[9]);
         return record;
       } catch (Exception e) {

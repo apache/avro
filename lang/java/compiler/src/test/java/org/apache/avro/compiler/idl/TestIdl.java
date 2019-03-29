@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +46,7 @@ import org.junit.Test;
  * corresponding .avpr file in output/. When the test is run, it generates and
  * stringifies each .avdl file and compares it to the expected output, failing
  * if the two differ.
- *
+ * <p>
  * To make it simpler to write these tests, you can run ant -Dtestcase=TestIdl
  * -Dtest.idl.mode=write which will *replace* all expected output.
  */
@@ -154,23 +155,23 @@ public class TestIdl {
     }
 
     private static String slurp(File f) throws IOException {
-      BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
-
-      String line = null;
       StringBuilder builder = new StringBuilder();
-      while ((line = in.readLine()) != null) {
-        builder.append(line);
+      try (BufferedReader in = new BufferedReader(
+          new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
+        String line = null;
+        while ((line = in.readLine()) != null) {
+          builder.append(line);
+        }
       }
-      in.close();
       ObjectMapper mapper = new ObjectMapper();
       JsonNode json = mapper.readTree(builder.toString());
       return mapper.writer().writeValueAsString(json);
     }
 
     private static void writeFile(File f, String s) throws IOException {
-      FileWriter w = new FileWriter(f);
-      w.write(s);
-      w.close();
+      try (FileWriter w = new FileWriter(f)) {
+        w.write(s);
+      }
     }
   }
 }

@@ -59,7 +59,6 @@
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.0.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
-    <joda.version>2.10.1</joda.version>
     <grpc.version>1.18.0</grpc.version>
     <netty-codec-http2.version>4.1.33.Final</netty-codec-http2.version>
     <zstd-jni.version>1.3.8-3</zstd-jni.version>
@@ -555,11 +554,6 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>${commons-compress.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>joda-time</groupId>
-        <artifactId>joda-time</artifactId>
-        <version>${joda.version}</version>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>

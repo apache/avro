@@ -28,15 +28,15 @@ import java.io.File;
  */
 public class TestSchemaMojo extends AbstractAvroMojoTest {
 
-  protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-jsr310.xml");
+  protected File testPom = new File(getBasedir(), "src/test/resources/unit/schema/pom.xml");
 
-  public void testSchemaMojoJsr310() throws Exception {
-    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jsr310TestPom);
+  public void testSchemaMojo() throws Exception {
+    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/schema-jsr310/test");
+    File outputDir = new File(getBasedir(), "target/test-harness/schema/test");
     String[] generatedFiles = new String[] { "PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java",
         "SchemaUser.java" };
 

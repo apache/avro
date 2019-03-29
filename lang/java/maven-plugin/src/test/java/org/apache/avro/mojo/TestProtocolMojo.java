@@ -28,15 +28,15 @@ import java.io.File;
  */
 public class TestProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-jsr310.xml");
+  protected File testPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom.xml");
 
   public void testProtocolMojoJsr310() throws Exception {
-    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jsr310TestPom);
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", testPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/protocol-jsr310/test");
+    File outputDir = new File(getBasedir(), "target/test-harness/protocol/test");
     String[] generatedFiles = new String[] { "ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java" };
 
     assertFilesExist(outputDir, generatedFiles);

@@ -95,23 +95,6 @@ public class SpecificCompiler {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
   }
 
-  public enum DateTimeLogicalTypeImplementation {
-    JSR310 {
-      @Override
-      void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
-      }
-    };
-
-    public static final DateTimeLogicalTypeImplementation DEFAULT = JSR310;
-
-    abstract void addLogicalTypeConversions(SpecificData specificData);
-  }
-
   private final SpecificData specificData = new SpecificData();
 
   private final Set<Schema> queue = new HashSet<>();
@@ -352,6 +335,11 @@ public class SpecificCompiler {
 
   private void initializeSpecificData() {
     specificData.addLogicalTypeConversion(new Conversions.DecimalConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
   }
 
   /**
@@ -537,8 +525,9 @@ public class SpecificCompiler {
    */
   protected int calcAllArgConstructorParameterUnits(Schema record) {
 
-    if (record.getType() != Schema.Type.RECORD)
+    if (record.getType() != Schema.Type.RECORD) {
       throw new RuntimeException("This method must only be called for record schemas.");
+    }
 
     return record.getFields().size();
   }
