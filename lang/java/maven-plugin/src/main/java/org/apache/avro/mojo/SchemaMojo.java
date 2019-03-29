@@ -76,7 +76,7 @@ public class SchemaMojo extends AbstractAvroMojo {
       schema = schemaParser.parse(src);
     }
 
-    SpecificCompiler compiler = new SpecificCompiler(schema, getDateTimeLogicalTypeImplementation());
+    SpecificCompiler compiler = new SpecificCompiler(schema);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());

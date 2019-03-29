@@ -28,24 +28,7 @@ import java.io.File;
  */
 public class TestSchemaMojo extends AbstractAvroMojoTest {
 
-  protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-jsr310.xml");
-
-  public void testSchemaMojoJoda() throws Exception {
-    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jodaTestPom);
-
-    assertNotNull(mojo);
-    mojo.execute();
-
-    File outputDir = new File(getBasedir(), "target/test-harness/schema-joda/test");
-    String[] generatedFiles = new String[] { "PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java",
-        "SchemaUser.java" };
-
-    assertFilesExist(outputDir, generatedFiles);
-
-    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
-    assertTrue(schemaUserContent.contains("org.joda.time.DateTime"));
-  }
 
   public void testSchemaMojoJsr310() throws Exception {
     SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jsr310TestPom);

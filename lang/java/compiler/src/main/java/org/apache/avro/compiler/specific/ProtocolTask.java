@@ -99,7 +99,7 @@ public class ProtocolTask extends Task {
 
   protected void doCompile(File src, File dir) throws IOException {
     Protocol protocol = Protocol.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
+    SpecificCompiler compiler = new SpecificCompiler(protocol);
     compiler.setStringType(getStringType());
     compiler.compileToDestination(src, dest);
   }

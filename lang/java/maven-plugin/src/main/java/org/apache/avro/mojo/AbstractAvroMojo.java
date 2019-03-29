@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -163,14 +162,6 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean enableDecimalLogicalType;
 
   /**
-   * Determines which type of classes to generate for date/time related logical
-   * types. Either 'joda' or 'jsr310'. Defaults to jsr310.
-   *
-   * @parameter default-value="jsr310"
-   */
-  protected String dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.JSR310.name().toLowerCase();
-
-  /**
    * The current Maven project.
    *
    * @parameter default-value="${project}"
@@ -267,22 +258,6 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
       return SpecificCompiler.FieldVisibility.valueOf(upper);
     } catch (IllegalArgumentException e) {
       return SpecificCompiler.FieldVisibility.PRIVATE;
-    }
-  }
-
-  protected DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
-    try {
-      if (this.dateTimeLogicalTypeImplementation == null || this.dateTimeLogicalTypeImplementation.isEmpty()) {
-        return DateTimeLogicalTypeImplementation.DEFAULT;
-      } else {
-        String upper = String.valueOf(this.dateTimeLogicalTypeImplementation).trim().toUpperCase();
-        return DateTimeLogicalTypeImplementation.valueOf(upper);
-      }
-    } catch (IllegalArgumentException e) {
-      getLog().warn("Unknown value '" + this.dateTimeLogicalTypeImplementation
-          + "' for property dateTimeLogicalTypeImplementation; using '"
-          + DateTimeLogicalTypeImplementation.DEFAULT.name().toLowerCase() + "' instead");
-      return DateTimeLogicalTypeImplementation.DEFAULT;
     }
   }
 

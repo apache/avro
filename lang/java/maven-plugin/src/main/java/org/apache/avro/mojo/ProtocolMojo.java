@@ -59,7 +59,7 @@ public class ProtocolMojo extends AbstractAvroMojo {
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
     Protocol protocol = Protocol.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
+    SpecificCompiler compiler = new SpecificCompiler(protocol);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());

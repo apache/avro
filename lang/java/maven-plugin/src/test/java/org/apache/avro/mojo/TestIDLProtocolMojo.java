@@ -28,22 +28,7 @@ import java.io.File;
  */
 public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-jsr310.xml");
-
-  public void testIdlProtocolMojoJoda() throws Exception {
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jodaTestPom);
-
-    assertNotNull(mojo);
-    mojo.execute();
-
-    File outputDir = new File(getBasedir(), "target/test-harness/idl-joda/test");
-    String[] generatedFileNames = new String[] { "IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
-        "IdlUserWrapper.java" };
-
-    String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
-    assertTrue(idlUserContent.contains("org.joda.time.DateTime"));
-  }
 
   public void testIdlProtocolMojoJsr310() throws Exception {
     IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jsr310TestPom);

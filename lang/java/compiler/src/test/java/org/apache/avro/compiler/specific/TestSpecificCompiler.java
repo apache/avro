@@ -359,11 +359,11 @@ public class TestSpecificCompiler {
     // Decimal type target class depends on configuration
     // UUID should always be CharSequence since we haven't added its
     // support in SpecificRecord
-    Assert.assertEquals("Should use Joda LocalDate for date type", "org.joda.time.LocalDate",
+    Assert.assertEquals("Should use Joda LocalDate for date type", "java.time.LocalDate",
         compiler.javaType(dateSchema));
-    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "org.joda.time.LocalTime",
+    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "java.time.LocalTime",
         compiler.javaType(timeSchema));
-    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "java.time.LocalDateTime",
         compiler.javaType(timestampSchema));
     Assert.assertEquals("Should use Java BigDecimal type", "java.math.BigDecimal", compiler.javaType(decimalSchema));
     Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
@@ -384,11 +384,11 @@ public class TestSpecificCompiler {
     // Decimal type target class depends on configuration
     // UUID should always be CharSequence since we haven't added its
     // support in SpecificRecord
-    Assert.assertEquals("Should use Joda LocalDate for date type", "org.joda.time.LocalDate",
+    Assert.assertEquals("Should use Joda LocalDate for date type", "java.time.LocalDate",
         compiler.javaType(dateSchema));
-    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "org.joda.time.LocalTime",
+    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "java.time.LocalTime",
         compiler.javaType(timeSchema));
-    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "java.time.LocalDateTime",
         compiler.javaType(timestampSchema));
     Assert.assertEquals("Should use ByteBuffer type", "java.nio.ByteBuffer", compiler.javaType(decimalSchema));
     Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
@@ -438,11 +438,11 @@ public class TestSpecificCompiler {
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     // Date/time types should always use upper level java classes, even though
     // their underlying representations are primitive types
-    Assert.assertEquals("Should use Joda LocalDate for date type", "org.joda.time.LocalDate",
+    Assert.assertEquals("Should use Joda LocalDate for date type", "java.time.LocalDate",
         compiler.javaUnbox(dateSchema));
-    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "org.joda.time.LocalTime",
+    Assert.assertEquals("Should use Joda LocalTime for time-millis type", "java.time.LocalTime",
         compiler.javaUnbox(timeSchema));
-    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "java.time.LocalDateTime",
         compiler.javaUnbox(timestampSchema));
   }
 

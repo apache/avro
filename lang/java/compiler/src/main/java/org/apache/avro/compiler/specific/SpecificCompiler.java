@@ -39,7 +39,6 @@ import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.TimeConversions;
-import org.apache.avro.data.JodaTimeConversions;
 import org.apache.avro.specific.SpecificData;
 
 import org.apache.avro.Protocol;
@@ -97,14 +96,6 @@ public class SpecificCompiler {
   }
 
   public enum DateTimeLogicalTypeImplementation {
-    JODA {
-      @Override
-      void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
-      }
-    },
     JSR310 {
       @Override
       void addLogicalTypeConversions(SpecificData specificData) {
@@ -134,7 +125,6 @@ public class SpecificCompiler {
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
-  private final DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation;
   private String suffix = ".java";
 
   /*
@@ -163,11 +153,7 @@ public class SpecificCompiler {
       + " * DO NOT EDIT DIRECTLY\n" + " */\n";
 
   public SpecificCompiler(Protocol protocol) {
-    this(protocol, DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  public SpecificCompiler(Protocol protocol, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this(dateTimeLogicalTypeImplementation);
+    this();
     // enqueue all types
     for (Schema s : protocol.getTypes()) {
       enqueue(s);
@@ -176,36 +162,16 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
-    this(schema, DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  public SpecificCompiler(Schema schema, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this(dateTimeLogicalTypeImplementation);
+    this();
     enqueue(schema);
     this.protocol = null;
   }
 
   /**
-   * Creates a specific compiler with the default (JSR310) type for date/time
-   * related logical types.
-   *
-   * @see #SpecificCompiler(DateTimeLogicalTypeImplementation)
+   * Creates a specific compiler with the given type to use for date/time related
+   * logical types.
    */
   SpecificCompiler() {
-    this(DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  /**
-   * Creates a specific compiler with the given type to use for date/time related
-   * logical types. Use {@link DateTimeLogicalTypeImplementation#JODA} to generate
-   * Joda Time classes, use {@link DateTimeLogicalTypeImplementation#JSR310} to
-   * generate {@code java.time.*} classes for the date/time local types.
-   *
-   * @param dateTimeLogicalTypeImplementation the types used for date/time related
-   *                                          logical types
-   */
-  SpecificCompiler(DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this.dateTimeLogicalTypeImplementation = dateTimeLogicalTypeImplementation;
     this.templateDir = System.getProperty("org.apache.avro.specific.templates",
         "/org/apache/avro/compiler/specific/templates/java/classic/");
     initializeVelocity();
@@ -294,10 +260,6 @@ public class SpecificCompiler {
    */
   public void setEnableDecimalLogicalType(boolean enableDecimalLogicalType) {
     this.enableDecimalLogicalType = enableDecimalLogicalType;
-  }
-
-  public DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
-    return dateTimeLogicalTypeImplementation;
   }
 
   public void addCustomConversion(Class<?> conversionClass) {
@@ -389,7 +351,6 @@ public class SpecificCompiler {
   }
 
   private void initializeSpecificData() {
-    dateTimeLogicalTypeImplementation.addLogicalTypeConversions(specificData);
     specificData.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
@@ -466,7 +427,7 @@ public class SpecificCompiler {
 
     for (File src : srcFiles) {
       Schema schema = parser.parse(src);
-      SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeImplementation.DEFAULT);
+      SpecificCompiler compiler = new SpecificCompiler(schema);
       compiler.compileToDestination(src, dest);
     }
   }
