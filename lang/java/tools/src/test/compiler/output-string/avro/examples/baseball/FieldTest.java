@@ -21,8 +21,8 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
 
   private static SpecificData MODEL$ = new SpecificData();
 static {
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.Jsr310TimeConversions.TimestampMillisConversion());
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.Jsr310TimeConversions.TimeMillisConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMillisConversion());
   }
 
   private static final BinaryMessageEncoder<FieldTest> ENCODER =
@@ -128,10 +128,10 @@ static {
       new org.apache.avro.Conversion<?>[] {
       null,
       null,
-      new org.apache.avro.data.Jsr310TimeConversions.TimestampMillisConversion(),
-      new org.apache.avro.data.Jsr310TimeConversions.TimestampMicrosConversion(),
-      new org.apache.avro.data.Jsr310TimeConversions.TimeMillisConversion(),
-      new org.apache.avro.data.Jsr310TimeConversions.TimeMicrosConversion(),
+      new org.apache.avro.data.TimeConversions.TimestampMillisConversion(),
+      new org.apache.avro.data.TimeConversions.TimestampMicrosConversion(),
+      new org.apache.avro.data.TimeConversions.TimeMillisConversion(),
+      new org.apache.avro.data.TimeConversions.TimeMicrosConversion(),
       null
   };
 

@@ -75,9 +75,14 @@ public class TestSpecificCompiler {
 
   private File src = new File("src/test/resources/simple_record.avsc");
 
-  /** Uses the system's java compiler to actually compile the generated code. */
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs)
       throws IOException {
+    assertCompilesWithJavaCompiler(dstDir, outputs, false);
+  }
+
+  /** Uses the system's java compiler to actually compile the generated code. */
+  static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs,
+      boolean ignoreWarnings) throws IOException {
     if (outputs.isEmpty()) {
       return; // Nothing to compile!
     }
@@ -112,7 +117,9 @@ public class TestSpecificCompiler {
         Collections.singletonList("-Xlint:all"), null, fileManager.getJavaFileObjects(javaFiles.toArray(new File[0])));
     boolean compilesWithoutError = cTask.call();
     assertTrue(compilesWithoutError);
-    assertEquals("Warnings produced when compiling generated code with -Xlint:all", 0, warnings.size());
+    if (!ignoreWarnings) {
+      assertEquals("Warnings produced when compiling generated code with -Xlint:all", 0, warnings.size());
+    }
   }
 
   private static Schema createSampleRecordSchema(int numStringFields, int numDoubleFields) {
@@ -544,7 +551,8 @@ public class TestSpecificCompiler {
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
+        usedConversionClasses.iterator().next());
   }
 
   @Test
@@ -556,7 +564,8 @@ public class TestSpecificCompiler {
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
+        usedConversionClasses.iterator().next());
   }
 
   @Test
@@ -568,7 +577,8 @@ public class TestSpecificCompiler {
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
+        usedConversionClasses.iterator().next());
   }
 
   @Test
@@ -580,7 +590,8 @@ public class TestSpecificCompiler {
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
+        usedConversionClasses.iterator().next());
   }
 
   @Test
@@ -592,7 +603,8 @@ public class TestSpecificCompiler {
 
     final Collection<String> usedConversionClasses = compiler.getUsedConversionClasses(schema);
     Assert.assertEquals(1, usedConversionClasses.size());
-    Assert.assertEquals("org.apache.avro.data.TimeConversions.DateConversion", usedConversionClasses.iterator().next());
+    Assert.assertEquals("org.apache.avro.data.JodaTimeConversions.DateConversion",
+        usedConversionClasses.iterator().next());
   }
 
   @Test
@@ -600,7 +612,7 @@ public class TestSpecificCompiler {
     Schema logicalTypesWithMultipleFields = new Schema.Parser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
     assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName()),
-        new SpecificCompiler(logicalTypesWithMultipleFields, JODA).compile());
+        new SpecificCompiler(logicalTypesWithMultipleFields, JODA).compile(), true);
   }
 
   @Test
@@ -631,11 +643,12 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
     Assert.assertEquals("Should use date conversion for date type",
-        "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+        "new org.apache.avro.data.JodaTimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use time conversion for time type",
-        "new org.apache.avro.data.TimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+        "new org.apache.avro.data.JodaTimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
     Assert.assertEquals("Should use timestamp conversion for date type",
-        "new org.apache.avro.data.TimeConversions.TimestampConversion()", compiler.conversionInstance(timestampSchema));
+        "new org.apache.avro.data.JodaTimeConversions.TimestampConversion()",
+        compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
         compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
@@ -654,11 +667,12 @@ public class TestSpecificCompiler {
     Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
     Assert.assertEquals("Should use date conversion for date type",
-        "new org.apache.avro.data.TimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
+        "new org.apache.avro.data.JodaTimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use time conversion for time type",
-        "new org.apache.avro.data.TimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+        "new org.apache.avro.data.JodaTimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
     Assert.assertEquals("Should use timestamp conversion for date type",
-        "new org.apache.avro.data.TimeConversions.TimestampConversion()", compiler.conversionInstance(timestampSchema));
+        "new org.apache.avro.data.JodaTimeConversions.TimestampConversion()",
+        compiler.conversionInstance(timestampSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",

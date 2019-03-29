@@ -18,17 +18,11 @@
 
 package org.apache.avro.data;
 
-import java.util.Date;
+import java.time.*;
 
-import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.data.TimeConversions.*;
-import org.apache.avro.reflect.ReflectData;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,9 +49,9 @@ public class TestTimeConversions {
   @Test
   public void testDateConversion() throws Exception {
     DateConversion conversion = new DateConversion();
-    LocalDate Jan_6_1970 = new LocalDate(1970, 1, 6); // 5
-    LocalDate Jan_1_1970 = new LocalDate(1970, 1, 1); // 0
-    LocalDate Dec_27_1969 = new LocalDate(1969, 12, 27); // -5
+    LocalDate Jan_6_1970 = LocalDate.of(1970, 1, 6); // 5
+    LocalDate Jan_1_1970 = LocalDate.of(1970, 1, 1); // 0
+    LocalDate Dec_27_1969 = LocalDate.of(1969, 12, 27); // -5
 
     Assert.assertEquals("6 Jan 1970 should be 5", 5,
         (int) conversion.toInt(Jan_6_1970, DATE_SCHEMA, LogicalTypes.date()));
@@ -74,14 +68,14 @@ public class TestTimeConversions {
 
   @Test
   public void testTimeMillisConversion() throws Exception {
-    TimeConversion conversion = new TimeConversion();
-    LocalTime oneAM = new LocalTime(1, 0);
-    LocalTime afternoon = new LocalTime(15, 14, 15, 926);
+    TimeMillisConversion conversion = new TimeMillisConversion();
+    LocalTime oneAM = LocalTime.of(1, 0);
+    LocalTime afternoon = LocalTime.of(15, 14, 15, 926_000_000);
     int afternoonMillis = ((15 * 60 + 14) * 60 + 15) * 1000 + 926;
 
     Assert.assertEquals("Midnight should be 0", 0,
         (int) conversion.toInt(LocalTime.MIDNIGHT, TIME_MILLIS_SCHEMA, LogicalTypes.timeMillis()));
-    Assert.assertEquals("01:00 should be 3,600,000", 3600000,
+    Assert.assertEquals("01:00 should be 3,600,000", 3_600_000,
         (int) conversion.toInt(oneAM, TIME_MILLIS_SCHEMA, LogicalTypes.timeMillis()));
     Assert.assertEquals("15:14:15.926 should be " + afternoonMillis, afternoonMillis,
         (int) conversion.toInt(afternoon, TIME_MILLIS_SCHEMA, LogicalTypes.timeMillis()));
@@ -97,147 +91,93 @@ public class TestTimeConversions {
   @Test
   public void testTimeMicrosConversion() throws Exception {
     TimeMicrosConversion conversion = new TimeMicrosConversion();
-    LocalTime oneAM = new LocalTime(1, 0);
-    LocalTime afternoon = new LocalTime(15, 14, 15, 926);
-    long afternoonMicros = ((long) (15 * 60 + 14) * 60 + 15) * 1000000 + 926551;
+    LocalTime oneAM = LocalTime.of(1, 0);
+    LocalTime afternoon = LocalTime.of(15, 14, 15, 926_551_000);
+    long afternoonMicros = ((long) (15 * 60 + 14) * 60 + 15) * 1_000_000 + 926_551;
 
     Assert.assertEquals("Midnight should be 0", LocalTime.MIDNIGHT,
         conversion.fromLong(0L, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
     Assert.assertEquals("01:00 should be 3,600,000,000", oneAM,
-        conversion.fromLong(3600000000L, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
-    Assert.assertEquals("15:14:15.926000 should be " + afternoonMicros, afternoon,
+        conversion.fromLong(3_600_000_000L, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
+    Assert.assertEquals("15:14:15.926551 should be " + afternoonMicros, afternoon,
         conversion.fromLong(afternoonMicros, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
-
-    try {
-      conversion.toLong(afternoon, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
-      Assert.fail("Should not convert LocalTime to long");
-    } catch (UnsupportedOperationException e) {
-      // expected
-    }
-  }
-
-  @Test
-  public void testLossyTimeMicrosConversion() throws Exception {
-    TimeMicrosConversion conversion = new LossyTimeMicrosConversion();
-    LocalTime oneAM = new LocalTime(1, 0);
-    LocalTime afternoon = new LocalTime(15, 14, 15, 926);
-    long afternoonMicros = ((long) (15 * 60 + 14) * 60 + 15) * 1000000 + 926551;
 
     Assert.assertEquals("Midnight should be 0", 0,
         (long) conversion.toLong(LocalTime.MIDNIGHT, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
-    Assert.assertEquals("01:00 should be 3,600,000,000", 3600000000L,
+    Assert.assertEquals("01:00 should be 3,600,000,000", 3_600_000_000L,
         (long) conversion.toLong(oneAM, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
-    Assert.assertEquals("15:14:15.926551 should be " + afternoonMicros, dropMicros(afternoonMicros), // loses precision!
+    Assert.assertEquals("15:14:15.926551 should be " + afternoonMicros, afternoonMicros,
         (long) conversion.toLong(afternoon, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
-
-    Assert.assertEquals("Midnight should be 0", LocalTime.MIDNIGHT,
-        conversion.fromLong(0L, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
-    Assert.assertEquals("01:00 should be 3,600,000,000", oneAM,
-        conversion.fromLong(3600000000L, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
-    Assert.assertEquals("15:14:15.926000 should be " + afternoonMicros, afternoon,
-        conversion.fromLong(afternoonMicros, TIME_MICROS_SCHEMA, LogicalTypes.timeMicros()));
   }
 
   @Test
   public void testTimestampMillisConversion() throws Exception {
-    TimestampConversion conversion = new TimestampConversion();
-    long nowInstant = new Date().getTime();
+    TimestampMillisConversion conversion = new TimestampMillisConversion();
+    long nowInstant = Instant.now().toEpochMilli(); // ms precision
 
-    DateTime now = conversion.fromLong(nowInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    // round trip
+    Instant now = conversion.fromLong(nowInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
     long roundTrip = conversion.toLong(now, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
     Assert.assertEquals("Round-trip conversion should work", nowInstant, roundTrip);
 
     long May_28_2015_21_46_53_221_instant = 1432849613221L;
-    DateTime May_28_2015_21_46_53_221 = new DateTime(2015, 5, 28, 21, 46, 53, 221, DateTimeZone.UTC);
+    Instant May_28_2015_21_46_53_221 = ZonedDateTime.of(2015, 5, 28, 21, 46, 53, 221_000_000, ZoneOffset.UTC)
+        .toInstant();
 
+    // known dates from https://www.epochconverter.com/
+    // > Epoch
     Assert.assertEquals("Known date should be correct", May_28_2015_21_46_53_221,
         conversion.fromLong(May_28_2015_21_46_53_221_instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
     Assert.assertEquals("Known date should be correct", May_28_2015_21_46_53_221_instant,
         (long) conversion.toLong(May_28_2015_21_46_53_221, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+
+    // Epoch
+    Assert.assertEquals("1970-01-01 should be 0", Instant.EPOCH,
+        conversion.fromLong(0L, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("1970-01-01 should be 0", 0L,
+        (long) conversion.toLong(ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC).toInstant(),
+            TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+
+    // < Epoch
+    long Jul_01_1969_12_00_00_123_instant = -15854400000L + 123;
+    Instant Jul_01_1969_12_00_00_123 = ZonedDateTime.of(1969, 7, 1, 12, 0, 0, 123_000_000, ZoneOffset.UTC).toInstant();
+
+    Assert.assertEquals("Pre 1970 date should be correct", Jul_01_1969_12_00_00_123,
+        conversion.fromLong(Jul_01_1969_12_00_00_123_instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Pre 1970 date should be correct", Jul_01_1969_12_00_00_123_instant,
+        (long) conversion.toLong(Jul_01_1969_12_00_00_123, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
   }
 
   @Test
   public void testTimestampMicrosConversion() throws Exception {
     TimestampMicrosConversion conversion = new TimestampMicrosConversion();
 
+    // known dates from https://www.epochconverter.com/
+    // > Epoch
     long May_28_2015_21_46_53_221_843_instant = 1432849613221L * 1000 + 843;
-    DateTime May_28_2015_21_46_53_221 = new DateTime(2015, 5, 28, 21, 46, 53, 221, DateTimeZone.UTC);
+    Instant May_28_2015_21_46_53_221_843 = ZonedDateTime.of(2015, 5, 28, 21, 46, 53, 221_843_000, ZoneOffset.UTC)
+        .toInstant();
 
-    Assert.assertEquals("Known date should be correct", May_28_2015_21_46_53_221, conversion
+    Assert.assertEquals("Known date should be correct", May_28_2015_21_46_53_221_843, conversion
         .fromLong(May_28_2015_21_46_53_221_843_instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
 
-    try {
-      conversion.toLong(May_28_2015_21_46_53_221, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
-      Assert.fail("Should not convert DateTime to long");
-    } catch (UnsupportedOperationException e) {
-      // expected
-    }
-  }
+    Assert.assertEquals("Known date should be correct", May_28_2015_21_46_53_221_843_instant, (long) conversion
+        .toLong(May_28_2015_21_46_53_221_843, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMillis()));
 
-  @Test
-  public void testLossyTimestampMicrosConversion() throws Exception {
-    TimestampMicrosConversion conversion = new LossyTimestampMicrosConversion();
-    long nowInstant = new Date().getTime() * 1000 + 674; // add fake micros
+    // Epoch
+    Assert.assertEquals("1970-01-01 should be 0", Instant.EPOCH,
+        conversion.fromLong(0L, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("1970-01-01 should be 0", 0L,
+        (long) conversion.toLong(ZonedDateTime.ofInstant(Instant.EPOCH, ZoneOffset.UTC).toInstant(),
+            TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
 
-    DateTime now = conversion.fromLong(nowInstant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
-    long roundTrip = conversion.toLong(now, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
-    Assert.assertEquals("Round-trip conversion should lose microseconds", dropMicros(nowInstant), roundTrip);
+    // < Epoch
+    long Jul_01_1969_12_00_00_000_123_instant = -15854400000L * 1000 + 123;
+    Instant Jul_01_1969_12_00_00_000_123 = ZonedDateTime.of(1969, 7, 1, 12, 0, 0, 123_000, ZoneOffset.UTC).toInstant();
 
-    long May_28_2015_21_46_53_221_843_instant = 1432849613221L * 1000 + 843;
-    DateTime May_28_2015_21_46_53_221 = new DateTime(2015, 5, 28, 21, 46, 53, 221, DateTimeZone.UTC);
-
-    Assert.assertEquals("Known date should be correct", May_28_2015_21_46_53_221, conversion
-        .fromLong(May_28_2015_21_46_53_221_843_instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
-    Assert.assertEquals("Known date should be correct", dropMicros(May_28_2015_21_46_53_221_843_instant),
-        (long) conversion.toLong(May_28_2015_21_46_53_221, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
-  }
-
-  /*
-   * model.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
-   * model.addLogicalTypeConversion(new
-   * TimeConversions.TimestampMicrosConversion());
-   */
-  @Test
-  public void testDynamicSchemaWithDateConversion() throws ClassNotFoundException {
-    Schema schema = getReflectedSchemaByName("org.joda.time.LocalDate", new TimeConversions.DateConversion());
-    Assert.assertEquals("Reflected schema should be logicalType date", DATE_SCHEMA, schema);
-  }
-
-  @Test
-  public void testDynamicSchemaWithTimeConversion() throws ClassNotFoundException {
-    Schema schema = getReflectedSchemaByName("org.joda.time.LocalTime", new TimeConversions.TimeConversion());
-    Assert.assertEquals("Reflected schema should be logicalType timeMillis", TIME_MILLIS_SCHEMA, schema);
-  }
-
-  @Test
-  public void testDynamicSchemaWithTimeMicrosConversion() throws ClassNotFoundException {
-    Schema schema = getReflectedSchemaByName("org.joda.time.LocalTime", new TimeConversions.TimeMicrosConversion());
-    Assert.assertEquals("Reflected schema should be logicalType timeMicros", TIME_MICROS_SCHEMA, schema);
-  }
-
-  @Test
-  public void testDynamicSchemaWithDateTimeConversion() throws ClassNotFoundException {
-    Schema schema = getReflectedSchemaByName("org.joda.time.DateTime", new TimeConversions.TimestampConversion());
-    Assert.assertEquals("Reflected schema should be logicalType timestampMillis", TIMESTAMP_MILLIS_SCHEMA, schema);
-  }
-
-  @Test
-  public void testDynamicSchemaWithDateTimeMicrosConversion() throws ClassNotFoundException {
-    Schema schema = getReflectedSchemaByName("org.joda.time.DateTime", new TimeConversions.TimestampMicrosConversion());
-    Assert.assertEquals("Reflected schema should be logicalType timestampMicros", TIMESTAMP_MICROS_SCHEMA, schema);
-  }
-
-  private Schema getReflectedSchemaByName(String className, Conversion<?> conversion) throws ClassNotFoundException {
-    // one argument: a fully qualified class name
-    Class<?> cls = Class.forName(className);
-
-    // get the reflected schema for the given class
-    ReflectData model = new ReflectData();
-    model.addLogicalTypeConversion(conversion);
-    return model.getSchema(cls);
-  }
-
-  private long dropMicros(long micros) {
-    return micros / 1000 * 1000;
+    Assert.assertEquals("Pre 1970 date should be correct", Jul_01_1969_12_00_00_000_123, conversion
+        .fromLong(Jul_01_1969_12_00_00_000_123_instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Pre 1970 date should be correct", Jul_01_1969_12_00_00_000_123_instant, (long) conversion
+        .toLong(Jul_01_1969_12_00_00_000_123, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
   }
 }
