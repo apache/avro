@@ -7,7 +7,7 @@ package org.apache.avro.specific;
 
 import java.math.BigDecimal;
 
-import org.apache.avro.data.TimeConversions;
+import org.apache.avro.data.JodaTimeConversions;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 
@@ -171,7 +171,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'b' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setB(java.lang.Boolean value) {
@@ -187,7 +187,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'i32' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setI32(java.lang.Integer value) {
@@ -203,7 +203,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'i64' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setI64(java.lang.Long value) {
@@ -219,7 +219,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'f32' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setF32(java.lang.Float value) {
@@ -235,7 +235,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'f64' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setF64(java.lang.Double value) {
@@ -251,7 +251,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 's' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setS(java.lang.CharSequence value) {
@@ -267,7 +267,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'd' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setD(org.joda.time.LocalDate value) {
@@ -283,7 +283,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 't' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setT(org.joda.time.LocalTime value) {
@@ -299,7 +299,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'dec' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setDec(BigDecimal value) {
@@ -315,16 +315,16 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
   /**
    * Sets the value of the 'ts' field.
-   * 
+   *
    * @param value the value to set.
    */
   public void setTs(org.joda.time.DateTime value) {
     this.ts = value;
   }
 
-  protected static final TimeConversions.DateConversion DATE_CONVERSION = new TimeConversions.DateConversion();
-  protected static final TimeConversions.TimeConversion TIME_CONVERSION = new TimeConversions.TimeConversion();
-  protected static final TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new TimeConversions.TimestampConversion();
+  protected static final JodaTimeConversions.DateConversion DATE_CONVERSION = new JodaTimeConversions.DateConversion();
+  protected static final JodaTimeConversions.TimeConversion TIME_CONVERSION = new JodaTimeConversions.TimeConversion();
+  protected static final JodaTimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new JodaTimeConversions.TimestampConversion();
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
   private final org.apache.avro.Conversion<?>[] conversions = new org.apache.avro.Conversion<?>[] { null, null, null,
       null, null, null, DATE_CONVERSION, TIME_CONVERSION, TIMESTAMP_CONVERSION, DECIMAL_CONVERSION, null };
@@ -478,7 +478,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'b' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setB(boolean value) {
@@ -512,7 +512,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'i32' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setI32(int value) {
@@ -546,7 +546,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'i64' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setI64(long value) {
@@ -580,7 +580,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'f32' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setF32(float value) {
@@ -614,7 +614,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'f64' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setF64(double value) {
@@ -648,7 +648,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 's' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setS(java.lang.CharSequence value) {
@@ -683,7 +683,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'd' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setD(org.joda.time.LocalDate value) {
@@ -717,7 +717,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 't' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setT(org.joda.time.LocalTime value) {
@@ -751,7 +751,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sets the value of the 'ts' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setTs(org.joda.time.DateTime value) {
@@ -785,7 +785,7 @@ public class TestRecordWithLogicalTypes extends org.apache.avro.specific.Specifi
 
     /**
      * Sedec the value of the 'dec' field.
-     * 
+     *
      * @param value the value to set.
      */
     public TestRecordWithLogicalTypes.Builder setDec(BigDecimal value) {

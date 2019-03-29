@@ -38,8 +38,8 @@ import java.util.Set;
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
-import org.apache.avro.data.Jsr310TimeConversions;
 import org.apache.avro.data.TimeConversions;
+import org.apache.avro.data.JodaTimeConversions;
 import org.apache.avro.specific.SpecificData;
 
 import org.apache.avro.Protocol;
@@ -100,19 +100,19 @@ public class SpecificCompiler {
     JODA {
       @Override
       void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimeConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimestampConversion());
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
       }
     },
     JSR310 {
       @Override
       void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimeMillisConversion());
-        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimeMicrosConversion());
-        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimestampMillisConversion());
-        specificData.addLogicalTypeConversion(new Jsr310TimeConversions.TimestampMicrosConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
+        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
       }
     };
 
