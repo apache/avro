@@ -38,20 +38,14 @@ public class ProtoConversions {
 
     @Override
     public Timestamp fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
-      java.sql.Timestamp ts = new java.sql.Timestamp(millisFromEpoch);
-
-      return Timestamp.newBuilder()
-        .setSeconds(ts.getTime() / 1000)
-        .setNanos(ts.getNanos())
-        .build();
+      long seconds = millisFromEpoch / 1000;
+      int nanos = (int) (millisFromEpoch - seconds * 1000) * 1000000;
+      return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
     }
 
     @Override
     public Long toLong(Timestamp value, Schema schema, LogicalType type) {
-      java.sql.Timestamp ts = new java.sql.Timestamp(value.getSeconds() * 1000);
-      ts.setNanos(value.getNanos());
-
-      return ts.getTime();
+      return value.getSeconds() * 1000 + value.getNanos() / 1000000;
     }
 
     @Override
@@ -73,26 +67,18 @@ public class ProtoConversions {
 
     @Override
     public Timestamp fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
-      java.sql.Timestamp ts = new java.sql.Timestamp(microsFromEpoch / 1000);
-      int micros = (int) (microsFromEpoch - (microsFromEpoch / 1000000 * 1000000));
-      ts.setNanos(micros * 1000);
-
-      return Timestamp.newBuilder()
-        .setSeconds(ts.getTime() / 1000)
-        .setNanos(ts.getNanos())
-        .build();
+      long seconds = microsFromEpoch / 1000000;
+      int nanos = (int) (microsFromEpoch - seconds * 1000000) * 1000;
+      return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
     }
 
     @Override
     public Long toLong(Timestamp value, Schema schema, LogicalType type) {
       if (value.getNanos() - (value.getNanos() / 1000000 * 1000000) > 0) {
-        throw new UnsupportedOperationException("micros-precise is supported");
+        throw new UnsupportedOperationException("micros-precise is unsupported");
       }
 
-      java.sql.Timestamp ts = new java.sql.Timestamp(value.getSeconds() * 1000);
-      ts.setNanos(value.getNanos());
-
-      return ts.getTime();
+      return value.getSeconds() * 1000 + value.getNanos() / 1000000;
     }
 
     @Override

@@ -48,27 +48,17 @@ public class TestProtoConversions {
     TimestampConversion conversion = new TimestampConversion();
     long nowInstant = new Date().getTime();
 
-    Timestamp now = conversion.fromLong(
-        nowInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
-    long roundTrip = conversion.toLong(
-        now, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
-    Assert.assertEquals("Round-trip conversion should work",
-        nowInstant, roundTrip);
+    Timestamp now = conversion.fromLong(nowInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    long roundTrip = conversion.toLong(now, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    Assert.assertEquals("Round-trip conversion should work", nowInstant, roundTrip);
 
     long May_28_2015_21_46_53_221_instant = 1432849613221L;
-    Timestamp May_28_2015_21_46_53_221 = Timestamp.newBuilder()
-      .setSeconds(1432849613L)
-      .setNanos(221000000)
-      .build();
+    Timestamp May_28_2015_21_46_53_221 = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221000000).build();
 
-    Assert.assertEquals("Known timestamp should be correct",
-        May_28_2015_21_46_53_221,
-        conversion.fromLong(May_28_2015_21_46_53_221_instant,
-            TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
-    Assert.assertEquals("Known timestamp should be correct",
-        May_28_2015_21_46_53_221_instant,
-        (long) conversion.toLong(May_28_2015_21_46_53_221,
-            TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221,
+        conversion.fromLong(May_28_2015_21_46_53_221_instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_instant,
+        (long) conversion.toLong(May_28_2015_21_46_53_221, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
   }
 
   @Test
@@ -76,19 +66,14 @@ public class TestProtoConversions {
     TimestampMicrosConversion conversion = new TimestampMicrosConversion();
 
     long May_28_2015_21_46_53_221_843_instant = 1432849613221L * 1000 + 843;
-    Timestamp May_28_2015_21_46_53_221_843_ts = Timestamp.newBuilder()
-      .setSeconds(1432849613L)
-      .setNanos(221843000)
-      .build();
+    Timestamp May_28_2015_21_46_53_221_843_ts = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221843000)
+        .build();
 
-    Assert.assertEquals("Known timestamp should be correct",
-        May_28_2015_21_46_53_221_843_ts,
-        conversion.fromLong(May_28_2015_21_46_53_221_843_instant,
-            TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
+    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_843_ts, conversion
+        .fromLong(May_28_2015_21_46_53_221_843_instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
 
     try {
-      conversion.toLong(May_28_2015_21_46_53_221_843_ts,
-        TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+      conversion.toLong(May_28_2015_21_46_53_221_843_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
       Assert.fail("Should not convert DateTime to long");
     } catch (UnsupportedOperationException e) {
       // expected
@@ -96,9 +81,10 @@ public class TestProtoConversions {
   }
 
   /*
-  model.addLogicalTypeConversion(new ProtoConversions.TimeMicrosConversion());
-  model.addLogicalTypeConversion(new ProtoConversions.TimestampMicrosConversion());
- */
+   * model.addLogicalTypeConversion(new ProtoConversions.TimeMicrosConversion());
+   * model.addLogicalTypeConversion(new
+   * ProtoConversions.TimestampMicrosConversion());
+   */
   @Test
   public void testDynamicSchemaWithDateTimeConversion() throws ClassNotFoundException {
     Schema schema = getReflectedSchemaByName("com.google.protobuf.Timestamp", new TimestampConversion());

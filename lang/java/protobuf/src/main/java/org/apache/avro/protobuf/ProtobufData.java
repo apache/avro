@@ -366,8 +366,7 @@ public class ProtobufData extends GenericData {
 
   }
 
-  private Map<Descriptor, Schema> schemaConversions
-    = new HashMap<>();
+  private Map<Descriptor, Schema> schemaConversions = new HashMap<>();
 
   /**
    * Set proto descriptor -> avro schema conversion to handle logical type

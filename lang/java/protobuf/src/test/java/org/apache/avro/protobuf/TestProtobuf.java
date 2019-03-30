@@ -96,7 +96,8 @@ public class TestProtobuf {
     assertEquals(org.apache.avro.protobuf.Test.class.getName(), s.getNamespace());
   }
 
-  @Test public void testGetNonRepeatedSchemaWithLogicalType() throws Exception {
+  @Test
+  public void testGetNonRepeatedSchemaWithLogicalType() throws Exception {
     ProtoConversions.TimestampConversion conversion = new ProtoConversions.TimestampConversion();
 
     // Don't convert to logical type if conversion isn't set
