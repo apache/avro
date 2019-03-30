@@ -360,7 +360,7 @@ module Avro
         @default = default
         @order = order
         @doc = doc
-        validate_default! if default?
+        validate_default! if default? && !Avro.disable_field_default_validation
       end
 
       def default?

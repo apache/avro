@@ -315,6 +315,47 @@ def test_empty_record
                  exception.to_s)
   end
 
+  def test_field_default_validation_disabled
+    Avro.disable_field_default_validation = true
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          {
+            name: 'veggies',
+            type: 'string',
+            default: nil
+          }
+        ]
+      )
+    end
+  ensure
+    Avro.disable_field_default_validation = false
+  end
+
+  def test_field_default_validation_disabled_via_env
+    Avro.disable_field_default_validation = false
+    ENV['AVRO_DISABLE_FIELD_DEFAULT_VALIDATION'] = "1"
+
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          {
+            name: 'veggies',
+            type: 'string',
+            default: nil
+          }
+        ]
+      )
+    end
+  ensure
+    ENV.delete('AVRO_DISABLE_FIELD_DEFAULT_VALIDATION')
+    Avro.disable_field_default_validation = false
+  end
+
   def test_validate_record_valid_default
     assert_nothing_raised(Avro::SchemaParseError) do
       hash_to_schema(
