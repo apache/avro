@@ -19,6 +19,12 @@ package org.apache.avro.reflect;
 
 import org.apache.avro.AvroRuntimeException;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.IdentityHashMap;
+import java.util.Map;
+
 /**
  * A few utility methods for using @link{java.misc.Unsafe}, mostly for private
  * use.
@@ -117,6 +123,37 @@ class ReflectionUtil {
     private FieldAccessor accessor(FieldAccess access, String name) throws Exception {
       return access.getAccessor(this.getClass().getDeclaredField(name));
     }
+  }
+
+  /**
+   * For an interface, get a map of any {@link TypeVariable}s to their actual
+   * types.
+   *
+   * @param iface interface to resolve types for.
+   * @return a map of {@link TypeVariable}s to actual types.
+   */
+  protected static Map<TypeVariable<?>, Type> resolveTypeVariables(Class<?> iface) {
+    return resolveTypeVariables(iface, new IdentityHashMap<>());
+  }
+
+  private static Map<TypeVariable<?>, Type> resolveTypeVariables(Class<?> iface, Map<TypeVariable<?>, Type> reuse) {
+
+    for (Type type : iface.getGenericInterfaces()) {
+      if (type instanceof ParameterizedType) {
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        Type rawType = parameterizedType.getRawType();
+        if (rawType instanceof Class<?>) {
+          Class<?> classType = (Class<?>) rawType;
+          TypeVariable<? extends Class<?>>[] typeParameters = classType.getTypeParameters();
+          Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+          for (int i = 0; i < typeParameters.length; i++) {
+            reuse.putIfAbsent(typeParameters[i], reuse.getOrDefault(actualTypeArguments[i], actualTypeArguments[i]));
+          }
+          resolveTypeVariables(classType, reuse);
+        }
+      }
+    }
+    return reuse;
   }
 
 }
