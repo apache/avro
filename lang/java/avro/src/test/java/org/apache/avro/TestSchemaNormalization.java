@@ -42,16 +42,13 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Enclosed.class)
 public class TestSchemaNormalization {
 
-  private static String PARSER_DATA_FILE =
-    (System.getProperty("share.dir", "../../../share")
+  private static String PARSER_DATA_FILE = (System.getProperty("share.dir", "../../../share")
       + "/test/data/schema-tests.txt");
 
-  private static String STANDARD_CANONICAL_DATA_FILE =
-    (System.getProperty("share.dir", "../../../share")
+  private static String STANDARD_CANONICAL_DATA_FILE = (System.getProperty("share.dir", "../../../share")
       + "/test/data/standard-schema-tests.txt");
 
-  private static String CUSTOM_CANONICAL_DATA_FILE =
-    (System.getProperty("share.dir", "../../../share")
+  private static String CUSTOM_CANONICAL_DATA_FILE = (System.getProperty("share.dir", "../../../share")
       + "/test/data/custom-schema-tests.txt");
 
   @RunWith(Parameterized.class)
@@ -77,14 +74,20 @@ public class TestSchemaNormalization {
   @RunWith(Parameterized.class)
   public static class TestStandardCanonicalSchema {
     String input, expectedOutput;
-    public TestStandardCanonicalSchema(String i, String o) { input=i; expectedOutput=o; }
 
-    @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(STANDARD_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
+    public TestStandardCanonicalSchema(String i, String o) {
+      input = i;
+      expectedOutput = o;
+    }
 
-    @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input)),
-        expectedOutput);
+    @Parameters
+    public static List<Object[]> cases() throws IOException {
+      return CaseFinder.find(data(STANDARD_CANONICAL_DATA_FILE), "canonical", new ArrayList<>());
+    }
+
+    @Test
+    public void testCanonicalization() throws Exception {
+      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input)), expectedOutput);
     }
   }
 
@@ -92,14 +95,20 @@ public class TestSchemaNormalization {
   public static class TestCustomCanonicalSchema {
     String input, expectedOutput;
     LinkedHashSet<String> properties = new LinkedHashSet<>(Arrays.asList("format"));
-    public TestCustomCanonicalSchema(String i, String o) { input=i; expectedOutput=o; }
 
-    @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(CUSTOM_CANONICAL_DATA_FILE), "canonical", new ArrayList<>()); }
+    public TestCustomCanonicalSchema(String i, String o) {
+      input = i;
+      expectedOutput = o;
+    }
 
-    @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input), properties),
-        expectedOutput);
+    @Parameters
+    public static List<Object[]> cases() throws IOException {
+      return CaseFinder.find(data(CUSTOM_CANONICAL_DATA_FILE), "canonical", new ArrayList<>());
+    }
+
+    @Test
+    public void testCanonicalization() throws Exception {
+      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input), properties), expectedOutput);
     }
   }
 
