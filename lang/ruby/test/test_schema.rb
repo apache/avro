@@ -17,6 +17,10 @@
 require 'test_help'
 
 class TestSchema < Test::Unit::TestCase
+  def hash_to_schema(hash)
+    Avro::Schema.parse(hash.to_json)
+  end
+
   def test_default_namespace
     schema = Avro::Schema.parse <<-SCHEMA
       {"type": "record", "name": "OuterRecord", "fields": [
@@ -307,4 +311,149 @@ class TestSchema < Test::Unit::TestCase
     assert_true(schema.mutual_read?(schema))
     assert_true(default1.mutual_read?(default2))
   end
+
+  def test_validate_defaults
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          {
+            name: 'veggies',
+            type: 'string',
+            default: nil
+          }
+        ]
+      )
+    end
+    assert_equal('Error validating default for veggies: at . expected type string, got null',
+                 exception.to_s)
+  end
+
+  def test_field_default_validation_disabled
+    Avro.disable_field_default_validation = true
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          {
+            name: 'veggies',
+            type: 'string',
+            default: nil
+          }
+        ]
+      )
+    end
+  ensure
+    Avro.disable_field_default_validation = false
+  end
+
+  def test_field_default_validation_disabled_via_env
+    Avro.disable_field_default_validation = false
+    ENV['AVRO_DISABLE_FIELD_DEFAULT_VALIDATION'] = "1"
+
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          {
+            name: 'veggies',
+            type: 'string',
+            default: nil
+          }
+        ]
+      )
+    end
+  ensure
+    ENV.delete('AVRO_DISABLE_FIELD_DEFAULT_VALIDATION')
+    Avro.disable_field_default_validation = false
+  end
+
+  def test_validate_record_valid_default
+    assert_nothing_raised(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'with_subrecord',
+        fields: [
+          {
+            name: 'sub',
+            type: {
+              name: 'subrecord',
+              type: 'record',
+              fields: [
+                { type: 'string', name: 'x' }
+              ]
+            },
+            default: {
+              x: "y"
+            }
+          }
+        ]
+      )
+    end
+  end
+
+  def test_validate_record_invalid_default
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'with_subrecord',
+        fields: [
+          {
+            name: 'sub',
+            type: {
+              name: 'subrecord',
+              type: 'record',
+              fields: [
+                { type: 'string', name: 'x' }
+              ]
+            },
+            default: {
+              a: 1
+            }
+          }
+        ]
+      )
+    end
+    assert_equal('Error validating default for sub: at .x expected type string, got null',
+                 exception.to_s)
+  end
+
+  def test_validate_union_defaults
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          {
+            name: 'veggies',
+            type: %w(string null),
+            default: 5
+          }
+        ]
+      )
+    end
+    assert_equal('Error validating default for veggies: at . expected type string, got int with value 5',
+                 exception.to_s)
+  end
+
+  def test_validate_union_default_first_type
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          {
+            name: 'veggies',
+            type: %w(null string),
+            default: 'apple'
+          }
+        ]
+      )
+    end
+    assert_equal('Error validating default for veggies: at . expected type null, got string with value "apple"',
+                 exception.to_s)
+    end
 end

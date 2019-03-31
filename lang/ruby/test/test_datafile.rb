@@ -38,7 +38,7 @@ class TestDataFile < Test::Unit::TestCase
   "fields" : [
     {"name": "username", "type": "string"},
     {"name": "age", "type": "int"},
-    {"name": "verified", "type": "boolean", "default": "false"}
+    {"name": "verified", "type": "boolean", "default": false}
   ]}
 JSON
 
