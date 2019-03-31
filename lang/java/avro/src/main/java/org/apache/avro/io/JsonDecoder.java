@@ -445,13 +445,14 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       Symbol.FieldAdjustAction fa = (Symbol.FieldAdjustAction) top;
       String name = fa.fname;
       if (currentReorderBuffer != null) {
-        TokenBuffer tokenBuffer = currentReorderBuffer.savedFields.get(name);
-        if (tokenBuffer != null) {
-          currentReorderBuffer.savedFields.remove(name);
-          currentReorderBuffer.origParser = in;
-          in = tokenBuffer.asParser();
-          in.nextToken();
-          return null;
+        try (TokenBuffer tokenBuffer = currentReorderBuffer.savedFields.get(name)) {
+          if (tokenBuffer != null) {
+            currentReorderBuffer.savedFields.remove(name);
+            currentReorderBuffer.origParser = in;
+            in = tokenBuffer.asParser();
+            in.nextToken();
+            return null;
+          }
         }
       }
       if (in.getCurrentToken() == JsonToken.FIELD_NAME) {
@@ -464,10 +465,11 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
             if (currentReorderBuffer == null) {
               currentReorderBuffer = new ReorderBuffer();
             }
-            TokenBuffer tokenBuffer = new TokenBuffer(in);
-            // Moves the parser to the end of the current event e.g. END_OBJECT
-            tokenBuffer.copyCurrentStructure(in);
-            currentReorderBuffer.savedFields.put(fn, tokenBuffer);
+            try (TokenBuffer tokenBuffer = new TokenBuffer(in)) {
+              // Moves the parser to the end of the current event e.g. END_OBJECT
+              tokenBuffer.copyCurrentStructure(in);
+              currentReorderBuffer.savedFields.put(fn, tokenBuffer);
+            }
             in.nextToken();
           }
         } while (in.getCurrentToken() == JsonToken.FIELD_NAME);
