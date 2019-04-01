@@ -1,0 +1,31 @@
+{
+  "doc": "",
+  "fields": [
+    {
+      "name": "b",
+      "type": {
+        "fields": [
+          {
+            "name": "c",
+            "type": {
+              "fields": [
+                {
+                  "name": "value",
+                  "type":  "string"
+
+                }
+              ],
+              "name": "C",
+              "type": "record"
+            }
+          }
+        ],
+        "name": "B",
+        "type": "record"
+      }
+    }
+  ],
+  "name": "A",
+  "namespace": "namespace",
+  "type": "record"
+}

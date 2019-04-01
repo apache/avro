@@ -20,7 +20,7 @@
 """
 Test the schema parsing logic.
 """
-
+import json
 import logging
 import traceback
 import unittest
@@ -645,6 +645,10 @@ class TestSchema(unittest.TestCase):
       schema.Parse(schema_string)
     self.assertRegexpMatches(str(e.exception), 'Duplicate.*field name.*foo')
 
+  def testDuplicateTypeOnDifferentLevels(self):
+    with open('avro/tests/reusingSchema.avsc') as f:
+      schema_string = json.dumps(json.load(f))
+    schema.Parse(schema_string)
 
 # ------------------------------------------------------------------------------
 
