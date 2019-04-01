@@ -23,6 +23,19 @@
         "name": "B",
         "type": "record"
       }
+    },
+    {
+      "name": "c",
+      "type": {
+        "fields": [
+          {
+            "name": "value",
+            "type":  "string"
+          }
+        ],
+        "name": "C",
+        "type": "record"
+      }
     }
   ],
   "name": "A",

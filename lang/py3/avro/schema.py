@@ -397,9 +397,6 @@ class Names(object):
     if schema.fullname in VALID_TYPES:
       raise SchemaParseException(
           '%s is a reserved type name.' % schema.fullname)
-    if schema.fullname in self.names:
-      raise SchemaParseException(
-          'Avro name %r already exists.' % schema.fullname)
 
     logger.log(DEBUG_VERBOSE, 'Register new name for %r', schema.fullname)
     self._names[schema.fullname] = schema
