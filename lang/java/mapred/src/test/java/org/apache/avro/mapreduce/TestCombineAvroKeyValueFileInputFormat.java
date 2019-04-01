@@ -41,6 +41,7 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestCombineAvroKeyValueFileInputFormat {
 
@@ -98,15 +99,16 @@ public class TestCombineAvroKeyValueFileInputFormat {
     DataFileReader<GenericRecord> avroFileReader = new DataFileReader<>(avroFile, datumReader);
     assertTrue(avroFileReader.hasNext());
 
-    AvroKeyValue<Integer, CharSequence> mapRecord1 = new AvroKeyValue<>(avroFileReader.next());
-    assertNotNull(mapRecord1.get());
-    assertEquals(1, mapRecord1.getKey().intValue());
-    assertEquals("apple banana carrot", mapRecord1.getValue().toString());
-
-    assertTrue(avroFileReader.hasNext());
-    AvroKeyValue<Integer, CharSequence> mapRecord2 = new AvroKeyValue<>(avroFileReader.next());
-    assertNotNull(mapRecord2.get());
-    assertEquals(2, mapRecord2.getKey().intValue());
-    assertEquals("apple banana", mapRecord2.getValue().toString());
+    while (avroFileReader.hasNext()) {
+      AvroKeyValue<Integer, CharSequence> mapRecord1 = new AvroKeyValue<>(avroFileReader.next());
+      assertNotNull(mapRecord1.get());
+      if (mapRecord1.getKey().intValue() == 1) {
+        assertEquals("apple banana carrot", mapRecord1.getValue().toString());
+      } else if (mapRecord1.getKey().intValue() == 2) {
+        assertEquals("apple banana", mapRecord1.getValue().toString());
+      } else {
+        fail("Unknown key " + mapRecord1.getKey().intValue());
+      }
+    }
   }
 }
