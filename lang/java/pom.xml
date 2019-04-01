@@ -316,6 +316,9 @@
               <version>4.10.0</version>
             </eclipse>
             <removeUnusedImports/>
+            <excludes>
+              <exclude>src/test/java/org/apache/avro/protobuf/Test.java</exclude>
+            </excludes>
           </java>
         </configuration>
         <executions>
