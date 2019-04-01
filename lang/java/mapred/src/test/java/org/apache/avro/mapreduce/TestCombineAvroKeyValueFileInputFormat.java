@@ -54,17 +54,14 @@ public class TestCombineAvroKeyValueFileInputFormat {
   @Test
   public void testReadRecords() throws IOException, InterruptedException, ClassNotFoundException {
 
-    Schema keyValueSchema = AvroKeyValue.getSchema(
-      Schema.create(Schema.Type.INT), Schema.create(Schema.Type.STRING));
+    Schema keyValueSchema = AvroKeyValue.getSchema(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.STRING));
 
-    AvroKeyValue<Integer, CharSequence> record1
-      = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
+    AvroKeyValue<Integer, CharSequence> record1 = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     record1.setKey(1);
     record1.setValue("apple banana carrot");
     AvroFiles.createFile(new File(mTempDir.getRoot(), "combineSplit00.avro"), keyValueSchema, record1.get());
 
-    AvroKeyValue<Integer, CharSequence> record2
-      = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
+    AvroKeyValue<Integer, CharSequence> record2 = new AvroKeyValue<>(new GenericData.Record(keyValueSchema));
     record2.setKey(2);
     record2.setValue("apple banana");
 
@@ -94,25 +91,20 @@ public class TestCombineAvroKeyValueFileInputFormat {
     // Run the job.
     assertTrue(job.waitForCompletion(true));
 
-
     // Verify that the output Avro container file has the expected data.
     File avroFile = new File(outputPath.toString(), "part-m-00000.avro");
     DatumReader<GenericRecord> datumReader = new SpecificDatumReader<>(
-      AvroKeyValue.getSchema(Schema.create(Schema.Type.INT),
-        Schema.create(Schema.Type.STRING)));
-    DataFileReader<GenericRecord> avroFileReader
-      = new DataFileReader<>(avroFile, datumReader);
+        AvroKeyValue.getSchema(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.STRING)));
+    DataFileReader<GenericRecord> avroFileReader = new DataFileReader<>(avroFile, datumReader);
     assertTrue(avroFileReader.hasNext());
 
-    AvroKeyValue<Integer, CharSequence> mapRecord1
-      = new AvroKeyValue<>(avroFileReader.next());
+    AvroKeyValue<Integer, CharSequence> mapRecord1 = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(mapRecord1.get());
     assertEquals(1, mapRecord1.getKey().intValue());
     assertEquals("apple banana carrot", mapRecord1.getValue().toString());
 
     assertTrue(avroFileReader.hasNext());
-    AvroKeyValue<Integer, CharSequence> mapRecord2
-      = new AvroKeyValue<>(avroFileReader.next());
+    AvroKeyValue<Integer, CharSequence> mapRecord2 = new AvroKeyValue<>(avroFileReader.next());
     assertNotNull(mapRecord2.get());
     assertEquals(2, mapRecord2.getKey().intValue());
     assertEquals("apple banana", mapRecord2.getValue().toString());
