@@ -41,6 +41,10 @@ public class ProtoConversions {
 
     @Override
     public Timestamp fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
+      if (millisFromEpoch < 0) {
+        throw new IllegalArgumentException("given value is negative");
+      }
+
       long seconds = millisFromEpoch / THOUSAND;
       int nanos = (int) (millisFromEpoch - seconds * THOUSAND) * MILLION;
       return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
@@ -70,6 +74,10 @@ public class ProtoConversions {
 
     @Override
     public Timestamp fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
+      if (microsFromEpoch < 0) {
+        throw new IllegalArgumentException("given value is negative");
+      }
+
       long seconds = microsFromEpoch / MILLION;
       int nanos = (int) (microsFromEpoch - seconds * MILLION) * THOUSAND;
       return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();

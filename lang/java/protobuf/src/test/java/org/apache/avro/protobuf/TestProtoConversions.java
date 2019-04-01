@@ -67,6 +67,12 @@ public class TestProtoConversions {
         conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
     Assert.assertEquals("Known timestamp should be correct", instant,
         (long) conversion.toLong(May_28_2015_21_46_53_221_ts, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+
+    try {
+      conversion.fromLong((long) -1.0, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
   }
 
   @Test
@@ -84,6 +90,12 @@ public class TestProtoConversions {
       conversion.toLong(May_28_2015_21_46_53_221_843_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
       Assert.fail("Should not convert DateTime to long");
     } catch (UnsupportedOperationException e) {
+      // expected
+    }
+
+    try {
+      conversion.fromLong((long) -1.0, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+    } catch (IllegalArgumentException e) {
       // expected
     }
   }
