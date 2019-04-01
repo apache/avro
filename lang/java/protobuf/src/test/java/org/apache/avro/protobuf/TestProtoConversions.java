@@ -45,7 +45,7 @@ public class TestProtoConversions {
 
   @Test
   public void testTimestampMillisConversion() throws Exception {
-    TimestampConversion conversion = new TimestampConversion();
+    TimestampMillisConversion conversion = new TimestampMillisConversion();
     long nowInstant = new Date().getTime();
 
     Timestamp now = conversion.fromLong(nowInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
@@ -87,7 +87,7 @@ public class TestProtoConversions {
    */
   @Test
   public void testDynamicSchemaWithDateTimeConversion() throws ClassNotFoundException {
-    Schema schema = getReflectedSchemaByName("com.google.protobuf.Timestamp", new TimestampConversion());
+    Schema schema = getReflectedSchemaByName("com.google.protobuf.Timestamp", new TimestampMillisConversion());
     Assert.assertEquals("Reflected schema should be logicalType timestampMillis", TIMESTAMP_MILLIS_SCHEMA, schema);
   }
 

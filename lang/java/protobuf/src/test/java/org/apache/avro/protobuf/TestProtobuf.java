@@ -98,7 +98,7 @@ public class TestProtobuf {
 
   @Test
   public void testGetNonRepeatedSchemaWithLogicalType() throws Exception {
-    ProtoConversions.TimestampConversion conversion = new ProtoConversions.TimestampConversion();
+    ProtoConversions.TimestampMillisConversion conversion = new ProtoConversions.TimestampMillisConversion();
 
     // Don't convert to logical type if conversion isn't set
     ProtobufData instance1 = new ProtobufData();

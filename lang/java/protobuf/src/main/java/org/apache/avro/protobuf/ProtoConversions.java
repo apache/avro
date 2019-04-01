@@ -28,7 +28,7 @@ public class ProtoConversions {
   private static final int THOUSAND = 1000;
   private static final int MILLION = 1000000;
 
-  public static class TimestampConversion extends Conversion<Timestamp> {
+  public static class TimestampMillisConversion extends Conversion<Timestamp> {
     @Override
     public Class<Timestamp> getConvertedType() {
       return Timestamp.class;
