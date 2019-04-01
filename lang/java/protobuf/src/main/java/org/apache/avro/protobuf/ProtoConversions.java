@@ -25,6 +25,9 @@ import org.apache.avro.Schema;
 
 public class ProtoConversions {
 
+  private static final int THOUHSAND = 1000;
+  private static final int MILLION = 1000000;
+
   public static class TimestampConversion extends Conversion<Timestamp> {
     @Override
     public Class<Timestamp> getConvertedType() {
@@ -38,14 +41,14 @@ public class ProtoConversions {
 
     @Override
     public Timestamp fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
-      long seconds = millisFromEpoch / 1000;
-      int nanos = (int) (millisFromEpoch - seconds * 1000) * 1000000;
+      long seconds = millisFromEpoch / THOUHSAND;
+      int nanos = (int) (millisFromEpoch - seconds * THOUHSAND) * MILLION;
       return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
     }
 
     @Override
     public Long toLong(Timestamp value, Schema schema, LogicalType type) {
-      return value.getSeconds() * 1000 + value.getNanos() / 1000000;
+      return ProtoConversions.toLong(value);
     }
 
     @Override
@@ -67,18 +70,18 @@ public class ProtoConversions {
 
     @Override
     public Timestamp fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
-      long seconds = microsFromEpoch / 1000000;
-      int nanos = (int) (microsFromEpoch - seconds * 1000000) * 1000;
+      long seconds = microsFromEpoch / MILLION;
+      int nanos = (int) (microsFromEpoch - seconds * MILLION) * THOUHSAND;
       return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
     }
 
     @Override
     public Long toLong(Timestamp value, Schema schema, LogicalType type) {
-      if (value.getNanos() - (value.getNanos() / 1000000 * 1000000) > 0) {
+      if (value.getNanos() - (value.getNanos() / MILLION * MILLION) > 0) {
         throw new UnsupportedOperationException("micros-precise is unsupported");
       }
 
-      return value.getSeconds() * 1000 + value.getNanos() / 1000000;
+      return ProtoConversions.toLong(value);
     }
 
     @Override
@@ -87,4 +90,7 @@ public class ProtoConversions {
     }
   }
 
+  private static long toLong(Timestamp value) {
+    return value.getSeconds() * THOUHSAND + value.getNanos() / MILLION;
+  }
 }
