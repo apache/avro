@@ -154,7 +154,6 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "'false'"       | false
     }
 
-    @Ignore("Velocity error, for some reason \$velocityCount is unset in a foreach")
     def "supports configuring templateDirectory"() {
         given:
         def templatesDir = testProjectDir.newFolder("templates", "alternateTemplates")
