@@ -20,6 +20,7 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
@@ -70,6 +71,14 @@ public class InduceMojo extends AbstractMojo {
   private boolean allowNull;
 
   /**
+   * Override the default ReflectData implementation with an extension. Must be a
+   * subclass of ReflectData.
+   *
+   * @parameter property="reflectDataImplementation"
+   */
+  private String reflectDataImplementation;
+
+  /**
    * The current Maven project.
    *
    * @parameter default-value="${project}"
@@ -83,7 +92,7 @@ public class InduceMojo extends AbstractMojo {
 
   public void execute() throws MojoExecutionException {
     classLoader = getClassLoader();
-    reflectData = allowNull ? ReflectData.AllowNull.get() : ReflectData.get();
+    reflectData = getReflectData();
 
     if (encoding == null) {
       encoding = Charset.defaultCharset().name();
@@ -148,6 +157,23 @@ public class InduceMojo extends AbstractMojo {
       return filename.concat(".avpr");
     } else {
       return filename.concat(".avsc");
+    }
+  }
+
+  private ReflectData getReflectData() throws MojoExecutionException {
+    if (reflectDataImplementation == null) {
+      return allowNull ? ReflectData.AllowNull.get() : ReflectData.get();
+    }
+
+    try {
+      Constructor<? extends ReflectData> constructor = loadClass(classLoader, reflectDataImplementation)
+          .asSubclass(ReflectData.class).getConstructor();
+      constructor.setAccessible(true);
+      return constructor.newInstance();
+    } catch (Exception e) {
+      throw new MojoExecutionException(String.format(
+          "Could not load ReflectData custom implementation %s. Make sure that it has a no-args constructor",
+          reflectDataImplementation), e);
     }
   }
 
