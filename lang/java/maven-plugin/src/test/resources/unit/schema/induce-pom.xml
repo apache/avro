@@ -37,8 +37,10 @@
           </execution>
         </executions>
         <configuration>
-          <sourceDirectory>${basedir}/src/test/java/org/apache/avro/entities</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/schemas</outputDirectory>
+          <javaSourceDirectories>
+            <directory>${basedir}/src/test/java/org/apache/avro/entities</directory>
+          </javaSourceDirectories>
+          <avroOutputDirectory>${basedir}/target/test-harness/schemas</avroOutputDirectory>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>

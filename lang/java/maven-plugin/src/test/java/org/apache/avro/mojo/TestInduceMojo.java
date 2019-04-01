@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,7 +19,13 @@
 package org.apache.avro.mojo;
 
 import java.io.File;
+import java.util.Arrays;
 
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.entities.Person;
+import org.apache.avro.protocols.Remote;
+import org.apache.avro.reflect.ReflectData;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
 public class TestInduceMojo extends AbstractMojoTestCase {
@@ -51,6 +57,9 @@ public class TestInduceMojo extends AbstractMojoTestCase {
 
     File outputDir = new File(getBasedir(), "target/test-harness/schemas/org/apache/avro/entities");
     assertTrue(outputDir.listFiles().length != 0);
+    File personSchemaFile = Arrays.stream(outputDir.listFiles()).filter(file -> file.getName().endsWith("Person.avsc"))
+        .findFirst().orElseThrow(AssertionError::new);
+    assertEquals(ReflectData.get().getSchema(Person.class), new Schema.Parser().parse(personSchemaFile));
   }
 
   public void testInducedSchemasFileExtension() throws Exception {
@@ -67,6 +76,9 @@ public class TestInduceMojo extends AbstractMojoTestCase {
 
     File outputDir = new File(getBasedir(), "target/test-harness/protocol/org/apache/avro/protocols");
     assertTrue(outputDir.listFiles().length != 0);
+    File remoteProtocolFile = Arrays.stream(outputDir.listFiles())
+        .filter(file -> file.getName().endsWith("Remote.avpr")).findFirst().orElseThrow(AssertionError::new);
+    assertEquals(ReflectData.get().getProtocol(Remote.class), Protocol.parse(remoteProtocolFile));
   }
 
   public void testInducedProtocolsFileExtension() throws Exception {
