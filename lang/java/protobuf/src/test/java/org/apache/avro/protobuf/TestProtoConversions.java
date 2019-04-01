@@ -28,12 +28,21 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Date;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 public class TestProtoConversions {
 
   private static Schema TIMESTAMP_MILLIS_SCHEMA;
   private static Schema TIMESTAMP_MICROS_SCHEMA;
+
+  private static Calendar May_28_2015_21_46_53_221 = Calendar.getInstance();
+
+  static {
+    May_28_2015_21_46_53_221.setTimeZone(TimeZone.getTimeZone("UTC"));
+    May_28_2015_21_46_53_221.set(2015, Calendar.MAY, 28, 21, 46, 53);
+    May_28_2015_21_46_53_221.set(Calendar.MILLISECOND, 221);
+  }
 
   @BeforeClass
   public static void createSchemas() {
@@ -46,31 +55,30 @@ public class TestProtoConversions {
   @Test
   public void testTimestampMillisConversion() throws Exception {
     TimestampMillisConversion conversion = new TimestampMillisConversion();
-    long nowInstant = new Date().getTime();
 
-    Timestamp now = conversion.fromLong(nowInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
-    long roundTrip = conversion.toLong(now, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
-    Assert.assertEquals("Round-trip conversion should work", nowInstant, roundTrip);
+    long instant = May_28_2015_21_46_53_221.getTimeInMillis();
+    Timestamp May_28_2015_21_46_53_221_ts = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221000000).build();
 
-    long May_28_2015_21_46_53_221_instant = 1432849613221L;
-    Timestamp May_28_2015_21_46_53_221 = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221000000).build();
+    Timestamp tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    long roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
 
-    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221,
-        conversion.fromLong(May_28_2015_21_46_53_221_instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
-    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_instant,
-        (long) conversion.toLong(May_28_2015_21_46_53_221, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_ts,
+        conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
+    Assert.assertEquals("Known timestamp should be correct", instant,
+        (long) conversion.toLong(May_28_2015_21_46_53_221_ts, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
   }
 
   @Test
   public void testTimestampMicrosConversion() throws Exception {
     TimestampMicrosConversion conversion = new TimestampMicrosConversion();
 
-    long May_28_2015_21_46_53_221_843_instant = 1432849613221L * 1000 + 843;
+    long instant = May_28_2015_21_46_53_221.getTimeInMillis() * 1000 + 843;
     Timestamp May_28_2015_21_46_53_221_843_ts = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221843000)
         .build();
 
-    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_843_ts, conversion
-        .fromLong(May_28_2015_21_46_53_221_843_instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
+    Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_843_ts,
+        conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
 
     try {
       conversion.toLong(May_28_2015_21_46_53_221_843_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
