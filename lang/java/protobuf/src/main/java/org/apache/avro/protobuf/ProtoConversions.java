@@ -25,7 +25,7 @@ import org.apache.avro.Schema;
 
 public class ProtoConversions {
 
-  private static final int THOUHSAND = 1000;
+  private static final int THOUSAND = 1000;
   private static final int MILLION = 1000000;
 
   public static class TimestampConversion extends Conversion<Timestamp> {
@@ -41,8 +41,8 @@ public class ProtoConversions {
 
     @Override
     public Timestamp fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
-      long seconds = millisFromEpoch / THOUHSAND;
-      int nanos = (int) (millisFromEpoch - seconds * THOUHSAND) * MILLION;
+      long seconds = millisFromEpoch / THOUSAND;
+      int nanos = (int) (millisFromEpoch - seconds * THOUSAND) * MILLION;
       return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
     }
 
@@ -71,7 +71,7 @@ public class ProtoConversions {
     @Override
     public Timestamp fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
       long seconds = microsFromEpoch / MILLION;
-      int nanos = (int) (microsFromEpoch - seconds * MILLION) * THOUHSAND;
+      int nanos = (int) (microsFromEpoch - seconds * MILLION) * THOUSAND;
       return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
     }
 
@@ -91,6 +91,6 @@ public class ProtoConversions {
   }
 
   private static long toLong(Timestamp value) {
-    return value.getSeconds() * THOUHSAND + value.getNanos() / MILLION;
+    return value.getSeconds() * THOUSAND + value.getNanos() / MILLION;
   }
 }
