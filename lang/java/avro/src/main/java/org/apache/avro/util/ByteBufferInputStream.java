@@ -18,7 +18,6 @@
 
 package org.apache.avro.util;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -35,22 +34,27 @@ public class ByteBufferInputStream extends InputStream {
 
   /**
    * @see InputStream#read()
-   * @throws EOFException if EOF is reached.
    */
   @Override
   public int read() throws IOException {
-    return getBuffer().get() & 0xff;
+    ByteBuffer buffer = getBuffer();
+    if (buffer == null) {
+      return -1;
+    }
+    return buffer.get() & 0xff;
   }
 
   /**
    * @see InputStream#read(byte[], int, int)
-   * @throws EOFException if EOF is reached before reading all the bytes.
    */
   @Override
   public int read(byte[] b, int off, int len) throws IOException {
     if (len == 0)
       return 0;
     ByteBuffer buffer = getBuffer();
+    if (buffer == null) {
+      return -1;
+    }
     int remaining = buffer.remaining();
     if (len > remaining) {
       buffer.get(b, off, remaining);
@@ -63,13 +67,14 @@ public class ByteBufferInputStream extends InputStream {
 
   /**
    * Read a buffer from the input without copying, if possible.
-   * 
-   * @throws EOFException if EOF is reached before reading all the bytes.
    */
   public ByteBuffer readBuffer(int length) throws IOException {
     if (length == 0)
       return ByteBuffer.allocate(0);
     ByteBuffer buffer = getBuffer();
+    if (buffer == null) {
+      return ByteBuffer.allocate(0);
+    }
     if (buffer.remaining() == length) { // can return current as-is?
       current++;
       return buffer; // return w/o copying
@@ -84,8 +89,6 @@ public class ByteBufferInputStream extends InputStream {
 
   /**
    * Returns the next non-empty buffer.
-   * 
-   * @throws EOFException if EOF is reached before reading all the bytes.
    */
   private ByteBuffer getBuffer() throws IOException {
     while (current < buffers.size()) {
@@ -94,6 +97,6 @@ public class ByteBufferInputStream extends InputStream {
         return buffer;
       current++;
     }
-    throw new EOFException();
+    return null;
   }
 }
