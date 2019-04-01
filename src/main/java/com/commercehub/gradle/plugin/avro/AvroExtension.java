@@ -22,6 +22,5 @@ public interface AvroExtension {
     String getTemplateDirectory();
     boolean isCreateSetters();
     boolean isEnableDecimalLogicalType();
-    boolean isValidateDefaults();
     String getDateTimeLogicalType();
 }

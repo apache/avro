@@ -94,7 +94,6 @@ There are a number of configuration options supported in the `avro` block.
 | stringType                | `"String"`            | `stringType` passed to Avro compiler                  |
 | templateDirectory         | see below             | `templateDir` passed to Avro compiler                 |
 | enableDecimalLogicalType  | `true`                | `enableDecimalLogicalType` passed to Avro compiler    |
-| validateDefaults          | `false`               | `setValidateDefaults` set on Avro Schema Parser       |
 | dateTimeLogicalType       | see below             | `dateTimeLogicalType` passed to Avro compiler         |
 
 ## createSetters
@@ -184,22 +183,6 @@ Example:
 ```groovy
 avro {
     enableDecimalLogicalType = false
-}
-```
-
-## validateDefaults
-
-Valid values: `false` (default), `true`; supports equivalent `String` values
-
-Set to `true` to force validation of default values in schema files. Each validation error will cause the build to fail.
-In order to maintain backward compatibility this option is disabled by default, but in the next big release, this option will
-be removed and schema validation will always be enabled.
-
-Example:
-
-```groovy
-avro {
-    validateDefaults = true
 }
 ```
 

@@ -54,7 +54,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private String templateDirectory;
     private boolean createSetters = DEFAULT_CREATE_SETTERS;
     private boolean enableDecimalLogicalType = DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
-    private boolean validateDefaults = DEFAULT_VALIDATE_DEFAULTS;
     private String dateTimeLogicalType = DEFAULT_DATE_TIME_LOGICAL_TYPE;
 
     private transient StringType parsedStringType;
@@ -129,15 +128,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.enableDecimalLogicalType = Boolean.parseBoolean(enableDecimalLogicalType);
     }
 
-    @Input
-    public boolean isValidateDefaults() {
-        return validateDefaults;
-    }
-
-    public void setValidateDefaults(boolean validateDefaults) {
-        this.validateDefaults = validateDefaults;
-    }
-
     @Optional
     @Input
     public String getDateTimeLogicalType() {
@@ -166,7 +156,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
         getLogger().debug("Using createSetters {}", isCreateSetters());
         getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType());
-        getLogger().debug("Using validateDefaults {}", isValidateDefaults());
         getLogger().debug("Using dateTimeLogicalType {}", parsedDateTimeLogicalTypeImplementation.name());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
@@ -233,7 +222,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         try {
             Schema.Parser parser = new Schema.Parser();
             parser.addTypes(parserTypes);
-            parser.setValidateDefaults(isValidateDefaults());
 
             compile(parser.parse(sourceFile), sourceFile);
             Map<String, Schema> typesDefinedInFile = asymmetricDifference(parser.getTypes(), parserTypes);

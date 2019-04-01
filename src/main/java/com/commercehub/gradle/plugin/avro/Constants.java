@@ -33,7 +33,6 @@ class Constants {
     static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PUBLIC_DEPRECATED.name();
     static final boolean DEFAULT_CREATE_SETTERS = true;
     static final boolean DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE = true;
-    static final boolean DEFAULT_VALIDATE_DEFAULTS = false;
     static final String DEFAULT_DATE_TIME_LOGICAL_TYPE = SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT.name();
 
     static final String SCHEMA_EXTENSION = "avsc";
@@ -45,7 +44,6 @@ class Constants {
 
     static final String AVRO_EXTENSION_NAME = "avro";
 
-    static final String OPTION_ENABLE_VALIDATE_DEFAULTS = "validateDefaults";
     static final String OPTION_ENABLE_DECIMAL_LOGICAL_TYPE = "enableDecimalLogicalType";
     static final String OPTION_CREATE_SETTERS = "createSetters";
     static final String OPTION_TEMPLATE_DIRECTORY = "templateDirectory";

@@ -246,67 +246,6 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     }
 
     @Unroll
-    def "supports configuring validateDefaults to #validateDefaults"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        buildFile << """
-        |avro {
-        |    validateDefaults = $validateDefaults
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-
-        where:
-        validateDefaults | fieldClz
-        "Boolean.TRUE"           | BigDecimal
-        "Boolean.FALSE"          | ByteBuffer
-        "true"                   | BigDecimal
-        "false"                  | ByteBuffer
-        "'true'"                 | BigDecimal
-        "'false'"                | ByteBuffer
-    }
-
-    def "validation of default values should cause the build to fail for invalid schema file"() {
-        given:
-        copyResource("userWithInvalidDefaults.avsc", avroDir)
-        buildFile << """
-        |avro {
-        |    validateDefaults = true
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = runAndFail("generateAvroJava")
-
-        then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Invalid default for field name: null not a \"string\"")
-    }
-
-    // TODO To be cleaned up post-merge, validateDefaults doesn't make sense in 1.9+ 
-    @Ignore("1.9 compiler validates defaults all the time so the build never succeeds")
-    def "lack of validation of default values should cause the build to succeed for invalid schema file"() {
-        given:
-        copyResource("userWithInvalidDefaults.avsc", avroDir)
-        buildFile << """
-        |avro {
-        |    validateDefaults = false
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-    }
-
-    @Unroll
     def "supports configuration of dateTimeLogicalType to #dateTimeLogicalType"() {
         given:
         copyResource("user.avsc", avroDir)

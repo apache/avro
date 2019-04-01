@@ -104,12 +104,6 @@ public class AvroBasePlugin implements Plugin<Project> {
                         return avroExtension.isEnableDecimalLogicalType();
                     }
                 });
-                taskMapping.map(OPTION_ENABLE_VALIDATE_DEFAULTS, new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        return avroExtension.isValidateDefaults();
-                    }
-                });
                 taskMapping.map(OPTION_DATE_TIME_LOGICAL_TYPE, new Callable<String>() {
                     @Override
                     public String call() throws Exception {
