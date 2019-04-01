@@ -95,6 +95,7 @@ There are a number of configuration options supported in the `avro` block.
 | templateDirectory         | see below             | `templateDir` passed to Avro compiler                 |
 | enableDecimalLogicalType  | `true`                | `enableDecimalLogicalType` passed to Avro compiler    |
 | validateDefaults          | `false`               | `setValidateDefaults` set on Avro Schema Parser       |
+| dateTimeLogicalType       | see below             | `dateTimeLogicalType` passed to Avro compiler         |
 
 ## createSetters
 
@@ -199,6 +200,21 @@ Example:
 ```groovy
 avro {
     validateDefaults = true
+}
+```
+
+## dateTimeLogicalType
+
+Valid values: `JSR310`, `JODA`
+
+By default, generated Java files will use the upstream Avro default date/time types. At time of writing this is JSR310.
+See `DateTimeLogicalTypeImplementation.DEFAULT` in the upstream code.
+
+Example:
+
+```groovy
+avro {
+    dateTimeLogicalType = 'JSR310'
 }
 ```
 

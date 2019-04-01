@@ -15,6 +15,7 @@
  */
 package com.commercehub.gradle.plugin.avro
 
+import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData.StringType
 import spock.lang.Ignore
@@ -29,6 +30,8 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}.
  */
 class OptionsFunctionalSpec extends FunctionalSpec {
+    static def actualDateTimeImplementationDefault = SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT == SpecificCompiler.DateTimeLogicalTypeImplementation.JSR310 ? "java.time.LocalDate" : "org.joda.time.LocalDate"
+
     def "setup"() {
         applyAvroPlugin()
     }
@@ -58,6 +61,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "enableDecimalLogicalType is enabled"
         content.contains("public void setSalary(${BigDecimal.name} value)")
+
+        and: "getDateTimeLogicalType is ?"
+        content.contains("public void setBirthDate(${actualDateTimeImplementationDefault} value)")
     }
 
     @Unroll
@@ -299,5 +305,49 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+    }
+
+    @Unroll
+    def "supports configuration of dateTimeLogicalType to #dateTimeLogicalType"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    dateTimeLogicalType = "${dateTimeLogicalType}"
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the specified dateTimeLogicalType is used"
+        content.contains("public void setBirthDate(${fieldClz} value)")
+
+        where:
+        dateTimeLogicalType                                                              | fieldClz
+        SpecificCompiler.DateTimeLogicalTypeImplementation.JODA.name()                   | "org.joda.time.LocalDate"
+        SpecificCompiler.DateTimeLogicalTypeImplementation.JODA.name().toLowerCase()     | "org.joda.time.LocalDate"
+        SpecificCompiler.DateTimeLogicalTypeImplementation.JSR310.name()                 | "java.time.LocalDate"
+    }
+
+    def "rejects unsupported dateTimeLogicalType values"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    dateTimeLogicalType = "badValue"
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = runAndFail("generateAvroJava")
+
+        then:
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("Invalid dateTimeLogicalType 'badValue'.  Value values are: [JODA, JSR310]")
     }
 }

@@ -58,6 +58,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                 return DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
             }
         });
+        extensionMapping.map(OPTION_DATE_TIME_LOGICAL_TYPE, new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return DEFAULT_DATE_TIME_LOGICAL_TYPE;
+            }
+        });
         project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
             @Override
             public void execute(GenerateAvroJavaTask task) {
@@ -102,6 +108,12 @@ public class AvroBasePlugin implements Plugin<Project> {
                     @Override
                     public Boolean call() throws Exception {
                         return avroExtension.isValidateDefaults();
+                    }
+                });
+                taskMapping.map(OPTION_DATE_TIME_LOGICAL_TYPE, new Callable<String>() {
+                    @Override
+                    public String call() throws Exception {
+                        return avroExtension.getDateTimeLogicalType();
                     }
                 });
             }
