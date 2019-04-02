@@ -63,8 +63,8 @@ module Avro
     TypeMismatchError = Class.new(ValidationError)
 
     class << self
-      def validate!(expected_schema, logical_datum, options = { recursive: true, encoded: false })
-        options ||= { fail_on_extra_fields: false }
+      def validate!(expected_schema, logical_datum, options = { recursive: true, encoded: false, fail_on_extra_fields: false })
+        options ||= {}
         options[:recursive] = true unless options.key?(:recursive)
 
         result = Result.new
@@ -86,16 +86,16 @@ module Avro
 
         case expected_schema.type_sym
         when :array
-          validate_array(expected_schema, datum, path, result)
+          validate_array(expected_schema, datum, path, result, options)
         when :map
-          validate_map(expected_schema, datum, path, result)
+          validate_map(expected_schema, datum, path, result, options)
         when :union
-          validate_union(expected_schema, datum, path, result)
+          validate_union(expected_schema, datum, path, result, options)
         when :record, :error, :request
           fail TypeMismatchError unless datum.is_a?(Hash)
           expected_schema.fields.each do |field|
             deeper_path = deeper_path_for_hash(field.name, path)
-            validate_recursive(field.type, datum[field.name], deeper_path, result)
+            validate_recursive(field.type, datum[field.name], deeper_path, result, options)
           end
           if options[:fail_on_extra_fields]
             datum_fields = datum.keys.map(&:to_s)
@@ -163,31 +163,31 @@ module Avro
         "expected enum with values #{symbols}, got #{actual_value_message(datum)}"
       end
 
-      def validate_array(expected_schema, datum, path, result)
+      def validate_array(expected_schema, datum, path, result, options = {})
         fail TypeMismatchError unless datum.is_a?(Array)
         datum.each_with_index do |d, i|
-          validate_recursive(expected_schema.items, d, path + "[#{i}]", result)
+          validate_recursive(expected_schema.items, d, path + "[#{i}]", result, options)
         end
       end
 
-      def validate_map(expected_schema, datum, path, result)
+      def validate_map(expected_schema, datum, path, result, options = {})
         fail TypeMismatchError unless datum.is_a?(Hash)
         datum.keys.each do |k|
           result.add_error(path, "unexpected key type '#{ruby_to_avro_type(k.class)}' in map") unless k.is_a?(String)
         end
         datum.each do |k, v|
           deeper_path = deeper_path_for_hash(k, path)
-          validate_recursive(expected_schema.values, v, deeper_path, result)
+          validate_recursive(expected_schema.values, v, deeper_path, result, options)
         end
       end
 
-      def validate_union(expected_schema, datum, path, result)
+      def validate_union(expected_schema, datum, path, result, options = {})
         if expected_schema.schemas.size == 1
-          validate_recursive(expected_schema.schemas.first, datum, path, result)
+          validate_recursive(expected_schema.schemas.first, datum, path, result, options)
           return
         end
         failures = []
-        compatible_type = first_compatible_type(datum, expected_schema, path, failures)
+        compatible_type = first_compatible_type(datum, expected_schema, path, failures, options)
         return unless compatible_type.nil?
 
         complex_type_failed = failures.detect { |r| COMPLEX_TYPES.include?(r[:type]) }
@@ -199,10 +199,10 @@ module Avro
         end
       end
 
-      def first_compatible_type(datum, expected_schema, path, failures)
+      def first_compatible_type(datum, expected_schema, path, failures, options = {})
         expected_schema.schemas.find do |schema|
           result = Result.new
-          validate_recursive(schema, datum, path, result)
+          validate_recursive(schema, datum, path, result, options)
           failures << { type: schema.type_sym, result: result } if result.failure?
           !result.failure?
         end
