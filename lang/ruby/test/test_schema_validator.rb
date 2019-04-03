@@ -17,8 +17,8 @@
 require 'test_help'
 
 class TestSchema < Test::Unit::TestCase
-  def validate!(schema, value)
-    Avro::SchemaValidator.validate!(schema, value)
+  def validate!(schema, value, options=nil)
+    Avro::SchemaValidator.validate!(schema, value, options)
   end
 
   def validate_simple!(schema, value)
@@ -467,5 +467,88 @@ class TestSchema < Test::Unit::TestCase
       "at .[0] expected type int, got null\nat .[1] expected type int, got string with value \"e\"",
       exception.to_s
     )
+  end
+
+  def test_validate_extra_fields
+    schema = hash_to_schema(
+               type: 'record',
+               name: 'fruits',
+               fields: [
+                 {
+                   name: 'veggies',
+                   type: 'string'
+                 }
+                     ]
+    )
+    exception = assert_raise(Avro::SchemaValidator::ValidationError) do
+      validate!(schema, {'veggies' => 'tomato', 'bread' => 'rye'}, fail_on_extra_fields: true)
+    end
+    assert_equal(1, exception.result.errors.size)
+    assert_equal("at . extra field 'bread' - not in schema",
+                 exception.to_s)
+  end
+
+  def test_validate_subrecord_extra_fields
+   schema = hash_to_schema(type: 'record',
+                           name: 'top',
+                           fields: [
+                             {
+                                name: 'fruit',
+                                type: {
+                                  name: 'fruit',
+                                  type: 'record',
+                                  fields: [{ name: 'name', type: 'string' }]
+                                }
+                             }
+                           ])
+    exception = assert_raise(Avro::SchemaValidator::ValidationError) do
+      validate!(schema, { 'fruit' => { 'name' => 'orange', 'color' => 'orange' } }, fail_on_extra_fields: true)
+    end
+    assert_equal(1, exception.result.errors.size)
+    assert_equal("at .fruit extra field 'color' - not in schema", exception.to_s)
+  end
+
+  def test_validate_array_extra_fields
+    schema = hash_to_schema(type: 'array',
+                            items: {
+                              name: 'fruit',
+                              type: 'record',
+                              fields: [{ name: 'name', type: 'string' }]
+                            })
+    exception = assert_raise(Avro::SchemaValidator::ValidationError) do
+      validate!(schema, [{ 'name' => 'orange', 'color' => 'orange' }], fail_on_extra_fields: true)
+    end
+    assert_equal(1, exception.result.errors.size)
+    assert_equal("at .[0] extra field 'color' - not in schema", exception.to_s)
+  end
+
+  def test_validate_map_extra_fields
+    schema = hash_to_schema(type: 'map',
+                            values: {
+                              name: 'fruit',
+                              type: 'record',
+                              fields: [{ name: 'color', type: 'string' }]
+                            })
+    exception = assert_raise(Avro::SchemaValidator::ValidationError) do
+      validate!(schema, { 'apple' => { 'color' => 'green', 'extra' => 1 } }, fail_on_extra_fields: true)
+    end
+    assert_equal(1, exception.result.errors.size)
+    assert_equal("at .apple extra field 'extra' - not in schema", exception.to_s)
+  end
+
+  def test_validate_union_extra_fields
+    schema = hash_to_schema([
+                              'null',
+                              {
+                                type: 'record',
+                                name: 'fruit',
+                                fields: [{ name: 'name', type: 'string' }]
+                              }
+                            ])
+    exception = assert_raise(Avro::SchemaValidator::ValidationError) do
+      validate!(schema, { 'name' => 'apple', 'color' => 'green' }, fail_on_extra_fields: true)
+    end
+    assert_equal(1, exception.result.errors.size)
+    assert_equal("at . extra field 'color' - not in schema", exception.to_s)
   end
 end
