@@ -319,7 +319,13 @@
                 <exclude>lang/csharp/src/apache/ipc/org/apache/avro/ipc/*.cs</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/_SUCCESS</exclude>
-                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/Test.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/Test.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/A.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/Foo.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/FooOrBuilder.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/M.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/MOrBuilder.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/TestMultipleFiles.java</exclude>
                 <!-- data and schema files -->
                 <exclude>**/*.avro</exclude> <!-- binary format -->
                 <exclude>**/*.avro12</exclude> <!-- binary format -->
