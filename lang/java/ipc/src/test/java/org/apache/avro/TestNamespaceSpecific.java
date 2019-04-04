@@ -42,7 +42,7 @@ public class TestNamespaceSpecific {
       return record;
     }
 
-    public void error() throws AvroRemoteException {
+    public void error() throws TestError {
       throw TestError.newBuilder().setMessage$("an error").build();
     }
   }

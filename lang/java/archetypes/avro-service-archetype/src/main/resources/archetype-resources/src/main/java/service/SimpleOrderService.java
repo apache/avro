@@ -21,7 +21,6 @@
 
 package ${package}.service;
 
-import org.apache.avro.AvroRemoteException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,7 @@ public class SimpleOrderService implements OrderProcessingService {
   private Logger log = LoggerFactory.getLogger(SimpleOrderService.class);
 
   @Override
-  public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {
+  public Confirmation submitOrder(Order order) throws OrderFailure {
     log.info("Received order for '{}' items from customer with id '{}'",
       new Object[] {order.getOrderItems().size(), order.getCustomerId()});
 

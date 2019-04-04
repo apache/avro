@@ -41,7 +41,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Conversion;
@@ -821,8 +820,7 @@ public class ReflectData extends SpecificData {
     List<Schema> errs = new ArrayList<>();
     errs.add(Protocol.SYSTEM_ERROR); // every method can throw
     for (Type err : method.getGenericExceptionTypes())
-      if (err != AvroRemoteException.class)
-        errs.add(getSchema(err, names));
+      errs.add(getSchema(err, names));
     Schema errors = Schema.createUnion(errs);
     return protocol.createMessage(method.getName(), null /* doc */, new LinkedHashMap<String, String>() /* propMap */,
         request, response, errors);

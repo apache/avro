@@ -79,7 +79,7 @@ public class TestProtocolSpecific {
       return data;
     }
 
-    public void error() throws AvroRemoteException {
+    public void error() throws TestError {
       if (throwUndeclaredError)
         throw new RuntimeException("foo");
       throw TestError.newBuilder().setMessage$("an error").build();

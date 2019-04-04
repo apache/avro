@@ -49,11 +49,12 @@ public interface $this.mangle($protocol.getName()) {
 #foreach ($p in $message.getRequest().getFields())##
 #*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
 #end
-)#if (! $message.isOneWay())
- throws org.apache.avro.AvroRemoteException##
+)#if (! $message.isOneWay() && $message.getErrors().getTypes().size() > 1)
+ throws ##
 ## The first error is always "string", so we skip it.
 #foreach ($error in $message.getErrors().getTypes().subList(1, $message.getErrors().getTypes().size()))
-, ${this.mangle($error.getFullName())}##
+${this.mangle($error.getFullName())}##
+#if ($foreach.hasNext), #end
 #end##    (error list)
 #end##    (one way)
 ;

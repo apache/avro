@@ -288,6 +288,7 @@
                 <exclude>**/.gitignore</exclude>
                 <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
+                <exclude>**/*.rej</exclude>
                 <exclude>build/**</exclude>
                 <exclude>doc/build/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>

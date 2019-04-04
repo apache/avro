@@ -18,7 +18,6 @@
 
 package org.apache.avro.grpc;
 
-import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.grpc.test.Kind;
 import org.apache.avro.grpc.test.MD5;
@@ -159,7 +158,7 @@ public class TestAvroProtocolGrpc {
   public void testNullableResponse() throws Exception {
     setUpServerAndClient(new TestServiceImplBase() {
       @Override
-      public String concatenate(String val1, boolean val2, long val3, int val4) throws AvroRemoteException {
+      public String concatenate(String val1, boolean val2, long val3, int val4) {
         return null;
       }
     });
@@ -227,17 +226,17 @@ public class TestAvroProtocolGrpc {
 
   private class TestServiceImplBase implements TestService {
     @Override
-    public TestRecord echo(TestRecord record) throws AvroRemoteException {
+    public TestRecord echo(TestRecord record) {
       return record;
     }
 
     @Override
-    public int add(int arg1, int arg2, int arg3) throws AvroRemoteException {
+    public int add(int arg1, int arg2, int arg3) {
       return arg1 + arg2 + arg3;
     }
 
     @Override
-    public void error(boolean declared) throws AvroRemoteException, TestError {
+    public void error(boolean declared) throws TestError {
       if (declared) {
         throw declaredError;
       }
@@ -256,7 +255,7 @@ public class TestAvroProtocolGrpc {
     }
 
     @Override
-    public String concatenate(String val1, boolean val2, long val3, int val4) throws AvroRemoteException {
+    public String concatenate(String val1, boolean val2, long val3, int val4) {
       return val1 + val2 + val3 + val4;
     }
   }
