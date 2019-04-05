@@ -42,7 +42,7 @@ public class Main {
         new DataFileRepairTool(), new IdlTool(), new IdlToSchemataTool(), new RecodecTool(), new ConcatTool(),
         new RpcReceiveTool(), new RpcSendTool(), new RpcProtocolTool(), new FromTextTool(), new ToTextTool(),
         new ToTrevniTool(), new TetherTool(), new TrevniCreateRandomTool(), new TrevniMetadataTool(),
-        new TrevniToJsonTool(), new SchemaNormalizationTool() }) {
+        new TrevniToJsonTool(), new SchemaNormalizationTool(), new SchemaFingerprintTool() }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {
         throw new AssertionError("Two tools with identical names: " + tool + ", " + prev);
