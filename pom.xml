@@ -368,6 +368,7 @@
                 <exclude>lang/js/test/mocha.opts</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
+                <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/js/coverage/**</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>

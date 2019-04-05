@@ -352,7 +352,7 @@ public abstract class Schema extends JsonProperties {
 
   /**
    * Render this as <a href="http://json.org/">JSON</a>.
-   * 
+   *
    * @param pretty if true, pretty-print JSON.
    */
   public String toString(boolean pretty) {
@@ -540,6 +540,15 @@ public abstract class Schema extends JsonProperties {
     /** Field's documentation within the record, if set. May return null. */
     public String doc() {
       return doc;
+    }
+
+    /**
+     * @return true if this Field has a default value set. Can be used to determine
+     *         if a "null" return from defaultVal() is due to that being the default
+     *         value or just not set.
+     */
+    public boolean hasDefaultValue() {
+      return defaultValue != null;
     }
 
     JsonNode defaultValue() {
@@ -913,7 +922,7 @@ public abstract class Schema extends JsonProperties {
         f.schema().toJson(names, gen);
         if (f.doc() != null)
           gen.writeStringField("doc", f.doc());
-        if (f.defaultValue() != null) {
+        if (f.hasDefaultValue()) {
           gen.writeFieldName("default");
           gen.writeTree(f.defaultValue());
         }
@@ -1347,7 +1356,7 @@ public abstract class Schema extends JsonProperties {
   /**
    * Constructs a Schema object from JSON schema file <tt>file</tt>. The contents
    * of <tt>file</tt> is expected to be in UTF-8 format.
-   * 
+   *
    * @param file The file to read the schema from.
    * @return The freshly built Schema.
    * @throws IOException if there was trouble reading the contents or they are
@@ -1362,7 +1371,7 @@ public abstract class Schema extends JsonProperties {
   /**
    * Constructs a Schema object from JSON schema stream <tt>in</tt>. The contents
    * of <tt>in</tt> is expected to be in UTF-8 format.
-   * 
+   *
    * @param in The input stream to read the schema from.
    * @return The freshly built Schema.
    * @throws IOException if there was trouble reading the contents or they are
@@ -1376,7 +1385,7 @@ public abstract class Schema extends JsonProperties {
 
   /**
    * Construct a schema from <a href="http://json.org/">JSON</a> text.
-   * 
+   *
    * @deprecated use {@link Schema.Parser} instead.
    */
   @Deprecated
@@ -1386,7 +1395,7 @@ public abstract class Schema extends JsonProperties {
 
   /**
    * Construct a schema from <a href="http://json.org/">JSON</a> text.
-   * 
+   *
    * @param validate true if names should be validated, false if not.
    * @deprecated use {@link Schema.Parser} instead.
    */
@@ -1849,7 +1858,7 @@ public abstract class Schema extends JsonProperties {
   /**
    * No change is permitted on LockableArrayList once lock() has been called on
    * it.
-   * 
+   *
    * @param <E>
    */
 
