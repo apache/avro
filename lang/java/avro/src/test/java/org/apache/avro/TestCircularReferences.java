@@ -289,14 +289,14 @@ public class TestCircularReferences {
     Reference parentRef = new Reference("parent");
 
     List<Schema.Field> childFields = new ArrayList<>();
-    childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, null));
-    childFields.add(new Schema.Field("parent", parentRefSchema, null, null));
+    childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING)));
+    childFields.add(new Schema.Field("parent", parentRefSchema));
     Schema childSchema = parentRef.addToSchema(Schema.createRecord("Child", null, null, false, childFields));
 
     List<Schema.Field> parentFields = new ArrayList<>();
-    parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
-    parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING), null, null));
-    parentFields.add(new Schema.Field("child", childSchema, null, null));
+    parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG)));
+    parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING)));
+    parentFields.add(new Schema.Field("child", childSchema));
     parentSchema.setFields(parentFields);
     Referenceable idRef = new Referenceable("id");
 

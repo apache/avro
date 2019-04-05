@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Field.Order;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -404,7 +405,7 @@ public class Protocol extends JsonProperties {
 
   /**
    * Render this as <a href="http://json.org/">JSON</a>.
-   * 
+   *
    * @param pretty if true, pretty-print JSON.
    */
   public String toString(boolean pretty) {
@@ -587,7 +588,8 @@ public class Protocol extends JsonProperties {
       JsonNode fieldDocNode = field.get("doc");
       if (fieldDocNode != null)
         fieldDoc = fieldDocNode.textValue();
-      Field newField = new Field(name, Schema.parse(fieldTypeNode, types), fieldDoc, field.get("default"));
+      Field newField = new Field(name, Schema.parse(fieldTypeNode, types), fieldDoc, field.get("default"), true,
+          Order.ASCENDING);
       Set<String> aliases = Schema.parseAliases(field);
       if (aliases != null) { // add aliases
         for (String alias : aliases)

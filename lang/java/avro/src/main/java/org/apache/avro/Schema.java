@@ -24,6 +24,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -448,7 +450,7 @@ public abstract class Schema extends JsonProperties {
 
         @Override
         protected Field createField(String name, Schema schema, String doc, JsonNode defaultValue) {
-          return new Field(name, schema, doc, defaultValue);
+          return new Field(name, schema, doc, defaultValue, true, Order.ASCENDING);
         }
 
         @Override
@@ -469,6 +471,12 @@ public abstract class Schema extends JsonProperties {
       }
     };
 
+    /**
+     * For Schema unions with a "null" type as the first entry, this can be used to
+     * specify that the default for the union is null.
+     */
+    public static final Object NULL_DEFAULT_VALUE = new Object();
+
     private final String name; // name of the field.
     private int position = -1;
     private final Schema schema;
@@ -477,21 +485,13 @@ public abstract class Schema extends JsonProperties {
     private final Order order;
     private Set<String> aliases;
 
-    Field(String name, Schema schema, String doc, JsonNode defaultValue) {
-      this(name, schema, doc, defaultValue, true, Order.ASCENDING);
-    }
-
-    Field(String name, Schema schema, String doc, JsonNode defaultValue, Order order) {
-      this(name, schema, doc, defaultValue, true, order);
-    }
-
     Field(String name, Schema schema, String doc, JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
       this.name = validateName(name);
       this.schema = schema;
       this.doc = doc;
       this.defaultValue = validateDefault ? validateDefault(name, schema, defaultValue) : defaultValue;
-      this.order = order;
+      this.order = Objects.requireNonNull(order, "Order cannot be null");
     }
 
     /**
@@ -501,10 +501,24 @@ public abstract class Schema extends JsonProperties {
      * {@code aliases}.
      */
     public Field(Field field, Schema schema) {
-      this(field.name, schema, field.doc, field.defaultValue, field.order);
+      this(field.name, schema, field.doc, field.defaultValue, true, field.order);
       putAll(field);
       if (field.aliases != null)
         aliases = new LinkedHashSet<>(field.aliases);
+    }
+
+    /**
+     *
+     */
+    public Field(String name, Schema schema) {
+      this(name, schema, (String) null, (JsonNode) null, true, Order.ASCENDING);
+    }
+
+    /**
+     *
+     */
+    public Field(String name, Schema schema, String doc) {
+      this(name, schema, doc, (JsonNode) null, true, Order.ASCENDING);
     }
 
     /**
@@ -512,7 +526,9 @@ public abstract class Schema extends JsonProperties {
      *                     mapping in {@link JsonProperties}
      */
     public Field(String name, Schema schema, String doc, Object defaultValue) {
-      this(name, schema, doc, defaultValue, Order.ASCENDING);
+      this(name, schema, doc,
+          defaultValue == NULL_DEFAULT_VALUE ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultValue), true,
+          Order.ASCENDING);
     }
 
     /**
@@ -520,7 +536,9 @@ public abstract class Schema extends JsonProperties {
      *                     mapping in {@link JsonProperties}
      */
     public Field(String name, Schema schema, String doc, Object defaultValue, Order order) {
-      this(name, schema, doc, JacksonUtils.toJsonNode(defaultValue), order);
+      this(name, schema, doc,
+          defaultValue == NULL_DEFAULT_VALUE ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultValue), true,
+          Objects.requireNonNull(order));
     }
 
     public String name() {
@@ -1595,7 +1613,7 @@ public abstract class Schema extends JsonProperties {
               && (Type.FLOAT.equals(fieldSchema.getType()) || Type.DOUBLE.equals(fieldSchema.getType()))
               && defaultValue.isTextual())
             defaultValue = new DoubleNode(Double.valueOf(defaultValue.textValue()));
-          Field f = new Field(fieldName, fieldSchema, fieldDoc, defaultValue, order);
+          Field f = new Field(fieldName, fieldSchema, fieldDoc, defaultValue, true, order);
           Iterator<String> i = field.fieldNames();
           while (i.hasNext()) { // add field props
             String prop = i.next();
@@ -1768,7 +1786,7 @@ public abstract class Schema extends JsonProperties {
       for (Field f : s.getFields()) {
         Schema fSchema = applyAliases(f.schema, seen, aliases, fieldAliases);
         String fName = getFieldAlias(name, f.name, fieldAliases);
-        Field newF = new Field(fName, fSchema, f.doc, f.defaultValue, f.order);
+        Field newF = new Field(fName, fSchema, f.doc, f.defaultValue, true, f.order);
         newF.putAll(f); // copy props
         newFields.add(newF);
       }

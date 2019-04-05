@@ -47,7 +47,7 @@ public class TestSeekableByteArrayInput {
   private Schema getTestSchema() throws Exception {
     Schema schema = Schema.createRecord("TestRecord", "this is a test record", "org.apache.avro.file", false);
     List<Field> fields = new ArrayList<>();
-    fields.add(new Field("name", Schema.create(Type.STRING), "this is a test field", null));
+    fields.add(new Field("name", Schema.create(Type.STRING), "this is a test field"));
     schema.setFields(fields);
     return schema;
   }
