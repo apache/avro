@@ -215,7 +215,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
    */
   protected void writeEnum(Schema schema, Object datum, Encoder out) throws IOException {
     if (!data.isEnum(datum))
-      throw new AvroTypeException("Not an enum: " + dataum + " for schema: " + schema);
+      throw new AvroTypeException("Not an enum: " + datum + " for schema: " + schema);
     out.writeEnum(schema.getEnumOrdinal(datum.toString()));
   }
 
