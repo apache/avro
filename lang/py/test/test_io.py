@@ -48,8 +48,6 @@ SCHEMAS_TO_VALIDATE = (
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
   ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),
   ('["string", "null", "long"]', None),
-  ('["double", "boolean"]', True),
-  ('["boolean", "double"]', True),
   ("""\
    {"type": "record",
     "name": "Test",
@@ -201,13 +199,6 @@ class TestIO(unittest.TestCase):
   def test_round_trip(self):
     print_test_name('TEST ROUND TRIP')
     correct = 0
-    def are_equal(datum, round_trip_datum):
-        if datum != round_trip_datum:
-            return False
-        if type(datum) == bool:
-            return type(round_trip_datum) == bool
-        else:
-            return True
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
       print 'Schema: %s' % example_schema
       print 'Datum: %s' % datum
@@ -220,7 +211,7 @@ class TestIO(unittest.TestCase):
       if isinstance(round_trip_datum, Decimal):
         round_trip_datum = round_trip_datum.to_eng_string()
         datum = str(datum)
-      if are_equal(datum, round_trip_datum): correct += 1
+      if datum == round_trip_datum: correct += 1
     self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
 
   #
