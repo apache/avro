@@ -76,7 +76,7 @@ function do_dist() {
 
 case "$target" in
   test)
-    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug .. && make && cd .. \
+    (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 .. && make && cd .. \
       && ./build/buffertest \
       && ./build/unittest \
       && ./build/CodecTests \
