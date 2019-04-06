@@ -53,11 +53,11 @@
     <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.1</extra-enforcer-rules.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
-    <javadoc-plugin.version>3.0.1</javadoc-plugin.version>
+    <javadoc-plugin.version>3.1.0</javadoc-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
     <source-plugin.version>3.0.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.20.0</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>1.21.1</spotless-maven-plugin.version>
   </properties>
 
   <modules>
@@ -115,6 +115,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -269,6 +270,7 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
+            <version>${rat.version}</version>
             <inherited>false</inherited>
             <executions>
               <execution>
