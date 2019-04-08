@@ -475,6 +475,12 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>hadoop3</id>
+      <properties>
+        <hadoop.version>3.2.0</hadoop.version>
+      </properties>
+    </profile>
   </profiles>
 
   <!-- dependencyManagement can be used to define dependency versions, scopes, and
@@ -507,6 +513,11 @@
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-servlet</artifactId>
           <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-util</artifactId>
+        <version>${jetty.version}</version>
       </dependency>
       <dependency>
           <groupId>javax.servlet</groupId>

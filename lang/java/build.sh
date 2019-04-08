@@ -44,6 +44,8 @@ function do_dist() {
 case "$target" in
   test)
     mvn -B test
+    # Test the modules that depend on hadoop using Hadoop 3
+    mvn -B test -Phadoop3
     ;;
 
   dist)
