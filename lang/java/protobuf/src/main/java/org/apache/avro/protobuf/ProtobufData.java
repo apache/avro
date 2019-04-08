@@ -226,20 +226,28 @@ public class ProtobufData extends GenericData {
   private String getNamespace(FileDescriptor fd, Descriptor containing) {
     FileOptions o = fd.getOptions();
     String p = o.hasJavaPackage() ? o.getJavaPackage() : fd.getPackage();
-    String outer;
-    if (o.hasJavaOuterClassname()) {
-      outer = o.getJavaOuterClassname();
-    } else {
-      outer = new File(fd.getName()).getName();
-      outer = outer.substring(0, outer.lastIndexOf('.'));
-      outer = toCamelCase(outer);
+    String outer = "";
+    if (!o.getJavaMultipleFiles()) {
+      if (o.hasJavaOuterClassname()) {
+        outer = o.getJavaOuterClassname();
+      } else {
+        outer = new File(fd.getName()).getName();
+        outer = outer.substring(0, outer.lastIndexOf('.'));
+        outer = toCamelCase(outer);
+      }
     }
     StringBuilder inner = new StringBuilder();
     while (containing != null) {
-      inner.insert(0, "$" + containing.getName());
+      if (inner.length() == 0) {
+        inner.insert(0, containing.getName());
+      } else {
+        inner.insert(0, containing.getName() + "$");
+      }
       containing = containing.getContainingType();
     }
-    return p + "." + outer + inner;
+    String d1 = (!outer.isEmpty() || inner.length() != 0 ? "." : "");
+    String d2 = (!outer.isEmpty() && inner.length() != 0 ? "$" : "");
+    return p + d1 + outer + d2 + inner;
   }
 
   private static String toCamelCase(String s) {

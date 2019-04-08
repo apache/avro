@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,13 @@ package org.apache.avro.mojo;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.List;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -38,20 +41,42 @@ import org.apache.maven.project.MavenProject;
  */
 public class InduceMojo extends AbstractMojo {
   /**
-   * The source directory of Java classes.
+   * The Java source directories.
    *
-   * @parameter property="sourceDirectory"
+   * @parameter property="javaSourceDirectories"
    *            default-value="${basedir}/src/main/java"
    */
-  private File sourceDirectory;
+  private File[] javaSourceDirectories;
 
   /**
    * Directory where to output Avro schemas (.avsc) or protocols (.avpr).
    *
-   * @parameter property="outputDirectory"
-   *            default-value="${basedir}/generated-resources/avro"
+   * @parameter property="avroOutputDirectory"
+   *            default-value="${project.build.directory}/generated-resources/avro"
    */
-  private File outputDirectory;
+  private File avroOutputDirectory;
+
+  /**
+   * The output encoding.
+   *
+   * @parameter default-value="${project.build.sourceEncoding}"
+   */
+  private String encoding;
+
+  /**
+   * Whether to use ReflectData.AllowNull.
+   *
+   * @parameter default-value="false"
+   */
+  private boolean allowNull;
+
+  /**
+   * Override the default ReflectData implementation with an extension. Must be a
+   * subclass of ReflectData.
+   *
+   * @parameter property="reflectDataImplementation"
+   */
+  private String reflectDataImplementation;
 
   /**
    * The current Maven project.
@@ -62,60 +87,106 @@ public class InduceMojo extends AbstractMojo {
    */
   protected MavenProject project;
 
-  public void execute() throws MojoExecutionException {
-    ClassLoader classLoader = getClassLoader();
+  private ClassLoader classLoader;
+  private ReflectData reflectData;
 
-    for (File inputFile : sourceDirectory.listFiles()) {
+  public void execute() throws MojoExecutionException {
+    classLoader = getClassLoader();
+    reflectData = getReflectData();
+
+    if (encoding == null) {
+      encoding = Charset.defaultCharset().name();
+      getLog().warn("Property project.build.sourceEncoding not set, using system default " + encoding);
+    }
+
+    for (File sourceDirectory : javaSourceDirectories) {
+      induceClasses(sourceDirectory);
+    }
+  }
+
+  private void induceClasses(File sourceDirectory) throws MojoExecutionException {
+    File[] files = sourceDirectory.listFiles();
+    if (files == null) {
+      throw new MojoExecutionException("Unable to list files from directory: " + sourceDirectory.getName());
+    }
+
+    for (File inputFile : files) {
+      if (inputFile.isDirectory()) {
+        induceClasses(inputFile);
+        continue;
+      }
+
       String className = parseClassName(inputFile.getPath());
+      if (className == null) {
+        continue; // Not a java file, continue
+      }
+
       Class<?> klass = loadClass(classLoader, className);
-      String fileName = outputDirectory.getPath() + "/" + parseFileName(klass);
+      String fileName = getOutputFileName(klass);
       File outputFile = new File(fileName);
       outputFile.getParentFile().mkdirs();
-      try {
-        PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+      try (PrintWriter writer = new PrintWriter(fileName, encoding)) {
         if (klass.isInterface()) {
-          writer.println(ReflectData.get().getProtocol(klass).toString(true));
+          writer.println(reflectData.getProtocol(klass).toString(true));
         } else {
-          writer.println(ReflectData.get().getSchema(klass).toString(true));
+          writer.println(reflectData.getSchema(klass).toString(true));
         }
-        writer.close();
+      } catch (AvroRuntimeException e) {
+        throw new MojoExecutionException("Failed to resolve schema or protocol for class " + klass.getCanonicalName(),
+            e);
       } catch (Exception e) {
-        e.printStackTrace();
+        throw new MojoExecutionException("Failed to write output file for class " + klass.getCanonicalName(), e);
       }
     }
   }
 
   private String parseClassName(String fileName) {
-    String indentifier = "java/";
+    String indentifier = "java" + File.separator;
     int index = fileName.lastIndexOf(indentifier);
     String namespacedFileName = fileName.substring(index + indentifier.length());
+    if (!namespacedFileName.endsWith(".java")) {
+      return null;
+    }
 
-    return namespacedFileName.replace("/", ".").replace(".java", "");
+    return namespacedFileName.replace(File.separator, ".").replaceFirst("\\.java$", "");
   }
 
-  private String parseFileName(Class klass) {
-    String className = klass.getName().replace(".", "/");
+  private String getOutputFileName(Class klass) {
+    String filename = avroOutputDirectory.getPath() + File.separator + klass.getName().replace(".", File.separator);
     if (klass.isInterface()) {
-      return className.concat(".avpr");
+      return filename.concat(".avpr");
     } else {
-      return className.concat(".avsc");
+      return filename.concat(".avsc");
     }
   }
 
-  private Class<?> loadClass(ClassLoader classLoader, String className) {
-    Class<?> klass = null;
+  private ReflectData getReflectData() throws MojoExecutionException {
+    if (reflectDataImplementation == null) {
+      return allowNull ? ReflectData.AllowNull.get() : ReflectData.get();
+    }
 
     try {
-      klass = classLoader.loadClass(className);
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+      Constructor<? extends ReflectData> constructor = loadClass(classLoader, reflectDataImplementation)
+          .asSubclass(ReflectData.class).getConstructor();
+      constructor.setAccessible(true);
+      return constructor.newInstance();
+    } catch (Exception e) {
+      throw new MojoExecutionException(String.format(
+          "Could not load ReflectData custom implementation %s. Make sure that it has a no-args constructor",
+          reflectDataImplementation), e);
     }
-
-    return klass;
   }
 
-  private ClassLoader getClassLoader() {
-    ClassLoader classLoader = null;
+  private Class<?> loadClass(ClassLoader classLoader, String className) throws MojoExecutionException {
+    try {
+      return classLoader.loadClass(className);
+    } catch (ClassNotFoundException e) {
+      throw new MojoExecutionException("Failed to load class " + className, e);
+    }
+  }
+
+  private ClassLoader getClassLoader() throws MojoExecutionException {
+    ClassLoader classLoader;
 
     try {
       List<String> classpathElements = project.getRuntimeClasspathElements();
@@ -129,7 +200,7 @@ public class InduceMojo extends AbstractMojo {
       }
       classLoader = new URLClassLoader(urls, getClass().getClassLoader());
     } catch (Exception e) {
-      e.printStackTrace();
+      throw new MojoExecutionException("Failed to obtain ClassLoader", e);
     }
 
     return classLoader;

@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.avro.AvroRemoteException;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.ipc.CallFuture;
 import org.apache.avro.ipc.Callback;
 import org.apache.avro.ipc.Responder;
@@ -293,7 +294,7 @@ public class TestNettyServerWithCallbacks {
         try {
           simpleClient2.add(1, 2);
           Assert.fail("Send after server close should have thrown Exception");
-        } catch (AvroRemoteException e) {
+        } catch (AvroRuntimeException e) {
           ioeCaught = e.getCause() instanceof IOException;
           Assert.assertTrue("Expected IOException", ioeCaught);
         } catch (Exception e) {
@@ -517,7 +518,7 @@ public class TestNettyServerWithCallbacks {
 
     /**
      * Creates a SimpleImpl.
-     * 
+     *
      * @param ackFlag the AtomicBoolean to toggle when ack() is called.
      */
     public SimpleImpl(final AtomicBoolean ackFlag) {
@@ -525,27 +526,27 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public String hello(String greeting) throws AvroRemoteException {
+    public String hello(String greeting) {
       return "Hello, " + greeting;
     }
 
     @Override
-    public TestRecord echo(TestRecord record) throws AvroRemoteException {
+    public TestRecord echo(TestRecord record) {
       return record;
     }
 
     @Override
-    public int add(int arg1, int arg2) throws AvroRemoteException {
+    public int add(int arg1, int arg2) {
       return arg1 + arg2;
     }
 
     @Override
-    public ByteBuffer echoBytes(ByteBuffer data) throws AvroRemoteException {
+    public ByteBuffer echoBytes(ByteBuffer data) {
       return data;
     }
 
     @Override
-    public void error() throws AvroRemoteException, TestError {
+    public void error() throws TestError {
       throw TestError.newBuilder().setMessage$("Test Message").build();
     }
 
@@ -573,7 +574,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public String hello(String greeting) throws AvroRemoteException {
+    public String hello(String greeting) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -584,7 +585,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public TestRecord echo(TestRecord record) throws AvroRemoteException {
+    public TestRecord echo(TestRecord record) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -595,7 +596,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public int add(int arg1, int arg2) throws AvroRemoteException {
+    public int add(int arg1, int arg2) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -606,7 +607,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public ByteBuffer echoBytes(ByteBuffer data) throws AvroRemoteException {
+    public ByteBuffer echoBytes(ByteBuffer data) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -617,7 +618,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public void error() throws AvroRemoteException, TestError {
+    public void error() throws TestError {
       releaseEnterPermit();
       acquireRunPermit();
       try {

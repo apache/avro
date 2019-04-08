@@ -83,7 +83,7 @@ public class TestStatsPluginAndServlet {
 
   }
 
-  private void makeRequest(Transceiver t) throws IOException {
+  private void makeRequest(Transceiver t) throws Exception {
     GenericRecord params = new GenericData.Record(protocol.getMessages().get("m").getRequest());
     params.put("x", 0);
     GenericRequestor r = new GenericRequestor(protocol, t);
@@ -91,7 +91,7 @@ public class TestStatsPluginAndServlet {
   }
 
   @Test
-  public void testFullServerPath() throws IOException {
+  public void testFullServerPath() throws Exception {
     Responder r = new TestResponder(protocol);
     StatsPlugin statsPlugin = new StatsPlugin();
     r.addRPCPlugin(statsPlugin);
@@ -126,7 +126,7 @@ public class TestStatsPluginAndServlet {
   }
 
   @Test
-  public void testPayloadSize() throws IOException {
+  public void testPayloadSize() throws Exception {
     Responder r = new TestResponder(protocol);
     StatsPlugin statsPlugin = new StatsPlugin();
     r.addRPCPlugin(statsPlugin);

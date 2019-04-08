@@ -81,7 +81,7 @@ public abstract class Requestor {
   /**
    * Adds a new plugin to manipulate RPC metadata. Plugins are executed in the
    * order that they are added.
-   * 
+   *
    * @param plugin a plugin that will manipulate RPC metadata
    */
   public void addRPCPlugin(RPCPlugin plugin) {
@@ -105,10 +105,11 @@ public abstract class Requestor {
     try { // the message is two-way, wait for the result
       return future.get();
     } catch (ExecutionException e) {
-      if (e.getCause() instanceof Exception) {
-        throw (Exception) e.getCause();
+      Throwable error = e.getCause();
+      if (error instanceof Exception) {
+        throw (Exception) error;
       } else {
-        throw new AvroRemoteException(e.getCause());
+        throw new AvroRuntimeException(error);
       }
     }
   }
@@ -117,20 +118,25 @@ public abstract class Requestor {
    * Writes a request message and returns the result through a Callback. Clients
    * can also use a Future interface by creating a new CallFuture<T>, passing it
    * in as the Callback parameter, and then waiting on that Future.
-   * 
+   *
    * @param             <T> the return type of the message.
    * @param messageName the name of the message to invoke.
    * @param request     the request data to send.
    * @param callback    the callback which will be invoked when the response is
    *                    returned or an error occurs.
-   * @throws Exception if an error occurs sending the message.
+   * @throws AvroRemoteException  if an exception is thrown to client by server.
+   * @throws IOException          if an I/O error occurs while sending the
+   *                              message.
+   * @throws AvroRuntimeException for another undeclared error while sending the
+   *                              message.
    */
-  public <T> void request(String messageName, Object request, Callback<T> callback) throws Exception {
+  public <T> void request(String messageName, Object request, Callback<T> callback)
+      throws AvroRemoteException, IOException {
     request(new Request(messageName, request, new RPCContext()), callback);
   }
 
   /** Writes a request message and returns the result through a Callback. */
-  <T> void request(Request request, Callback<T> callback) throws Exception {
+  <T> void request(Request request, Callback<T> callback) throws AvroRemoteException, IOException {
     Transceiver t = getTransceiver();
     if (!t.isConnected()) {
       // Acquire handshake lock so that only one thread is performing the
@@ -144,15 +150,24 @@ public abstract class Requestor {
         } else {
           CallFuture<T> callFuture = new CallFuture<>(callback);
           t.transceive(request.getBytes(), new TransceiverCallback<>(request, callFuture));
-          // Block until handshake complete
-          callFuture.await();
+          try {
+            // Block until handshake complete
+            callFuture.await();
+          } catch (InterruptedException e) {
+            // Restore the interrupted status
+            Thread.currentThread().interrupt();
+          }
           if (request.getMessage().isOneWay()) {
             Throwable error = callFuture.getError();
             if (error != null) {
-              if (error instanceof Exception) {
-                throw (Exception) error;
+              if (error instanceof AvroRemoteException) {
+                throw (AvroRemoteException) error;
+              } else if (error instanceof AvroRuntimeException) {
+                throw (AvroRuntimeException) error;
+              } else if (error instanceof IOException) {
+                throw (IOException) error;
               } else {
-                throw new AvroRemoteException(error);
+                throw new AvroRuntimeException(error);
               }
             }
           }
@@ -318,7 +333,7 @@ public abstract class Requestor {
 
     /**
      * Creates a TransceiverCallback.
-     * 
+     *
      * @param request  the request to set.
      * @param callback the callback to set.
      */
@@ -382,7 +397,7 @@ public abstract class Requestor {
 
     /**
      * Creates a Request.
-     * 
+     *
      * @param messageName the name of the message to invoke.
      * @param request     the request data to send.
      * @param context     the RPC context to use.
@@ -393,7 +408,7 @@ public abstract class Requestor {
 
     /**
      * Creates a Request.
-     * 
+     *
      * @param messageName the name of the message to invoke.
      * @param request     the request data to send.
      * @param context     the RPC context to use.
@@ -408,7 +423,7 @@ public abstract class Requestor {
 
     /**
      * Copy constructor.
-     * 
+     *
      * @param other Request from which to copy fields.
      */
     public Request(Request other) {
@@ -420,7 +435,7 @@ public abstract class Requestor {
 
     /**
      * Gets the message name.
-     * 
+     *
      * @return the message name.
      */
     public String getMessageName() {
@@ -429,7 +444,7 @@ public abstract class Requestor {
 
     /**
      * Gets the RPC context.
-     * 
+     *
      * @return the RPC context.
      */
     public RPCContext getContext() {
@@ -438,7 +453,7 @@ public abstract class Requestor {
 
     /**
      * Gets the Message associated with this request.
-     * 
+     *
      * @return this request's message.
      */
     public Message getMessage() {
@@ -453,11 +468,11 @@ public abstract class Requestor {
 
     /**
      * Gets the request data, generating it first if necessary.
-     * 
+     *
      * @return the request data.
-     * @throws Exception if an error occurs generating the request data.
+     * @throws IOException if an error occurs generating the request data.
      */
-    public List<ByteBuffer> getBytes() throws Exception {
+    public List<ByteBuffer> getBytes() throws IOException {
       if (requestBytes == null) {
         ByteBufferOutputStream bbo = new ByteBufferOutputStream();
         BinaryEncoder out = ENCODER_FACTORY.binaryEncoder(bbo, encoder);
@@ -499,7 +514,7 @@ public abstract class Requestor {
 
     /**
      * Creates a Response.
-     * 
+     *
      * @param request the Request associated with this response.
      */
     public Response(Request request) {
@@ -508,7 +523,7 @@ public abstract class Requestor {
 
     /**
      * Creates a Creates a Response.
-     * 
+     *
      * @param request the Request associated with this response.
      * @param in      the BinaryDecoder to use to deserialize the response.
      */
@@ -519,7 +534,7 @@ public abstract class Requestor {
 
     /**
      * Gets the RPC response, reading/deserializing it first if necessary.
-     * 
+     *
      * @return the RPC response.
      * @throws Exception if an error occurs reading/deserializing the response.
      */

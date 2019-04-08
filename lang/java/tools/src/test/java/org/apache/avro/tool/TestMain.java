@@ -27,6 +27,7 @@ public class TestMain {
   public void testToolDescriptionLength() {
     Main m = new Main();
     for (Tool t : m.tools.values()) {
+      // System.out.println(t.getName() + ": " + t.getShortDescription().length());
       if (m.maxLen + 2 + t.getShortDescription().length() > 80) {
         fail("Tool description too long: " + t.getName());
       }

@@ -51,13 +51,13 @@
     <antrun-plugin.version>1.8</antrun-plugin.version>
     <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
     <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
-    <extra-enforcer-rules.version>1.1</extra-enforcer-rules.version>
+    <extra-enforcer-rules.version>1.2</extra-enforcer-rules.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
-    <javadoc-plugin.version>3.0.1</javadoc-plugin.version>
+    <javadoc-plugin.version>3.1.0</javadoc-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
     <source-plugin.version>3.0.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.20.0</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>1.21.1</spotless-maven-plugin.version>
   </properties>
 
   <modules>
@@ -115,6 +115,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
             <id>enforce</id>
@@ -269,6 +270,7 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
+            <version>${rat.version}</version>
             <inherited>false</inherited>
             <executions>
               <execution>
@@ -288,6 +290,7 @@
                 <exclude>**/.gitignore</exclude>
                 <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
+                <exclude>**/*.rej</exclude>
                 <exclude>build/**</exclude>
                 <exclude>doc/build/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
@@ -319,7 +322,13 @@
                 <exclude>lang/csharp/src/apache/ipc/org/apache/avro/ipc/*.cs</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/_SUCCESS</exclude>
-                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/Test.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/Test.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/A.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/Foo.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/FooOrBuilder.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/M.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/MOrBuilder.java</exclude>
+                <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/TestMultipleFiles.java</exclude>
                 <!-- data and schema files -->
                 <exclude>**/*.avro</exclude> <!-- binary format -->
                 <exclude>**/*.avro12</exclude> <!-- binary format -->
@@ -361,6 +370,7 @@
                 <exclude>lang/js/test/mocha.opts</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
+                <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/js/coverage/**</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>

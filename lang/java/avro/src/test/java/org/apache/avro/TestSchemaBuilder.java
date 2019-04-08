@@ -44,23 +44,32 @@ public class TestSchemaBuilder {
   public void testRecord() {
     Schema schema = SchemaBuilder.record("myrecord").namespace("org.example").aliases("oldrecord").fields().name("f0")
         .aliases("f0alias").type().stringType().noDefault().name("f1").doc("This is f1").type().longType().noDefault()
-        .name("f2").type().nullable().booleanType().booleanDefault(true).endRecord();
+        .name("f2").type().nullable().booleanType().booleanDefault(true).name("f3").type().unionOf().nullType().and()
+        .booleanType().endUnion().nullDefault().endRecord();
 
     Assert.assertEquals("myrecord", schema.getName());
     Assert.assertEquals("org.example", schema.getNamespace());
     Assert.assertEquals("org.example.oldrecord", schema.getAliases().iterator().next());
     Assert.assertFalse(schema.isError());
     List<Schema.Field> fields = schema.getFields();
-    Assert.assertEquals(3, fields.size());
-    Assert.assertEquals(new Schema.Field("f0", Schema.create(Schema.Type.STRING), null, null), fields.get(0));
+    Assert.assertEquals(4, fields.size());
+    Assert.assertEquals(new Schema.Field("f0", Schema.create(Schema.Type.STRING)), fields.get(0));
     Assert.assertTrue(fields.get(0).aliases().contains("f0alias"));
-    Assert.assertEquals(new Schema.Field("f1", Schema.create(Schema.Type.LONG), "This is f1", null), fields.get(1));
+    Assert.assertEquals(new Schema.Field("f1", Schema.create(Schema.Type.LONG), "This is f1"), fields.get(1));
 
     List<Schema> types = new ArrayList<>();
     types.add(Schema.create(Schema.Type.BOOLEAN));
     types.add(Schema.create(Schema.Type.NULL));
     Schema optional = Schema.createUnion(types);
     Assert.assertEquals(new Schema.Field("f2", optional, null, true), fields.get(2));
+
+    List<Schema> types2 = new ArrayList<>();
+    types2.add(Schema.create(Schema.Type.NULL));
+    types2.add(Schema.create(Schema.Type.BOOLEAN));
+    Schema optional2 = Schema.createUnion(types2);
+
+    Assert.assertNotEquals(new Schema.Field("f3", optional2, null, (Object) null), fields.get(3));
+    Assert.assertEquals(new Schema.Field("f3", optional2, null, Schema.Field.NULL_DEFAULT_VALUE), fields.get(3));
   }
 
   @Test
@@ -426,7 +435,7 @@ public class TestSchemaBuilder {
     Assert.assertEquals("LongList", schema.getName());
     List<Schema.Field> fields = schema.getFields();
     Assert.assertEquals(2, fields.size());
-    Assert.assertEquals(new Schema.Field("value", Schema.create(Schema.Type.LONG), null, null), fields.get(0));
+    Assert.assertEquals(new Schema.Field("value", Schema.create(Schema.Type.LONG), null), fields.get(0));
 
     Assert.assertEquals(Schema.Type.UNION, fields.get(1).schema().getType());
 

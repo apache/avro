@@ -36,6 +36,7 @@ import org.apache.avro.util.internal.JacksonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
@@ -77,11 +78,11 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * <p/>
  * <h6>Selecting and Building an Avro Type</h6> The API analogy for the right
  * hand side of the Avro Schema JSON
- * 
+ *
  * <pre>
  * "type":
  * </pre>
- * 
+ *
  * is a {@link TypeBuilder}, {@link FieldTypeBuilder}, or
  * {@link UnionFieldTypeBuilder}, depending on the context. These types all
  * share a similar API for selecting and building types.
@@ -89,22 +90,22 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * <h5>Primitive Types</h5> All Avro primitive types are trivial to configure. A
  * primitive type in Avro JSON can be declared two ways, one that supports
  * custom properties and one that does not:
- * 
+ *
  * <pre>
  * {"type":"int"}
  * {"type":{"name":"int"}}
  * {"type":{"name":"int", "customProp":"val"}}
  * </pre>
- * 
+ *
  * The analogous code form for the above three JSON lines are the below three
  * lines:
- * 
+ *
  * <pre>
  *  .intType()
  *  .intBuilder().endInt()
  *  .intBuilder().prop("customProp", "val").endInt()
  * </pre>
- * 
+ *
  * Every primitive type has a shortcut to create the trivial type, and a builder
  * when custom properties are required. The first line above is a shortcut for
  * the second, analogous to the JSON case.
@@ -123,7 +124,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * <li>{@link EnumBuilder#symbols(String...)}</li>
  * <li>{@link RecordBuilder#fields()}</li> Example use of a named type with all
  * optional parameters:
- * 
+ *
  * <pre>
  * .enumeration("Suit").namespace("org.apache.test")
  *   .aliases("org.apache.test.OldSuit")
@@ -131,9 +132,9 @@ import com.fasterxml.jackson.databind.node.TextNode;
  *   .prop("customProp", "val")
  *   .symbols("SPADES", "HEARTS", "DIAMONDS", "CLUBS")
  * </pre>
- * 
+ *
  * Which is equivalent to the JSON:
- * 
+ *
  * <pre>
  * { "type":"enum",
  *   "name":"Suit", "namespace":"org.apache.test",
@@ -143,7 +144,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  *   "symbols":["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
  * }
  * </pre>
- * 
+ *
  * <h6>Nested Types</h6> The Avro nested types, map and array, can have custom
  * properties like all avro types, are not named, and must specify a nested
  * type. After configuration of optional properties, an array or map builds or
@@ -170,16 +171,16 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * <h6>Unions</h6> Union types are built via {@link TypeBuilder#unionOf()} or
  * {@link FieldTypeBuilder#unionOf()} in the context of type selection. This
  * chains together multiple types, in union order. For example:
- * 
+ *
  * <pre>
  * .unionOf()
  *   .fixed("IPv4").size(4).and()
  *   .fixed("IPv6").size(16).and()
  *   .nullType().endUnion()
  * </pre>
- * 
+ *
  * is equivalent to the Avro schema JSON:
- * 
+ *
  * <pre>
  * [
  *   {"type":"fixed", "name":"IPv4", "size":4},
@@ -187,21 +188,21 @@ import com.fasterxml.jackson.databind.node.TextNode;
  *   "null"
  * ]
  * </pre>
- * 
+ *
  * In a field context, the first type of a union defines what default type is
  * allowed.
  * </p>
  * Unions have two shortcuts for common cases. nullable() creates a union of a
  * type and null. In a field type context, optional() is available and creates a
  * union of null and a type, with a null default. The below two are equivalent:
- * 
+ *
  * <pre>
  *   .unionOf().intType().and().nullType().endUnion()
  *   .nullable().intType()
  * </pre>
- * 
+ *
  * The below two field declarations are equivalent:
- * 
+ *
  * <pre>
  *   .name("f").type().unionOf().nullType().and().longType().endUnion().nullDefault()
  *   .name("f").type().optional().longType()
@@ -209,13 +210,13 @@ import com.fasterxml.jackson.databind.node.TextNode;
  *
  * <h6>Explicit Types and Types by Name</h6> Types can also be specified
  * explicitly by passing in a Schema, or by name:
- * 
+ *
  * <pre>
  *   .type(Schema.create(Schema.Type.INT)) // explicitly specified
  *   .type("MD5")                       // reference by full name or short name
  *   .type("MD5", "org.apache.avro.test")  // reference by name and namespace
  * </pre>
- * 
+ *
  * When a type is specified by name, and the namespace is absent or null, the
  * namespace is inherited from the enclosing context. A namespace will propagate
  * as a default to child fields, nested types, or later defined types in a
@@ -249,11 +250,11 @@ public class SchemaBuilder {
   /**
    * Create a builder for an Avro record with the specified name. This is
    * equivalent to:
-   * 
+   *
    * <pre>
    * builder().record(name);
    * </pre>
-   * 
+   *
    * @param name the record name
    */
   public static RecordBuilder<Schema> record(String name) {
@@ -263,11 +264,11 @@ public class SchemaBuilder {
   /**
    * Create a builder for an Avro enum with the specified name and symbols
    * (values). This is equivalent to:
-   * 
+   *
    * <pre>
    * builder().enumeration(name);
    * </pre>
-   * 
+   *
    * @param name the enum name
    */
   public static EnumBuilder<Schema> enumeration(String name) {
@@ -277,11 +278,11 @@ public class SchemaBuilder {
   /**
    * Create a builder for an Avro fixed type with the specified name and size.
    * This is equivalent to:
-   * 
+   *
    * <pre>
    * builder().fixed(name);
    * </pre>
-   * 
+   *
    * @param name the fixed name
    */
   public static FixedBuilder<Schema> fixed(String name) {
@@ -290,7 +291,7 @@ public class SchemaBuilder {
 
   /**
    * Create a builder for an Avro array This is equivalent to:
-   * 
+   *
    * <pre>
    * builder().array();
    * </pre>
@@ -301,7 +302,7 @@ public class SchemaBuilder {
 
   /**
    * Create a builder for an Avro map This is equivalent to:
-   * 
+   *
    * <pre>
    * builder().map();
    * </pre>
@@ -312,7 +313,7 @@ public class SchemaBuilder {
 
   /**
    * Create a builder for an Avro union This is equivalent to:
-   * 
+   *
    * <pre>
    * builder().unionOf();
    * </pre>
@@ -323,17 +324,17 @@ public class SchemaBuilder {
 
   /**
    * Create a builder for a union of a type and null. This is a shortcut for:
-   * 
+   *
    * <pre>
    * builder().nullable();
    * </pre>
-   * 
+   *
    * and the following two lines are equivalent:
-   * 
+   *
    * <pre>
    * nullable().intType();
    * </pre>
-   * 
+   *
    * <pre>
    * unionOf().intType().and().nullType().endUnion();
    * </pre>
@@ -1015,7 +1016,7 @@ public class SchemaBuilder {
 
     /**
      * A plain boolean type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * booleanBuilder().endBoolean();
      * </pre>
@@ -1034,7 +1035,7 @@ public class SchemaBuilder {
 
     /**
      * A plain int type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * intBuilder().endInt();
      * </pre>
@@ -1053,7 +1054,7 @@ public class SchemaBuilder {
 
     /**
      * A plain long type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * longBuilder().endLong();
      * </pre>
@@ -1072,7 +1073,7 @@ public class SchemaBuilder {
 
     /**
      * A plain float type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * floatBuilder().endFloat();
      * </pre>
@@ -1091,7 +1092,7 @@ public class SchemaBuilder {
 
     /**
      * A plain double type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * doubleBuilder().endDouble();
      * </pre>
@@ -1110,7 +1111,7 @@ public class SchemaBuilder {
 
     /**
      * A plain string type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * stringBuilder().endString();
      * </pre>
@@ -1129,7 +1130,7 @@ public class SchemaBuilder {
 
     /**
      * A plain bytes type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * bytesBuilder().endBytes();
      * </pre>
@@ -1148,7 +1149,7 @@ public class SchemaBuilder {
 
     /**
      * A plain null type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * nullBuilder().endNull();
      * </pre>
@@ -1167,13 +1168,13 @@ public class SchemaBuilder {
 
     /**
      * Build an Avro map type Example usage:
-     * 
+     *
      * <pre>
      * map().values().intType()
      * </pre>
-     * 
+     *
      * Equivalent to Avro JSON Schema:
-     * 
+     *
      * <pre>
      * {"type":"map", "values":"int"}
      * </pre>
@@ -1184,13 +1185,13 @@ public class SchemaBuilder {
 
     /**
      * Build an Avro array type Example usage:
-     * 
+     *
      * <pre>
      * array().items().longType()
      * </pre>
-     * 
+     *
      * Equivalent to Avro JSON Schema:
-     * 
+     *
      * <pre>
      * {"type":"array", "values":"long"}
      * </pre>
@@ -1201,13 +1202,13 @@ public class SchemaBuilder {
 
     /**
      * Build an Avro fixed type. Example usage:
-     * 
+     *
      * <pre>
      * fixed("com.foo.IPv4").size(4)
      * </pre>
-     * 
+     *
      * Equivalent to Avro JSON Schema:
-     * 
+     *
      * <pre>
      * {"type":"fixed", "name":"com.foo.IPv4", "size":4}
      * </pre>
@@ -1218,14 +1219,14 @@ public class SchemaBuilder {
 
     /**
      * Build an Avro enum type. Example usage:
-     * 
+     *
      * <pre>
      * enumeration("Suits").namespace("org.cards").doc("card suit names").defaultSymbol("HEART").symbols("HEART", "SPADE",
      *     "DIAMOND", "CLUB")
      * </pre>
-     * 
+     *
      * Equivalent to Avro JSON Schema:
-     * 
+     *
      * <pre>
      * {"type":"enum", "name":"Suits", "namespace":"org.cards",
      *  "doc":"card suit names", "symbols":[
@@ -1238,14 +1239,14 @@ public class SchemaBuilder {
 
     /**
      * Build an Avro record type. Example usage:
-     * 
+     *
      * <pre>
      * record("com.foo.Foo").fields().name("field1").typeInt().intDefault(1).name("field2").typeString().noDefault()
      *     .name("field3").optional().typeFixed("FooFixed").size(4).endRecord()
      * </pre>
-     * 
+     *
      * Equivalent to Avro JSON Schema:
-     * 
+     *
      * <pre>
      * {"type":"record", "name":"com.foo.Foo", "fields": [
      *   {"name":"field1", "type":"int", "default":1},
@@ -1262,7 +1263,7 @@ public class SchemaBuilder {
 
     /**
      * Build an Avro union schema type. Example usage:
-     * 
+     *
      * <pre>
      * unionOf().stringType().and().bytesType().endUnion()
      * </pre>
@@ -1275,11 +1276,11 @@ public class SchemaBuilder {
      * A shortcut for building a union of a type and null.
      * <p/>
      * For example, the code snippets below are equivalent:
-     * 
+     *
      * <pre>
      * nullable().booleanType()
      * </pre>
-     * 
+     *
      * <pre>
      * unionOf().booleanType().and().nullType().endUnion()
      * </pre>
@@ -1334,13 +1335,13 @@ public class SchemaBuilder {
    * configuring a default for the field.
    * <p/>
    * For example, an int field with default value 1:
-   * 
+   *
    * <pre>
    * intSimple().withDefault(1);
    * </pre>
-   * 
+   *
    * or an array with items that are optional int types:
-   * 
+   *
    * <pre>
    * array().items().optional().intType();
    * </pre>
@@ -1358,7 +1359,7 @@ public class SchemaBuilder {
 
     /**
      * A plain boolean type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * booleanBuilder().endBoolean();
      * </pre>
@@ -1377,7 +1378,7 @@ public class SchemaBuilder {
 
     /**
      * A plain int type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * intBuilder().endInt();
      * </pre>
@@ -1396,7 +1397,7 @@ public class SchemaBuilder {
 
     /**
      * A plain long type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * longBuilder().endLong();
      * </pre>
@@ -1415,7 +1416,7 @@ public class SchemaBuilder {
 
     /**
      * A plain float type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * floatBuilder().endFloat();
      * </pre>
@@ -1434,7 +1435,7 @@ public class SchemaBuilder {
 
     /**
      * A plain double type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * doubleBuilder().endDouble();
      * </pre>
@@ -1453,7 +1454,7 @@ public class SchemaBuilder {
 
     /**
      * A plain string type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * stringBuilder().endString();
      * </pre>
@@ -1472,7 +1473,7 @@ public class SchemaBuilder {
 
     /**
      * A plain bytes type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * bytesBuilder().endBytes();
      * </pre>
@@ -1491,7 +1492,7 @@ public class SchemaBuilder {
 
     /**
      * A plain null type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * nullBuilder().endNull();
      * </pre>
@@ -1560,11 +1561,11 @@ public class SchemaBuilder {
      * value of the non-null type.
      * <p/>
      * For example, the two code snippets below are equivalent:
-     * 
+     *
      * <pre>
      * nullable().booleanType().booleanDefault(true)
      * </pre>
-     * 
+     *
      * <pre>
      * unionOf().booleanType().and().nullType().endUnion().booleanDefault(true)
      * </pre>
@@ -1577,11 +1578,11 @@ public class SchemaBuilder {
      * A shortcut for building a union of null and a type, with a null default.
      * <p/>
      * For example, the two code snippets below are equivalent:
-     * 
+     *
      * <pre>
      * optional().booleanType()
      * </pre>
-     * 
+     *
      * <pre>
      * unionOf().nullType().and().booleanType().endUnion().nullDefault()
      * </pre>
@@ -1606,7 +1607,7 @@ public class SchemaBuilder {
 
     /**
      * A plain boolean type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * booleanBuilder().endBoolean();
      * </pre>
@@ -1625,7 +1626,7 @@ public class SchemaBuilder {
 
     /**
      * A plain int type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * intBuilder().endInt();
      * </pre>
@@ -1644,7 +1645,7 @@ public class SchemaBuilder {
 
     /**
      * A plain long type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * longBuilder().endLong();
      * </pre>
@@ -1663,7 +1664,7 @@ public class SchemaBuilder {
 
     /**
      * A plain float type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * floatBuilder().endFloat();
      * </pre>
@@ -1682,7 +1683,7 @@ public class SchemaBuilder {
 
     /**
      * A plain double type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * doubleBuilder().endDouble();
      * </pre>
@@ -1701,7 +1702,7 @@ public class SchemaBuilder {
 
     /**
      * A plain string type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * stringBuilder().endString();
      * </pre>
@@ -1720,7 +1721,7 @@ public class SchemaBuilder {
 
     /**
      * A plain bytes type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * bytesBuilder().endBytes();
      * </pre>
@@ -1739,7 +1740,7 @@ public class SchemaBuilder {
 
     /**
      * A plain null type without custom properties. This is equivalent to:
-     * 
+     *
      * <pre>
      * nullBuilder().endNull();
      * </pre>
@@ -1822,7 +1823,7 @@ public class SchemaBuilder {
 
     /**
      * Add a field with the given name.
-     * 
+     *
      * @return A {@link FieldBuilder} for the given name.
      */
     public FieldBuilder<R> name(String fieldName) {
@@ -1833,7 +1834,7 @@ public class SchemaBuilder {
      * Shortcut for creating a boolean field with the given name and no default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().booleanType().noDefault()
      * </pre>
@@ -1847,7 +1848,7 @@ public class SchemaBuilder {
      * with null default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().optional().booleanType()
      * </pre>
@@ -1874,7 +1875,7 @@ public class SchemaBuilder {
      * Shortcut for creating an int field with the given name and no default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().intType().noDefault()
      * </pre>
@@ -1888,7 +1889,7 @@ public class SchemaBuilder {
      * null default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().optional().intType()
      * </pre>
@@ -1902,7 +1903,7 @@ public class SchemaBuilder {
      * int default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().nullable().intType().intDefault(defaultVal)
      * </pre>
@@ -1915,7 +1916,7 @@ public class SchemaBuilder {
      * Shortcut for creating a long field with the given name and no default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().longType().noDefault()
      * </pre>
@@ -1929,7 +1930,7 @@ public class SchemaBuilder {
      * null default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().optional().longType()
      * </pre>
@@ -1943,7 +1944,7 @@ public class SchemaBuilder {
      * long default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().nullable().longType().longDefault(defaultVal)
      * </pre>
@@ -1956,7 +1957,7 @@ public class SchemaBuilder {
      * Shortcut for creating a float field with the given name and no default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().floatType().noDefault()
      * </pre>
@@ -1970,7 +1971,7 @@ public class SchemaBuilder {
      * null default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().optional().floatType()
      * </pre>
@@ -1984,7 +1985,7 @@ public class SchemaBuilder {
      * a float default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().nullable().floatType().floatDefault(defaultVal)
      * </pre>
@@ -1997,7 +1998,7 @@ public class SchemaBuilder {
      * Shortcut for creating a double field with the given name and no default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().doubleType().noDefault()
      * </pre>
@@ -2011,7 +2012,7 @@ public class SchemaBuilder {
      * with null default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().optional().doubleType()
      * </pre>
@@ -2025,7 +2026,7 @@ public class SchemaBuilder {
      * with a double default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().nullable().doubleType().doubleDefault(defaultVal)
      * </pre>
@@ -2038,7 +2039,7 @@ public class SchemaBuilder {
      * Shortcut for creating a string field with the given name and no default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().stringType().noDefault()
      * </pre>
@@ -2052,7 +2053,7 @@ public class SchemaBuilder {
      * with null default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().optional().stringType()
      * </pre>
@@ -2066,7 +2067,7 @@ public class SchemaBuilder {
      * with a string default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().nullable().stringType().stringDefault(defaultVal)
      * </pre>
@@ -2079,7 +2080,7 @@ public class SchemaBuilder {
      * Shortcut for creating a bytes field with the given name and no default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().bytesType().noDefault()
      * </pre>
@@ -2093,7 +2094,7 @@ public class SchemaBuilder {
      * null default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().optional().bytesType()
      * </pre>
@@ -2107,7 +2108,7 @@ public class SchemaBuilder {
      * a bytes default.
      * <p/>
      * This is equivalent to:
-     * 
+     *
      * <pre>
      * name(fieldName).type().nullable().bytesType().bytesDefault(defaultVal)
      * </pre>
@@ -2137,11 +2138,11 @@ public class SchemaBuilder {
    *
    * Usage is to first configure any of the optional parameters and then to call
    * one of the type methods to complete the field. For example
-   * 
+   *
    * <pre>
    *   .namespace("org.apache.example").orderDescending().type()
    * </pre>
-   * 
+   *
    * Optional parameters for a field are namespace, doc, order, and aliases.
    */
   public final static class FieldBuilder<R> extends NamedBuilder<FieldBuilder<R>> {
@@ -2174,7 +2175,7 @@ public class SchemaBuilder {
     /**
      * Final step in configuring this field, finalizing name, namespace, alias, and
      * order.
-     * 
+     *
      * @return A builder for the field's type and default value.
      */
     public FieldTypeBuilder<R> type() {
@@ -2225,16 +2226,16 @@ public class SchemaBuilder {
     }
 
     private FieldAssembler<R> completeField(Schema schema, Object defaultVal) {
-      JsonNode defaultNode = toJsonNode(defaultVal);
+      JsonNode defaultNode = defaultVal == null ? NullNode.getInstance() : toJsonNode(defaultVal);
       return completeField(schema, defaultNode);
     }
 
     private FieldAssembler<R> completeField(Schema schema) {
-      return completeField(schema, null);
+      return completeField(schema, (JsonNode) null);
     }
 
     private FieldAssembler<R> completeField(Schema schema, JsonNode defaultVal) {
-      Field field = new Field(name(), schema, doc(), defaultVal, order);
+      Field field = new Field(name(), schema, doc(), defaultVal, true, order);
       addPropsTo(field);
       addAliasesTo(field);
       return fields.addField(field);

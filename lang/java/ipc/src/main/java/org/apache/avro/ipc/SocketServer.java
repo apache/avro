@@ -29,6 +29,7 @@ import java.nio.channels.SocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.Message;
 import org.apache.avro.ipc.generic.GenericResponder;
@@ -36,7 +37,7 @@ import org.apache.avro.ipc.generic.GenericResponder;
 /**
  * A socket-based server implementation. This uses a simple, non-standard wire
  * protocol and is not intended for production services.
- * 
+ *
  * @deprecated use {@link SaslSocketServer} instead.
  */
 @Deprecated
@@ -139,7 +140,7 @@ public class SocketServer extends Thread implements Server {
     Responder responder = new GenericResponder(Protocol.parse("{\"protocol\": \"X\"}")) {
       @Override
       public Object respond(Message message, Object request) throws Exception {
-        throw new IOException("no messages!");
+        throw new AvroRemoteException("no messages!");
       }
     };
     SocketServer server = new SocketServer(responder, new InetSocketAddress(0));

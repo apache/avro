@@ -30,7 +30,7 @@
   <artifactId>avro-mapred</artifactId>
 
   <name>Apache Avro Mapred API</name>
-  <description>An org.apache.hadoop.mapred compatible API for using Avro Serializatin in Hadoop</description>
+  <description>An org.apache.hadoop.mapred compatible API for using Avro Serialization in Hadoop</description>
   <packaging>bundle</packaging>
 
   <properties>

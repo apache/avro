@@ -113,7 +113,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testHello() throws IOException {
+  public void testHello() throws Exception {
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("hello").getRequest());
     params.put("greeting", new Utf8("bob"));
     Utf8 response = (Utf8) requestor.request("hello", params);
@@ -121,7 +121,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testEcho() throws IOException {
+  public void testEcho() throws Exception {
     GenericRecord record = new GenericData.Record(PROTOCOL.getType("TestRecord"));
     record.put("name", new Utf8("foo"));
     record.put("kind", new GenericData.EnumSymbol(PROTOCOL.getType("Kind"), "BAR"));
@@ -134,7 +134,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testEchoBytes() throws IOException {
+  public void testEchoBytes() throws Exception {
     Random random = new Random();
     int length = random.nextInt(1024 * 16);
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("echoBytes").getRequest());
@@ -147,7 +147,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testError() throws IOException {
+  public void testError() throws Exception {
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("error").getRequest());
     AvroRemoteException error = null;
     try {
@@ -160,7 +160,7 @@ public class TestProtocolGeneric {
   }
 
   @Test
-  public void testUndeclaredError() throws IOException {
+  public void testUndeclaredError() throws Exception {
     this.throwUndeclaredError = true;
     RuntimeException error = null;
     GenericRecord params = new GenericData.Record(PROTOCOL.getMessages().get("error").getRequest());
@@ -180,7 +180,7 @@ public class TestProtocolGeneric {
    * Construct and use a different protocol whose "hello" method has an extra
    * argument to check that schema is sent to parse request.
    */
-  public void testHandshake() throws IOException {
+  public void testHandshake() throws Exception {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
     List<Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN), null, null));
@@ -203,7 +203,7 @@ public class TestProtocolGeneric {
    * Construct and use a different protocol whose "echo" response has an extra
    * field to check that correct schema is used to parse response.
    */
-  public void testResponseChange() throws IOException {
+  public void testResponseChange() throws Exception {
 
     List<Field> fields = new ArrayList<>();
     for (Field f : PROTOCOL.getType("TestRecord").getFields())
@@ -235,7 +235,7 @@ public class TestProtocolGeneric {
   }
 
   @AfterClass
-  public static void testStopServer() throws IOException {
+  public static void testStopServer() throws Exception {
     client.close();
     server.close();
   }
