@@ -66,6 +66,9 @@ public class TestProtobuf {
     builder = Foo.newBuilder(fooInArray);
     builder.addFooArray(fooInArray);
 
+    com.google.protobuf.Timestamp ts = com.google.protobuf.Timestamp.newBuilder().setSeconds(1L).setNanos(2).build();
+    builder.setTimestamp(ts);
+
     builder = Foo.newBuilder(fooInner);
     builder.setFoo(fooInner);
     Foo foo = builder.build();

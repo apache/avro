@@ -18,6 +18,8 @@
 
 package org.apache.avro.protobuf.noopt;
 
+import "google/protobuf/timestamp.proto";
+
 message Foo {
   // all the primitive types
   required    int32 int32    =  1;
@@ -45,6 +47,8 @@ message Foo {
   // a recursive type
   optional     Foo  foo      = 18;
 
+  // a predefined message type
+  optional google.protobuf.Timestamp timestamp = 21;
 }
 
 // an enum
