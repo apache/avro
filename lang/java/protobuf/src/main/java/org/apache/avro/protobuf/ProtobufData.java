@@ -20,7 +20,6 @@ package org.apache.avro.protobuf;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.IdentityHashMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
 import java.io.File;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
@@ -46,6 +46,7 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
+import org.apache.avro.util.ClassUtils;
 import org.apache.avro.util.internal.Accessor;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -200,8 +201,10 @@ public class ProtobufData extends GenericData {
       return seen.get(descriptor);
     boolean first = seen.isEmpty();
 
-    Schema converted = schemaConversions.get(descriptor);
-    if (converted != null) {
+    Conversion conversion = getConversionByDescriptor(descriptor);
+    if (conversion != null) {
+      Schema converted = conversion.getRecommendedSchema();
+      seen.put(descriptor, converted);
       return converted;
     }
 
@@ -374,16 +377,28 @@ public class ProtobufData extends GenericData {
 
   }
 
-  private Map<Descriptor, Schema> schemaConversions = new HashMap<>();
-
   /**
-   * Set proto descriptor -> avro schema conversion to handle logical type
+   * Get Conversion from protobuf descriptor via protobuf classname.
    *
-   * @param descriptor message descriptor in protobuf
-   * @param avroSchema avro schema might have logical type
+   * @param descriptor protobuf descriptor
+   * @return Conversion | null
    */
-  public void addSchemaConversion(Descriptor descriptor, Schema avroSchema) {
-    schemaConversions.put(descriptor, avroSchema);
-  }
+  private Conversion getConversionByDescriptor(Descriptor descriptor) {
+    String namespace = getNamespace(descriptor.getFile(), descriptor.getContainingType());
+    String name = descriptor.getName();
+    String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
 
+    Class clazz;
+    try {
+      clazz = ClassUtils.forName(getClassLoader(), namespace + dot + name);
+    } catch (ClassNotFoundException e) {
+      clazz = null;
+    }
+
+    if (clazz != null) {
+      return getConversionByClass(clazz);
+    } else {
+      return null;
+    }
+  }
 }
