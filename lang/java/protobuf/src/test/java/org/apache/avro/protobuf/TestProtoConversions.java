@@ -67,37 +67,66 @@ public class TestProtoConversions {
         conversion.fromLong(instant, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
     Assert.assertEquals("Known timestamp should be correct", instant,
         (long) conversion.toLong(May_28_2015_21_46_53_221_ts, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis()));
-
-    try {
-      conversion.fromLong((long) -1.0, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
-    } catch (IllegalArgumentException e) {
-      // expected
-    }
   }
 
   @Test
-  public void testTimestampMicrosConversion() throws Exception {
+  public void testTimestampMicrosConversion() {
     TimestampMicrosConversion conversion = new TimestampMicrosConversion();
 
     long instant = May_28_2015_21_46_53_221.getTimeInMillis() * 1000 + 843;
     Timestamp May_28_2015_21_46_53_221_843_ts = Timestamp.newBuilder().setSeconds(1432849613L).setNanos(221843000)
         .build();
 
+    Timestamp tsFromInstant = conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+    long roundTrip = conversion.toLong(tsFromInstant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+    Assert.assertEquals("Round-trip conversion should work", instant, roundTrip);
+
     Assert.assertEquals("Known timestamp should be correct", May_28_2015_21_46_53_221_843_ts,
         conversion.fromLong(instant, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
+    Assert.assertEquals("Known timestamp should be correct", instant, (long) conversion
+        .toLong(May_28_2015_21_46_53_221_843_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros()));
+  }
 
-    try {
-      conversion.toLong(May_28_2015_21_46_53_221_843_ts, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
-      Assert.fail("Should not convert DateTime to long");
-    } catch (UnsupportedOperationException e) {
-      // expected
-    }
+  @Test(expected = IllegalArgumentException.class)
+  public void testTimestampMillisConversionSecondsLowerLimit() throws Exception {
+    TimestampMillisConversion conversion = new TimestampMillisConversion();
+    long exceeded = (ProtoConversions.SECONDS_LOWERLIMIT - 1) * 1000;
+    conversion.fromLong(exceeded, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+  }
 
-    try {
-      conversion.fromLong((long) -1.0, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
-    } catch (IllegalArgumentException e) {
-      // expected
-    }
+  @Test(expected = IllegalArgumentException.class)
+  public void testTimestampMillisConversionSecondsUpperLimit() throws Exception {
+    TimestampMillisConversion conversion = new TimestampMillisConversion();
+    long exceeded = (ProtoConversions.SECONDS_UPPERLIMIT + 1) * 1000;
+    conversion.fromLong(exceeded, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testTimestampMillisConversionNanosLowerLimit() throws Exception {
+    TimestampMillisConversion conversion = new TimestampMillisConversion();
+    long exceeded = -1L;
+    conversion.fromLong(exceeded, TIMESTAMP_MILLIS_SCHEMA, LogicalTypes.timestampMillis());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testTimestampMicrosConversionSecondsLowerLimit() throws Exception {
+    TimestampMicrosConversion conversion = new TimestampMicrosConversion();
+    long exceeded = (ProtoConversions.SECONDS_LOWERLIMIT - 1) * 1000000;
+    conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testTimestampMicrosConversionSecondsUpperLimit() throws Exception {
+    TimestampMicrosConversion conversion = new TimestampMicrosConversion();
+    long exceeded = (ProtoConversions.SECONDS_UPPERLIMIT + 1) * 1000000;
+    conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testTimestampMicrosConversionNanosLowerLimit() throws Exception {
+    TimestampMicrosConversion conversion = new TimestampMicrosConversion();
+    long exceeded = -1L;
+    conversion.fromLong(exceeded, TIMESTAMP_MICROS_SCHEMA, LogicalTypes.timestampMicros());
   }
 
   /*

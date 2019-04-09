@@ -28,6 +28,20 @@ public class ProtoConversions {
   private static final int THOUSAND = 1000;
   private static final int MILLION = 1000000;
 
+  // second value must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z
+  // inclusive.
+  public static final long SECONDS_LOWERLIMIT = -62135596800L;
+  public static final long SECONDS_UPPERLIMIT = 253402300799L;
+
+  // nano value Must be from 0 to 999,999,999 inclusive.
+  public static final int NANOSECONDS_LOWERLIMIT = 0;
+  public static final int NANOSECONDS_UPPERLIMIT = 999999999;
+
+  // timestamp precise of conversion from long
+  public enum TimestampPrecise {
+    Millis, Micros
+  };
+
   public static class TimestampMillisConversion extends Conversion<Timestamp> {
     @Override
     public Class<Timestamp> getConvertedType() {
@@ -40,19 +54,13 @@ public class ProtoConversions {
     }
 
     @Override
-    public Timestamp fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
-      if (millisFromEpoch < 0) {
-        throw new IllegalArgumentException("given value is negative");
-      }
-
-      long seconds = millisFromEpoch / THOUSAND;
-      int nanos = (int) (millisFromEpoch - seconds * THOUSAND) * MILLION;
-      return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
+    public Timestamp fromLong(Long millisFromEpoch, Schema schema, LogicalType type) throws IllegalArgumentException {
+      return ProtoConversions.fromLong(millisFromEpoch, TimestampPrecise.Millis);
     }
 
     @Override
     public Long toLong(Timestamp value, Schema schema, LogicalType type) {
-      return ProtoConversions.toLong(value);
+      return ProtoConversions.toLong(value, TimestampPrecise.Millis);
     }
 
     @Override
@@ -73,23 +81,13 @@ public class ProtoConversions {
     }
 
     @Override
-    public Timestamp fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
-      if (microsFromEpoch < 0) {
-        throw new IllegalArgumentException("given value is negative");
-      }
-
-      long seconds = microsFromEpoch / MILLION;
-      int nanos = (int) (microsFromEpoch - seconds * MILLION) * THOUSAND;
-      return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
+    public Timestamp fromLong(Long microsFromEpoch, Schema schema, LogicalType type) throws IllegalArgumentException {
+      return ProtoConversions.fromLong(microsFromEpoch, TimestampPrecise.Micros);
     }
 
     @Override
     public Long toLong(Timestamp value, Schema schema, LogicalType type) {
-      if (value.getNanos() - (value.getNanos() / MILLION * MILLION) > 0) {
-        throw new UnsupportedOperationException("micros-precise is unsupported");
-      }
-
-      return ProtoConversions.toLong(value);
+      return ProtoConversions.toLong(value, TimestampPrecise.Micros);
     }
 
     @Override
@@ -98,7 +96,46 @@ public class ProtoConversions {
     }
   }
 
-  private static long toLong(Timestamp value) {
-    return value.getSeconds() * THOUSAND + value.getNanos() / MILLION;
+  private static long toLong(Timestamp value, TimestampPrecise precise) {
+    long rv = 0L;
+
+    switch (precise) {
+    case Millis:
+      rv = value.getSeconds() * THOUSAND + value.getNanos() / MILLION;
+      break;
+    case Micros:
+      rv = value.getSeconds() * MILLION + value.getNanos() / THOUSAND;
+      break;
+    }
+
+    return rv;
+  }
+
+  private static Timestamp fromLong(Long epoch, TimestampPrecise precise) throws IllegalArgumentException {
+    long seconds = 0L;
+    int nanos = 0;
+
+    switch (precise) {
+    case Millis:
+      seconds = epoch / THOUSAND;
+      nanos = (int) (epoch - seconds * THOUSAND) * MILLION;
+      break;
+    case Micros:
+      seconds = epoch / MILLION;
+      nanos = (int) (epoch - seconds * MILLION) * THOUSAND;
+      break;
+    }
+
+    if (seconds < SECONDS_LOWERLIMIT || seconds > SECONDS_UPPERLIMIT) {
+      throw new IllegalArgumentException("given seconds is out of range");
+    }
+
+    if (nanos < NANOSECONDS_LOWERLIMIT || nanos > NANOSECONDS_UPPERLIMIT) {
+      // NOTE nanos > NANOSECONDS_UPPERLIMIT is unexpected because exceeded part is
+      // moved to seconds
+      throw new IllegalArgumentException("given nanos is out of range");
+    }
+
+    return Timestamp.newBuilder().setSeconds(seconds).setNanos(nanos).build();
   }
 }
