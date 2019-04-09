@@ -120,7 +120,6 @@ public class TestProtobuf {
     // Convert to logical type if conversion is set
     ProtobufData instance2 = new ProtobufData();
     instance2.addLogicalTypeConversion(conversion);
-    instance2.addSchemaConversion(com.google.protobuf.Timestamp.getDescriptor(), conversion.getRecommendedSchema());
     Schema s2 = instance2.getSchema(com.google.protobuf.Timestamp.class);
     assertEquals(conversion.getRecommendedSchema(), s2);
   }
