@@ -30,15 +30,15 @@ public class ProtoConversions {
 
   // second value must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z
   // inclusive.
-  public static final long SECONDS_LOWERLIMIT = -62135596800L;
-  public static final long SECONDS_UPPERLIMIT = 253402300799L;
+  static final long SECONDS_LOWERLIMIT = -62135596800L;
+  static final long SECONDS_UPPERLIMIT = 253402300799L;
 
   // nano value Must be from 0 to 999,999,999 inclusive.
-  public static final int NANOSECONDS_LOWERLIMIT = 0;
-  public static final int NANOSECONDS_UPPERLIMIT = 999999999;
+  private static final int NANOSECONDS_LOWERLIMIT = 0;
+  private static final int NANOSECONDS_UPPERLIMIT = 999999999;
 
   // timestamp precise of conversion from long
-  public enum TimestampPrecise {
+  private enum TimestampPrecise {
     Millis, Micros
   };
 
