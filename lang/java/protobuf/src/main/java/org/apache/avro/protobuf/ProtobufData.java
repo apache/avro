@@ -388,16 +388,10 @@ public class ProtobufData extends GenericData {
     String name = descriptor.getName();
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
 
-    Class clazz;
     try {
-      clazz = ClassUtils.forName(getClassLoader(), namespace + dot + name);
-    } catch (ClassNotFoundException e) {
-      clazz = null;
-    }
-
-    if (clazz != null) {
+      Class clazz = ClassUtils.forName(getClassLoader(), namespace + dot + name);
       return getConversionByClass(clazz);
-    } else {
+    } catch (ClassNotFoundException e) {
       return null;
     }
   }
