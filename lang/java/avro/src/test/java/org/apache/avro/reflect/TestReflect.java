@@ -608,6 +608,7 @@ public class TestReflect {
         + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
   }
 
+  @AvroMeta(key = "X", value = "Y")
   public static class RAvroMeta {
     @AvroMeta(key = "K", value = "V")
     int a;
@@ -615,8 +616,48 @@ public class TestReflect {
 
   @Test
   public void testAnnotationAvroMeta() throws Exception {
-    check(RAvroMeta.class, "{\"type\":\"record\",\"name\":\"RAvroMeta\",\"namespace\":"
-        + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[" + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\"}]}");
+    check(RAvroMeta.class,
+        "{\"type\":\"record\",\"name\":\"RAvroMeta\",\"namespace\":"
+            + "\"org.apache.avro.reflect.TestReflect\",\"fields\":[" + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\"}]"
+            + ",\"X\":\"Y\"}");
+  }
+
+  @AvroMeta(key = "X", value = "Y")
+  @AvroMeta(key = "A", value = "B")
+  public static class RAvroMultiMeta {
+    @AvroMeta(key = "K", value = "V")
+    @AvroMeta(key = "L", value = "W")
+    int a;
+  }
+
+  @Test
+  public void testAnnotationMultiAvroMeta() {
+    check(RAvroMultiMeta.class,
+        "{\"type\":\"record\",\"name\":\"RAvroMultiMeta\",\"namespace\":"
+            + "\"org.apache.avro.reflect.TestReflect\",\"fields\":["
+            + "{\"name\":\"a\",\"type\":\"int\",\"K\":\"V\",\"L\":\"W\"}]" + ",\"X\":\"Y\",\"A\":\"B\"}");
+  }
+
+  public static class RAvroDuplicateFieldMeta {
+    @AvroMeta(key = "K", value = "V")
+    @AvroMeta(key = "K", value = "W")
+    int a;
+  }
+
+  @Test(expected = AvroTypeException.class)
+  public void testAnnotationDuplicateFieldAvroMeta() {
+    ReflectData.get().getSchema(RAvroDuplicateFieldMeta.class);
+  }
+
+  @AvroMeta(key = "K", value = "V")
+  @AvroMeta(key = "K", value = "W")
+  public static class RAvroDuplicateTypeMeta {
+    int a;
+  }
+
+  @Test(expected = AvroTypeException.class)
+  public void testAnnotationDuplicateTypeAvroMeta() {
+    ReflectData.get().getSchema(RAvroDuplicateTypeMeta.class);
   }
 
   public static class RAvroName {
