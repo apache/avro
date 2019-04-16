@@ -629,9 +629,13 @@ public class ReflectData extends SpecificData {
               String fieldName = (annotatedName != null) ? annotatedName.value() : field.getName();
               Schema.Field recordField = new Schema.Field(fieldName, fieldSchema, doc, defaultValue);
 
-              AvroMeta meta = field.getAnnotation(AvroMeta.class); // add metadata
-              if (meta != null)
+              AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
+              for (AvroMeta meta : metadata) {
+                if (recordField.getObjectProps().containsKey(meta.key())) {
+                  throw new AvroTypeException("Duplicate field prop key: " + meta.key());
+                }
                 recordField.addProp(meta.key(), meta.value());
+              }
               for (Schema.Field f : fields) {
                 if (f.name().equals(fieldName))
                   throw new AvroTypeException("double field entry: " + fieldName);
@@ -644,9 +648,13 @@ public class ReflectData extends SpecificData {
           if (error) // add Throwable message
             fields.add(new Schema.Field("detailMessage", THROWABLE_MESSAGE, null, null));
           schema.setFields(fields);
-          AvroMeta meta = c.getAnnotation(AvroMeta.class);
-          if (meta != null)
+          AvroMeta[] metadata = c.getAnnotationsByType(AvroMeta.class);
+          for (AvroMeta meta : metadata) {
+            if (schema.getObjectProps().containsKey(meta.key())) {
+              throw new AvroTypeException("Duplicate type prop key: " + meta.key());
+            }
             schema.addProp(meta.key(), meta.value());
+          }
         }
         names.put(fullName, schema);
       }
