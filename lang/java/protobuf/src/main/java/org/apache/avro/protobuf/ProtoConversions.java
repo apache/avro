@@ -117,12 +117,12 @@ public class ProtoConversions {
 
     switch (precise) {
     case Millis:
-      seconds = epoch / THOUSAND;
-      nanos = (int) (epoch - seconds * THOUSAND) * MILLION;
+      seconds = Math.floorDiv(epoch, THOUSAND);
+      nanos = (int) Math.floorMod(epoch, THOUSAND) * MILLION;
       break;
     case Micros:
-      seconds = epoch / MILLION;
-      nanos = (int) (epoch - seconds * MILLION) * THOUSAND;
+      seconds = Math.floorDiv(epoch, MILLION);
+      nanos = (int) Math.floorMod(epoch, MILLION) * THOUSAND;
       break;
     }
 
@@ -131,8 +131,8 @@ public class ProtoConversions {
     }
 
     if (nanos < NANOSECONDS_LOWERLIMIT || nanos > NANOSECONDS_UPPERLIMIT) {
-      // NOTE nanos > NANOSECONDS_UPPERLIMIT is unexpected because exceeded part is
-      // moved to seconds
+      // NOTE here is unexpected cases because exceeded part is
+      // moved to seconds by floor methods
       throw new IllegalArgumentException("given nanos is out of range");
     }
 
