@@ -111,18 +111,18 @@ public class ProtoConversions {
     return rv;
   }
 
-  private static Timestamp fromLong(Long epoch, TimestampPrecise precise) throws IllegalArgumentException {
+  private static Timestamp fromLong(Long elapsedSinceEpoch, TimestampPrecise precise) throws IllegalArgumentException {
     long seconds = 0L;
     int nanos = 0;
 
     switch (precise) {
     case Millis:
-      seconds = Math.floorDiv(epoch, THOUSAND);
-      nanos = (int) Math.floorMod(epoch, THOUSAND) * MILLION;
+      seconds = Math.floorDiv(elapsedSinceEpoch, THOUSAND);
+      nanos = (int) Math.floorMod(elapsedSinceEpoch, THOUSAND) * MILLION;
       break;
     case Micros:
-      seconds = Math.floorDiv(epoch, MILLION);
-      nanos = (int) Math.floorMod(epoch, MILLION) * THOUSAND;
+      seconds = Math.floorDiv(elapsedSinceEpoch, MILLION);
+      nanos = (int) Math.floorMod(elapsedSinceEpoch, MILLION) * THOUSAND;
       break;
     }
 
