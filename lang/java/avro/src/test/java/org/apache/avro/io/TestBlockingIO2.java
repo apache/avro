@@ -53,7 +53,7 @@ public class TestBlockingIO2 {
 
     decoder = DecoderFactory.get().binaryDecoder(bb, null);
     this.calls = calls;
-    this.msg = "Case: { "+bufferSize+", "+skipLevel+", \""+calls+"\" }";
+    this.msg = "Case: { " + bufferSize + ", " + skipLevel + ", \"" + calls + "\" }";
   }
 
   @Test

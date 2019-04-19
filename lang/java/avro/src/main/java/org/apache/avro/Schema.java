@@ -781,12 +781,19 @@ public abstract class Schema extends JsonProperties {
 
   }
 
-  /** Useful as key of {@link Map}s when traversing two schemas at the
-   * same time and need to watch for recursion.
+  /**
+   * Useful as key of {@link Map}s when traversing two schemas at the same time
+   * and need to watch for recursion.
    */
   public static class SeenPair {
-    private Object s1; private Object s2;
-    public SeenPair(Object s1, Object s2) { this.s1 = s1; this.s2 = s2; }
+    private Object s1;
+    private Object s2;
+
+    public SeenPair(Object s1, Object s2) {
+      this.s1 = s1;
+      this.s2 = s2;
+    }
+
     public boolean equals(Object o) {
       if (!(o instanceof SeenPair))
         return false;

@@ -249,7 +249,7 @@ public class TestNonStringMapKeys {
     List<GenericRecord> records = new ArrayList<>();
     while (fileReader.hasNext()) {
       try {
-        records.add (fileReader.next(record));
+        records.add(fileReader.next(record));
       } catch (Exception e) {
         fail("Fail with schema: " + schema);
       }

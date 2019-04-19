@@ -66,21 +66,19 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   }
 
   /**
-   * Takes a {@link Resolver.Action} for resolving two schemas and
-   * returns the start symbol for a grammar that implements that
-   * resolution.  If the action is for a record and there's already a
-   * symbol for that record in <tt>seen</tt>, then that symbol is
-   * returned. Otherwise a new symbol is generated and returned.
+   * Takes a {@link Resolver.Action} for resolving two schemas and returns the
+   * start symbol for a grammar that implements that resolution. If the action is
+   * for a record and there's already a symbol for that record in <tt>seen</tt>,
+   * then that symbol is returned. Otherwise a new symbol is generated and
+   * returned.
    *
-   * @param action    The resolver to be implemented
-   * @param seen      The &lt;Action&gt; to symbol
-   * map of start symbols of resolving grammars so far.
-   * @return          The start symbol for the resolving grammar
+   * @param action The resolver to be implemented
+   * @param seen   The &lt;Action&gt; to symbol map of start symbols of resolving
+   *               grammars so far.
+   * @return The start symbol for the resolving grammar
    * @throws IOException
    */
-  private Symbol generate(Resolver.Action action, Map<Object, Symbol> seen)
-      throws IOException
-  {
+  private Symbol generate(Resolver.Action action, Map<Object, Symbol> seen) throws IOException {
     if (action instanceof Resolver.DoNothing) {
       return simpleGen(action.writer, seen);
 
@@ -94,51 +92,53 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.resolve(simpleGen(action.writer, seen), simpleGen(action.reader, seen));
 
     } else if (action.writer.getType() == Schema.Type.ARRAY) {
-      Symbol es = generate(((Resolver.Container)action).elementAction, seen);
+      Symbol es = generate(((Resolver.Container) action).elementAction, seen);
       return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, es), Symbol.ARRAY_START);
 
     } else if (action.writer.getType() == Schema.Type.MAP) {
-      Symbol es = generate(((Resolver.Container)action).elementAction, seen);
+      Symbol es = generate(((Resolver.Container) action).elementAction, seen);
       return Symbol.seq(Symbol.repeat(Symbol.MAP_END, es, Symbol.STRING), Symbol.MAP_START);
 
     } else if (action.writer.getType() == Schema.Type.UNION) {
-      if (((Resolver.WriterUnion)action).unionEquiv)
+      if (((Resolver.WriterUnion) action).unionEquiv)
         return simpleGen(action.writer, seen);
       Resolver.Action[] branches = ((Resolver.WriterUnion) action).actions;
       Symbol[] symbols = new Symbol[branches.length];
       String[] labels = new String[branches.length];
-      int i = 0; for (Resolver.Action branch : branches) {
+      int i = 0;
+      for (Resolver.Action branch : branches) {
         symbols[i] = generate(branch, seen);
         labels[i] = action.writer.getTypes().get(i).getFullName();
         i++;
       }
       return Symbol.seq(Symbol.alt(symbols, labels), Symbol.WRITER_UNION_ACTION);
 
-    } if (action instanceof Resolver.ReaderUnion) {
+    }
+    if (action instanceof Resolver.ReaderUnion) {
       Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
       Symbol s = generate(ru.actualAction, seen);
       return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
 
     } else if (action instanceof Resolver.EnumAdjust) {
-      Resolver.EnumAdjust e = (Resolver.EnumAdjust)action;
+      Resolver.EnumAdjust e = (Resolver.EnumAdjust) action;
       Object[] adjs = new Object[e.adjustments.length];
       for (int i = 0; i < adjs.length; i++)
         adjs[i] = (0 <= e.adjustments[i] ? new Integer(e.adjustments[i])
-                   : "No match for " + e.writer.getEnumSymbols().get(i));
-      return  Symbol.seq(Symbol.enumAdjustAction(e.reader.getEnumSymbols().size(),
-                                                 adjs), Symbol.ENUM);
+            : "No match for " + e.writer.getEnumSymbols().get(i));
+      return Symbol.seq(Symbol.enumAdjustAction(e.reader.getEnumSymbols().size(), adjs), Symbol.ENUM);
 
     } else if (action instanceof Resolver.RecordAdjust) {
       Symbol result = seen.get(action);
       if (result == null) {
-        final Resolver.RecordAdjust ra = (Resolver.RecordAdjust)action;
+        final Resolver.RecordAdjust ra = (Resolver.RecordAdjust) action;
         int defaultCount = ra.readerOrder.length - ra.firstDefault;
-        int count = 1 + ra.fieldActions.length + 3*defaultCount;
+        int count = 1 + ra.fieldActions.length + 3 * defaultCount;
         Symbol[] production = new Symbol[count];
         result = Symbol.seq(production);
         seen.put(action, result);
         production[--count] = Symbol.fieldOrderAction(ra.readerOrder);
-        for (Resolver.Action wfa : ra.fieldActions) production[--count] = generate(wfa, seen);
+        for (Resolver.Action wfa : ra.fieldActions)
+          production[--count] = generate(wfa, seen);
         for (int i = ra.firstDefault; i < ra.readerOrder.length; i++) {
           Schema.Field rf = ra.readerOrder[i];
           byte[] bb = getBinary(rf.schema(), Accessor.defaultValue(rf));
@@ -155,14 +155,22 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
 
   private Symbol simpleGen(Schema s, Map<Object, Symbol> seen) {
     switch (s.getType()) {
-    case NULL: return Symbol.NULL;
-    case BOOLEAN: return Symbol.BOOLEAN;
-    case INT: return Symbol.INT;
-    case LONG: return Symbol.LONG;
-    case FLOAT: return Symbol.FLOAT;
-    case DOUBLE: return Symbol.DOUBLE;
-    case BYTES: return Symbol.BYTES;
-    case STRING: return Symbol.STRING;
+    case NULL:
+      return Symbol.NULL;
+    case BOOLEAN:
+      return Symbol.BOOLEAN;
+    case INT:
+      return Symbol.INT;
+    case LONG:
+      return Symbol.LONG;
+    case FLOAT:
+      return Symbol.FLOAT;
+    case DOUBLE:
+      return Symbol.DOUBLE;
+    case BYTES:
+      return Symbol.BYTES;
+    case STRING:
+      return Symbol.STRING;
 
     case FIXED:
       return Symbol.seq(new Symbol.IntCheckAction(s.getFixedSize()), Symbol.FIXED);
@@ -171,18 +179,18 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.seq(Symbol.enumAdjustAction(s.getEnumSymbols().size(), null), Symbol.ENUM);
 
     case ARRAY:
-      return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, simpleGen(s.getElementType(), seen)),
-                        Symbol.ARRAY_START);
+      return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, simpleGen(s.getElementType(), seen)), Symbol.ARRAY_START);
 
     case MAP:
-      return Symbol.seq(Symbol.repeat(Symbol.MAP_END, simpleGen(s.getValueType(), seen),
-                                      Symbol.STRING), Symbol.MAP_START);
+      return Symbol.seq(Symbol.repeat(Symbol.MAP_END, simpleGen(s.getValueType(), seen), Symbol.STRING),
+          Symbol.MAP_START);
 
     case UNION: {
       List<Schema> subs = s.getTypes();
       Symbol[] symbols = new Symbol[subs.size()];
       String[] labels = new String[subs.size()];
-      int i = 0; for (Schema b : s.getTypes()) {
+      int i = 0;
+      for (Schema b : s.getTypes()) {
         symbols[i] = simpleGen(b, seen);
         labels[i++] = b.getFullName();
       }
@@ -192,12 +200,11 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     case RECORD: {
       Symbol result = seen.get(s);
       if (result == null) {
-        Symbol[] production = new Symbol[s.getFields().size()+1];
+        Symbol[] production = new Symbol[s.getFields().size() + 1];
         result = Symbol.seq(production);
         seen.put(s, result);
         int i = production.length;
-        production[--i] =
-          Symbol.fieldOrderAction(s.getFields().toArray(new Schema.Field[0]));
+        production[--i] = Symbol.fieldOrderAction(s.getFields().toArray(new Schema.Field[0]));
         for (Field f : s.getFields())
           production[--i] = simpleGen(f.schema(), seen);
         // FieldOrderAction is needed even though the field-order hasn't changed,

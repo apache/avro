@@ -297,11 +297,12 @@ public class TestValidatingIO {
       bvi = new JsonDecoder(sc, in);
     }
     Decoder vi = new ValidatingDecoder(sc, bvi);
-    String msg = "Error in validating case: "+sc;
+    String msg = "Error in validating case: " + sc;
     check(msg, vi, calls, values, skipLevel);
   }
 
-  public static void check(Decoder vi, String calls, Object[] values, final int skipLevel) throws IOException {
+  public static void check(String msg, Decoder vi, String calls, Object[] values, final int skipLevel)
+      throws IOException {
     InputScanner cs = new InputScanner(calls.toCharArray());
     int p = 0;
     int level = 0;
@@ -326,12 +327,14 @@ public class TestValidatingIO {
           assertEquals(msg, values[p++], vi.readLong());
           break;
         case 'F':
-          if (!(values[p] instanceof Float)) fail();
+          if (!(values[p] instanceof Float))
+            fail();
           float f = (Float) values[p++];
           assertEquals(msg, f, vi.readFloat(), Math.abs(f / 1000));
           break;
         case 'D':
-          if (!(values[p] instanceof Double)) fail();
+          if (!(values[p] instanceof Double))
+            fail();
           double d = (Double) values[p++];
           assertEquals(msg, d, vi.readDouble(), Math.abs(d / 1000));
           break;
@@ -364,27 +367,24 @@ public class TestValidatingIO {
             byte[] bb = (byte[]) values[p++];
             ByteBuffer bb2 = vi.readBytes(null);
             byte[] actBytes = new byte[bb2.remaining()];
-            System.arraycopy(bb2.array(), bb2.position(), actBytes,
-                0, bb2.remaining());
+            System.arraycopy(bb2.array(), bb2.position(), actBytes, 0, bb2.remaining());
             assertArrayEquals(msg, bb, actBytes);
           }
           break;
-        case 'f':
-          {
-            int len = extractInt(cs);
-            if (level == skipLevel) {
-              vi.skipFixed(len);
-              p++;
-            } else {
-              byte[] bb = (byte[]) values[p++];
-              byte[] actBytes = new byte[len];
-              vi.readFixed(actBytes);
-              assertArrayEquals(msg, bb, actBytes);
-            }
+        case 'f': {
+          int len = extractInt(cs);
+          if (level == skipLevel) {
+            vi.skipFixed(len);
+            p++;
+          } else {
+            byte[] bb = (byte[]) values[p++];
+            byte[] actBytes = new byte[len];
+            vi.readFixed(actBytes);
+            assertArrayEquals(msg, bb, actBytes);
           }
+        }
           break;
-        case 'e':
-        {
+        case 'e': {
           int e = extractInt(cs);
           if (level == skipLevel) {
             vi.readEnum();
@@ -392,7 +392,7 @@ public class TestValidatingIO {
             assertEquals(msg, e, vi.readEnum());
           }
         }
-        break;
+          break;
         case '[':
           if (level == skipLevel) {
             p += skip(msg, cs, vi, true);
@@ -417,14 +417,14 @@ public class TestValidatingIO {
           }
         case ']':
           assertEquals(msg, 0, counts[level]);
-          if (! isEmpty[level]) {
+          if (!isEmpty[level]) {
             assertEquals(msg, 0, vi.arrayNext());
           }
           level--;
           break;
         case '}':
           assertEquals(0, counts[level]);
-          if (! isEmpty[level]) {
+          if (!isEmpty[level]) {
             assertEquals(msg, 0, vi.mapNext());
           }
           level--;
@@ -442,15 +442,14 @@ public class TestValidatingIO {
         case 'c':
           extractInt(cs);
           continue;
-        case 'U':
-          {
-            int idx = extractInt(cs);
-            assertEquals(msg, idx, vi.readIndex());
-            continue;
-          }
+        case 'U': {
+          int idx = extractInt(cs);
+          assertEquals(msg, idx, vi.readIndex());
+          continue;
+        }
         case 'R':
-            ((ResolvingDecoder) vi).readFieldOrder();
-            continue;
+          ((ResolvingDecoder) vi).readFieldOrder();
+          continue;
         default:
           fail(msg);
         }
@@ -461,12 +460,11 @@ public class TestValidatingIO {
     assertEquals(msg, values.length, p);
   }
 
-  private static int skip(String msg, InputScanner cs, Decoder vi, boolean isArray)
-    throws IOException {
+  private static int skip(String msg, InputScanner cs, Decoder vi, boolean isArray) throws IOException {
     final char end = isArray ? ']' : '}';
     if (isArray) {
       assertEquals(msg, 0, vi.skipArray());
-    } else if (end == '}'){
+    } else if (end == '}') {
       assertEquals(msg, 0, vi.skipMap());
     }
     int level = 0;
