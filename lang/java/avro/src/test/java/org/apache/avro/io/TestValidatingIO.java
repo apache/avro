@@ -297,10 +297,12 @@ public class TestValidatingIO {
       bvi = new JsonDecoder(sc, in);
     }
     Decoder vi = new ValidatingDecoder(sc, bvi);
-    check(vi, calls, values, skipLevel);
+    String msg = "Error in validating case: " + sc;
+    check(msg, vi, calls, values, skipLevel);
   }
 
-  public static void check(Decoder vi, String calls, Object[] values, final int skipLevel) throws IOException {
+  public static void check(String msg, Decoder vi, String calls, Object[] values, final int skipLevel)
+      throws IOException {
     InputScanner cs = new InputScanner(calls.toCharArray());
     int p = 0;
     int level = 0;
@@ -310,156 +312,160 @@ public class TestValidatingIO {
     while (!cs.isDone()) {
       final char c = cs.cur();
       cs.next();
-      switch (c) {
-      case 'N':
-        vi.readNull();
-        break;
-      case 'B':
-        assertEquals(values[p++], vi.readBoolean());
-        break;
-      case 'I':
-        assertEquals(values[p++], vi.readInt());
-        break;
-      case 'L':
-        assertEquals(values[p++], vi.readLong());
-        break;
-      case 'F':
-        if (!(values[p] instanceof Float))
-          fail();
-        float f = (Float) values[p++];
-        assertEquals(f, vi.readFloat(), Math.abs(f / 1000));
-        break;
-      case 'D':
-        if (!(values[p] instanceof Double))
-          fail();
-        double d = (Double) values[p++];
-        assertEquals(d, vi.readDouble(), Math.abs(d / 1000));
-        break;
-      case 'S':
-        extractInt(cs);
-        if (level == skipLevel) {
-          vi.skipString();
-          p++;
-        } else {
-          String s = (String) values[p++];
-          assertEquals(new Utf8(s), vi.readString(null));
-        }
-        break;
-      case 'K':
-        extractInt(cs);
-        if (level == skipLevel) {
-          vi.skipString();
-          p++;
-        } else {
-          String s = (String) values[p++];
-          assertEquals(new Utf8(s), vi.readString(null));
-        }
-        break;
-      case 'b':
-        extractInt(cs);
-        if (level == skipLevel) {
-          vi.skipBytes();
-          p++;
-        } else {
-          byte[] bb = (byte[]) values[p++];
-          ByteBuffer bb2 = vi.readBytes(null);
-          byte[] actBytes = new byte[bb2.remaining()];
-          System.arraycopy(bb2.array(), bb2.position(), actBytes, 0, bb2.remaining());
-          assertArrayEquals(bb, actBytes);
-        }
-        break;
-      case 'f': {
-        int len = extractInt(cs);
-        if (level == skipLevel) {
-          vi.skipFixed(len);
-          p++;
-        } else {
-          byte[] bb = (byte[]) values[p++];
-          byte[] actBytes = new byte[len];
-          vi.readFixed(actBytes);
-          assertArrayEquals(bb, actBytes);
-        }
-      }
-        break;
-      case 'e': {
-        int e = extractInt(cs);
-        if (level == skipLevel) {
-          vi.readEnum();
-        } else {
-          assertEquals(e, vi.readEnum());
-        }
-      }
-        break;
-      case '[':
-        if (level == skipLevel) {
-          p += skip(cs, vi, true);
+      try {
+        switch (c) {
+        case 'N':
+          vi.readNull();
           break;
-        } else {
-          level++;
-          counts[level] = vi.readArrayStart();
-          isArray[level] = true;
-          isEmpty[level] = counts[level] == 0;
-          continue;
-        }
-      case '{':
-        if (level == skipLevel) {
-          p += skip(cs, vi, false);
+        case 'B':
+          assertEquals(msg, values[p++], vi.readBoolean());
           break;
-        } else {
-          level++;
-          counts[level] = vi.readMapStart();
-          isArray[level] = false;
-          isEmpty[level] = counts[level] == 0;
-          continue;
-        }
-      case ']':
-        assertEquals(0, counts[level]);
-        if (!isEmpty[level]) {
-          assertEquals(0, vi.arrayNext());
-        }
-        level--;
-        break;
-      case '}':
-        assertEquals(0, counts[level]);
-        if (!isEmpty[level]) {
-          assertEquals(0, vi.mapNext());
-        }
-        level--;
-        break;
-      case 's':
-        if (counts[level] == 0) {
-          if (isArray[level]) {
-            counts[level] = vi.arrayNext();
+        case 'I':
+          assertEquals(msg, values[p++], vi.readInt());
+          break;
+        case 'L':
+          assertEquals(msg, values[p++], vi.readLong());
+          break;
+        case 'F':
+          if (!(values[p] instanceof Float))
+            fail();
+          float f = (Float) values[p++];
+          assertEquals(msg, f, vi.readFloat(), Math.abs(f / 1000));
+          break;
+        case 'D':
+          if (!(values[p] instanceof Double))
+            fail();
+          double d = (Double) values[p++];
+          assertEquals(msg, d, vi.readDouble(), Math.abs(d / 1000));
+          break;
+        case 'S':
+          extractInt(cs);
+          if (level == skipLevel) {
+            vi.skipString();
+            p++;
           } else {
-            counts[level] = vi.mapNext();
+            String s = (String) values[p++];
+            assertEquals(msg, new Utf8(s), vi.readString(null));
+          }
+          break;
+        case 'K':
+          extractInt(cs);
+          if (level == skipLevel) {
+            vi.skipString();
+            p++;
+          } else {
+            String s = (String) values[p++];
+            assertEquals(msg, new Utf8(s), vi.readString(null));
+          }
+          break;
+        case 'b':
+          extractInt(cs);
+          if (level == skipLevel) {
+            vi.skipBytes();
+            p++;
+          } else {
+            byte[] bb = (byte[]) values[p++];
+            ByteBuffer bb2 = vi.readBytes(null);
+            byte[] actBytes = new byte[bb2.remaining()];
+            System.arraycopy(bb2.array(), bb2.position(), actBytes, 0, bb2.remaining());
+            assertArrayEquals(msg, bb, actBytes);
+          }
+          break;
+        case 'f': {
+          int len = extractInt(cs);
+          if (level == skipLevel) {
+            vi.skipFixed(len);
+            p++;
+          } else {
+            byte[] bb = (byte[]) values[p++];
+            byte[] actBytes = new byte[len];
+            vi.readFixed(actBytes);
+            assertArrayEquals(msg, bb, actBytes);
           }
         }
-        counts[level]--;
-        continue;
-      case 'c':
-        extractInt(cs);
-        continue;
-      case 'U': {
-        int idx = extractInt(cs);
-        assertEquals(idx, vi.readIndex());
-        continue;
-      }
-      case 'R':
-        ((ResolvingDecoder) vi).readFieldOrder();
-        continue;
-      default:
-        fail();
+          break;
+        case 'e': {
+          int e = extractInt(cs);
+          if (level == skipLevel) {
+            vi.readEnum();
+          } else {
+            assertEquals(msg, e, vi.readEnum());
+          }
+        }
+          break;
+        case '[':
+          if (level == skipLevel) {
+            p += skip(msg, cs, vi, true);
+            break;
+          } else {
+            level++;
+            counts[level] = vi.readArrayStart();
+            isArray[level] = true;
+            isEmpty[level] = counts[level] == 0;
+            continue;
+          }
+        case '{':
+          if (level == skipLevel) {
+            p += skip(msg, cs, vi, false);
+            break;
+          } else {
+            level++;
+            counts[level] = vi.readMapStart();
+            isArray[level] = false;
+            isEmpty[level] = counts[level] == 0;
+            continue;
+          }
+        case ']':
+          assertEquals(msg, 0, counts[level]);
+          if (!isEmpty[level]) {
+            assertEquals(msg, 0, vi.arrayNext());
+          }
+          level--;
+          break;
+        case '}':
+          assertEquals(0, counts[level]);
+          if (!isEmpty[level]) {
+            assertEquals(msg, 0, vi.mapNext());
+          }
+          level--;
+          break;
+        case 's':
+          if (counts[level] == 0) {
+            if (isArray[level]) {
+              counts[level] = vi.arrayNext();
+            } else {
+              counts[level] = vi.mapNext();
+            }
+          }
+          counts[level]--;
+          continue;
+        case 'c':
+          extractInt(cs);
+          continue;
+        case 'U': {
+          int idx = extractInt(cs);
+          assertEquals(msg, idx, vi.readIndex());
+          continue;
+        }
+        case 'R':
+          ((ResolvingDecoder) vi).readFieldOrder();
+          continue;
+        default:
+          fail(msg);
+        }
+      } catch (RuntimeException e) {
+        throw new RuntimeException(msg, e);
       }
     }
-    assertEquals(values.length, p);
+    assertEquals(msg, values.length, p);
   }
 
-  private static int skip(InputScanner cs, Decoder vi, boolean isArray) throws IOException {
+  private static int skip(String msg, InputScanner cs, Decoder vi, boolean isArray) throws IOException {
     final char end = isArray ? ']' : '}';
     if (isArray) {
-      assertEquals(0, vi.skipArray());
+      assertEquals(msg, 0, vi.skipArray());
     } else if (end == '}') {
-      assertEquals(0, vi.skipMap());
+      assertEquals(msg, 0, vi.skipMap());
     }
     int level = 0;
     int p = 0;

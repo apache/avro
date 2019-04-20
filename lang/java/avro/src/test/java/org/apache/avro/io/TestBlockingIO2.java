@@ -37,6 +37,7 @@ public class TestBlockingIO2 {
   private final Decoder decoder;
   private final String calls;
   private Object[] values;
+  private String msg;
 
   public TestBlockingIO2(int bufferSize, int skipLevel, String calls) throws IOException {
 
@@ -52,11 +53,12 @@ public class TestBlockingIO2 {
 
     decoder = DecoderFactory.get().binaryDecoder(bb, null);
     this.calls = calls;
+    this.msg = "Case: { " + bufferSize + ", " + skipLevel + ", \"" + calls + "\" }";
   }
 
   @Test
   public void testScan() throws IOException {
-    TestValidatingIO.check(decoder, calls, values, -1);
+    TestValidatingIO.check(msg, decoder, calls, values, -1);
   }
 
   @Parameterized.Parameters
