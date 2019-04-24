@@ -129,7 +129,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   }
 
   /**
-   * Same as {@link readFieldOrder} except that it returns <tt>null</tt> if there
+   * Same as {@link #readFieldOrder} except that it returns <tt>null</tt> if there
    * was no reordering of fields, i.e., if the correct thing for the reader to do
    * is to read (all) of its fields in the order specified by its own schema
    * (useful for optimizations).
