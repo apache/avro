@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,15 +71,11 @@ public class Protocol extends JsonProperties {
   public static final long VERSION = 1;
 
   // Support properties for both Protocol and Message objects
-  private static final Set<String> MESSAGE_RESERVED = new HashSet<>();
-  static {
-    Collections.addAll(MESSAGE_RESERVED, "doc", "response", "request", "errors", "one-way");
-  }
+  private static final Set<String> MESSAGE_RESERVED = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("doc", "response", "request", "errors", "one-way")));
 
-  private static final Set<String> FIELD_RESERVED = new HashSet<>();
-  static {
-    Collections.addAll(FIELD_RESERVED, "name", "type", "doc", "default", "aliases");
-  }
+  private static final Set<String> FIELD_RESERVED = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("name", "type", "doc", "default", "aliases")));
 
   /** A protocol message. */
   public class Message extends JsonProperties {
@@ -264,10 +261,8 @@ public class Protocol extends JsonProperties {
     SYSTEM_ERRORS = Schema.createUnion(errors);
   }
 
-  private static final Set<String> PROTOCOL_RESERVED = new HashSet<>();
-  static {
-    Collections.addAll(PROTOCOL_RESERVED, "namespace", "protocol", "doc", "messages", "types", "errors");
-  }
+  private static final Set<String> PROTOCOL_RESERVED = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("namespace", "protocol", "doc", "messages", "types", "errors")));
 
   private Protocol() {
     super(PROTOCOL_RESERVED);
