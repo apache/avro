@@ -101,11 +101,11 @@ do
         exit -1;
       fi
 
-      #runs RAT on artifacts
-      mvn -N -P rat antrun:run
+      # runs RAT on artifacts
+      mvn -N -P rat antrun:run verify
 
       mkdir -p dist
-      (cd build; tar czf ../dist/${SRC_DIR}.tar.gz ${SRC_DIR})
+      tar czf dist/${SRC_DIR}.tar.gz build/${SRC_DIR}
 
       # build lang-specific artifacts
 
