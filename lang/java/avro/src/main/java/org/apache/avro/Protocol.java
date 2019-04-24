@@ -71,13 +71,11 @@ public class Protocol extends JsonProperties {
   public static final long VERSION = 1;
 
   // Support properties for both Protocol and Message objects
-  private static final Set<String> MESSAGE_RESERVED =
-      Collections.unmodifiableSet(new HashSet<>(
-          Arrays.asList("doc", "response", "request", "errors", "one-way")));
+  private static final Set<String> MESSAGE_RESERVED = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("doc", "response", "request", "errors", "one-way")));
 
-  private static final Set<String> FIELD_RESERVED =
-      Collections.unmodifiableSet(new HashSet<>(
-          Arrays.asList("name", "type", "doc", "default", "aliases")));
+  private static final Set<String> FIELD_RESERVED = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("name", "type", "doc", "default", "aliases")));
 
   /** A protocol message. */
   public class Message extends JsonProperties {
@@ -263,9 +261,8 @@ public class Protocol extends JsonProperties {
     SYSTEM_ERRORS = Schema.createUnion(errors);
   }
 
-  private static final Set<String> PROTOCOL_RESERVED =
-      Collections.unmodifiableSet(new HashSet<>(Arrays.asList("namespace",
-          "protocol", "doc", "messages", "types", "errors")));
+  private static final Set<String> PROTOCOL_RESERVED = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("namespace", "protocol", "doc", "messages", "types", "errors")));
 
   private Protocol() {
     super(PROTOCOL_RESERVED);
@@ -374,8 +371,8 @@ public class Protocol extends JsonProperties {
   }
 
   /** Create a two-way message. */
-  public <T> Message createMessage(String name, String doc,
-      Map<String, ?> propMap, Schema request, Schema response, Schema errors) {
+  public <T> Message createMessage(String name, String doc, Map<String, ?> propMap, Schema request, Schema response,
+      Schema errors) {
     return new TwoWayMessage(name, doc, propMap, request, response, errors);
   }
 
