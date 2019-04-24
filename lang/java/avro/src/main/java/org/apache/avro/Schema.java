@@ -443,10 +443,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return (hashCode == other.hashCode) || (hashCode == NO_HASHCODE) || (other.hashCode == NO_HASHCODE);
   }
 
-  private static final Set<String> FIELD_RESERVED = new HashSet<>();
-  static {
-    Collections.addAll(FIELD_RESERVED, "default", "doc", "name", "order", "type", "aliases");
-  }
+  private static final Set<String> FIELD_RESERVED = Collections
+      .unmodifiableSet(new HashSet<>(Arrays.asList("default", "doc", "name", "order", "type", "aliases")));
 
   /** Returns true if this record is an union type. */
   public boolean isUnion() {
