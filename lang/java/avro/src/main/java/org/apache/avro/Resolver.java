@@ -129,9 +129,9 @@ public class Resolver {
    */
   public static abstract class Action {
     /** Helps us traverse faster. */
-    public static enum Type {
+    public enum Type {
       DO_NOTHING, ERROR, PROMOTE, CONTAINER, ENUM, SKIP, RECORD, WRITER_UNION, READER_UNION
-    };
+    }
 
     public final Schema writer, reader;
     public final Type type;
@@ -219,7 +219,6 @@ public class Resolver {
     }
 
     public String toString() {
-      String result;
       switch (this.error) {
       case INCOMPATIBLE_SCHEMA_TYPES:
       case NAMES_DONT_MATCH:
@@ -245,7 +244,7 @@ public class Resolver {
 
   /**
    * In this case, the writer's type needs to be promoted to the reader's. These
-   * are constructed by {@link Promote.resolve}, which will only construct one
+   * are constructed by {@link Promote#resolve}, which will only construct one
    * when the writer's and reader's schemas are different (ie, no "self
    * promotion"), and whent the promotion is one allowed by the Avro spec.
    */
@@ -259,8 +258,8 @@ public class Resolver {
      * 
      * @param w Writer's schema
      * @param r Rearder's schema
-     * @result a {@link Promote} schema if the two schemas are compatible, or
-     *         {@link ErrorType.INCOMPATIBLE_SCHEMA_TYPE} if they are not.
+     * @return a {@link Promote} schema if the two schemas are compatible, or
+     *         {@link ErrorType#INCOMPATIBLE_SCHEMA_TYPES} if they are not.
      * @throws IllegalArgumentException if <em>getType()</em> of the two schemas are
      *                                  not different.
      */
@@ -365,7 +364,7 @@ public class Resolver {
     private EnumAdjust(Schema w, Schema r, GenericData d, int[] adj) {
       super(w, r, d, Action.Type.ENUM);
       this.adjustments = adj;
-      boolean noAdj = true;
+      boolean noAdj;
       int rsymCount = r.getEnumSymbols().size();
       int count = Math.min(rsymCount, adj.length);
       noAdj = (adj.length <= rsymCount);
@@ -376,7 +375,7 @@ public class Resolver {
 
     /**
      * If writer and reader don't have same name, a
-     * {@link ErrorAction.Type.NAMES_DONT_MATCH} is returned, otherwise an
+     * {@link ErrorAction.ErrorType#NAMES_DONT_MATCH} is returned, otherwise an
      * appropriate {@link EnumAdjust} is.
      */
     public static Action resolve(Schema w, Schema r, GenericData d) {
@@ -396,11 +395,11 @@ public class Resolver {
   }
 
   /**
-   * This only appears inside {@link RecordAdjust.fieldActions}, i.e., the actions
+   * This only appears inside {@link RecordAdjust#fieldActions}, i.e., the actions
    * for adjusting the fields of a record. This action indicates that the writer's
    * schema has a field that the reader's does <em>not</em> have, and thus the
    * field should be skipped. Since there is no corresponding reader's schema for
-   * the writer's in this case, the {@link Action.reader} field is <tt>null</tt>
+   * the writer's in this case, the {@link Action#reader} field is <tt>null</tt>
    * for this subclass.
    */
   public static class Skip extends Action {
@@ -429,13 +428,14 @@ public class Resolver {
      * fields that will be read from the writer: these <i>n</i> are in the order
      * dictated by writer's schema. The remaining <i>m</i> fields will be read from
      * default values (actions for these default values are found in
-     * {@link defaults}.
+     * {@link RecordAdjust#defaults}.
      */
     public final Field[] readerOrder;
 
     /**
-     * Pointer into {@link readerOrder} of the first reader field whose value comes
-     * from a default value. Set to length of {@link readerOrder} if there are none.
+     * Pointer into {@link RecordAdjust#readerOrder} of the first reader field whose
+     * value comes from a default value. Set to length of
+     * {@link RecordAdjust#readerOrder} if there are none.
      */
     public final int firstDefault;
 

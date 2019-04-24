@@ -27,6 +27,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.io.Encoder;
+import org.apache.avro.message.MessageDecoder;
+import org.apache.avro.message.MessageEncoder;
 
 /** Base class for generated record classes. */
 public abstract class SpecificRecordBase
@@ -103,10 +105,11 @@ public abstract class SpecificRecordBase
   }
 
   /**
-   * Returns true iff an instance supports the {@link #encode} and {@link #decode}
-   * operations. Should only be used by <code>SpecificDatumReader/Writer</code> to
-   * selectively use {@link #customEncode} and {@link #customDecode} to optimize
-   * the (de)serialization of values.
+   * Returns true iff an instance supports the {@link MessageEncoder#encode} and
+   * {@link MessageDecoder#decode} operations. Should only be used by
+   * <code>SpecificDatumReader/Writer</code> to selectively use
+   * {@link #customEncode} and {@link #customDecode} to optimize the
+   * (de)serialization of values.
    */
   protected boolean hasCustomCoders() {
     return false;
