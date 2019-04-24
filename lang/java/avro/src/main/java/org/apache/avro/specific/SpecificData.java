@@ -117,7 +117,7 @@ public class SpecificData extends GenericData {
 
   @Override
   public DatumReader createDatumReader(Schema schema) {
-    return new SpecificDatumReader(schema, schema, this);
+    return createDatumReader(schema, schema);
   }
 
   @Override
@@ -491,10 +491,36 @@ public class SpecificData extends GenericData {
     return (c.isInstance(old) ? old : newInstance(c, schema));
   }
 
+  @SuppressWarnings("rawtypes")
+  @Override
+  /**
+   * Create an InstanceSupplier that caches all information required for the
+   * creation of a schema record instance rather than having to look them up for
+   * each call (as newRecord would)
+   */
+  public InstanceSupplier getNewRecordSupplier(Schema schema) {
+    Class c = getClass(schema);
+    if (c == null) {
+      return super.getNewRecordSupplier(schema);
+    }
+
+    boolean useSchema = SchemaConstructable.class.isAssignableFrom(c);
+    Constructor meth = (Constructor) CTOR_CACHE.get(c);
+    Object[] params = useSchema ? new Object[] { schema } : (Object[]) null;
+
+    return (old, sch) -> {
+      try {
+        return c.isInstance(old) ? old : meth.newInstance(params);
+      } catch (ReflectiveOperationException e) {
+        throw new RuntimeException(e);
+      }
+    };
+  }
+
   /**
    * Tag interface that indicates that a class has a one-argument constructor that
    * accepts a Schema.
-   * 
+   *
    * @see #newInstance
    */
   public interface SchemaConstructable {

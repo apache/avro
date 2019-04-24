@@ -218,6 +218,7 @@ public class Resolver {
       this.error = e;
     }
 
+    @Override
     public String toString() {
       String result;
       switch (this.error) {
@@ -256,7 +257,7 @@ public class Resolver {
 
     /**
      * Return a promotion.
-     * 
+     *
      * @param w Writer's schema
      * @param r Rearder's schema
      * @result a {@link Promote} schema if the two schemas are compatible, or
@@ -360,9 +361,10 @@ public class Resolver {
    */
   public static class EnumAdjust extends Action {
     public final int[] adjustments;
+    public final Object[] values;
     public final boolean noAdjustmentsNeeded;
 
-    private EnumAdjust(Schema w, Schema r, GenericData d, int[] adj) {
+    private EnumAdjust(Schema w, Schema r, GenericData d, int[] adj, Object[] values) {
       super(w, r, d, Action.Type.ENUM);
       this.adjustments = adj;
       boolean noAdj = true;
@@ -372,6 +374,7 @@ public class Resolver {
       for (int i = 0; noAdj && i < count; i++)
         noAdj &= (i == adj[i]);
       this.noAdjustmentsNeeded = noAdj;
+      this.values = values;
     }
 
     /**
@@ -387,11 +390,17 @@ public class Resolver {
       final List<String> rsymbols = r.getEnumSymbols();
       final int defaultIndex = (r.getEnumDefault() == null ? -1 : rsymbols.indexOf(r.getEnumDefault()));
       int[] adjustments = new int[wsymbols.size()];
+      Object[] values = new Object[wsymbols.size()];
+      Object defaultValue = (defaultIndex == -1) ? null : d.createEnum(r.getEnumDefault(), r);
       for (int i = 0; i < adjustments.length; i++) {
         int j = rsymbols.indexOf(wsymbols.get(i));
-        adjustments[i] = (0 <= j ? j : defaultIndex);
+        if (j < 0) {
+          j = defaultIndex;
+        }
+        adjustments[i] = j;
+        values[i] = (j == defaultIndex) ? defaultValue : d.createEnum(rsymbols.get(j), r);
       }
-      return new EnumAdjust(w, r, d, adjustments);
+      return new EnumAdjust(w, r, d, adjustments, values);
     }
   }
 
@@ -448,6 +457,11 @@ public class Resolver {
     public final Object[] defaults;
 
     /**
+     * Supplier that offers an optimized alternative to data.newRecord()
+     */
+    public final GenericData.InstanceSupplier instanceSupplier;
+
+    /**
      * Returns true iff <code>i&nbsp;==&nbsp;readerOrder[i].pos()</code> for all
      * indices <code>i</code>. Which is to say: the order of the reader's fields is
      * the same in both the reader's and writer's schema.
@@ -465,6 +479,7 @@ public class Resolver {
       this.readerOrder = ro;
       this.firstDefault = firstD;
       this.defaults = defaults;
+      this.instanceSupplier = d.getNewRecordSupplier(r);
     }
 
     /**
@@ -472,7 +487,7 @@ public class Resolver {
      * if there was a problem resolving. An {@link ErrorAction} is returned when
      * either the two record-schemas don't have the same name, or if the writer is
      * missing a field for which the reader does not have a default value.
-     * 
+     *
      * @throws RuntimeException if writer and reader schemas are not both records
      */
     static Action resolve(Schema w, Schema r, GenericData d, Map<SeenPair, Action> seen) {
@@ -584,7 +599,7 @@ public class Resolver {
      * Returns a {@link ReaderUnion} action for resolving <tt>w</tt> and <tt>r</tt>,
      * or an {@link ErrorAction} if there is no branch in the reader that matches
      * the writer.
-     * 
+     *
      * @throws RuntimeException if <tt>r</tt> is not a union schema or <tt>w</tt>
      *                          <em>is</em> a union schema
      */

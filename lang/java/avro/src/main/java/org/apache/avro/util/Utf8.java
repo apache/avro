@@ -80,7 +80,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   /**
    * Return length in bytes.
-   * 
+   *
    * @deprecated call {@link #getByteLength()} instead.
    */
   @Deprecated
@@ -96,7 +96,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   /**
    * Set length in bytes. Should called whenever byte content changes, even if the
    * length does not change, as this also clears the cached String.
-   * 
+   *
    * @deprecated call {@link #setByteLength(int)} instead.
    */
   @Deprecated
@@ -127,6 +127,16 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     this.bytes = getBytesFor(string);
     this.length = bytes.length;
     this.string = string;
+    return this;
+  }
+
+  public Utf8 set(Utf8 other) {
+    if (this.bytes.length < other.length) {
+      this.bytes = new byte[other.length];
+    }
+    this.length = other.length;
+    System.arraycopy(other.bytes, 0, bytes, 0, length);
+    this.string = other.string;
     return this;
   }
 

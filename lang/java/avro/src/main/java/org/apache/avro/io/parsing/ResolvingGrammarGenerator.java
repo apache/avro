@@ -54,7 +54,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
-   * 
+   *
    * @param writer The schema used by the writer
    * @param reader The schema used by the reader
    * @return The start symbol for the resolving grammar
@@ -224,7 +224,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Returns the Avro binary encoded version of <tt>n</tt> according to the schema
    * <tt>s</tt>.
-   * 
+   *
    * @param s The schema for encoding
    * @param n The Json node that has the value to be encoded.
    * @return The binary encoded version of <tt>n</tt>.
@@ -241,13 +241,13 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt> according
    * to the schema <tt>s</tt>.
-   * 
+   *
    * @param e The encoder to encode into.
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.
    * @throws IOException
    */
-  static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
+  public static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
     switch (s.getType()) {
     case RECORD:
       for (Field f : s.getFields()) {

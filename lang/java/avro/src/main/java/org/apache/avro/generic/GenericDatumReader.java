@@ -44,6 +44,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private final GenericData data;
   private Schema actual;
   private Schema expected;
+  private DatumReader<D> fastDatumReader = null;
 
   private ResolvingDecoder creatorResolver = null;
   private final Thread creator;
@@ -90,6 +91,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       expected = actual;
     }
     creatorResolver = null;
+    fastDatumReader = null;
   }
 
   /** Get the reader's schema. */
@@ -139,6 +141,15 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @Override
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
+    if (data.isFastReaderEnabled()) {
+      DatumReader<D> localFastReader = this.fastDatumReader;
+      if (localFastReader == null) {
+        localFastReader = data.getFastReaderBuilder().createDatumReader(actual, expected);
+        this.fastDatumReader = localFastReader;
+      }
+      return localFastReader.read(reuse, in);
+    }
+
     ResolvingDecoder resolver = getResolver(actual, expected);
     resolver.configure(in);
     D result = (D) read(reuse, expected, resolver);
@@ -203,7 +214,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /**
    * Convert a underlying representation of a logical type (such as a ByteBuffer)
    * to a higher level object (such as a BigDecimal).
-   * 
+   *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
    *                                  Please be noticed that the exception type
@@ -379,7 +390,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations. By default, returns {@link GenericFixed}.
-   * 
+   *
    * @deprecated As of Avro 1.6.0 this method has been moved to
    *             {@link GenericData#createFixed(Object, Schema)}
    */
@@ -391,7 +402,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations. By default, returns {@link GenericFixed}.
-   * 
+   *
    * @deprecated As of Avro 1.6.0 this method has been moved to
    *             {@link GenericData#createFixed(Object, byte[], Schema)}
    */
@@ -407,7 +418,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * they should either be removed from the old object, or it should create a new
    * instance that conforms to the schema. By default, this returns a
    * {@link GenericData.Record}.
-   * 
+   *
    * @deprecated As of Avro 1.6.0 this method has been moved to
    *             {@link GenericData#newRecord(Object, Schema)}
    */
@@ -423,14 +434,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   @SuppressWarnings("unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericArray) {
-      ((GenericArray) old).reset();
-      return old;
-    } else if (old instanceof Collection) {
-      ((Collection) old).clear();
-      return old;
-    } else
-      return new GenericData.Array(size, schema);
+    return data.newArray(old, size, schema);
   }
 
   /**
@@ -439,11 +443,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   @SuppressWarnings("unchecked")
   protected Object newMap(Object old, int size) {
-    if (old instanceof Map) {
-      ((Map) old).clear();
-      return old;
-    } else
-      return new HashMap<>(size);
+    return data.newMap(old, size);
   }
 
   /**
