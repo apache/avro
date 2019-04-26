@@ -90,6 +90,14 @@ class TestLogicalTypes < Test::Unit::TestCase
     assert_equal Time.utc(2015, 5, 28, 21, 46, 53, 221843), type.decode(1432849613221843)
   end
 
+  def test_parse_fixed_duration
+    schema = Avro::Schema.parse <<-SCHEMA
+      { "type": "fixed", "size": 12, "name": "fixed_dur", "logicalType": "duration" }
+    SCHEMA
+
+    assert_equal 'duration', schema.logical_type
+  end
+
   def encode(datum, schema)
     buffer = StringIO.new("")
     encoder = Avro::IO::BinaryEncoder.new(buffer)
