@@ -355,7 +355,7 @@ module Avro
         unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
-        super(:fixed, name, space, names, logical_type)
+        super(:fixed, name, space, names, nil, logical_type)
         @size = size
       end
 
