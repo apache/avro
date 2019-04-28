@@ -594,6 +594,21 @@ public class TestSchema {
     assertEquals(s2, s3);
   }
 
+  @Test
+  public void testAliasesSelfReferential() {
+    String t1 = "{\"type\":\"record\",\"name\":\"a\",\"fields\":[{\"name\":\"f\",\"type\":{\"type\":\"record\",\"name\":\"C\",\"fields\":[{\"name\":\"c\",\"type\":{\"type\":\"array\",\"items\":[\"null\",\"C\"]}}]}}]}";
+    String t2 = "{\"type\":\"record\",\"name\":\"x\",\"fields\":[{\"name\":\"f\",\"type\":{\"type\":\"record\",\"name\":\"C\",\"fields\":[{\"name\":\"d\",\"type\":{\"type\":\"array\",\"items\":[\"null\",\"C\"]},\"aliases\":[\"c\"]}]}}],\"aliases\":[\"a\"]}";
+    Schema s1 = new Schema.Parser().parse(t1);
+    Schema s2 = new Schema.Parser().parse(t2);
+
+    assertEquals(s1.getAliases(), Collections.emptySet());
+    assertEquals(s2.getAliases(), Collections.singleton("a"));
+
+    Schema s3 = Schema.applyAliases(s1, s2);
+    assertNotSame(s2, s3);
+    assertEquals(s2, s3);
+  }
+
   private static void check(File dst, String schemaJson, String defaultJson, Object defaultValue) throws Exception {
     check(dst, schemaJson, defaultJson, defaultValue, true);
   }
