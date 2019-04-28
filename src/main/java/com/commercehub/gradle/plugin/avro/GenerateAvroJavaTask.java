@@ -147,8 +147,10 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
         parsedFieldVisibility =
             Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), getFieldVisibility());
-        parsedDateTimeLogicalTypeImplementation =
-            Enums.parseCaseInsensitive(OPTION_DATE_TIME_LOGICAL_TYPE, SpecificCompiler.DateTimeLogicalTypeImplementation.values(), getDateTimeLogicalType());
+        parsedDateTimeLogicalTypeImplementation = Enums.parseCaseInsensitive(
+            OPTION_DATE_TIME_LOGICAL_TYPE,
+            SpecificCompiler.DateTimeLogicalTypeImplementation.values(), getDateTimeLogicalType()
+        );
 
         getLogger().debug("Using outputCharacterEncoding {}", getOutputCharacterEncoding());
         getLogger().debug("Using stringType {}", parsedStringType.name());

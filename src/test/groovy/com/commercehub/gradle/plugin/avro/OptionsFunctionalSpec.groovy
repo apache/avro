@@ -15,14 +15,13 @@
  */
 package com.commercehub.gradle.plugin.avro
 
-import org.apache.avro.compiler.specific.SpecificCompiler
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility
 import org.apache.avro.generic.GenericData.StringType
-import spock.lang.Ignore
 import spock.lang.Unroll
 
 import java.nio.ByteBuffer
 
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.*
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
@@ -30,7 +29,7 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}.
  */
 class OptionsFunctionalSpec extends FunctionalSpec {
-    static def actualDateTimeImplementationDefault = SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT == SpecificCompiler.DateTimeLogicalTypeImplementation.JSR310 ? "java.time.LocalDate" : "org.joda.time.LocalDate"
+    static actualDateTimeImplementationDefault = DEFAULT == JSR310 ? "java.time.LocalDate" : "org.joda.time.LocalDate"
 
     def "setup"() {
         applyAvroPlugin()
@@ -266,10 +265,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         content.contains("public void setBirthDate(${fieldClz} value)")
 
         where:
-        dateTimeLogicalType                                                              | fieldClz
-        SpecificCompiler.DateTimeLogicalTypeImplementation.JODA.name()                   | "org.joda.time.LocalDate"
-        SpecificCompiler.DateTimeLogicalTypeImplementation.JODA.name().toLowerCase()     | "org.joda.time.LocalDate"
-        SpecificCompiler.DateTimeLogicalTypeImplementation.JSR310.name()                 | "java.time.LocalDate"
+        dateTimeLogicalType       | fieldClz
+        JODA.name()               | "org.joda.time.LocalDate"
+        JODA.name().toLowerCase() | "org.joda.time.LocalDate"
+        JSR310.name()             | "java.time.LocalDate"
     }
 
     def "rejects unsupported dateTimeLogicalType values"() {
