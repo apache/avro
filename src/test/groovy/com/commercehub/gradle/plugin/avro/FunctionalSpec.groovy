@@ -63,7 +63,7 @@ abstract class FunctionalSpec extends Specification {
             repositories {
                 jcenter()
                 maven {
-                    url 'https://repository.apache.org/content/repositories/snapshots/'
+                    url 'https://repository.apache.org/content/repositories/staging/'
                 }
             }
         """
