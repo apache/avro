@@ -153,6 +153,7 @@ do
 
       for f in $(find dist -type f \
         \! -name '*.md5' \! -name '*.sha1' \
+        \! -name '*.sha512' \! -name '*.sha256' \
         \! -name '*.asc' \! -name '*.txt' );
       do
         (cd `dirname $f`; shasum -a 512 `basename $f`) > $f.sha512
