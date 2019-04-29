@@ -105,7 +105,7 @@ do
       mvn -N -P rat antrun:run verify
 
       mkdir -p dist
-      tar czf dist/${SRC_DIR}.tar.gz build/${SRC_DIR}
+      (cd build; tar czf ../dist/${SRC_DIR}.tar.gz ${SRC_DIR})
 
       # build lang-specific artifacts
 
