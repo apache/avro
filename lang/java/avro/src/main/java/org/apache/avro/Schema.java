@@ -888,7 +888,7 @@ public abstract class Schema extends JsonProperties {
       boolean first = seen.isEmpty();
       try {
         seen.add(here);
-        return fields.equals(((RecordSchema) o).fields);
+        return Objects.equals(fields, that.fields);
       } finally {
         if (first)
           seen.clear();
