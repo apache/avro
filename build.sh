@@ -155,8 +155,7 @@ do
         \! -name '*.md5' \! -name '*.sha1' \
         \! -name '*.asc' \! -name '*.txt' );
       do
-        (cd `dirname $f`; md5sum `basename $f`) > $f.md5
-        (cd `dirname $f`; sha1sum `basename $f`) > $f.sha1
+        (cd `dirname $f`; shasum -a 512 `basename $f`) > $f.sha512
         gpg --passphrase $password --armor --output $f.asc --detach-sig $f
       done
 
