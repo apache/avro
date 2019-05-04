@@ -65,9 +65,6 @@ AVRO_RPC_MIME = 'avro/binary'
 
 # protocol cache
 
-# Map: remote name -> remote MD5 hash
-_REMOTE_HASHES = {}
-
 # Decoder/encoder for a 32 bits big-endian integer.
 UINT32_BE = avro_io.STRUCT_INT
 
@@ -159,10 +156,6 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
       encoder: Encoder to write the handshake request into.
     """
     local_hash = self._local_protocol.md5
-
-    # if self._remote_hash is None:
-    #   remote_name = self.transceiver.remote_name
-    #   self._remote_hash = _REMOTE_HASHES.get(remote_name)
 
     if self._remote_hash is None:
       self._remote_hash = local_hash
