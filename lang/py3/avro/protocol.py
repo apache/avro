@@ -25,6 +25,7 @@ import hashlib
 import json
 import logging
 from types import MappingProxyType
+from typing import Any, Dict, Generator, List, Mapping, Optional, Tuple, Union
 
 from avro import schema
 
@@ -41,18 +42,16 @@ VALID_TYPE_SCHEMA_TYPES = frozenset(['enum', 'record', 'error', 'fixed'])
 
 class ProtocolParseException(schema.AvroException):
   """Error while parsing a JSON protocol descriptor."""
-  pass
 
 
 # ------------------------------------------------------------------------------
 # Base Classes
 
-
 class Protocol(object):
   """An application protocol."""
 
   @staticmethod
-  def _ParseTypeDesc(type_desc, names):
+  def _ParseTypeDesc(type_desc: str, names: schema.Names) -> schema.Schema:
     type_schema = schema.SchemaFromJSONData(type_desc, names=names)
     if type_schema.type not in VALID_TYPE_SCHEMA_TYPES:
       raise ProtocolParseException(
@@ -62,7 +61,7 @@ class Protocol(object):
     return type_schema
 
   @staticmethod
-  def _ParseMessageDesc(name, message_desc, names):
+  def _ParseMessageDesc(name: str, message_desc: Dict[str, str], names: schema.Names) -> Message:
     """Parses a protocol message descriptor.
 
     Args:
@@ -107,7 +106,7 @@ class Protocol(object):
     )
 
   @staticmethod
-  def _ParseMessageDescMap(message_desc_map, names):
+  def _ParseMessageDescMap(message_desc_map: Dict[str, Dict[str, str]], names: schema.Names) -> Generator[Message, None, None]:
     for name, message_desc in message_desc_map.items():
       yield Protocol._ParseMessageDesc(
           name=name,
@@ -117,11 +116,11 @@ class Protocol(object):
 
   def __init__(
       self,
-      name,
-      namespace=None,
-      types=tuple(),
-      messages=tuple(),
-  ):
+      name: str,
+      namespace: Optional[str]=None,
+      types: Tuple[schema.Schema, ...]=(),
+      messages: Tuple[Message, ...]=(),
+  ) -> None:
     """Initializes a new protocol object.
 
     Args:
@@ -135,7 +134,7 @@ class Protocol(object):
     self._name = self._avro_name.simple_name
     self._namespace = self._avro_name.namespace
 
-    self._props = {}
+    self._props = {} # type: Dict[str, str]
     self._props['name'] = self._name
     if self._namespace:
       self._props['namespace'] = self._namespace
@@ -165,50 +164,50 @@ class Protocol(object):
     self._md5 = hashlib.md5(str(self).encode('utf-8')).digest()
 
   @property
-  def name(self):
+  def name(self) -> str:
     """Returns: the simple name of the protocol."""
     return self._name
 
   @property
-  def namespace(self):
+  def namespace(self) -> str:
     """Returns: the namespace this protocol belongs to."""
     return self._namespace
 
   @property
-  def fullname(self):
+  def fullname(self) -> str:
     """Returns: the fully qualified name of this protocol."""
     return self._fullname
 
   @property
-  def types(self):
+  def types(self) -> Tuple[schema.Schema, ...]:
     """Returns: the collection of types declared in this protocol."""
     return self._types
 
   @property
-  def type_map(self):
+  def type_map(self) -> Mapping[str, schema.Schema]:
     """Returns: the map of types in this protocol, indexed by their full name."""
     return self._type_map
 
   @property
-  def messages(self):
+  def messages(self) -> Tuple[Message, ...]:
     """Returns: the collection of messages declared in this protocol."""
     return self._messages
 
   @property
-  def message_map(self):
+  def message_map(self) -> Mapping[str, Message]:
     """Returns: the map of messages in this protocol, indexed by their name."""
     return self._message_map
 
   @property
-  def md5(self):
+  def md5(self) -> bytes:
     return self._md5
 
   @property
-  def props(self):
+  def props(self) -> Mapping[str, str]:
     return self._props
 
-  def to_json(self):
-    to_dump = {}
+  def to_json(self) -> Dict[str, Union[str, Dict, List]]:
+    to_dump = {} # type: Dict[str, Union[str, Dict, List]]
     to_dump['protocol'] = self.name
     names = schema.Names(default_namespace=self.namespace)
     if self.namespace:
@@ -222,10 +221,10 @@ class Protocol(object):
       to_dump['messages'] = messages_dict
     return to_dump
 
-  def __str__(self):
+  def __str__(self) -> str:
     return json.dumps(self.to_json(), cls=schema.MappingProxyEncoder)
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
@@ -237,7 +236,7 @@ class Message(object):
   """A Protocol message."""
 
   @staticmethod
-  def _ParseRequestFromJSONDesc(request_desc, names):
+  def _ParseRequestFromJSONDesc(request_desc: List[schema.Field], names: schema.Names) -> schema.RecordSchema:
     """Parses the request descriptor of a protocol message.
 
     Args:
@@ -257,7 +256,7 @@ class Message(object):
     )
 
   @staticmethod
-  def _ParseResponseFromJSONDesc(response_desc, names):
+  def _ParseResponseFromJSONDesc(response_desc: schema.Schema, names: schema.Names) -> schema.Schema:
     """Parses the response descriptor of a protocol message.
 
     Args:
@@ -269,7 +268,7 @@ class Message(object):
     return schema.SchemaFromJSONData(response_desc, names=names)
 
   @staticmethod
-  def _ParseErrorsFromJSONDesc(errors_desc, names):
+  def _ParseErrorsFromJSONDesc(errors_desc: schema.Schema , names: schema.Names) -> schema.Schema:
     """Parses the errors descriptor of a protocol message.
 
     Args:
@@ -286,38 +285,38 @@ class Message(object):
     }
     return schema.SchemaFromJSONData(error_union_desc, names=names)
 
-  def __init__(self,  name, request, response, errors=None):
+  def __init__(self, name: str, request: Message, response: Message, errors: Optional[schema.Schema]=None) -> None:
     self._name = name
 
-    self._props = {}
+    self._props = {} # type: Dict[str, str]
     # TODO: set properties
     self._request = request
     self._response = response
     self._errors = errors
 
   @property
-  def name(self):
+  def name(self) -> str:
     return self._name
 
   @property
-  def request(self):
+  def request(self) -> Message:
     return self._request
 
   @property
-  def response(self):
+  def response(self) -> Message:
     return self._response
 
   @property
-  def errors(self):
+  def errors(self) -> schema.Schema:
     return self._errors
 
-  def props(self):
+  def props(self) -> Mapping[str, str]:
     return self._props
 
-  def __str__(self):
+  def __str__(self) -> str:
     return json.dumps(self.to_json(), cls=schema.MappingProxyEncoder)
 
-  def to_json(self, names=None):
+  def to_json(self, names: Optional[schema.Names]=None) -> Dict[str, Dict]:
     if names is None:
       names = schema.Names()
     to_dump = {}
@@ -327,14 +326,14 @@ class Message(object):
       to_dump['errors'] = self.errors.to_json(names)
     return to_dump
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     return self.name == that.name and self.props == that.props
 
 
 # ------------------------------------------------------------------------------
 
 
-def ProtocolFromJSONData(json_data):
+def ProtocolFromJSONData(json_data: Dict[str, Union[str, Dict[str, Dict[str, str]]]]) -> Protocol:
   """Builds an Avro  Protocol from its JSON descriptor.
 
   Args:
@@ -375,7 +374,7 @@ def ProtocolFromJSONData(json_data):
   )
 
 
-def Parse(json_string):
+def Parse(json_string: str) -> Protocol:
   """Constructs a Protocol from its JSON descriptor in text form.
 
   Args:
