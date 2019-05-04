@@ -26,6 +26,10 @@ import logging
 import lzma
 import os
 import zlib
+from collections.abc import Iterable
+from types import TracebackType
+from typing import BinaryIO, Dict, Optional, Type, Union
+from warnings import warn
 
 from avro import io as avro_io
 from avro import schema
@@ -126,18 +130,18 @@ class DataFileWriter(object):
   """Writes Avro data files."""
 
   @staticmethod
-  def GenerateSyncMarker():
+  def GenerateSyncMarker() -> bytes:
     """Generates a random synchronization marker."""
     return os.urandom(SYNC_SIZE)
 
   # TODO: make 'encoder' a metadata property
   def __init__(
       self,
-      writer,
-      datum_writer,
-      writer_schema=None,
-      codec=NULL_CODEC,
-  ):
+      writer: BinaryIO,
+      datum_writer: avro_io.DatumWriter,
+      writer_schema: Optional[schema.Schema] = None,
+      codec: str = NULL_CODEC,
+  ) -> None:
     """Constructs a new DataFileWriter instance.
 
     If the schema is not present, presume we're appending.
@@ -154,7 +158,7 @@ class DataFileWriter(object):
     self._buffer_writer = io.BytesIO()
     self._buffer_encoder = avro_io.BinaryEncoder(self._buffer_writer)
     self._block_count = 0
-    self._meta = {}
+    self._meta = {}  # type: Dict[str, bytes]
 
     # Ensure we have a writer that accepts bytes:
     self._writer.write(b'')
@@ -190,42 +194,47 @@ class DataFileWriter(object):
   # read-only properties
 
   @property
-  def writer(self):
+  def writer(self) -> BinaryIO:
     return self._writer
 
   @property
-  def encoder(self):
+  def encoder(self) -> avro_io.BinaryEncoder:
     return self._encoder
 
   @property
-  def datum_writer(self):
+  def datum_writer(self) -> avro_io.DatumWriter:
     return self._datum_writer
 
   @property
-  def buffer_encoder(self):
+  def buffer_encoder(self) -> avro_io.BinaryEncoder:
     return self._buffer_encoder
 
   @property
-  def sync_marker(self):
+  def sync_marker(self) -> bytes:
     return self._sync_marker
 
   @property
-  def meta(self):
+  def meta(self) -> Dict[str, bytes]:
     return self._meta
 
-  def __enter__(self):
+  def __enter__(self) -> DataFileWriter:
     return self
 
-  def __exit__(self, type, value, traceback):
+  def __exit__(
+      self,
+      exc_type: Type[Exception],
+      exc_value: Exception,
+      traceback: TracebackType,
+  ) -> None:
     # Perform a close if there's no exception
-    if type is None:
+    if exc_type is None:
       self.close()
 
   @property
-  def block_count(self):
+  def block_count(self) -> int:
     return self._block_count
 
-  def GetMeta(self, key):
+  def GetMeta(self, key: str) -> Optional[bytes]:
     """Reports the metadata associated to the given key.
 
     Args:
@@ -235,7 +244,7 @@ class DataFileWriter(object):
     """
     return self._meta.get(key)
 
-  def SetMeta(self, key, value):
+  def SetMeta(self, key: str, value: Union[str, bytes]) -> None:
     """Sets the metadata value for the given key.
 
     Note: metadata is persisted and retrieved as bytes.
@@ -251,7 +260,7 @@ class DataFileWriter(object):
         'Invalid metadata value for key %r: %r' % (key, value))
     self._meta[key] = value
 
-  def _WriteHeader(self):
+  def _WriteHeader(self) -> None:
     header = {
         'magic': MAGIC,
         'meta': self.meta,
@@ -264,7 +273,7 @@ class DataFileWriter(object):
     self._header_written = True
 
   # TODO: make a schema for blocks and use datum_writer
-  def _WriteBlock(self):
+  def _WriteBlock(self) -> None:
     if not self._header_written:
       self._WriteHeader()
 
@@ -324,7 +333,7 @@ class DataFileWriter(object):
     self._buffer_writer.truncate()
     self._block_count = 0
 
-  def append(self, datum):
+  def append(self, datum: bytes) -> None:
     """Append a datum to the file."""
     self.datum_writer.write(datum, self.buffer_encoder)
     self._block_count += 1
@@ -333,7 +342,7 @@ class DataFileWriter(object):
     if self._buffer_writer.tell() >= SYNC_INTERVAL:
       self._WriteBlock()
 
-  def sync(self):
+  def sync(self) -> int:
     """
     Return the current position as a value that may be passed to
     DataFileReader.seek(long). Forces the end of the current block,
@@ -342,12 +351,12 @@ class DataFileWriter(object):
     self._WriteBlock()
     return self.writer.tell()
 
-  def flush(self):
+  def flush(self) -> None:
     """Flush the current state of the file, including metadata."""
     self._WriteBlock()
     self.writer.flush()
 
-  def close(self):
+  def close(self) -> None:
     """Close the file."""
     self.flush()
     self.writer.close()
@@ -356,12 +365,12 @@ class DataFileWriter(object):
 # ------------------------------------------------------------------------------
 
 
-class DataFileReader(object):
+class DataFileReader(Iterable):
   """Read files written by DataFileWriter."""
 
   # TODO: allow user to specify expected schema?
   # TODO: allow user to specify the encoder
-  def __init__(self, reader, datum_reader):
+  def __init__(self, reader: BinaryIO, datum_reader: avro_io.DatumReader) -> None:
     """Initializes a new data file reader.
 
     Args:
@@ -392,53 +401,58 @@ class DataFileReader(object):
     self.datum_reader.writer_schema = (
         schema.Parse(self.GetMeta(SCHEMA_KEY).decode('utf-8')))
 
-  def __enter__(self):
+  def __enter__(self) -> DataFileReader:
     return self
 
-  def __exit__(self, type, value, traceback):
+  def __exit__(
+      self,
+      exc_type: Type[Exception],
+      exc_value: Exception,
+      traceback: TracebackType,
+  ) -> None:
     # Perform a close if there's no exception
-    if type is None:
+    if exc_type is None:
       self.close()
 
-  def __iter__(self):
+  def __iter__(self) -> DataFileReader:
     return self
 
   # read-only properties
   @property
-  def reader(self):
+  def reader(self) -> BinaryIO:
     return self._reader
 
   @property
-  def raw_decoder(self):
+  def raw_decoder(self) -> avro_io.BinaryDecoder:
     return self._raw_decoder
 
   @property
-  def datum_decoder(self):
+  def datum_decoder(self) -> avro_io.BinaryDecoder:
     return self._datum_decoder
 
   @property
-  def datum_reader(self):
+  def datum_reader(self) -> avro_io.DatumReader:
     return self._datum_reader
 
   @property
-  def sync_marker(self):
+  def sync_marker(self) -> bytes:
     return self._sync_marker
 
   @property
-  def meta(self):
+  def meta(self) -> Dict[str, bytes]:
     return self._meta
 
   @property
-  def file_length(self):
+  def file_length(self) -> int:
     """Length of the input file, in bytes."""
     return self._file_length
 
   # read/write properties
   @property
-  def block_count(self):
+  def block_count(self) -> int:
     return self._block_count
 
-  def GetMeta(self, key):
+  def GetMeta(self, key: str) -> Optional[bytes]:
     """Reports the value of a given metadata key.
 
     Args:
@@ -448,7 +462,7 @@ class DataFileReader(object):
     """
     return self._meta.get(key)
 
-  def SetMeta(self, key, value):
+  def SetMeta(self, key: str, value: bytes) -> None:
     """Sets a metadata.
 
     Args:
@@ -459,7 +473,7 @@ class DataFileReader(object):
       value = value.encode('utf-8')
     self._meta[key] = value
 
-  def _GetInputFileLength(self):
+  def _GetInputFileLength(self) -> int:
     """Reports the length of the input file, in bytes.
 
     Leaves the current position unmodified.
@@ -473,10 +487,10 @@ class DataFileReader(object):
     self.reader.seek(current_pos)
     return file_length
 
-  def is_EOF(self):
+  def is_EOF(self) -> bool:
     return self.reader.tell() == self.file_length
 
-  def _read_header(self):
+  def _read_header(self) -> None:
     # seek to the beginning of the file to get magic block
     self.reader.seek(0, 0)
 
@@ -496,7 +510,7 @@ class DataFileReader(object):
     # set sync marker
     self._sync_marker = header['sync']
 
-  def _read_block_header(self):
+  def _read_block_header(self) -> None:
     self._block_count = self.raw_decoder.read_long()
     if self.codec == NULL_CODEC:
       # Skip a long; we don't need to use the length.
@@ -521,7 +535,7 @@ class DataFileReader(object):
       data = self.raw_decoder.read(length - 4)
       uncompressed = snappy.decompress(data)
       self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
-      self.raw_decoder.check_crc32(uncompressed);
+      self.raw_decoder.check_crc32(uncompressed)
     elif self.codec == XZ_CODEC:
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length)
@@ -542,7 +556,7 @@ class DataFileReader(object):
     else:
       raise DataFileException("Unknown codec: %r" % self.codec)
 
-  def _skip_sync(self):
+  def _skip_sync(self) -> bool:
     """
     Read the length of the sync marker; if it matches the sync marker,
     return True. Otherwise, seek back to where we started and return False.
@@ -556,7 +570,7 @@ class DataFileReader(object):
 
   # TODO: handle block of length zero
   # TODO: clean this up with recursion
-  def __next__(self):
+  def __next__(self) -> str:
     """Return the next datum in the file."""
     if self.block_count == 0:
       if self.is_EOF():
@@ -571,7 +585,7 @@ class DataFileReader(object):
     self._block_count -= 1
     return datum
 
-  def close(self):
+  def close(self) -> None:
     """Close this reader."""
     self.reader.close()
 
