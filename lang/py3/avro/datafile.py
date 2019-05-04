@@ -403,10 +403,6 @@ class DataFileReader(object):
   def __iter__(self):
     return self
 
-  def __next__(self):
-    """Implements the iterator interface."""
-    return next(self)
-
   # read-only properties
   @property
   def reader(self):
