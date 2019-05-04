@@ -74,7 +74,7 @@ STRUCT_CRC32 = struct.Struct('>I')   # big-endian unsigned int
 
 class AvroTypeException(schema.AvroException):
   """Raised when datum is not an example of schema."""
-  def __init__(self, expected_schema: schema.Schema, datum: bytes) -> None:
+  def __init__(self, expected_schema: schema.Schema, datum: AvroTypes) -> None:
     pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
     fail_msg = "The datum %s is not an example of the schema %s"\
                % (datum, pretty_expected)
@@ -115,7 +115,7 @@ _valid['double'] = _valid['float']
 _valid['error_union'] = _valid['union']
 _valid['error'] = _valid['request'] = _valid['record']
 
-def Validate(expected_schema: schema.Schema, datum: bytes) -> bool:
+def Validate(expected_schema: schema.Schema, datum: AvroTypes) -> bool:
   """Determines if a python datum is an instance of a schema.
 
   Args:
@@ -300,7 +300,7 @@ class BinaryEncoder(object):
     """
     pass
 
-  def write_boolean(self, datum: bytes) -> None:
+  def write_boolean(self, datum: bool) -> None:
     """
     a boolean is written as a single byte
     whose value is either 0 (false) or 1 (true).
@@ -770,7 +770,7 @@ class DatumWriter(object):
   writer_schema = property(lambda self: self._writer_schema,
                             set_writer_schema)
 
-  def write(self, datum: bytes, encoder: BinaryEncoder) -> None:
+  def write(self, datum: AvroTypes, encoder: BinaryEncoder) -> None:
     # validate datum
     if not Validate(self.writer_schema, datum):
       raise AvroTypeException(self.writer_schema, datum)

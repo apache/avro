@@ -27,16 +27,18 @@ import io
 import logging
 import os
 import socketserver
+from typing import IO, Dict, Optional, Type
 
 from avro import io as avro_io
 from avro import protocol, schema
 
 logger = logging.getLogger(__name__)
 
+RequestDatumType = Dict[str, str]
 # ------------------------------------------------------------------------------
 # Constants
 
-def LoadResource(name):
+def LoadResource(name: str) -> str:
   dir_path = os.path.dirname(__file__)
   rsrc_path = os.path.join(dir_path, name)
   with open(rsrc_path, 'r') as f:
@@ -80,7 +82,7 @@ class AvroRemoteException(schema.AvroException):
   """
   Raised when an error message is sent by an Avro requestor or responder.
   """
-  def __init__(self, fail_msg=None):
+  def __init__(self, fail_msg: Optional[str]=None) -> None:
     schema.AvroException.__init__(self, fail_msg)
 
 class ConnectionClosedException(schema.AvroException):
@@ -94,7 +96,7 @@ class ConnectionClosedException(schema.AvroException):
 class BaseRequestor(object, metaclass=abc.ABCMeta):
   """Base class for the client side of a protocol interaction."""
 
-  def __init__(self, local_protocol, transceiver):
+  def __init__(self, local_protocol: protocol.Protocol, transceiver: Transceiver) -> None:
     """Initializes a new requestor object.
 
     Args:
@@ -108,17 +110,17 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     self._send_protocol = None
 
   @property
-  def local_protocol(self):
+  def local_protocol(self) -> protocol.Protocol:
     """Returns: the Avro Protocol describing the messages sent and received."""
     return self._local_protocol
 
   @property
-  def transceiver(self):
+  def transceiver(self) -> Transceiver:
     """Returns: the underlying channel used by this requestor."""
     return self._transceiver
 
   @abc.abstractmethod
-  def _IssueRequest(self, call_request, message_name, request_datum):
+  def _IssueRequest(self, call_request: bytes, message_name: str, request_datum: RequestDatumType) -> None:
     """TODO: Document this method.
 
     Args:
@@ -128,9 +130,8 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     Returns:
       ???
     """
-    raise Error('Abstract method')
 
-  def Request(self, message_name, request_datum):
+  def Request(self, message_name: str, request_datum: RequestDatumType) -> None:
     """Writes a request message and reads a response or error message.
 
     Args:
@@ -149,7 +150,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     call_request = buffer_writer.getvalue()
     return self._IssueRequest(call_request, message_name, request_datum)
 
-  def _WriteHandshakeRequest(self, encoder):
+  def _WriteHandshakeRequest(self, encoder: avro_io.BinaryEncoder) -> None:
     """Emits the handshake request.
 
     Args:
@@ -171,7 +172,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     logger.info('Sending handshake request: %s', request_datum)
     HANDSHAKE_REQUESTOR_WRITER.write(request_datum, encoder)
 
-  def _WriteCallRequest(self, message_name, request_datum, encoder):
+  def _WriteCallRequest(self, message_name: str, request_datum: RequestDatumType, encoder: avro_io.BinaryEncoder) -> None:
     """
     The format of a call request is:
       * request metadata, a map with values of type bytes
@@ -180,7 +181,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
         the message's request declaration.
     """
     # request metadata (not yet implemented)
-    request_metadata = {}
+    request_metadata = {} # type: RequestDatumType
     META_WRITER.write(request_metadata, encoder)
 
     # Identify message to send:
@@ -192,12 +193,12 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     # message parameters
     self._WriteRequest(message.request, request_datum, encoder)
 
-  def _WriteRequest(self, request_schema, request_datum, encoder):
+  def _WriteRequest(self, request_schema: schema.Schema, request_datum: RequestDatumType, encoder: avro_io.BinaryEncoder) -> None:
     logger.info('writing request: %s', request_datum)
     datum_writer = avro_io.DatumWriter(request_schema)
     datum_writer.write(request_datum, encoder)
 
-  def _ReadHandshakeResponse(self, decoder):
+  def _ReadHandshakeResponse(self, decoder: avro_io.BinaryDecoder) -> bool:
     """Reads and processes the handshake response message.
 
     Args:
@@ -233,7 +234,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     else:
       raise schema.AvroException('handshake_response.match=%r' % match)
 
-  def _ReadCallResponse(self, message_name, decoder):
+  def _ReadCallResponse(self, message_name: str, decoder: avro_io.BinaryDecoder) -> None:
     """Reads and processes a method call response.
 
     The format of a call response is:
@@ -275,12 +276,12 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
       reader_schema = local_message_schema.errors
       raise self._ReadError(writer_schema, reader_schema, decoder)
 
-  def _ReadResponse(self, writer_schema, reader_schema, decoder):
+  def _ReadResponse(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: avro_io.BinaryDecoder) -> AvroTypes:
     datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
     result = datum_reader.read(decoder)
     return result
 
-  def _ReadError(self, writer_schema, reader_schema, decoder):
+  def _ReadError(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: avro_io.BinaryDecoder) -> AvroRemoteException:
     datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
     return AvroRemoteException(datum_reader.read(decoder))
 
@@ -288,7 +289,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
 class Requestor(BaseRequestor):
   """Concrete requestor implementation."""
 
-  def _IssueRequest(self, call_request, message_name, request_datum):
+  def _IssueRequest(self, call_request: bytes, message_name: str, request_datum: RequestDatumType) -> None:
     call_response = self.transceiver.Transceive(call_request)
 
     # process the handshake and call response
@@ -306,25 +307,23 @@ class Requestor(BaseRequestor):
 class Responder(object, metaclass=abc.ABCMeta):
   """Base class for the server side of a protocol interaction."""
 
-  def __init__(self, local_protocol):
+  def __init__(self, local_protocol: protocol.Protocol) -> None:
     self._local_protocol = local_protocol
     self._local_hash = self._local_protocol.md5
-    self._protocol_cache = {}
-
-    self.set_protocol_cache(self._local_hash, self._local_protocol)
+    self._protocol_cache = { self._local_hash: self._local_protocol }
 
   @property
-  def local_protocol(self):
+  def local_protocol(self) -> protocol.Protocol:
     return self._local_protocol
 
   # utility functions to manipulate protocol cache
-  def get_protocol_cache(self, hash):
+  def get_protocol_cache(self, hash: str) -> Optional[protocol.Protocol]:
     return self._protocol_cache.get(hash)
 
-  def set_protocol_cache(self, hash, protocol):
+  def set_protocol_cache(self, hash: str, protocol: protocol.Protocol) -> None:
     self._protocol_cache[hash] = protocol
 
-  def Respond(self, call_request):
+  def Respond(self, call_request: bytes) -> bytes:
     """Entry point to process one procedure call.
 
     Args:
@@ -391,7 +390,7 @@ class Responder(object, metaclass=abc.ABCMeta):
       self._WriteError(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
     return buffer_writer.getvalue()
 
-  def _ProcessHandshake(self, decoder, encoder):
+  def _ProcessHandshake(self, decoder: avro_io.BinaryDecoder, encoder: avro_io.BinaryEncoder) -> protocol.Protocol:
     """Processes an RPC handshake.
 
     Args:
@@ -435,7 +434,7 @@ class Responder(object, metaclass=abc.ABCMeta):
     return remote_protocol
 
   @abc.abstractmethod
-  def Invoke(self, local_message, request):
+  def Invoke(self, local_message: str, request: None) -> None:
     """Processes one procedure call.
 
     Args:
@@ -446,17 +445,16 @@ class Responder(object, metaclass=abc.ABCMeta):
     Raises:
       ???
     """
-    raise Error('abtract method')
 
-  def _ReadRequest(self, writer_schema, reader_schema, decoder):
+  def _ReadRequest(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: avro_io.BinaryDecoder) -> avro_io.AvroTypes:
     datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
     return datum_reader.read(decoder)
 
-  def _WriteResponse(self, writer_schema, response_datum, encoder):
+  def _WriteResponse(self, writer_schema: schema.Schema, response_datum: avro_io.AvroTypes, encoder: avro_io.BinaryEncoder) -> None:
     datum_writer = avro_io.DatumWriter(writer_schema)
     datum_writer.write(response_datum, encoder)
 
-  def _WriteError(self, writer_schema, error_exception, encoder):
+  def _WriteError(self, writer_schema: schema.Schema, error_exception: BaseException, encoder: avro_io.BinaryEncoder) -> None:
     datum_writer = avro_io.DatumWriter(writer_schema)
     datum_writer.write(str(error_exception), encoder)
 
@@ -468,10 +466,10 @@ class Responder(object, metaclass=abc.ABCMeta):
 class FramedReader(object):
   """Wrapper around a file-like object to read framed data."""
 
-  def __init__(self, reader):
+  def __init__(self, reader: IO) -> None:
     self._reader = reader
 
-  def Read(self):
+  def Read(self) -> bytes:
     """Reads one message from the configured reader.
 
     Returns:
@@ -482,7 +480,7 @@ class FramedReader(object):
     while self._ReadFrame(message) > 0: pass
     return message.getvalue()
 
-  def _ReadFrame(self, message):
+  def _ReadFrame(self, message: IO) -> int:
     """Reads and appends one frame into the given message bytes.
 
     Args:
@@ -503,7 +501,7 @@ class FramedReader(object):
       remaining -= len(data_bytes)
     return frame_size
 
-  def _ReadInt32(self):
+  def _ReadInt32(self) -> int:
     encoded = self._reader.read(UINT32_BE.size)
     if len(encoded) != UINT32_BE.size:
       raise ConnectionClosedException('Invalid header: %r' % encoded)
@@ -513,10 +511,10 @@ class FramedReader(object):
 class FramedWriter(object):
   """Wrapper around a file-like object to write framed data."""
 
-  def __init__(self, writer):
+  def __init__(self, writer: IO) -> None:
     self._writer = writer
 
-  def Write(self, message):
+  def Write(self, message: bytes) -> None:
     """Writes a message.
 
     Message is chunked into sequences of frames terminated by an empty frame.
@@ -533,11 +531,11 @@ class FramedWriter(object):
     # A message is always terminated by a zero-length buffer.
     self._WriteUnsignedInt32(0)
 
-  def _WriteBuffer(self, chunk):
+  def _WriteBuffer(self, chunk: bytes) -> None:
     self._WriteUnsignedInt32(len(chunk))
     self._writer.write(chunk)
 
-  def _WriteUnsignedInt32(self, uint32):
+  def _WriteUnsignedInt32(self, uint32: int) -> None:
     self._writer.write(UINT32_BE.pack(uint32))
 
 
@@ -547,11 +545,11 @@ class FramedWriter(object):
 
 class Transceiver(object, metaclass=abc.ABCMeta):
   @abc.abstractproperty
-  def remote_name(self):
+  def remote_name(self) -> str:
     pass
 
   @abc.abstractmethod
-  def ReadMessage(self):
+  def ReadMessage(self) -> bytes:
     """Reads a single message from the channel.
 
     Blocks until a message can be read.
@@ -562,7 +560,7 @@ class Transceiver(object, metaclass=abc.ABCMeta):
     pass
 
   @abc.abstractmethod
-  def WriteMessage(self, message):
+  def WriteMessage(self, message: bytes) -> None:
     """Writes a message into the channel.
 
     Blocks until the message has been written.
@@ -572,7 +570,7 @@ class Transceiver(object, metaclass=abc.ABCMeta):
     """
     pass
 
-  def Transceive(self, request):
+  def Transceive(self, request: bytes) -> bytes:
     """Processes a single request-reply interaction.
 
     Synchronous request-reply interaction.
@@ -586,7 +584,7 @@ class Transceiver(object, metaclass=abc.ABCMeta):
     result = self.ReadMessage()
     return result
 
-  def Close(self):
+  def Close(self) -> None:
     """Closes this transceiver."""
     pass
 
@@ -594,7 +592,7 @@ class Transceiver(object, metaclass=abc.ABCMeta):
 class HTTPTransceiver(Transceiver):
   """HTTP-based transceiver implementation."""
 
-  def __init__(self, host, port, req_resource='/', ssl=False):
+  def __init__(self, host: str, port: int, req_resource: str='/', ssl: bool=False) -> None:
     """Initializes a new HTTP transceiver.
 
     Args:
@@ -611,17 +609,17 @@ class HTTPTransceiver(Transceiver):
     self._remote_name = self._conn.sock.getsockname()
 
   @property
-  def remote_name(self):
+  def remote_name(self) -> str:
     return self._remote_name
 
-  def ReadMessage(self):
+  def ReadMessage(self) -> bytes:
     response = self._conn.getresponse()
     response_reader = FramedReader(response)
     framed_message = response_reader.Read()
     response.read()    # ensure we're ready for subsequent requests
     return framed_message
 
-  def WriteMessage(self, message):
+  def WriteMessage(self, message: bytes) -> None:
     req_method = 'POST'
     req_headers = {'Content-Type': AVRO_RPC_MIME}
 
@@ -632,7 +630,7 @@ class HTTPTransceiver(Transceiver):
 
     self._conn.request(req_method, self._req_resource, req_body, req_headers)
 
-  def Close(self):
+  def Close(self) -> None:
     self._conn.close()
     self._conn = None
 
@@ -641,9 +639,9 @@ class HTTPTransceiver(Transceiver):
 # Server Implementations
 
 
-def _MakeHandlerClass(responder):
+def _MakeHandlerClass(responder: Responder) -> Type[http.server.BaseHTTPRequestHandler]:
   class AvroHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-    def do_POST(self):
+    def do_POST(self) -> None:
       reader = FramedReader(self.rfile)
       call_request = reader.Read()
       logger.info('Serialized request: %r', call_request)
@@ -667,13 +665,12 @@ class MultiThreadedHTTPServer(
     http.server.HTTPServer,
 ):
   """Multi-threaded HTTP server."""
-  pass
 
 
 class AvroIpcHttpServer(MultiThreadedHTTPServer):
   """Avro IPC server implemented on top of an HTTP server."""
 
-  def __init__(self, interface, port, responder):
+  def __init__(self, interface: str, port: int, responder: Responder) -> None:
     """Initializes a new Avro IPC server.
 
     Args:
