@@ -61,7 +61,7 @@ class Protocol(object):
     return type_schema
 
   @staticmethod
-  def _ParseMessageDesc(name: str, message_desc: Dict[str, str], names: schema.Names) -> Message:
+  def _ParseMessageDesc(name: str, message_desc: Dict[str, str], names: schema.Names) -> 'Message':
     """Parses a protocol message descriptor.
 
     Args:
@@ -106,7 +106,7 @@ class Protocol(object):
     )
 
   @staticmethod
-  def _ParseMessageDescMap(message_desc_map: Dict[str, Dict[str, str]], names: schema.Names) -> Generator[Message, None, None]:
+  def _ParseMessageDescMap(message_desc_map: Dict[str, Dict[str, str]], names: schema.Names) -> Generator['Message', None, None]:
     for name, message_desc in message_desc_map.items():
       yield Protocol._ParseMessageDesc(
           name=name,
@@ -119,7 +119,7 @@ class Protocol(object):
       name: str,
       namespace: Optional[str]=None,
       types: Tuple[schema.Schema, ...]=(),
-      messages: Tuple[Message, ...]=(),
+      messages: Tuple['Message', ...]=(),
   ) -> None:
     """Initializes a new protocol object.
 
@@ -189,12 +189,12 @@ class Protocol(object):
     return self._type_map
 
   @property
-  def messages(self) -> Tuple[Message, ...]:
+  def messages(self) -> Tuple['Message', ...]:
     """Returns: the collection of messages declared in this protocol."""
     return self._messages
 
   @property
-  def message_map(self) -> Mapping[str, Message]:
+  def message_map(self) -> Mapping[str, 'Message']:
     """Returns: the map of messages in this protocol, indexed by their name."""
     return self._message_map
 
@@ -285,7 +285,7 @@ class Message(object):
     }
     return schema.SchemaFromJSONData(error_union_desc, names=names)
 
-  def __init__(self, name: str, request: Message, response: Message, errors: Optional[schema.Schema]=None) -> None:
+  def __init__(self, name: str, request: 'Message', response: 'Message', errors: Optional[schema.Schema]=None) -> None:
     self._name = name
 
     self._props = {} # type: Dict[str, str]
@@ -299,11 +299,11 @@ class Message(object):
     return self._name
 
   @property
-  def request(self) -> Message:
+  def request(self) -> 'Message':
     return self._request
 
   @property
-  def response(self) -> Message:
+  def response(self) -> 'Message':
     return self._response
 
   @property

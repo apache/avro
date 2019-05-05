@@ -51,7 +51,7 @@ ToJsonType = Mapping[str, AvroType]
 EnumSymbolsType = Iterable[str]
 StrMapType = Mapping[str, str]
 OptStrMapType = Optional[StrMapType]
-OptNamesType = Optional[Names]
+OptNamesType = Optional['Names']
 OptStrType = Optional[str]
 
 logger = logging.getLogger(__name__)
@@ -222,7 +222,7 @@ class Schema(ToJsonMixin, metaclass=abc.ABCMeta):
     return self._props.get('doc')
 
   @property
-  def props(self) -> MappingProxyType[str, AvroType]:
+  def props(self) -> Mapping[str, AvroType]:
     """Reports all the properties of this schema.
 
     Includes all properties, reserved and non reserved.
@@ -339,7 +339,7 @@ class Names(object):
     """Returns: the default namespace, if any, or None."""
     return self._default_namespace
 
-  def NewWithDefaultNamespace(self, namespace: str) -> Names:
+  def NewWithDefaultNamespace(self, namespace: str) -> 'Names':
     """Creates a new name tracker from this tracker, but with a new default ns.
 
     Args:
@@ -399,7 +399,7 @@ class Names(object):
     del(prunable['namespace'])
     return prunable
 
-  def Register(self, schema: NamedSchema) -> None:
+  def Register(self, schema: 'NamedSchema') -> None:
     """Registers a new named schema in this tracker.
 
     Args:
@@ -948,7 +948,7 @@ class RecordSchema(NamedSchema):
       yield RecordSchema._MakeField(index, field_desc, names)
 
   @staticmethod
-  def _MakeFieldMap(fields: Iterable[Field]) -> MappingProxyType[str, Field]:
+  def _MakeFieldMap(fields: Iterable[Field]) -> Mapping[str, Field]:
     """Builds the field map.
 
     Guarantees field name unicity.

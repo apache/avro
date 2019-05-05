@@ -217,7 +217,7 @@ class DataFileWriter(object):
   def meta(self) -> Dict[str, bytes]:
     return self._meta
 
-  def __enter__(self) -> DataFileWriter:
+  def __enter__(self) -> 'DataFileWriter':
     return self
 
   def __exit__(
@@ -401,7 +401,7 @@ class DataFileReader(Iterable):
     self.datum_reader.writer_schema = (
         schema.Parse(self.GetMeta(SCHEMA_KEY).decode('utf-8')))
 
-  def __enter__(self) -> DataFileReader:
+  def __enter__(self) -> 'DataFileReader':
     return self
 
   def __exit__(
@@ -414,7 +414,7 @@ class DataFileReader(Iterable):
     if exc_type is None:
       self.close()
 
-  def __iter__(self) -> DataFileReader:
+  def __iter__(self) -> 'DataFileReader':
     return self
 
   # read-only properties

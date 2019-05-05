@@ -96,7 +96,7 @@ class ConnectionClosedException(schema.AvroException):
 class BaseRequestor(object, metaclass=abc.ABCMeta):
   """Base class for the client side of a protocol interaction."""
 
-  def __init__(self, local_protocol: protocol.Protocol, transceiver: Transceiver) -> None:
+  def __init__(self, local_protocol: protocol.Protocol, transceiver: 'Transceiver') -> None:
     """Initializes a new requestor object.
 
     Args:
@@ -115,7 +115,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     return self._local_protocol
 
   @property
-  def transceiver(self) -> Transceiver:
+  def transceiver(self) -> 'Transceiver':
     """Returns: the underlying channel used by this requestor."""
     return self._transceiver
 
