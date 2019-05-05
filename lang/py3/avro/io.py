@@ -55,8 +55,6 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Constants
 
-AvroTypes = Union[None, bool, int, float, bytes, str, List, Dict]
-
 INT_MIN_VALUE = -(1 << 31)
 INT_MAX_VALUE = (1 << 31) - 1
 LONG_MIN_VALUE = -(1 << 63)
@@ -74,7 +72,7 @@ STRUCT_CRC32 = struct.Struct('>I')   # big-endian unsigned int
 
 class AvroTypeException(schema.AvroException):
   """Raised when datum is not an example of schema."""
-  def __init__(self, expected_schema: schema.Schema, datum: AvroTypes) -> None:
+  def __init__(self, expected_schema: schema.Schema, datum: schema.AvroType) -> None:
     pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
     fail_msg = "The datum %s is not an example of the schema %s"\
                % (datum, pretty_expected)
@@ -115,7 +113,7 @@ _valid['double'] = _valid['float']
 _valid['error_union'] = _valid['union']
 _valid['error'] = _valid['request'] = _valid['record']
 
-def Validate(expected_schema: schema.Schema, datum: AvroTypes) -> bool:
+def Validate(expected_schema: schema.Schema, datum: schema.AvroType) -> bool:
   """Determines if a python datum is an instance of a schema.
 
   Args:
@@ -442,12 +440,12 @@ class DatumReader(object):
   reader_schema = property(lambda self: self._reader_schema,
                             set_reader_schema)
 
-  def read(self, decoder: BinaryDecoder) -> AvroTypes:
+  def read(self, decoder: BinaryDecoder) -> schema.AvroType:
     if self.reader_schema is None:
       self.reader_schema = self.writer_schema
     return self.read_data(self.writer_schema, self.reader_schema, decoder)
 
-  def read_data(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: BinaryDecoder) -> AvroTypes:
+  def read_data(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: BinaryDecoder) -> schema.AvroType:
     # schema matching
     if not DatumReader.match_schemas(writer_schema, reader_schema):
       fail_msg = 'Schemas do not match.'
@@ -639,7 +637,7 @@ class DatumReader(object):
           self.skip_data(writer_schema.values, decoder)
       block_count = decoder.read_long()
 
-  def read_union(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: BinaryDecoder) -> AvroTypes:
+  def read_union(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: BinaryDecoder) -> schema.AvroType:
     """
     A union is encoded by first writing a long value indicating
     the zero-based position within the union of the schema of its value.
@@ -664,7 +662,7 @@ class DatumReader(object):
       raise SchemaResolutionException(fail_msg, writer_schema)
     return self.skip_data(writer_schema.schemas[index_of_schema], decoder)
 
-  def read_record(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: BinaryDecoder) -> AvroTypes:
+  def read_record(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: BinaryDecoder) -> schema.AvroType:
     """
     A record is encoded by encoding the values of its fields
     in the order that they are declared. In other words, a record
@@ -713,7 +711,7 @@ class DatumReader(object):
     for field in writer_schema.fields:
       self.skip_data(field.type, decoder)
 
-  def _read_default_value(self, field_schema: schema.Schema, default_value: AvroTypes) -> AvroTypes:
+  def _read_default_value(self, field_schema: schema.Schema, default_value: schema.AvroType) -> schema.AvroType:
     """
     Basically a JSON Decoder?
     """
@@ -770,7 +768,7 @@ class DatumWriter(object):
   writer_schema = property(lambda self: self._writer_schema,
                             set_writer_schema)
 
-  def write(self, datum: AvroTypes, encoder: BinaryEncoder) -> None:
+  def write(self, datum: schema.AvroType, encoder: BinaryEncoder) -> None:
     # validate datum
     if not Validate(self.writer_schema, datum):
       raise AvroTypeException(self.writer_schema, datum)
@@ -869,7 +867,7 @@ class DatumWriter(object):
         self.write_data(writer_schema.values, val, encoder)
     encoder.write_long(0)
 
-  def write_union(self, writer_schema: schema.Schema, datum: AvroTypes, encoder: BinaryEncoder) -> None:
+  def write_union(self, writer_schema: schema.Schema, datum: schema.AvroType, encoder: BinaryEncoder) -> None:
     """
     A union is encoded by first writing a long value indicating
     the zero-based position within the union of the schema of its value.

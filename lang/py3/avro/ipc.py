@@ -276,7 +276,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
       reader_schema = local_message_schema.errors
       raise self._ReadError(writer_schema, reader_schema, decoder)
 
-  def _ReadResponse(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: avro_io.BinaryDecoder) -> AvroTypes:
+  def _ReadResponse(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: avro_io.BinaryDecoder) -> schema.AvroType:
     datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
     result = datum_reader.read(decoder)
     return result
@@ -446,11 +446,11 @@ class Responder(object, metaclass=abc.ABCMeta):
       ???
     """
 
-  def _ReadRequest(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: avro_io.BinaryDecoder) -> avro_io.AvroTypes:
+  def _ReadRequest(self, writer_schema: schema.Schema, reader_schema: schema.Schema, decoder: avro_io.BinaryDecoder) -> schema.AvroType:
     datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
     return datum_reader.read(decoder)
 
-  def _WriteResponse(self, writer_schema: schema.Schema, response_datum: avro_io.AvroTypes, encoder: avro_io.BinaryEncoder) -> None:
+  def _WriteResponse(self, writer_schema: schema.Schema, response_datum: schema.AvroType, encoder: avro_io.BinaryEncoder) -> None:
     datum_writer = avro_io.DatumWriter(writer_schema)
     datum_writer.write(response_datum, encoder)
 

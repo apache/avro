@@ -43,6 +43,16 @@ import json
 import logging
 import re
 from types import MappingProxyType
+from typing import (Any, Callable, Dict, Generator, Iterable, List, Mapping,
+                    MutableMapping, Optional, Tuple, TypeVar, Union)
+
+AvroType = Union[None, bool, int, float, bytes, str, List, Dict]
+ToJsonType = Mapping[str, AvroType]
+EnumSymbolsType = Iterable[str]
+StrMapType = Mapping[str, str]
+OptStrMapType = Optional[StrMapType]
+OptNamesType = Optional[Names]
+OptStrType = Optional[str]
 
 logger = logging.getLogger(__name__)
 
@@ -136,33 +146,48 @@ VALID_FIELD_SORT_ORDERS = frozenset([
 
 class Error(Exception):
   """Base class for errors in this module."""
-  pass
 
 
 class AvroException(Error):
   """Generic Avro schema error."""
-  pass
 
 
 class SchemaParseException(AvroException):
   """Error while parsing a JSON schema descriptor."""
-  pass
+
+JSONEncodableType = Union[MappingProxyType, Dict, List, Tuple, str, int, float, bool, None]
 
 # ------------------------------------------------------------------------------
 # Utilities
 class MappingProxyEncoder(json.JSONEncoder):
-  def default(self, obj):
+  def default(self, obj: JSONEncodableType) -> Union[str, MappingProxyType]:
     if isinstance(obj, MappingProxyType):
       return obj.copy()
-    return json.JSONEncoder.default(self, obj)
+    return super().default(obj)
+
+class ToJsonMixin(metaclass=abc.ABCMeta):
+  """A mixin for classes that implement __str__ via to_json."""
+
+  @abc.abstractmethod
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
+    """Converts the object into its AVRO specification representation.
+
+    Schema types that have names (records, enums, and fixed) must
+    be aware of not re-defining schemas that are already listed
+    in the parameter names.
+    """
+
+  def __str__(self) -> str:
+    """Returns the JSON representation of this schema."""
+    return json.dumps(self.to_json(), cls=MappingProxyEncoder)
 
 # ------------------------------------------------------------------------------
 
 
-class Schema(object, metaclass=abc.ABCMeta):
+class Schema(ToJsonMixin, metaclass=abc.ABCMeta):
   """Abstract base class for all Schema classes."""
 
-  def __init__(self, type, other_props=None):
+  def __init__(self, type: str, other_props: OptStrMapType=None) -> None:
     """Initializes a new schema object.
 
     Args:
@@ -173,7 +198,7 @@ class Schema(object, metaclass=abc.ABCMeta):
       raise SchemaParseException('%r is not a valid Avro type.' % type)
 
     # All properties of this schema, as a map: property name -> property value
-    self._props = {}
+    self._props = {}  # type: Dict[str, AvroType]
 
     self._props['type'] = type
     self._type = type
@@ -182,22 +207,22 @@ class Schema(object, metaclass=abc.ABCMeta):
       self._props.update(other_props)
 
   @property
-  def namespace(self):
+  def namespace(self) -> OptStrType:
     """Returns: the namespace this schema belongs to, if any, or None."""
-    return self._props.get('namespace', None)
+    return self._props.get('namespace')
 
   @property
-  def type(self):
+  def type(self) -> str:
     """Returns: the type of this schema."""
     return self._type
 
   @property
-  def doc(self):
+  def doc(self) -> OptStrType:
     """Returns: the documentation associated to this schema, if any, or None."""
-    return self._props.get('doc', None)
+    return self._props.get('doc')
 
   @property
-  def props(self):
+  def props(self) -> MappingProxyType[str, AvroType]:
     """Reports all the properties of this schema.
 
     Includes all properties, reserved and non reserved.
@@ -209,23 +234,9 @@ class Schema(object, metaclass=abc.ABCMeta):
     return MappingProxyType(self._props)
 
   @property
-  def other_props(self):
+  def other_props(self) -> Dict[str, str]:
     """Returns: the dictionary of non-reserved properties."""
-    return dict(FilterKeysOut(items=self._props, keys=SCHEMA_RESERVED_PROPS))
-
-  def __str__(self):
-    """Returns: the JSON representation of this schema."""
-    return json.dumps(self.to_json(), cls=MappingProxyEncoder)
-
-  @abc.abstractmethod
-  def to_json(self, names):
-    """Converts the schema object into its AVRO specification representation.
-
-    Schema types that have names (records, enums, and fixed) must
-    be aware of not re-defining schemas that are already listed
-    in the parameter names.
-    """
-    raise Exception('Cannot run abstract method.')
+    return {k: v for k, v in self._props.items() if k not in SCHEMA_RESERVED_PROPS}
 
 
 # ------------------------------------------------------------------------------
@@ -243,7 +254,7 @@ _RE_FULL_NAME = re.compile(
 class Name(object):
   """Representation of an Avro name."""
 
-  def __init__(self, name, namespace=None):
+  def __init__(self, name: str, namespace: OptStrType=None) -> None:
     """Parses an Avro name.
 
     Args:
@@ -279,24 +290,24 @@ class Name(object):
             'Invalid schema name %r infered from name %r and namespace %r.'
             % (self._fullname, self._name, self._namespace))
 
-  def __eq__(self, other):
+  def __eq__(self, other: Any) -> bool:
     if not isinstance(other, Name):
       return NotImplemented
     return self.fullname == other.fullname
 
   @property
-  def simple_name(self):
+  def simple_name(self) -> str:
     """Returns: the simple name part of this name."""
     return self._name
 
   @property
-  def namespace(self):
+  def namespace(self) -> str:
     """Returns: this name's namespace, possible the empty string."""
     return self._namespace
 
   @property
-  def fullname(self):
-    """Returns: the full name."""
+  def fullname(self) -> str:
+    """Returns: the full name (always contains a period '.')."""
     return self._fullname
 
 
@@ -306,7 +317,7 @@ class Name(object):
 class Names(object):
   """Tracks Avro named schemas and default namespace during parsing."""
 
-  def __init__(self, default_namespace=None, names=None):
+  def __init__(self, default_namespace: OptStrType=None, names: Optional[MutableMapping[str, Schema]]=None) -> None:
     """Initializes a new name tracker.
 
     Args:
@@ -319,16 +330,16 @@ class Names(object):
     self._default_namespace = default_namespace
 
   @property
-  def names(self):
+  def names(self) -> Mapping[str, Schema]:
     """Returns: the mapping of known named schemas."""
     return self._names
 
   @property
-  def default_namespace(self):
+  def default_namespace(self) -> OptStrType:
     """Returns: the default namespace, if any, or None."""
     return self._default_namespace
 
-  def NewWithDefaultNamespace(self, namespace):
+  def NewWithDefaultNamespace(self, namespace: str) -> Names:
     """Creates a new name tracker from this tracker, but with a new default ns.
 
     Args:
@@ -338,7 +349,7 @@ class Names(object):
     """
     return Names(names=self._names, default_namespace=namespace)
 
-  def GetName(self, name, namespace=None):
+  def GetName(self, name: str, namespace: OptStrType=None) -> Name:
     """Resolves the Avro name according to this name tracker's state.
 
     Args:
@@ -350,15 +361,15 @@ class Names(object):
     if namespace is None: namespace = self._default_namespace
     return Name(name=name, namespace=namespace)
 
-  def has_name(self, name, namespace=None):
+  def has_name(self, name: str, namespace: OptStrType=None) -> bool:
     avro_name = self.GetName(name=name, namespace=namespace)
     return avro_name.fullname in self._names
 
-  def get_name(self, name, namespace=None):
+  def get_name(self, name: str, namespace: OptStrType=None) -> Optional[Schema]:
     avro_name = self.GetName(name=name, namespace=namespace)
     return self._names.get(avro_name.fullname, None)
 
-  def GetSchema(self, name, namespace=None):
+  def GetSchema(self, name: str, namespace: OptStrType=None) -> Optional[Schema]:
     """Resolves an Avro schema by name.
 
     Args:
@@ -370,7 +381,7 @@ class Names(object):
     avro_name = self.GetName(name=name, namespace=namespace)
     return self._names.get(avro_name.fullname, None)
 
-  def prune_namespace(self, properties):
+  def prune_namespace(self, properties: Mapping[str, str]) -> Mapping[str, str]:
     """given a properties, return properties with namespace removed if
     it matches the own default namespace
     """
@@ -388,7 +399,7 @@ class Names(object):
     del(prunable['namespace'])
     return prunable
 
-  def Register(self, schema):
+  def Register(self, schema: NamedSchema) -> None:
     """Registers a new named schema in this tracker.
 
     Args:
@@ -416,12 +427,12 @@ class NamedSchema(Schema):
 
   def __init__(
       self,
-      type,
-      name,
-      namespace=None,
-      names=None,
-      other_props=None,
-  ):
+      type: str,
+      name: str,
+      namespace: OptStrType=None,
+      names: OptNamesType=None,
+      other_props: OptStrMapType=None,
+  ) -> None:
     """Initializes a new named schema object.
 
     Args:
@@ -443,23 +454,23 @@ class NamedSchema(Schema):
       self._props['namespace'] = self.namespace
 
   @property
-  def avro_name(self):
+  def avro_name(self) -> Name:
     """Returns: the Name object describing this schema's name."""
     return self._avro_name
 
   @property
-  def name(self):
+  def name(self) -> str:
     return self._avro_name.simple_name
 
   @property
-  def namespace(self):
+  def namespace(self) -> str:
     return self._avro_name.namespace
 
   @property
-  def fullname(self):
+  def fullname(self) -> str:
     return self._avro_name.fullname
 
-  def name_ref(self, names):
+  def name_ref(self, names: Names) -> str:
     """Reports this schema name relative to the specified name tracker.
 
     Args:
@@ -469,8 +480,7 @@ class NamedSchema(Schema):
     """
     if self.namespace == names.default_namespace:
       return self.name
-    else:
-      return self.fullname
+    return self.fullname
 
 
 # ------------------------------------------------------------------------------
@@ -479,21 +489,21 @@ class NamedSchema(Schema):
 _NO_DEFAULT = object()
 
 
-class Field(object):
+class Field(ToJsonMixin):
   """Representation of the schema of a field in a record."""
 
   def __init__(
       self,
-      type,
-      name,
-      index,
-      has_default,
-      default=_NO_DEFAULT,
-      order=None,
-      names=None,
-      doc=None,
-      other_props=None
-  ):
+      type: str,
+      name: str,
+      index: int,
+      has_default: bool,
+      default: Union[object, AvroType]=_NO_DEFAULT,
+      order: OptStrType=None,
+      names: OptNamesType=None,
+      doc: OptStrType=None,
+      other_props: OptStrMapType=None,
+  ) -> None:
     """Initializes a new Field object.
 
     Args:
@@ -512,10 +522,10 @@ class Field(object):
     if (order is not None) and (order not in VALID_FIELD_SORT_ORDERS):
       raise SchemaParseException('Invalid record field order: %r.' % order)
 
-    # All properties of this record field:
-    self._props = {}
-
     self._has_default = has_default
+
+    # All properties of this record field:
+    self._props = {} # type: Mapping[str, AvroType]
     if other_props:
       self._props.update(other_props)
 
@@ -524,7 +534,7 @@ class Field(object):
     self._name = self._props['name'] = name
 
     # TODO: check to ensure default is valid
-    if has_default:
+    if has_default and default is not _NO_DEFAULT:
       self._props['default'] = default
 
     if order is not None:
@@ -534,55 +544,52 @@ class Field(object):
       self._props['doc'] = doc
 
   @property
-  def type(self):
+  def type(self) -> str:
     """Returns: the schema of this field."""
     return self._type
 
   @property
-  def name(self):
+  def name(self) -> str:
     """Returns: this field name."""
     return self._name
 
   @property
-  def index(self):
+  def index(self) -> int:
     """Returns: the 0-based index of this field in the record."""
     return self._index
 
   @property
-  def default(self):
+  def default(self) -> AvroType:
     return self._props['default']
 
   @property
-  def has_default(self):
+  def has_default(self) -> bool:
     return self._has_default
 
   @property
-  def order(self):
-    return self._props.get('order', None)
+  def order(self) -> OptStrType:
+    return self._props.get('order')
 
   @property
-  def doc(self):
-    return self._props.get('doc', None)
+  def doc(self) -> OptStrType:
+    return self._props.get('doc')
 
   @property
-  def props(self):
+  def props(self) -> Mapping[str, AvroType]:
     return self._props
 
   @property
-  def other_props(self):
-    return FilterKeysOut(items=self._props, keys=FIELD_RESERVED_PROPS)
+  def other_props(self) -> Mapping[str, str]:
+    return {k: v for k, v in self._props.items() if k not in FIELD_RESERVED_PROPS}
 
-  def __str__(self):
-    return json.dumps(self.to_json(), cls=MappingProxyEncoder)
-
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     to_dump = self.props.copy()
     to_dump['type'] = self.type.to_json(names)
     return to_dump
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
@@ -597,7 +604,7 @@ class PrimitiveSchema(Schema):
   Valid primitive types are defined in PRIMITIVE_TYPES.
   """
 
-  def __init__(self, type, other_props=None):
+  def __init__(self, type: str, other_props: OptStrMapType=None) -> None:
     """Initializes a new schema object for the specified primitive type.
 
     Args:
@@ -608,24 +615,21 @@ class PrimitiveSchema(Schema):
     super(PrimitiveSchema, self).__init__(type, other_props=other_props)
 
   @property
-  def name(self):
+  def name(self) -> str:
     """Returns: the simple name of this schema."""
     # The name of a primitive type is the type itself.
     return self.type
 
   @property
-  def fullname(self):
+  def fullname(self) -> str:
     """Returns: the fully qualified name of this schema."""
     # The full name is the simple name for primitive schema.
     return self.name
 
-  def to_json(self, names=None):
-    if len(self.props) == 1:
-      return self.fullname
-    else:
-      return self.props
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
+    return self.fullname if len(self.props) == 1 else self.props
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     return self.props == that.props
 
 
@@ -636,11 +640,11 @@ class PrimitiveSchema(Schema):
 class FixedSchema(NamedSchema):
   def __init__(
       self,
-      name,
-      namespace,
-      size,
-      names=None,
-      other_props=None,
+      name: str,
+      namespace: str,
+      size: int,
+      names: OptNamesType=None,
+      other_props: OptStrMapType=None,
   ):
     # Ensure valid ctor args
     if not isinstance(size, int):
@@ -657,20 +661,19 @@ class FixedSchema(NamedSchema):
     self._props['size'] = size
 
   @property
-  def size(self):
+  def size(self) -> int:
     """Returns: the size of this fixed schema, in bytes."""
     return self._props['size']
 
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     if self.fullname in names.names:
       return self.name_ref(names)
-    else:
-      names.names[self.fullname] = self
-      return names.prune_namespace(self.props)
+    names.names[self.fullname] = self
+    return names.prune_namespace(self.props)
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     return self.props == that.props
 
 
@@ -680,13 +683,13 @@ class FixedSchema(NamedSchema):
 class EnumSchema(NamedSchema):
   def __init__(
       self,
-      name,
-      namespace,
-      symbols,
-      names=None,
-      doc=None,
-      other_props=None,
-  ):
+      name: str,
+      namespace: str,
+      symbols: EnumSymbolsType,
+      names: OptNamesType=None,
+      doc: OptStrType=None,
+      other_props: OptStrMapType=None,
+  ) -> None:
     """Initializes a new enumeration schema object.
 
     Args:
@@ -717,11 +720,11 @@ class EnumSchema(NamedSchema):
       self._props['doc'] = doc
 
   @property
-  def symbols(self):
+  def symbols(self) -> EnumSymbolsType:
     """Returns: the symbols defined in this enum."""
     return self._props['symbols']
 
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     if self.fullname in names.names:
@@ -730,7 +733,7 @@ class EnumSchema(NamedSchema):
       names.names[self.fullname] = self
       return names.prune_namespace(self.props)
 
-  def __eq__(self, that):
+  def __eq__(self, that) -> bool:
     return self.props == that.props
 
 
@@ -741,7 +744,7 @@ class EnumSchema(NamedSchema):
 class ArraySchema(Schema):
   """Schema of an array."""
 
-  def __init__(self, items, other_props=None):
+  def __init__(self, items: Iterable[Schema], other_props: OptStrMapType=None) -> None:
     """Initializes a new array schema object.
 
     Args:
@@ -756,11 +759,11 @@ class ArraySchema(Schema):
     self._props['items'] = items
 
   @property
-  def items(self):
+  def items(self) -> Iterable[Schema]:
     """Returns: the schema of the items in this array."""
     return self._items_schema
 
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     to_dump = self.props.copy()
@@ -768,7 +771,7 @@ class ArraySchema(Schema):
     to_dump['items'] = item_schema.to_json(names)
     return to_dump
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
@@ -779,7 +782,7 @@ class ArraySchema(Schema):
 class MapSchema(Schema):
   """Schema of a map."""
 
-  def __init__(self, values, other_props=None):
+  def __init__(self, values: Mapping[str, Schema], other_props: OptStrMapType=None) -> None:
     """Initializes a new map schema object.
 
     Args:
@@ -794,18 +797,18 @@ class MapSchema(Schema):
     self._props['values'] = values
 
   @property
-  def values(self):
+  def values(self) -> Mapping[str, Schema]:
     """Returns: the schema of the values in this map."""
     return self._values_schema
 
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     to_dump = self.props.copy()
     to_dump['values'] = self.values.to_json(names)
     return to_dump
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
@@ -816,7 +819,7 @@ class MapSchema(Schema):
 class UnionSchema(Schema):
   """Schema of a union."""
 
-  def __init__(self, schemas):
+  def __init__(self, schemas: Iterable[Schema]) -> None:
     """Initializes a new union schema object.
 
     Args:
@@ -850,11 +853,11 @@ class UnionSchema(Schema):
           % ''.join(map(lambda schema: ('\n\t - %s' % schema), self._schemas)))
 
   @property
-  def schemas(self):
+  def schemas(self) -> Iterable[Schema]:
     """Returns: the ordered list of schema branches in the union."""
     return self._schemas
 
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     to_dump = []
@@ -862,7 +865,7 @@ class UnionSchema(Schema):
       to_dump.append(schema.to_json(names))
     return to_dump
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
@@ -873,7 +876,7 @@ class UnionSchema(Schema):
 class ErrorUnionSchema(UnionSchema):
   """Schema representing the declared errors of a protocol message."""
 
-  def __init__(self, schemas):
+  def __init__(self, schemas: Iterable[Schema]) -> None:
     """Initializes an error-union schema.
 
     Args:
@@ -884,7 +887,7 @@ class ErrorUnionSchema(UnionSchema):
     schemas = [PrimitiveSchema(type=STRING)] + list(schemas)
     super(ErrorUnionSchema, self).__init__(schemas=schemas)
 
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     to_dump = []
@@ -902,7 +905,7 @@ class RecordSchema(NamedSchema):
   """Schema of a record."""
 
   @staticmethod
-  def _MakeField(index, field_desc, names):
+  def _MakeField(index: int, field_desc: StrMapType, names: Names) -> Field:
     """Builds field schemas from a list of field JSON descriptors.
 
     Args:
@@ -916,8 +919,7 @@ class RecordSchema(NamedSchema):
         json_data=field_desc['type'],
         names=names,
     )
-    other_props = (
-        dict(FilterKeysOut(items=field_desc, keys=FIELD_RESERVED_PROPS)))
+    other_props = {k: v for k, v in field_desc.items() if k not in FIELD_RESERVED_PROPS}
     return Field(
         type=field_schema,
         name=field_desc['name'],
@@ -931,7 +933,7 @@ class RecordSchema(NamedSchema):
     )
 
   @staticmethod
-  def _MakeFieldList(field_desc_list, names):
+  def _MakeFieldList(field_desc_list: Iterable[StrMapType], names: Names) -> Generator[Field, None, None]:
     """Builds field schemas from a list of field JSON descriptors.
 
     Guarantees field name unicity.
@@ -946,7 +948,7 @@ class RecordSchema(NamedSchema):
       yield RecordSchema._MakeField(index, field_desc, names)
 
   @staticmethod
-  def _MakeFieldMap(fields):
+  def _MakeFieldMap(fields: Iterable[Field]) -> MappingProxyType[str, Field]:
     """Builds the field map.
 
     Guarantees field name unicity.
@@ -956,7 +958,7 @@ class RecordSchema(NamedSchema):
     Returns:
       A read-only map of field schemas, indexed by name.
     """
-    field_map = {}
+    field_map = {} # type: Dict[str, Field]
     for field in fields:
       if field.name in field_map:
         raise SchemaParseException(
@@ -966,15 +968,15 @@ class RecordSchema(NamedSchema):
 
   def __init__(
       self,
-      name,
-      namespace,
-      fields=None,
-      make_fields=None,
-      names=None,
-      record_type=RECORD,
-      doc=None,
-      other_props=None
-  ):
+      name: str,
+      namespace: str,
+      fields: Optional[Iterable[Field]]=None,
+      make_fields: Optional[Callable[[Iterable[Names]], Iterable[Field]]]=None,
+      names: OptNamesType=None,
+      record_type: OptStrType=RECORD,
+      doc: OptStrType=None,
+      other_props: OptStrMapType=None
+  ) -> None:
     """Initializes a new record schema object.
 
     Args:
@@ -1030,16 +1032,16 @@ class RecordSchema(NamedSchema):
       self._props['doc'] = doc
 
   @property
-  def fields(self):
+  def fields(self) -> Iterable[Field]:
     """Returns: the field schemas, as an ordered tuple."""
     return self._fields
 
   @property
-  def field_map(self):
+  def field_map(self) -> Mapping[str, Field]:
     """Returns: a read-only map of the field schemas index by field names."""
     return self._field_map
 
-  def to_json(self, names=None):
+  def to_json(self, names: OptNamesType=None) -> ToJsonType:
     if names is None:
       names = Names()
     # Request records don't have names
@@ -1048,68 +1050,44 @@ class RecordSchema(NamedSchema):
 
     if self.fullname in names.names:
       return self.name_ref(names)
-    else:
-      names.names[self.fullname] = self
+
+    names.names[self.fullname] = self
 
     to_dump = names.prune_namespace(self.props.copy())
     to_dump['fields'] = [f.to_json(names) for f in self.fields]
     return to_dump
 
-  def __eq__(self, that):
+  def __eq__(self, that: Any) -> bool:
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
 
 # ------------------------------------------------------------------------------
-# Module functions
 
 
-def FilterKeysOut(items, keys):
-  """Filters a collection of (key, value) items.
-
-  Exclude any item whose key belongs to keys.
-
-  Args:
-    items: Dictionary of items to filter the keys out of.
-    keys: Keys to filter out.
-  Yields:
-    Filtered items.
-  """
-  for key, value in items.items():
-    if key in keys: continue
-    yield (key, value)
-
-
-# ------------------------------------------------------------------------------
-
-
-def _SchemaFromJSONString(json_string, names):
+def _SchemaFromJSONString(json_string: str, names: Names) -> Schema:
   if json_string in PRIMITIVE_TYPES:
     return PrimitiveSchema(type=json_string)
-  else:
-    # Look for a known named schema:
-    schema = names.GetSchema(name=json_string)
-    if schema is None:
-      raise SchemaParseException(
-          'Unknown named schema %r, known names: %r.'
-          % (json_string, sorted(names.names)))
-    return schema
+  # Look for a known named schema:
+  schema = names.GetSchema(name=json_string)
+  if schema is None:
+    raise SchemaParseException('Unknown named schema %r, known names: %r.' % (json_string, sorted(names.names)))
+  return schema
 
 
-def _SchemaFromJSONArray(json_array, names):
-  def MakeSchema(desc):
-    return SchemaFromJSONData(json_data=desc, names=names)
+def _SchemaFromJSONArray(json_array: List, names: Names) -> UnionSchema:
+  def MakeSchema(desc: Union[str, List, Dict]) -> Schema:
+    return SchemaFromJSONData(desc, names)
   return UnionSchema(map(MakeSchema, json_array))
 
 
-def _SchemaFromJSONObject(json_object, names):
+def _SchemaFromJSONObject(json_object: Dict, names: Names) -> Schema:
   type = json_object.get('type')
   if type is None:
     raise SchemaParseException(
         'Avro schema JSON descriptor has no "type" property: %r' % json_object)
 
-  other_props = dict(
-      FilterKeysOut(items=json_object, keys=SCHEMA_RESERVED_PROPS))
+  other_props = {k: v for k, v in json_object.items() if k not in SCHEMA_RESERVED_PROPS}
 
   if type in PRIMITIVE_TYPES:
     # FIXME should not ignore other properties
@@ -1192,7 +1170,7 @@ _JSONDataParserTypeMap = {
 }
 
 
-def SchemaFromJSONData(json_data, names=None):
+def SchemaFromJSONData(json_data: Union[str, List, Dict], names: Optional[Names]=None) -> Schema:
   """Builds an Avro Schema from its JSON descriptor.
 
   Args:
@@ -1207,8 +1185,9 @@ def SchemaFromJSONData(json_data, names=None):
     names = Names()
 
   # Select the appropriate parser based on the JSON data type:
-  parser = _JSONDataParserTypeMap.get(type(json_data))
-  if parser is None:
+  try:
+    parser = _JSONDataParserTypeMap[type(json_data)]
+  except KeyError:
     raise SchemaParseException(
         'Invalid JSON descriptor for an Avro schema: %r.' % json_data)
   return parser(json_data, names=names)
@@ -1217,7 +1196,7 @@ def SchemaFromJSONData(json_data, names=None):
 # ------------------------------------------------------------------------------
 
 
-def Parse(json_string):
+def Parse(json_string: str) -> Schema:
   """Constructs a Schema from its JSON descriptor in text form.
 
   Args:
