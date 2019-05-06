@@ -37,4 +37,4 @@ before_install:
 
 script:
   - sed 's/java:8-jdk/java:'${JAVA}'-jdk/' share/docker/Dockerfile
-  - /tmp/yetus-0.8.0/bin/test-patch --plugins=buildtest --user-plugins=share/precommit/ --run-tests --empty-patch --docker --dockerfile=share/docker/Dockerfile --dirty-workspace --verbose=true
+  - travis_wait /tmp/yetus-0.8.0/bin/test-patch --plugins=buildtest --user-plugins=share/precommit/ --run-tests --empty-patch --docker --dockerfile=share/docker/Dockerfile --dirty-workspace --verbose=true
