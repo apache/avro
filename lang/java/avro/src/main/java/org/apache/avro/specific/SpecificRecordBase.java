@@ -115,11 +115,11 @@ public abstract class SpecificRecordBase
     return false;
   }
 
-  protected void customEncode(Encoder out) throws IOException {
+  public void customEncode(Encoder out) throws IOException {
     throw new UnsupportedOperationException();
   }
 
-  protected void customDecode(ResolvingDecoder in) throws IOException {
+  public void customDecode(ResolvingDecoder in) throws IOException {
     throw new UnsupportedOperationException();
   }
 }
