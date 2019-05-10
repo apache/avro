@@ -102,7 +102,9 @@ public class SpecificCompiler {
       void addLogicalTypeConversions(SpecificData specificData) {
         specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
         specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeMicrosConversion());
         specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
+        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampMicrosConversion());
       }
     },
     JSR310 {
