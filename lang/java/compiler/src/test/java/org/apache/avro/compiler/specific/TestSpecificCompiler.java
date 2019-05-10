@@ -417,6 +417,7 @@ public class TestSpecificCompiler {
     Schema floatSchema = Schema.create(Schema.Type.FLOAT);
     Schema doubleSchema = Schema.create(Schema.Type.DOUBLE);
     Schema boolSchema = Schema.create(Schema.Type.BOOLEAN);
+
     Assert.assertEquals("Should use int for Type.INT",
         "int", compiler.javaUnbox(intSchema));
     Assert.assertEquals("Should use long for Type.LONG",
@@ -432,7 +433,11 @@ public class TestSpecificCompiler {
         .addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis()
         .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeMicroSchema = LogicalTypes.timeMicros()
+        .addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampMicrosSchema = LogicalTypes.timestampMicros()
         .addToSchema(Schema.create(Schema.Type.LONG));
     // Date/time types should always use upper level java classes, even though
     // their underlying representations are primitive types
@@ -442,7 +447,10 @@ public class TestSpecificCompiler {
         "org.joda.time.LocalTime", compiler.javaUnbox(timeSchema));
     Assert.assertEquals("Should use Joda DateTime for timestamp-millis type",
         "org.joda.time.DateTime", compiler.javaUnbox(timestampSchema));
-
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type",
+        "org.joda.time.LocalTime", compiler.javaUnbox(timeMicroSchema));
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type",
+        "org.joda.time.DateTime", compiler.javaUnbox(timestampMicrosSchema));
   }
 
   @Test
@@ -522,7 +530,11 @@ public class TestSpecificCompiler {
         .addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis()
         .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeMicroSchema = LogicalTypes.timeMicros()
+        .addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampMicrosSchema = LogicalTypes.timestampMicros()
         .addToSchema(Schema.create(Schema.Type.LONG));
     Schema decimalSchema = LogicalTypes.decimal(9,2)
         .addToSchema(Schema.create(Schema.Type.BYTES));
@@ -533,12 +545,17 @@ public class TestSpecificCompiler {
         "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use TIME_CONVERSION for time type",
         "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use TIME_MICROS_CONVERSION for time type",
+        "TIME_MICROS_CONVERSION", compiler.conversionInstance(timeMicroSchema));
     Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
         "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use TIMESTAMP_MICROS_CONVERSION for date type",
+        "TIMESTAMP_MICROS_CONVERSION", compiler.conversionInstance(timestampMicrosSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "null", compiler.conversionInstance(uuidSchema));
+
   }
 
 
@@ -551,7 +568,11 @@ public class TestSpecificCompiler {
         .addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis()
         .addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeMicroSchema = LogicalTypes.timeMicros()
+        .addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis()
+        .addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampMicrosSchema = LogicalTypes.timestampMicros()
         .addToSchema(Schema.create(Schema.Type.LONG));
     Schema decimalSchema = LogicalTypes.decimal(9,2)
         .addToSchema(Schema.create(Schema.Type.BYTES));
@@ -562,8 +583,12 @@ public class TestSpecificCompiler {
         "DATE_CONVERSION", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use TIME_CONVERSION for time type",
         "TIME_CONVERSION", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use TIME_MICROS_CONVERSION for time type",
+        "TIME_MICROS_CONVERSION", compiler.conversionInstance(timeMicroSchema));
     Assert.assertEquals("Should use TIMESTAMP_CONVERSION for date type",
         "TIMESTAMP_CONVERSION", compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use TIMESTAMP_MICROS_CONVERSION for date type",
+        "TIMESTAMP_MICROS_CONVERSION", compiler.conversionInstance(timestampMicrosSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "DECIMAL_CONVERSION", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",

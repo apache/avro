@@ -19,6 +19,13 @@
       }
     },
     {
+      "name": "timeMicros",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-micros"
+      }
+    },
+    {
       "name": "requestId",
       "type": [
         "null",

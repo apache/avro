@@ -163,7 +163,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #if ($this.hasLogicalTypeField($schema))
   protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
   protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
+  protected static final org.apache.avro.data.TimeConversions.TimeMicrosConversion TIME_MICROS_CONVERSION = new org.apache.avro.data.TimeConversions.TimeMicrosConversion();
   protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
+  protected static final org.apache.avro.data.TimeConversions.TimestampMicrosConversion TIMESTAMP_MICROS_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampMicrosConversion();
   protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
 
   private static final org.apache.avro.Conversion<?>[] conversions =
