@@ -29,7 +29,6 @@ import zlib
 from collections.abc import Iterable
 from types import TracebackType
 from typing import BinaryIO, Dict, Optional, Type, Union
-from warnings import warn
 
 from avro import io as avro_io
 from avro import schema
@@ -118,9 +117,6 @@ SCHEMA_KEY = "avro.schema"
 
 class DataFileException(schema.AvroException):
   """Problem reading or writing file object containers."""
-
-  def __init__(self, msg):
-    super(DataFileException, self).__init__(msg)
 
 
 # ------------------------------------------------------------------------------
