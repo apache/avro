@@ -1,4 +1,22 @@
-# Avro C#
+# Avro C# [![Build Status](https://travis-ci.org/apache/avro.svg?branch=master)](https://travis-ci.org/apache/avro) [![NuGet Package](https://img.shields.io/nuget/v/Apache.Avro.svg)](https://www.nuget.org/packages/Apache.Avro)
+
+[![Avro](http://avro.apache.org/images/avro-logo.png)](http://avro.apache.org/)
+
+## Install
+
+Install the Apache.Avro package from NuGet
+
+```
+Install-Package Apache.Avro
+```
+
+## Usage
+
+See the examples in [`src/apache/test/Examples`](./src/apache/test/Examples). The best place to
+start is the [Generic Examples](./src/apache/test/Examples/Generic.cs);
+
+Why are the examples implemented as unit tests? This helps us to ensure that our examples work
+properly and stay up-to-date.
 
 ## Build & Test
 
