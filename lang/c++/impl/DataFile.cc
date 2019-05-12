@@ -272,7 +272,7 @@ DataFileReaderBase::DataFileReaderBase(const char* filename) :
 }
 
 DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) :
-    filename_(NULL), stream_(std::move(inputStream)),
+    filename_(""), stream_(std::move(inputStream)),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
