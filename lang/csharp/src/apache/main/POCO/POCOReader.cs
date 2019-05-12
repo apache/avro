@@ -391,6 +391,23 @@ namespace Avro.POCO
         }
 
         /// <summary>
+        /// Deserializes a enum. Uses CreateEnum to construct the new enum object.
+        /// </summary>
+        /// <param name="reuse">If appropirate, uses this instead of creating a new enum object.</param>
+        /// <param name="writerSchema">The schema the writer used while writing the enum</param>
+        /// <param name="readerSchema">The schema the reader is using</param>
+        /// <param name="d">The decoder for deserialization.</param>
+        /// <returns>An enum object.</returns>
+        protected override object ReadEnum(object reuse, EnumSchema writerSchema, Schema readerSchema, Decoder d)
+        {
+            var i = d.ReadEnum();
+            var symbol = writerSchema[i];
+            var es = readerSchema as EnumSchema;
+            var enumType = EnumCache.GetEnumeration(es);
+            return Enum.Parse(enumType, symbol);
+        }
+
+        /// <summary>
         /// Deserializes a record from the stream.
         /// </summary>
         /// <param name="reuse">If not null, a record object that could be reused for returning the result</param>

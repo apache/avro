@@ -16,17 +16,16 @@ namespace Avro.POCO
 
         public DotnetProperty(PropertyInfo property) : this(property, null)
         {
-
         }
 
         virtual public Type GetPropertyType()
         {
             if (Converter != null)
             {
-                return _property.PropertyType;
+                return Converter.GetPropertyType();
             }
 
-            return Converter.GetType();
+            return _property.PropertyType;
         }
 
         virtual public object GetValue(object o)
@@ -41,7 +40,7 @@ namespace Avro.POCO
 
         virtual public void SetValue(object o, object v)
         {
-            if (Converter == null)
+            if (Converter != null)
             {
                 _property.SetValue(o, Converter.FromAvroType(v));
             }

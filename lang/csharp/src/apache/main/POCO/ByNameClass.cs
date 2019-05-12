@@ -6,7 +6,7 @@ namespace Avro.POCO
 {
     public class ByNameClass : IDotnetClass
     {
-        private ConcurrentDictionary<string, DotnetProperty> _propertyMap;
+        private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
         public ByNameClass(Type t, RecordSchema r)
         {

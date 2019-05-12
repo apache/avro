@@ -7,7 +7,7 @@ namespace Avro.POCO
 {
     public class ByPosClass : IDotnetClass
     {
-        private ConcurrentDictionary<int, DotnetProperty> _propertyMap;
+        private ConcurrentDictionary<int, DotnetProperty> _propertyMap = new ConcurrentDictionary<int, DotnetProperty>();
 
         private Type _type { get; set; }
 
@@ -38,7 +38,8 @@ namespace Avro.POCO
                         {
                             throw new AvroException($"Avro record {r.Fullname} does not have field position {avroAttr.FieldPos}. Type {_type.Name}");
                         }
-                        _propertyMap.TryAdd(avroAttr.FieldPos, new DotnetProperty(prop, avroAttr.Converter));
+                        var np = new DotnetProperty(prop, avroAttr.Converter);
+                        _propertyMap.AddOrUpdate(avroAttr.FieldPos, np, (i,x)=>np);
                     }
                 }
             }

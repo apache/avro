@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Avro;
@@ -75,24 +76,68 @@ namespace Avro.POCO
                 return new ByNameClass(t, schema);
             }
         }
-        public static void LoadClassCache(Type objType, RecordSchema rs)
+        public static void LoadClassCache(Type objType, Schema s)
         {
-            ClassCache.AddClassNameMapItem(rs, objType);
-            var c = ClassCache.GetClass(rs);
-            foreach (var f in rs.Fields)
+            // if (s==null)
+            // {
+            //     return;
+            // }
+            switch(s)
             {
-                var t = c.GetFieldType(f);
-                if (t.IsClass)
-                {
-                    ClassCache.AddClassNameMapItem(f.Schema as RecordSchema, t);
-                    LoadClassCache(objType, rs);
-                }
-                if (t.IsEnum)
-                {
-                    EnumCache.AddEnumNameMapItem(f.Schema as NamedSchema, t);
-                }
+                case RecordSchema rs:
+                    if (!objType.IsClass)
+                    {
+                        throw new AvroException($"Cant map scalar type {objType.Name} to record {rs.Fullname}");
+                    }
+                    if (typeof(byte[]).IsAssignableFrom(objType)
+                        || typeof(string).IsAssignableFrom(objType)
+                        || typeof(IList).IsAssignableFrom(objType)
+                        || typeof(IDictionary).IsAssignableFrom(objType)
+                    )
+                    {
+                        throw new AvroException($"Cant map type {objType.Name} to record {rs.Fullname}");
+                    }
+
+                    ClassCache.AddClassNameMapItem(rs, objType);
+                    var c = ClassCache.GetClass(rs);
+                    foreach (var f in rs.Fields)
+                    {
+                        var t = c.GetFieldType(f);
+                        LoadClassCache(t, f.Schema);
+                    }
+                    break;
+                case ArraySchema ars:
+                    if (!typeof(IList).IsAssignableFrom(objType))
+                    {
+                        throw new AvroException($"Cant map type {objType.Name} to array {ars.Fullname}");
+                    }
+                    if (!objType.IsGenericType)
+                    {
+                        throw new AvroException($"Cant map non-generic type {objType.Name} to array {ars.Fullname}");
+                    }
+
+                    LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
+                    break;
+                case MapSchema ms:
+                    if (!typeof(IDictionary).IsAssignableFrom(objType))
+                    {
+                        throw new AvroException($"Cant map type {objType.Name} to map {ms.Fullname}");
+                    }
+                    if (!objType.IsGenericType)
+                    {
+                        throw new AvroException($"Cant map non-generic type {objType.Name} to map {ms.Fullname}");
+                    }
+                    if (!typeof(string).IsAssignableFrom(objType.GenericTypeArguments[0]))
+                    {
+                        throw new AvroException($"First type parameter of {objType.Name} mustbe assignable to string");
+                    }
+
+                    LoadClassCache(objType.GenericTypeArguments[1], ms.ValueSchema);
+                    break;
+                case NamedSchema ns:
+                    EnumCache.AddEnumNameMapItem(ns, objType);
+                    break;
             }
         }
-
     }
 }

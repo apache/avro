@@ -12,7 +12,7 @@ namespace Avro.POCO
 
         public object FromAvroType(object o)
         {
-            var dt = CompatibilityExtensions.FromUnixTimeMilliseconds((long)o);
+            var dt = DateTimeOffset.FromUnixTimeMilliseconds((long)o);
             return dt;
         }
 
