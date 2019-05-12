@@ -60,9 +60,9 @@ public class TestSpecificRecordBuilder {
     Person person = builder.build();
     Assert.assertEquals("James Gosling", person.getName());
     Assert.assertEquals(1955, person.getYearOfBirth());
-    Assert.assertEquals("US", person.getCountry());  // country should default to "US"
+    Assert.assertEquals("US", person.getCountry()); // country should default to "US"
     Assert.assertEquals("CA", person.getState());
-    Assert.assertNotNull(person.getFriends());  // friends should default to an empty list
+    Assert.assertNotNull(person.getFriends()); // friends should default to an empty list
     Assert.assertEquals(0, person.getFriends().size());
     Assert.assertNotNull(person.getLanguages()); // Languages should now be "English" and "Java"
     Assert.assertEquals(2, person.getLanguages().size());
@@ -76,9 +76,9 @@ public class TestSpecificRecordBuilder {
     Person.Builder builderCopy = Person.newBuilder(person);
     Assert.assertEquals("James Gosling", builderCopy.getName());
     Assert.assertEquals(1955, builderCopy.getYearOfBirth());
-    Assert.assertEquals("US", builderCopy.getCountry());  // country should default to "US"
+    Assert.assertEquals("US", builderCopy.getCountry()); // country should default to "US"
     Assert.assertEquals("CA", builderCopy.getState());
-    Assert.assertNotNull(builderCopy.getFriends());  // friends should default to an empty list
+    Assert.assertNotNull(builderCopy.getFriends()); // friends should default to an empty list
     Assert.assertEquals(0, builderCopy.getFriends().size());
 
     // Test clearing fields:
@@ -96,21 +96,17 @@ public class TestSpecificRecordBuilder {
   public void testUnions() {
     long datetime = 1234L;
     String product = "widget";
-    PageView p = PageView.newBuilder()
-      .setDatetime(1234L)
-      .setPageContext(ProductPage.newBuilder()
-          .setProduct(product)
-          .build())
-      .build();
+    PageView p = PageView.newBuilder().setDatetime(1234L)
+        .setPageContext(ProductPage.newBuilder().setProduct(product).build()).build();
     Assert.assertEquals(datetime, p.getDatetime());
     Assert.assertEquals(ProductPage.class, p.getPageContext().getClass());
-    Assert.assertEquals(product, ((ProductPage)p.getPageContext()).getProduct());
+    Assert.assertEquals(product, ((ProductPage) p.getPageContext()).getProduct());
 
     PageView p2 = PageView.newBuilder(p).build();
 
     Assert.assertEquals(datetime, p2.getDatetime());
     Assert.assertEquals(ProductPage.class, p2.getPageContext().getClass());
-    Assert.assertEquals(product, ((ProductPage)p2.getPageContext()).getProduct());
+    Assert.assertEquals(product, ((ProductPage) p2.getPageContext()).getProduct());
 
     Assert.assertEquals(p, p2);
 
@@ -118,23 +114,12 @@ public class TestSpecificRecordBuilder {
 
   @Test
   public void testInterop() {
-    Interop interop = Interop.newBuilder()
-        .setNullField(null)
-        .setArrayField(Arrays.asList(3.14159265, 6.022))
-        .setBoolField(true)
-        .setBytesField(ByteBuffer.allocate(4).put(new byte[] { 3, 2, 1, 0 }))
-        .setDoubleField(1.41421)
-        .setEnumField(Kind.C)
-        .setFixedField(new MD5(
-            new byte[] { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3 }))
-        .setFloatField(1.61803f)
-        .setIntField(64)
-        .setLongField(1024)
-        .setMapField(Collections.singletonMap("Foo1", new Foo()))
-        .setRecordField(new Node())
-        .setStringField("MyInterop")
-        .setUnionField(2.71828)
-        .build();
+    Interop interop = Interop.newBuilder().setNullField(null).setArrayField(Arrays.asList(3.14159265, 6.022))
+        .setBoolField(true).setBytesField(ByteBuffer.allocate(4).put(new byte[] { 3, 2, 1, 0 })).setDoubleField(1.41421)
+        .setEnumField(Kind.C).setFixedField(new MD5(new byte[] { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3 }))
+        .setFloatField(1.61803f).setIntField(64).setLongField(1024)
+        .setMapField(Collections.singletonMap("Foo1", new Foo())).setRecordField(new Node()).setStringField("MyInterop")
+        .setUnionField(2.71828).build();
 
     Interop copy = Interop.newBuilder(interop).build();
     Assert.assertEquals(interop.getArrayField().size(), copy.getArrayField().size());
@@ -154,12 +139,12 @@ public class TestSpecificRecordBuilder {
     Assert.assertEquals(interop, copy);
   }
 
-  @Test(expected=org.apache.avro.AvroRuntimeException.class)
+  @Test(expected = org.apache.avro.AvroRuntimeException.class)
   public void attemptToSetNonNullableFieldToNull() {
     Person.newBuilder().setName(null);
   }
 
-  @Test(expected=org.apache.avro.AvroRuntimeException.class)
+  @Test(expected = org.apache.avro.AvroRuntimeException.class)
   public void buildWithoutSettingRequiredFields1() {
     Person.newBuilder().build();
   }
@@ -196,14 +181,13 @@ public class TestSpecificRecordBuilder {
     List<String> languages = new ArrayList<>(Arrays.asList("English", "Java"));
     long startTimeNanos = System.nanoTime();
     for (int ii = 0; ii < count; ii++) {
-      Person.newBuilder().setName("James Gosling").setYearOfBirth(1955).setCountry("US").setState("CA").setFriends(friends).
-        setLanguages(languages).build();
+      Person.newBuilder().setName("James Gosling").setYearOfBirth(1955).setCountry("US").setState("CA")
+          .setFriends(friends).setLanguages(languages).build();
     }
     long durationNanos = System.nanoTime() - startTimeNanos;
     double durationMillis = durationNanos / 1e6d;
-    System.out.println("Built " + count + " records in " + durationMillis + "ms (" +
-        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) +
-        "ms/record");
+    System.out.println("Built " + count + " records in " + durationMillis + "ms (" + (count / (durationMillis / 1000d))
+        + " records/sec, " + (durationMillis / count) + "ms/record");
   }
 
   @Ignore
@@ -216,9 +200,8 @@ public class TestSpecificRecordBuilder {
     }
     long durationNanos = System.nanoTime() - startTimeNanos;
     double durationMillis = durationNanos / 1e6d;
-    System.out.println("Built " + count + " records in " + durationMillis + "ms (" +
-        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) +
-        "ms/record");
+    System.out.println("Built " + count + " records in " + durationMillis + "ms (" + (count / (durationMillis / 1000d))
+        + " records/sec, " + (durationMillis / count) + "ms/record");
   }
 
   @Ignore
@@ -240,8 +223,7 @@ public class TestSpecificRecordBuilder {
     }
     long durationNanos = System.nanoTime() - startTimeNanos;
     double durationMillis = durationNanos / 1e6d;
-    System.out.println("Built " + count + " records in " + durationMillis + "ms (" +
-        (count / (durationMillis / 1000d)) + " records/sec, " + (durationMillis / count) +
-        "ms/record");
+    System.out.println("Built " + count + " records in " + durationMillis + "ms (" + (count / (durationMillis / 1000d))
+        + " records/sec, " + (durationMillis / count) + "ms/record");
   }
 }

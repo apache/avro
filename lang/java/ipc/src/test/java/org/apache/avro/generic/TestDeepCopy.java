@@ -44,20 +44,17 @@ public class TestDeepCopy {
   public void testDeepCopy() {
     // Set all non-default fields in an Interop instance:
     Interop.Builder interopBuilder = Interop.newBuilder();
-    interopBuilder.setArrayField(
-        Arrays.asList(1.1, 1.2, 1.3, 1.4));
+    interopBuilder.setArrayField(Arrays.asList(1.1, 1.2, 1.3, 1.4));
     interopBuilder.setBoolField(true);
     interopBuilder.setBytesField(ByteBuffer.wrap(new byte[] { 1, 2, 3, 4 }));
     interopBuilder.setDoubleField(3.14d);
     interopBuilder.setEnumField(Kind.B);
-    interopBuilder.setFixedField(new MD5(new byte[] {
-        4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1 }));
+    interopBuilder.setFixedField(new MD5(new byte[] { 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1 }));
     interopBuilder.setFloatField(6.022f);
     interopBuilder.setIntField(32);
     interopBuilder.setLongField(64L);
 
-    Map<java.lang.String,org.apache.avro.Foo> map =
-      new HashMap<>(1);
+    Map<java.lang.String, org.apache.avro.Foo> map = new HashMap<>(1);
     map.put("foo", Foo.newBuilder().setLabel("bar").build());
     interopBuilder.setMapField(map);
 
@@ -70,7 +67,7 @@ public class TestDeepCopy {
     interopBuilder.setRecordField(rootBuilder.build());
 
     interopBuilder.setStringField("Hello");
-    interopBuilder.setUnionField(Collections.singletonList(ByteBuffer.wrap(new byte[]{1, 2})));
+    interopBuilder.setUnionField(Collections.singletonList(ByteBuffer.wrap(new byte[] { 1, 2 })));
 
     Interop interop = interopBuilder.build();
 
@@ -78,29 +75,19 @@ public class TestDeepCopy {
     for (Field field : Interop.SCHEMA$.getFields()) {
       // Original field and deep copy should be equivalent:
       if (interop.get(field.pos()) instanceof ByteBuffer) {
-        assertTrue(Arrays.equals(((ByteBuffer)interop.get(field.pos())).array(),
-            ((ByteBuffer)GenericData.get().deepCopy(field.schema(),
-                interop.get(field.pos()))).array()));
-      }
-      else {
-        assertEquals(interop.get(field.pos()),
-            SpecificData.get().deepCopy(
-                field.schema(), interop.get(field.pos())));
+        assertTrue(Arrays.equals(((ByteBuffer) interop.get(field.pos())).array(),
+            ((ByteBuffer) GenericData.get().deepCopy(field.schema(), interop.get(field.pos()))).array()));
+      } else {
+        assertEquals(interop.get(field.pos()), SpecificData.get().deepCopy(field.schema(), interop.get(field.pos())));
       }
 
       // Original field and deep copy should be different instances:
-      if ((field.schema().getType() != Type.ENUM)
-           && (field.schema().getType() != Type.NULL)
-           && (field.schema().getType() != Type.BOOLEAN)
-           && (field.schema().getType() != Type.INT)
-           && (field.schema().getType() != Type.LONG)
-           && (field.schema().getType() != Type.FLOAT)
-           && (field.schema().getType() != Type.DOUBLE)
-           && (field.schema().getType() != Type.STRING)) {
+      if ((field.schema().getType() != Type.ENUM) && (field.schema().getType() != Type.NULL)
+          && (field.schema().getType() != Type.BOOLEAN) && (field.schema().getType() != Type.INT)
+          && (field.schema().getType() != Type.LONG) && (field.schema().getType() != Type.FLOAT)
+          && (field.schema().getType() != Type.DOUBLE) && (field.schema().getType() != Type.STRING)) {
         assertFalse("Field " + field.name() + " is same instance in deep copy",
-            interop.get(field.pos()) ==
-              GenericData.get().deepCopy(
-                  field.schema(), interop.get(field.pos())));
+            interop.get(field.pos()) == GenericData.get().deepCopy(field.schema(), interop.get(field.pos())));
       }
     }
   }

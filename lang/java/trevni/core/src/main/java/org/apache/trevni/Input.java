@@ -28,4 +28,3 @@ public interface Input extends Closeable {
   /** Positioned read. */
   int read(long position, byte[] b, int start, int len) throws IOException;
 }
-

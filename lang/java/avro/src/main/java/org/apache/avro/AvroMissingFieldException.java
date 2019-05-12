@@ -26,6 +26,7 @@ import java.util.List;
 /** Avro exception in case of missing fields. */
 public class AvroMissingFieldException extends AvroRuntimeException {
   private List<Field> chainOfFields = new ArrayList<>(8);
+
   public AvroMissingFieldException(String message, Field field) {
     super(message);
     chainOfFields.add(field);
@@ -38,7 +39,7 @@ public class AvroMissingFieldException extends AvroRuntimeException {
   @Override
   public String toString() {
     StringBuilder result = new StringBuilder();
-    for (Field field: chainOfFields) {
+    for (Field field : chainOfFields) {
       result.insert(0, " --> " + field.name());
     }
     return "Path in schema:" + result;

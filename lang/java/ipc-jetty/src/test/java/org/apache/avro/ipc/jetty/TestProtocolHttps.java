@@ -25,8 +25,6 @@ import org.apache.avro.ipc.HttpTransceiver;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-
-
 import java.net.URL;
 
 public class TestProtocolHttps extends TestProtocolSpecific {
@@ -49,8 +47,8 @@ public class TestProtocolHttps extends TestProtocolSpecific {
   }
 
   @Override
-  public Transceiver createTransceiver() throws Exception{
-    return new HttpTransceiver(new URL("https://localhost:"+server.getPort()+"/"));
+  public Transceiver createTransceiver() throws Exception {
+    return new HttpTransceiver(new URL("https://localhost:" + server.getPort() + "/"));
   }
 
   protected int getExpectedHandshakeCount() {

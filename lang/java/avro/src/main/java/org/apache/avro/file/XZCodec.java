@@ -33,17 +33,17 @@ public class XZCodec extends Codec {
   public final static int DEFAULT_COMPRESSION = 6;
 
   static class Option extends CodecFactory {
-      private int compressionLevel;
+    private int compressionLevel;
 
-      Option(int compressionLevel) {
-        this.compressionLevel = compressionLevel;
-      }
-
-      @Override
-      protected Codec createInstance() {
-        return new XZCodec(compressionLevel);
-      }
+    Option(int compressionLevel) {
+      this.compressionLevel = compressionLevel;
     }
+
+    @Override
+    protected Codec createInstance() {
+      return new XZCodec(compressionLevel);
+    }
+  }
 
   private ByteArrayOutputStream outputBuffer;
   private int compressionLevel;
@@ -69,10 +69,7 @@ public class XZCodec extends Codec {
   @Override
   public ByteBuffer decompress(ByteBuffer data) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-    InputStream bytesIn = new ByteArrayInputStream(
-      data.array(),
-      computeOffset(data),
-      data.remaining());
+    InputStream bytesIn = new ByteArrayInputStream(data.array(), computeOffset(data), data.remaining());
 
     try (InputStream ios = new XZCompressorInputStream(bytesIn)) {
       IOUtils.copy(ios, baos);
@@ -100,7 +97,7 @@ public class XZCodec extends Codec {
       return true;
     if (obj == null || obj.getClass() != getClass())
       return false;
-    XZCodec other = (XZCodec)obj;
+    XZCodec other = (XZCodec) obj;
     return (this.compressionLevel == other.compressionLevel);
   }
 

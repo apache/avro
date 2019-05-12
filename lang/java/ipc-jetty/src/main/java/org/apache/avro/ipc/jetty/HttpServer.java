@@ -49,10 +49,9 @@ public class HttpServer implements Server {
     this(servlet, null, port);
   }
 
-
   /** Constructs a server to run on the named port on the specified address. */
   public HttpServer(Responder responder, InetSocketAddress addr) throws IOException {
-      this(new ResponderServlet(responder), addr.getHostString(), addr.getPort());
+    this(new ResponderServlet(responder), addr.getHostString(), addr.getPort());
   }
 
   /** Constructs a server to run on the named port on the specified address. */
@@ -79,13 +78,21 @@ public class HttpServer implements Server {
     server.setHandler(sch);
   }
 
-  /** Constructs a server to run with the given ConnectionFactory on the given address/port. */
-  public HttpServer(Responder responder, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
+  /**
+   * Constructs a server to run with the given ConnectionFactory on the given
+   * address/port.
+   */
+  public HttpServer(Responder responder, ConnectionFactory connectionFactory, String bindAddress, int port)
+      throws IOException {
     this(new ResponderServlet(responder), connectionFactory, bindAddress, port);
   }
 
-  /** Constructs a server to run with the given ConnectionFactory on the given address/port. */
-  public HttpServer(ResponderServlet servlet, ConnectionFactory connectionFactory, String bindAddress, int port) throws IOException {
+  /**
+   * Constructs a server to run with the given ConnectionFactory on the given
+   * address/port.
+   */
+  public HttpServer(ResponderServlet servlet, ConnectionFactory connectionFactory, String bindAddress, int port)
+      throws IOException {
     this.server = new org.eclipse.jetty.server.Server();
     HttpConfiguration httpConfig = new HttpConfiguration();
     HttpConnectionFactory httpFactory = new HttpConnectionFactory(httpConfig);
@@ -104,7 +111,7 @@ public class HttpServer implements Server {
   /**
    * Constructs a server to run with the given connector.
    *
-   *  @deprecated - use the Constructors that take a ConnectionFactory
+   * @deprecated - use the Constructors that take a ConnectionFactory
    */
   @Deprecated
   public HttpServer(ResponderServlet servlet, Connector connector) throws IOException {
@@ -116,10 +123,11 @@ public class HttpServer implements Server {
     server.setHandler(handler);
     handler.addServletWithMapping(new ServletHolder(servlet), "/*");
   }
+
   /**
    * Constructs a server to run with the given connector.
    *
-   *  @deprecated - use the Constructors that take a ConnectionFactory
+   * @deprecated - use the Constructors that take a ConnectionFactory
    */
   @Deprecated
   public HttpServer(Responder responder, Connector connector) throws IOException {
@@ -131,7 +139,9 @@ public class HttpServer implements Server {
   }
 
   @Override
-  public int getPort() { return ((ServerConnector)server.getConnectors()[0]).getLocalPort(); }
+  public int getPort() {
+    return ((ServerConnector) server.getConnectors()[0]).getLocalPort();
+  }
 
   @Override
   public void close() {
@@ -142,10 +152,12 @@ public class HttpServer implements Server {
     }
   }
 
-  /** Start the server.
-   * @throws AvroRuntimeException if the underlying Jetty server
-   * throws any exception while starting.
-  */
+  /**
+   * Start the server.
+   * 
+   * @throws AvroRuntimeException if the underlying Jetty server throws any
+   *                              exception while starting.
+   */
   @Override
   public void start() {
     try {

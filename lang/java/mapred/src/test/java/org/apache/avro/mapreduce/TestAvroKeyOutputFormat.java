@@ -84,14 +84,14 @@ public class TestAvroKeyOutputFormat {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
     conf.set(AvroJob.CONF_OUTPUT_CODEC, DataFileConstants.ZSTANDARD_CODEC);
-    testGetRecordWriter(conf, CodecFactory.zstandardCodec(), DataFileConstants.DEFAULT_SYNC_INTERVAL);
+    testGetRecordWriter(conf, CodecFactory.zstandardCodec(3), DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
   @Test
   public void testWithDeflateCodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
-    conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.DeflateCodec");
+    conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.DeflateCodec");
     conf.setInt(org.apache.avro.mapred.AvroOutputFormat.DEFLATE_LEVEL_KEY, -1);
     conf.setInt(SYNC_INTERVAL_KEY, TEST_SYNC_INTERVAL);
     testGetRecordWriter(conf, CodecFactory.deflateCodec(-1), TEST_SYNC_INTERVAL);
@@ -101,7 +101,7 @@ public class TestAvroKeyOutputFormat {
   public void testWithSnappyCodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
-    conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.SnappyCodec");
+    conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec");
     testGetRecordWriter(conf, CodecFactory.snappyCodec(), DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
@@ -109,13 +109,14 @@ public class TestAvroKeyOutputFormat {
   public void testWithBZip2CodeWithHadoopConfig() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean("mapred.output.compress", true);
-    conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.BZip2Codec");
+    conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.BZip2Codec");
     conf.setInt(SYNC_INTERVAL_KEY, TEST_SYNC_INTERVAL);
     testGetRecordWriter(conf, CodecFactory.bzip2Codec(), TEST_SYNC_INTERVAL);
   }
 
   /**
-   * Tests that the record writer is constructed and returned correctly from the output format.
+   * Tests that the record writer is constructed and returned correctly from the
+   * output format.
    */
   private void testGetRecordWriter(Configuration conf, CodecFactory expectedCodec, int expectedSyncInterval)
       throws IOException {
@@ -125,36 +126,31 @@ public class TestAvroKeyOutputFormat {
     Schema writerSchema = Schema.create(Schema.Type.INT);
     AvroJob.setOutputKeySchema(job, writerSchema);
     TaskAttemptContext context = createMock(TaskAttemptContext.class);
-    expect(context.getConfiguration())
-        .andReturn(job.getConfiguration()).anyTimes();
-    expect(context.getTaskAttemptID())
-        .andReturn(TaskAttemptID.forName("attempt_200707121733_0001_m_000000_0"))
+    expect(context.getConfiguration()).andReturn(job.getConfiguration()).anyTimes();
+    expect(context.getTaskAttemptID()).andReturn(TaskAttemptID.forName("attempt_200707121733_0001_m_000000_0"))
         .anyTimes();
     expect(context.getNumReduceTasks()).andReturn(1);
 
     // Create a mock record writer.
     @SuppressWarnings("unchecked")
-    RecordWriter<AvroKey<Integer>, NullWritable> expectedRecordWriter
-        = createMock(RecordWriter.class);
-    AvroKeyOutputFormat.RecordWriterFactory recordWriterFactory
-        = createMock(AvroKeyOutputFormat.RecordWriterFactory.class);
+    RecordWriter<AvroKey<Integer>, NullWritable> expectedRecordWriter = createMock(RecordWriter.class);
+    AvroKeyOutputFormat.RecordWriterFactory recordWriterFactory = createMock(
+        AvroKeyOutputFormat.RecordWriterFactory.class);
 
     // Expect the record writer factory to be called with appropriate parameters.
     Capture<CodecFactory> capturedCodecFactory = Capture.newInstance();
-    expect(recordWriterFactory.create(eq(writerSchema),
-        anyObject(GenericData.class),
-        capture(capturedCodecFactory),  // Capture for comparison later.
-        anyObject(OutputStream.class),
-        eq(expectedSyncInterval))).andReturn(expectedRecordWriter);
+    expect(recordWriterFactory.create(eq(writerSchema), anyObject(GenericData.class), capture(capturedCodecFactory), // Capture
+                                                                                                                     // for
+                                                                                                                     // comparison
+                                                                                                                     // later.
+        anyObject(OutputStream.class), eq(expectedSyncInterval))).andReturn(expectedRecordWriter);
 
     replay(context);
     replay(expectedRecordWriter);
     replay(recordWriterFactory);
 
-    AvroKeyOutputFormat<Integer> outputFormat
-        = new AvroKeyOutputFormat<>(recordWriterFactory);
-    RecordWriter<AvroKey<Integer>, NullWritable> recordWriter
-        = outputFormat.getRecordWriter(context);
+    AvroKeyOutputFormat<Integer> outputFormat = new AvroKeyOutputFormat<>(recordWriterFactory);
+    RecordWriter<AvroKey<Integer>, NullWritable> recordWriter = outputFormat.getRecordWriter(context);
     // Make sure the expected codec was used.
     assertTrue(capturedCodecFactory.hasCaptured());
     assertEquals(expectedCodec.toString(), capturedCodecFactory.getValue().toString());

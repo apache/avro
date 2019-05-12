@@ -24,11 +24,11 @@ import org.apache.avro.data.ErrorBuilder;
 import org.apache.avro.data.RecordBuilderBase;
 
 /**
- * Abstract base class for specific ErrorBuilder implementations.
- * Not thread-safe.
+ * Abstract base class for specific ErrorBuilder implementations. Not
+ * thread-safe.
  */
-abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
-  extends RecordBuilderBase<T> implements ErrorBuilder<T> {
+abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase> extends RecordBuilderBase<T>
+    implements ErrorBuilder<T> {
   private Constructor<T> errorConstructor;
   private Object value;
   private boolean hasValue;
@@ -37,6 +37,7 @@ abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
 
   /**
    * Creates a SpecificErrorBuilderBase for building errors of the given type.
+   * 
    * @param schema the schema associated with the error class.
    */
   protected SpecificErrorBuilderBase(Schema schema) {
@@ -45,6 +46,7 @@ abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
 
   /**
    * SpecificErrorBuilderBase copy constructor.
+   * 
    * @param other SpecificErrorBuilderBase instance to copy.
    */
   protected SpecificErrorBuilderBase(SpecificErrorBuilderBase<T> other) {
@@ -58,6 +60,7 @@ abstract public class SpecificErrorBuilderBase<T extends SpecificExceptionBase>
 
   /**
    * Creates a SpecificErrorBuilderBase by copying an existing error instance.
+   * 
    * @param other the error instance to copy.
    */
   protected SpecificErrorBuilderBase(T other) {

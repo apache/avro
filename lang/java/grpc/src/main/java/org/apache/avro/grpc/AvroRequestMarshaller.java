@@ -64,8 +64,8 @@ public class AvroRequestMarshaller implements MethodDescriptor.Marshaller<Object
       }
       return args;
     } catch (IOException e) {
-      throw Status.INTERNAL.withCause(e).
-          withDescription("Error deserializing avro request arguments").asRuntimeException();
+      throw Status.INTERNAL.withCause(e).withDescription("Error deserializing avro request arguments")
+          .asRuntimeException();
     } finally {
       AvroGrpcUtils.skipAndCloseQuietly(stream);
     }

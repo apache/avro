@@ -30,7 +30,8 @@ public abstract class AvroDatumConverter<INPUT, OUTPUT> {
   public abstract OUTPUT convert(INPUT input);
 
   /**
-   * Gets the writer schema that should be used to serialize the output Avro datum.
+   * Gets the writer schema that should be used to serialize the output Avro
+   * datum.
    *
    * @return The writer schema for the output Avro datum.
    */

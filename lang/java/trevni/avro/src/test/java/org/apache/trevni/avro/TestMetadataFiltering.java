@@ -25,7 +25,8 @@ import static org.junit.Assert.*;
 
 public class TestMetadataFiltering {
 
-  @Test public void testMetadataFiltering() throws Exception {
+  @Test
+  public void testMetadataFiltering() throws Exception {
     JobConf job = new JobConf();
 
     job.set(AvroTrevniOutputFormat.META_PREFIX + "test1", "1");

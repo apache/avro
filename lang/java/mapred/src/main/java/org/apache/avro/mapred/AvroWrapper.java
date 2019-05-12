@@ -23,16 +23,24 @@ public class AvroWrapper<T> {
   private T datum;
 
   /** Wrap null. Construct {@link AvroWrapper} wrapping no datum. */
-  public AvroWrapper() { this(null); }
+  public AvroWrapper() {
+    this(null);
+  }
 
   /** Wrap a datum. */
-  public AvroWrapper(T datum) { this.datum = datum; }
+  public AvroWrapper(T datum) {
+    this.datum = datum;
+  }
 
   /** Return the wrapped datum. */
-  public T datum() { return datum; }
+  public T datum() {
+    return datum;
+  }
 
   /** Set the wrapped datum. */
-  public void datum(T datum) { this.datum = datum; }
+  public void datum(T datum) {
+    this.datum = datum;
+  }
 
   @Override
   public int hashCode() {
@@ -47,10 +55,11 @@ public class AvroWrapper<T> {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    AvroWrapper that = (AvroWrapper)obj;
+    AvroWrapper that = (AvroWrapper) obj;
     if (this.datum == null) {
       return that.datum == null;
-    } else return datum.equals(that.datum);
+    } else
+      return datum.equals(that.datum);
   }
 
   /** Get the wrapped datum as JSON. */

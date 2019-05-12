@@ -38,8 +38,8 @@ public class TestAvroTextSort {
 
   @Test
   /**
-   * Run the identity job on a "bytes" Avro file using AvroAsTextInputFormat
-   * and AvroTextOutputFormat to produce a sorted "bytes" Avro file.
+   * Run the identity job on a "bytes" Avro file using AvroAsTextInputFormat and
+   * AvroTextOutputFormat to produce a sorted "bytes" Avro file.
    */
   public void testSort() throws Exception {
     JobConf job = new JobConf();

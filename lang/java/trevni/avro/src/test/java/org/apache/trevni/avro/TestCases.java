@@ -32,7 +32,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.generic.GenericDatumReader;
 
-
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -41,7 +40,8 @@ public class TestCases {
   private static final File DIR = new File("src/test/cases/");
   private static final File FILE = new File("target", "case.trv");
 
-  @Test public void testCases() throws Exception {
+  @Test
+  public void testCases() throws Exception {
     for (File f : DIR.listFiles())
       if (f.isDirectory() && !f.getName().startsWith("."))
         runCase(f);
@@ -52,8 +52,7 @@ public class TestCases {
     List<Object> data = fromJson(schema, new File(dir, "input.json"));
 
     // write full data
-    AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<>(schema, new ColumnFileMetaData());
+    AvroColumnWriter<Object> writer = new AvroColumnWriter<>(schema, new ColumnFileMetaData());
     for (Object datum : data)
       writer.write(datum);
     writer.writeTo(FILE);
@@ -70,8 +69,7 @@ public class TestCases {
   }
 
   private void checkRead(Schema s, List<Object> data) throws Exception {
-    try (AvroColumnReader<Object> reader = new AvroColumnReader<>(new AvroColumnReader.Params(FILE)
-      .setSchema(s))) {
+    try (AvroColumnReader<Object> reader = new AvroColumnReader<>(new AvroColumnReader.Params(FILE).setSchema(s))) {
       for (Object datum : data)
         assertEquals(datum, reader.next());
     }

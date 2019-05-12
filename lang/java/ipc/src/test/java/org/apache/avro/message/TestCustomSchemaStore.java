@@ -35,6 +35,7 @@ public class TestCustomSchemaStore {
 
   static class CustomSchemaStore implements SchemaStore {
     Cache cache;
+
     CustomSchemaStore() {
       cache = new Cache();
       cache.addSchema(NestedEvolve1.getClassSchema());
@@ -72,7 +73,8 @@ public class TestCustomSchemaStore {
     rootBuilder.setNested(TestRecord3.newBuilder().setName("Name").setData("Data").build());
     ByteBuffer nestedEvolve3Buffer = rootBuilder.build().toByteBuffer();
 
-    // Decode it ... should fail because schema for 'NestedEvolve3' is not available in the SchemaStore
+    // Decode it ... should fail because schema for 'NestedEvolve3' is not available
+    // in the SchemaStore
     decoder.decode(nestedEvolve3Buffer);
   }
 

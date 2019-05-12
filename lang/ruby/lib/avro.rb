@@ -32,6 +32,15 @@ module Avro
       super(msg)
     end
   end
+
+  class << self
+    attr_writer :disable_field_default_validation
+
+    def disable_field_default_validation
+      @disable_field_default_validation ||=
+        ENV.fetch('AVRO_DISABLE_FIELD_DEFAULT_VALIDATION', '') != ''
+    end
+  end
 end
 
 require 'avro/schema'

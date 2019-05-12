@@ -27,13 +27,12 @@ import org.junit.Test;
 
 public class TestSchemaResolver {
 
-
   @Test
   public void testResolving() throws ParseException, MalformedURLException, IOException {
     File file = new File(".");
     String currentWorkPath = file.getAbsolutePath();
-    String testIdl = currentWorkPath + File.separator + "src" + File.separator + "test"
-        + File.separator + "idl" + File.separator + "cycle.avdl";
+    String testIdl = currentWorkPath + File.separator + "src" + File.separator + "test" + File.separator + "idl"
+        + File.separator + "cycle.avdl";
     Idl compiler = new Idl(new File(testIdl));
     Protocol protocol = compiler.CompilationUnit();
     System.out.println(protocol);
@@ -50,16 +49,14 @@ public class TestSchemaResolver {
   @Test(expected = IllegalArgumentException.class)
   public void testIsUnresolvedSchemaError2() {
     // No "UnresolvedSchema" property
-    Schema s = SchemaBuilder.record("R")
-        .prop("org.apache.avro.compiler.idl.unresolved.name", "x").fields().endRecord();
+    Schema s = SchemaBuilder.record("R").prop("org.apache.avro.compiler.idl.unresolved.name", "x").fields().endRecord();
     SchemaResolver.getUnresolvedSchemaName(s);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testIsUnresolvedSchemaError3() {
     // Namespace not "org.apache.avro.compiler".
-    Schema s = SchemaBuilder.record("UnresolvedSchema")
-        .prop("org.apache.avro.compiler.idl.unresolved.name", "x")
+    Schema s = SchemaBuilder.record("UnresolvedSchema").prop("org.apache.avro.compiler.idl.unresolved.name", "x")
         .fields().endRecord();
     SchemaResolver.getUnresolvedSchemaName(s);
   }

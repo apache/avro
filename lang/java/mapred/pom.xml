@@ -30,10 +30,11 @@
   <artifactId>avro-mapred</artifactId>
 
   <name>Apache Avro Mapred API</name>
-  <description>An org.apache.hadoop.mapred compatible API for using Avro Serializatin in Hadoop</description>
+  <description>An org.apache.hadoop.mapred compatible API for using Avro Serialization in Hadoop</description>
   <packaging>bundle</packaging>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <osgi.import>
       !org.apache.avro.mapred*,
       org.apache.avro*;version="${project.version}",
@@ -51,14 +52,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>${jar-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <!-- Allow guava because hadoop brings it as a transitive dependency. -->
       <plugin>
@@ -170,7 +163,6 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-library</artifactId>
-      <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -189,7 +181,6 @@
         <artifactId>snappy-java</artifactId>
         <scope>test</scope>
     </dependency>
-
   </dependencies>
 </project>
 

@@ -52,22 +52,22 @@ public class TestSortedKeyValueFile {
   @Rule
   public TemporaryFolder mTempDir = new TemporaryFolder();
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testWriteOutOfSortedOrder() throws IOException {
     LOG.debug("Writing some records to a SortedKeyValueFile...");
 
     Configuration conf = new Configuration();
     SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
-        .withKeySchema(Schema.create(Schema.Type.STRING))
-        .withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf)
-        .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"))
-        .withIndexInterval(2);  // Index every other record.
+        .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
+        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile")).withIndexInterval(2); // Index
+                                                                                                                  // every
+                                                                                                                  // other
+                                                                                                                  // record.
 
     try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options)) {
-      Utf8 key = new Utf8();                        // re-use key, to test copied
+      Utf8 key = new Utf8(); // re-use key, to test copied
       writer.append(key.set("banana"), "Banana");
-      writer.append(key.set("apple"), "Apple");  // Ruh, roh!
+      writer.append(key.set("apple"), "Apple"); // Ruh, roh!
     }
   }
 
@@ -81,28 +81,23 @@ public class TestSortedKeyValueFile {
     DatumReader<GenericRecord> datumReader = SpecificData.get().createDatumReader(recordSchema);
     DataFileReader<GenericRecord> reader;
 
-    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
-        .withKeySchema(key)
-        .withValueSchema(value)
-        .withConfiguration(conf)
-        .withPath(myfile);
+    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options().withKeySchema(key)
+        .withValueSchema(value).withConfiguration(conf).withPath(myfile);
 
     SortedKeyValueFile.Writer<CharSequence, CharSequence> writer;
 
-    for(String codec : new String[]{"null", "deflate", "snappy", "bzip2"}) {
-        LOG.debug("Using " + codec + "codec for a SortedKeyValueFile...");
+    for (String codec : new String[] { "null", "deflate", "snappy", "bzip2" }) {
+      LOG.debug("Using " + codec + "codec for a SortedKeyValueFile...");
 
-        options.withCodec(codec);
+      options.withCodec(codec);
 
-        writer = new SortedKeyValueFile.Writer<>(options);
-        writer.close();
+      writer = new SortedKeyValueFile.Writer<>(options);
+      writer.close();
 
-        reader = new DataFileReader<>(
-            new FsInput(new Path(myfile, SortedKeyValueFile.DATA_FILENAME), conf),
-            datumReader);
+      reader = new DataFileReader<>(new FsInput(new Path(myfile, SortedKeyValueFile.DATA_FILENAME), conf), datumReader);
 
-        assertEquals(codec, reader.getMetaString("avro.codec"));
-        reader.close();
+      assertEquals(codec, reader.getMetaString("avro.codec"));
+      reader.close();
     }
   }
 
@@ -117,20 +112,13 @@ public class TestSortedKeyValueFile {
     DataFileReader<GenericRecord> reader;
 
     LOG.debug("Using CodecFactory.deflateCodec() for a SortedKeyValueFile...");
-    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
-        .withKeySchema(key)
-        .withValueSchema(value)
-        .withConfiguration(conf)
-        .withPath(myfile)
-        .withCodec(CodecFactory.deflateCodec(9));
+    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options().withKeySchema(key)
+        .withValueSchema(value).withConfiguration(conf).withPath(myfile).withCodec(CodecFactory.deflateCodec(9));
 
-    SortedKeyValueFile.Writer<CharSequence, CharSequence> writer =
-        new SortedKeyValueFile.Writer<>(options);
+    SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options);
     writer.close();
 
-    reader = new DataFileReader<>(
-        new FsInput(new Path(myfile, SortedKeyValueFile.DATA_FILENAME), conf),
-        datumReader);
+    reader = new DataFileReader<>(new FsInput(new Path(myfile, SortedKeyValueFile.DATA_FILENAME), conf), datumReader);
 
     assertEquals("deflate", reader.getMetaString("avro.codec"));
     reader.close();
@@ -141,10 +129,9 @@ public class TestSortedKeyValueFile {
     LOG.debug("Using a bad codec for a SortedKeyValueFile...");
 
     try {
-      SortedKeyValueFile.Writer.Options options =
-          new SortedKeyValueFile.Writer.Options().withCodec("foobar");
+      SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options().withCodec("foobar");
     } catch (AvroRuntimeException e) {
-        assertEquals("Unrecognized codec: foobar", e.getMessage());
+      assertEquals("Unrecognized codec: foobar", e.getMessage());
     }
   }
 
@@ -154,24 +141,22 @@ public class TestSortedKeyValueFile {
 
     Configuration conf = new Configuration();
     SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
-        .withKeySchema(Schema.create(Schema.Type.STRING))
-        .withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf)
-        .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"))
-        .withIndexInterval(2);  // Index every other record.
+        .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
+        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile")).withIndexInterval(2); // Index
+                                                                                                                  // every
+                                                                                                                  // other
+                                                                                                                  // record.
 
     try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(options)) {
-      writer.append("apple", "Apple");  // Will be indexed.
+      writer.append("apple", "Apple"); // Will be indexed.
       writer.append("banana", "Banana");
-      writer.append("carrot", "Carrot");  // Will be indexed.
+      writer.append("carrot", "Carrot"); // Will be indexed.
       writer.append("durian", "Durian");
     }
-
 
     LOG.debug("Checking the generated directory...");
     File directory = new File(mTempDir.getRoot().getPath(), "myfile");
     assertTrue(directory.exists());
-
 
     LOG.debug("Checking the generated index file...");
     File indexFile = new File(directory, SortedKeyValueFile.INDEX_FILENAME);
@@ -199,21 +184,18 @@ public class TestSortedKeyValueFile {
     try (DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(dataFile, dataReader)) {
       dataFileReader.seek(indexRecords.get(0).getValue());
       assertTrue(dataFileReader.hasNext());
-      AvroKeyValue<CharSequence, CharSequence> appleRecord
-        = new AvroKeyValue<>(dataFileReader.next());
+      AvroKeyValue<CharSequence, CharSequence> appleRecord = new AvroKeyValue<>(dataFileReader.next());
       assertEquals("apple", appleRecord.getKey().toString());
       assertEquals("Apple", appleRecord.getValue().toString());
 
       dataFileReader.seek(indexRecords.get(1).getValue());
       assertTrue(dataFileReader.hasNext());
-      AvroKeyValue<CharSequence, CharSequence> carrotRecord
-        = new AvroKeyValue<>(dataFileReader.next());
+      AvroKeyValue<CharSequence, CharSequence> carrotRecord = new AvroKeyValue<>(dataFileReader.next());
       assertEquals("carrot", carrotRecord.getKey().toString());
       assertEquals("Carrot", carrotRecord.getValue().toString());
 
       assertTrue(dataFileReader.hasNext());
-      AvroKeyValue<CharSequence, CharSequence> durianRecord
-        = new AvroKeyValue<>(dataFileReader.next());
+      AvroKeyValue<CharSequence, CharSequence> durianRecord = new AvroKeyValue<>(dataFileReader.next());
       assertEquals("durian", durianRecord.getKey().toString());
       assertEquals("Durian", durianRecord.getValue().toString());
     }
@@ -223,27 +205,27 @@ public class TestSortedKeyValueFile {
   public void testReader() throws IOException {
     Configuration conf = new Configuration();
     SortedKeyValueFile.Writer.Options writerOptions = new SortedKeyValueFile.Writer.Options()
-        .withKeySchema(Schema.create(Schema.Type.STRING))
-        .withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf)
-        .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"))
-        .withIndexInterval(2);  // Index every other record.
+        .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
+        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile")).withIndexInterval(2); // Index
+                                                                                                                  // every
+                                                                                                                  // other
+                                                                                                                  // record.
 
-    try (SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(writerOptions)) {
-      writer.append("apple", "Apple");  // Will be indexed.
+    try (
+        SortedKeyValueFile.Writer<CharSequence, CharSequence> writer = new SortedKeyValueFile.Writer<>(writerOptions)) {
+      writer.append("apple", "Apple"); // Will be indexed.
       writer.append("banana", "Banana");
-      writer.append("carrot", "Carrot");  // Will be indexed.
+      writer.append("carrot", "Carrot"); // Will be indexed.
       writer.append("durian", "Durian");
     }
 
     LOG.debug("Reading the file back using a reader...");
     SortedKeyValueFile.Reader.Options readerOptions = new SortedKeyValueFile.Reader.Options()
-        .withKeySchema(Schema.create(Schema.Type.STRING))
-        .withValueSchema(Schema.create(Schema.Type.STRING))
-        .withConfiguration(conf)
-        .withPath(new Path(mTempDir.getRoot().getPath(), "myfile"));
+        .withKeySchema(Schema.create(Schema.Type.STRING)).withValueSchema(Schema.create(Schema.Type.STRING))
+        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "myfile"));
 
-    try (SortedKeyValueFile.Reader<CharSequence, CharSequence> reader = new SortedKeyValueFile.Reader<>(readerOptions)) {
+    try (
+        SortedKeyValueFile.Reader<CharSequence, CharSequence> reader = new SortedKeyValueFile.Reader<>(readerOptions)) {
       assertEquals("Carrot", reader.get("carrot").toString());
       assertEquals("Banana", reader.get("banana").toString());
       assertNull(reader.get("a-vegetable"));
@@ -254,32 +236,46 @@ public class TestSortedKeyValueFile {
 
   public static class Stringy implements Comparable<Stringy> {
     private String s;
-    public Stringy() {};
-    public Stringy(String s) { this.s = s; }
-    @Override public String toString() { return s; }
-    @Override public int hashCode() { return s.hashCode(); }
-    @Override public boolean equals(Object that) {
+
+    public Stringy() {
+    };
+
+    public Stringy(String s) {
+      this.s = s;
+    }
+
+    @Override
+    public String toString() {
+      return s;
+    }
+
+    @Override
+    public int hashCode() {
+      return s.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object that) {
       return this.s.equals(that.toString());
     }
-    @Override public int compareTo(Stringy that) {
+
+    @Override
+    public int compareTo(Stringy that) {
       return this.s.compareTo(that.s);
     }
   }
 
-  @Test public void testAlternateModel() throws Exception {
+  @Test
+  public void testAlternateModel() throws Exception {
     LOG.debug("Writing some reflect records...");
 
     ReflectData model = ReflectData.get();
 
     Configuration conf = new Configuration();
-    SortedKeyValueFile.Writer.Options options
-      = new SortedKeyValueFile.Writer.Options()
-      .withKeySchema(model.getSchema(Stringy.class))
-      .withValueSchema(model.getSchema(Stringy.class))
-      .withConfiguration(conf)
-      .withPath(new Path(mTempDir.getRoot().getPath(), "reflect"))
-      .withDataModel(model)
-      .withIndexInterval(2);
+    SortedKeyValueFile.Writer.Options options = new SortedKeyValueFile.Writer.Options()
+        .withKeySchema(model.getSchema(Stringy.class)).withValueSchema(model.getSchema(Stringy.class))
+        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "reflect")).withDataModel(model)
+        .withIndexInterval(2);
 
     try (SortedKeyValueFile.Writer<Stringy, Stringy> writer = new SortedKeyValueFile.Writer<>(options)) {
       writer.append(new Stringy("apple"), new Stringy("Apple"));
@@ -289,13 +285,9 @@ public class TestSortedKeyValueFile {
     }
 
     LOG.debug("Reading the file back using a reader...");
-    SortedKeyValueFile.Reader.Options readerOptions =
-      new SortedKeyValueFile.Reader.Options()
-      .withKeySchema(model.getSchema(Stringy.class))
-      .withValueSchema(model.getSchema(Stringy.class))
-      .withConfiguration(conf)
-      .withPath(new Path(mTempDir.getRoot().getPath(), "reflect"))
-      .withDataModel(model);
+    SortedKeyValueFile.Reader.Options readerOptions = new SortedKeyValueFile.Reader.Options()
+        .withKeySchema(model.getSchema(Stringy.class)).withValueSchema(model.getSchema(Stringy.class))
+        .withConfiguration(conf).withPath(new Path(mTempDir.getRoot().getPath(), "reflect")).withDataModel(model);
 
     try (SortedKeyValueFile.Reader<Stringy, Stringy> reader = new SortedKeyValueFile.Reader<>(readerOptions)) {
       assertEquals(new Stringy("Carrot"), reader.get(new Stringy("carrot")));
@@ -306,6 +298,5 @@ public class TestSortedKeyValueFile {
     }
 
   }
-
 
 }

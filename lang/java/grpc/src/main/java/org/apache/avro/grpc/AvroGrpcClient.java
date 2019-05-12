@@ -47,7 +47,7 @@ public abstract class AvroGrpcClient {
    *
    * @param channel the channel used for gRPC {@link ClientCalls}.
    * @param iface   Avro interface for which client is built.
-   * @param <T>     type of Avro Interface.
+   * @param         <T> type of Avro Interface.
    * @return a new client proxy.
    */
   public static <T> T create(Channel channel, Class<T> iface) {
@@ -60,16 +60,15 @@ public abstract class AvroGrpcClient {
    * @param channel     the channel used for gRPC {@link ClientCalls}.
    * @param iface       Avro interface for which client is built.
    * @param callOptions client call options for gRPC.
-   * @param <T>         type of Avro Interface.
+   * @param             <T> type of Avro Interface.
    * @return a new client proxy.
    */
-  public static <T> T create(Channel channel, Class<T> iface, CallOptions
-      callOptions) {
+  public static <T> T create(Channel channel, Class<T> iface, CallOptions callOptions) {
     Protocol protocol = AvroGrpcUtils.getProtocol(iface);
     ServiceDescriptor serviceDescriptor = ServiceDescriptor.create(iface);
-    ServiceInvocationHandler proxyHandler = new ServiceInvocationHandler(channel, callOptions,
-        protocol, serviceDescriptor);
-    return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[]{iface}, proxyHandler);
+    ServiceInvocationHandler proxyHandler = new ServiceInvocationHandler(channel, callOptions, protocol,
+        serviceDescriptor);
+    return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] { iface }, proxyHandler);
   }
 
   private static class ServiceInvocationHandler implements InvocationHandler {
@@ -78,8 +77,8 @@ public abstract class AvroGrpcClient {
     private final Protocol protocol;
     private final ServiceDescriptor serviceDescriptor;
 
-    ServiceInvocationHandler(Channel channel, CallOptions callOptions, Protocol
-        protocol, ServiceDescriptor serviceDescriptor) {
+    ServiceInvocationHandler(Channel channel, CallOptions callOptions, Protocol protocol,
+        ServiceDescriptor serviceDescriptor) {
       this.channel = channel;
       this.callOptions = callOptions;
       this.protocol = protocol;
@@ -91,25 +90,24 @@ public abstract class AvroGrpcClient {
       try {
         return invokeUnaryMethod(method, args);
       } catch (RuntimeException re) {
-        //rethrow any runtime exception
+        // rethrow any runtime exception
         throw re;
       } catch (Exception e) {
-        //throw any of the declared exceptions
+        // throw any of the declared exceptions
         for (Class<?> exceptionClass : method.getExceptionTypes()) {
           if (exceptionClass.isInstance(e)) {
             throw e;
           }
         }
-        //wrap all other exceptions
+        // wrap all other exceptions
         throw new AvroRemoteException(e);
       }
     }
 
     private Object invokeUnaryMethod(Method method, Object[] args) throws Exception {
       Type[] parameterTypes = method.getParameterTypes();
-      if ((parameterTypes.length > 0) &&
-          (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
-          Callback.class.isAssignableFrom(((Class<?>) parameterTypes[parameterTypes.length - 1]))) {
+      if ((parameterTypes.length > 0) && (parameterTypes[parameterTypes.length - 1] instanceof Class)
+          && Callback.class.isAssignableFrom(((Class<?>) parameterTypes[parameterTypes.length - 1]))) {
         // get the callback argument from the end
         Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
         Callback<?> callback = (Callback<?>) args[args.length - 1];
@@ -127,18 +125,17 @@ public abstract class AvroGrpcClient {
         return callFuture.get();
       } catch (Exception e) {
         if (e.getCause() instanceof Exception) {
-          throw (Exception)e.getCause();
+          throw (Exception) e.getCause();
         }
         throw new AvroRemoteException(e.getCause());
       }
     }
 
-    private <RespT> void unaryRequest(String methodName, Object[] args, Callback<RespT> callback) throws
-        Exception {
-      StreamObserver<Object> observerAdpater = new CallbackToResponseStreamObserverAdpater<>
-          (callback);
-      ClientCalls.asyncUnaryCall(channel.newCall(serviceDescriptor.getMethod(methodName,
-          MethodDescriptor.MethodType.UNARY), callOptions), args, observerAdpater);
+    private <RespT> void unaryRequest(String methodName, Object[] args, Callback<RespT> callback) throws Exception {
+      StreamObserver<Object> observerAdpater = new CallbackToResponseStreamObserverAdpater<>(callback);
+      ClientCalls.asyncUnaryCall(
+          channel.newCall(serviceDescriptor.getMethod(methodName, MethodDescriptor.MethodType.UNARY), callOptions),
+          args, observerAdpater);
     }
 
     private static class CallbackToResponseStreamObserverAdpater<T> implements StreamObserver<Object> {

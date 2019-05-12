@@ -30,20 +30,15 @@ import org.junit.Test;
 public class TestSchema {
   @Test
   public void testSplitSchemaBuild() {
-    Schema s = SchemaBuilder
-        .record("HandshakeRequest")
-        .namespace("org.apache.avro.ipc").fields()
-        .name("clientProtocol").type().optional().stringType()
-        .name("meta").type().optional().map().values().bytesType()
-        .endRecord();
+    Schema s = SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientProtocol")
+        .type().optional().stringType().name("meta").type().optional().map().values().bytesType().endRecord();
 
     String schemaString = s.toString();
     int mid = schemaString.length() / 2;
 
     Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
-    Schema parsedArrayOfStringSchema =
-        new org.apache.avro.Schema.Parser().parse
-            (schemaString.substring(0, mid), schemaString.substring(mid));
+    Schema parsedArrayOfStringSchema = new org.apache.avro.Schema.Parser().parse(schemaString.substring(0, mid),
+        schemaString.substring(mid));
     assertNotNull(parsedStringSchema);
     assertNotNull(parsedArrayOfStringSchema);
     assertEquals(parsedStringSchema.toString(), parsedArrayOfStringSchema.toString());

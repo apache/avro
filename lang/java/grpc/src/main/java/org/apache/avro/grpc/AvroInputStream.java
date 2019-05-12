@@ -26,11 +26,14 @@ import java.io.OutputStream;
 
 import io.grpc.Drainable;
 
-/** An {@link InputStream} backed by Avro RPC request/response that can drained to
- * a{@link OutputStream}. */
+/**
+ * An {@link InputStream} backed by Avro RPC request/response that can drained
+ * to a{@link OutputStream}.
+ */
 public abstract class AvroInputStream extends InputStream implements Drainable {
   /**
-   * Container to hold the serialized Avro payload when its read before draining it.
+   * Container to hold the serialized Avro payload when its read before draining
+   * it.
    */
   private ByteArrayInputStream partial;
 
@@ -58,8 +61,8 @@ public abstract class AvroInputStream extends InputStream implements Drainable {
   }
 
   /**
-   * An {@link OutputStream} that writes to a target {@link OutputStream} and provides total
-   * number of bytes written to it.
+   * An {@link OutputStream} that writes to a target {@link OutputStream} and
+   * provides total number of bytes written to it.
    */
   protected static class CountingOutputStream extends OutputStream {
     private final OutputStream target;

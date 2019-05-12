@@ -19,8 +19,8 @@ package org.apache.avro.specific;
 
 import org.apache.avro.generic.IndexedRecord;
 
-/** Implemented by generated record classes. Permits efficient access to
- * fields.*/
+/**
+ * Implemented by generated record classes. Permits efficient access to fields.
+ */
 public interface SpecificRecord extends IndexedRecord {
 }
-

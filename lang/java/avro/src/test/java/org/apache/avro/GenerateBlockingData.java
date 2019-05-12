@@ -30,24 +30,21 @@ import org.apache.avro.util.RandomData;
 
 /**
  * Generates file with objects of a specific schema(that doesn't contain nesting
- * of arrays and maps) with random data. This is only for testing.
- * Generated file contains the count of objects of the specified schema followed
- * by objects serialized using BlockingBinaryEncoder. No other metadata is
- * written to the file. See interoptests.py for more details(interoptests.py
- * reads the file generated here and validates the contents).
+ * of arrays and maps) with random data. This is only for testing. Generated
+ * file contains the count of objects of the specified schema followed by
+ * objects serialized using BlockingBinaryEncoder. No other metadata is written
+ * to the file. See interoptests.py for more details(interoptests.py reads the
+ * file generated here and validates the contents).
  */
 public class GenerateBlockingData {
   private static final int SYNC_INTERVAL = 1000;
-  private static ByteArrayOutputStream buffer =
-                      new ByteArrayOutputStream(2*SYNC_INTERVAL);
+  private static ByteArrayOutputStream buffer = new ByteArrayOutputStream(2 * SYNC_INTERVAL);
 
   private static EncoderFactory factory = EncoderFactory.get();
-  private static Encoder bufOut = EncoderFactory.get().blockingBinaryEncoder(
-      buffer, null);
+  private static Encoder bufOut = EncoderFactory.get().blockingBinaryEncoder(buffer, null);
   private static int blockCount;
 
-  private static void writeBlock(Encoder vout, FileOutputStream out)
-               throws IOException{
+  private static void writeBlock(Encoder vout, FileOutputStream out) throws IOException {
     vout.writeLong(blockCount);
     bufOut.flush();
     buffer.writeTo(out);
@@ -56,9 +53,8 @@ public class GenerateBlockingData {
   }
 
   public static void main(String[] args) throws Exception {
-    if(args.length != 3) {
-      System.out.println(
-          "Usage: GenerateBlockingData <schemafile> <outputfile> <count>");
+    if (args.length != 3) {
+      System.out.println("Usage: GenerateBlockingData <schemafile> <outputfile> <count>");
       System.exit(-1);
     }
 

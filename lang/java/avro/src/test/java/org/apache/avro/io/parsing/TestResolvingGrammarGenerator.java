@@ -48,8 +48,7 @@ public class TestResolvingGrammarGenerator {
   private final Schema schema;
   private final JsonNode data;
 
-  public TestResolvingGrammarGenerator(String jsonSchema, String jsonData)
-    throws IOException {
+  public TestResolvingGrammarGenerator(String jsonSchema, String jsonData) throws IOException {
     this.schema = new Schema.Parser().parse(jsonSchema);
     JsonFactory factory = new JsonFactory();
     ObjectMapper mapper = new ObjectMapper(factory);
@@ -61,8 +60,7 @@ public class TestResolvingGrammarGenerator {
   public void test() throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     EncoderFactory factory = EncoderFactory.get();
-    Encoder e = factory.validatingEncoder(schema,
-        factory.binaryEncoder(baos, null));
+    Encoder e = factory.validatingEncoder(schema, factory.binaryEncoder(baos, null));
 
     ResolvingGrammarGenerator.encode(e, schema, data);
     e.flush();
@@ -70,17 +68,10 @@ public class TestResolvingGrammarGenerator {
 
   @Test
   public void testRecordMissingRequiredFieldError() throws Exception {
-    Schema schemaWithoutField = SchemaBuilder
-        .record("MyRecord").namespace("ns")
-        .fields()
-          .name("field1").type().stringType().noDefault()
-        .endRecord();
-    Schema schemaWithField = SchemaBuilder
-        .record("MyRecord").namespace("ns")
-        .fields()
-          .name("field1").type().stringType().noDefault()
-          .name("field2").type().stringType().noDefault()
-        .endRecord();
+    Schema schemaWithoutField = SchemaBuilder.record("MyRecord").namespace("ns").fields().name("field1").type()
+        .stringType().noDefault().endRecord();
+    Schema schemaWithField = SchemaBuilder.record("MyRecord").namespace("ns").fields().name("field1").type()
+        .stringType().noDefault().name("field2").type().stringType().noDefault().endRecord();
     GenericData.Record record = new GenericRecordBuilder(schemaWithoutField).set("field1", "someValue").build();
     byte[] data = writeRecord(schemaWithoutField, record);
     try {
@@ -94,35 +85,17 @@ public class TestResolvingGrammarGenerator {
 
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
-    Collection<Object[]> ret = Arrays.asList(
-        new Object[][] {
-            { "{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ "
-                + " { \"name\" : \"f1\", \"type\": \"int\" }, "
-                + " { \"name\" : \"f2\", \"type\": \"float\" } "
-                + "] } }",
-              "{ \"f2\": 10.4, \"f1\": 10 } " },
-            { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": "
-                + "[ \"s1\", \"s2\"] } }", " \"s1\" " },
-            { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": "
-                + "[ \"s1\", \"s2\"] } }", " \"s2\" " },
-            { "{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }",
-              "\"hello\"" },
-            { "{ \"type\": \"array\", \"items\": \"int\" }",
-              "[ 10, 20, 30 ]" },
-            { "{ \"type\": \"map\", \"values\": \"int\" }",
-              "{ \"k1\": 10, \"k3\": 20, \"k3\": 30 }" },
-            { "[ \"int\", \"long\" ]", "10" },
-            { "\"string\"", "\"hello\"" },
-            { "\"bytes\"", "\"hello\"" },
-            { "\"int\"", "10" },
-            { "\"long\"", "10" },
-            { "\"float\"", "10.0" },
-            { "\"double\"", "10.0" },
-            { "\"boolean\"", "true" },
-            { "\"boolean\"", "false" },
-            { "\"null\"", "null" },
-            }
-        );
+    Collection<Object[]> ret = Arrays.asList(new Object[][] {
+        { "{ \"type\": \"record\", \"name\": \"r\", \"fields\": [ " + " { \"name\" : \"f1\", \"type\": \"int\" }, "
+            + " { \"name\" : \"f2\", \"type\": \"float\" } " + "] } }", "{ \"f2\": 10.4, \"f1\": 10 } " },
+        { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] } }", " \"s1\" " },
+        { "{ \"type\": \"enum\", \"name\": \"e\", \"symbols\": " + "[ \"s1\", \"s2\"] } }", " \"s2\" " },
+        { "{ \"type\": \"fixed\", \"name\": \"f\", \"size\": 10 }", "\"hello\"" },
+        { "{ \"type\": \"array\", \"items\": \"int\" }", "[ 10, 20, 30 ]" },
+        { "{ \"type\": \"map\", \"values\": \"int\" }", "{ \"k1\": 10, \"k3\": 20, \"k3\": 30 }" },
+        { "[ \"int\", \"long\" ]", "10" }, { "\"string\"", "\"hello\"" }, { "\"bytes\"", "\"hello\"" },
+        { "\"int\"", "10" }, { "\"long\"", "10" }, { "\"float\"", "10.0" }, { "\"double\"", "10.0" },
+        { "\"boolean\"", "true" }, { "\"boolean\"", "false" }, { "\"null\"", "null" }, });
     return ret;
   }
 

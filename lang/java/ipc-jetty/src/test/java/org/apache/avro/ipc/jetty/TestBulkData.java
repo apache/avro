@@ -36,10 +36,8 @@ import java.util.Random;
 import org.apache.avro.test.BulkData;
 
 public class TestBulkData {
-  private static final long COUNT =
-    Integer.parseInt(System.getProperty("test.count", "10"));
-  private static final int SIZE =
-    Integer.parseInt(System.getProperty("test.size", "65536"));
+  private static final long COUNT = Integer.parseInt(System.getProperty("test.count", "10"));
+  private static final int SIZE = Integer.parseInt(System.getProperty("test.size", "65536"));
 
   private static final ByteBuffer DATA = ByteBuffer.allocate(SIZE);
   static {
@@ -52,7 +50,9 @@ public class TestBulkData {
   public static class BulkDataImpl implements BulkData {
 
     @Override
-    public ByteBuffer read() { return DATA.duplicate(); }
+    public ByteBuffer read() {
+      return DATA.duplicate();
+    }
 
     @Override
     public void write(ByteBuffer data) {
@@ -65,10 +65,9 @@ public class TestBulkData {
 
   @Before
   public void startServer() throws Exception {
-    if (server != null) return;
-    server =
-      new HttpServer(new SpecificResponder(BulkData.class, new BulkDataImpl()),
-                     0);
+    if (server != null)
+      return;
+    server = new HttpServer(new SpecificResponder(BulkData.class, new BulkDataImpl()), 0);
     server.start();
     Transceiver client = new HttpTransceiver(new URL("http://127.0.0.1:" + server.getPort() + "/"));
     proxy = SpecificRequestor.getClient(BulkData.class, client);
@@ -106,12 +105,12 @@ public class TestBulkData {
   }
 
   private static void printStats(long start) {
-    double seconds = (System.currentTimeMillis()-start)/1000.0;
-    System.out.println("seconds = "+(int)seconds);
-    System.out.println("requests/second = "+(int)(COUNT/seconds));
-    double megabytes = (COUNT*SIZE)/(1024*1024.0);
-    System.out.println("MB = "+(int)megabytes);
-    System.out.println("MB/second = "+ (int)(megabytes/seconds));
+    double seconds = (System.currentTimeMillis() - start) / 1000.0;
+    System.out.println("seconds = " + (int) seconds);
+    System.out.println("requests/second = " + (int) (COUNT / seconds));
+    double megabytes = (COUNT * SIZE) / (1024 * 1024.0);
+    System.out.println("MB = " + (int) megabytes);
+    System.out.println("MB/second = " + (int) (megabytes / seconds));
   }
 
 }

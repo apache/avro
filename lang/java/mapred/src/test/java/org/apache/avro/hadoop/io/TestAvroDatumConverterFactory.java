@@ -57,8 +57,8 @@ public class TestAvroDatumConverterFactory {
 
     AvroKey<CharSequence> avroKey = new AvroKey<>("foo");
     @SuppressWarnings("unchecked")
-    AvroDatumConverter<AvroKey<CharSequence>, ?> converter = mFactory.create(
-        (Class<AvroKey<CharSequence>>) avroKey.getClass());
+    AvroDatumConverter<AvroKey<CharSequence>, ?> converter = mFactory
+        .create((Class<AvroKey<CharSequence>>) avroKey.getClass());
     assertEquals("foo", converter.convert(avroKey).toString());
   }
 
@@ -68,15 +68,14 @@ public class TestAvroDatumConverterFactory {
 
     AvroValue<Integer> avroValue = new AvroValue<>(42);
     @SuppressWarnings("unchecked")
-    AvroDatumConverter<AvroValue<Integer>, Integer> converter = mFactory.create(
-        (Class<AvroValue<Integer>>) avroValue.getClass());
+    AvroDatumConverter<AvroValue<Integer>, Integer> converter = mFactory
+        .create((Class<AvroValue<Integer>>) avroValue.getClass());
     assertEquals(42, converter.convert(avroValue).intValue());
   }
 
   @Test
   public void testConvertBooleanWritable() {
-    AvroDatumConverter<BooleanWritable, Boolean> converter
-        = mFactory.create(BooleanWritable.class);
+    AvroDatumConverter<BooleanWritable, Boolean> converter = mFactory.create(BooleanWritable.class);
     assertEquals(true, converter.convert(new BooleanWritable(true)));
   }
 

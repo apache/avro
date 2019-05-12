@@ -30,7 +30,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.compiler.schema.Schemas;
 
 /**
- * Utility class to resolve schemas that are unavailable at the time they are referenced in the IDL.
+ * Utility class to resolve schemas that are unavailable at the time they are
+ * referenced in the IDL.
  */
 final class SchemaResolver {
 
@@ -44,16 +45,16 @@ final class SchemaResolver {
   private static final String UR_SCHEMA_NS = "org.apache.avro.compiler";
 
   /**
-   * Create a schema to represent a "unresolved" schema.
-   * (used to represent a schema where the definition is not known at the time)
-   * This concept might be generalizable...
+   * Create a schema to represent a "unresolved" schema. (used to represent a
+   * schema where the definition is not known at the time) This concept might be
+   * generalizable...
    *
    * @param name
    * @return
    */
   static Schema unresolvedSchema(final String name) {
-    Schema schema = Schema.createRecord(UR_SCHEMA_NAME, "unresolved schema",
-        UR_SCHEMA_NS, false, Collections.EMPTY_LIST);
+    Schema schema = Schema.createRecord(UR_SCHEMA_NAME, "unresolved schema", UR_SCHEMA_NS, false,
+        Collections.EMPTY_LIST);
     schema.addProp(UR_SCHEMA_ATTR, name);
     return schema;
   }
@@ -66,8 +67,7 @@ final class SchemaResolver {
    */
   static boolean isUnresolvedSchema(final Schema schema) {
     return (schema.getType() == Schema.Type.RECORD && schema.getProp(UR_SCHEMA_ATTR) != null
-        && UR_SCHEMA_NAME.equals(schema.getName())
-        && UR_SCHEMA_NS.equals(schema.getNamespace()));
+        && UR_SCHEMA_NAME.equals(schema.getName()) && UR_SCHEMA_NS.equals(schema.getNamespace()));
   }
 
   /**
@@ -106,14 +106,12 @@ final class SchemaResolver {
       Protocol.Message nvalue;
       if (value.isOneWay()) {
         Schema replacement = resolve(replacements, value.getRequest(), protocol);
-        nvalue = result.createMessage(value.getName(), value.getDoc(),
-            value, replacement);
+        nvalue = result.createMessage(value.getName(), value.getDoc(), value, replacement);
       } else {
         Schema request = resolve(replacements, value.getRequest(), protocol);
         Schema response = resolve(replacements, value.getResponse(), protocol);
         Schema errors = resolve(replacements, value.getErrors(), protocol);
-        nvalue = result.createMessage(value.getName(), value.getDoc(),
-            value, request, response, errors);
+        nvalue = result.createMessage(value.getName(), value.getDoc(), value, request, response, errors);
       }
       result.getMessages().put(entry.getKey(), nvalue);
     }
@@ -121,12 +119,11 @@ final class SchemaResolver {
     return result;
   }
 
-  private static Schema resolve(final IdentityHashMap<Schema, Schema> replacements,
-                                final Schema request, final Protocol protocol) {
+  private static Schema resolve(final IdentityHashMap<Schema, Schema> replacements, final Schema request,
+      final Protocol protocol) {
     Schema replacement = replacements.get(request);
     if (replacement == null) {
-      replacement = Schemas.visit(request, new ResolvingVisitor(request, replacements,
-          new SymbolTable(protocol)));
+      replacement = Schemas.visit(request, new ResolvingVisitor(request, replacements, new SymbolTable(protocol)));
     }
     return replacement;
   }

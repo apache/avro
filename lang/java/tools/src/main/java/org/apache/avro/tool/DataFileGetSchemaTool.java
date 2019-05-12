@@ -38,15 +38,13 @@ public class DataFileGetSchemaTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.size() != 1) {
       err.println("Expected 1 argument: input_file");
       return 1;
     }
-    DataFileReader<Void> reader =
-        new DataFileReader<>(Util.openSeekableFromFS(args.get(0)),
-                             new GenericDatumReader<>());
+    DataFileReader<Void> reader = new DataFileReader<>(Util.openSeekableFromFS(args.get(0)),
+        new GenericDatumReader<>());
     out.println(reader.getSchema().toString(true));
     return 0;
   }

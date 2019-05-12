@@ -19,7 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -31,51 +31,51 @@ import org.apache.avro.util.Utf8;
  * {@link Decoder} that performs type-resolution between the reader's and
  * writer's schemas.
  *
- * <p>When resolving schemas, this class will return the values of fields in
- * _writer's_ order, not the reader's order.  (However, it returns _only_ the
- * reader's fields, not any extra fields the writer may have written.)  To help
+ * <p>
+ * When resolving schemas, this class will return the values of fields in
+ * _writer's_ order, not the reader's order. (However, it returns _only_ the
+ * reader's fields, not any extra fields the writer may have written.) To help
  * clients handle fields that appear to be coming out of order, this class
  * defines the method {@link #readFieldOrder}.
  *
- * <p>See the <a href="parsing/doc-files/parsing.html">parser documentation</a> for
- *  information on how this works.
+ * <p>
+ * See the <a href="parsing/doc-files/parsing.html">parser documentation</a> for
+ * information on how this works.
  */
 public class ResolvingDecoder extends ValidatingDecoder {
 
   private Decoder backup;
 
-  ResolvingDecoder(Schema writer, Schema reader, Decoder in)
-    throws IOException {
+  ResolvingDecoder(Schema writer, Schema reader, Decoder in) throws IOException {
     this(resolve(writer, reader), in);
   }
 
   /**
-   * Constructs a <tt>ResolvingDecoder</tt> using the given resolver.
-   * The resolver must have been returned by a previous call to
+   * Constructs a <tt>ResolvingDecoder</tt> using the given resolver. The resolver
+   * must have been returned by a previous call to
    * {@link #resolve(Schema, Schema)}.
-   * @param resolver  The resolver to use.
-   * @param in  The underlying decoder.
+   * 
+   * @param resolver The resolver to use.
+   * @param in       The underlying decoder.
    * @throws IOException
    */
-  private ResolvingDecoder(Object resolver, Decoder in)
-    throws IOException {
+  private ResolvingDecoder(Object resolver, Decoder in) throws IOException {
     super((Symbol) resolver, in);
   }
 
   /**
    * Produces an opaque resolver that can be used to construct a new
-   * {@link ResolvingDecoder#ResolvingDecoder(Object, Decoder)}. The
-   * returned Object is immutable and hence can be simultaneously used
-   * in many ResolvingDecoders. This method is reasonably expensive, the
-   * users are encouraged to cache the result.
+   * {@link ResolvingDecoder#ResolvingDecoder(Object, Decoder)}. The returned
+   * Object is immutable and hence can be simultaneously used in many
+   * ResolvingDecoders. This method is reasonably expensive, the users are
+   * encouraged to cache the result.
    *
-   * @param writer  The writer's schema. Cannot be null.
-   * @param reader  The reader's schema. Cannot be null.
-   * @return  The opaque resolver.
+   * @param writer The writer's schema. Cannot be null.
+   * @param reader The reader's schema. Cannot be null.
+   * @return The opaque resolver.
    * @throws IOException
    */
-  public static Object resolve(Schema writer, Schema reader)
-    throws IOException {
+  public static Object resolve(Schema writer, Schema reader) throws IOException {
     if (null == writer) {
       throw new NullPointerException("writer cannot be null!");
     }
@@ -85,16 +85,17 @@ public class ResolvingDecoder extends ValidatingDecoder {
     return new ResolvingGrammarGenerator().generate(writer, reader);
   }
 
-  /** Returns the actual order in which the reader's fields will be
-   * returned to the reader.
+  /**
+   * Returns the actual order in which the reader's fields will be returned to the
+   * reader.
    *
-   * This method is useful because {@link ResolvingDecoder}
-   * returns values in the order written by the writer, rather than
-   * the order expected by the reader.  This method allows readers
-   * to figure out what fields to expect.  Let's say the reader is
-   * expecting a three-field record, the first field is a long, the
-   * second a string, and the third an array.  In this case, a
-   * typical usage might be as follows:
+   * This method is useful because {@link ResolvingDecoder} returns values in the
+   * order written by the writer, rather than the order expected by the reader.
+   * This method allows readers to figure out what fields to expect. Let's say the
+   * reader is expecting a three-field record, the first field is a long, the
+   * second a string, and the third an array. In this case, a typical usage might
+   * be as follows:
+   * 
    * <pre>
    *   Schema.Fields[] fieldOrder = in.readFieldOrder();
    *   for (int i = 0; i &lt; 3; i++) {
@@ -110,51 +111,47 @@ public class ResolvingDecoder extends ValidatingDecoder {
    *       break;
    *     }
    * </pre>
-   * Note that {@link ResolvingDecoder} will return only the
-   * fields expected by the reader, not other fields that may have
-   * been written by the writer.  Thus, the iteration-count of "3" in
-   * the above loop will always be correct.
+   * 
+   * Note that {@link ResolvingDecoder} will return only the fields expected by
+   * the reader, not other fields that may have been written by the writer. Thus,
+   * the iteration-count of "3" in the above loop will always be correct.
    *
-   * Throws a runtime exception if we're not just about to read the
-   * first field of a record.  (If the client knows the
-   * order of incoming fields, then the client does <em>not</em>
-   * need to call this method but rather can just start reading the
-   * field values.)
+   * Throws a runtime exception if we're not just about to read the first field of
+   * a record. (If the client knows the order of incoming fields, then the client
+   * does <em>not</em> need to call this method but rather can just start reading
+   * the field values.)
    *
    * @throws AvroTypeException If we're not starting a new record
    *
    */
   public final Schema.Field[] readFieldOrder() throws IOException {
-    return ((Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION)).
-      fields;
+    return ((Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION)).fields;
   }
 
   /**
-   * Same as {@link readFieldOrder} except that it returns
-   * <tt>null</tt> if there was no reordering of fields, i.e., if the
-   * correct thing for the reader to do is to read (all) of its fields
-   * in the order specified by its own schema (useful for
-   * optimizations).
+   * Same as {@link #readFieldOrder} except that it returns <tt>null</tt> if there
+   * was no reordering of fields, i.e., if the correct thing for the reader to do
+   * is to read (all) of its fields in the order specified by its own schema
+   * (useful for optimizations).
    */
   public final Schema.Field[] readFieldOrderIfDiff() throws IOException {
-    Symbol.FieldOrderAction top
-      = (Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION);
+    Symbol.FieldOrderAction top = (Symbol.FieldOrderAction) parser.advance(Symbol.FIELD_ACTION);
     return (top.noReorder ? null : top.fields);
   }
 
   /**
-   * Consume any more data that has been written by the writer but not
-   * needed by the reader so that the the underlying decoder is in proper
-   * shape for the next record. This situation happens when, for example,
-   * the writer writes a record with two fields and the reader needs only the
-   * first field.
+   * Consume any more data that has been written by the writer but not needed by
+   * the reader so that the the underlying decoder is in proper shape for the next
+   * record. This situation happens when, for example, the writer writes a record
+   * with two fields and the reader needs only the first field.
    *
-   * This function should be called after completely decoding an object but
-   * before next object can be decoded from the same underlying decoder
-   * either directly or through another resolving decoder. If the same resolving
-   * decoder is used for the next object as well, calling this method is
-   * optional; the state of this resolving decoder ensures that any leftover
-   * portions are consumed before the next object is decoded.
+   * This function should be called after completely decoding an object but before
+   * next object can be decoded from the same underlying decoder either directly
+   * or through another resolving decoder. If the same resolving decoder is used
+   * for the next object as well, calling this method is optional; the state of
+   * this resolving decoder ensures that any leftover portions are consumed before
+   * the next object is decoded.
+   * 
    * @throws IOException
    */
   public final void drain() throws IOException {
@@ -213,13 +210,11 @@ public class ResolvingDecoder extends ValidatingDecoder {
     }
   }
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
-
   @Override
   public String readString() throws IOException {
     Symbol actual = parser.advance(Symbol.STRING);
     if (actual == Symbol.BYTES) {
-      return new String(in.readBytes(null).array(), UTF8);
+      return new String(in.readBytes(null).array(), StandardCharsets.UTF_8);
     } else {
       assert actual == Symbol.STRING;
       return in.readString();
@@ -265,7 +260,8 @@ public class ResolvingDecoder extends ValidatingDecoder {
     parser.advance(Symbol.ENUM);
     Symbol.EnumAdjustAction top = (Symbol.EnumAdjustAction) parser.popSymbol();
     int n = in.readEnum();
-    if (top.noAdjustments) return n;
+    if (top.noAdjustments)
+      return n;
     Object o = top.adjustments[n];
     if (o instanceof Integer) {
       return (Integer) o;
@@ -294,11 +290,11 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public Symbol doAction(Symbol input, Symbol top) throws IOException {
     if (top instanceof Symbol.FieldOrderAction) {
       return input == Symbol.FIELD_ACTION ? top : null;
-    } if (top instanceof Symbol.ResolvingAction) {
+    }
+    if (top instanceof Symbol.ResolvingAction) {
       Symbol.ResolvingAction t = (Symbol.ResolvingAction) top;
       if (t.reader != input) {
-        throw new AvroTypeException("Found " + t.reader + " while looking for "
-                                    + input);
+        throw new AvroTypeException("Found " + t.reader + " while looking for " + input);
       } else {
         return t.writer;
       }
@@ -313,8 +309,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else if (top instanceof Symbol.DefaultStartAction) {
       Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
       backup = in;
-      in = DecoderFactory.get()
-        .binaryDecoder(dsa.contents, null);
+      in = DecoderFactory.get().binaryDecoder(dsa.contents, null);
     } else if (top == Symbol.DEFAULT_END_ACTION) {
       in = backup;
     } else {
@@ -338,11 +333,9 @@ public class ResolvingDecoder extends ValidatingDecoder {
     } else if (top instanceof Symbol.DefaultStartAction) {
       Symbol.DefaultStartAction dsa = (Symbol.DefaultStartAction) top;
       backup = in;
-      in = DecoderFactory.get()
-        .binaryDecoder(dsa.contents, null);
+      in = DecoderFactory.get().binaryDecoder(dsa.contents, null);
     } else if (top == Symbol.DEFAULT_END_ACTION) {
       in = backup;
     }
   }
 }
-

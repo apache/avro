@@ -101,8 +101,8 @@ do
         exit -1;
       fi
 
-      #runs RAT on artifacts
-      mvn -N -P rat antrun:run
+      # runs RAT on artifacts
+      mvn -N -P rat antrun:run verify
 
       mkdir -p dist
       (cd build; tar czf ../dist/${SRC_DIR}.tar.gz ${SRC_DIR})
@@ -153,10 +153,10 @@ do
 
       for f in $(find dist -type f \
         \! -name '*.md5' \! -name '*.sha1' \
+        \! -name '*.sha512' \! -name '*.sha256' \
         \! -name '*.asc' \! -name '*.txt' );
       do
-        (cd `dirname $f`; md5sum `basename $f`) > $f.md5
-        (cd `dirname $f`; sha1sum `basename $f`) > $f.sha1
+        (cd `dirname $f`; shasum -a 512 `basename $f`) > $f.sha512
         gpg --passphrase $password --armor --output $f.asc --detach-sig $f
       done
 
@@ -196,6 +196,49 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+      ;;
+    veryclean)
+      rm -rf build dist
+      (cd doc; ant clean)
+
+      (mvn -B clean)
+      rm -rf lang/java/*/userlogs/
+      rm -rf lang/java/*/dependency-reduced-pom.xml
+
+      (cd lang/py; ant clean)
+      rm -rf lang/py/userlogs/
+
+      (cd lang/py3; python3 setup.py clean)
+      rm -rf lang/py3/dist
+      rm -rf lang/py3/avro_python3.egg-info
+      rm -f  lang/py3/avro/*.avsc
+      rm -f  lang/py3/avro/VERSION.txt
+      rm -rf lang/py3/avro/__pycache__/
+      rm -f  lang/py3/avro/tests/interop.avsc
+      rm -rf lang/py3/avro/tests/__pycache__/
+
+      (cd lang/c; ./build.sh clean)
+
+      (cd lang/c++; ./build.sh clean)
+
+      (cd lang/csharp; ./build.sh clean)
+
+      (cd lang/js; ./build.sh clean)
+
+      (cd lang/ruby; ./build.sh clean)
+
+      (cd lang/php; ./build.sh clean)
+
+      (cd lang/perl; ./build.sh clean)
+      rm -rf lang/c++/build
+      rm -rf lang/c++/test?.df
+      rm -rf lang/js/node_modules
+      rm -rf lang/perl/inc/
+      rm -rf lang/ruby/.gem/
+      rm -rf lang/ruby/Gemfile.lock
+      rm -rf lang/py/lib/ivy-2.2.0.jar
+      rm -rf lang/csharp/src/apache/ipc.test/bin/
+      rm -rf lang/csharp/src/apache/ipc.test/obj
       ;;
 
     docker)

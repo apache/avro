@@ -35,7 +35,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.ipc.generic.GenericResponder;
 
-/** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces.*/
+/** {@link org.apache.avro.ipc.Responder Responder} for generated interfaces. */
 public class SpecificResponder extends GenericResponder {
   private Object impl;
 
@@ -56,7 +56,9 @@ public class SpecificResponder extends GenericResponder {
     this.impl = impl;
   }
 
-  public SpecificData getSpecificData() {return (SpecificData)getGenericData();}
+  public SpecificData getSpecificData() {
+    return (SpecificData) getGenericData();
+  }
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
@@ -69,8 +71,7 @@ public class SpecificResponder extends GenericResponder {
   }
 
   @Override
-  public void writeError(Schema schema, Object error,
-                         Encoder out) throws IOException {
+  public void writeError(Schema schema, Object error, Encoder out) throws IOException {
     getDatumWriter(schema).write(error, out);
   }
 
@@ -81,8 +82,8 @@ public class SpecificResponder extends GenericResponder {
     Class[] paramTypes = new Class[numParams];
     int i = 0;
     try {
-      for (Schema.Field param: message.getRequest().getFields()) {
-        params[i] = ((GenericRecord)request).get(param.name());
+      for (Schema.Field param : message.getRequest().getFields()) {
+        params[i] = ((GenericRecord) request).get(param.name());
         paramTypes[i] = getSpecificData().getClass(param.schema());
         i++;
       }
@@ -90,10 +91,11 @@ public class SpecificResponder extends GenericResponder {
       method.setAccessible(true);
       return method.invoke(impl, params);
     } catch (InvocationTargetException e) {
-      if (e.getTargetException() instanceof Exception) {
-        throw (Exception) e.getTargetException();
+      Throwable error = e.getTargetException();
+      if (error instanceof Exception) {
+        throw (Exception) error;
       } else {
-        throw new Exception(e.getTargetException());
+        throw new AvroRuntimeException(error);
       }
     } catch (NoSuchMethodException | IllegalAccessException e) {
       throw new AvroRuntimeException(e);
@@ -101,4 +103,3 @@ public class SpecificResponder extends GenericResponder {
   }
 
 }
-

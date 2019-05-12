@@ -34,8 +34,10 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 /**
  * FileOutputFormat for writing Avro container files.
  *
- * <p>Since Avro container files only contain records (not key/value pairs), this output
- * format ignores the value.</p>
+ * <p>
+ * Since Avro container files only contain records (not key/value pairs), this
+ * output format ignores the value.
+ * </p>
  *
  * @param <T> The (java) type of the Avro data to write.
  */
@@ -68,14 +70,13 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
     /**
      * Creates a new record writer instance.
      *
-     * @param writerSchema The writer schema for the records to write.
+     * @param writerSchema     The writer schema for the records to write.
      * @param compressionCodec The compression type for the writer file.
-     * @param outputStream The target output stream for the records.
-     * @param syncInterval The sync interval for the writer file.
+     * @param outputStream     The target output stream for the records.
+     * @param syncInterval     The sync interval for the writer file.
      */
-    protected RecordWriter<AvroKey<T>, NullWritable> create(
-        Schema writerSchema, GenericData dataModel, CodecFactory compressionCodec,
-        OutputStream outputStream, int syncInterval) throws IOException {
+    protected RecordWriter<AvroKey<T>, NullWritable> create(Schema writerSchema, GenericData dataModel,
+        CodecFactory compressionCodec, OutputStream outputStream, int syncInterval) throws IOException {
       return new AvroKeyRecordWriter<>(writerSchema, dataModel, compressionCodec, outputStream, syncInterval);
     }
   }
@@ -83,8 +84,7 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
   /** {@inheritDoc} */
   @Override
   @SuppressWarnings("unchecked")
-  public RecordWriter<AvroKey<T>, NullWritable> getRecordWriter(TaskAttemptContext context)
-      throws IOException {
+  public RecordWriter<AvroKey<T>, NullWritable> getRecordWriter(TaskAttemptContext context) throws IOException {
     Configuration conf = context.getConfiguration();
     // Get the writer schema.
     Schema writerSchema = AvroJob.getOutputKeySchema(conf);
@@ -96,17 +96,15 @@ public class AvroKeyOutputFormat<T> extends AvroOutputFormatBase<AvroKey<T>, Nul
       }
     }
     if (null == writerSchema) {
-      throw new IOException(
-          "AvroKeyOutputFormat requires an output schema. Use AvroJob.setOutputKeySchema().");
+      throw new IOException("AvroKeyOutputFormat requires an output schema. Use AvroJob.setOutputKeySchema().");
     }
 
     GenericData dataModel = AvroSerialization.createDataModel(conf);
 
     OutputStream out = getAvroFileOutputStream(context);
     try {
-      return mRecordWriterFactory.create
-              (writerSchema, dataModel, getCompressionCodec(context),
-                      out, getSyncInterval(context));
+      return mRecordWriterFactory.create(writerSchema, dataModel, getCompressionCodec(context), out,
+          getSyncInterval(context));
     } catch (IOException e) {
       out.close();
       throw e;

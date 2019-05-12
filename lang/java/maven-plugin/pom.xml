@@ -34,6 +34,7 @@
   <description>Maven plugin for Avro IDL and Specific API Compilers</description>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <pluginTestingVersion>1.3</pluginTestingVersion>
   </properties>
 
@@ -42,7 +43,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>${plugin-plugin.version}</version>
         <executions>
           <execution>
             <id>generated-helpmojo</id>

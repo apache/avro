@@ -33,6 +33,10 @@
   <url>http://avro.apache.org/</url>
   <packaging>pom</packaging>
 
+  <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
+  </properties>
+
   <modules>
     <module>core</module>
     <module>avro</module>
@@ -57,14 +61,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>${jar-plugin.version}</version>
-          <executions>
-            <execution>
-              <goals>
-                <goal>test-jar</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
       </plugins>
     </pluginManagement>

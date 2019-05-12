@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-
 package org.apache.avro.mapreduce;
 
 import java.io.IOException;
@@ -54,14 +53,10 @@ public class TestAvroMultipleOutputs {
   @Rule
   public TemporaryFolder DIR = new TemporaryFolder();
 
-  public static final Schema STATS_SCHEMA =
-    new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
-                  + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"},"
-                  + "{\"name\":\"name\",\"type\":\"string\"}]}");
-  public static final Schema STATS_SCHEMA_2 =
-    new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
-                  + "\"fields\":[{\"name\":\"count1\",\"type\":\"int\"},"
-                  + "{\"name\":\"name1\",\"type\":\"string\"}]}");
+  public static final Schema STATS_SCHEMA = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
+      + "\"fields\":[{\"name\":\"count\",\"type\":\"int\"}," + "{\"name\":\"name\",\"type\":\"string\"}]}");
+  public static final Schema STATS_SCHEMA_2 = new Schema.Parser().parse("{\"name\":\"stats\",\"type\":\"record\","
+      + "\"fields\":[{\"name\":\"count1\",\"type\":\"int\"}," + "{\"name\":\"name1\",\"type\":\"string\"}]}");
 
   private static class LineCountMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
     private IntWritable mOne;
@@ -73,13 +68,12 @@ public class TestAvroMultipleOutputs {
 
     @Override
     protected void map(LongWritable fileByteOffset, Text line, Context context)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
       context.write(line, mOne);
     }
   }
 
-  private static class StatCountMapper
-          extends Mapper<AvroKey<TextStats>, NullWritable, Text, IntWritable> {
+  private static class StatCountMapper extends Mapper<AvroKey<TextStats>, NullWritable, Text, IntWritable> {
     private IntWritable mCount;
     private Text mText;
 
@@ -91,7 +85,7 @@ public class TestAvroMultipleOutputs {
 
     @Override
     protected void map(AvroKey<TextStats> record, NullWritable ignore, Context context)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
       mCount.set(record.datum().getCount());
       mText.set(record.datum().getName().toString());
       context.write(mText, mCount);
@@ -99,7 +93,7 @@ public class TestAvroMultipleOutputs {
   }
 
   private static class GenericStatsReducer
-          extends Reducer<Text, IntWritable, AvroKey<GenericData.Record>, NullWritable> {
+      extends Reducer<Text, IntWritable, AvroKey<GenericData.Record>, NullWritable> {
     private AvroKey<GenericData.Record> mStats;
     private AvroMultipleOutputs amos;
 
@@ -111,7 +105,7 @@ public class TestAvroMultipleOutputs {
 
     @Override
     protected void reduce(Text line, Iterable<IntWritable> counts, Context context)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
       GenericData.Record record = new GenericData.Record(STATS_SCHEMA);
       GenericData.Record record2 = new GenericData.Record(STATS_SCHEMA_2);
       int sum = 0;
@@ -138,8 +132,7 @@ public class TestAvroMultipleOutputs {
     }
   }
 
-  private static class SpecificStatsReducer
-          extends Reducer<Text, IntWritable, AvroKey<TextStats>, NullWritable> {
+  private static class SpecificStatsReducer extends Reducer<Text, IntWritable, AvroKey<TextStats>, NullWritable> {
     private AvroKey<TextStats> mStats;
     private AvroMultipleOutputs amos;
 
@@ -151,7 +144,7 @@ public class TestAvroMultipleOutputs {
 
     @Override
     protected void reduce(Text line, Iterable<IntWritable> counts, Context context)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
       TextStats record = new TextStats();
       record.setCount(0);
       for (IntWritable count : counts) {
@@ -169,20 +162,18 @@ public class TestAvroMultipleOutputs {
     }
   }
 
-  private static class SortMapper
-          extends Mapper<AvroKey<TextStats>, NullWritable, AvroKey<TextStats>, NullWritable> {
+  private static class SortMapper extends Mapper<AvroKey<TextStats>, NullWritable, AvroKey<TextStats>, NullWritable> {
     @Override
     protected void map(AvroKey<TextStats> key, NullWritable value, Context context)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
       context.write(key, value);
     }
   }
 
-  private static class SortReducer
-          extends Reducer<AvroKey<TextStats>, NullWritable, AvroKey<TextStats>, NullWritable> {
+  private static class SortReducer extends Reducer<AvroKey<TextStats>, NullWritable, AvroKey<TextStats>, NullWritable> {
     @Override
     protected void reduce(AvroKey<TextStats> key, Iterable<NullWritable> ignore, Context context)
-            throws IOException, InterruptedException {
+        throws IOException, InterruptedException {
       context.write(key, NullWritable.get());
     }
   }
@@ -191,9 +182,8 @@ public class TestAvroMultipleOutputs {
   public void testAvroGenericOutput() throws Exception {
     Job job = Job.getInstance();
 
-    FileInputFormat.setInputPaths(job, new Path(getClass()
-            .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
-            .toURI().toString()));
+    FileInputFormat.setInputPaths(job,
+        new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt").toURI().toString()));
     job.setInputFormatClass(TextInputFormat.class);
 
     job.setMapperClass(LineCountMapper.class);
@@ -220,8 +210,7 @@ public class TestAvroMultipleOutputs {
     Map<String, Integer> counts = new HashMap<>();
 
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new GenericDatumReader<>(STATS_SCHEMA))) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA))) {
       for (GenericData.Record record : reader) {
         counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
       }
@@ -235,8 +224,7 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new GenericDatumReader<>(STATS_SCHEMA_2))) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA_2))) {
       for (GenericData.Record record : reader) {
         counts.put(((Utf8) record.get("name1")).toString(), (Integer) record.get("count1"));
       }
@@ -250,8 +238,7 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new GenericDatumReader<>(STATS_SCHEMA))) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA))) {
       for (GenericData.Record record : reader) {
         counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
       }
@@ -265,8 +252,7 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new GenericDatumReader<>(STATS_SCHEMA_2))) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA_2))) {
       for (GenericData.Record record : reader) {
         counts.put(((Utf8) record.get("name1")).toString(), (Integer) record.get("count1"));
       }
@@ -279,8 +265,7 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(1, outputFiles.length);
     counts.clear();
     try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new GenericDatumReader<>(STATS_SCHEMA))) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new GenericDatumReader<>(STATS_SCHEMA))) {
       for (GenericData.Record record : reader) {
         counts.put(((Utf8) record.get("name")).toString(), (Integer) record.get("count"));
       }
@@ -295,9 +280,8 @@ public class TestAvroMultipleOutputs {
   public void testAvroSpecificOutput() throws Exception {
     Job job = Job.getInstance();
 
-    FileInputFormat.setInputPaths(job, new Path(getClass()
-            .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt")
-            .toURI().toString()));
+    FileInputFormat.setInputPaths(job,
+        new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.txt").toURI().toString()));
     job.setInputFormatClass(TextInputFormat.class);
 
     job.setMapperClass(LineCountMapper.class);
@@ -319,8 +303,7 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(1, outputFiles.length);
     Map<String, Integer> counts = new HashMap<>();
     try (DataFileReader<TextStats> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new SpecificDatumReader<>())) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>())) {
       for (TextStats record : reader) {
         counts.put(record.getName().toString(), record.getCount());
       }
@@ -335,9 +318,8 @@ public class TestAvroMultipleOutputs {
   public void testAvroInput() throws Exception {
     Job job = Job.getInstance();
 
-    FileInputFormat.setInputPaths(job, new Path(getClass()
-            .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
-            .toURI().toString()));
+    FileInputFormat.setInputPaths(job,
+        new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro").toURI().toString()));
     job.setInputFormatClass(AvroKeyInputFormat.class);
     AvroJob.setInputKeySchema(job, TextStats.SCHEMA$);
     AvroMultipleOutputs.addNamedOutput(job, "myavro3", AvroKeyOutputFormat.class, TextStats.SCHEMA$, null);
@@ -361,8 +343,7 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(1, outputFiles.length);
     Map<String, Integer> counts = new HashMap<>();
     try (DataFileReader<TextStats> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new SpecificDatumReader<>())) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>())) {
       for (TextStats record : reader) {
         counts.put(record.getName().toString(), record.getCount());
       }
@@ -377,9 +358,8 @@ public class TestAvroMultipleOutputs {
   public void testAvroMapOutput() throws Exception {
     Job job = Job.getInstance();
 
-    FileInputFormat.setInputPaths(job, new Path(getClass()
-            .getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro")
-            .toURI().toString()));
+    FileInputFormat.setInputPaths(job,
+        new Path(getClass().getResource("/org/apache/avro/mapreduce/mapreduce-test-input.avro").toURI().toString()));
     job.setInputFormatClass(AvroKeyInputFormat.class);
     AvroJob.setInputKeySchema(job, TextStats.SCHEMA$);
 
@@ -402,8 +382,7 @@ public class TestAvroMultipleOutputs {
     Assert.assertEquals(1, outputFiles.length);
     Map<String, Integer> counts = new HashMap<>();
     try (DataFileReader<TextStats> reader = new DataFileReader<>(
-            new FsInput(outputFiles[0].getPath(), job.getConfiguration()),
-            new SpecificDatumReader<>())) {
+        new FsInput(outputFiles[0].getPath(), job.getConfiguration()), new SpecificDatumReader<>())) {
       for (TextStats record : reader) {
         counts.put(record.getName().toString(), record.getCount());
       }

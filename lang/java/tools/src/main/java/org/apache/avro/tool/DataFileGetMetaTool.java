@@ -43,26 +43,21 @@ public class DataFileGetMetaTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     OptionParser p = new OptionParser();
-    OptionSpec<String> keyOption =
-        p.accepts("key", "Metadata key")
-        .withOptionalArg()
-        .ofType(String.class);
+    OptionSpec<String> keyOption = p.accepts("key", "Metadata key").withOptionalArg().ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
     String keyName = keyOption.value(opts);
 
-    List<String> nargs = (List<String>)opts.nonOptionArguments();
+    List<String> nargs = (List<String>) opts.nonOptionArguments();
     if (nargs.size() != 1) {
       err.println("Expected 1 arg: input_file");
       p.printHelpOn(err);
       return 1;
     }
     FsInput in = Util.openSeekableFromFS(args.get(0));
-    DataFileReader<Void> reader =
-      new DataFileReader<>(in, new GenericDatumReader<>());
+    DataFileReader<Void> reader = new DataFileReader<>(in, new GenericDatumReader<>());
     if (keyName != null) {
       byte[] value = reader.getMeta(keyName);
       if (value != null) {
@@ -84,10 +79,10 @@ public class DataFileGetMetaTool implements Tool {
 
   // escape TAB, NL and CR in keys, so that output can be reliably parsed
   static String escapeKey(String key) {
-    key = key.replace("\\","\\\\");               // escape backslashes first
-    key = key.replace("\t","\\t");                // TAB
-    key = key.replace("\n","\\n");                // NL
-    key = key.replace("\r","\\r");                // CR
+    key = key.replace("\\", "\\\\"); // escape backslashes first
+    key = key.replace("\t", "\\t"); // TAB
+    key = key.replace("\n", "\\n"); // NL
+    key = key.replace("\r", "\\r"); // CR
     return key;
   }
 

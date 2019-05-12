@@ -21,8 +21,12 @@ package org.apache.avro.mapred;
 /** The wrapper of values for jobs configured with {@link AvroJob} . */
 public class AvroValue<T> extends AvroWrapper<T> {
   /** Wrap null. Construct {@link AvroValue} wrapping no value. */
-  public AvroValue() { this(null); }
+  public AvroValue() {
+    this(null);
+  }
 
   /** Wrap a value. */
-  public AvroValue(T datum) { super(datum); }
+  public AvroValue(T datum) {
+    super(datum);
+  }
 }

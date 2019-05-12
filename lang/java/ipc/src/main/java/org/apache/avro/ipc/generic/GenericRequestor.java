@@ -29,7 +29,6 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
-import org.apache.avro.ipc.Callback;
 import org.apache.avro.ipc.Requestor;
 import org.apache.avro.ipc.Transceiver;
 
@@ -37,69 +36,35 @@ import org.apache.avro.ipc.Transceiver;
 public class GenericRequestor extends Requestor {
   GenericData data;
 
-  public GenericRequestor(Protocol protocol, Transceiver transceiver)
-    throws IOException {
+  public GenericRequestor(Protocol protocol, Transceiver transceiver) throws IOException {
     this(protocol, transceiver, GenericData.get());
   }
 
-  public GenericRequestor(Protocol protocol, Transceiver transceiver,
-                          GenericData data)
-    throws IOException {
+  public GenericRequestor(Protocol protocol, Transceiver transceiver, GenericData data) throws IOException {
     super(protocol, transceiver);
     this.data = data;
   }
 
-  public GenericData getGenericData() { return data; }
-
-  @Override
-  public Object request(String messageName, Object request)
-    throws IOException {
-    try {
-      return super.request(messageName, request);
-    } catch (Exception e) {
-      if (e instanceof RuntimeException)
-        throw (RuntimeException)e;
-      if (e instanceof IOException)
-        throw (IOException)e;
-      throw new AvroRemoteException(e);
-    }
+  public GenericData getGenericData() {
+    return data;
   }
 
   @Override
-  public <T> void request(String messageName, Object request, Callback<T> callback)
-    throws IOException {
-    try {
-      super.request(messageName, request, callback);
-    } catch (Exception e) {
-      if (e instanceof RuntimeException)
-        throw (RuntimeException)e;
-      if (e instanceof IOException)
-        throw (IOException)e;
-      throw new AvroRemoteException(e);
-    }
-  }
-
-  @Override
-  public void writeRequest(Schema schema, Object request, Encoder out)
-    throws IOException {
+  public void writeRequest(Schema schema, Object request, Encoder out) throws IOException {
     new GenericDatumWriter<>(schema, data).write(request, out);
   }
 
   @Override
-  public Object readResponse(Schema writer, Schema reader, Decoder in)
-    throws IOException {
+  public Object readResponse(Schema writer, Schema reader, Decoder in) throws IOException {
     return new GenericDatumReader<>(writer, reader, data).read(null, in);
   }
 
   @Override
-  public Exception readError(Schema writer, Schema reader, Decoder in)
-    throws IOException {
-    Object error = new GenericDatumReader<>(writer, reader, data)
-      .read(null,in);
+  public Exception readError(Schema writer, Schema reader, Decoder in) throws IOException {
+    Object error = new GenericDatumReader<>(writer, reader, data).read(null, in);
     if (error instanceof CharSequence)
       return new AvroRuntimeException(error.toString()); // system error
     return new AvroRemoteException(error);
   }
 
 }
-

@@ -50,6 +50,7 @@
             <import>${basedir}/src/test/avro/imports</import>
             <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
           </imports>
+          <dateTimeLogicalTypeImplementation>joda</dateTimeLogicalTypeImplementation>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>
@@ -64,7 +65,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.9.7</version>
+      <version>${jackson.version}</version>
     </dependency>
   </dependencies>
 

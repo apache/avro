@@ -29,7 +29,7 @@ abstract class Checksum {
     else if ("crc32".equals(name))
       return new Crc32Checksum();
     else
-      throw new TrevniRuntimeException("Unknown checksum: "+name);
+      throw new TrevniRuntimeException("Unknown checksum: " + name);
   }
 
   /** The number of bytes per checksum. */

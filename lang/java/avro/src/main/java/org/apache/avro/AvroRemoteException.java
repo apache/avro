@@ -18,13 +18,12 @@
 
 package org.apache.avro;
 
-import java.io.IOException;
-
 /** Base class for exceptions thrown to client by server. */
-public class AvroRemoteException extends IOException {
+public class AvroRemoteException extends Exception {
   private Object value;
 
-  protected AvroRemoteException() {}
+  protected AvroRemoteException() {
+  }
 
   public AvroRemoteException(Throwable value) {
     this(value.toString());
@@ -41,6 +40,7 @@ public class AvroRemoteException extends IOException {
     this.value = value;
   }
 
-  public Object getValue() { return value; }
+  public Object getValue() {
+    return value;
+  }
 }
-

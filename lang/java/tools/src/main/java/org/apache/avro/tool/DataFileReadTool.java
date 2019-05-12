@@ -51,11 +51,9 @@ public class DataFileReadTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser optionParser = new OptionParser();
-    OptionSpec<Void> prettyOption = optionParser
-        .accepts("pretty", "Turns on pretty printing.");
+    OptionSpec<Void> prettyOption = optionParser.accepts("pretty", "Turns on pretty printing.");
     String headDesc = String.format("Converts the first X records (default is %d).", DEFAULT_HEAD_COUNT);
     OptionSpec<String> headOption = optionParser.accepts("head", headDesc).withOptionalArg();
 
@@ -92,17 +90,19 @@ public class DataFileReadTool implements Tool {
 
   private static long getHeadCount(OptionSet optionSet, OptionSpec<String> headOption, List<String> nargs) {
     long headCount = Long.MAX_VALUE;
-    if(optionSet.has(headOption)) {
+    if (optionSet.has(headOption)) {
       headCount = DEFAULT_HEAD_COUNT;
       List<String> headValues = optionSet.valuesOf(headOption);
-      if(headValues.size() > 0) {
+      if (headValues.size() > 0) {
         // if the value parses to int, assume it's meant to go with --head
-        // otherwise assume it was an optionSet.nonOptionArgument and add back to the list
+        // otherwise assume it was an optionSet.nonOptionArgument and add back to the
+        // list
         // TODO: support input filenames whose whole path+name is int parsable?
         try {
           headCount = Long.parseLong(headValues.get(0));
-          if(headCount < 0) throw new AvroRuntimeException("--head count must not be negative");
-        } catch(NumberFormatException ex) {
+          if (headCount < 0)
+            throw new AvroRuntimeException("--head count must not be negative");
+        } catch (NumberFormatException ex) {
           nargs.addAll(headValues);
         }
       }

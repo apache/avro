@@ -38,8 +38,11 @@ import java.net.InetSocketAddress;
 public class TestNamespaceSpecific {
 
   public static class TestImpl implements TestNamespace {
-    public TestRecord echo(TestRecord record) { return record; }
-    public void error() throws AvroRemoteException {
+    public TestRecord echo(TestRecord record) {
+      return record;
+    }
+
+    public void error() throws TestError {
       throw TestError.newBuilder().setMessage$("an error").build();
     }
   }
@@ -50,9 +53,9 @@ public class TestNamespaceSpecific {
 
   @Before
   public void testStartServer() throws Exception {
-    if (server != null) return;
-    server = new SocketServer(new SpecificResponder(TestNamespace.class, new TestImpl()),
-                              new InetSocketAddress(0));
+    if (server != null)
+      return;
+    server = new SocketServer(new SpecificResponder(TestNamespace.class, new TestImpl()), new InetSocketAddress(0));
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = SpecificRequestor.getClient(TestNamespace.class, client);
@@ -61,7 +64,7 @@ public class TestNamespaceSpecific {
   @Test
   public void testEcho() throws IOException {
     TestRecord record = new TestRecord();
-    record.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    record.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
     TestRecord echoed = proxy.echo(record);
     assertEquals(record, echoed);
     assertEquals(record.hashCode(), echoed.hashCode());

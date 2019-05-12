@@ -30,7 +30,7 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
-/** {@link org.apache.avro.ipc.Responder} for existing interfaces.*/
+/** {@link org.apache.avro.ipc.Responder} for existing interfaces. */
 public class ReflectResponder extends SpecificResponder {
   public ReflectResponder(Class iface, Object impl) {
     this(iface, impl, new ReflectData(impl.getClass().getClassLoader()));
@@ -48,7 +48,9 @@ public class ReflectResponder extends SpecificResponder {
     super(protocol, impl, data);
   }
 
-  public ReflectData getReflectData() { return (ReflectData)getSpecificData(); }
+  public ReflectData getReflectData() {
+    return (ReflectData) getSpecificData();
+  }
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
@@ -61,13 +63,10 @@ public class ReflectResponder extends SpecificResponder {
   }
 
   @Override
-  public void writeError(Schema schema, Object error,
-                         Encoder out) throws IOException {
+  public void writeError(Schema schema, Object error, Encoder out) throws IOException {
     if (error instanceof CharSequence)
-      error = error.toString();                   // system error: convert
+      error = error.toString(); // system error: convert
     super.writeError(schema, error, out);
   }
-
-
 
 }

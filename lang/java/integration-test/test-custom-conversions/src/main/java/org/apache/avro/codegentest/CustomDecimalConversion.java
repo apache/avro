@@ -29,24 +29,24 @@ import java.nio.ByteBuffer;
 public class CustomDecimalConversion extends Conversion<CustomDecimal> {
   @Override
   public Class<CustomDecimal> getConvertedType() {
-      return CustomDecimal.class;
+    return CustomDecimal.class;
   }
 
   @Override
   public String getLogicalTypeName() {
-      return "decimal";
+    return "decimal";
   }
 
   @Override
   public CustomDecimal fromBytes(ByteBuffer value, Schema schema, LogicalType type) {
-      int scale = ((LogicalTypes.Decimal)type).getScale();
-      byte[] bytes = value.get(new byte[value.remaining()]).array();
-      return new CustomDecimal(new BigInteger(bytes), scale);
+    int scale = ((LogicalTypes.Decimal) type).getScale();
+    byte[] bytes = value.get(new byte[value.remaining()]).array();
+    return new CustomDecimal(new BigInteger(bytes), scale);
   }
 
   @Override
   public ByteBuffer toBytes(CustomDecimal value, Schema schema, LogicalType type) {
-      int scale = ((LogicalTypes.Decimal)type).getScale();
-      return ByteBuffer.wrap(value.toByteArray(scale));
+    int scale = ((LogicalTypes.Decimal) type).getScale();
+    return ByteBuffer.wrap(value.toByteArray(scale));
   }
 }

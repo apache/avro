@@ -33,8 +33,6 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.avro.ipc.Responder;
 import org.apache.avro.ipc.Server;
 import org.apache.avro.ipc.Transceiver;
-import org.apache.avro.ipc.netty.NettyServer;
-import org.apache.avro.ipc.netty.NettyTransceiver;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -44,26 +42,19 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.ssl.SslHandler;
 
-public class TestNettyServerWithSSL extends TestNettyServer{
+public class TestNettyServerWithSSL extends TestNettyServer {
   public static final String TEST_CERTIFICATE = "servercert.p12";
   public static final String TEST_CERTIFICATE_PASSWORD = "s3cret";
 
   protected static Server initializeServer(Responder responder) {
-    ChannelFactory channelFactory = new NioServerSocketChannelFactory(
-        Executors.newCachedThreadPool(),
-        Executors.newCachedThreadPool()
-    );
-    return new NettyServer(responder, new InetSocketAddress(0),
-        channelFactory, new SSLChannelPipelineFactory(),
-        null);
+    ChannelFactory channelFactory = new NioServerSocketChannelFactory(Executors.newCachedThreadPool(),
+        Executors.newCachedThreadPool());
+    return new NettyServer(responder, new InetSocketAddress(0), channelFactory, new SSLChannelPipelineFactory(), null);
   }
 
   protected static Transceiver initializeTransceiver(int serverPort) throws IOException {
-    return  new NettyTransceiver(new InetSocketAddress(serverPort),
-        new SSLChannelFactory(),
-        CONNECT_TIMEOUT_MILLIS);
+    return new NettyTransceiver(new InetSocketAddress(serverPort), new SSLChannelFactory(), CONNECT_TIMEOUT_MILLIS);
   }
-
 
   /**
    * Factory of SSL-enabled client channels
@@ -77,8 +68,7 @@ public class TestNettyServerWithSSL extends TestNettyServer{
     public SocketChannel newChannel(ChannelPipeline pipeline) {
       try {
         SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, new TrustManager[]{new BogusTrustManager()},
-                        null);
+        sslContext.init(null, new TrustManager[] { new BogusTrustManager() }, null);
         SSLEngine sslEngine = sslContext.createSSLEngine();
         sslEngine.setUseClientMode(true);
         pipeline.addFirst("ssl", new SslHandler(sslEngine));
@@ -112,14 +102,12 @@ public class TestNettyServerWithSSL extends TestNettyServer{
   /**
    * Factory of SSL-enabled server worker channel pipelines
    */
-  private static class SSLChannelPipelineFactory
-      implements ChannelPipelineFactory {
+  private static class SSLChannelPipelineFactory implements ChannelPipelineFactory {
 
     private SSLContext createServerSSLContext() {
       try {
         KeyStore ks = KeyStore.getInstance("PKCS12");
-        ks.load(
-            TestNettyServer.class.getResource(TEST_CERTIFICATE).openStream(),
+        ks.load(TestNettyServer.class.getResource(TEST_CERTIFICATE).openStream(),
             TEST_CERTIFICATE_PASSWORD.toCharArray());
 
         // Set up key manager factory to use our key store
@@ -135,8 +123,7 @@ public class TestNettyServerWithSSL extends TestNettyServer{
     }
 
     private String getAlgorithm() {
-      String algorithm = Security.getProperty(
-          "ssl.KeyManagerFactory.algorithm");
+      String algorithm = Security.getProperty("ssl.KeyManagerFactory.algorithm");
       if (algorithm == null) {
         algorithm = "SunX509";
       }

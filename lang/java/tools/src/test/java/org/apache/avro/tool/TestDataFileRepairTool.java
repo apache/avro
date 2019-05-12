@@ -56,7 +56,7 @@ public class TestDataFileRepairTool {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     long pos;
     // Write a data file
-    try(DataFileWriter<Utf8> w = new DataFileWriter<>(new GenericDatumWriter<>(SCHEMA))) {
+    try (DataFileWriter<Utf8> w = new DataFileWriter<>(new GenericDatumWriter<>(SCHEMA))) {
       w.create(SCHEMA, baos);
       w.append(new Utf8("apple"));
       w.append(new Utf8("banana"));
@@ -77,16 +77,17 @@ public class TestDataFileRepairTool {
     int corruptedBytes = 3;
     byte[] corrupted = new byte[original.length + corruptedBytes];
     System.arraycopy(original, 0, corrupted, 0, corruptPosition);
-    System.arraycopy(original, corruptPosition,
-        corrupted, corruptPosition + corruptedBytes, original.length - corruptPosition);
+    System.arraycopy(original, corruptPosition, corrupted, corruptPosition + corruptedBytes,
+        original.length - corruptPosition);
 
     corruptBlockFile = new File(DIR.getRoot(), "corruptBlock.avro");
     corruptBlockFile.deleteOnExit();
-    try(FileOutputStream out = new FileOutputStream(corruptBlockFile)) {
+    try (FileOutputStream out = new FileOutputStream(corruptBlockFile)) {
       out.write(corrupted);
     }
 
-    // Corrupt the "endive" record by changing the length of the string to be negative
+    // Corrupt the "endive" record by changing the length of the string to be
+    // negative
     corruptPosition = (int) pos - DataFileConstants.SYNC_SIZE - (1 + "fig".length() + 1 + "endive".length());
     corrupted = new byte[original.length];
     System.arraycopy(original, 0, corrupted, 0, original.length);
@@ -94,7 +95,7 @@ public class TestDataFileRepairTool {
 
     corruptRecordFile = new File(DIR.getRoot(), "corruptRecord.avro");
     corruptRecordFile.deleteOnExit();
-    try(FileOutputStream out = new FileOutputStream(corruptRecordFile) ) {
+    try (FileOutputStream out = new FileOutputStream(corruptRecordFile)) {
       out.write(corrupted);
     }
   }
@@ -111,11 +112,7 @@ public class TestDataFileRepairTool {
   private String run(Tool tool, InputStream stdin, String... args) throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     PrintStream stdout = new PrintStream(out);
-    tool.run(
-        stdin,
-        stdout,
-        System.err,
-        Arrays.asList(args));
+    tool.run(stdin, stdout, System.err, Arrays.asList(args));
     return out.toString("UTF-8").replace("\r", "");
   }
 
@@ -135,8 +132,7 @@ public class TestDataFileRepairTool {
 
   @Test
   public void testRepairAllCorruptBlock() throws Exception {
-    String output = run(new DataFileRepairTool(), "-o", "all",
-        corruptBlockFile.getPath(), repairedFile.getPath());
+    String output = run(new DataFileRepairTool(), "-o", "all", corruptBlockFile.getPath(), repairedFile.getPath());
     assertTrue(output, output.contains("Number of blocks: 2 Number of corrupt blocks: 1"));
     assertTrue(output, output.contains("Number of records: 5 Number of corrupt records: 0"));
     checkFileContains(repairedFile, "apple", "banana", "celery", "guava", "hazelnut");
@@ -144,18 +140,15 @@ public class TestDataFileRepairTool {
 
   @Test
   public void testRepairAllCorruptRecord() throws Exception {
-    String output = run(new DataFileRepairTool(), "-o", "all",
-        corruptRecordFile.getPath(), repairedFile.getPath());
+    String output = run(new DataFileRepairTool(), "-o", "all", corruptRecordFile.getPath(), repairedFile.getPath());
     assertTrue(output, output.contains("Number of blocks: 3 Number of corrupt blocks: 1"));
     assertTrue(output, output.contains("Number of records: 8 Number of corrupt records: 2"));
-    checkFileContains(repairedFile, "apple", "banana", "celery", "date", "guava",
-        "hazelnut");
+    checkFileContains(repairedFile, "apple", "banana", "celery", "date", "guava", "hazelnut");
   }
 
   @Test
   public void testRepairPriorCorruptBlock() throws Exception {
-    String output = run(new DataFileRepairTool(), "-o", "prior",
-        corruptBlockFile.getPath(), repairedFile.getPath());
+    String output = run(new DataFileRepairTool(), "-o", "prior", corruptBlockFile.getPath(), repairedFile.getPath());
     assertTrue(output, output.contains("Number of blocks: 2 Number of corrupt blocks: 1"));
     assertTrue(output, output.contains("Number of records: 5 Number of corrupt records: 0"));
     checkFileContains(repairedFile, "apple", "banana", "celery");
@@ -163,8 +156,7 @@ public class TestDataFileRepairTool {
 
   @Test
   public void testRepairPriorCorruptRecord() throws Exception {
-    String output = run(new DataFileRepairTool(), "-o", "prior",
-        corruptRecordFile.getPath(), repairedFile.getPath());
+    String output = run(new DataFileRepairTool(), "-o", "prior", corruptRecordFile.getPath(), repairedFile.getPath());
     assertTrue(output, output.contains("Number of blocks: 3 Number of corrupt blocks: 1"));
     assertTrue(output, output.contains("Number of records: 8 Number of corrupt records: 2"));
     checkFileContains(repairedFile, "apple", "banana", "celery", "date");
@@ -172,8 +164,7 @@ public class TestDataFileRepairTool {
 
   @Test
   public void testRepairAfterCorruptBlock() throws Exception {
-    String output = run(new DataFileRepairTool(), "-o", "after",
-        corruptBlockFile.getPath(), repairedFile.getPath());
+    String output = run(new DataFileRepairTool(), "-o", "after", corruptBlockFile.getPath(), repairedFile.getPath());
     assertTrue(output, output.contains("Number of blocks: 2 Number of corrupt blocks: 1"));
     assertTrue(output, output.contains("Number of records: 5 Number of corrupt records: 0"));
     checkFileContains(repairedFile, "guava", "hazelnut");
@@ -181,16 +172,14 @@ public class TestDataFileRepairTool {
 
   @Test
   public void testRepairAfterCorruptRecord() throws Exception {
-    String output = run(new DataFileRepairTool(), "-o", "after",
-        corruptRecordFile.getPath(), repairedFile.getPath());
+    String output = run(new DataFileRepairTool(), "-o", "after", corruptRecordFile.getPath(), repairedFile.getPath());
     assertTrue(output, output.contains("Number of blocks: 3 Number of corrupt blocks: 1"));
     assertTrue(output, output.contains("Number of records: 8 Number of corrupt records: 2"));
     checkFileContains(repairedFile, "guava", "hazelnut");
   }
 
   private void checkFileContains(File repairedFile, String... lines) throws IOException {
-    DataFileReader r = new DataFileReader<>(repairedFile,
-        new GenericDatumReader<>(SCHEMA));
+    DataFileReader r = new DataFileReader<>(repairedFile, new GenericDatumReader<>(SCHEMA));
     for (String line : lines) {
       assertEquals(line, r.next().toString());
     }

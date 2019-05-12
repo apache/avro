@@ -24,67 +24,84 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream;
-import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 public class ZstandardCodec extends Codec {
 
-    static class Option extends CodecFactory {
+  static class Option extends CodecFactory {
+    private final int compressionLevel;
+    private final boolean useChecksum;
 
-        @Override
-        protected Codec createInstance() {
-          return new ZstandardCodec();
-        }
-      }
-
-    private ByteArrayOutputStream outputBuffer;
-
-    @Override
-    public String getName() {
-        return DataFileConstants.ZSTANDARD_CODEC;
+    Option(int compressionLevel, boolean useChecksum) {
+      this.compressionLevel = compressionLevel;
+      this.useChecksum = useChecksum;
     }
 
     @Override
-    public ByteBuffer compress(ByteBuffer data) throws IOException {
-        ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
-        try (OutputStream outputStream = new ZstdCompressorOutputStream(baos)) {
-           outputStream.write(data.array(), computeOffset(data), data.remaining());
-        }
-        return ByteBuffer.wrap(baos.toByteArray());
+    protected Codec createInstance() {
+      return new ZstandardCodec(compressionLevel, useChecksum);
     }
+  }
 
-    @Override
-    public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-        ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
-        InputStream bytesIn = new ByteArrayInputStream(
-          compressedData.array(),
-          computeOffset(compressedData),
-          compressedData.remaining());
-        try (InputStream ios = new ZstdCompressorInputStream(bytesIn)) {
-            IOUtils.copy(ios, baos);
-        }
-        return ByteBuffer.wrap(baos.toByteArray());
-    }
+  private final int compressionLevel;
+  private final boolean useChecksum;
+  private ByteArrayOutputStream outputBuffer;
 
-    // get and initialize the output buffer for use.
-    private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
-      if (outputBuffer == null) {
-        outputBuffer = new ByteArrayOutputStream(suggestedLength);
-      }
-      outputBuffer.reset();
-      return outputBuffer;
-    }
+  /**
+   * Create a ZstandardCodec instance with the given compressionLevel and checksum
+   * option
+   **/
+  public ZstandardCodec(int compressionLevel, boolean useChecksum) {
+    this.compressionLevel = compressionLevel;
+    this.useChecksum = useChecksum;
+  }
 
-    @Override
-    public int hashCode() {
-      return getName().hashCode();
-    }
+  @Override
+  public String getName() {
+    return DataFileConstants.ZSTANDARD_CODEC;
+  }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-      return obj != null && obj.getClass() == getClass();
+  @Override
+  public ByteBuffer compress(ByteBuffer data) throws IOException {
+    ByteArrayOutputStream baos = getOutputBuffer(data.remaining());
+    try (OutputStream outputStream = ZstandardLoader.output(baos, compressionLevel, useChecksum)) {
+      outputStream.write(data.array(), computeOffset(data), data.remaining());
     }
+    return ByteBuffer.wrap(baos.toByteArray());
+  }
+
+  @Override
+  public ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
+    ByteArrayOutputStream baos = getOutputBuffer(compressedData.remaining());
+    InputStream bytesIn = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
+        compressedData.remaining());
+    try (InputStream ios = ZstandardLoader.input(bytesIn)) {
+      IOUtils.copy(ios, baos);
+    }
+    return ByteBuffer.wrap(baos.toByteArray());
+  }
+
+  // get and initialize the output buffer for use.
+  private ByteArrayOutputStream getOutputBuffer(int suggestedLength) {
+    if (outputBuffer == null) {
+      outputBuffer = new ByteArrayOutputStream(suggestedLength);
+    }
+    outputBuffer.reset();
+    return outputBuffer;
+  }
+
+  @Override
+  public int hashCode() {
+    return getName().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (this == obj) || (obj != null && obj.getClass() == this.getClass());
+  }
+
+  @Override
+  public String toString() {
+    return getName() + "[" + compressionLevel + "]";
+  }
 }

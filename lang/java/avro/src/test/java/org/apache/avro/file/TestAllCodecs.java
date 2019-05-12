@@ -35,14 +35,9 @@ public class TestAllCodecs {
 
   @Parameterized.Parameters(name = "{index}: codec={0}")
   public static Collection<Object[]> data() {
-    return Arrays.asList(new Object[][] {
-      { "bzip2", BZip2Codec.class },
-      { "zstandard", ZstandardCodec.class },
-      { "null", NullCodec.class },
-      { "xz", XZCodec.class },
-      { "snappy", SnappyCodec.class },
-      { "deflate", DeflateCodec.class },
-    });
+    return Arrays.asList(new Object[][] { { "bzip2", BZip2Codec.class }, { "zstandard", ZstandardCodec.class },
+        { "null", NullCodec.class }, { "xz", XZCodec.class }, { "snappy", SnappyCodec.class },
+        { "deflate", DeflateCodec.class }, });
   }
 
   @Parameterized.Parameter(0)
@@ -50,7 +45,6 @@ public class TestAllCodecs {
 
   @Parameterized.Parameter(1)
   public Class<? extends Codec> codecClass;
-
 
   @Test
   public void testCodec() throws IOException {

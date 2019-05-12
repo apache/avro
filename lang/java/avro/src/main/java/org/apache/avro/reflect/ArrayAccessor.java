@@ -94,8 +94,7 @@ class ArrayAccessor {
     }
   }
 
-  static Object readArray(Object array, Class<?> elementType, long l,
-      ResolvingDecoder in) throws IOException {
+  static Object readArray(Object array, Class<?> elementType, long l, ResolvingDecoder in) throws IOException {
     if (elementType == int.class)
       return readArray((int[]) array, l, in);
     if (elementType == long.class)
@@ -113,8 +112,7 @@ class ArrayAccessor {
     return null;
   }
 
-  static boolean[] readArray(boolean[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static boolean[] readArray(boolean[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -129,8 +127,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static int[] readArray(int[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static int[] readArray(int[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -145,8 +142,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static short[] readArray(short[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static short[] readArray(short[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -161,8 +157,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static char[] readArray(char[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static char[] readArray(char[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -177,8 +172,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static long[] readArray(long[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static long[] readArray(long[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -193,8 +187,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static float[] readArray(float[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static float[] readArray(float[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -209,8 +202,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static double[] readArray(double[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static double[] readArray(double[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;

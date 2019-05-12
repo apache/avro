@@ -20,6 +20,7 @@ package org.apache.trevni.avro.mapreduce;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
 
 import org.apache.avro.Schema;
@@ -31,17 +32,18 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.trevni.ColumnFileMetaData;
-import org.apache.trevni.MetaData;
 import org.apache.trevni.avro.AvroColumnWriter;
 
 /**
- * Abstract base class for <code>RecordWriter</code>s that writes Trevni container files.
+ * Abstract base class for <code>RecordWriter</code>s that writes Trevni
+ * container files.
  *
  * @param <K> The type of key the record writer should generate.
  * @param <V> The type of value the record wrtier should generate.
- * @param <T> The type of the entries within the Trevni container file being writen.
+ * @param <T> The type of the entries within the Trevni container file being
+ *        writen.
  */
-public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K, V> {
+public abstract class AvroTrevniRecordWriterBase<K, V, T> extends RecordWriter<K, V> {
 
   /** trevni file extension */
   public final static String EXT = ".trv";
@@ -49,9 +51,10 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
   /** prefix of job configs that we care about */
   public static final String META_PREFIX = "trevni.meta.";
 
-  /** Counter that increments as new trevni files are create because the current file
-   * has exceeded the block size
-   * */
+  /**
+   * Counter that increments as new trevni files are create because the current
+   * file has exceeded the block size
+   */
   protected int part = 0;
 
   /** Trevni file writer */
@@ -69,12 +72,14 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
   /** Provided avro schema from the context */
   protected Schema schema;
 
-  /** meta data to be stored in the output file.  */
+  /** meta data to be stored in the output file. */
   protected ColumnFileMetaData meta;
 
   /**
    * Constructor.
-   * @param context The TaskAttempContext to supply the writer with information form the job configuration
+   * 
+   * @param context The TaskAttempContext to supply the writer with information
+   *                form the job configuration
    */
   public AvroTrevniRecordWriterBase(TaskAttemptContext context) throws IOException {
 
@@ -94,12 +99,14 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
 
   /**
    * Use the task context to construct a schema for writing
+   * 
    * @throws IOException
    */
-  abstract protected  Schema initSchema(TaskAttemptContext context);
+  abstract protected Schema initSchema(TaskAttemptContext context);
 
   /**
    * A Trevni flush will close the current file and prep a new writer
+   * 
    * @throws IOException
    */
   public void flush() throws IOException {
@@ -111,8 +118,7 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
 
   /** {@inheritDoc} */
   @Override
-  public void close(TaskAttemptContext arg0) throws IOException,
-      InterruptedException {
+  public void close(TaskAttemptContext arg0) throws IOException, InterruptedException {
     flush();
   }
 
@@ -121,8 +127,8 @@ public abstract class AvroTrevniRecordWriterBase<K,V, T> extends RecordWriter<K,
 
     for (Entry<String, String> confEntry : configuration) {
       if (confEntry.getKey().startsWith(META_PREFIX))
-        meta.put(confEntry.getKey().substring(META_PREFIX.length()), confEntry
-          .getValue().getBytes(MetaData.UTF8));
+        meta.put(confEntry.getKey().substring(META_PREFIX.length()),
+            confEntry.getValue().getBytes(StandardCharsets.UTF_8));
     }
 
     return meta;

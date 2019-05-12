@@ -31,13 +31,12 @@ import org.apache.avro.test.Simple;
 public class TestProtocolDatagram extends TestProtocolSpecific {
   @Override
   public Server createServer(Responder testResponder) throws Exception {
-    return  new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
-        new InetSocketAddress("localhost",
-            new Random().nextInt(10000)+10000));
+    return new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
+        new InetSocketAddress("localhost", new Random().nextInt(10000) + 10000));
   }
 
   @Override
-  public Transceiver createTransceiver() throws Exception{
+  public Transceiver createTransceiver() throws Exception {
     return new DatagramTransceiver(new InetSocketAddress("localhost", server.getPort()));
   }
 

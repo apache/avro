@@ -152,7 +152,7 @@ static {
    */
   public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($foreach.count < $schema.getFields().size()), #end#end) {
 #foreach ($field in $schema.getFields())
-    this.${this.mangle($field.name())} = ${this.mangle($field.name())};
+    ${this.generateSetterCode($field.schema(), ${this.mangle($field.name())}, ${this.mangle($field.name())})}
 #end
   }
 #else
@@ -251,7 +251,7 @@ static {
    * @param value the value to set.
    */
   public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
-    this.${this.mangle($field.name(), $schema.isError())} = value;
+    ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
   }
 #end
 
@@ -410,7 +410,7 @@ static {
 #if (${this.hasBuilder($field.schema())})
       this.${this.mangle($field.name(), $schema.isError())}Builder = null;
 #end
-      this.${this.mangle($field.name(), $schema.isError())} = value;
+      ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
       fieldSetFlags()[$field.pos()] = true;
       return this;
     }
@@ -536,7 +536,7 @@ static {
 #if ($this.isCustomCodable($schema))
   @Override protected boolean hasCustomCoders() { return true; }
 
-  @Override protected void customEncode(org.apache.avro.io.Encoder out)
+  @Override public void customEncode(org.apache.avro.io.Encoder out)
     throws java.io.IOException
   {
 #set ($nv = 0)## Counter to ensure unique var-names
@@ -550,7 +550,7 @@ static {
 #end
   }
 
-  @Override protected void customDecode(org.apache.avro.io.ResolvingDecoder in)
+  @Override public void customDecode(org.apache.avro.io.ResolvingDecoder in)
     throws java.io.IOException
   {
     org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();

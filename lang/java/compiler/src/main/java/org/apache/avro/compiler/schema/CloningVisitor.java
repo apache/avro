@@ -26,8 +26,9 @@ import org.apache.avro.Schema;
 import static org.apache.avro.Schema.Type.RECORD;
 
 /**
- * this visitor will create a clone of the original Schema with docs and other nonessential fields stripped
- * by default. what attributes are copied is customizable.
+ * this visitor will create a clone of the original Schema with docs and other
+ * nonessential fields stripped by default. what attributes are copied is
+ * customizable.
  */
 public final class CloningVisitor implements SchemaVisitor<Schema> {
 
@@ -76,34 +77,34 @@ public final class CloningVisitor implements SchemaVisitor<Schema> {
     Schema.Type type = terminal.getType();
     Schema newSchema;
     switch (type) {
-      case RECORD: // recursion.
-      case ARRAY:
-      case MAP:
-      case UNION:
-        if (!replace.containsKey(terminal)) {
-          throw new IllegalStateException("Schema " + terminal + " must be already processed");
-        }
-        return SchemaVisitorAction.CONTINUE;
-      case BOOLEAN:
-      case BYTES:
-      case DOUBLE:
-      case FLOAT:
-      case INT:
-      case LONG:
-      case NULL:
-      case STRING:
-        newSchema = Schema.create(type);
-        break;
-      case ENUM:
-        newSchema = Schema.createEnum(terminal.getName(), copyDocs ? terminal.getDoc() : null,
-            terminal.getNamespace(), terminal.getEnumSymbols());
-        break;
-      case FIXED:
-        newSchema = Schema.createFixed(terminal.getName(), copyDocs ? terminal.getDoc() : null,
-            terminal.getNamespace(), terminal.getFixedSize());
-        break;
-      default:
-        throw new IllegalStateException("Unsupported schema " + terminal);
+    case RECORD: // recursion.
+    case ARRAY:
+    case MAP:
+    case UNION:
+      if (!replace.containsKey(terminal)) {
+        throw new IllegalStateException("Schema " + terminal + " must be already processed");
+      }
+      return SchemaVisitorAction.CONTINUE;
+    case BOOLEAN:
+    case BYTES:
+    case DOUBLE:
+    case FLOAT:
+    case INT:
+    case LONG:
+    case NULL:
+    case STRING:
+      newSchema = Schema.create(type);
+      break;
+    case ENUM:
+      newSchema = Schema.createEnum(terminal.getName(), copyDocs ? terminal.getDoc() : null, terminal.getNamespace(),
+          terminal.getEnumSymbols());
+      break;
+    case FIXED:
+      newSchema = Schema.createFixed(terminal.getName(), copyDocs ? terminal.getDoc() : null, terminal.getNamespace(),
+          terminal.getFixedSize());
+      break;
+    default:
+      throw new IllegalStateException("Unsupported schema " + terminal);
     }
     copyProperties.copy(terminal, newSchema);
     replace.put(terminal, newSchema);
@@ -114,8 +115,8 @@ public final class CloningVisitor implements SchemaVisitor<Schema> {
   public SchemaVisitorAction visitNonTerminal(final Schema nt) {
     Schema.Type type = nt.getType();
     if (type == RECORD) {
-      Schema newSchema = Schema.createRecord(nt.getName(), copyDocs ? nt.getDoc() : null,
-          nt.getNamespace(), nt.isError());
+      Schema newSchema = Schema.createRecord(nt.getName(), copyDocs ? nt.getDoc() : null, nt.getNamespace(),
+          nt.isError());
       copyProperties.copy(nt, newSchema);
       replace.put(nt, newSchema);
     }
@@ -127,34 +128,34 @@ public final class CloningVisitor implements SchemaVisitor<Schema> {
     Schema.Type type = nt.getType();
     Schema newSchema;
     switch (type) {
-      case RECORD:
-        newSchema = replace.get(nt);
-        List<Schema.Field> fields = nt.getFields();
-        List<Schema.Field> newFields = new ArrayList<>(fields.size());
-        for (Schema.Field field : fields) {
-          Schema.Field newField = new Schema.Field(field.name(), replace.get(field.schema()),
-              copyDocs ? field.doc() : null, field.defaultVal(), field.order());
-          copyProperties.copy(field, newField);
-          newFields.add(newField);
-        }
-        newSchema.setFields(newFields);
-        return SchemaVisitorAction.CONTINUE;
-      case UNION:
-        List<Schema> types = nt.getTypes();
-        List<Schema> newTypes = new ArrayList<>(types.size());
-        for (Schema sch : types) {
-          newTypes.add(replace.get(sch));
-        }
-        newSchema = Schema.createUnion(newTypes);
-        break;
-      case ARRAY:
-        newSchema = Schema.createArray(replace.get(nt.getElementType()));
-        break;
-      case MAP:
-        newSchema = Schema.createMap(replace.get(nt.getValueType()));
-        break;
-      default:
-        throw new IllegalStateException("Illegal type " + type + ", schema " + nt);
+    case RECORD:
+      newSchema = replace.get(nt);
+      List<Schema.Field> fields = nt.getFields();
+      List<Schema.Field> newFields = new ArrayList<>(fields.size());
+      for (Schema.Field field : fields) {
+        Schema.Field newField = new Schema.Field(field.name(), replace.get(field.schema()),
+            copyDocs ? field.doc() : null, field.defaultVal(), field.order());
+        copyProperties.copy(field, newField);
+        newFields.add(newField);
+      }
+      newSchema.setFields(newFields);
+      return SchemaVisitorAction.CONTINUE;
+    case UNION:
+      List<Schema> types = nt.getTypes();
+      List<Schema> newTypes = new ArrayList<>(types.size());
+      for (Schema sch : types) {
+        newTypes.add(replace.get(sch));
+      }
+      newSchema = Schema.createUnion(newTypes);
+      break;
+    case ARRAY:
+      newSchema = Schema.createArray(replace.get(nt.getElementType()));
+      break;
+    case MAP:
+      newSchema = Schema.createMap(replace.get(nt.getValueType()));
+      break;
+    default:
+      throw new IllegalStateException("Illegal type " + type + ", schema " + nt);
     }
     copyProperties.copy(nt, newSchema);
     replace.put(nt, newSchema);

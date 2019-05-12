@@ -41,10 +41,8 @@ public class TestGenericRecordBuilder {
 
     // Verify that builder has no fields set after initialization:
     for (Field field : schema.getFields()) {
-      Assert.assertFalse("RecordBuilder should not have field " + field.name(),
-          builder.has(field.name()));
-      Assert.assertNull("Field " + field.name() + " should be null",
-          builder.get(field.name()));
+      Assert.assertFalse("RecordBuilder should not have field " + field.name(), builder.has(field.name()));
+      Assert.assertNull("Field " + field.name() + " should be null", builder.get(field.name()));
     }
 
     // Set field in builder:
@@ -73,12 +71,12 @@ public class TestGenericRecordBuilder {
     Assert.assertNull(builder.get("intField"));
   }
 
-  @Test(expected=org.apache.avro.AvroRuntimeException.class)
+  @Test(expected = org.apache.avro.AvroRuntimeException.class)
   public void attemptToSetNonNullableFieldToNull() {
     new GenericRecordBuilder(recordSchema()).set("intField", null);
   }
 
-  @Test(expected=org.apache.avro.AvroRuntimeException.class)
+  @Test(expected = org.apache.avro.AvroRuntimeException.class)
   public void buildWithoutSettingRequiredFields1() {
     new GenericRecordBuilder(recordSchema()).build();
   }
@@ -86,11 +84,8 @@ public class TestGenericRecordBuilder {
   @Test()
   public void buildWithoutSettingRequiredFields2() {
     try {
-      new GenericRecordBuilder(recordSchema()).
-      set("anArray", Collections.singletonList("one")).
-      build();
-      Assert.fail("Should have thrown " +
-          AvroRuntimeException.class.getCanonicalName());
+      new GenericRecordBuilder(recordSchema()).set("anArray", Collections.singletonList("one")).build();
+      Assert.fail("Should have thrown " + AvroRuntimeException.class.getCanonicalName());
     } catch (AvroRuntimeException e) {
       Assert.assertTrue(e.getMessage().contains("intField"));
     }
@@ -102,10 +97,8 @@ public class TestGenericRecordBuilder {
     fields.add(new Field("id", Schema.create(Type.STRING), null, "0"));
     fields.add(new Field("intField", Schema.create(Type.INT), null, null));
     fields.add(new Field("anArray", Schema.createArray(Schema.create(Type.STRING)), null, null));
-    fields.add(new Field("optionalInt", Schema.createUnion
-                         (Arrays.asList(Schema.create(Type.NULL),
-                                        Schema.create(Type.INT))),
-                         null, Schema.NULL_VALUE));
+    fields.add(new Field("optionalInt",
+        Schema.createUnion(Arrays.asList(Schema.create(Type.NULL), Schema.create(Type.INT))), null, Schema.NULL_VALUE));
     Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
     schema.setFields(fields);
     return schema;

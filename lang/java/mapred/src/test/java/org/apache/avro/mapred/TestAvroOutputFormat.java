@@ -30,8 +30,7 @@ public class TestAvroOutputFormat {
     int newSyncInterval = 100000;
     AvroOutputFormat.setSyncInterval(jobConf, newSyncInterval);
 
-    assertEquals(newSyncInterval, jobConf.getInt(
-            AvroOutputFormat.SYNC_INTERVAL_KEY, -1));
+    assertEquals(newSyncInterval, jobConf.getInt(AvroOutputFormat.SYNC_INTERVAL_KEY, -1));
   }
 
   @Test

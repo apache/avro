@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.avro.AvroRemoteException;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.ipc.CallFuture;
 import org.apache.avro.ipc.Callback;
 import org.apache.avro.ipc.Responder;
@@ -58,8 +59,7 @@ public class TestNettyServerWithCallbacks {
   private static Transceiver transceiver;
   private static Simple.Callback simpleClient;
   private static final AtomicBoolean ackFlag = new AtomicBoolean(false);
-  private static final AtomicReference<CountDownLatch> ackLatch =
-    new AtomicReference<>(new CountDownLatch(1));
+  private static final AtomicReference<CountDownLatch> ackLatch = new AtomicReference<>(new CountDownLatch(1));
   private static Simple simpleService = new SimpleImpl(ackFlag);
 
   @BeforeClass
@@ -72,8 +72,7 @@ public class TestNettyServerWithCallbacks {
     int serverPort = server.getPort();
     System.out.println("server port : " + serverPort);
 
-    transceiver = new NettyTransceiver(new InetSocketAddress(
-        serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
+    transceiver = new NettyTransceiver(new InetSocketAddress(serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
     simpleClient = SpecificRequestor.getClient(Simple.Callback.class, transceiver);
   }
 
@@ -105,6 +104,7 @@ public class TestNettyServerWithCallbacks {
       public void handleResult(String result) {
         future2.handleResult(result);
       }
+
       @Override
       public void handleError(Throwable error) {
         future2.handleError(error);
@@ -116,11 +116,9 @@ public class TestNettyServerWithCallbacks {
 
   @Test
   public void echo() throws Exception {
-    TestRecord record = TestRecord.newBuilder().setHash(
-        new org.apache.avro.test.MD5(
-            new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 })).
-        setKind(org.apache.avro.test.Kind.FOO).
-        setName("My Record").build();
+    TestRecord record = TestRecord.newBuilder()
+        .setHash(new org.apache.avro.test.MD5(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 }))
+        .setKind(org.apache.avro.test.Kind.FOO).setName("My Record").build();
 
     // Test synchronous RPC:
     Assert.assertEquals(record, simpleClient.echo(record));
@@ -138,6 +136,7 @@ public class TestNettyServerWithCallbacks {
       public void handleResult(TestRecord result) {
         future2.handleResult(result);
       }
+
       @Override
       public void handleError(Throwable error) {
         future2.handleError(error);
@@ -165,6 +164,7 @@ public class TestNettyServerWithCallbacks {
       public void handleResult(Integer result) {
         future2.handleResult(result);
       }
+
       @Override
       public void handleError(Throwable error) {
         future2.handleError(error);
@@ -194,6 +194,7 @@ public class TestNettyServerWithCallbacks {
       public void handleResult(ByteBuffer result) {
         future2.handleResult(result);
       }
+
       @Override
       public void handleError(Throwable error) {
         future2.handleError(error);
@@ -223,12 +224,10 @@ public class TestNettyServerWithCallbacks {
       future.get(2, TimeUnit.SECONDS);
       Assert.fail("Expected " + TestError.class.getCanonicalName() + " to be thrown");
     } catch (ExecutionException e) {
-      Assert.assertTrue("Expected " + TestError.class.getCanonicalName(),
-          e.getCause() instanceof TestError);
+      Assert.assertTrue("Expected " + TestError.class.getCanonicalName(), e.getCause() instanceof TestError);
     }
     Assert.assertNotNull(future.getError());
-    Assert.assertTrue("Expected " + TestError.class.getCanonicalName(),
-        future.getError() instanceof TestError);
+    Assert.assertTrue("Expected " + TestError.class.getCanonicalName(), future.getError() instanceof TestError);
     Assert.assertNull(future.getResult());
 
     // Test asynchronous RPC (callback):
@@ -239,6 +238,7 @@ public class TestNettyServerWithCallbacks {
       public void handleResult(Void result) {
         Assert.fail("Expected " + TestError.class.getCanonicalName());
       }
+
       @Override
       public void handleError(Throwable error) {
         errorRef.set(error);
@@ -266,17 +266,15 @@ public class TestNettyServerWithCallbacks {
   public void testSendAfterChannelClose() throws Exception {
     // Start up a second server so that closing the server doesn't
     // interfere with the other unit tests:
-    Server server2 = new NettyServer(new SpecificResponder(Simple.class, simpleService),
-        new InetSocketAddress(0));
+    Server server2 = new NettyServer(new SpecificResponder(Simple.class, simpleService), new InetSocketAddress(0));
     server2.start();
     try {
       int serverPort = server2.getPort();
       System.out.println("server2 port : " + serverPort);
 
-      try (Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-        serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS)) {
-        Simple.Callback simpleClient2 =
-          SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
+      try (Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(serverPort),
+          TestNettyServer.CONNECT_TIMEOUT_MILLIS)) {
+        Simple.Callback simpleClient2 = SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
 
         // Verify that connection works:
         Assert.assertEquals(3, simpleClient2.add(1, 2));
@@ -296,7 +294,7 @@ public class TestNettyServerWithCallbacks {
         try {
           simpleClient2.add(1, 2);
           Assert.fail("Send after server close should have thrown Exception");
-        } catch (AvroRemoteException e) {
+        } catch (AvroRuntimeException e) {
           ioeCaught = e.getCause() instanceof IOException;
           Assert.assertTrue("Expected IOException", ioeCaught);
         } catch (Exception e) {
@@ -331,18 +329,16 @@ public class TestNettyServerWithCallbacks {
     // Start up a second server so that closing the server doesn't
     // interfere with the other unit tests:
     BlockingSimpleImpl blockingSimpleImpl = new BlockingSimpleImpl();
-    Server server2 = new NettyServer(new SpecificResponder(Simple.class,
-        blockingSimpleImpl), new InetSocketAddress(0));
+    Server server2 = new NettyServer(new SpecificResponder(Simple.class, blockingSimpleImpl), new InetSocketAddress(0));
     server2.start();
     try {
       int serverPort = server2.getPort();
       System.out.println("server2 port : " + serverPort);
 
       CallFuture<Integer> addFuture = new CallFuture<>();
-      try (Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-        serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS)) {
-        Simple.Callback simpleClient2 =
-          SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
+      try (Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(serverPort),
+          TestNettyServer.CONNECT_TIMEOUT_MILLIS)) {
+        Simple.Callback simpleClient2 = SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
 
         // The first call has to block for the handshake:
         Assert.assertEquals(3, simpleClient2.add(1, 2));
@@ -381,8 +377,8 @@ public class TestNettyServerWithCallbacks {
     // Start up a second server so that closing the server doesn't
     // interfere with the other unit tests:
     BlockingSimpleImpl blockingSimpleImpl = new BlockingSimpleImpl();
-    final Server server2 = new NettyServer(new SpecificResponder(Simple.class,
-        blockingSimpleImpl), new InetSocketAddress(0));
+    final Server server2 = new NettyServer(new SpecificResponder(Simple.class, blockingSimpleImpl),
+        new InetSocketAddress(0));
     server2.start();
 
     Transceiver transceiver2 = null;
@@ -391,11 +387,9 @@ public class TestNettyServerWithCallbacks {
       int serverPort = server2.getPort();
       System.out.println("server2 port : " + serverPort);
 
-      transceiver2 = new NettyTransceiver(new InetSocketAddress(
-          serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
+      transceiver2 = new NettyTransceiver(new InetSocketAddress(serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
 
-      final Simple.Callback simpleClient2 =
-          SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
+      final Simple.Callback simpleClient2 = SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
 
       // Acquire the method-enter permit, which will be released by the
       // server method once we call it
@@ -420,7 +414,8 @@ public class TestNettyServerWithCallbacks {
       // The server side method is now blocked waiting on the run permit
       // (= is busy handling the request)
 
-      // Stop the server in a separate thread as it blocks the actual thread until the server side
+      // Stop the server in a separate thread as it blocks the actual thread until the
+      // server side
       // method is running
       new Thread(server2::close).start();
 
@@ -447,32 +442,28 @@ public class TestNettyServerWithCallbacks {
     // Start up a second server so that closing the server doesn't
     // interfere with the other unit tests:
     SimpleImpl simpleImpl = new BlockingSimpleImpl();
-    Server server2 = new NettyServer(new SpecificResponder(Simple.class,
-        simpleImpl), new InetSocketAddress(0));
+    Server server2 = new NettyServer(new SpecificResponder(Simple.class, simpleImpl), new InetSocketAddress(0));
     try {
       server2.start();
       int serverPort = server2.getPort();
       System.out.println("server2 port : " + serverPort);
 
       // Initialize a client, and establish a connection to the server:
-      Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(
-          serverPort), TestNettyServer.CONNECT_TIMEOUT_MILLIS);
-      Simple.Callback simpleClient2 =
-          SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
+      Transceiver transceiver2 = new NettyTransceiver(new InetSocketAddress(serverPort),
+          TestNettyServer.CONNECT_TIMEOUT_MILLIS);
+      Simple.Callback simpleClient2 = SpecificRequestor.getClient(Simple.Callback.class, transceiver2);
       Assert.assertEquals(3, simpleClient2.add(1, 2));
 
       // Restart the server:
       server2.close();
       try {
         simpleClient2.add(2, -1);
-        Assert.fail("Client should not be able to invoke RPCs " +
-            "because server is no longer running");
+        Assert.fail("Client should not be able to invoke RPCs " + "because server is no longer running");
       } catch (Exception e) {
         // Expected since server is no longer running
       }
       Thread.sleep(2000L);
-      server2 = new NettyServer(new SpecificResponder(Simple.class,
-          simpleImpl), new InetSocketAddress(serverPort));
+      server2 = new NettyServer(new SpecificResponder(Simple.class, simpleImpl), new InetSocketAddress(serverPort));
       server2.start();
 
       // Invoke an RPC using the same client, which should reestablish the
@@ -514,9 +505,9 @@ public class TestNettyServerWithCallbacks {
     runFlag.set(false);
     threadPool.shutdown();
     Assert.assertTrue("Timed out shutting down thread pool", threadPool.awaitTermination(2, TimeUnit.SECONDS));
-    System.out.println("Completed " + rpcCount.get() + " RPCs in " + runTimeMillis +
-        "ms => " + (((double)rpcCount.get() / (double)runTimeMillis) * 1000) + " RPCs/sec, " +
-        ((double)runTimeMillis / (double)rpcCount.get()) + " ms/RPC.");
+    System.out.println("Completed " + rpcCount.get() + " RPCs in " + runTimeMillis + "ms => "
+        + (((double) rpcCount.get() / (double) runTimeMillis) * 1000) + " RPCs/sec, "
+        + ((double) runTimeMillis / (double) rpcCount.get()) + " ms/RPC.");
   }
 
   /**
@@ -527,6 +518,7 @@ public class TestNettyServerWithCallbacks {
 
     /**
      * Creates a SimpleImpl.
+     *
      * @param ackFlag the AtomicBoolean to toggle when ack() is called.
      */
     public SimpleImpl(final AtomicBoolean ackFlag) {
@@ -534,27 +526,27 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public String hello(String greeting) throws AvroRemoteException {
+    public String hello(String greeting) {
       return "Hello, " + greeting;
     }
 
     @Override
-    public TestRecord echo(TestRecord record) throws AvroRemoteException {
+    public TestRecord echo(TestRecord record) {
       return record;
     }
 
     @Override
-    public int add(int arg1, int arg2) throws AvroRemoteException {
+    public int add(int arg1, int arg2) {
       return arg1 + arg2;
     }
 
     @Override
-    public ByteBuffer echoBytes(ByteBuffer data) throws AvroRemoteException {
+    public ByteBuffer echoBytes(ByteBuffer data) {
       return data;
     }
 
     @Override
-    public void error() throws AvroRemoteException, TestError {
+    public void error() throws TestError {
       throw TestError.newBuilder().setMessage$("Test Message").build();
     }
 
@@ -582,7 +574,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public String hello(String greeting) throws AvroRemoteException {
+    public String hello(String greeting) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -593,7 +585,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public TestRecord echo(TestRecord record) throws AvroRemoteException {
+    public TestRecord echo(TestRecord record) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -604,7 +596,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public int add(int arg1, int arg2) throws AvroRemoteException {
+    public int add(int arg1, int arg2) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -615,7 +607,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public ByteBuffer echoBytes(ByteBuffer data) throws AvroRemoteException {
+    public ByteBuffer echoBytes(ByteBuffer data) {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -626,7 +618,7 @@ public class TestNettyServerWithCallbacks {
     }
 
     @Override
-    public void error() throws AvroRemoteException, TestError {
+    public void error() throws TestError {
       releaseEnterPermit();
       acquireRunPermit();
       try {
@@ -656,7 +648,7 @@ public class TestNettyServerWithCallbacks {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         throw new RuntimeException(e);
-    }
+      }
     }
 
     /**
@@ -675,14 +667,14 @@ public class TestNettyServerWithCallbacks {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         throw new RuntimeException(e);
-  }
-}
+      }
+    }
 
     /**
      * Releases a single permit to the semaphore.
      */
     public void releaseEnterPermit() {
-        enterSemaphore.release();
+      enterSemaphore.release();
     }
   }
 }

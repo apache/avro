@@ -62,26 +62,22 @@ public class RecordBuilderBaseTest {
   @Test
   public void testIsValidValueWithNullField() {
     // Verify that null is a valid value for null fields:
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", Schema.create(Type.NULL), null, null), null));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", Schema.create(Type.NULL), null, null), null));
   }
 
   @Test
   public void testIsValidValueWithUnion() {
     // Verify that null values are not valid for a union with no null type:
-    Schema unionWithoutNull = Schema.createUnion(Arrays.asList(Schema.create(Type.STRING), Schema.create(Type.BOOLEAN)));
+    Schema unionWithoutNull = Schema
+        .createUnion(Arrays.asList(Schema.create(Type.STRING), Schema.create(Type.BOOLEAN)));
 
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithoutNull, null, null), new Object()));
-    Assert.assertFalse(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithoutNull, null, null), null));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", unionWithoutNull, null, null), new Object()));
+    Assert.assertFalse(RecordBuilderBase.isValidValue(new Field("f", unionWithoutNull, null, null), null));
 
     // Verify that null values are valid for a union with a null type:
     Schema unionWithNull = Schema.createUnion(Arrays.asList(Schema.create(Type.STRING), Schema.create(Type.NULL)));
 
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithNull, null, null), new Object()));
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithNull, null, null), null));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", unionWithNull, null, null), new Object()));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", unionWithNull, null, null), null));
   }
 }

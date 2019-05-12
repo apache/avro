@@ -23,18 +23,19 @@ import java.util.zip.Deflater;
 
 import org.apache.avro.AvroRuntimeException;
 
-/**  Encapsulates the ability to specify and configure a compression codec.
+/**
+ * Encapsulates the ability to specify and configure a compression codec.
  *
  * Currently there are three codecs registered by default:
  * <ul>
- *   <li>{@code null}</li>
- *   <li>{@code deflate}</li>
- *   <li>{@code snappy}</li>
- *   <li>{@code bzip2}</li>
+ * <li>{@code null}</li>
+ * <li>{@code deflate}</li>
+ * <li>{@code snappy}</li>
+ * <li>{@code bzip2}</li>
  * </ul>
  *
- * New and custom codecs can be registered using {@link #addCodec(String,
- * CodecFactory)}.
+ * New and custom codecs can be registered using
+ * {@link #addCodec(String, CodecFactory)}.
  */
 public abstract class CodecFactory {
   /** Null codec, for no compression. */
@@ -42,69 +43,95 @@ public abstract class CodecFactory {
     return NullCodec.OPTION;
   }
 
-  /** Deflate codec, with specific compression.
-   * compressionLevel should be between 1 and 9, inclusive. */
+  /**
+   * Deflate codec, with specific compression. compressionLevel should be between
+   * 1 and 9, inclusive.
+   */
   public static CodecFactory deflateCodec(int compressionLevel) {
     return new DeflateCodec.Option(compressionLevel);
   }
 
-  /** XZ codec, with specific compression.
-   * compressionLevel should be between 1 and 9, inclusive. */
+  /**
+   * XZ codec, with specific compression. compressionLevel should be between 1 and
+   * 9, inclusive.
+   */
   public static CodecFactory xzCodec(int compressionLevel) {
-      return new XZCodec.Option(compressionLevel);
+    return new XZCodec.Option(compressionLevel);
   }
 
-  /** Snappy codec.*/
+  /** Snappy codec. */
   public static CodecFactory snappyCodec() {
     try {
       return new SnappyCodec.Option();
     } catch (Throwable t) {
-      //snappy not available
+      // snappy not available
       return null;
     }
   }
 
-  /** bzip2 codec.*/
+  /** bzip2 codec. */
   public static CodecFactory bzip2Codec() {
     return new BZip2Codec.Option();
   }
 
-  /** zstandard codec.*/
-  public static CodecFactory zstandardCodec() {
-    return new ZstandardCodec.Option();
+  /**
+   * zstandard codec, with specific compression level.
+   *
+   * @param level The compression level should be between -5 and 22, inclusive.
+   *              Negative levels are 'fast' modes akin to lz4 or snappy, levels
+   *              above 9 are generally for archival purposes, and levels above 18
+   *              use a lot of memory.
+   */
+  public static CodecFactory zstandardCodec(int level) {
+    return new ZstandardCodec.Option(level, false);
+  }
+
+  /**
+   * zstandard codec, with specific compression level.
+   *
+   * @param level       The compression level should be between -5 and 22,
+   *                    inclusive. Negative levels are 'fast' modes akin to lz4 or
+   *                    snappy, levels above 9 are generally for archival
+   *                    purposes, and levels above 18 use a lot of memory.
+   * @param useChecksum if true, will include a checksum with each data block
+   */
+  public static CodecFactory zstandardCodec(int level, boolean useChecksum) {
+    return new ZstandardCodec.Option(level, useChecksum);
   }
 
   /** Creates internal Codec. */
   protected abstract Codec createInstance();
 
-  /** Mapping of string names (stored as metas) and codecs.
-   * Note that currently options (like compression level)
-   * are not recoverable. */
-  private static final Map<String, CodecFactory> REGISTERED =
-    new HashMap<>();
+  /**
+   * Mapping of string names (stored as metas) and codecs. Note that currently
+   * options (like compression level) are not recoverable.
+   */
+  private static final Map<String, CodecFactory> REGISTERED = new HashMap<>();
 
   public static final int DEFAULT_DEFLATE_LEVEL = Deflater.DEFAULT_COMPRESSION;
   public static final int DEFAULT_XZ_LEVEL = XZCodec.DEFAULT_COMPRESSION;
+  public static final int DEFAULT_ZSTANDARD_LEVEL = 3;
 
   static {
     addCodec(DataFileConstants.NULL_CODEC, nullCodec());
     addCodec(DataFileConstants.DEFLATE_CODEC, deflateCodec(DEFAULT_DEFLATE_LEVEL));
     addCodec(DataFileConstants.BZIP2_CODEC, bzip2Codec());
     addCodec(DataFileConstants.XZ_CODEC, xzCodec(DEFAULT_XZ_LEVEL));
-    addCodec(DataFileConstants.ZSTANDARD_CODEC, zstandardCodec());
+    addCodec(DataFileConstants.ZSTANDARD_CODEC, zstandardCodec(DEFAULT_ZSTANDARD_LEVEL));
     addCodec(DataFileConstants.SNAPPY_CODEC, snappyCodec());
   }
 
-  /** Maps a codec name into a CodecFactory.
+  /**
+   * Maps a codec name into a CodecFactory.
    *
    * Currently there are six codecs registered by default:
    * <ul>
-   *   <li>{@code null}</li>
-   *   <li>{@code deflate}</li>
-   *   <li>{@code snappy}</li>
-   *   <li>{@code bzip2}</li>
-   *   <li>{@code xz}</li>
-   *   <li>{@code zstandard}</li>
+   * <li>{@code null}</li>
+   * <li>{@code deflate}</li>
+   * <li>{@code snappy}</li>
+   * <li>{@code bzip2}</li>
+   * <li>{@code xz}</li>
+   * <li>{@code zstandard}</li>
    * </ul>
    */
   public static CodecFactory fromString(String s) {
@@ -115,10 +142,10 @@ public abstract class CodecFactory {
     return o;
   }
 
-
-
-  /** Adds a new codec implementation.  If name already had
-   * a codec associated with it, returns the previous codec. */
+  /**
+   * Adds a new codec implementation. If name already had a codec associated with
+   * it, returns the previous codec.
+   */
   public static CodecFactory addCodec(String name, CodecFactory c) {
     if (c != null) {
       return REGISTERED.put(name, c);

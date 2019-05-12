@@ -38,7 +38,9 @@ case "$1" in
 
   dist)
     # build binary tarball
-    msbuild /t:"restore;build" /p:"Configuration=Release"
+    dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
+    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
+    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/ipc/Avro.ipc.csproj
 
     # add the binary LICENSE and NOTICE to the tarball
     mkdir build/
@@ -53,13 +55,13 @@ case "$1" in
     cp -R src/apache/ipc/bin/Release/* build/ipc/
 
     # build the tarball
-    mkdir -p $ROOT/dist/csharp
-    (cd build; tar czf $ROOT/../dist/csharp/avro-csharp-$VERSION.tar.gz main codegen ipc LICENSE NOTICE)
+    mkdir -p ${ROOT}/dist/csharp
+    (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen ipc LICENSE NOTICE)
 
     # build documentation
     doxygen Avro.dox
-    mkdir -p $ROOT/build/avro-doc-$VERSION/api/csharp
-    cp -pr build/doc/* $ROOT/build/avro-doc-$VERSION/api/csharp
+    mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+    cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
     ;;
 
   clean)

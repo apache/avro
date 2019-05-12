@@ -605,7 +605,7 @@
         <p>In some situations a single Avro serialized object is to be stored for a
         longer period of time. One very common example is storing Avro records
         for several weeks in an <a href="http://kafka.apache.org/">Apache Kafka</a> topic.</p>
-        <p>In the period after a schema change this persistance system will contain records
+        <p>In the period after a schema change this persistence system will contain records
         that have been written with different schemas. So the need arises to know which schema
         was used to write a record to support schema evolution correctly.
         In most cases the schema itself is too large to include in the message,

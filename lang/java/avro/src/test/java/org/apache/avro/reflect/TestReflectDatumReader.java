@@ -52,8 +52,7 @@ public class TestReflectDatumReader {
     byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithList, PojoWithList.class);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
-    ReflectDatumReader<PojoWithList> reflectDatumReader = new ReflectDatumReader<>(
-        PojoWithList.class);
+    ReflectDatumReader<PojoWithList> reflectDatumReader = new ReflectDatumReader<>(PojoWithList.class);
 
     PojoWithList deserialized = new PojoWithList();
     reflectDatumReader.read(deserialized, decoder);
@@ -71,8 +70,7 @@ public class TestReflectDatumReader {
     byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithArray, PojoWithArray.class);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
-    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<>(
-        PojoWithArray.class);
+    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<>(PojoWithArray.class);
 
     PojoWithArray deserialized = new PojoWithArray();
     reflectDatumReader.read(deserialized, decoder);
@@ -122,7 +120,8 @@ public class TestReflectDatumReader {
         return false;
       if (relatedIds == null) {
         return other.relatedIds == null;
-      } else return relatedIds.equals(other.relatedIds);
+      } else
+        return relatedIds.equals(other.relatedIds);
     }
   }
 

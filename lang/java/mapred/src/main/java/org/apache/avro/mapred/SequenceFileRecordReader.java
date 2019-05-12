@@ -24,13 +24,10 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileSplit;
 
 /** A {@link org.apache.hadoop.mapred.RecordReader} for sequence files. */
-public class SequenceFileRecordReader<K,V> extends AvroRecordReader<Pair<K,V>> {
+public class SequenceFileRecordReader<K, V> extends AvroRecordReader<Pair<K, V>> {
 
-  public SequenceFileRecordReader(JobConf job, FileSplit split)
-    throws IOException {
-    super(new SequenceFileReader<>(split.getPath().toUri(), job),
-          split);
+  public SequenceFileRecordReader(JobConf job, FileSplit split) throws IOException {
+    super(new SequenceFileReader<>(split.getPath().toUri(), job), split);
   }
 
 }
-

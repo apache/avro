@@ -31,6 +31,10 @@
   <url>http://avro.apache.org/</url>
   <description>Trevni Java Avro</description>
 
+  <properties>
+    <main.basedir>${project.parent.parent.parent.basedir}</main.basedir>
+  </properties>
+
   <build>
     <plugins>
       <!-- Allow guava because hadoop brings it as a transitive dependency. -->
@@ -74,7 +78,6 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>${hadoop2.version}</version>
       <!-- hadoop's execution environment provides its own jars, usurping any others.
         So we should not include it here -->
       <scope>provided</scope>

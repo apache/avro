@@ -5,3 +5,5 @@ Gemfile.lock
 .gem/
 avro.gemspec
 pkg/
+.ruby-version
+.ruby-gemset

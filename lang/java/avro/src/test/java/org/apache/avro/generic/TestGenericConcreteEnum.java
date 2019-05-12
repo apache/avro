@@ -38,8 +38,7 @@ import static org.junit.Assert.assertEquals;
 public class TestGenericConcreteEnum {
 
   private static byte[] serializeRecord(FooBarSpecificRecord fooBarSpecificRecord) throws IOException {
-    GenericDatumWriter<FooBarSpecificRecord> datumWriter =
-      new GenericDatumWriter<>(FooBarSpecificRecord.SCHEMA$);
+    GenericDatumWriter<FooBarSpecificRecord> datumWriter = new GenericDatumWriter<>(FooBarSpecificRecord.SCHEMA$);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(fooBarSpecificRecord, encoder);
@@ -70,7 +69,8 @@ public class TestGenericConcreteEnum {
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(bytes, null);
 
-    SpecificDatumReader<FooBarSpecificRecord> specificDatumReader = new SpecificDatumReader<>(FooBarSpecificRecord.SCHEMA$);
+    SpecificDatumReader<FooBarSpecificRecord> specificDatumReader = new SpecificDatumReader<>(
+        FooBarSpecificRecord.SCHEMA$);
     FooBarSpecificRecord deserialized = new FooBarSpecificRecord();
     specificDatumReader.read(deserialized, decoder);
 
@@ -78,12 +78,7 @@ public class TestGenericConcreteEnum {
   }
 
   private FooBarSpecificRecord getRecord() {
-    return FooBarSpecificRecord.newBuilder()
-      .setId(42)
-      .setName("foo")
-      .setNicknames(Collections.singletonList("bar"))
-      .setRelatedids(Collections.singletonList(3))
-      .setTypeEnum(TypeEnum.a)
-      .build();
+    return FooBarSpecificRecord.newBuilder().setId(42).setName("foo").setNicknames(Collections.singletonList("bar"))
+        .setRelatedids(Collections.singletonList(3)).setTypeEnum(TypeEnum.a).build();
   }
 }

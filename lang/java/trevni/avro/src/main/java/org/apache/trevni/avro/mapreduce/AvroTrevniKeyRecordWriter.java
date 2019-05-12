@@ -35,17 +35,17 @@ public class AvroTrevniKeyRecordWriter<T> extends AvroTrevniRecordWriterBase<Avr
 
   /**
    * Constructor.
-   * @param context The TaskAttempContext to supply the writer with information form the job configuration
+   * 
+   * @param context The TaskAttempContext to supply the writer with information
+   *                form the job configuration
    */
-  public AvroTrevniKeyRecordWriter(TaskAttemptContext context)
-      throws IOException {
+  public AvroTrevniKeyRecordWriter(TaskAttemptContext context) throws IOException {
     super(context);
   }
 
   /** {@inheritDoc} */
   @Override
-  public void write(AvroKey<T> key, NullWritable value) throws IOException,
-      InterruptedException {
+  public void write(AvroKey<T> key, NullWritable value) throws IOException, InterruptedException {
     writer.write(key.datum());
     if (writer.sizeEstimate() >= blockSize) // block full
       flush();
@@ -55,8 +55,7 @@ public class AvroTrevniKeyRecordWriter<T> extends AvroTrevniRecordWriterBase<Avr
   @Override
   protected Schema initSchema(TaskAttemptContext context) {
     boolean isMapOnly = context.getNumReduceTasks() == 0;
-    return isMapOnly ? AvroJob.getMapOutputKeySchema(context
-        .getConfiguration()) : AvroJob.getOutputKeySchema(context
-        .getConfiguration());
+    return isMapOnly ? AvroJob.getMapOutputKeySchema(context.getConfiguration())
+        : AvroJob.getOutputKeySchema(context.getConfiguration());
   }
 }

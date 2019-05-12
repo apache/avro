@@ -24,10 +24,11 @@ import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.io.parsing.Parser.ActionHandler;
 import org.apache.avro.io.parsing.SkipParser.SkipHandler;
 
-/** Base class for <a href="parsing/package-summary.html">parser</a>-based
- * {@link Decoder}s. */
-public abstract class ParsingDecoder extends Decoder
-  implements ActionHandler, SkipHandler {
+/**
+ * Base class for <a href="parsing/package-summary.html">parser</a>-based
+ * {@link Decoder}s.
+ */
+public abstract class ParsingDecoder extends Decoder implements ActionHandler, SkipHandler {
   protected final SkipParser parser;
 
   protected ParsingDecoder(Symbol root) throws IOException {
@@ -46,7 +47,8 @@ public abstract class ParsingDecoder extends Decoder
     Symbol top = parser.topSymbol();
     if (top == Symbol.NULL) {
       readNull();
-    } if (top == Symbol.BOOLEAN) {
+    }
+    if (top == Symbol.BOOLEAN) {
       readBoolean();
     } else if (top == Symbol.INT) {
       readInt();
@@ -60,7 +62,7 @@ public abstract class ParsingDecoder extends Decoder
       skipString();
     } else if (top == Symbol.BYTES) {
       skipBytes();
-    } else if (top == Symbol.ENUM)  {
+    } else if (top == Symbol.ENUM) {
       readEnum();
     } else if (top == Symbol.FIXED) {
       skipFixed();
@@ -74,4 +76,3 @@ public abstract class ParsingDecoder extends Decoder
   }
 
 }
-

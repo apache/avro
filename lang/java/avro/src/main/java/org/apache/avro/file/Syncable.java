@@ -23,13 +23,13 @@ import java.io.IOException;
 public interface Syncable {
 
   /**
-   * Sync the file to disk. On supported platforms, this method behaves like
-   * POSIX <code>fsync</code> and syncs all underlying OS buffers for this
-   * file descriptor to disk. On these platforms, if this method returns,
-   * the data written to this instance is guaranteed to be persisted on disk.
+   * Sync the file to disk. On supported platforms, this method behaves like POSIX
+   * <code>fsync</code> and syncs all underlying OS buffers for this file
+   * descriptor to disk. On these platforms, if this method returns, the data
+   * written to this instance is guaranteed to be persisted on disk.
    *
-   * @throws IOException - if an error occurred while attempting to sync the
-   *                     data to disk.
+   * @throws IOException - if an error occurred while attempting to sync the data
+   *                     to disk.
    */
   void sync() throws IOException;
 }

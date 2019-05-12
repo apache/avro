@@ -26,20 +26,18 @@ import java.math.BigInteger;
 
 public class TestCustomConversion extends AbstractSpecificRecordTest {
 
-    @Test
-    public void testNullValues() throws IOException {
-        LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
-                .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
-                .build();
-        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
-    }
+  @Test
+  public void testNullValues() throws IOException {
+    LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
+        .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2)).build();
+    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
 
-    @Test
-    public void testNonNullValues() throws IOException {
-        LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
-                .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
-                .setNullableCustomField(new CustomDecimal(BigInteger.valueOf(3000), 2))
-                .build();
-        verifySerDeAndStandardMethods(instanceOfGeneratedClass);
-    }
+  @Test
+  public void testNonNullValues() throws IOException {
+    LogicalTypesWithCustomConversion instanceOfGeneratedClass = LogicalTypesWithCustomConversion.newBuilder()
+        .setNonNullCustomField(new CustomDecimal(BigInteger.valueOf(100), 2))
+        .setNullableCustomField(new CustomDecimal(BigInteger.valueOf(3000), 2)).build();
+    verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
 }

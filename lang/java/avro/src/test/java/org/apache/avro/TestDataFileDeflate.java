@@ -52,8 +52,7 @@ public class TestDataFileDeflate {
     w.close();
 
     // Read it
-    DataFileStream<Utf8> r = new DataFileStream<>(
-        new ByteArrayInputStream(baos.toByteArray()),
+    DataFileStream<Utf8> r = new DataFileStream<>(new ByteArrayInputStream(baos.toByteArray()),
         new GenericDatumReader<>(schema));
     assertEquals("hello world", r.next().toString());
     assertEquals("hello moon", r.next().toString());

@@ -45,45 +45,45 @@ import org.junit.Test;
 
 public class TestGenericData {
 
-  @Test(expected=AvroRuntimeException.class)
-    public void testrecordConstructorNullSchema() throws Exception {
+  @Test(expected = AvroRuntimeException.class)
+  public void testrecordConstructorNullSchema() throws Exception {
     new GenericData.Record(null);
   }
 
-  @Test(expected=AvroRuntimeException.class)
-    public void testrecordConstructorWrongSchema() throws Exception {
+  @Test(expected = AvroRuntimeException.class)
+  public void testrecordConstructorWrongSchema() throws Exception {
     new GenericData.Record(Schema.create(Schema.Type.INT));
   }
 
-  @Test(expected=AvroRuntimeException.class)
-    public void testArrayConstructorNullSchema() throws Exception {
+  @Test(expected = AvroRuntimeException.class)
+  public void testArrayConstructorNullSchema() throws Exception {
     new GenericData.Array<>(1, null);
   }
 
-  @Test(expected=AvroRuntimeException.class)
-    public void testArrayConstructorWrongSchema() throws Exception {
+  @Test(expected = AvroRuntimeException.class)
+  public void testArrayConstructorWrongSchema() throws Exception {
     new GenericData.Array<>(1, Schema.create(Schema.Type.INT));
   }
 
-  @Test(expected=AvroRuntimeException.class)
+  @Test(expected = AvroRuntimeException.class)
   public void testRecordCreateEmptySchema() throws Exception {
     Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
     Record r = new GenericData.Record(s);
   }
 
-  @Test(expected=AvroRuntimeException.class)
+  @Test(expected = AvroRuntimeException.class)
   public void testGetEmptySchemaFields() throws Exception {
     Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
     s.getFields();
   }
 
-  @Test(expected=AvroRuntimeException.class)
+  @Test(expected = AvroRuntimeException.class)
   public void testGetEmptySchemaField() throws Exception {
     Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
     s.getField("foo");
   }
 
-  @Test(expected=AvroRuntimeException.class)
+  @Test(expected = AvroRuntimeException.class)
   public void testRecordPutInvalidField() throws Exception {
     Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
     List<Schema.Field> fields = new ArrayList<>();
@@ -97,8 +97,8 @@ public class TestGenericData {
   /** Make sure that even with nulls, hashCode() doesn't throw NPE. */
   public void testHashCode() {
     GenericData.get().hashCode(null, Schema.create(Type.NULL));
-    GenericData.get().hashCode(null, Schema.createUnion(
-        Arrays.asList(Schema.create(Type.BOOLEAN), Schema.create(Type.STRING))));
+    GenericData.get().hashCode(null,
+        Schema.createUnion(Arrays.asList(Schema.create(Type.BOOLEAN), Schema.create(Type.STRING))));
     List<CharSequence> stuff = new ArrayList<>();
     stuff.add("string");
     Schema schema = recordSchema();
@@ -115,8 +115,7 @@ public class TestGenericData {
     GenericRecord r2 = new GenericData.Record(s);
     Collection<CharSequence> l0 = new ArrayDeque<>();
     List<CharSequence> l1 = new ArrayList<>();
-    GenericArray<CharSequence> l2 =
-      new GenericData.Array<>(1, s.getFields().get(0).schema());
+    GenericArray<CharSequence> l2 = new GenericData.Array<>(1, s.getFields().get(0).schema());
     String foo = "foo";
     l0.add(new StringBuilder(foo));
     l1.add(foo);
@@ -138,28 +137,27 @@ public class TestGenericData {
     return schema;
   }
 
-  @Test public void testEquals2() {
-   Schema schema1 = Schema.createRecord("r", null, "x", false);
-   List<Field> fields1 = new ArrayList<>();
-   fields1.add(new Field("a", Schema.create(Schema.Type.STRING), null, null,
-                         Field.Order.IGNORE));
-   schema1.setFields(fields1);
+  @Test
+  public void testEquals2() {
+    Schema schema1 = Schema.createRecord("r", null, "x", false);
+    List<Field> fields1 = new ArrayList<>();
+    fields1.add(new Field("a", Schema.create(Schema.Type.STRING), null, null, Field.Order.IGNORE));
+    schema1.setFields(fields1);
 
-   // only differs in field order
-   Schema schema2 = Schema.createRecord("r", null, "x", false);
-   List<Field> fields2 = new ArrayList<>();
-   fields2.add(new Field("a", Schema.create(Schema.Type.STRING), null, null,
-                         Field.Order.ASCENDING));
-   schema2.setFields(fields2);
+    // only differs in field order
+    Schema schema2 = Schema.createRecord("r", null, "x", false);
+    List<Field> fields2 = new ArrayList<>();
+    fields2.add(new Field("a", Schema.create(Schema.Type.STRING), null, null, Field.Order.ASCENDING));
+    schema2.setFields(fields2);
 
-   GenericRecord record1 = new GenericData.Record(schema1);
-   record1.put("a", "1");
+    GenericRecord record1 = new GenericData.Record(schema1);
+    record1.put("a", "1");
 
-   GenericRecord record2 = new GenericData.Record(schema2);
-   record2.put("a", "2");
+    GenericRecord record2 = new GenericData.Record(schema2);
+    record2.put("a", "2");
 
-   assertFalse(record2.equals(record1));
-   assertFalse(record1.equals(record2));
+    assertFalse(record2.equals(record1));
+    assertFalse(record1.equals(record2));
   }
 
   @Test
@@ -172,17 +170,17 @@ public class TestGenericData {
 
   @Test
   public void testArrayReversal() {
-      Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
-      GenericArray<Integer> forward = new GenericData.Array<>(10, schema);
-      GenericArray<Integer> backward = new GenericData.Array<>(10, schema);
-      for (int i = 0; i <= 9; i++) {
-        forward.add(i);
-      }
-      for (int i = 9; i >= 0; i--) {
-        backward.add(i);
-      }
-      forward.reverse();
-      assertTrue(forward.equals(backward));
+    Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
+    GenericArray<Integer> forward = new GenericData.Array<>(10, schema);
+    GenericArray<Integer> backward = new GenericData.Array<>(10, schema);
+    for (int i = 0; i <= 9; i++) {
+      forward.add(i);
+    }
+    for (int i = 9; i >= 0; i--) {
+      backward.add(i);
+    }
+    forward.reverse();
+    assertTrue(forward.equals(backward));
   }
 
   @Test
@@ -199,22 +197,24 @@ public class TestGenericData {
     try {
       array.get(2);
       fail("Expected IndexOutOfBoundsException getting index 2");
-    } catch (IndexOutOfBoundsException e) {}
+    } catch (IndexOutOfBoundsException e) {
+    }
     array.clear();
     assertEquals(0, array.size());
     try {
       array.get(0);
       fail("Expected IndexOutOfBoundsException getting index 0 after clear()");
-    } catch (IndexOutOfBoundsException e) {}
+    } catch (IndexOutOfBoundsException e) {
+    }
 
   }
+
   @Test
-  public void testArrayAddAtLocation()
-  {
+  public void testArrayAddAtLocation() {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
     GenericArray<Integer> array = new GenericData.Array<>(6, schema);
     array.clear();
-    for(int i=0; i<5; ++i)
+    for (int i = 0; i < 5; ++i)
       array.add(i);
     assertEquals(5, array.size());
     array.add(0, 6);
@@ -235,15 +235,16 @@ public class TestGenericData {
     try {
       array.get(9);
       fail("Expected IndexOutOfBoundsException after adding elements");
-    } catch (IndexOutOfBoundsException e){}
+    } catch (IndexOutOfBoundsException e) {
+    }
   }
+
   @Test
-  public void testArrayRemove()
-  {
+  public void testArrayRemove() {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
     GenericArray<Integer> array = new GenericData.Array<>(10, schema);
     array.clear();
-    for(int i=0; i<10; ++i)
+    for (int i = 0; i < 10; ++i)
       array.add(i);
     assertEquals(10, array.size());
     assertEquals(Integer.valueOf(0), array.get(0));
@@ -259,32 +260,34 @@ public class TestGenericData {
     try {
       array.get(9);
       fail("Expected IndexOutOfBoundsException after removing an element");
-    } catch (IndexOutOfBoundsException e){}
+    } catch (IndexOutOfBoundsException e) {
+    }
     try {
       array.set(9, 99);
       fail("Expected IndexOutOfBoundsException after removing an element");
-    } catch (IndexOutOfBoundsException e){}
+    } catch (IndexOutOfBoundsException e) {
+    }
     try {
       array.remove(9);
       fail("Expected IndexOutOfBoundsException after removing an element");
-    } catch (IndexOutOfBoundsException e){}
+    } catch (IndexOutOfBoundsException e) {
+    }
 
     // Test that we can still remove for properly sized arrays, and the rval
     assertEquals(Integer.valueOf(9), array.remove(8));
     assertEquals(8, array.size());
 
-
     // Test insertion after remove
     array.add(88);
     assertEquals(Integer.valueOf(88), array.get(8));
   }
+
   @Test
-  public void testArraySet()
-  {
+  public void testArraySet() {
     Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
     GenericArray<Integer> array = new GenericData.Array<>(10, schema);
     array.clear();
-    for(int i=0; i<10; ++i)
+    for (int i = 0; i < 10; ++i)
       array.add(i);
     assertEquals(10, array.size());
     assertEquals(Integer.valueOf(0), array.get(0));
@@ -298,14 +301,15 @@ public class TestGenericData {
   @Test
   public void testToStringIsJson() throws JsonParseException, IOException {
     Field stringField = new Field("string", Schema.create(Type.STRING), null, null);
-    Field enumField = new Field("enum", Schema.createEnum("my_enum", "doc", null, Arrays.asList("a", "b", "c")), null, null);
+    Field enumField = new Field("enum", Schema.createEnum("my_enum", "doc", null, Arrays.asList("a", "b", "c")), null,
+        null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
     schema.setFields(Arrays.asList(stringField, enumField));
 
     GenericRecord r = new GenericData.Record(schema);
     // \u2013 is EN DASH
     r.put(stringField.name(), "hello\nthere\"\tyou\u2013}");
-    r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(),"a"));
+    r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(), "a"));
 
     String json = r.toString();
     JsonFactory factory = new JsonFactory();
@@ -318,16 +322,20 @@ public class TestGenericData {
 
   @Test
   public void testMapWithNonStringKeyToStringIsJson() throws Exception {
-    Schema intMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
+    Schema intMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Integer\"}");
     Field intMapField = new Field("intMap", Schema.createMap(intMapSchema), null, null);
-    Schema decMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
+    Schema decMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.math.BigDecimal\"}");
     Field decMapField = new Field("decMap", Schema.createMap(decMapSchema), null, null);
-    Schema boolMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
+    Schema boolMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.lang.Boolean\"}");
     Field boolMapField = new Field("boolMap", Schema.createMap(boolMapSchema), null, null);
-    Schema fileMapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
+    Schema fileMapSchema = new Schema.Parser()
+        .parse("{\"type\": \"map\", \"values\": \"string\", \"java-key-class\" : \"java.io.File\"}");
     Field fileMapField = new Field("fileMap", Schema.createMap(fileMapSchema), null, null);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
-    schema.setFields(Arrays.asList(intMapField,decMapField,boolMapField,fileMapField));
+    schema.setFields(Arrays.asList(intMapField, decMapField, boolMapField, fileMapField));
 
     HashMap<Integer, String> intPair = new HashMap<>();
     intPair.put(1, "one");
@@ -343,7 +351,7 @@ public class TestGenericData {
     boolPair.put(null, null);
 
     HashMap<java.io.File, String> filePair = new HashMap<>();
-    java.io.File f = new java.io.File( getClass().getResource("/SchemaBuilder.avsc").toURI() );
+    java.io.File f = new java.io.File(getClass().getResource("/SchemaBuilder.avsc").toURI());
     filePair.put(f, "File");
 
     GenericRecord r = new GenericData.Record(schema);
@@ -361,39 +369,43 @@ public class TestGenericData {
     mapper.readTree(parser);
   }
 
-  @Test public void testToStringEscapesControlCharsInBytes() throws Exception {
+  @Test
+  public void testToStringEscapesControlCharsInBytes() throws Exception {
     GenericData data = GenericData.get();
-    ByteBuffer bytes = ByteBuffer.wrap(new byte[] {'a', '\n', 'b'});
-    assertEquals("{\"bytes\": \"a\\nb\"}", data.toString(bytes));
-    assertEquals("{\"bytes\": \"a\\nb\"}", data.toString(bytes));
+    ByteBuffer bytes = ByteBuffer.wrap(new byte[] { 'a', '\n', 'b' });
+    assertEquals("\"a\\nb\"", data.toString(bytes));
+    assertEquals("\"a\\nb\"", data.toString(bytes));
   }
 
-  @Test public void testToStringEscapesControlCharsInMap() {
+  @Test
+  public void testToStringEscapesControlCharsInMap() {
     GenericData data = GenericData.get();
     Map<String, String> m = new HashMap<>();
     m.put("a\n\\b", "a\n\\b");
     assertEquals("{\"a\\n\\\\b\": \"a\\n\\\\b\"}", data.toString(m));
   }
 
-  @Test public void testToStringFixed() throws Exception {
+  @Test
+  public void testToStringFixed() throws Exception {
     GenericData data = GenericData.get();
-    assertEquals("[97, 10, 98]", data.toString(new GenericData.Fixed(
-        Schema.createFixed("test", null, null, 3),
-        new byte[] {'a', '\n', 'b'})));
+    assertEquals("[97, 10, 98]",
+        data.toString(new GenericData.Fixed(Schema.createFixed("test", null, null, 3), new byte[] { 'a', '\n', 'b' })));
   }
 
-  @Test public void testToStringDoesNotEscapeForwardSlash() throws Exception {
+  @Test
+  public void testToStringDoesNotEscapeForwardSlash() throws Exception {
     GenericData data = GenericData.get();
     assertEquals("\"/\"", data.toString("/"));
   }
 
-  @Test public void testToStringNanInfinity() throws Exception {
+  @Test
+  public void testToStringNanInfinity() throws Exception {
     GenericData data = GenericData.get();
-    assertEquals("\"Infinity\"",data.toString(Float.POSITIVE_INFINITY));
-    assertEquals("\"-Infinity\"",data.toString(Float.NEGATIVE_INFINITY));
+    assertEquals("\"Infinity\"", data.toString(Float.POSITIVE_INFINITY));
+    assertEquals("\"-Infinity\"", data.toString(Float.NEGATIVE_INFINITY));
     assertEquals("\"NaN\"", data.toString(Float.NaN));
-    assertEquals("\"Infinity\"",data.toString(Double.POSITIVE_INFINITY));
-    assertEquals("\"-Infinity\"",data.toString(Double.NEGATIVE_INFINITY));
+    assertEquals("\"Infinity\"", data.toString(Double.POSITIVE_INFINITY));
+    assertEquals("\"-Infinity\"", data.toString(Double.NEGATIVE_INFINITY));
     assertEquals("\"NaN\"", data.toString(Double.NaN));
   }
 
@@ -441,7 +453,7 @@ public class TestGenericData {
 
   @Test
   public void testEnumCompare() {
-    Schema s = Schema.createEnum("Kind",null,null,Arrays.asList("Z","Y","X"));
+    Schema s = Schema.createEnum("Kind", null, null, Arrays.asList("Z", "Y", "X"));
     GenericEnumSymbol z = new GenericData.EnumSymbol(s, "Z");
     GenericEnumSymbol z2 = new GenericData.EnumSymbol(s, "Z");
     assertEquals(0, z.compareTo(z2));
@@ -454,11 +466,10 @@ public class TestGenericData {
   public void testByteBufferDeepCopy() {
     // Test that a deep copy of a byte buffer respects the byte buffer
     // limits and capacity.
-    byte[] buffer_value = {0, 1, 2, 3, 0, 0, 0};
+    byte[] buffer_value = { 0, 1, 2, 3, 0, 0, 0 };
     ByteBuffer buffer = ByteBuffer.wrap(buffer_value, 1, 4);
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
-    Field byte_field =
-      new Field("bytes", Schema.create(Type.BYTES), null, null);
+    Field byte_field = new Field("bytes", Schema.create(Type.BYTES), null, null);
     schema.setFields(Collections.singletonList(byte_field));
 
     GenericRecord record = new GenericData.Record(schema);
@@ -475,7 +486,7 @@ public class TestGenericData {
     List<Schema> unionTypes = new ArrayList<>();
     Schema schema;
     Schema nullSchema = Schema.create(Type.NULL);
-    Schema enumSchema = Schema.createEnum("AnEnum", null, null, Arrays.asList("X","Y","Z"));
+    Schema enumSchema = Schema.createEnum("AnEnum", null, null, Arrays.asList("X", "Y", "Z"));
     GenericEnumSymbol w = new GenericData.EnumSymbol(enumSchema, "W");
     GenericEnumSymbol x = new GenericData.EnumSymbol(enumSchema, "X");
     GenericEnumSymbol y = new GenericData.EnumSymbol(enumSchema, "Y");
@@ -506,10 +517,13 @@ public class TestGenericData {
     assertTrue(GenericData.get().validate(schema, null));
   }
 
-  private enum anEnum { ONE,TWO,THREE };
+  private enum anEnum {
+    ONE, TWO, THREE
+  };
+
   @Test
   public void validateRequiresGenericSymbolForEnumSchema() {
-    final Schema schema = Schema.createEnum("my_enum", "doc", "namespace", Arrays.asList("ONE","TWO","THREE"));
+    final Schema schema = Schema.createEnum("my_enum", "doc", "namespace", Arrays.asList("ONE", "TWO", "THREE"));
     final GenericData gd = GenericData.get();
 
     /* positive cases */
@@ -523,20 +537,12 @@ public class TestGenericData {
 
   @Test
   public void testValidateUnion() {
-      Schema type1Schema = SchemaBuilder.record("Type1")
-          .fields()
-          .requiredString("myString")
-          .requiredInt("myInt")
-          .endRecord();
+    Schema type1Schema = SchemaBuilder.record("Type1").fields().requiredString("myString").requiredInt("myInt")
+        .endRecord();
 
-      Schema type2Schema = SchemaBuilder.record("Type2")
-          .fields()
-          .requiredString("myString")
-          .endRecord();
+    Schema type2Schema = SchemaBuilder.record("Type2").fields().requiredString("myString").endRecord();
 
-      Schema unionSchema = SchemaBuilder.unionOf()
-          .type(type1Schema).and().type(type2Schema)
-          .endUnion();
+    Schema unionSchema = SchemaBuilder.unionOf().type(type1Schema).and().type(type2Schema).endUnion();
 
     GenericRecord record = new GenericData.Record(type2Schema);
     record.put("myString", "myValue");
@@ -544,9 +550,9 @@ public class TestGenericData {
   }
 
   /*
-   * The toString has a detection for circular references to abort.
-   * This detection has the risk of detecting that same value as being a circular reference.
-   * For Record, Map and Array this is correct, for the rest is is not.
+   * The toString has a detection for circular references to abort. This detection
+   * has the risk of detecting that same value as being a circular reference. For
+   * Record, Map and Array this is correct, for the rest is is not.
    */
   @Test
   public void testToStringSameValues() throws IOException {
@@ -554,26 +560,26 @@ public class TestGenericData {
     fields.add(new Field("nullstring1", Schema.create(Type.STRING), null, null));
     fields.add(new Field("nullstring2", Schema.create(Type.STRING), null, null));
 
-    fields.add(new Field("string1", Schema.create(Type.STRING  ), null, null));
-    fields.add(new Field("string2", Schema.create(Type.STRING  ), null, null));
+    fields.add(new Field("string1", Schema.create(Type.STRING), null, null));
+    fields.add(new Field("string2", Schema.create(Type.STRING), null, null));
 
-    fields.add(new Field("bytes1",  Schema.create(Type.BYTES   ), null, null));
-    fields.add(new Field("bytes2",  Schema.create(Type.BYTES   ), null, null));
+    fields.add(new Field("bytes1", Schema.create(Type.BYTES), null, null));
+    fields.add(new Field("bytes2", Schema.create(Type.BYTES), null, null));
 
-    fields.add(new Field("int1",    Schema.create(Type.INT     ), null, null));
-    fields.add(new Field("int2",    Schema.create(Type.INT     ), null, null));
+    fields.add(new Field("int1", Schema.create(Type.INT), null, null));
+    fields.add(new Field("int2", Schema.create(Type.INT), null, null));
 
-    fields.add(new Field("long1",   Schema.create(Type.LONG    ), null, null));
-    fields.add(new Field("long2",   Schema.create(Type.LONG    ), null, null));
+    fields.add(new Field("long1", Schema.create(Type.LONG), null, null));
+    fields.add(new Field("long2", Schema.create(Type.LONG), null, null));
 
-    fields.add(new Field("float1",  Schema.create(Type.FLOAT   ), null, null));
-    fields.add(new Field("float2",  Schema.create(Type.FLOAT   ), null, null));
+    fields.add(new Field("float1", Schema.create(Type.FLOAT), null, null));
+    fields.add(new Field("float2", Schema.create(Type.FLOAT), null, null));
 
-    fields.add(new Field("double1", Schema.create(Type.DOUBLE  ), null, null));
-    fields.add(new Field("double2", Schema.create(Type.DOUBLE  ), null, null));
+    fields.add(new Field("double1", Schema.create(Type.DOUBLE), null, null));
+    fields.add(new Field("double2", Schema.create(Type.DOUBLE), null, null));
 
-    fields.add(new Field("boolean1",Schema.create(Type.BOOLEAN ), null, null));
-    fields.add(new Field("boolean2",Schema.create(Type.BOOLEAN ), null, null));
+    fields.add(new Field("boolean1", Schema.create(Type.BOOLEAN), null, null));
+    fields.add(new Field("boolean2", Schema.create(Type.BOOLEAN), null, null));
 
     List<String> enumValues = new ArrayList<>();
     enumValues.add("One");
@@ -603,18 +609,18 @@ public class TestGenericData {
     testRecord.put("nullstring2", null);
 
     String fortyTwo = "42";
-    testRecord.put("string1",  fortyTwo);
-    testRecord.put("string2",  fortyTwo);
-    testRecord.put("bytes1",   0x42 );
-    testRecord.put("bytes2",   0x42 );
-    testRecord.put("int1",     42 );
-    testRecord.put("int2",     42 );
-    testRecord.put("long1",    42L);
-    testRecord.put("long2",    42L);
-    testRecord.put("float1",   42F);
-    testRecord.put("float2",   42F);
-    testRecord.put("double1",  42D);
-    testRecord.put("double2",  42D);
+    testRecord.put("string1", fortyTwo);
+    testRecord.put("string2", fortyTwo);
+    testRecord.put("bytes1", 0x42);
+    testRecord.put("bytes2", 0x42);
+    testRecord.put("int1", 42);
+    testRecord.put("int2", 42);
+    testRecord.put("long1", 42L);
+    testRecord.put("long2", 42L);
+    testRecord.put("float1", 42F);
+    testRecord.put("float2", 42F);
+    testRecord.put("double1", 42D);
+    testRecord.put("double2", 42D);
     testRecord.put("boolean1", true);
     testRecord.put("boolean2", true);
 
@@ -622,26 +628,28 @@ public class TestGenericData {
     testRecord.put("enum2", "One");
 
     GenericRecord record = new GenericData.Record(recordSchema);
-    record.put("myString","42");
-    testRecord.put("record1",  record);
-    testRecord.put("record2",  record);
+    record.put("myString", "42");
+    testRecord.put("record1", record);
+    testRecord.put("record2", record);
 
     GenericArray<String> array = new GenericData.Array<>(1, arraySchema);
     array.clear();
     array.add("42");
-    testRecord.put("array1",   array);
-    testRecord.put("array2",   array);
+    testRecord.put("array1", array);
+    testRecord.put("array2", array);
 
     Map<String, String> map = new HashMap<>();
     map.put("42", "42");
-    testRecord.put("map1",     map);
-    testRecord.put("map2",     map);
+    testRecord.put("map1", map);
+    testRecord.put("map2", map);
 
     String testString = testRecord.toString();
-    assertFalse("Record with duplicated values results in wrong 'toString()'", testString.contains("CIRCULAR REFERENCE"));
+    assertFalse("Record with duplicated values results in wrong 'toString()'",
+        testString.contains("CIRCULAR REFERENCE"));
   }
 
-  // Test copied from Apache Parquet: org.apache.parquet.avro.TestCircularReferences
+  // Test copied from Apache Parquet:
+  // org.apache.parquet.avro.TestCircularReferences
   @Test
   public void testToStringRecursive() throws IOException {
     ReferenceManager manager = new ReferenceManager();
@@ -654,23 +662,20 @@ public class TestGenericData {
     Schema placeholderSchema = Schema.createRecord("Placeholder", null, null, false);
     List<Schema.Field> placeholderFields = new ArrayList<>();
     placeholderFields.add( // at least one field is needed to be a valid schema
-      new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
+        new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
     placeholderSchema.setFields(placeholderFields);
 
     Referenceable idRef = new Referenceable("id");
 
-    Schema parentRefSchema = Schema.createUnion(
-      Schema.create(Schema.Type.NULL),
-      Schema.create(Schema.Type.LONG),
-      idRef.addToSchema(placeholderSchema));
+    Schema parentRefSchema = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.LONG),
+        idRef.addToSchema(placeholderSchema));
 
     Reference parentRef = new Reference("parent");
 
     List<Schema.Field> childFields = new ArrayList<>();
     childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, null));
     childFields.add(new Schema.Field("parent", parentRefSchema, null, null));
-    Schema childSchema = parentRef.addToSchema(
-      Schema.createRecord("Child", null, null, false, childFields));
+    Schema childSchema = parentRef.addToSchema(Schema.createRecord("Child", null, null, false, childFields));
 
     List<Schema.Field> parentFields = new ArrayList<>();
     parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
@@ -698,24 +703,25 @@ public class TestGenericData {
   }
 
   @Test
-  /** check that GenericArray.reset() retains reusable elements and that GenericArray.prune() cleans
-   * them up properly.
+  /**
+   * check that GenericArray.reset() retains reusable elements and that
+   * GenericArray.prune() cleans them up properly.
    */
   public void testGenericArrayPeek() {
     Schema elementSchema = SchemaBuilder.record("element").fields().requiredString("value").endRecord();
     Schema arraySchema = Schema.createArray(elementSchema);
 
-    GenericRecord record = new GenericData.Record( elementSchema );
+    GenericRecord record = new GenericData.Record(elementSchema);
     record.put("value", "string");
 
     GenericArray<GenericRecord> list = new GenericData.Array<>(1, arraySchema);
     list.add(record);
 
     list.reset();
-    assertTrue( record == list.peek() );
+    assertTrue(record == list.peek());
 
     list.prune();
-    assertNull( list.peek() );
+    assertNull(list.peek());
   }
 
 }

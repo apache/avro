@@ -26,28 +26,31 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobConfigurable;
 import org.apache.hadoop.mapred.Reporter;
 
-/** A reducer for Avro data.
+/**
+ * A reducer for Avro data.
  *
- * <p>Applications should subclass this class and pass their subclass to {@link
- * AvroJob#setReducerClass(JobConf, Class)} and perhaps {@link AvroJob#setCombinerClass(JobConf, Class)}.
- * Subclasses override {@link #reduce(Object, Iterable, AvroCollector, Reporter)}.
+ * <p>
+ * Applications should subclass this class and pass their subclass to
+ * {@link AvroJob#setReducerClass(JobConf, Class)} and perhaps
+ * {@link AvroJob#setCombinerClass(JobConf, Class)}. Subclasses override
+ * {@link #reduce(Object, Iterable, AvroCollector, Reporter)}.
  */
 
-public class AvroReducer<K,V,OUT> extends Configured implements JobConfigurable, Closeable {
+public class AvroReducer<K, V, OUT> extends Configured implements JobConfigurable, Closeable {
 
-  private Pair<K,V> outputPair;
+  private Pair<K, V> outputPair;
 
-  /** Called with all map output values with a given key.  By default, pairs
-   * key with each value, collecting {@link Pair} instances. */
+  /**
+   * Called with all map output values with a given key. By default, pairs key
+   * with each value, collecting {@link Pair} instances.
+   */
   @SuppressWarnings("unchecked")
-  public void reduce(K key, Iterable<V> values,
-                     AvroCollector<OUT> collector,
-                     Reporter reporter) throws IOException {
+  public void reduce(K key, Iterable<V> values, AvroCollector<OUT> collector, Reporter reporter) throws IOException {
     if (outputPair == null)
       outputPair = new Pair<>(AvroJob.getOutputSchema(getConf()));
     for (V value : values) {
       outputPair.set(key, value);
-      collector.collect((OUT)outputPair);
+      collector.collect((OUT) outputPair);
     }
   }
 

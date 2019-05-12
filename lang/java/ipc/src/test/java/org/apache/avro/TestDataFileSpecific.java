@@ -30,7 +30,6 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
-import org.apache.avro.Foo;
 import org.junit.rules.TemporaryFolder;
 
 public class TestDataFileSpecific {
@@ -38,21 +37,21 @@ public class TestDataFileSpecific {
   @Rule
   public TemporaryFolder DIR = new TemporaryFolder();
 
-  /* Test when using SpecificDatumReader<T>() constructor to read from a file
-   * with a different schema that both reader & writer schemas are found.*/
+  /*
+   * Test when using SpecificDatumReader<T>() constructor to read from a file with
+   * a different schema that both reader & writer schemas are found.
+   */
   @Test
   public void testSpecificDatumReaderDefaultCtor() throws IOException {
     File file = new File(DIR.getRoot().getPath(), "testSpecificDatumReaderDefaultCtor");
 
     // like the specific Foo, but with another field
-    Schema s1 = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Foo\","
-            + "\"namespace\":\"org.apache.avro\",\"fields\":["
-            + "{\"name\":\"label\",\"type\":\"string\"},"
-            + "{\"name\":\"id\",\"type\":\"int\"}]}");
+    Schema s1 = new Schema.Parser()
+        .parse("{\"type\":\"record\",\"name\":\"Foo\"," + "\"namespace\":\"org.apache.avro\",\"fields\":["
+            + "{\"name\":\"label\",\"type\":\"string\"}," + "{\"name\":\"id\",\"type\":\"int\"}]}");
 
     // write a file using generic objects
-    try (DataFileWriter<Record> writer =
-                 new DataFileWriter<>(new GenericDatumWriter<Record>(s1)).create(s1, file)) {
+    try (DataFileWriter<Record> writer = new DataFileWriter<>(new GenericDatumWriter<Record>(s1)).create(s1, file)) {
       for (int i = 0; i < 10; i++) {
         Record r = new Record(s1);
         r.put("label", "" + i);

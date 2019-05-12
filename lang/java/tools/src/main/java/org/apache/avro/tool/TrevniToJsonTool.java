@@ -32,9 +32,10 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 
-/** Tool to read Trevni files and print them as JSON.
- * This can read any Trevni file.  Nested structure is reconstructed from the
- * columns rather than any schema information.
+/**
+ * Tool to read Trevni files and print them as JSON. This can read any Trevni
+ * file. Nested structure is reconstructed from the columns rather than any
+ * schema information.
  */
 public class TrevniToJsonTool implements Tool {
   static final JsonFactory FACTORY = new JsonFactory();
@@ -54,8 +55,7 @@ public class TrevniToJsonTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-                 List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     String filename;
     boolean pretty = false;
     if (args.size() == 2 && "-pretty".equals(args.get(0))) {
@@ -74,12 +74,11 @@ public class TrevniToJsonTool implements Tool {
   }
 
   /** Read a Trevni file and print each row as a JSON object. */
-  public void toJson(Input input, PrintStream out, boolean pretty)
-    throws IOException {
+  public void toJson(Input input, PrintStream out, boolean pretty) throws IOException {
     this.generator = FACTORY.createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       generator.useDefaultPrettyPrinter();
-    } else {                                      // ensure newline separation
+    } else { // ensure newline separation
       MinimalPrettyPrinter pp = new MinimalPrettyPrinter();
       pp.setRootValueSeparator(System.getProperty("line.separator"));
       generator.setPrettyPrinter(pp);
@@ -137,32 +136,40 @@ public class TrevniToJsonTool implements Tool {
     }
   }
 
-  private void primitiveToJson(ColumnMetaData column, Object value)
-    throws IOException {
+  private void primitiveToJson(ColumnMetaData column, Object value) throws IOException {
     switch (column.getType()) {
     case NULL:
-      generator.writeNull();                        break;
+      generator.writeNull();
+      break;
     case BOOLEAN:
-      generator.writeBoolean((Boolean)value);       break;
+      generator.writeBoolean((Boolean) value);
+      break;
     case INT:
-      generator.writeNumber((Integer)value);        break;
+      generator.writeNumber((Integer) value);
+      break;
     case LONG:
-      generator.writeNumber((Long)value);           break;
+      generator.writeNumber((Long) value);
+      break;
     case FIXED32:
-      generator.writeNumber((Integer)value);        break;
+      generator.writeNumber((Integer) value);
+      break;
     case FIXED64:
-      generator.writeNumber((Long)value);           break;
+      generator.writeNumber((Long) value);
+      break;
     case FLOAT:
-      generator.writeNumber((Float)value);          break;
+      generator.writeNumber((Float) value);
+      break;
     case DOUBLE:
-      generator.writeNumber((Double)value);         break;
+      generator.writeNumber((Double) value);
+      break;
     case STRING:
-      generator.writeString((String)value);         break;
+      generator.writeString((String) value);
+      break;
     case BYTES:
-      generator.writeBinary((byte[])value);
+      generator.writeBinary((byte[]) value);
       break;
     default:
-      throw new RuntimeException("Unknown value type: "+column.getType());
+      throw new RuntimeException("Unknown value type: " + column.getType());
     }
   }
 

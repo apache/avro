@@ -37,16 +37,14 @@ import org.apache.avro.io.JsonDecoder;
 /** Tool to convert JSON data into the binary form. */
 public class JsonToBinaryFragmentTool implements Tool {
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser optionParser = new OptionParser();
     OptionSpec<String> schemaFileOption = optionParser
-        .accepts("schema-file", "File containing schema, must not occur with inline schema.")
-        .withOptionalArg()
+        .accepts("schema-file", "File containing schema, must not occur with inline schema.").withOptionalArg()
         .ofType(String.class);
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
-    List<String> nargs = (List<String>)optionSet.nonOptionArguments();
+    List<String> nargs = (List<String>) optionSet.nonOptionArguments();
     String schemaFile = schemaFileOption.value(optionSet);
 
     if (nargs.size() != (schemaFile == null ? 2 : 1)) {
@@ -68,16 +66,13 @@ public class JsonToBinaryFragmentTool implements Tool {
     InputStream input = Util.fileOrStdin(inputFile, stdin);
 
     try {
-      GenericDatumReader<Object> reader =
-          new GenericDatumReader<>(schema);
+      GenericDatumReader<Object> reader = new GenericDatumReader<>(schema);
 
-      JsonDecoder jsonDecoder =
-      DecoderFactory.get().jsonDecoder(schema, input);
-      GenericDatumWriter<Object> writer =
-          new GenericDatumWriter<>(schema);
+      JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(schema, input);
+      GenericDatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       Encoder e = EncoderFactory.get().binaryEncoder(out, null);
       Object datum = null;
-      while(true) {
+      while (true) {
         try {
           datum = reader.read(datum, jsonDecoder);
         } catch (EOFException eofException) {

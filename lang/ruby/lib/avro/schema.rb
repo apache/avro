@@ -355,7 +355,7 @@ module Avro
         unless size.is_a?(Integer)
           raise AvroError, 'Fixed Schema requires a valid integer for size property.'
         end
-        super(:fixed, name, space, names, logical_type)
+        super(:fixed, name, space, names, nil, logical_type)
         @size = size
       end
 
@@ -374,6 +374,7 @@ module Avro
         @default = default
         @order = order
         @doc = doc
+        validate_default! if default? && !Avro.disable_field_default_validation
       end
 
       def default?
@@ -386,6 +387,20 @@ module Avro
           avro['order'] = order if order
           avro['doc'] = doc if doc
         end
+      end
+
+      private
+
+      def validate_default!
+        type_for_default = if type.type_sym == :union
+                             type.schemas.first
+                           else
+                             type
+                           end
+
+        Avro::SchemaValidator.validate!(type_for_default, default)
+      rescue Avro::SchemaValidator::ValidationError => e
+        raise Avro::SchemaParseError, "Error validating default for #{name}: #{e.message}"
       end
     end
   end

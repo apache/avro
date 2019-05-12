@@ -29,8 +29,7 @@ abstract class FieldAccessor {
 
   protected abstract Object get(Object object) throws IllegalAccessException;
 
-  protected abstract void set(Object object, Object value)
-      throws IllegalAccessException, IOException;
+  protected abstract void set(Object object, Object value) throws IllegalAccessException, IOException;
 
   protected void read(Object object, Decoder in) throws IOException {
   }

@@ -26,8 +26,8 @@ import java.nio.ByteBuffer;
 import org.apache.avro.file.Codec;
 
 /**
- * Simple Custom Codec to validate making Codec Public
- * Compress and Decompress operations are just bitwise-NOT of data
+ * Simple Custom Codec to validate making Codec Public Compress and Decompress
+ * operations are just bitwise-NOT of data
  */
 public class CustomCodec extends Codec {
 
@@ -72,17 +72,17 @@ public class CustomCodec extends Codec {
   }
 
   /**
-   * Codecs must implement an equals() method.  Two codecs, A and B are equal
-   * if: the result of A and B decompressing content compressed by A is the same
-   * AND the result of A and B decompressing content compressed by B is the same
+   * Codecs must implement an equals() method. Two codecs, A and B are equal if:
+   * the result of A and B decompressing content compressed by A is the same AND
+   * the result of A and B decompressing content compressed by B is the same
    */
   private boolean compareDecompress(Codec other, ByteBuffer original) throws IOException {
     ByteBuffer compressedA = this.compress(original);
     original.rewind();
     ByteBuffer compressedB = other.compress(original);
 
-    return this.decompress(compressedA).equals(other.decompress((ByteBuffer) compressedA.rewind())) &&
-      this.decompress(compressedB).equals(other.decompress((ByteBuffer) compressedB.rewind()));
+    return this.decompress(compressedA).equals(other.decompress((ByteBuffer) compressedA.rewind()))
+        && this.decompress(compressedB).equals(other.decompress((ByteBuffer) compressedB.rewind()));
   }
 
   @Override

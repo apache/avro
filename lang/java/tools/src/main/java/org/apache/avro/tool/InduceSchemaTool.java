@@ -32,8 +32,7 @@ import org.apache.avro.reflect.ReflectData;
 public class InduceSchemaTool implements Tool {
 
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.size() == 0 || args.size() > 2) {
       System.err.println("Usage: [colon-delimited-classpath] classname");
       return 1;

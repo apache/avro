@@ -1,4 +1,5 @@
 package org.apache.avro.ipc.jetty;
+
 import org.apache.avro.ipc.stats.StatsPlugin;
 import org.apache.avro.ipc.stats.StatsServlet;
 /*
@@ -34,8 +35,9 @@ public class StatsServer {
   Server httpServer;
   StatsPlugin plugin;
 
-  /* Start a stats server on the given port,
-   * responsible for the given plugin. */
+  /*
+   * Start a stats server on the given port, responsible for the given plugin.
+   */
   public StatsServer(StatsPlugin plugin, int port) throws Exception {
     this.httpServer = new Server(port);
     this.plugin = plugin;

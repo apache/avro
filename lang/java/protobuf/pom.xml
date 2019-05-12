@@ -34,6 +34,7 @@
   <packaging>bundle</packaging>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <osgi.import>
       !org.apache.avro.protobuf*,
       org.apache.avro*;version="${project.version}",
@@ -60,6 +61,10 @@
                     <exec executable="protoc">
                       <arg value="--java_out=src/test/java/"/>
                       <arg value="src/test/protobuf/test.proto"/>
+                    </exec>
+                    <exec executable="protoc">
+                      <arg value="--java_out=src/test/java/"/>
+                      <arg value="src/test/protobuf/test_multiple_files.proto"/>
                     </exec>
                   </tasks>
                 </configuration>

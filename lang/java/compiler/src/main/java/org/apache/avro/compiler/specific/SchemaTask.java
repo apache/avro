@@ -38,9 +38,8 @@ public class SchemaTask extends ProtocolTask {
       System.err.println("Usage: SchemaTask <schema.avsc>... <output-folder>");
       System.exit(1);
     }
-    File dst = new File(args[args.length-1]);
-    for (int i = 0; i < args.length-1; i++)
+    File dst = new File(args[args.length - 1]);
+    for (int i = 0; i < args.length - 1; i++)
       new SchemaTask().doCompile(new File(args[i]), dst);
   }
 }
-

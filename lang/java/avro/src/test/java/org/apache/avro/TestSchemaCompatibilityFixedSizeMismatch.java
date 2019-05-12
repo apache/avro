@@ -37,8 +37,10 @@ public class TestSchemaCompatibilityFixedSizeMismatch {
     Object[][] fields = { //
         { FIXED_4_BYTES, FIXED_8_BYTES, "expected: 8, found: 4", "/size" },
         { FIXED_8_BYTES, FIXED_4_BYTES, "expected: 4, found: 8", "/size" },
-        { A_DINT_B_DFIXED_8_BYTES_RECORD1, A_DINT_B_DFIXED_4_BYTES_RECORD1, "expected: 4, found: 8", "/fields/1/type/size" },
-        { A_DINT_B_DFIXED_4_BYTES_RECORD1, A_DINT_B_DFIXED_8_BYTES_RECORD1, "expected: 8, found: 4", "/fields/1/type/size" }, };
+        { A_DINT_B_DFIXED_8_BYTES_RECORD1, A_DINT_B_DFIXED_4_BYTES_RECORD1, "expected: 4, found: 8",
+            "/fields/1/type/size" },
+        { A_DINT_B_DFIXED_4_BYTES_RECORD1, A_DINT_B_DFIXED_8_BYTES_RECORD1, "expected: 8, found: 4",
+            "/fields/1/type/size" }, };
     return Arrays.asList(fields);
   }
 
@@ -53,7 +55,6 @@ public class TestSchemaCompatibilityFixedSizeMismatch {
 
   @Test
   public void testFixedSizeMismatchSchemas() throws Exception {
-    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.FIXED_SIZE_MISMATCH,
-        details, location);
+    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.FIXED_SIZE_MISMATCH, details, location);
   }
 }
