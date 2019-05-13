@@ -1,9 +1,11 @@
 {
     "type": "record",
-    "name": "RootRecord",
+    "name": "RootRecordAliased",
+	"aliases": ["RootRecord"],
     "fields": [
         {
-            "name": "mylong",
+            "name": "mylongAliased",
+			"aliases": ["mylong"],
             "type": "long"
         },
         {

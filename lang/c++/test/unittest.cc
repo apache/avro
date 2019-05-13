@@ -140,30 +140,30 @@ struct TestSchema
         NodePtr node = schema_.root();
 
         size_t index = 0;
-        bool found = node->nameIndex("mylongxxx", index);
+        bool found = node->nameIndex(std::string("mylongxxx"), index);
         BOOST_CHECK_EQUAL(found, false);
 
-        found = node->nameIndex("mylong", index);
+        found = node->nameIndex(std::string("mylong"), index);
         BOOST_CHECK_EQUAL(found, true);
         BOOST_CHECK_EQUAL(index, 0U);
 
-        found = node->nameIndex("mylong2", index);
+        found = node->nameIndex(std::string("mylong2"), index);
         BOOST_CHECK_EQUAL(found, true);
         BOOST_CHECK_EQUAL(index, 8U);
 
-        found = node->nameIndex("myenum", index);
+        found = node->nameIndex(std::string("myenum"), index);
         BOOST_CHECK_EQUAL(found, true);
         NodePtr enumNode = node->leafAt(index);
 
-        found = enumNode->nameIndex("one", index);
+        found = enumNode->nameIndex(std::string("one"), index);
         BOOST_CHECK_EQUAL(found, true);
         BOOST_CHECK_EQUAL(index, 1U);
 
-        found = enumNode->nameIndex("three", index);
+        found = enumNode->nameIndex(std::string("three"), index);
         BOOST_CHECK_EQUAL(found, true);
         BOOST_CHECK_EQUAL(index, 3U);
 
-        found = enumNode->nameIndex("four", index);
+        found = enumNode->nameIndex(std::string("four"), index);
         BOOST_CHECK_EQUAL(found, false);
     }
 
