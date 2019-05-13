@@ -70,8 +70,8 @@ class ResolvingGrammarGenerator : public ValidatingGrammarGenerator {
         const NodePtr& reader, map<NodePair, ProductionPtr> &m,
         map<NodePtr, ProductionPtr> &m2);
 
-    static vector<pair<string, size_t> > fields(const NodePtr& n) {
-        vector<pair<string, size_t> > result;
+    static vector<pair<Name, size_t> > fields(const NodePtr& n) {
+        vector<pair<Name, size_t> > result;
         size_t c = n->names();
         for (size_t i = 0; i < c; ++i) {
             result.push_back(make_pair(n->nameAt(i), i));
@@ -191,8 +191,8 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
 {
     ProductionPtr result = make_shared<Production>();
 
-    vector<pair<string, size_t> > wf = fields(writer);
-    vector<pair<string, size_t> > rf = fields(reader);
+    vector<pair<Name, size_t> > wf = fields(writer);
+    vector<pair<Name, size_t> > rf = fields(reader);
     vector<size_t> fieldOrder;
     fieldOrder.reserve(reader->names());
 
@@ -202,11 +202,11 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
      * If no matching field is found for reader, arrange to skip the writer
      * field.
      */
-    for (vector<pair<string, size_t> >::const_iterator it = wf.begin();
+    for (vector<pair<Name, size_t> >::const_iterator it = wf.begin();
         it != wf.end(); ++it) {
-        vector<pair<string, size_t> >::iterator it2 =
+        vector<pair<Name, size_t> >::iterator it2 =
             find_if(rf.begin(), rf.end(),
-                equalsFirst<string, size_t>(it->first));
+                equalsFirst<Name, size_t>(it->first));
         if (it2 != rf.end()) {
             ProductionPtr p = doGenerate2(writer->leafAt(it->second),
                 reader->leafAt(it2->second), m, m2);
@@ -229,7 +229,7 @@ ProductionPtr ResolvingGrammarGenerator::resolveRecords(
      * Examine the reader fields left out, (i.e. those didn't have corresponding
      * writer field).
      */
-    for (vector<pair<string, size_t> >::const_iterator it = rf.begin();
+    for (vector<pair<Name, size_t> >::const_iterator it = rf.begin();
         it != rf.end(); ++it) {
 
         NodePtr s = reader->leafAt(it->second);

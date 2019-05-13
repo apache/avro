@@ -178,23 +178,23 @@ struct MultiAttribute
 template<typename T>
 struct NameIndexConcept {
 
-    bool lookup(const std::string &name, size_t &index) const {
+    bool lookup(const Name &name, size_t &index) const {
         throw Exception("Name index does not exist");
         return 0;
     }
 
-    bool add(const::std::string &name, size_t index) {
+    bool add(const Name &name, size_t index) {
         throw Exception("Name index does not exist");
         return false;
     }
 };
 
 template<>
-struct NameIndexConcept < MultiAttribute<std::string> > 
+struct NameIndexConcept < MultiAttribute<Name> > 
 {
-    typedef std::map<std::string, size_t> IndexMap;
+    typedef std::map<Name, size_t> IndexMap;
 
-    bool lookup(const std::string &name, size_t &index) const {
+    bool lookup(const Name &name, size_t &index) const {
         IndexMap::const_iterator iter = map_.find(name); 
         if(iter == map_.end()) {
             return false;
@@ -203,7 +203,7 @@ struct NameIndexConcept < MultiAttribute<std::string> >
         return true;
     }
 
-    bool add(const::std::string &name, size_t index) {
+    bool add(const Name &name, size_t index) {
         bool added = false;
         IndexMap::iterator lb = map_.lower_bound(name); 
         if(lb == map_.end() || map_.key_comp()(name, lb->first)) {
