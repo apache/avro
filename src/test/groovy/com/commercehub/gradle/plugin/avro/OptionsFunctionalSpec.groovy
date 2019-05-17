@@ -21,6 +21,7 @@ import spock.lang.Unroll
 
 import java.nio.ByteBuffer
 
+import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.*
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
@@ -28,6 +29,8 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
  * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}.
  */
 class OptionsFunctionalSpec extends FunctionalSpec {
+    static actualDateTimeImplementationDefault = DEFAULT == JSR310 ? "java.time.LocalDate" : "org.joda.time.LocalDate"
+
     def "setup"() {
         applyAvroPlugin()
     }
@@ -57,6 +60,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "enableDecimalLogicalType is enabled"
         content.contains("public void setSalary(${BigDecimal.name} value)")
+
+        and: "getDateTimeLogicalType is ?"
+        content.contains("public void setBirthDate(${actualDateTimeImplementationDefault} value)")
     }
 
     @Unroll
@@ -239,12 +245,12 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     }
 
     @Unroll
-    def "supports configuring validateDefaults to #validateDefaults"() {
+    def "supports configuration of dateTimeLogicalType to #dateTimeLogicalType"() {
         given:
         copyResource("user.avsc", avroDir)
         buildFile << """
         |avro {
-        |    validateDefaults = $validateDefaults
+        |    dateTimeLogicalType = "${dateTimeLogicalType}"
         |}
         |""".stripMargin()
 
@@ -253,23 +259,24 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then: "the task succeeds"
         taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the specified dateTimeLogicalType is used"
+        content.contains("public void setBirthDate(${fieldClz} value)")
 
         where:
-        validateDefaults | fieldClz
-        "Boolean.TRUE"           | BigDecimal
-        "Boolean.FALSE"          | ByteBuffer
-        "true"                   | BigDecimal
-        "false"                  | ByteBuffer
-        "'true'"                 | BigDecimal
-        "'false'"                | ByteBuffer
+        dateTimeLogicalType       | fieldClz
+        JODA.name()               | "org.joda.time.LocalDate"
+        JODA.name().toLowerCase() | "org.joda.time.LocalDate"
+        JSR310.name()             | "java.time.LocalDate"
     }
 
-    def "validation of default values should cause the build to fail for invalid schema file"() {
+    def "rejects unsupported dateTimeLogicalType values"() {
         given:
-        copyResource("userWithInvalidDefaults.avsc", avroDir)
+        copyResource("user.avsc", avroDir)
         buildFile << """
         |avro {
-        |    validateDefaults = true
+        |    dateTimeLogicalType = "badValue"
         |}
         |""".stripMargin()
 
@@ -278,22 +285,6 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         then:
         taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Invalid default for field name: null not a \"string\"")
-    }
-
-    def "lack of validation of default values should cause the build to succeed for invalid schema file"() {
-        given:
-        copyResource("userWithInvalidDefaults.avsc", avroDir)
-        buildFile << """
-        |avro {
-        |    validateDefaults = false
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.output.contains("Invalid dateTimeLogicalType 'badValue'.  Value values are: [JODA, JSR310]")
     }
 }

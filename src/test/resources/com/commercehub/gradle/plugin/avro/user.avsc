@@ -8,6 +8,10 @@
      {
          "name": "salary",
          "type": { "type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2 }
+     },
+     {
+         "name": "birth_date",
+         "type": { "type": "int", "logicalType": "date" }
      }
  ]
 }

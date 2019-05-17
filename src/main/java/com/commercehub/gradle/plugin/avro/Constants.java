@@ -15,6 +15,7 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.plugins.JavaPlugin;
@@ -32,7 +33,7 @@ class Constants {
     static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PUBLIC_DEPRECATED.name();
     static final boolean DEFAULT_CREATE_SETTERS = true;
     static final boolean DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE = true;
-    static final boolean DEFAULT_VALIDATE_DEFAULTS = false;
+    static final String DEFAULT_DATE_TIME_LOGICAL_TYPE = SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT.name();
 
     static final String SCHEMA_EXTENSION = "avsc";
     static final String PROTOCOL_EXTENSION = "avpr";
@@ -43,13 +44,13 @@ class Constants {
 
     static final String AVRO_EXTENSION_NAME = "avro";
 
-    static final String OPTION_ENABLE_VALIDATE_DEFAULTS = "validateDefaults";
     static final String OPTION_ENABLE_DECIMAL_LOGICAL_TYPE = "enableDecimalLogicalType";
     static final String OPTION_CREATE_SETTERS = "createSetters";
     static final String OPTION_TEMPLATE_DIRECTORY = "templateDirectory";
     static final String OPTION_FIELD_VISIBILITY = "fieldVisibility";
     static final String OPTION_STRING_TYPE = "stringType";
     static final String OPTION_OUTPUT_CHARACTER_ENCODING = "outputCharacterEncoding";
+    static final String OPTION_DATE_TIME_LOGICAL_TYPE = "dateTimeLogicalType";
 
     /**
      * When our minimum supported version is 3.5+, we can remove this

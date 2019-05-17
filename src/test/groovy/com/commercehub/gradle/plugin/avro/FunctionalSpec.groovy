@@ -60,7 +60,9 @@ abstract class FunctionalSpec extends Specification {
                     classpath files($pluginClasspath)
                 }
             }
-            repositories { jcenter() }
+            repositories {
+                jcenter()
+            }
         """
     }
 

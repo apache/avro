@@ -54,10 +54,11 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private String templateDirectory;
     private boolean createSetters = DEFAULT_CREATE_SETTERS;
     private boolean enableDecimalLogicalType = DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
-    private boolean validateDefaults = DEFAULT_VALIDATE_DEFAULTS;
+    private String dateTimeLogicalType = DEFAULT_DATE_TIME_LOGICAL_TYPE;
 
     private transient StringType parsedStringType;
     private transient FieldVisibility parsedFieldVisibility;
+    private transient SpecificCompiler.DateTimeLogicalTypeImplementation parsedDateTimeLogicalTypeImplementation;
 
     @Optional
     @Input
@@ -127,13 +128,18 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.enableDecimalLogicalType = Boolean.parseBoolean(enableDecimalLogicalType);
     }
 
+    @Optional
     @Input
-    public boolean isValidateDefaults() {
-        return validateDefaults;
+    public String getDateTimeLogicalType() {
+        return dateTimeLogicalType;
     }
 
-    public void setValidateDefaults(boolean validateDefaults) {
-        this.validateDefaults = validateDefaults;
+    public void setDateTimeLogicalType(String dateTimeLogicalType) {
+        this.dateTimeLogicalType = dateTimeLogicalType;
+    }
+
+    public void setDateTimeLogicalType(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalType) {
+        setDateTimeLogicalType(dateTimeLogicalType.name());
     }
 
     @TaskAction
@@ -141,13 +147,18 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
         parsedFieldVisibility =
             Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), getFieldVisibility());
+        parsedDateTimeLogicalTypeImplementation = Enums.parseCaseInsensitive(
+            OPTION_DATE_TIME_LOGICAL_TYPE,
+            SpecificCompiler.DateTimeLogicalTypeImplementation.values(), getDateTimeLogicalType()
+        );
+
         getLogger().debug("Using outputCharacterEncoding {}", getOutputCharacterEncoding());
         getLogger().debug("Using stringType {}", parsedStringType.name());
         getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
         getLogger().debug("Using createSetters {}", isCreateSetters());
         getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType());
-        getLogger().debug("Using validateDefaults {}", isValidateDefaults());
+        getLogger().debug("Using dateTimeLogicalType {}", parsedDateTimeLogicalTypeImplementation.name());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         processFiles();
@@ -213,7 +224,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         try {
             Schema.Parser parser = new Schema.Parser();
             parser.addTypes(parserTypes);
-            parser.setValidateDefaults(isValidateDefaults());
 
             compile(parser.parse(sourceFile), sourceFile);
             Map<String, Schema> typesDefinedInFile = asymmetricDifference(parser.getTypes(), parserTypes);
@@ -256,11 +266,11 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void compile(Protocol protocol, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(protocol), sourceFile);
+        compile(new SpecificCompiler(protocol, parsedDateTimeLogicalTypeImplementation), sourceFile);
     }
 
     private void compile(Schema schema, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(schema), sourceFile);
+        compile(new SpecificCompiler(schema, parsedDateTimeLogicalTypeImplementation), sourceFile);
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {

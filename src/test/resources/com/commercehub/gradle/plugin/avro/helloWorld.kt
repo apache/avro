@@ -17,8 +17,9 @@
 package demo
 
 import example.avro.User
+import java.time.LocalDate
 
 fun main(args : Array<String>) {
-    val user = User("David", 24, "blue", null)
+    val user = User("David", 24, "blue", null, LocalDate.of(2019, 1, 1))
     println("Hello, ${user.getName()}")
 }

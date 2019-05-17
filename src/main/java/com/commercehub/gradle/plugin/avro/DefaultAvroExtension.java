@@ -27,7 +27,7 @@ public class DefaultAvroExtension implements AvroExtension {
     private String templateDirectory;
     private boolean createSetters;
     private boolean enableDecimalLogicalType;
-    private boolean validateDefaults;
+    private String dateTimeLogicalType;
 
     @Override
     public String getOutputCharacterEncoding() {
@@ -104,15 +104,15 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
-    public boolean isValidateDefaults() {
-        return validateDefaults;
+    public String getDateTimeLogicalType() {
+        return dateTimeLogicalType;
     }
 
-    public void setValidateDefaults(String validateDefaults) {
-        setValidateDefaults(Boolean.parseBoolean(validateDefaults));
+    public void setDateTimeLogicalType(String dateTimeLogicalType) {
+        this.dateTimeLogicalType = dateTimeLogicalType;
     }
 
-    public void setValidateDefaults(boolean validateDefaults) {
-        this.validateDefaults = validateDefaults;
+    public void setDateTimeLogicalType(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalType) {
+        setDateTimeLogicalType(dateTimeLogicalType.name());
     }
 }
