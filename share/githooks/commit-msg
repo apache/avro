@@ -42,17 +42,6 @@ else
     echo "Fail: Must be in this format: ${LOGMESSAGE_FORMAT}"
     exit 1
 fi
-
-ISSUE_ID=$(head -1 ${COMMIT_MSG_FILE} | cut -d':' -f1)
-
-echo -n "= CHANGES.txt mentions ${ISSUE_ID}: "
-if grep -q "${ISSUE_ID}[^0-9]" CHANGES.txt
-then
-    echo "Ok"
-else
-    echo "Fail"
-    exit 1
-fi
 echo "=========================="
 
 exit 0
