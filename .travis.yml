@@ -6,14 +6,14 @@ install: true
 
 matrix:
   include:
-    - jdk: openjdk7
-      env: GRADLE_OPTS="-Xmx386m -Xms386m -XX:MaxPermSize=128m" # Java 7 still uses separate permgen
-      before_script: # Workaround for https://github.com/travis-ci/travis-ci/issues/8503
-        - sudo sed -i 's/security.provider.9/#security.provider.9/g' $JAVA_HOME/jre/lib/security/java.security
     - jdk: openjdk8
     - jdk: openjdk9
     - jdk: openjdk10
     - jdk: openjdk11
+    - jdk: openjdk12
+    - jdk: openjdk-ea
+  allow_failures:
+    - jdk: openjdk-ea
 
 env:
   global:
