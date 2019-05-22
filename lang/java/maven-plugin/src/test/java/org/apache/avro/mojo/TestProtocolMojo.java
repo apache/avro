@@ -68,5 +68,13 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
 
     assertNotNull(mojo);
     mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/protocol/test");
+    String[] generatedFiles = new String[] { "ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java" };
+
+    assertFilesExist(outputDir, generatedFiles);
+
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
+    assertTrue(schemaUserContent.contains("It works!"));
   }
 }

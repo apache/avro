@@ -70,5 +70,14 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
 
     assertNotNull(mojo);
     mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/schema/test");
+    String[] generatedFiles = new String[] { "PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java",
+        "SchemaUser.java" };
+
+    assertFilesExist(outputDir, generatedFiles);
+
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
+    assertTrue(schemaUserContent.contains("It works!"));
   }
 }

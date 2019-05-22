@@ -741,5 +741,16 @@ public class TestSpecificCompiler {
     compiler.setTemplateDir("src/test/resources/templates_with_custom_tools/");
     compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
     assertTrue(this.outputFile.exists());
+    int itWorksFound = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("It works!")) {
+          itWorksFound++;
+        }
+      }
+    }
+    assertEquals(1, itWorksFound);
   }
 }
