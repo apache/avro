@@ -30,6 +30,8 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-jsr310.xml");
+  protected File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/protocol/pom-injecting-velocity-tools.xml");
 
   public void testProtocolMojoJoda() throws Exception {
     ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jodaTestPom);
@@ -62,9 +64,7 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
   }
 
   public void testSetCompilerVelocityAdditionalTools() throws Exception {
-    testPom = new File(getBasedir(),
-      "src/test/resources/unit/protocol/pom-injecting-velocity-tools.xml");
-    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", testPom);
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", injectingVelocityToolsTestPom);
 
     assertNotNull(mojo);
     mojo.execute();

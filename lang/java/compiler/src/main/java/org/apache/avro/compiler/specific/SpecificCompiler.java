@@ -214,8 +214,8 @@ public class SpecificCompiler {
   }
 
   /**
-   * Set additional Velocity tools (simple POJOs) to be injected into the
-   * Velocity template context.
+   * Set additional Velocity tools (simple POJOs) to be injected into the Velocity
+   * template context.
    */
   public void setAdditionalVelocityTools(Object[] additionalVelocityTools) {
     this.additionalVelocityTools = additionalVelocityTools;
@@ -558,7 +558,7 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("protocol", protocol);
     context.put("this", this);
-    for(Object velocityTool : additionalVelocityTools) {
+    for (Object velocityTool : additionalVelocityTools) {
       String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
       context.put(toolName, velocityTool);
     }
@@ -613,7 +613,7 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("this", this);
     context.put("schema", schema);
-    for(Object velocityTool : additionalVelocityTools) {
+    for (Object velocityTool : additionalVelocityTools) {
       String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
       context.put(toolName, velocityTool);
     }

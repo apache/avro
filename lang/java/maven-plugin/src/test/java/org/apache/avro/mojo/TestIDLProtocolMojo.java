@@ -30,6 +30,8 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-jsr310.xml");
+  protected File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
 
   public void testIdlProtocolMojoJoda() throws Exception {
     IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jodaTestPom);
@@ -60,9 +62,9 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
   }
 
   public void testSetCompilerVelocityAdditionalTools() throws Exception {
-    testPom = new File(getBasedir(),
-      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
+    injectingVelocityToolsTestPom = new File(getBasedir(),
+        "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
+    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", injectingVelocityToolsTestPom);
 
     assertNotNull(mojo);
     mojo.execute();

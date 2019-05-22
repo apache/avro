@@ -732,4 +732,14 @@ public class TestSpecificCompiler {
     }
     assertEquals(17, optionalFound);
   }
+
+  @Test
+  public void testAdditionalToolsAreInjectedIntoTemplate() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    Object[] customTools = new Object[] { new String() };
+    compiler.setAdditionalVelocityTools(customTools);
+    compiler.setTemplateDir("src/test/resources/templates_with_custom_tools/");
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+  }
 }

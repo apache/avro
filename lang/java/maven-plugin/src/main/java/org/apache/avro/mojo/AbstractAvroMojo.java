@@ -121,8 +121,8 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   /**
    * The qualified names of classes which the plugin will look up, instantiate
-   * (through an empty constructor that must exist) and set up to be injected
-   * into Velocity templates by Avro compiler.
+   * (through an empty constructor that must exist) and set up to be injected into
+   * Velocity templates by Avro compiler.
    *
    * @parameter property="velocityToolsClassesNames"
    */
@@ -297,12 +297,12 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
 
   protected Object[] instantiateAdditionalVelocityTools() {
     Object[] velocityTools = new Object[velocityToolsClassesNames.length];
-    for(int i = 0; i < velocityTools.length; i++) {
+    for (int i = 0; i < velocityTools.length; i++) {
       String velocityToolClassName = velocityToolsClassesNames[i];
       try {
         Class klass = Class.forName(velocityToolClassName);
         velocityTools[i] = klass.newInstance();
-      } catch(Exception e) {
+      } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }

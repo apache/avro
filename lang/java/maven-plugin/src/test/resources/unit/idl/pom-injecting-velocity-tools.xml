@@ -18,17 +18,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.7.3-SNAPSHOT</version>
+    <version>1.9.0-SNAPSHOT</version>
     <relativePath>../../../../../../../../../</relativePath>
   </parent>
+
   <artifactId>avro-maven-plugin-test</artifactId>
   <packaging>jar</packaging>
 
   <name>testproject</name>
- 
+
   <build>
     <plugins>
       <plugin>
@@ -44,13 +46,14 @@
         <configuration>
           <sourceDirectory>${basedir}/src/test</sourceDirectory>
           <outputDirectory>${basedir}/target/test-harness/idl</outputDirectory>
-          <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
+          <stringType>String</stringType>
           <templateDirectory>
             ${basedir}/src/test/resources/templates/
           </templateDirectory>
           <velocityToolsClassesNames>
             <param>java.lang.String</param>
           </velocityToolsClassesNames>
+          <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>
     </plugins>
@@ -59,12 +62,13 @@
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
-      <version>1.7.3-SNAPSHOT</version>
+      <version>${parent.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.9.10</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
   </dependencies>
+
 </project>

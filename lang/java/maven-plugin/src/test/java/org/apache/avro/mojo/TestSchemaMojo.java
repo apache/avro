@@ -30,6 +30,8 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-jsr310.xml");
+  protected File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/schema/pom-injecting-velocity-tools.xml");
 
   public void testSchemaMojoJoda() throws Exception {
     SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jodaTestPom);
@@ -64,9 +66,7 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
   }
 
   public void testSetCompilerVelocityAdditionalTools() throws Exception {
-    testPom = new File(getBasedir(),
-      "src/test/resources/unit/schema/pom-injecting-velocity-tools.xml");
-    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testPom);
+    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", injectingVelocityToolsTestPom);
 
     assertNotNull(mojo);
     mojo.execute();
