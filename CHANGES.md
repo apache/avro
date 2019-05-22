@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.17.0
 * Built using Avro 1.9.0
 * Removed configuration setting `validateDefaults`; defaults are now always validated due to an upstream change
 * Java 7 is no longer supported, as Avro 1.9.0 is now Java 8+
