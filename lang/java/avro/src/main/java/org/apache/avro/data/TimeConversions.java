@@ -217,14 +217,14 @@ public class TimeConversions {
 
     @Override
     public LocalDateTime fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
-      Instant instant = new Jsr310TimeConversions.TimestampMillisConversion().fromLong(millisFromEpoch, schema, type);
+      Instant instant = new TimestampMillisConversion().fromLong(millisFromEpoch, schema, type);
       return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     @Override
     public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
       Instant instant = timestamp.toInstant(ZoneOffset.UTC);
-      return new Jsr310TimeConversions.TimestampMillisConversion().toLong(instant, schema, type);
+      return new TimestampMillisConversion().toLong(instant, schema, type);
     }
 
     @Override
@@ -246,14 +246,14 @@ public class TimeConversions {
 
     @Override
     public LocalDateTime fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
-      Instant instant = new Jsr310TimeConversions.TimestampMicrosConversion().fromLong(microsFromEpoch, schema, type);
+      Instant instant = new TimestampMicrosConversion().fromLong(microsFromEpoch, schema, type);
       return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     @Override
     public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
       Instant instant = timestamp.toInstant(ZoneOffset.UTC);
-      return new Jsr310TimeConversions.TimestampMicrosConversion().toLong(instant, schema, type);
+      return new TimestampMicrosConversion().toLong(instant, schema, type);
     }
 
     @Override

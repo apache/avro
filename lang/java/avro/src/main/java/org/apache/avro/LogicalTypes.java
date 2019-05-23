@@ -175,15 +175,13 @@ public class LogicalTypes {
     return TIMESTAMP_MICROS_TYPE;
   }
 
-  private static final LocalDateTimeTimestampMillis LOCAL_DATE_TIME_TIMESTAMP_MILLIS_TYPE =
-    new LocalDateTimeTimestampMillis();
+  private static final LocalDateTimeTimestampMillis LOCAL_DATE_TIME_TIMESTAMP_MILLIS_TYPE = new LocalDateTimeTimestampMillis();
 
   public static LocalDateTimeTimestampMillis localDateTimeTimestampMillis() {
     return LOCAL_DATE_TIME_TIMESTAMP_MILLIS_TYPE;
   }
 
-  private static final LocalDateTimeTimestampMicros LOCAL_DATE_TIME_TIMESTAMP_MICROS_TYPE =
-    new LocalDateTimeTimestampMicros();
+  private static final LocalDateTimeTimestampMicros LOCAL_DATE_TIME_TIMESTAMP_MICROS_TYPE = new LocalDateTimeTimestampMicros();
 
   public static LocalDateTimeTimestampMicros localDateTimeTimestampMicros() {
     return LOCAL_DATE_TIME_TIMESTAMP_MICROS_TYPE;
@@ -376,8 +374,7 @@ public class LogicalTypes {
     public void validate(Schema schema) {
       super.validate(schema);
       if (schema.getType() != Schema.Type.LONG) {
-        throw new IllegalArgumentException(
-            "Timestamp (micros) can only be used with an underlying long type");
+        throw new IllegalArgumentException("Timestamp (micros) can only be used with an underlying long type");
       }
     }
   }
@@ -391,8 +388,7 @@ public class LogicalTypes {
     public void validate(Schema schema) {
       super.validate(schema);
       if (schema.getType() != Schema.Type.LONG) {
-        throw new IllegalArgumentException(
-          "Timestamp (millis) can only be used with an underlying long type");
+        throw new IllegalArgumentException("Timestamp (millis) can only be used with an underlying long type");
       }
     }
   }

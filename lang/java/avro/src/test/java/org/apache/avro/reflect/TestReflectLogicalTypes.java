@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import org.apache.avro.*;
-import org.apache.avro.data.Jsr310TimeConversions;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
@@ -52,7 +52,7 @@ public class TestReflectLogicalTypes {
   public static void addUUID() {
     REFLECT.addLogicalTypeConversion(new Conversions.UUIDConversion());
     REFLECT.addLogicalTypeConversion(new Conversions.DecimalConversion());
-    REFLECT.addLogicalTypeConversion(new Jsr310TimeConversions.LocalDateTimeTimestampMillisConversion());
+    REFLECT.addLogicalTypeConversion(new TimeConversions.LocalDateTimeTimestampMillisConversion());
   }
 
   @Test
@@ -605,18 +605,12 @@ public class TestReflectLogicalTypes {
   public void testReflectedSchemaLocalDateTime() {
     Schema actual = REFLECT.getSchema(RecordWithTimestamps.class);
 
-    Assert.assertEquals("Should have the correct record name",
-      "org.apache.avro.reflect",
-      actual.getNamespace());
-    Assert.assertEquals("Should have the correct record name",
-      "RecordWithTimestamps",
-      actual.getName());
-    Assert.assertEquals("Should have the correct physical type",
-      Schema.Type.LONG,
-      actual.getField("localDateTime").schema().getType());
-    Assert.assertEquals("Should have the correct logical type",
-      LogicalTypes.localDateTimeTimestampMillis(),
-      LogicalTypes.fromSchema(actual.getField("localDateTime").schema()));
+    Assert.assertEquals("Should have the correct record name", "org.apache.avro.reflect", actual.getNamespace());
+    Assert.assertEquals("Should have the correct record name", "RecordWithTimestamps", actual.getName());
+    Assert.assertEquals("Should have the correct physical type", Schema.Type.LONG,
+        actual.getField("localDateTime").schema().getType());
+    Assert.assertEquals("Should have the correct logical type", LogicalTypes.localDateTimeTimestampMillis(),
+        LogicalTypes.fromSchema(actual.getField("localDateTime").schema()));
   }
 
   private static <D> List<D> read(DatumReader<D> reader, File file) throws IOException {
