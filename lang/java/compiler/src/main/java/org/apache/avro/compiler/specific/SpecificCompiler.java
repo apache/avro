@@ -123,7 +123,7 @@ public class SpecificCompiler {
 
   private final SpecificData specificData = new SpecificData();
 
-  private final Set<Schema> queue = new HashSet<>();
+  private final SchemaQueue queue = new SchemaQueue();
   private Protocol protocol;
   private VelocityEngine velocityEngine;
   private String templateDir;
@@ -170,7 +170,7 @@ public class SpecificCompiler {
     this(dateTimeLogicalTypeImplementation);
     // enqueue all types
     for (Schema s : protocol.getTypes()) {
-      enqueue(s);
+      queue.enqueue(s);
     }
     this.protocol = protocol;
   }
@@ -181,7 +181,7 @@ public class SpecificCompiler {
 
   public SpecificCompiler(Schema schema, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
     this(dateTimeLogicalTypeImplementation);
-    enqueue(schema);
+    queue.enqueue(schema);
     this.protocol = null;
   }
 
@@ -396,7 +396,7 @@ public class SpecificCompiler {
   /**
    * Captures output file path and contents.
    */
-  static class OutputFile {
+  public static class OutputFile {
     String path;
     String contents;
     String outputCharacterEncoding;
@@ -405,7 +405,7 @@ public class SpecificCompiler {
      * Writes output to path destination directory when it is newer than src,
      * creating directories as necessary. Returns the created file.
      */
-    File writeToDestination(File src, File destDir) throws IOException {
+    public File writeToDestination(File src, File destDir) throws IOException {
       File f = new File(destDir, path);
       if (src != null && f.exists() && f.lastModified() >= src.lastModified())
         return f; // already up to date: ignore
@@ -468,44 +468,6 @@ public class SpecificCompiler {
       Schema schema = parser.parse(src);
       SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeImplementation.DEFAULT);
       compiler.compileToDestination(src, dest);
-    }
-  }
-
-  /** Recursively enqueue schemas that need a class generated. */
-  private void enqueue(Schema schema) {
-    if (queue.contains(schema))
-      return;
-    switch (schema.getType()) {
-    case RECORD:
-      queue.add(schema);
-      for (Schema.Field field : schema.getFields())
-        enqueue(field.schema());
-      break;
-    case MAP:
-      enqueue(schema.getValueType());
-      break;
-    case ARRAY:
-      enqueue(schema.getElementType());
-      break;
-    case UNION:
-      for (Schema s : schema.getTypes())
-        enqueue(s);
-      break;
-    case ENUM:
-    case FIXED:
-      queue.add(schema);
-      break;
-    case STRING:
-    case BYTES:
-    case INT:
-    case LONG:
-    case FLOAT:
-    case DOUBLE:
-    case BOOLEAN:
-    case NULL:
-      break;
-    default:
-      throw new RuntimeException("Unknown type: " + schema);
     }
   }
 
@@ -594,7 +556,7 @@ public class SpecificCompiler {
     }
   }
 
-  OutputFile compile(Schema schema) {
+  public OutputFile compile(Schema schema) {
     schema = addStringType(schema); // annotate schema as needed
     String output = "";
     VelocityContext context = new VelocityContext();
@@ -1228,5 +1190,52 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  public static class SchemaQueue extends HashSet<Schema> {
+    public SchemaQueue() {
+    }
+
+    public SchemaQueue(Schema schema) {
+      enqueue(schema);
+    }
+
+    /** Recursively enqueue schemas that need a class generated. */
+    private void enqueue(Schema schema) {
+      if (contains(schema))
+        return;
+      switch (schema.getType()) {
+        case RECORD:
+          add(schema);
+          for (Schema.Field field : schema.getFields())
+            enqueue(field.schema());
+          break;
+        case MAP:
+          enqueue(schema.getValueType());
+          break;
+        case ARRAY:
+          enqueue(schema.getElementType());
+          break;
+        case UNION:
+          for (Schema s : schema.getTypes())
+            enqueue(s);
+          break;
+        case ENUM:
+        case FIXED:
+          add(schema);
+          break;
+        case STRING:
+        case BYTES:
+        case INT:
+        case LONG:
+        case FLOAT:
+        case DOUBLE:
+        case BOOLEAN:
+        case NULL:
+          break;
+        default:
+          throw new RuntimeException("Unknown type: " + schema);
+      }
+    }
   }
 }

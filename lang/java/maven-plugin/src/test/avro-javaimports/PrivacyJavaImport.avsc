@@ -1,0 +1,22 @@
+{
+  "name": "PrivacyJavaImport",
+  "namespace": "test",
+  "type": "record",
+  "doc": "",
+  "fields": [
+    {
+      "name": "dummy1",
+      "type": "test.Dummy",
+      "doc": ""
+    },
+    {
+        "name": "stringField",
+        "type": { "type": "string" }
+    },
+    {
+        "name": "dummy2",
+        "type": "test.Dummy",
+        "doc": ""
+    }
+  ]
+}
