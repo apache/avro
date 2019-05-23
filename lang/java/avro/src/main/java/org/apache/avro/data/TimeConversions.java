@@ -204,7 +204,9 @@ public class TimeConversions {
     }
   }
 
-  public static class LocalDateTimeTimestampMillisConversion extends Conversion<LocalDateTime> {
+  public static class LocalTimestampMillisConversion extends Conversion<LocalDateTime> {
+    private final TimestampMillisConversion timestampMillisConversion = new TimestampMillisConversion();
+
     @Override
     public Class<LocalDateTime> getConvertedType() {
       return LocalDateTime.class;
@@ -212,28 +214,30 @@ public class TimeConversions {
 
     @Override
     public String getLogicalTypeName() {
-      return "local-date-time-timestamp-millis";
+      return "local-timestamp-millis";
     }
 
     @Override
     public LocalDateTime fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
-      Instant instant = new TimestampMillisConversion().fromLong(millisFromEpoch, schema, type);
+      Instant instant = timestampMillisConversion.fromLong(millisFromEpoch, schema, type);
       return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     @Override
     public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
       Instant instant = timestamp.toInstant(ZoneOffset.UTC);
-      return new TimestampMillisConversion().toLong(instant, schema, type);
+      return timestampMillisConversion.toLong(instant, schema, type);
     }
 
     @Override
     public Schema getRecommendedSchema() {
-      return LogicalTypes.localDateTimeTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+      return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 
-  public static class LocalDateTimeTimestampMicrosConversion extends Conversion<LocalDateTime> {
+  public static class LocalTimestampMicrosConversion extends Conversion<LocalDateTime> {
+    private final TimestampMicrosConversion timestampMicrosConversion = new TimestampMicrosConversion();
+
     @Override
     public Class<LocalDateTime> getConvertedType() {
       return LocalDateTime.class;
@@ -241,24 +245,24 @@ public class TimeConversions {
 
     @Override
     public String getLogicalTypeName() {
-      return "local-date-time-timestamp-micros";
+      return "local-timestamp-micros";
     }
 
     @Override
     public LocalDateTime fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
-      Instant instant = new TimestampMicrosConversion().fromLong(microsFromEpoch, schema, type);
+      Instant instant = timestampMicrosConversion.fromLong(microsFromEpoch, schema, type);
       return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 
     @Override
     public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
       Instant instant = timestamp.toInstant(ZoneOffset.UTC);
-      return new TimestampMicrosConversion().toLong(instant, schema, type);
+      return timestampMicrosConversion.toLong(instant, schema, type);
     }
 
     @Override
     public Schema getRecommendedSchema() {
-      return LogicalTypes.localDateTimeTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+      return LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 }

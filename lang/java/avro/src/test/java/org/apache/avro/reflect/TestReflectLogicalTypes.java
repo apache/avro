@@ -52,7 +52,7 @@ public class TestReflectLogicalTypes {
   public static void addUUID() {
     REFLECT.addLogicalTypeConversion(new Conversions.UUIDConversion());
     REFLECT.addLogicalTypeConversion(new Conversions.DecimalConversion());
-    REFLECT.addLogicalTypeConversion(new TimeConversions.LocalDateTimeTimestampMillisConversion());
+    REFLECT.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
   }
 
   @Test
@@ -609,7 +609,7 @@ public class TestReflectLogicalTypes {
     Assert.assertEquals("Should have the correct record name", "RecordWithTimestamps", actual.getName());
     Assert.assertEquals("Should have the correct physical type", Schema.Type.LONG,
         actual.getField("localDateTime").schema().getType());
-    Assert.assertEquals("Should have the correct logical type", LogicalTypes.localDateTimeTimestampMillis(),
+    Assert.assertEquals("Should have the correct logical type", LogicalTypes.localTimestampMillis(),
         LogicalTypes.fromSchema(actual.getField("localDateTime").schema()));
   }
 

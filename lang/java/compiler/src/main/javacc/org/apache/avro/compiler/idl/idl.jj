@@ -242,7 +242,7 @@ TOKEN :
 | < TIME: "time_ms" >
 | < TIMESTAMP: "timestamp_ms" >
 | < DECIMAL: "decimal" >
-| < LOCAL_DATE_TIME_TS_MS: "local_date_time_timestamp_ms" >
+| < LOCAL_TIMESTAMP_MS: "local_timestamp_ms" >
 }
 
 /* LITERALS */
@@ -1498,7 +1498,7 @@ Schema PrimitiveType():
 | "date" { return LogicalTypes.date().addToSchema(Schema.create(Type.INT)); }
 | "time_ms" { return LogicalTypes.timeMillis().addToSchema(Schema.create(Type.INT)); }
 | "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
-| "local_date_time_timestamp_ms" { return LogicalTypes.localDateTimeTimestampMillis().addToSchema(Schema.create(Type.LONG)); }
+| "local_timestamp_ms" { return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "decimal" { return DecimalTypeProperties(); }
 }
 
@@ -1582,7 +1582,7 @@ Token AnyIdentifier():
    t = <DATE> |
    t = <TIME> |
    t = <TIMESTAMP> |
-   t = <LOCAL_DATE_TIME_TS_MS> |
+   t = <LOCAL_TIMESTAMP_MS> |
    t = <DECIMAL> |
    t = <IDENTIFIER>)
   {

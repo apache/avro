@@ -51,8 +51,8 @@ public class TestGenericLogicalTypes {
   public static void addDecimalAndUUID() {
     GENERIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
     GENERIC.addLogicalTypeConversion(new Conversions.UUIDConversion());
-    GENERIC.addLogicalTypeConversion(new TimeConversions.LocalDateTimeTimestampMicrosConversion());
-    GENERIC.addLogicalTypeConversion(new TimeConversions.LocalDateTimeTimestampMillisConversion());
+    GENERIC.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
+    GENERIC.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
   }
 
   @Test
@@ -275,8 +275,8 @@ public class TestGenericLogicalTypes {
   }
 
   @Test
-  public void testReadTimestampLocalDateTimeMillis() throws IOException {
-    LogicalType timestamp = LogicalTypes.localDateTimeTimestampMillis();
+  public void testReadLocalTimestampMillis() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMillis();
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
@@ -284,7 +284,7 @@ public class TestGenericLogicalTypes {
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC);
     List<LocalDateTime> expected = Arrays.asList(i1, i2);
 
-    Conversion<LocalDateTime> conversion = new TimeConversions.LocalDateTimeTimestampMillisConversion();
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMillisConversion();
 
     // use the conversion directly instead of relying on the write side
     Long i1long = conversion.toLong(i1, longSchema, timestamp);
@@ -295,15 +295,15 @@ public class TestGenericLogicalTypes {
   }
 
   @Test
-  public void testWriteTimestampLocalDateTimeMillis() throws IOException {
-    LogicalType timestamp = LogicalTypes.localDateTimeTimestampMillis();
+  public void testWriteLocalTimestampMillis() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMillis();
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
     LocalDateTime i1 = LocalDateTime.now();
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC);
 
-    Conversion<LocalDateTime> conversion = new TimeConversions.LocalDateTimeTimestampMillisConversion();
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMillisConversion();
 
     Long d1long = conversion.toLong(i1, longSchema, timestamp);
     Long d2long = conversion.toLong(i2, longSchema, timestamp);
@@ -315,8 +315,8 @@ public class TestGenericLogicalTypes {
   }
 
   @Test
-  public void testReadTimestampLocalDateTimeMicros() throws IOException {
-    LogicalType timestamp = LogicalTypes.localDateTimeTimestampMicros();
+  public void testReadLocalTimestampMicros() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMicros();
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
@@ -324,7 +324,7 @@ public class TestGenericLogicalTypes {
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochSecond(0, 4000), ZoneOffset.UTC);
     List<LocalDateTime> expected = Arrays.asList(i1, i2);
 
-    Conversion<LocalDateTime> conversion = new TimeConversions.LocalDateTimeTimestampMicrosConversion();
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMicrosConversion();
 
     // use the conversion directly instead of relying on the write side
     Long i1long = conversion.toLong(i1, longSchema, timestamp);
@@ -336,15 +336,15 @@ public class TestGenericLogicalTypes {
   }
 
   @Test
-  public void testWriteTimestampLocalDateTimeMicros() throws IOException {
-    LogicalType timestamp = LogicalTypes.localDateTimeTimestampMicros();
+  public void testWriteLocalTimestampMicros() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMicros();
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
     LocalDateTime i1 = LocalDateTime.now();
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochSecond(0, 4000), ZoneOffset.UTC);
 
-    Conversion<LocalDateTime> conversion = new TimeConversions.LocalDateTimeTimestampMicrosConversion();
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMicrosConversion();
 
     Long d1long = conversion.toLong(i1, longSchema, timestamp);
     Long d2long = conversion.toLong(i2, longSchema, timestamp);
