@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ namespace Avro.Test
     [TestFixture]
     class SpecificTests
     {
+#if !NETCOREAPP2_0 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         // The dynamically created assembly used in the test below can only be created
         // once otherwise repeated tests will fail as the same type name will exist in
         // multiple assemblies and so the type in the test and the type found by ObjectCreator
@@ -94,9 +95,9 @@ namespace Avro.Test
 }"
 , new object[] {3, // index of the schema to serialize
   "com.foo.Z",  // name of the schema to serialize
-@"Console.WriteLine(""Constructing com.foo.Z..."");", // Empty Constructor.
+@"// Console.WriteLine(""Constructing com.foo.Z..."");", // Empty Constructor.
 @"
-  Console.WriteLine(""Populating com.foo.Z..."");
+  // Console.WriteLine(""Populating com.foo.Z..."");
   string bytes = ""bytes sample text"";
   System.Text.UTF8Encoding encoding = new System.Text.UTF8Encoding();
 
@@ -157,8 +158,7 @@ namespace Avro.Test
     myArray3.Add(o1);
     myArray3.Add(o2);
 
-"}
-)]
+"}, TestName = "TestSpecific")]
         public void TestSpecific(string str, object[] result)
         {
             if(compres == null)
@@ -191,7 +191,7 @@ namespace Avro.Test
             // compile
             var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("Avro.dll");
+            comparam.ReferencedAssemblies.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "Avro.dll"));
             comparam.GenerateInMemory = true;
             var ccp = new Microsoft.CSharp.CSharpCodeProvider();
             var units = new CodeCompileUnit[] { compileUnit };
@@ -225,6 +225,7 @@ namespace Avro.Test
             Assert.IsFalse(rec2 == null);
             AssertSpecificRecordEqual(rec, rec2);
         }
+#endif
 
         [TestCase]
         public void TestEnumResolution()

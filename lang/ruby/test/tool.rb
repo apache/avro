@@ -42,7 +42,6 @@ class GenericHandler < WEBrick::HTTPServlet::AbstractServlet
     writer = Avro::IPC::FramedWriter.new(StringIO.new)
     writer.write_framed_message(unframed_resp)
     resp.body = writer.to_s
-    @server.stop
   end
 end
 

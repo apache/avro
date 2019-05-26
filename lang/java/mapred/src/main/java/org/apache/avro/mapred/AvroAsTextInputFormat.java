@@ -61,9 +61,7 @@ public class AvroAsTextInputFormat extends FileInputFormat<Text, Text> {
   }
 
   @Override
-  public RecordReader<Text, Text>
-    getRecordReader(InputSplit split, JobConf job, Reporter reporter)
-    throws IOException {
+  public RecordReader<Text, Text> getRecordReader(InputSplit split, JobConf job, Reporter reporter) throws IOException {
     reporter.setStatus(split.toString());
     return new AvroAsTextRecordReader(job, (FileSplit) split);
   }

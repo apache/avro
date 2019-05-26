@@ -26,21 +26,19 @@ import java.util.Iterator;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.util.RandomData;
 import org.apache.trevni.avro.AvroColumnReader;
-import org.apache.trevni.avro.RandomData;
-
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class TestToTrevniTool {
-  private static final int COUNT =
-    Integer.parseInt(System.getProperty("test.count", "200"));
-  private static final File DIR
-    = new File(System.getProperty("test.dir", "/tmp"));
+  private static final long SEED = System.currentTimeMillis();
+
+  private static final int COUNT = Integer.parseInt(System.getProperty("test.count", "200"));
+  private static final File DIR = new File("/tmp");
   private static final File AVRO_FILE = new File(DIR, "random.avro");
   private static final File TREVNI_FILE = new File(DIR, "random.trv");
-  private static final File SCHEMA_FILE =
-    new File("../../../share/test/schemas/weather.avsc");
+  private static final File SCHEMA_FILE = new File("../../../share/test/schemas/weather.avsc");
 
   private String run(String... args) throws Exception {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -51,21 +49,19 @@ public class TestToTrevniTool {
 
   @Test
   public void test() throws Exception {
-    Schema schema = Schema.parse(SCHEMA_FILE);
+    Schema schema = new Schema.Parser().parse(SCHEMA_FILE);
 
-    DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>());
+    DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.create(schema, Util.createFromFS(AVRO_FILE.toString()));
-    for (Object datum : new RandomData(schema, COUNT))
+    for (Object datum : new RandomData(schema, COUNT, SEED))
       writer.append(datum);
     writer.close();
 
     run(AVRO_FILE.toString(), TREVNI_FILE.toString());
 
-    AvroColumnReader<Object> reader =
-      new AvroColumnReader<>(new AvroColumnReader.Params(TREVNI_FILE));
+    AvroColumnReader<Object> reader = new AvroColumnReader<>(new AvroColumnReader.Params(TREVNI_FILE));
     Iterator<Object> found = reader.iterator();
-    for (Object expected : new RandomData(schema, COUNT))
+    for (Object expected : new RandomData(schema, COUNT, SEED))
       assertEquals(expected, found.next());
     reader.close();
   }

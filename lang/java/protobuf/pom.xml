@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -34,6 +34,7 @@
   <packaging>bundle</packaging>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <osgi.import>
       !org.apache.avro.protobuf*,
       org.apache.avro*;version="${project.version}",
@@ -50,6 +51,7 @@
         <plugins>
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
+            <version>${antrun-plugin.version}</version>
             <executions>
               <execution>
                 <phase>generate-test-sources</phase>
@@ -59,6 +61,10 @@
                     <exec executable="protoc">
                       <arg value="--java_out=src/test/java/"/>
                       <arg value="src/test/protobuf/test.proto"/>
+                    </exec>
+                    <exec executable="protoc">
+                      <arg value="--java_out=src/test/java/"/>
+                      <arg value="src/test/protobuf/test_multiple_files.proto"/>
                     </exec>
                   </tasks>
                 </configuration>
@@ -85,14 +91,12 @@
       <version>${protobuf.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
     </dependency>
   </dependencies>
 

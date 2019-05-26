@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 import org.apache.avro.FooBarSpecificRecord;
@@ -40,8 +41,7 @@ import test.StringablesRecord;
 public class TestSpecificDatumReader {
 
   public static byte[] serializeRecord(FooBarSpecificRecord fooBarSpecificRecord) throws IOException {
-    SpecificDatumWriter<FooBarSpecificRecord> datumWriter =
-        new SpecificDatumWriter<>(FooBarSpecificRecord.SCHEMA$);
+    SpecificDatumWriter<FooBarSpecificRecord> datumWriter = new SpecificDatumWriter<>(FooBarSpecificRecord.SCHEMA$);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(fooBarSpecificRecord, encoder);
@@ -50,8 +50,7 @@ public class TestSpecificDatumReader {
   }
 
   public static byte[] serializeRecord(StringablesRecord stringablesRecord) throws IOException {
-    SpecificDatumWriter<StringablesRecord> datumWriter =
-        new SpecificDatumWriter<>(StringablesRecord.SCHEMA$);
+    SpecificDatumWriter<StringablesRecord> datumWriter = new SpecificDatumWriter<>(StringablesRecord.SCHEMA$);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(stringablesRecord, encoder);
@@ -64,14 +63,15 @@ public class TestSpecificDatumReader {
     Builder newBuilder = FooBarSpecificRecord.newBuilder();
     newBuilder.setId(42);
     newBuilder.setName("foo");
-    newBuilder.setNicknames(Arrays.asList("bar"));
-    newBuilder.setRelatedids(Arrays.asList(1,2,3));
+    newBuilder.setNicknames(Collections.singletonList("bar"));
+    newBuilder.setRelatedids(Arrays.asList(1, 2, 3));
     FooBarSpecificRecord specificRecord = newBuilder.build();
 
     byte[] recordBytes = serializeRecord(specificRecord);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(recordBytes, null);
-    SpecificDatumReader<FooBarSpecificRecord> specificDatumReader = new SpecificDatumReader<>(FooBarSpecificRecord.SCHEMA$);
+    SpecificDatumReader<FooBarSpecificRecord> specificDatumReader = new SpecificDatumReader<>(
+        FooBarSpecificRecord.SCHEMA$);
     FooBarSpecificRecord deserialized = new FooBarSpecificRecord();
     specificDatumReader.read(deserialized, decoder);
 
@@ -93,8 +93,7 @@ public class TestSpecificDatumReader {
     byte[] recordBytes = serializeRecord(stringablesRecord);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(recordBytes, null);
-    SpecificDatumReader<StringablesRecord> specificDatumReader =
-      new SpecificDatumReader<>(StringablesRecord.SCHEMA$);
+    SpecificDatumReader<StringablesRecord> specificDatumReader = new SpecificDatumReader<>(StringablesRecord.SCHEMA$);
     StringablesRecord deserialized = new StringablesRecord();
     specificDatumReader.read(deserialized, decoder);
 

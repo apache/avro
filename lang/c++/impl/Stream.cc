@@ -157,32 +157,32 @@ public:
     void flush() { }
 };
 
-std::auto_ptr<OutputStream> memoryOutputStream(size_t chunkSize)
+std::unique_ptr<OutputStream> memoryOutputStream(size_t chunkSize)
 {
-    return std::auto_ptr<OutputStream>(new MemoryOutputStream(chunkSize));
+    return std::unique_ptr<OutputStream>(new MemoryOutputStream(chunkSize));
 }
 
-std::auto_ptr<InputStream> memoryInputStream(const uint8_t* data, size_t len)
+std::unique_ptr<InputStream> memoryInputStream(const uint8_t* data, size_t len)
 {
-    return std::auto_ptr<InputStream>(new MemoryInputStream2(data, len));
+    return std::unique_ptr<InputStream>(new MemoryInputStream2(data, len));
 }
 
-std::auto_ptr<InputStream> memoryInputStream(const OutputStream& source)
+std::unique_ptr<InputStream> memoryInputStream(const OutputStream& source)
 {
     const MemoryOutputStream& mos =
         dynamic_cast<const MemoryOutputStream&>(source);
     return (mos.data_.empty()) ?
-        std::auto_ptr<InputStream>(new MemoryInputStream2(0, 0)) :
-        std::auto_ptr<InputStream>(new MemoryInputStream(mos.data_,
+        std::unique_ptr<InputStream>(new MemoryInputStream2(0, 0)) :
+        std::unique_ptr<InputStream>(new MemoryInputStream(mos.data_,
             mos.chunkSize_,
             (mos.chunkSize_ - mos.available_)));
 }
 
-boost::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source)
+std::shared_ptr<std::vector<uint8_t> > snapshot(const OutputStream& source)
 {
     const MemoryOutputStream& mos =
         dynamic_cast<const MemoryOutputStream&>(source);
-    boost::shared_ptr<std::vector<uint8_t> > result(new std::vector<uint8_t>());
+    std::shared_ptr<std::vector<uint8_t> > result(new std::vector<uint8_t>());
     size_t c = mos.byteCount_;
     result->reserve(mos.byteCount_);
     for (vector<uint8_t*>::const_iterator it = mos.data_.begin();

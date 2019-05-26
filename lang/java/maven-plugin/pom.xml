@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -33,11 +33,8 @@
   <name>Apache Avro Maven Plugin</name>
   <description>Maven plugin for Avro IDL and Specific API Compilers</description>
 
-  <prerequisites>
-    <maven>${maven.version}</maven>
-  </prerequisites>
-
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <pluginTestingVersion>1.3</pluginTestingVersion>
   </properties>
 
@@ -46,7 +43,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>${plugin-plugin.version}</version>
         <executions>
           <execution>
             <id>generated-helpmojo</id>

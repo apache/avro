@@ -25,7 +25,7 @@ import java.util.TreeMap;
 
 import java.io.InputStream;
 
-/** Command-line driver.*/
+/** Command-line driver. */
 public class Main {
   /**
    * Available tools, initialized in constructor.
@@ -36,37 +36,16 @@ public class Main {
 
   Main() {
     tools = new TreeMap<>();
-    for (Tool tool : new Tool[] {
-        new CatTool(),
-        new SpecificCompilerTool(),
-        new InduceSchemaTool(),
-        new JsonToBinaryFragmentTool(),
-        new BinaryFragmentToJsonTool(),
-        new CreateRandomFileTool(),
-        new DataFileReadTool(),
-        new DataFileWriteTool(),
-        new DataFileGetMetaTool(),
-        new DataFileGetSchemaTool(),
-        new DataFileRepairTool(),
-        new IdlTool(),
-        new IdlToSchemataTool(),
-        new RecodecTool(),
-        new ConcatTool(),
-        new RpcReceiveTool(),
-        new RpcSendTool(),
-        new RpcProtocolTool(),
-        new FromTextTool(),
-        new ToTextTool(),
-        new ToTrevniTool(),
-        new TetherTool(),
-        new TrevniCreateRandomTool(),
-        new TrevniMetadataTool(),
-        new TrevniToJsonTool()
-        }) {
+    for (Tool tool : new Tool[] { new CatTool(), new SpecificCompilerTool(), new InduceSchemaTool(),
+        new JsonToBinaryFragmentTool(), new BinaryFragmentToJsonTool(), new CreateRandomFileTool(),
+        new DataFileReadTool(), new DataFileWriteTool(), new DataFileGetMetaTool(), new DataFileGetSchemaTool(),
+        new DataFileRepairTool(), new IdlTool(), new IdlToSchemataTool(), new RecodecTool(), new ConcatTool(),
+        new RpcReceiveTool(), new RpcSendTool(), new RpcProtocolTool(), new FromTextTool(), new ToTextTool(),
+        new ToTrevniTool(), new TetherTool(), new TrevniCreateRandomTool(), new TrevniMetadataTool(),
+        new TrevniToJsonTool(), new SchemaNormalizationTool(), new SchemaFingerprintTool() }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {
-        throw new AssertionError(
-            "Two tools with identical names: " + tool + ", " + prev);
+        throw new AssertionError("Two tools with identical names: " + tool + ", " + prev);
       }
       maxLen = Math.max(tool.getName().length(), maxLen);
     }
@@ -84,23 +63,16 @@ public class Main {
     if (args.length != 0) {
       Tool tool = tools.get(args[0]);
       if (tool != null) {
-        return tool.run(
-          System.in, System.out, System.err, Arrays.asList(args).subList(1, args.length));
+        return tool.run(System.in, System.out, System.err, Arrays.asList(args).subList(1, args.length));
       }
     }
     System.err.print("Version ");
-    InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt");
-    try {
+    try (InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt")) {
       printStream(versionInput);
-    } finally {
-      versionInput.close();
     }
     System.err.print(" of ");
-    InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE");
-    try {
+    try (InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE")) {
       printHead(noticeInput, 5);
-    } finally {
-      noticeInput.close();
     }
     System.err.println("----------------");
 

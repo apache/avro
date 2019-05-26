@@ -29,27 +29,25 @@ import org.apache.hadoop.mapred.Reporter;
 
 import org.apache.avro.mapred.AvroJob;
 
-class TetherReducer
-  implements Reducer<TetherData,NullWritable,TetherData,NullWritable> {
+class TetherReducer implements Reducer<TetherData, NullWritable, TetherData, NullWritable> {
 
   private JobConf job;
   private TetheredProcess process;
   private boolean error;
 
+  @Override
   public void configure(JobConf job) {
     this.job = job;
   }
 
+  @Override
   public void reduce(TetherData datum, Iterator<NullWritable> ignore,
-                     OutputCollector<TetherData, NullWritable> collector,
-                     Reporter reporter) throws IOException {
+      OutputCollector<TetherData, NullWritable> collector, Reporter reporter) throws IOException {
     try {
       if (process == null) {
         process = new TetheredProcess(job, collector, reporter);
-        process.inputClient.configure
-          (TaskType.REDUCE,
-           AvroJob.getMapOutputSchema(job).toString(),
-           AvroJob.getOutputSchema(job).toString());
+        process.inputClient.configure(TaskType.REDUCE, AvroJob.getMapOutputSchema(job).toString(),
+            AvroJob.getOutputSchema(job).toString());
       }
       process.inputClient.input(datum.buffer(), datum.count());
     } catch (IOException e) {
@@ -64,8 +62,10 @@ class TetherReducer
   /**
    * Handle the end of the input by closing down the application.
    */
+  @Override
   public void close() throws IOException {
-    if (process == null) return;
+    if (process == null)
+      return;
     try {
       if (error)
         process.inputClient.abort();

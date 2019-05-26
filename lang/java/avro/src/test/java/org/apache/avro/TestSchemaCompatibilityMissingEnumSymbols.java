@@ -18,11 +18,10 @@
 package org.apache.avro;
 
 import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.ENUM1_ABC_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM1_AB_SCHEMA;
-import static org.apache.avro.TestSchemas.ENUM1_BC_SCHEMA;
-import java.util.ArrayList;
-import java.util.List;
+import static org.apache.avro.TestSchemas.*;
+
+import java.util.Arrays;
+
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,13 +42,10 @@ public class TestSchemaCompatibilityMissingEnumSymbols {
   @Parameters(name = "r: {0} | w: {1}")
   public static Iterable<Object[]> data() {
     Object[][] fields = { //
-        { ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "[C]", "/symbols" }, { ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "[A]", "/symbols" },
+        { ENUM1_AB_SCHEMA, ENUM1_ABC_SCHEMA, "[C]", "/symbols" },
+        { ENUM1_BC_SCHEMA, ENUM1_ABC_SCHEMA, "[A]", "/symbols" },
         { RECORD1_WITH_ENUM_AB, RECORD1_WITH_ENUM_ABC, "[C]", "/fields/0/type/symbols" } };
-    List<Object[]> list = new ArrayList<>(fields.length);
-    for (Object[] schemas : fields) {
-      list.add(schemas);
-    }
-    return list;
+    return Arrays.asList(fields);
   }
 
   @Parameter(0)
@@ -63,7 +59,6 @@ public class TestSchemaCompatibilityMissingEnumSymbols {
 
   @Test
   public void testTypeMismatchSchemas() throws Exception {
-    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.MISSING_ENUM_SYMBOLS,
-        details, location);
+    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.MISSING_ENUM_SYMBOLS, details, location);
   }
 }

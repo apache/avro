@@ -62,7 +62,7 @@
                 ]
             },
             "default": {
-                "s1": "sval",
+                "s1": "\"sval\\u8352\"",
                 "d1": 5.67,
                 "i1": 99
             }
@@ -83,6 +83,17 @@
                 "type": "array",
                 "items": "double"
             }
+        },
+        {
+            "name": "myarraywithDefaultValue",
+            "type": {
+                "type": "array",
+                "items": "int"
+            },
+            "default": [
+                2,
+                3
+            ]
         },
         {
             "name": "myenum",
@@ -153,12 +164,26 @@
             }
         },
         {
+            "name": "myfixedwithDefaultValue",
+            "type": [{
+                "type": "fixed",
+                "size": 1,
+                "name": "val"
+            }, "null"],
+            "default": "\u0001"
+        },
+        {
             "name": "anotherint",
             "type": "int"
         },
         {
             "name": "bytes",
             "type": "bytes"
+        },
+        {
+            "name": "byteswithDefaultValue",
+            "type": ["bytes", "null"],
+            "default": "\u00ff\u00AA"
         }
     ]
 }

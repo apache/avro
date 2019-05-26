@@ -22,11 +22,11 @@
 #include "Specific.hh"
 #include "Stream.hh"
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::string;
 using std::vector;
 using std::map;
-using boost::array;
+using std::array;
 
 namespace avro {
 
@@ -61,7 +61,7 @@ template <> struct codec_traits<C> {
 namespace specific {
 
 class Test {
-    auto_ptr<OutputStream> os;
+    unique_ptr<OutputStream> os;
     EncoderPtr e;
     DecoderPtr d;
 public:
@@ -75,7 +75,7 @@ public:
     }
 
     template <typename T> void decode(T& t) {
-        auto_ptr<InputStream> is = memoryInputStream(*os);
+        unique_ptr<InputStream> is = memoryInputStream(*os);
         d->init(*is);
         avro::decode(*d, t);
     }
@@ -158,6 +158,15 @@ void testArray()
     BOOST_CHECK_EQUAL_COLLECTIONS(b.begin(), b.end(), n.begin(), n.end());
 }
 
+void testBoolArray()
+{
+    bool values[] = { true, false, true, false };
+    vector<bool> n(values, values + 4);
+    vector<bool> b = encodeAndDecode(n);
+    
+    BOOST_CHECK_EQUAL_COLLECTIONS(b.begin(), b.end(), n.begin(), n.end());
+}
+
 void testMap()
 {
     map<string, int32_t> n;
@@ -194,6 +203,7 @@ init_unit_test_suite( int argc, char* argv[] )
     ts->add(BOOST_TEST_CASE(avro::specific::testBytes));
     ts->add(BOOST_TEST_CASE(avro::specific::testFixed));
     ts->add(BOOST_TEST_CASE(avro::specific::testArray));
+    ts->add(BOOST_TEST_CASE(avro::specific::testBoolArray));
     ts->add(BOOST_TEST_CASE(avro::specific::testMap));
     ts->add(BOOST_TEST_CASE(avro::specific::testCustom));
     return ts;

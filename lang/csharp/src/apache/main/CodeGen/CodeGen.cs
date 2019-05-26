@@ -45,6 +45,11 @@ namespace Avro
         public IList<Protocol> Protocols { get; private set; }
 
         /// <summary>
+        /// Mapping of Avro namespaces to C# namespaces
+        /// </summary>
+        public IDictionary<string, string> NamespaceMapping { get; private set; }
+
+        /// <summary>
         /// List of generated namespaces
         /// </summary>
         protected Dictionary<string, CodeNamespace> namespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
@@ -56,6 +61,7 @@ namespace Avro
         {
             this.Schemas = new List<Schema>();
             this.Protocols = new List<Protocol>();
+            this.NamespaceMapping = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -90,7 +96,11 @@ namespace Avro
 
             if (!namespaceLookup.TryGetValue(name, out ns))
             {
-                ns = new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
+                string csharpNamespace;
+                ns = NamespaceMapping.TryGetValue(name, out csharpNamespace)
+                    ? new CodeNamespace(csharpNamespace)
+                    : new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
+
                 foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
                     ns.Imports.Add(nci);
 
@@ -260,6 +270,11 @@ namespace Avro
             ctd.Attributes = MemberAttributes.Public;
             ctd.BaseTypes.Add("SpecificFixed");
 
+            if (fixedSchema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(fixedSchema.Documentation));
+            }
+
             // create static schema field
             createSchemaField(schema, ctd, true);
 
@@ -305,6 +320,11 @@ namespace Avro
             CodeTypeDeclaration ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(enumschema.Name));
             ctd.IsEnum = true;
             ctd.Attributes = MemberAttributes.Public;
+
+            if (enumschema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(enumschema.Documentation));
+            }
 
             foreach (string symbol in enumschema.Symbols)
             {
@@ -525,6 +545,11 @@ namespace Avro
             ctd.Attributes = MemberAttributes.Public;
             ctd.IsClass = true;
             ctd.IsPartial = true;
+
+            if (recordSchema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(recordSchema.Documentation));
+            }
 
             createSchemaField(schema, ctd, isError);
 
@@ -828,7 +853,11 @@ namespace Avro
             {
                 var ns = nsc[i];
 
-                string dir = outputdir + "\\" + CodeGenUtil.Instance.UnMangle(ns.Name).Replace('.', '\\');
+                string dir = outputdir;
+                foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                {
+                    dir = Path.Combine(dir, name);
+                }
                 Directory.CreateDirectory(dir);
 
                 var new_ns = new CodeNamespace(ns.Name);
@@ -840,7 +869,7 @@ namespace Avro
                 for (int j = 0; j < types.Count; j++)
                 {
                     var ctd = types[j];
-                    string file = dir + "\\" + CodeGenUtil.Instance.UnMangle(ctd.Name) + ".cs";
+                    string file = Path.Combine(dir, Path.ChangeExtension(CodeGenUtil.Instance.UnMangle(ctd.Name), "cs"));
                     using (var writer = new StreamWriter(file, false))
                     {
                         new_ns.Types.Add(ctd);

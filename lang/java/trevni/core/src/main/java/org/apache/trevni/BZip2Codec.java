@@ -33,12 +33,9 @@ public class BZip2Codec extends Codec {
   @Override
   ByteBuffer compress(ByteBuffer uncompressedData) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(uncompressedData.remaining());
-    BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos);
 
-    try {
+    try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos)) {
       outputStream.write(uncompressedData.array());
-    } finally {
-      outputStream.close();
     }
 
     ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
@@ -48,22 +45,19 @@ public class BZip2Codec extends Codec {
   @Override
   ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
     ByteArrayInputStream bais = new ByteArrayInputStream(compressedData.array());
-    BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais);
-    try {
+    try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais)) {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
       int readCount = -1;
 
-      while ( (readCount = inputStream.read(buffer, compressedData.position(), buffer.length))> 0) {
+      while ((readCount = inputStream.read(buffer, compressedData.position(), buffer.length)) > 0) {
         baos.write(buffer, 0, readCount);
       }
 
       ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
       return result;
-    } finally {
-      inputStream.close();
     }
   }
 

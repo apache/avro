@@ -17,56 +17,97 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM java:8-jdk
+FROM openjdk:8
 
 WORKDIR /root
 
-# Add the repository for node.js 4.x
-RUN curl -sL https://deb.nodesource.com/setup_4.x | bash -
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Add the repository for node.js 6.x
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+
+# Register Microsoft key and feed for .NET SDK
+# https://dotnet.microsoft.com/download/linux-package-manager/debian8/sdk-current
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
+  mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
+  wget -q https://packages.microsoft.com/config/debian/9/prod.list && \
+  mv prod.list /etc/apt/sources.list.d/microsoft-prod.list && \
+  chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
+  chown root:root /etc/apt/sources.list.d/microsoft-prod.list
+
+RUN curl https://packages.sury.org/php/apt.gpg | apt-key add --no-tty - && \
+      echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
 
 # Install dependencies from packages
-RUN apt-get update && apt-get install --no-install-recommends -y \
-  git subversion curl ant make maven \
-  gcc cmake libjansson-dev asciidoc source-highlight \
-  g++ flex bison libboost-all-dev doxygen \
-  mono-devel mono-gmcs nunit \
-  nodejs \
-  perl \
-  php5 phpunit php5-gmp bzip2 \
-  python python-setuptools python3-setuptools \
-  ruby ruby-dev rake \
-  libsnappy1 libsnappy-dev
+RUN apt-get -qq update && \
+  apt-get -qq install --no-install-recommends -y \
+    ant \
+    asciidoc \
+    bison \
+    bzip2 \
+    cmake \
+    curl \
+    dotnet-sdk-2.2 \
+    doxygen \
+    flex \
+    g++ \
+    gcc \
+    git \
+    libboost-all-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libglib2.0-dev \
+    libjansson-dev \
+    libsnappy-dev \
+    libsnappy1v5 \
+    make \
+    maven \
+    nodejs \
+    perl \
+    php5.6 \
+    php5.6-gmp \
+    python \
+    python-setuptools \
+    python3-setuptools \
+    rake \
+    ruby \
+    ruby-dev \
+    source-highlight \
+    subversion \
+    valgrind && \
+  apt-get -qq clean && \
+  rm -rf /var/lib/apt/lists/*
 
 # Install Forrest in /usr/local/apache-forrest
-# Download
-RUN cd /usr/local/ && wget "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz"      -O "apache-forrest-0.9-sources.tar.gz"
-RUN cd /usr/local/ && wget "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" -O "apache-forrest-0.9-dependencies.tar.gz"
-
-# Unpack Apache Forrest
-RUN cd /usr/local/ && \
-    tar xzf apache-forrest-0.9-sources.tar.gz && \
-    tar xzf apache-forrest-0.9-dependencies.tar.gz && \
-    mv apache-forrest-0.9 apache-forrest
-RUN cd /usr/local/apache-forrest/main && ./build.sh
+RUN curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz" | tar -xzf - -C /usr/local/ && \
+    curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" | tar -xzf - -C /usr/local/ && \
+    mv /usr/local/apache-forrest-0.9 /usr/local/apache-forrest && \
+    cd /usr/local/apache-forrest/main && \
+    ./build.sh
 
 # The solution for https://issues.apache.org/jira/browse/PIG-3906
-RUN mkdir -p /usr/local/apache-forrest/plugins       && chmod a+rwX -R /usr/local/apache-forrest/plugins
-RUN mkdir -p /usr/local/apache-forrest/build/plugins && chmod a+rwX -R /usr/local/apache-forrest/build/plugins
-
 # Configure where forrest can be found
-RUN echo 'forrest.home=/usr/local/apache-forrest' > build.properties
+RUN mkdir -p /usr/local/apache-forrest/plugins       && chmod a+rwX -R /usr/local/apache-forrest/plugins && \
+    mkdir -p /usr/local/apache-forrest/build/plugins && chmod a+rwX -R /usr/local/apache-forrest/build/plugins && \
+    echo 'forrest.home=/usr/local/apache-forrest' > build.properties
+
 ENV FORREST_HOME /usr/local/apache-forrest
 
 # Install Perl modules
-RUN curl -L http://cpanmin.us | perl - --self-upgrade # non-interactive cpan
-RUN cpanm install Module::Install Module::Install::ReadmeFromPod \
+RUN curl -L http://cpanmin.us | perl - --self-upgrade && \
+  cpanm install Module::Install Module::Install::ReadmeFromPod \
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
   Test::Exception Test::Pod
+
+# Install PHPUnit
+RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy
 
 # Install global Node modules
 RUN npm install -g grunt-cli
+
+CMD ["/avro/share/docker/run-tests.sh"]

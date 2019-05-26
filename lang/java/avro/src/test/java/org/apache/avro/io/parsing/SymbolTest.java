@@ -15,43 +15,35 @@
  */
 package org.apache.avro.io.parsing;
 
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import junit.framework.Assert;
+
 import org.apache.avro.Schema;
 import org.junit.Test;
 
 /**
- * Unit test to verify that recursive schemas are flattened correctly.
- * See AVRO-1667.
+ * Unit test to verify that recursive schemas are flattened correctly. See
+ * AVRO-1667.
  */
 public class SymbolTest {
 
   private static final String SCHEMA = "{\"type\":\"record\",\"name\":\"SampleNode\","
-      + "\"namespace\":\"org.spf4j.ssdump2.avro\",\n" +
-      " \"fields\":[\n" +
-      "    {\"name\":\"count\",\"type\":\"int\",\"default\":0},\n" +
-      "    {\"name\":\"subNodes\",\"type\":\n" +
-      "       {\"type\":\"array\",\"items\":{\n" +
-      "           \"type\":\"record\",\"name\":\"SamplePair\",\n" +
-      "           \"fields\":[\n" +
-      "              {\"name\":\"method\",\"type\":\n" +
-      "                  {\"type\":\"record\",\"name\":\"Method\",\n" +
-      "                  \"fields\":[\n" +
-      "                     {\"name\":\"declaringClass\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},\n" +
-      "                     {\"name\":\"methodName\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}\n" +
-      "                  ]}},\n" +
-      "              {\"name\":\"node\",\"type\":\"SampleNode\"}]}}}]}";
+      + "\"namespace\":\"org.spf4j.ssdump2.avro\",\n" + " \"fields\":[\n"
+      + "    {\"name\":\"count\",\"type\":\"int\",\"default\":0},\n" + "    {\"name\":\"subNodes\",\"type\":\n"
+      + "       {\"type\":\"array\",\"items\":{\n" + "           \"type\":\"record\",\"name\":\"SamplePair\",\n"
+      + "           \"fields\":[\n" + "              {\"name\":\"method\",\"type\":\n"
+      + "                  {\"type\":\"record\",\"name\":\"Method\",\n" + "                  \"fields\":[\n"
+      + "                     {\"name\":\"declaringClass\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},\n"
+      + "                     {\"name\":\"methodName\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}}\n"
+      + "                  ]}},\n" + "              {\"name\":\"node\",\"type\":\"SampleNode\"}]}}}]}";
 
   @Test
   public void testSomeMethod() throws IOException {
     Schema schema = new Schema.Parser().parse(SCHEMA);
-
-    Symbol root = Symbol.root(new ResolvingGrammarGenerator()
-        .generate(schema, schema, new HashMap<>()));
+    Symbol root = new ResolvingGrammarGenerator().generate(schema, schema);
     validateNonNull(root, new HashSet<>());
   }
 
@@ -64,7 +56,7 @@ public class SymbolTest {
     if (symb.production != null) {
       for (Symbol s : symb.production) {
         if (s == null) {
-          Assert.fail("invalid parsing tree should not contain nulls");
+          fail("invalid parsing tree should not contain nulls");
         }
         if (s.kind != Symbol.Kind.ROOT) {
           validateNonNull(s, seen);

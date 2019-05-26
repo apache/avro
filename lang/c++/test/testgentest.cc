@@ -22,6 +22,10 @@
 #include <sstream>
 #include <boost/test/included/unit_test_framework.hpp>
 
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
+#endif
+
 #include "testgen.hh" // < generated header
 #include "testgen2.hh" // < generated header
 
@@ -518,7 +522,7 @@ struct TestSchemaResolving {
 template<typename T>
 void addTestCase(boost::unit_test::test_suite &test)
 {
-    boost::shared_ptr<T> newtest( new T );
+    std::shared_ptr<T> newtest( new T );
     test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
 }
 
@@ -553,4 +557,3 @@ init_unit_test_suite( int argc, char* argv[] )
 
     return test;
 }
-

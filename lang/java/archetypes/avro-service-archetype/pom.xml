@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-archetypes-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
@@ -32,6 +32,10 @@
 
   <name>Apache Avro Maven Service Archetype</name>
   <description>Archetype that generates a simple example Avro service</description>
+
+  <properties>
+    <main.basedir>${project.parent.parent.parent.basedir}</main.basedir>
+  </properties>
 
   <build>
     <resources>

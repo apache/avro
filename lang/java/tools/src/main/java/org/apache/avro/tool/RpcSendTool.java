@@ -34,12 +34,9 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
 import org.apache.avro.ipc.Ipc;
 import org.apache.avro.ipc.generic.GenericRequestor;
-
-import org.codehaus.jackson.JsonEncoding;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 
 /**
  * Sends a single RPC message.
@@ -56,19 +53,14 @@ public class RpcSendTool implements Tool {
   }
 
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser p = new OptionParser();
-    OptionSpec<String> file =
-      p.accepts("file", "Data file containing request parameters.")
-      .withRequiredArg()
-      .ofType(String.class);
-    OptionSpec<String> data =
-      p.accepts("data", "JSON-encoded request parameters.")
-      .withRequiredArg()
-      .ofType(String.class);
+    OptionSpec<String> file = p.accepts("file", "Data file containing request parameters.").withRequiredArg()
+        .ofType(String.class);
+    OptionSpec<String> data = p.accepts("data", "JSON-encoded request parameters.").withRequiredArg()
+        .ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
-    args = (List<String>)opts.nonOptionArguments();
+    args = (List<String>) opts.nonOptionArguments();
 
     if (args.size() != 3) {
       err.println("Usage: uri protocol_file message_name (-data d | -file f)");
@@ -81,8 +73,7 @@ public class RpcSendTool implements Tool {
     String messageName = args.get(2);
     Message message = protocol.getMessages().get(messageName);
     if (message == null) {
-      err.println(String.format("No message named '%s' found in protocol '%s'.",
-          messageName, protocol));
+      err.println(String.format("No message named '%s' found in protocol '%s'.", messageName, protocol));
       return 1;
     }
 
@@ -96,21 +87,17 @@ public class RpcSendTool implements Tool {
       return 1;
     }
 
-    GenericRequestor client =
-      new GenericRequestor(protocol, Ipc.createTransceiver(uri));
+    GenericRequestor client = new GenericRequestor(protocol, Ipc.createTransceiver(uri));
     Object response = client.request(message.getName(), datum);
     dumpJson(out, message.getResponse(), response);
     return 0;
   }
 
-  private void dumpJson(PrintStream out, Schema schema, Object datum)
-  throws IOException {
+  private void dumpJson(PrintStream out, Schema schema, Object datum) throws IOException {
     DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
-    JsonGenerator g =
-      new JsonFactory().createJsonGenerator(out, JsonEncoding.UTF8);
-    g.useDefaultPrettyPrinter();
-    writer.write(datum, EncoderFactory.get().jsonEncoder(schema, g));
-    g.flush();
+    JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(schema, out, true);
+    writer.write(datum, jsonEncoder);
+    jsonEncoder.flush();
     out.println();
     out.flush();
   }

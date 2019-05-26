@@ -20,11 +20,10 @@
 #define avro_ResolverSchema_hh__
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <stdint.h>
+#include <memory>
 
 #include "Config.hh"
-#include "Boost.hh"
 #include "Reader.hh"
 
 /// \file ResolverSchema.hh
@@ -48,7 +47,7 @@ class AVRO_DECL ResolverSchema {
 
     void parse(Reader &reader, uint8_t *address); 
 
-    boost::shared_ptr<Resolver> resolver_;
+    std::shared_ptr<Resolver> resolver_;
 
 };
 

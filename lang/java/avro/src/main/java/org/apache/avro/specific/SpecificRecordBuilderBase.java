@@ -21,33 +21,35 @@ import org.apache.avro.Schema;
 import org.apache.avro.data.RecordBuilderBase;
 
 /**
- * Abstract base class for specific RecordBuilder implementations.
- * Not thread-safe.
+ * Abstract base class for specific RecordBuilder implementations. Not
+ * thread-safe.
  */
-abstract public class SpecificRecordBuilderBase<T extends SpecificRecord>
-  extends RecordBuilderBase<T> {
+abstract public class SpecificRecordBuilderBase<T extends SpecificRecord> extends RecordBuilderBase<T> {
 
   /**
    * Creates a SpecificRecordBuilderBase for building records of the given type.
+   * 
    * @param schema the schema associated with the record class.
    */
   protected SpecificRecordBuilderBase(Schema schema) {
-    super(schema, SpecificData.get());
+    super(schema, SpecificData.getForSchema(schema));
   }
 
   /**
    * SpecificRecordBuilderBase copy constructor.
+   * 
    * @param other SpecificRecordBuilderBase instance to copy.
    */
   protected SpecificRecordBuilderBase(SpecificRecordBuilderBase<T> other) {
-    super(other, SpecificData.get());
+    super(other, other.data());
   }
 
   /**
    * Creates a SpecificRecordBuilderBase by copying an existing record instance.
+   * 
    * @param other the record instance to copy.
    */
   protected SpecificRecordBuilderBase(T other) {
-    super(other.getSchema(), SpecificData.get());
+    super(other.getSchema(), SpecificData.getForSchema(other.getSchema()));
   }
 }

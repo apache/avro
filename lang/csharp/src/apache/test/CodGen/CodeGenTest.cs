@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -30,6 +30,7 @@ namespace Avro.Test
 
     class CodeGenTest
     {
+#if !NETCOREAPP2_0 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""ClassKeywords"",
@@ -48,7 +49,7 @@ namespace Avro.Test
 			{ ""name"" : ""string"", ""type"" : { ""type"": ""fixed"", ""size"": 16, ""name"": ""static"" } }
 		]
 }
-", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"})]
+", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"}, TestName = "TestCodeGen0")]
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""SchemaObject"",
@@ -67,7 +68,7 @@ namespace Avro.Test
 		}
 	]
 }
-", new object[] { "schematest.SchemaObject", typeof(IList<object>) })]
+", new object[] { "schematest.SchemaObject", typeof(IList<object>) }, TestName = "TestCodeGen1")]
         public static void TestCodeGen(string str, object[] result)
         {
             Schema schema = Schema.Parse(str);
@@ -98,6 +99,43 @@ namespace Avro.Test
             }
         }
 
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", null, null, "com.base")]
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", "com.base", "SchemaTest", "SchemaTest")]
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", "miss", "SchemaTest", "com.base")]
+        public void TestCodeGenNamespaceMapping(string str, string avroNamespace, string csharpNamespace,
+            string expectedNamespace)
+        {
+            Schema schema = Schema.Parse(str);
+
+            var codegen = new CodeGen();
+            codegen.AddSchema(schema);
+
+            if (avroNamespace != null && csharpNamespace != null)
+            {
+                codegen.NamespaceMapping[avroNamespace] = csharpNamespace;
+            }
+
+            var results = GenerateAssembly(codegen);
+            foreach(var type in results.CompiledAssembly.GetTypes())
+            {
+                Assert.AreEqual(expectedNamespace, type.Namespace);
+            }
+        }
 
         private static CompilerResults GenerateSchema(Schema schema)
         {
@@ -112,7 +150,7 @@ namespace Avro.Test
 
             var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("Avro.dll");
+            comparam.ReferencedAssemblies.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "Avro.dll"));
             comparam.GenerateInMemory = true;
             var ccp = new CSharpCodeProvider();
             var units = new[] { compileUnit };
@@ -125,5 +163,6 @@ namespace Avro.Test
             Assert.AreEqual(0, compres.Errors.Count);
             return compres;
         }
+#endif
     }
 }

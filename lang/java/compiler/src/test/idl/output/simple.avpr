@@ -10,6 +10,11 @@
     "symbols" : [ "FOO", "BAR", "BAZ" ],
     "aliases" : [ "org.foo.KindOf" ]
   }, {
+   "type" : "enum",
+   "name" : "Status",
+   "symbols" : [ "A", "B", "C" ],
+   "default" : "C"
+  }, {
     "type" : "fixed",
     "name" : "MD5",
     "doc" : "An MD5 hash.",
@@ -29,6 +34,11 @@
       "type" : "Kind",
       "doc" : "The kind of record.",
       "order" : "descending"
+    }, {
+      "name" : "status",
+      "type" : "Status",
+      "doc" : "The status of the record.",
+      "default" : "A"
     }, {
       "name" : "hash",
       "type" : "MD5",

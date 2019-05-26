@@ -31,54 +31,63 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.FsInput;
 
-class TetherRecordReader
-  implements RecordReader<TetherData, NullWritable> {
+class TetherRecordReader implements RecordReader<TetherData, NullWritable> {
 
   private FsInput in;
   private DataFileReader reader;
   private long start;
   private long end;
 
-  public TetherRecordReader(JobConf job, FileSplit split)
-    throws IOException {
+  public TetherRecordReader(JobConf job, FileSplit split) throws IOException {
     this.in = new FsInput(split.getPath(), job);
-    this.reader =
-      new DataFileReader<>(in, new GenericDatumReader<>());
+    this.reader = new DataFileReader<>(in, new GenericDatumReader<>());
 
-    reader.sync(split.getStart());                    // sync to start
+    reader.sync(split.getStart()); // sync to start
     this.start = in.tell();
     this.end = split.getStart() + split.getLength();
 
     job.set(AvroJob.INPUT_SCHEMA, reader.getSchema().toString());
   }
 
-  public Schema getSchema() { return reader.getSchema(); }
+  public Schema getSchema() {
+    return reader.getSchema();
+  }
 
-  public TetherData createKey() { return new TetherData(); }
+  @Override
+  public TetherData createKey() {
+    return new TetherData();
+  }
 
-  public NullWritable createValue() { return NullWritable.get(); }
+  @Override
+  public NullWritable createValue() {
+    return NullWritable.get();
+  }
 
-  public boolean next(TetherData data, NullWritable ignore)
-    throws IOException {
+  @Override
+  public boolean next(TetherData data, NullWritable ignore) throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
       return false;
     data.buffer(reader.nextBlock());
-    data.count((int)reader.getBlockCount());
+    data.count((int) reader.getBlockCount());
     return true;
   }
 
+  @Override
   public float getProgress() throws IOException {
     if (end == start) {
       return 0.0f;
     } else {
-      return Math.min(1.0f, (in.tell() - start) / (float)(end - start));
+      return Math.min(1.0f, (in.tell() - start) / (float) (end - start));
     }
   }
 
+  @Override
   public long getPos() throws IOException {
     return in.tell();
   }
 
-  public void close() throws IOException { reader.close(); }
-
+  @Override
+  public void close() throws IOException {
+    reader.close();
+  }
 }

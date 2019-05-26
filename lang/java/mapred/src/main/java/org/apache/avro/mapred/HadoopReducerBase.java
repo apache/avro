@@ -27,14 +27,15 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.Reducer;
 
-abstract class HadoopReducerBase<K,V,OUT,KO,VO> extends MapReduceBase
-  implements Reducer<AvroKey<K>, AvroValue<V>, KO, VO> {
+abstract class HadoopReducerBase<K, V, OUT, KO, VO> extends MapReduceBase
+    implements Reducer<AvroKey<K>, AvroValue<V>, KO, VO> {
 
-  private AvroReducer<K,V,OUT> reducer;
+  private AvroReducer<K, V, OUT> reducer;
   private AvroCollector<OUT> collector;
 
-  protected abstract AvroReducer<K,V,OUT> getReducer(JobConf conf);
-  protected abstract AvroCollector<OUT> getCollector(OutputCollector<KO,VO> c);
+  protected abstract AvroReducer<K, V, OUT> getReducer(JobConf conf);
+
+  protected abstract AvroCollector<OUT> getCollector(OutputCollector<KO, VO> c);
 
   @Override
   public void configure(JobConf conf) {
@@ -43,17 +44,33 @@ abstract class HadoopReducerBase<K,V,OUT,KO,VO> extends MapReduceBase
 
   class ReduceIterable implements Iterable<V>, Iterator<V> {
     private Iterator<AvroValue<V>> values;
-    public boolean hasNext() { return values.hasNext(); }
-    public V next() { return values.next().datum(); }
-    public void remove() { throw new UnsupportedOperationException(); }
-    public Iterator<V> iterator() { return this; }
+
+    @Override
+    public boolean hasNext() {
+      return values.hasNext();
+    }
+
+    @Override
+    public V next() {
+      return values.next().datum();
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterator<V> iterator() {
+      return this;
+    }
   }
+
   private ReduceIterable reduceIterable = new ReduceIterable();
 
   @Override
-  public final void reduce(AvroKey<K> key, Iterator<AvroValue<V>> values,
-                           OutputCollector<KO, VO> out,
-                           Reporter reporter) throws IOException {
+  public final void reduce(AvroKey<K> key, Iterator<AvroValue<V>> values, OutputCollector<KO, VO> out,
+      Reporter reporter) throws IOException {
     if (this.collector == null)
       this.collector = getCollector(out);
     reduceIterable.values = values;

@@ -38,19 +38,16 @@ import org.apache.avro.generic.GenericDatumWriter;
 /** Converts an input file from Avro binary into JSON. */
 public class BinaryFragmentToJsonTool implements Tool {
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser optionParser = new OptionParser();
-    OptionSpec<Void> noPrettyOption = optionParser
-        .accepts("no-pretty", "Turns off pretty printing.");
+    OptionSpec<Void> noPrettyOption = optionParser.accepts("no-pretty", "Turns off pretty printing.");
     OptionSpec<String> schemaFileOption = optionParser
-        .accepts("schema-file", "File containing schema, must not occur with inline schema.")
-        .withOptionalArg()
+        .accepts("schema-file", "File containing schema, must not occur with inline schema.").withOptionalArg()
         .ofType(String.class);
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean noPretty = optionSet.has(noPrettyOption);
-    List<String> nargs = (List<String>)optionSet.nonOptionArguments();
+    List<String> nargs = (List<String>) optionSet.nonOptionArguments();
     String schemaFile = schemaFileOption.value(optionSet);
 
     if (nargs.size() != (schemaFile == null ? 2 : 1)) {
@@ -73,12 +70,11 @@ public class BinaryFragmentToJsonTool implements Tool {
 
     try {
       DatumReader<Object> reader = new GenericDatumReader<>(schema);
-      BinaryDecoder binaryDecoder =
-        DecoderFactory.get().binaryDecoder(input, null);
+      BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(input, null);
       DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
       JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(schema, out, !noPretty);
       Object datum = null;
-      while (!binaryDecoder.isEnd()){
+      while (!binaryDecoder.isEnd()) {
         datum = reader.read(datum, binaryDecoder);
         writer.write(datum, jsonEncoder);
         jsonEncoder.flush();

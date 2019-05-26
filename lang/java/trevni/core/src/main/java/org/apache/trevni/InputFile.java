@@ -34,16 +34,18 @@ public class InputFile implements Input {
   }
 
   @Override
-  public long length() throws IOException { return channel.size(); }
+  public long length() throws IOException {
+    return channel.size();
+  }
 
   @Override
-  public int read(long position, byte[] b, int start, int len)
-    throws IOException {
+  public int read(long position, byte[] b, int start, int len) throws IOException {
     return channel.read(ByteBuffer.wrap(b, start, len), position);
   }
 
   @Override
-  public void close() throws IOException { channel.close(); }
+  public void close() throws IOException {
+    channel.close();
+  }
 
 }
-

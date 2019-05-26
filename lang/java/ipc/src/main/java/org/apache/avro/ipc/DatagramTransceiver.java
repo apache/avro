@@ -28,11 +28,12 @@ import java.nio.channels.DatagramChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A datagram-based {@link Transceiver} implementation. This uses a simple,
- * non-standard wire protocol and is not intended for production services. */
+/**
+ * A datagram-based {@link Transceiver} implementation. This uses a simple,
+ * non-standard wire protocol and is not intended for production services.
+ */
 public class DatagramTransceiver extends Transceiver {
-  private static final Logger LOG
-    = LoggerFactory.getLogger(DatagramTransceiver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DatagramTransceiver.class);
 
   private static final int MAX_SIZE = 16 * 1024;
 
@@ -40,7 +41,10 @@ public class DatagramTransceiver extends Transceiver {
   private SocketAddress remote;
   private ByteBuffer buffer = ByteBuffer.allocate(MAX_SIZE);
 
-  public String getRemoteName() { return remote.toString(); }
+  @Override
+  public String getRemoteName() {
+    return remote.toString();
+  }
 
   public DatagramTransceiver(SocketAddress remote) throws IOException {
     this(DatagramChannel.open());
@@ -51,35 +55,36 @@ public class DatagramTransceiver extends Transceiver {
     this.channel = channel;
   }
 
+  @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
     buffer.clear();
     remote = channel.receive(buffer);
-    LOG.info("received from "+remote);
+    LOG.info("received from " + remote);
     buffer.flip();
     List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       int length = buffer.getInt();
-      if (length == 0) {                          // end of buffers
+      if (length == 0) { // end of buffers
         return buffers;
       }
-      ByteBuffer chunk = buffer.slice();          // use data without copying
+      ByteBuffer chunk = buffer.slice(); // use data without copying
       chunk.limit(length);
-      buffer.position(buffer.position()+length);
+      buffer.position(buffer.position() + length);
       buffers.add(chunk);
     }
   }
 
-  public synchronized void writeBuffers(List<ByteBuffer> buffers)
-    throws IOException {
+  @Override
+  public synchronized void writeBuffers(List<ByteBuffer> buffers) throws IOException {
     buffer.clear();
     for (ByteBuffer b : buffers) {
       buffer.putInt(b.remaining());
-      buffer.put(b);                              // copy data.  sigh.
+      buffer.put(b); // copy data. sigh.
     }
     buffer.putInt(0);
     buffer.flip();
     channel.send(buffer, remote);
-    LOG.info("sent to "+remote);
+    LOG.info("sent to " + remote);
   }
 
 }

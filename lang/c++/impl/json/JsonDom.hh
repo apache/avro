@@ -24,7 +24,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "boost/any.hpp"
 #include "Config.hh"
@@ -59,20 +59,26 @@ enum EntityType {
     etObject
 };
 
+const char* typeToString(EntityType t);
+
 class AVRO_DECL Entity {
     EntityType type_;
     boost::any value_;
+    size_t line_; // can't be const else noncopyable...
+
     void ensureType(EntityType) const;
 public:
-    Entity() : type_(etNull) { }
-    Entity(Bool v) : type_(etBool), value_(v) { }
-    Entity(Long v) : type_(etLong), value_(v) { }
-    Entity(Double v) : type_(etDouble), value_(v) { }
-    Entity(const boost::shared_ptr<String>& v) : type_(etString), value_(v) { }
-    Entity(const boost::shared_ptr<Array>& v) : type_(etArray), value_(v) { }
-    Entity(const boost::shared_ptr<Object>& v) : type_(etObject), value_(v) { }
+    Entity(size_t line = 0) : type_(etNull), line_(line) { }
+    Entity(Bool v, size_t line = 0) : type_(etBool), value_(v), line_(line) { }
+    Entity(Long v, size_t line = 0) : type_(etLong), value_(v), line_(line) { }
+    Entity(Double v, size_t line = 0) : type_(etDouble), value_(v), line_(line) { }
+    Entity(const std::shared_ptr<String>& v, size_t line = 0) : type_(etString), value_(v), line_(line) { }
+    Entity(const std::shared_ptr<Array>& v, size_t line = 0) : type_(etArray), value_(v), line_(line) { }
+    Entity(const std::shared_ptr<Object>& v, size_t line = 0) : type_(etObject), value_(v), line_(line) { }
     
     EntityType type() const { return type_; }
+
+    size_t line() const { return line_; }
 
     Bool boolValue() const {
         ensureType(etBool);
@@ -89,19 +95,18 @@ public:
         return boost::any_cast<Double>(value_);
     }
 
-    const String& stringValue() const {
-        ensureType(etString);
-        return **boost::any_cast<boost::shared_ptr<String> >(&value_);
-    }
+    String stringValue() const;
+
+    String bytesValue() const;
     
     const Array& arrayValue() const {
         ensureType(etArray);
-        return **boost::any_cast<boost::shared_ptr<Array> >(&value_);
+        return **boost::any_cast<std::shared_ptr<Array> >(&value_);
     }
 
     const Object& objectValue() const {
         ensureType(etObject);
-        return **boost::any_cast<boost::shared_ptr<Object> >(&value_);
+        return **boost::any_cast<std::shared_ptr<Object> >(&value_);
     }
 
     std::string toString() const;

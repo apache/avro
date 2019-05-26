@@ -17,20 +17,22 @@
  */
 package org.apache.avro;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.UUID;
+
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class TestDataFileCustomSync {
   private byte[] createDataFile(byte[] sync) throws IOException {
@@ -54,7 +56,7 @@ public class TestDataFileCustomSync {
     try {
       MessageDigest digester = MessageDigest.getInstance("MD5");
       long time = System.currentTimeMillis();
-      digester.update((UUID.randomUUID()+"@"+time).getBytes());
+      digester.update((UUID.randomUUID() + "@" + time).getBytes(UTF_8));
       return digester.digest();
     } catch (NoSuchAlgorithmException e) {
       throw new RuntimeException(e);

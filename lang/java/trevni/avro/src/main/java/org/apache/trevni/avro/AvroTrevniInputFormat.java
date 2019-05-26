@@ -37,13 +37,14 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.AvroWrapper;
 
-/** An {@link org.apache.hadoop.mapred.InputFormat} for Trevni files.
+/**
+ * An {@link org.apache.hadoop.mapred.InputFormat} for Trevni files.
  *
- * <p>A subset schema to be read may be specified with {@link
- * AvroJob#setInputSchema(JobConf,Schema)}.
+ * <p>
+ * A subset schema to be read may be specified with
+ * {@link AvroJob#setInputSchema(JobConf,Schema)}.
  */
-public class AvroTrevniInputFormat<T>
-  extends FileInputFormat<AvroWrapper<T>, NullWritable> {
+public class AvroTrevniInputFormat<T> extends FileInputFormat<AvroWrapper<T>, NullWritable> {
 
   @Override
   protected boolean isSplitable(FileSystem fs, Path filename) {
@@ -61,14 +62,12 @@ public class AvroTrevniInputFormat<T>
   }
 
   @Override
-  public RecordReader<AvroWrapper<T>, NullWritable>
-    getRecordReader(InputSplit split, final JobConf job,
-                    Reporter reporter) throws IOException {
-    final FileSplit file = (FileSplit)split;
+  public RecordReader<AvroWrapper<T>, NullWritable> getRecordReader(InputSplit split, final JobConf job,
+      Reporter reporter) throws IOException {
+    final FileSplit file = (FileSplit) split;
     reporter.setStatus(file.toString());
 
-    final AvroColumnReader.Params params =
-      new AvroColumnReader.Params(new HadoopInput(file.getPath(), job));
+    final AvroColumnReader.Params params = new AvroColumnReader.Params(new HadoopInput(file.getPath(), job));
     params.setModel(ReflectData.get());
     if (job.get(AvroJob.INPUT_SCHEMA) != null)
       params.setSchema(AvroJob.getInputSchema(job));
@@ -78,12 +77,18 @@ public class AvroTrevniInputFormat<T>
       private float rows = reader.getRowCount();
       private long row;
 
-      public AvroWrapper<T> createKey() { return new AvroWrapper<>(null); }
+      @Override
+      public AvroWrapper<T> createKey() {
+        return new AvroWrapper<>(null);
+      }
 
-      public NullWritable createValue() { return NullWritable.get(); }
+      @Override
+      public NullWritable createValue() {
+        return NullWritable.get();
+      }
 
-      public boolean next(AvroWrapper<T> wrapper, NullWritable ignore)
-        throws IOException {
+      @Override
+      public boolean next(AvroWrapper<T> wrapper, NullWritable ignore) throws IOException {
         if (!reader.hasNext())
           return false;
         wrapper.datum(reader.next());
@@ -91,15 +96,23 @@ public class AvroTrevniInputFormat<T>
         return true;
       }
 
-      public float getProgress() throws IOException { return row / rows; }
+      @Override
+      public float getProgress() throws IOException {
+        return row / rows;
+      }
 
-      public long getPos() throws IOException { return row; }
+      @Override
+      public long getPos() throws IOException {
+        return row;
+      }
 
-      public void close() throws IOException { reader.close(); }
+      @Override
+      public void close() throws IOException {
+        reader.close();
+      }
 
     };
 
   }
 
 }
-

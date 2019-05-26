@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,6 +33,9 @@ A schema may be one of:
   A boolean; or
   Null.
 """
+from math import floor
+from math import log10
+
 try:
   import json
 except ImportError:
@@ -110,6 +113,7 @@ class SchemaParseException(AvroException):
 
 class Schema(object):
   """Base class for all Schema classes."""
+  _props = None
   def __init__(self, type, other_props=None):
     # Ensure valid ctor args
     if not isinstance(type, basestring):
@@ -120,13 +124,14 @@ class Schema(object):
       raise SchemaParseException(fail_msg)
 
     # add members
-    if not hasattr(self, '_props'): self._props = {}
+    if self._props is None:
+      self._props = {}
     self.set_prop('type', type)
     self.type = type
     self._props.update(other_props or {})
 
   # Read-only properties dict. Printing schemas
-  # creates JSON properties directly from this dict. 
+  # creates JSON properties directly from this dict.
   props = property(lambda self: self._props)
 
   # Read-only property dict. Non-reserved properties
@@ -155,11 +160,11 @@ class Schema(object):
 
 class Name(object):
   """Class to describe Avro name."""
-  
+
   def __init__(self, name_attr, space_attr, default_space):
     """
     Formulate full name according to the specification.
-    
+
     @arg name_attr: name value read in schema or None.
     @arg space_attr: namespace value read in schema or None.
     @ard default_space: the current default space or None.
@@ -178,19 +183,19 @@ class Name(object):
     elif name_attr == "":
       fail_msg = 'Space must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
-  
+
     if not (isinstance(default_space, basestring) or (default_space is None)):
       fail_msg = 'Default space must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
     elif name_attr == "":
       fail_msg = 'Default must be non-empty string or None.'
       raise SchemaParseException(fail_msg)
-    
-    self._full = None; 
-    
+
+    self._full = None;
+
     if name_attr is None or name_attr == "":
         return;
-    
+
     if (name_attr.find('.') < 0):
       if (space_attr is not None) and (space_attr != ""):
         self._full = "%s.%s" % (space_attr, name_attr)
@@ -200,20 +205,20 @@ class Name(object):
         else:
           self._full = name_attr
     else:
-        self._full = name_attr         
-    
+        self._full = name_attr
+
   def __eq__(self, other):
     if not isinstance(other, Name):
         return False
     return (self.fullname == other.fullname)
-      
+
   fullname = property(lambda self: self._full)
 
   def get_space(self):
     """Back out a namespace from full name."""
     if self._full is None:
         return None
-    
+
     if (self._full.find('.') > 0):
       return self._full.rsplit(".", 1)[0]
     else:
@@ -224,17 +229,17 @@ class Names(object):
   def __init__(self, default_namespace=None):
       self.names = {}
       self.default_namespace = default_namespace
-      
+
   def has_name(self, name_attr, space_attr):
       test = Name(name_attr, space_attr, self.default_namespace).fullname
       return self.names.has_key(test)
-  
-  def get_name(self, name_attr, space_attr):    
+
+  def get_name(self, name_attr, space_attr):
       test = Name(name_attr, space_attr, self.default_namespace).fullname
       if not self.names.has_key(test):
           return None
       return self.names[test]
-  
+
   def prune_namespace(self, properties):
     """given a properties, return properties with namespace removed if
     it matches the own default namespace"""
@@ -255,14 +260,14 @@ class Names(object):
   def add_name(self, name_attr, space_attr, new_schema):
     """
     Add a new schema object to the name set.
-    
+
       @arg name_attr: name value read in schema
       @arg space_attr: namespace value read in schema.
-      
+
       @return: the Name that was just added.
     """
     to_add = Name(name_attr, space_attr, self.default_namespace)
-    
+
     if to_add.fullname in VALID_TYPES:
       fail_msg = '%s is a reserved type name.' % to_add.fullname
       raise SchemaParseException(fail_msg)
@@ -295,12 +300,12 @@ class NamedSchema(Schema):
 
     # Store name and namespace as they were read in origin schema
     self.set_prop('name', name)
-    if namespace is not None: 
+    if namespace is not None:
       self.set_prop('namespace', new_name.get_space())
 
     # Store full name as calculated from name, namespace
     self._fullname = new_name.fullname
-    
+
   def name_ref(self, names):
     if self.namespace == names.default_namespace:
       return self.name
@@ -311,6 +316,42 @@ class NamedSchema(Schema):
   name = property(lambda self: self.get_prop('name'))
   namespace = property(lambda self: self.get_prop('namespace'))
   fullname = property(lambda self: self._fullname)
+
+#
+# Logical type class
+#
+
+class LogicalSchema(object):
+  def __init__(self, logical_type):
+    self.logical_type = logical_type
+
+#
+# Decimal logical schema
+#
+
+class DecimalLogicalSchema(LogicalSchema):
+  def __init__(self, precision, scale=0):
+    max_precision = self._max_precision()
+    if not isinstance(precision, int) or precision <= 0:
+      raise SchemaParseException("""Precision is required for logical type
+                                DECIMAL and must be a positive integer but
+                                is %s.""" % precision)
+    elif precision > max_precision:
+      raise SchemaParseException("Cannot store precision digits. Max is %s"
+                                 %(max_precision))
+
+    if not isinstance(scale, int) or scale < 0:
+      raise SchemaParseException("Scale %s must be a positive Integer." % scale)
+
+    elif scale > precision:
+      raise SchemaParseException("Invalid DECIMAL scale %s. Cannot be greater than precision %s"
+                                 %(scale, precision))
+
+    LogicalSchema.__init__(self, 'decimal')
+
+  def _max_precision(self):
+    raise NotImplementedError()
+
 
 class Field(object):
   def __init__(self, type, name, has_default, default=None,
@@ -405,14 +446,40 @@ class PrimitiveSchema(Schema):
     return self.props == that.props
 
 #
+# Decimal Bytes Type
+#
+
+class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
+  def __init__(self, precision, scale=0, other_props=None):
+    DecimalLogicalSchema.__init__(self, precision, scale)
+    PrimitiveSchema.__init__(self, 'bytes', other_props)
+    self.set_prop('precision', precision)
+    self.set_prop('scale', scale)
+
+  # read-only properties
+  precision = property(lambda self: self.get_prop('precision'))
+  scale = property(lambda self: self.get_prop('scale'))
+
+  def _max_precision(self):
+    # Considering the max 32 bit integer value
+    return (1 << 31) - 1
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+
+#
 # Complex Types (non-recursive)
 #
 
 class FixedSchema(NamedSchema):
   def __init__(self, name, namespace, size, names=None, other_props=None):
     # Ensure valid ctor args
-    if not isinstance(size, int):
-      fail_msg = 'Fixed Schema requires a valid integer for size property.'
+    if not isinstance(size, int) or size < 0:
+      fail_msg = 'Fixed Schema requires a valid positive integer for size property.'
       raise AvroException(fail_msg)
 
     # Call parent ctor
@@ -435,6 +502,31 @@ class FixedSchema(NamedSchema):
 
   def __eq__(self, that):
     return self.props == that.props
+
+#
+# Decimal Fixed Type
+#
+
+class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
+  def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
+    FixedSchema.__init__(self, name, namespace, size, names, other_props)
+    DecimalLogicalSchema.__init__(self, precision, scale)
+    self.set_prop('precision', precision)
+    self.set_prop('scale', scale)
+
+  # read-only properties
+  precision = property(lambda self: self.get_prop('precision'))
+  scale = property(lambda self: self.get_prop('scale'))
+
+  def _max_precision(self):
+    return round(floor(log10(pow(2, (8 * self.size - 1)) - 1)))
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
 
 class EnumSchema(NamedSchema):
   def __init__(self, name, namespace, symbols, names=None, doc=None, other_props=None):
@@ -609,8 +701,8 @@ class RecordSchema(NamedSchema):
     field_objects = []
     field_names = []
     for i, field in enumerate(field_data):
-      if hasattr(field, 'get') and callable(field.get):
-        type = field.get('type')        
+      if callable(getattr(field, 'get', None)):
+        type = field.get('type')
         name = field.get('name')
 
         # null values can have a default value of None
@@ -652,7 +744,7 @@ class RecordSchema(NamedSchema):
       NamedSchema.__init__(self, schema_type, name, namespace, names,
                            other_props)
 
-    if schema_type == 'record': 
+    if schema_type == 'record':
       old_default = names.default_namespace
       names.default_namespace = Name(name, namespace,
                                      names.default_namespace).get_space()
@@ -704,7 +796,7 @@ def get_other_props(all_props,reserved_props):
   Retrieve the non-reserved properties from a dictionary of properties
   @args reserved_props: The set of reserved properties to exclude
   """
-  if hasattr(all_props, 'items') and callable(all_props.items):
+  if callable(getattr(all_props, 'items', None)):
     return dict([(k,v) for (k,v) in all_props.items() if k not in
                  reserved_props ])
 
@@ -717,18 +809,32 @@ def make_avsc_object(json_data, names=None):
   """
   if names == None:
     names = Names()
-  
+
   # JSON object (non-union)
-  if hasattr(json_data, 'get') and callable(json_data.get):
+  if callable(getattr(json_data, 'get', None)):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
+    logical_type = None
+    if 'logicalType' in json_data:
+      logical_type = json_data.get('logicalType')
+      if logical_type != 'decimal':
+       raise SchemaParseException("Currently does not support %s logical type" % logical_type)
     if type in PRIMITIVE_TYPES:
+      if type == 'bytes':
+        if logical_type == 'decimal':
+          precision = json_data.get('precision')
+          scale = 0 if json_data.get('scale') is None else json_data.get('scale')
+          return BytesDecimalSchema(precision, scale, other_props)
       return PrimitiveSchema(type, other_props)
     elif type in NAMED_TYPES:
       name = json_data.get('name')
       namespace = json_data.get('namespace', names.default_namespace)
       if type == 'fixed':
         size = json_data.get('size')
+        if logical_type == 'decimal':
+          precision = json_data.get('precision')
+          scale = 0 if json_data.get('scale') is None else json_data.get('scale')
+          return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
         return FixedSchema(name, namespace, size, names, other_props)
       elif type == 'enum':
         symbols = json_data.get('symbols')

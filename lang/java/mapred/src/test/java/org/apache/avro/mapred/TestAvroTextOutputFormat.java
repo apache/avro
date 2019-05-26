@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -35,23 +35,23 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.RecordWriter;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestAvroTextOutputFormat {
-
-  private static final String UTF8 = "UTF-8";
+  @Rule
+  public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   @Test
   public void testAvroTextRecordWriter() throws Exception {
-    File file = new File(System.getProperty("test.dir", "."), "writer");
+    File file = new File(tmpFolder.getRoot().getPath(), "writer");
     Schema schema = Schema.create(Schema.Type.BYTES);
-    DatumWriter<ByteBuffer> datumWriter =
-      new GenericDatumWriter<>(schema);
-    DataFileWriter<ByteBuffer> fileWriter =
-      new DataFileWriter<>(datumWriter);
+    DatumWriter<ByteBuffer> datumWriter = new GenericDatumWriter<>(schema);
+    DataFileWriter<ByteBuffer> fileWriter = new DataFileWriter<>(datumWriter);
     fileWriter.create(schema, file);
-    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<>()
-      .new AvroTextRecordWriter(fileWriter, "\t".getBytes(UTF8));
+    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<>().new AvroTextRecordWriter(fileWriter,
+        "\t".getBytes(StandardCharsets.UTF_8));
 
     rw.write(null, null);
     rw.write(null, NullWritable.get());
@@ -70,8 +70,7 @@ public class TestAvroTextOutputFormat {
     rw.close(null);
 
     DatumReader<ByteBuffer> reader = new GenericDatumReader<>();
-    DataFileReader<ByteBuffer> fileReader =
-      new DataFileReader<>(file, reader);
+    DataFileReader<ByteBuffer> fileReader = new DataFileReader<>(file, reader);
     assertEquals("k1", asString(fileReader.next()));
     assertEquals("k2", asString(fileReader.next()));
     assertEquals("v1", asString(fileReader.next()));
@@ -81,10 +80,10 @@ public class TestAvroTextOutputFormat {
     assertFalse("End", fileReader.hasNext());
   }
 
-  private String asString(ByteBuffer buf) throws UnsupportedEncodingException {
+  private String asString(ByteBuffer buf) {
     byte[] b = new byte[buf.remaining()];
     buf.get(b);
-    return new String(b, UTF8);
+    return new String(b, StandardCharsets.UTF_8);
   }
 
 }

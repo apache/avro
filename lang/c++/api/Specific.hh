@@ -23,10 +23,11 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include "array"
 
-#include "boost/array.hpp"
 #include "boost/blank.hpp"
 
+#include "AvroTraits.hh"
 #include "Config.hh"
 #include "Encoder.hh"
 #include "Decoder.hh"
@@ -61,8 +62,7 @@ template <typename T> void decode(Decoder& d, T& t);
  * The default is empty.
  */
 template <typename T>
-struct codec_traits {
-};
+struct codec_traits;
 
 /**
  * codec_traits for Avro boolean.
@@ -200,21 +200,21 @@ template <> struct codec_traits<std::vector<uint8_t> > {
 /**
  * codec_traits for Avro fixed.
  */
-template <size_t N> struct codec_traits<boost::array<uint8_t, N> > {
+template <size_t N> struct codec_traits<std::array<uint8_t, N> > {
     /**
      * Encodes a given value.
      */
-    static void encode(Encoder& e, const boost::array<uint8_t, N>& b) {
-        e.encodeFixed(&b[0], N);
+    static void encode(Encoder& e, const std::array<uint8_t, N>& b) {
+        e.encodeFixed(b.data(), N);
     }
 
     /**
      * Decodes into a given value.
      */
-    static void decode(Decoder& d, boost::array<uint8_t, N>& s) {
+    static void decode(Decoder& d, std::array<uint8_t, N>& s) {
         std::vector<uint8_t> v(N);
         d.decodeFixed(N, v);
-        std::copy(&v[0], &v[0] + N, &s[0]);
+        std::copy(v.data(), v.data() + N, s.data());
     }
 };
 
@@ -250,6 +250,18 @@ template <typename T> struct codec_traits<std::vector<T> > {
                 s.push_back(t);
             }
         }
+    }
+};
+
+typedef codec_traits<std::vector<bool>::const_reference> bool_codec_traits;
+
+template <> struct codec_traits<std::conditional<avro::is_not_defined<bool_codec_traits>::value,
+         std::vector<bool>::const_reference, void>::type> {
+   /**
+    * Encodes a given value.
+    */
+    static void encode(Encoder& e, std::vector<bool>::const_reference b) {
+        e.encodeBool(b);
     }
 };
 
@@ -330,6 +342,7 @@ void decode(Decoder& d, T& t) {
 }
 
 }   // namespace avro
+
 #endif // avro_Codec_hh__
 
 

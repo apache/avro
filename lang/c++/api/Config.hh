@@ -31,6 +31,10 @@
 # define AVRO_DECL __declspec(dllimport)
 #endif  // AVRO_SOURCE
 #endif  // AVRO_DYN_LINK
+
+#include <intsafe.h>
+typedef SSIZE_T ssize_t;
+
 #endif  // _WIN32
 
 #ifndef AVRO_DECL

@@ -24,7 +24,7 @@ public class UnresolvedUnionException extends AvroRuntimeException {
   private Schema unionSchema;
 
   public UnresolvedUnionException(Schema unionSchema, Object unresolvedDatum) {
-    super("Not in union "+unionSchema+": "+unresolvedDatum);
+    super("Not in union " + unionSchema + ": " + unresolvedDatum);
     this.unionSchema = unionSchema;
     this.unresolvedDatum = unresolvedDatum;
   }

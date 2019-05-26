@@ -23,10 +23,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Expert: Fields with this annotation are encoded using the given custom encoder.
- * This annotation overrides {@link org.apache.avro.reflect.Stringable Stringable} and {@link org.apache.avro.reflect.Nullable Nullable}.
- * Since no validation is performed, invalid custom encodings may result in an unreadable file.
- * Use of {@link org.apache.avro.io.ValidatingEncoder} is recommended.
+ * Expert: Fields with this annotation are encoded using the given custom
+ * encoder. This annotation overrides {@link org.apache.avro.reflect.Stringable
+ * Stringable} and {@link org.apache.avro.reflect.Nullable Nullable}. Since no
+ * validation is performed, invalid custom encodings may result in an unreadable
+ * file. Use of {@link org.apache.avro.io.ValidatingEncoder} is recommended.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

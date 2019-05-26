@@ -22,17 +22,17 @@ import java.io.PrintStream;
 import java.util.List;
 
 /**
- * Command-line "avro-tools" utilities should implement this
- * interface for delegation by {@link Main}.
+ * Command-line "avro-tools" utilities should implement this interface for
+ * delegation by {@link Main}.
  */
 public interface Tool {
   /**
-   * Runs the tool with supplied arguments.  Input and output streams
-   * are customizable for easier testing.
+   * Runs the tool with supplied arguments. Input and output streams are
+   * customizable for easier testing.
    *
-   * @param in Input stream to read data (typically System.in).
-   * @param out Output of tool (typically System.out).
-   * @param err Error stream (typically System.err).
+   * @param in   Input stream to read data (typically System.in).
+   * @param out  Output of tool (typically System.out).
+   * @param err  Error stream (typically System.err).
    * @param args Non-null list of arguments.
    * @return result code (0 for success)
    * @throws Exception Just like main(), tools may throw Exception.

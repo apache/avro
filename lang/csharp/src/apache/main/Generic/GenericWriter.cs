@@ -181,7 +181,7 @@ namespace Avro.Generic
                 }
                 catch (Exception ex)
                 {
-                    throw new AvroException(ex.Message + " in field " + field.Name);
+                    throw new AvroException(ex.Message + " in field " + field.Name, ex);
                 }
             }
         }

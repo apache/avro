@@ -31,37 +31,40 @@ public class Foo {
 
   public interface Iface {
 
-    public void ping() throws org.apache.thrift.TException;
+    void ping() throws org.apache.thrift.TException;
 
-    public int add(int num1, int num2) throws org.apache.thrift.TException;
+    int add(int num1, int num2) throws org.apache.thrift.TException;
 
-    public void zip() throws org.apache.thrift.TException;
+    void zip() throws org.apache.thrift.TException;
 
   }
 
   public interface AsyncIface {
 
-    public void ping(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    void ping(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
-    public void add(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    void add(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler)
+        throws org.apache.thrift.TException;
 
-    public void zip(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
+    void zip(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException;
 
   }
 
   public static class Client extends org.apache.thrift.TServiceClient implements Iface {
     public static class Factory implements org.apache.thrift.TServiceClientFactory<Client> {
-      public Factory() {}
+      public Factory() {
+      }
+
       public Client getClient(org.apache.thrift.protocol.TProtocol prot) {
         return new Client(prot);
       }
+
       public Client getClient(org.apache.thrift.protocol.TProtocol iprot, org.apache.thrift.protocol.TProtocol oprot) {
         return new Client(iprot, oprot);
       }
     }
 
-    public Client(org.apache.thrift.protocol.TProtocol prot)
-    {
+    public Client(org.apache.thrift.protocol.TProtocol prot) {
       super(prot, prot);
     }
 
@@ -69,78 +72,80 @@ public class Foo {
       super(iprot, oprot);
     }
 
-    public void ping() throws org.apache.thrift.TException
-    {
+    @Override
+    public void ping() throws org.apache.thrift.TException {
       send_ping();
       recv_ping();
     }
 
-    public void send_ping() throws org.apache.thrift.TException
-    {
+    public void send_ping() throws org.apache.thrift.TException {
       ping_args args = new ping_args();
       sendBase("ping", args);
     }
 
-    public void recv_ping() throws org.apache.thrift.TException
-    {
+    public void recv_ping() throws org.apache.thrift.TException {
       ping_result result = new ping_result();
       receiveBase(result, "ping");
-      return;
     }
 
-    public int add(int num1, int num2) throws org.apache.thrift.TException
-    {
+    @Override
+    public int add(int num1, int num2) throws org.apache.thrift.TException {
       send_add(num1, num2);
       return recv_add();
     }
 
-    public void send_add(int num1, int num2) throws org.apache.thrift.TException
-    {
+    public void send_add(int num1, int num2) throws org.apache.thrift.TException {
       add_args args = new add_args();
       args.setNum1(num1);
       args.setNum2(num2);
       sendBase("add", args);
     }
 
-    public int recv_add() throws org.apache.thrift.TException
-    {
+    public int recv_add() throws org.apache.thrift.TException {
       add_result result = new add_result();
       receiveBase(result, "add");
       if (result.isSetSuccess()) {
         return result.success;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "add failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT,
+          "add failed: unknown result");
     }
 
-    public void zip() throws org.apache.thrift.TException
-    {
+    @Override
+    public void zip() throws org.apache.thrift.TException {
       send_zip();
     }
 
-    public void send_zip() throws org.apache.thrift.TException
-    {
+    public void send_zip() throws org.apache.thrift.TException {
       zip_args args = new zip_args();
       sendBase("zip", args);
     }
 
   }
+
   public static class AsyncClient extends org.apache.thrift.async.TAsyncClient implements AsyncIface {
     public static class Factory implements org.apache.thrift.async.TAsyncClientFactory<AsyncClient> {
       private org.apache.thrift.async.TAsyncClientManager clientManager;
       private org.apache.thrift.protocol.TProtocolFactory protocolFactory;
-      public Factory(org.apache.thrift.async.TAsyncClientManager clientManager, org.apache.thrift.protocol.TProtocolFactory protocolFactory) {
+
+      public Factory(org.apache.thrift.async.TAsyncClientManager clientManager,
+          org.apache.thrift.protocol.TProtocolFactory protocolFactory) {
         this.clientManager = clientManager;
         this.protocolFactory = protocolFactory;
       }
+
       public AsyncClient getAsyncClient(org.apache.thrift.transport.TNonblockingTransport transport) {
         return new AsyncClient(protocolFactory, clientManager, transport);
       }
     }
 
-    public AsyncClient(org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.async.TAsyncClientManager clientManager, org.apache.thrift.transport.TNonblockingTransport transport) {
+    public AsyncClient(org.apache.thrift.protocol.TProtocolFactory protocolFactory,
+        org.apache.thrift.async.TAsyncClientManager clientManager,
+        org.apache.thrift.transport.TNonblockingTransport transport) {
       super(protocolFactory, clientManager, transport);
     }
 
+    @Override
     public void ping(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
       ping_call method_call = new ping_call(resultHandler, this, ___protocolFactory, ___transport);
@@ -149,28 +154,36 @@ public class Foo {
     }
 
     public static class ping_call extends org.apache.thrift.async.TAsyncMethodCall {
-      public ping_call(org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public ping_call(org.apache.thrift.async.AsyncMethodCallback resultHandler,
+          org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory,
+          org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
       }
 
+      @Override
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("ping", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        prot.writeMessageBegin(
+            new org.apache.thrift.protocol.TMessage("ping", org.apache.thrift.protocol.TMessageType.CALL, 0));
         ping_args args = new ping_args();
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public void getResult() throws org.apache.thrift.TException {
+      public Object getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
-        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(
+            getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
         (new Client(prot)).recv_ping();
+        return null;
       }
     }
 
-    public void add(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
+    @Override
+    public void add(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler)
+        throws org.apache.thrift.TException {
       checkReady();
       add_call method_call = new add_call(num1, num2, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
@@ -180,14 +193,19 @@ public class Foo {
     public static class add_call extends org.apache.thrift.async.TAsyncMethodCall {
       private int num1;
       private int num2;
-      public add_call(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+
+      public add_call(int num1, int num2, org.apache.thrift.async.AsyncMethodCallback resultHandler,
+          org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory,
+          org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.num1 = num1;
         this.num2 = num2;
       }
 
+      @Override
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("add", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        prot.writeMessageBegin(
+            new org.apache.thrift.protocol.TMessage("add", org.apache.thrift.protocol.TMessageType.CALL, 0));
         add_args args = new add_args();
         args.setNum1(num1);
         args.setNum2(num2);
@@ -195,16 +213,19 @@ public class Foo {
         prot.writeMessageEnd();
       }
 
-      public int getResult() throws org.apache.thrift.TException {
+      @Override
+      public Object getResult() throws org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
-        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(
+            getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
         return (new Client(prot)).recv_add();
       }
     }
 
+    @Override
     public void zip(org.apache.thrift.async.AsyncMethodCallback resultHandler) throws org.apache.thrift.TException {
       checkReady();
       zip_call method_call = new zip_call(resultHandler, this, ___protocolFactory, ___transport);
@@ -213,39 +234,50 @@ public class Foo {
     }
 
     public static class zip_call extends org.apache.thrift.async.TAsyncMethodCall {
-      public zip_call(org.apache.thrift.async.AsyncMethodCallback resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public zip_call(org.apache.thrift.async.AsyncMethodCallback resultHandler,
+          org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory,
+          org.apache.thrift.transport.TNonblockingTransport transport) {
         super(client, protocolFactory, transport, resultHandler, true);
       }
 
+      @Override
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("zip", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        prot.writeMessageBegin(
+            new org.apache.thrift.protocol.TMessage("zip", org.apache.thrift.protocol.TMessageType.CALL, 0));
         zip_args args = new zip_args();
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public void getResult() throws org.apache.thrift.TException {
+      @Override
+      public Object getResult() {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new IllegalStateException("Method call not finished!");
         }
-        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(
+            getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return prot;
       }
     }
 
   }
 
-  public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Processor.class.getName());
+  public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I>
+      implements org.apache.thrift.TProcessor {
+    private static final Logger LOG = LoggerFactory.getLogger(Processor.class.getName());
+
     public Processor(I iface) {
       super(iface, getProcessMap(new HashMap<>()));
     }
 
-    protected Processor(I iface, Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
+    protected Processor(I iface,
+        Map<String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>> processMap) {
       super(iface, getProcessMap(processMap));
     }
 
-    private static <I extends Iface> Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> getProcessMap(Map<String,  org.apache.thrift.ProcessFunction<I, ? extends  org.apache.thrift.TBase>> processMap) {
+    private static <I extends Iface> Map<String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>> getProcessMap(
+        Map<String, org.apache.thrift.ProcessFunction<I, ? extends org.apache.thrift.TBase>> processMap) {
       processMap.put("ping", new ping());
       processMap.put("add", new add());
       processMap.put("zip", new zip());
@@ -257,14 +289,17 @@ public class Foo {
         super("ping");
       }
 
+      @Override
       public ping_args getEmptyArgsInstance() {
         return new ping_args();
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
 
+      @Override
       public ping_result getResult(I iface, ping_args args) throws org.apache.thrift.TException {
         ping_result result = new ping_result();
         iface.ping();
@@ -277,10 +312,12 @@ public class Foo {
         super("add");
       }
 
+      @Override
       public add_args getEmptyArgsInstance() {
         return new add_args();
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
@@ -316,15 +353,18 @@ public class Foo {
 
   public static class AsyncProcessor<I extends AsyncIface> extends org.apache.thrift.TBaseAsyncProcessor<I> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AsyncProcessor.class.getName());
+
     public AsyncProcessor(I iface) {
       super(iface, getProcessMap(new HashMap<>()));
     }
 
-    protected AsyncProcessor(I iface, Map<String,  org.apache.thrift.AsyncProcessFunction<I, ? extends  org.apache.thrift.TBase, ?>> processMap) {
+    protected AsyncProcessor(I iface,
+        Map<String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?>> processMap) {
       super(iface, getProcessMap(processMap));
     }
 
-    private static <I extends AsyncIface> Map<String,  org.apache.thrift.AsyncProcessFunction<I, ? extends  org.apache.thrift.TBase,?>> getProcessMap(Map<String,  org.apache.thrift.AsyncProcessFunction<I, ? extends  org.apache.thrift.TBase, ?>> processMap) {
+    private static <I extends AsyncIface> Map<String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?>> getProcessMap(
+        Map<String, org.apache.thrift.AsyncProcessFunction<I, ? extends org.apache.thrift.TBase, ?>> processMap) {
       processMap.put("ping", new ping());
       processMap.put("add", new add());
       processMap.put("zip", new zip());
@@ -340,29 +380,34 @@ public class Foo {
         return new ping_args();
       }
 
+      @Override
       public AsyncMethodCallback<Void> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<Void>() {
+          @Override
           public void onComplete(Void o) {
             ping_result result = new ping_result();
             try {
-              fcall.sendResponse(fb,result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
               return;
             } catch (Exception e) {
               LOGGER.error("Exception writing to internal frame buffer", e);
             }
             fb.close();
           }
+
+          @Override
           public void onError(Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TBase msg;
             ping_result result = new ping_result();
             {
               msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
-              msg = (org.apache.thrift.TBase)new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+              msg = (org.apache.thrift.TBase) new org.apache.thrift.TApplicationException(
+                  org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
             }
             try {
-              fcall.sendResponse(fb,msg,msgType,seqid);
+              fcall.sendResponse(fb, msg, msgType, seqid);
               return;
             } catch (Exception ex) {
               LOGGER.error("Exception writing to internal frame buffer", ex);
@@ -372,11 +417,14 @@ public class Foo {
         };
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
 
-      public void start(I iface, ping_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws TException {
+      @Override
+      public void start(I iface, ping_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler)
+          throws TException {
         iface.ping(resultHandler);
       }
     }
@@ -386,35 +434,41 @@ public class Foo {
         super("add");
       }
 
+      @Override
       public add_args getEmptyArgsInstance() {
         return new add_args();
       }
 
+      @Override
       public AsyncMethodCallback<Integer> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<Integer>() {
+          @Override
           public void onComplete(Integer o) {
             add_result result = new add_result();
             result.success = o;
             result.setSuccessIsSet(true);
             try {
-              fcall.sendResponse(fb,result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY, seqid);
               return;
             } catch (Exception e) {
               LOGGER.error("Exception writing to internal frame buffer", e);
             }
             fb.close();
           }
+
+          @Override
           public void onError(Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TBase msg;
             add_result result = new add_result();
             {
               msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
-              msg = (org.apache.thrift.TBase)new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+              msg = (org.apache.thrift.TBase) new org.apache.thrift.TApplicationException(
+                  org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
             }
             try {
-              fcall.sendResponse(fb,msg,msgType,seqid);
+              fcall.sendResponse(fb, msg, msgType, seqid);
               return;
             } catch (Exception ex) {
               LOGGER.error("Exception writing to internal frame buffer", ex);
@@ -424,12 +478,15 @@ public class Foo {
         };
       }
 
+      @Override
       protected boolean isOneway() {
         return false;
       }
 
-      public void start(I iface, add_args args, org.apache.thrift.async.AsyncMethodCallback<Integer> resultHandler) throws TException {
-        iface.add(args.num1, args.num2,resultHandler);
+      @Override
+      public void start(I iface, add_args args, org.apache.thrift.async.AsyncMethodCallback<Integer> resultHandler)
+          throws TException {
+        iface.add(args.num1, args.num2, resultHandler);
       }
     }
 
@@ -438,34 +495,43 @@ public class Foo {
         super("zip");
       }
 
+      @Override
       public zip_args getEmptyArgsInstance() {
         return new zip_args();
       }
 
+      @Override
       public AsyncMethodCallback<Void> getResultHandler(final AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new AsyncMethodCallback<Void>() {
+          @Override
           public void onComplete(Void o) {
           }
+
+          @Override
           public void onError(Exception e) {
           }
         };
       }
 
+      @Override
       protected boolean isOneway() {
         return true;
       }
 
-      public void start(I iface, zip_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws TException {
+      @Override
+      public void start(I iface, zip_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler)
+          throws TException {
         iface.zip(resultHandler);
       }
     }
 
   }
 
-  public static class ping_args implements org.apache.thrift.TBase<ping_args, ping_args._Fields>, java.io.Serializable, Cloneable, Comparable<ping_args>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("ping_args");
-
+  public static class ping_args implements org.apache.thrift.TBase<ping_args, ping_args._Fields>, java.io.Serializable,
+      Cloneable, Comparable<ping_args> {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct(
+        "ping_args");
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
     static {
@@ -473,10 +539,12 @@ public class Foo {
       schemes.put(TupleScheme.class, new ping_argsTupleSchemeFactory());
     }
 
-
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    /**
+     * The set of fields this struct contains, along with convenience methods for
+     * finding and manipulating them.
+     */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-;
+      ;
 
       private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -490,19 +558,20 @@ public class Foo {
        * Find the _Fields constant that matches fieldId, or null if its not found.
        */
       public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          default:
-            return null;
+        switch (fieldId) {
+        default:
+          return null;
         }
       }
 
       /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
+       * Find the _Fields constant that matches fieldId, throwing an exception if it
+       * is not found.
        */
       public static _Fields findByThriftIdOrThrow(int fieldId) {
         _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        if (fields == null)
+          throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
         return fields;
       }
 
@@ -521,14 +590,17 @@ public class Foo {
         _fieldName = fieldName;
       }
 
+      @Override
       public short getThriftFieldId() {
         return _thriftId;
       }
 
+      @Override
       public String getFieldName() {
         return _fieldName;
       }
     }
+
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
@@ -545,6 +617,7 @@ public class Foo {
     public ping_args(ping_args other) {
     }
 
+    @Override
     public ping_args deepCopy() {
       return new ping_args(this);
     }
@@ -553,18 +626,23 @@ public class Foo {
     public void clear() {
     }
 
+    @Override
     public void setFieldValue(_Fields field, Object value) {
       switch (field) {
       }
     }
 
+    @Override
     public Object getFieldValue(_Fields field) {
       switch (field) {
       }
       throw new IllegalStateException();
     }
 
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field corresponding to fieldID is set (has been assigned a
+     * value) and false otherwise
+     */
     public boolean isSet(_Fields field) {
       if (field == null) {
         throw new IllegalArgumentException();
@@ -580,15 +658,12 @@ public class Foo {
       if (that == null)
         return false;
       if (that instanceof ping_args)
-        return this.equals((ping_args)that);
+        return this.equals((ping_args) that);
       return false;
     }
 
     public boolean equals(ping_args that) {
-      if (that == null)
-        return false;
-
-      return true;
+      return that != null;
     }
 
     @Override
@@ -621,11 +696,9 @@ public class Foo {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("ping_args(");
       boolean first = true;
 
-      sb.append(")");
-      return sb.toString();
+      return "ping_args(" + ")";
     }
 
     public void validate() throws org.apache.thrift.TException {
@@ -657,18 +730,18 @@ public class Foo {
 
     private static class ping_argsStandardScheme extends StandardScheme<ping_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, ping_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, ping_args struct)
+          throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
-        while (true)
-        {
+        while (true) {
           schemeField = iprot.readFieldBegin();
           if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
-            default:
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
           iprot.readFieldEnd();
         }
@@ -676,7 +749,8 @@ public class Foo {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, ping_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, ping_args struct)
+          throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -695,21 +769,24 @@ public class Foo {
     private static class ping_argsTupleScheme extends TupleScheme<ping_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, ping_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, ping_args struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, ping_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, ping_args struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
 
   }
 
-  public static class ping_result implements org.apache.thrift.TBase<ping_result, ping_result._Fields>, java.io.Serializable, Cloneable, Comparable<ping_result>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("ping_result");
-
+  public static class ping_result implements org.apache.thrift.TBase<ping_result, ping_result._Fields>,
+      java.io.Serializable, Cloneable, Comparable<ping_result> {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct(
+        "ping_result");
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
     static {
@@ -717,10 +794,12 @@ public class Foo {
       schemes.put(TupleScheme.class, new ping_resultTupleSchemeFactory());
     }
 
-
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    /**
+     * The set of fields this struct contains, along with convenience methods for
+     * finding and manipulating them.
+     */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-;
+      ;
 
       private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -734,19 +813,20 @@ public class Foo {
        * Find the _Fields constant that matches fieldId, or null if its not found.
        */
       public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          default:
-            return null;
+        switch (fieldId) {
+        default:
+          return null;
         }
       }
 
       /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
+       * Find the _Fields constant that matches fieldId, throwing an exception if it
+       * is not found.
        */
       public static _Fields findByThriftIdOrThrow(int fieldId) {
         _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        if (fields == null)
+          throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
         return fields;
       }
 
@@ -773,6 +853,7 @@ public class Foo {
         return _fieldName;
       }
     }
+
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
@@ -808,7 +889,10 @@ public class Foo {
       throw new IllegalStateException();
     }
 
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field corresponding to fieldID is set (has been assigned a
+     * value) and false otherwise
+     */
     public boolean isSet(_Fields field) {
       if (field == null) {
         throw new IllegalArgumentException();
@@ -824,15 +908,12 @@ public class Foo {
       if (that == null)
         return false;
       if (that instanceof ping_result)
-        return this.equals((ping_result)that);
+        return this.equals((ping_result) that);
       return false;
     }
 
     public boolean equals(ping_result that) {
-      if (that == null)
-        return false;
-
-      return true;
+      return that != null;
     }
 
     @Override
@@ -861,15 +942,13 @@ public class Foo {
 
     public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
       schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
-      }
+    }
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("ping_result(");
       boolean first = true;
 
-      sb.append(")");
-      return sb.toString();
+      return "ping_result(" + ")";
     }
 
     public void validate() throws org.apache.thrift.TException {
@@ -901,18 +980,18 @@ public class Foo {
 
     private static class ping_resultStandardScheme extends StandardScheme<ping_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, ping_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, ping_result struct)
+          throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
-        while (true)
-        {
+        while (true) {
           schemeField = iprot.readFieldBegin();
           if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
-            default:
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
           iprot.readFieldEnd();
         }
@@ -920,7 +999,8 @@ public class Foo {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, ping_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, ping_result struct)
+          throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -939,23 +1019,29 @@ public class Foo {
     private static class ping_resultTupleScheme extends TupleScheme<ping_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, ping_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, ping_result struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, ping_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, ping_result struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
       }
     }
 
   }
 
-  public static class add_args implements org.apache.thrift.TBase<add_args, add_args._Fields>, java.io.Serializable, Cloneable, Comparable<add_args>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("add_args");
+  public static class add_args implements org.apache.thrift.TBase<add_args, add_args._Fields>, java.io.Serializable,
+      Cloneable, Comparable<add_args> {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct(
+        "add_args");
 
-    private static final org.apache.thrift.protocol.TField NUM1_FIELD_DESC = new org.apache.thrift.protocol.TField("num1", org.apache.thrift.protocol.TType.I32, (short)1);
-    private static final org.apache.thrift.protocol.TField NUM2_FIELD_DESC = new org.apache.thrift.protocol.TField("num2", org.apache.thrift.protocol.TType.I32, (short)2);
+    private static final org.apache.thrift.protocol.TField NUM1_FIELD_DESC = new org.apache.thrift.protocol.TField(
+        "num1", org.apache.thrift.protocol.TType.I32, (short) 1);
+    private static final org.apache.thrift.protocol.TField NUM2_FIELD_DESC = new org.apache.thrift.protocol.TField(
+        "num2", org.apache.thrift.protocol.TType.I32, (short) 2);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
     static {
@@ -966,10 +1052,12 @@ public class Foo {
     private int num1; // required
     private int num2; // required
 
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    /**
+     * The set of fields this struct contains, along with convenience methods for
+     * finding and manipulating them.
+     */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      NUM1((short)1, "num1"),
-      NUM2((short)2, "num2");
+      NUM1((short) 1, "num1"), NUM2((short) 2, "num2");
 
       private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -983,23 +1071,24 @@ public class Foo {
        * Find the _Fields constant that matches fieldId, or null if its not found.
        */
       public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          case 1: // NUM1
-            return NUM1;
-          case 2: // NUM2
-            return NUM2;
-          default:
-            return null;
+        switch (fieldId) {
+        case 1: // NUM1
+          return NUM1;
+        case 2: // NUM2
+          return NUM2;
+        default:
+          return null;
         }
       }
 
       /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
+       * Find the _Fields constant that matches fieldId, throwing an exception if it
+       * is not found.
        */
       public static _Fields findByThriftIdOrThrow(int fieldId) {
         _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        if (fields == null)
+          throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
         return fields;
       }
 
@@ -1034,10 +1123,12 @@ public class Foo {
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
-      tmpMap.put(_Fields.NUM1, new org.apache.thrift.meta_data.FieldMetaData("num1", org.apache.thrift.TFieldRequirementType.DEFAULT,
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-      tmpMap.put(_Fields.NUM2, new org.apache.thrift.meta_data.FieldMetaData("num2", org.apache.thrift.TFieldRequirementType.DEFAULT,
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+      tmpMap.put(_Fields.NUM1,
+          new org.apache.thrift.meta_data.FieldMetaData("num1", org.apache.thrift.TFieldRequirementType.DEFAULT,
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+      tmpMap.put(_Fields.NUM2,
+          new org.apache.thrift.meta_data.FieldMetaData("num2", org.apache.thrift.TFieldRequirementType.DEFAULT,
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(add_args.class, metaDataMap);
     }
@@ -1045,10 +1136,7 @@ public class Foo {
     public add_args() {
     }
 
-    public add_args(
-      int num1,
-      int num2)
-    {
+    public add_args(int num1, int num2) {
       this();
       this.num1 = num1;
       setNum1IsSet(true);
@@ -1090,7 +1178,10 @@ public class Foo {
       __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __NUM1_ISSET_ID);
     }
 
-    /** Returns true if field num1 is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field num1 is set (has been assigned a value) and false
+     * otherwise
+     */
     public boolean isSetNum1() {
       return EncodingUtils.testBit(__isset_bitfield, __NUM1_ISSET_ID);
     }
@@ -1112,7 +1203,10 @@ public class Foo {
       __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __NUM2_ISSET_ID);
     }
 
-    /** Returns true if field num2 is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field num2 is set (has been assigned a value) and false
+     * otherwise
+     */
     public boolean isSetNum2() {
       return EncodingUtils.testBit(__isset_bitfield, __NUM2_ISSET_ID);
     }
@@ -1127,7 +1221,7 @@ public class Foo {
         if (value == null) {
           unsetNum1();
         } else {
-          setNum1((Integer)value);
+          setNum1((Integer) value);
         }
         break;
 
@@ -1135,7 +1229,7 @@ public class Foo {
         if (value == null) {
           unsetNum2();
         } else {
-          setNum2((Integer)value);
+          setNum2((Integer) value);
         }
         break;
 
@@ -1145,16 +1239,19 @@ public class Foo {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case NUM1:
-        return Integer.valueOf(getNum1());
+        return getNum1();
 
       case NUM2:
-        return Integer.valueOf(getNum2());
+        return getNum2();
 
       }
       throw new IllegalStateException();
     }
 
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field corresponding to fieldID is set (has been assigned a
+     * value) and false otherwise
+     */
     public boolean isSet(_Fields field) {
       if (field == null) {
         throw new IllegalArgumentException();
@@ -1174,7 +1271,7 @@ public class Foo {
       if (that == null)
         return false;
       if (that instanceof add_args)
-        return this.equals((add_args)that);
+        return this.equals((add_args) that);
       return false;
     }
 
@@ -1196,8 +1293,7 @@ public class Foo {
       if (this_present_num2 || that_present_num2) {
         if (!(this_present_num2 && that_present_num2))
           return false;
-        if (this.num2 != that.num2)
-          return false;
+        return this.num2 == that.num2;
       }
 
       return true;
@@ -1216,7 +1312,7 @@ public class Foo {
 
       int lastComparison = 0;
 
-      lastComparison = Boolean.valueOf(isSetNum1()).compareTo(other.isSetNum1());
+      lastComparison = Boolean.compare(isSetNum1(), other.isSetNum1());
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1226,7 +1322,7 @@ public class Foo {
           return lastComparison;
         }
       }
-      lastComparison = Boolean.valueOf(isSetNum2()).compareTo(other.isSetNum2());
+      lastComparison = Boolean.compare(isSetNum2(), other.isSetNum2());
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1259,7 +1355,8 @@ public class Foo {
       sb.append("num1:");
       sb.append(this.num1);
       first = false;
-      if (!first) sb.append(", ");
+      if (!first)
+        sb.append(", ");
       sb.append("num2:");
       sb.append(this.num2);
       first = false;
@@ -1282,7 +1379,8 @@ public class Foo {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
-        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        // it doesn't seem like you should have to do this, but java serialization is
+        // wacky, and doesn't call the default constructor.
         __isset_bitfield = 0;
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
@@ -1298,34 +1396,34 @@ public class Foo {
 
     private static class add_argsStandardScheme extends StandardScheme<add_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, add_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, add_args struct)
+          throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
-        while (true)
-        {
+        while (true) {
           schemeField = iprot.readFieldBegin();
           if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
-            case 1: // NUM1
-              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-                struct.num1 = iprot.readI32();
-                struct.setNum1IsSet(true);
-              } else {
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            case 2: // NUM2
-              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-                struct.num2 = iprot.readI32();
-                struct.setNum2IsSet(true);
-              } else {
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            default:
+          case 1: // NUM1
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.num1 = iprot.readI32();
+              struct.setNum1IsSet(true);
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 2: // NUM2
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.num2 = iprot.readI32();
+              struct.setNum2IsSet(true);
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
           iprot.readFieldEnd();
         }
@@ -1333,7 +1431,8 @@ public class Foo {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, add_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, add_args struct)
+          throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -1358,7 +1457,8 @@ public class Foo {
     private static class add_argsTupleScheme extends TupleScheme<add_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, add_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, add_args struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetNum1()) {
@@ -1393,10 +1493,13 @@ public class Foo {
 
   }
 
-  public static class add_result implements org.apache.thrift.TBase<add_result, add_result._Fields>, java.io.Serializable, Cloneable, Comparable<add_result>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("add_result");
+  public static class add_result implements org.apache.thrift.TBase<add_result, add_result._Fields>,
+      java.io.Serializable, Cloneable, Comparable<add_result> {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct(
+        "add_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.I32, (short)0);
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField(
+        "success", org.apache.thrift.protocol.TType.I32, (short) 0);
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
     static {
@@ -1406,9 +1509,12 @@ public class Foo {
 
     private int success; // required
 
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    /**
+     * The set of fields this struct contains, along with convenience methods for
+     * finding and manipulating them.
+     */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SUCCESS((short)0, "success");
+      SUCCESS((short) 0, "success");
 
       private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -1422,21 +1528,22 @@ public class Foo {
        * Find the _Fields constant that matches fieldId, or null if its not found.
        */
       public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          case 0: // SUCCESS
-            return SUCCESS;
-          default:
-            return null;
+        switch (fieldId) {
+        case 0: // SUCCESS
+          return SUCCESS;
+        default:
+          return null;
         }
       }
 
       /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
+       * Find the _Fields constant that matches fieldId, throwing an exception if it
+       * is not found.
        */
       public static _Fields findByThriftIdOrThrow(int fieldId) {
         _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        if (fields == null)
+          throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
         return fields;
       }
 
@@ -1470,8 +1577,9 @@ public class Foo {
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
-      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT,
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+      tmpMap.put(_Fields.SUCCESS,
+          new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT,
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
       metaDataMap = Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(add_result.class, metaDataMap);
     }
@@ -1479,9 +1587,7 @@ public class Foo {
     public add_result() {
     }
 
-    public add_result(
-      int success)
-    {
+    public add_result(int success) {
       this();
       this.success = success;
       setSuccessIsSet(true);
@@ -1518,7 +1624,10 @@ public class Foo {
       __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __SUCCESS_ISSET_ID);
     }
 
-    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field success is set (has been assigned a value) and false
+     * otherwise
+     */
     public boolean isSetSuccess() {
       return EncodingUtils.testBit(__isset_bitfield, __SUCCESS_ISSET_ID);
     }
@@ -1533,7 +1642,7 @@ public class Foo {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((Integer)value);
+          setSuccess((Integer) value);
         }
         break;
 
@@ -1543,13 +1652,16 @@ public class Foo {
     public Object getFieldValue(_Fields field) {
       switch (field) {
       case SUCCESS:
-        return Integer.valueOf(getSuccess());
+        return getSuccess();
 
       }
       throw new IllegalStateException();
     }
 
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field corresponding to fieldID is set (has been assigned a
+     * value) and false otherwise
+     */
     public boolean isSet(_Fields field) {
       if (field == null) {
         throw new IllegalArgumentException();
@@ -1567,7 +1679,7 @@ public class Foo {
       if (that == null)
         return false;
       if (that instanceof add_result)
-        return this.equals((add_result)that);
+        return this.equals((add_result) that);
       return false;
     }
 
@@ -1580,8 +1692,7 @@ public class Foo {
       if (this_present_success || that_present_success) {
         if (!(this_present_success && that_present_success))
           return false;
-        if (this.success != that.success)
-          return false;
+        return this.success == that.success;
       }
 
       return true;
@@ -1600,7 +1711,7 @@ public class Foo {
 
       int lastComparison = 0;
 
-      lastComparison = Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      lastComparison = Boolean.compare(isSetSuccess(), other.isSetSuccess());
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1623,7 +1734,7 @@ public class Foo {
 
     public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
       schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
-      }
+    }
 
     @Override
     public String toString() {
@@ -1652,7 +1763,8 @@ public class Foo {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
       try {
-        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+        // it doesn't seem like you should have to do this, but java serialization is
+        // wacky, and doesn't call the default constructor.
         __isset_bitfield = 0;
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
@@ -1668,26 +1780,26 @@ public class Foo {
 
     private static class add_resultStandardScheme extends StandardScheme<add_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, add_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, add_result struct)
+          throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
-        while (true)
-        {
+        while (true) {
           schemeField = iprot.readFieldBegin();
           if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
-            case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-                struct.success = iprot.readI32();
-                struct.setSuccessIsSet(true);
-              } else {
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
-            default:
+          case 0: // SUCCESS
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.success = iprot.readI32();
+              struct.setSuccessIsSet(true);
+            } else {
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
           iprot.readFieldEnd();
         }
@@ -1695,7 +1807,8 @@ public class Foo {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, add_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, add_result struct)
+          throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -1719,7 +1832,8 @@ public class Foo {
     private static class add_resultTupleScheme extends TupleScheme<add_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, add_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, add_result struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
         BitSet optionals = new BitSet();
         if (struct.isSetSuccess()) {
@@ -1732,7 +1846,8 @@ public class Foo {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, add_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, add_result struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol iprot = (TTupleProtocol) prot;
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
@@ -1744,9 +1859,10 @@ public class Foo {
 
   }
 
-  public static class zip_args implements org.apache.thrift.TBase<zip_args, zip_args._Fields>, java.io.Serializable, Cloneable, Comparable<zip_args>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("zip_args");
-
+  public static class zip_args implements org.apache.thrift.TBase<zip_args, zip_args._Fields>, java.io.Serializable,
+      Cloneable, Comparable<zip_args> {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct(
+        "zip_args");
 
     private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
     static {
@@ -1754,10 +1870,12 @@ public class Foo {
       schemes.put(TupleScheme.class, new zip_argsTupleSchemeFactory());
     }
 
-
-    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    /**
+     * The set of fields this struct contains, along with convenience methods for
+     * finding and manipulating them.
+     */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-;
+      ;
 
       private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -1771,19 +1889,20 @@ public class Foo {
        * Find the _Fields constant that matches fieldId, or null if its not found.
        */
       public static _Fields findByThriftId(int fieldId) {
-        switch(fieldId) {
-          default:
-            return null;
+        switch (fieldId) {
+        default:
+          return null;
         }
       }
 
       /**
-       * Find the _Fields constant that matches fieldId, throwing an exception
-       * if it is not found.
+       * Find the _Fields constant that matches fieldId, throwing an exception if it
+       * is not found.
        */
       public static _Fields findByThriftIdOrThrow(int fieldId) {
         _Fields fields = findByThriftId(fieldId);
-        if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        if (fields == null)
+          throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
         return fields;
       }
 
@@ -1810,6 +1929,7 @@ public class Foo {
         return _fieldName;
       }
     }
+
     public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
@@ -1845,7 +1965,10 @@ public class Foo {
       throw new IllegalStateException();
     }
 
-    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    /**
+     * Returns true if field corresponding to fieldID is set (has been assigned a
+     * value) and false otherwise
+     */
     public boolean isSet(_Fields field) {
       if (field == null) {
         throw new IllegalArgumentException();
@@ -1861,15 +1984,12 @@ public class Foo {
       if (that == null)
         return false;
       if (that instanceof zip_args)
-        return this.equals((zip_args)that);
+        return this.equals((zip_args) that);
       return false;
     }
 
     public boolean equals(zip_args that) {
-      if (that == null)
-        return false;
-
-      return true;
+      return that != null;
     }
 
     @Override
@@ -1902,11 +2022,9 @@ public class Foo {
 
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder("zip_args(");
       boolean first = true;
 
-      sb.append(")");
-      return sb.toString();
+      return "zip_args(" + ")";
     }
 
     public void validate() throws org.apache.thrift.TException {
@@ -1938,18 +2056,18 @@ public class Foo {
 
     private static class zip_argsStandardScheme extends StandardScheme<zip_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, zip_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, zip_args struct)
+          throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
-        while (true)
-        {
+        while (true) {
           schemeField = iprot.readFieldBegin();
           if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
             break;
           }
           switch (schemeField.id) {
-            default:
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
           iprot.readFieldEnd();
         }
@@ -1957,7 +2075,8 @@ public class Foo {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, zip_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, zip_args struct)
+          throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -1976,7 +2095,8 @@ public class Foo {
     private static class zip_argsTupleScheme extends TupleScheme<zip_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, zip_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, zip_args struct)
+          throws org.apache.thrift.TException {
         TTupleProtocol oprot = (TTupleProtocol) prot;
       }
 

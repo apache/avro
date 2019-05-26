@@ -24,7 +24,8 @@ import org.apache.avro.mapred.AvroKey;
 import org.apache.hadoop.io.NullWritable;
 
 /**
- * Reads records from an input split representing a chunk of an Trenvi container file.
+ * Reads records from an input split representing a chunk of an Trenvi container
+ * file.
  *
  * @param <T> The (java) type of data in Trevni container file.
  */
@@ -35,15 +36,13 @@ public class AvroTrevniKeyRecordReader<T> extends AvroTrevniRecordReaderBase<Avr
 
   /** {@inheritDoc} */
   @Override
-  public AvroKey<T> getCurrentKey() throws IOException,
-      InterruptedException {
+  public AvroKey<T> getCurrentKey() throws IOException, InterruptedException {
     return mCurrentKey;
   }
 
   /** {@inheritDoc} */
   @Override
-  public NullWritable getCurrentValue() throws IOException,
-      InterruptedException {
+  public NullWritable getCurrentValue() throws IOException, InterruptedException {
     return NullWritable.get();
   }
 
@@ -56,4 +55,3 @@ public class AvroTrevniKeyRecordReader<T> extends AvroTrevniRecordReaderBase<Avr
   }
 
 }
-

@@ -22,7 +22,6 @@
 #ifndef _WIN32
 #include <sys/uio.h>
 #endif
-#include <boost/type_traits.hpp>
 #include <vector>
 
 #include "../Config.hh"
@@ -135,7 +134,7 @@ class AVRO_DECL OutputBuffer
 
     template<typename T>
     void writeTo(T val) {
-        pimpl_->writeTo(val, boost::is_fundamental<T>());
+        pimpl_->writeTo(val, std::is_fundamental<T>());
     }
 
     /** 
@@ -490,6 +489,7 @@ inline InputBuffer OutputBuffer::extractData(size_type bytes)
     return InputBuffer(newImpl);
 }
 
+#ifndef _WIN32
 /** 
  * Create an array of iovec structures from the buffer.  This utility is used
  * to support writev and readv function calls.  The caller should ensure the
@@ -519,6 +519,7 @@ inline void toIovec(BufferType &buf, std::vector<struct iovec> &iov)
         ++iter;
     }
 }
+#endif
 
 } // namespace
 

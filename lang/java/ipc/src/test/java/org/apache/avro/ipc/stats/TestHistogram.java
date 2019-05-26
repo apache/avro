@@ -21,11 +21,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.apache.avro.ipc.stats.Histogram.Entry;
 import org.apache.avro.ipc.stats.Histogram.Segmenter;
@@ -35,12 +31,11 @@ public class TestHistogram {
 
   @Test
   public void testBasicOperation() {
-    Segmenter<String, Integer> s = new Histogram.TreeMapSegmenter<>(
-        new TreeSet<>(Arrays.asList(0, 1, 2, 4, 8, 16)));
+    Segmenter<String, Integer> s = new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(0, 1, 2, 4, 8, 16)));
 
     Histogram<String, Integer> h = new Histogram<>(s);
 
-    for(int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 20; ++i) {
       h.add(i);
     }
     assertEquals(20, h.getCount());
@@ -48,8 +43,7 @@ public class TestHistogram {
 
     assertEquals("[0,1)=1;[1,2)=1;[2,4)=2;[4,8)=4;[8,16)=8;[16,infinity)=4", h.toString());
 
-    String[] correctBucketLabels = {
-        "[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)", "[16,infinity)"};
+    String[] correctBucketLabels = { "[0,1)", "[1,2)", "[2,4)", "[4,8)", "[8,16)", "[16,infinity)" };
 
     // test bucket iterator
     int pos = 0;
@@ -68,8 +62,7 @@ public class TestHistogram {
       }
     }
 
-    String[] correctBoundryLabels = {
-        "0", "1", "2", "4", "8", "16"};
+    String[] correctBoundryLabels = { "0", "1", "2", "4", "8", "16" };
     List<String> boundryLabels = h.getSegmenter().getBoundaryLabels();
 
     assertEquals(correctBoundryLabels.length, boundryLabels.size());
@@ -95,35 +88,38 @@ public class TestHistogram {
 
   }
 
-  @Test(expected=Histogram.SegmenterException.class)
+  @Test(expected = Histogram.SegmenterException.class)
   public void testBadValue() {
-    Segmenter<String, Long> s = new Histogram.TreeMapSegmenter<>(
-        new TreeSet<>(Arrays.asList(0L, 1L, 2L, 4L, 8L, 16L)));
+    Segmenter<String, Long> s = new Histogram.TreeMapSegmenter<>(new TreeSet<>(Arrays.asList(0L, 1L, 2L, 4L, 8L, 16L)));
 
     Histogram<String, Long> h = new Histogram<>(s);
     h.add(-1L);
   }
 
   /** Only has one bucket */
-  static class SingleBucketSegmenter implements Segmenter<String, Float >{
+  static class SingleBucketSegmenter implements Segmenter<String, Float> {
     @Override
     public Iterator<String> getBuckets() {
-      return Arrays.asList("X").iterator();
+      return Collections.singletonList("X").iterator();
     }
 
     public List<String> getBoundaryLabels() {
-      return Arrays.asList("X");
+      return Collections.singletonList("X");
     }
 
     public List<String> getBucketLabels() {
-      return Arrays.asList("X");
+      return Collections.singletonList("X");
     }
 
     @Override
-    public int segment(Float value) { return 0; }
+    public int segment(Float value) {
+      return 0;
+    }
 
     @Override
-    public int size() { return 1; }
+    public int size() {
+      return 1;
+    }
 
   }
 

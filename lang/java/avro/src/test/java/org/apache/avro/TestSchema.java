@@ -17,12 +17,10 @@
  */
 package org.apache.avro;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.Schema.Field;
@@ -32,36 +30,32 @@ import org.junit.Test;
 public class TestSchema {
   @Test
   public void testSplitSchemaBuild() {
-    Schema s = SchemaBuilder
-       .record("HandshakeRequest")
-       .namespace("org.apache.avro.ipc").fields()
-         .name("clientProtocol").type().optional().stringType()
-         .name("meta").type().optional().map().values().bytesType()
-         .endRecord();
+    Schema s = SchemaBuilder.record("HandshakeRequest").namespace("org.apache.avro.ipc").fields().name("clientProtocol")
+        .type().optional().stringType().name("meta").type().optional().map().values().bytesType().endRecord();
 
     String schemaString = s.toString();
-    final int mid = schemaString.length() / 2;
+    int mid = schemaString.length() / 2;
 
     Schema parsedStringSchema = new org.apache.avro.Schema.Parser().parse(s.toString());
-    Schema parsedArrayOfStringSchema =
-      new org.apache.avro.Schema.Parser().parse
-      (schemaString.substring(0, mid), schemaString.substring(mid));
+    Schema parsedArrayOfStringSchema = new org.apache.avro.Schema.Parser().parse(schemaString.substring(0, mid),
+        schemaString.substring(mid));
     assertNotNull(parsedStringSchema);
     assertNotNull(parsedArrayOfStringSchema);
     assertEquals(parsedStringSchema.toString(), parsedArrayOfStringSchema.toString());
   }
 
   @Test
-  public void testDuplicateRecordFieldName() {
-    final Schema schema = Schema.createRecord("RecordName", null, null, false);
-    final List<Field> fields = new ArrayList<>();
+  public void testDefaultRecordWithDuplicateFieldName() {
+    String recordName = "name";
+    Schema schema = Schema.createRecord(recordName, "doc", "namespace", false);
+    List<Field> fields = new ArrayList<>();
     fields.add(new Field("field_name", Schema.create(Type.NULL), null, null));
     fields.add(new Field("field_name", Schema.create(Type.INT), null, null));
     try {
       schema.setFields(fields);
       fail("Should not be able to create a record with duplicate field name.");
     } catch (AvroRuntimeException are) {
-      assertTrue(are.getMessage().contains("Duplicate field field_name in record RecordName"));
+      assertTrue(are.getMessage().contains("Duplicate field field_name in record " + recordName));
     }
   }
 
@@ -77,8 +71,22 @@ public class TestSchema {
   }
 
   @Test
+  public void testRecordWithNullDoc() {
+    Schema schema = Schema.createRecord("name", null, "namespace", false);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+  }
+
+  @Test
+  public void testRecordWithNullNamespace() {
+    Schema schema = Schema.createRecord("name", "doc", null, false);
+    String schemaString = schema.toString();
+    assertNotNull(schemaString);
+  }
+
+  @Test
   public void testEmptyRecordSchema() {
-    Schema schema = Schema.createRecord("foobar", null, null, false);
+    Schema schema = createDefaultRecord();
     String schemaString = schema.toString();
     assertNotNull(schemaString);
   }
@@ -93,7 +101,8 @@ public class TestSchema {
     List<Field> fields = new ArrayList<>();
     fields.add(new Field("field_name1", Schema.create(Type.NULL), null, null));
     fields.add(new Field("field_name2", Schema.create(Type.INT), null, null));
-    Schema schema = Schema.createRecord("foobar", null, null, false, fields);
+    Schema schema = createDefaultRecord();
+    schema.setFields(fields);
     String schemaString = schema.toString();
     assertNotNull(schemaString);
     assertEquals(2, schema.getFields().size());
@@ -101,8 +110,71 @@ public class TestSchema {
 
   @Test(expected = NullPointerException.class)
   public void testSchemaWithNullFields() {
-    Schema.createRecord("foobar", null, null, false, null);
+    Schema.createRecord("name", "doc", "namespace", false, null);
   }
 
+  @Test
+  public void testIsUnionOnUnionWithMultipleElements() {
+    Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
+    assertTrue(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnUnionWithOneElement() {
+    Schema schema = Schema.createUnion(Schema.create(Type.LONG));
+    assertTrue(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnRecord() {
+    Schema schema = createDefaultRecord();
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnArray() {
+    Schema schema = Schema.createArray(Schema.create(Type.LONG));
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnEnum() {
+    Schema schema = Schema.createEnum("name", "doc", "namespace", Collections.singletonList("value"));
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnFixed() {
+    Schema schema = Schema.createFixed("name", "doc", "space", 10);
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsUnionOnMap() {
+    Schema schema = Schema.createMap(Schema.create(Type.LONG));
+    assertFalse(schema.isUnion());
+  }
+
+  @Test
+  public void testIsNullableOnUnionWithNull() {
+    Schema schema = Schema.createUnion(Schema.create(Type.NULL), Schema.create(Type.LONG));
+    assertTrue(schema.isNullable());
+  }
+
+  @Test
+  public void testIsNullableOnUnionWithoutNull() {
+    Schema schema = Schema.createUnion(Schema.create(Type.LONG));
+    assertFalse(schema.isNullable());
+  }
+
+  @Test
+  public void testIsNullableOnRecord() {
+    Schema schema = createDefaultRecord();
+    assertFalse(schema.isNullable());
+  }
+
+  private Schema createDefaultRecord() {
+    return Schema.createRecord("name", "doc", "namespace", false);
+  }
 
 }

@@ -52,10 +52,15 @@ namespace Avro
         /// <summary>
         /// Namespace.Name of the schema
         /// </summary>
-        public string Fullname
+        public override string Fullname
         {
             get { return SchemaName.Fullname; }
         }
+
+        /// <summary>
+        /// Documentation for the schema, if any. Null if there is no documentation.
+        /// </summary>
+        public string Documentation { get; private set; }
 
         /// <summary>
         /// List of aliases for this named schema
@@ -95,11 +100,16 @@ namespace Avro
         /// </summary>
         /// <param name="type">schema type</param>
         /// <param name="name">name</param>
+        /// <param name="aliases">aliases for this named schema</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schemas already read</param>
-        protected NamedSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props, SchemaNames names)
+        /// <param name="doc">documentation for this named schema</param>
+        protected NamedSchema(Type type, SchemaName name, IList<SchemaName> aliases, PropertyMap props, SchemaNames names,
+            string doc)
                                 : base(type, props)
         {
             this.SchemaName = name;
+            this.Documentation = doc;
             this.aliases = aliases;
             if (null != name.Name)  // Added this check for anonymous records inside Message
                 if (!names.Add(name, this))

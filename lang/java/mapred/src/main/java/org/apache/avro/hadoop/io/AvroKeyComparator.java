@@ -31,7 +31,9 @@ import org.apache.hadoop.io.RawComparator;
  * The {@link org.apache.hadoop.io.RawComparator} used by jobs configured with
  * {@link org.apache.avro.mapreduce.AvroJob}.
  *
- * <p>Compares AvroKeys output from the map phase for sorting.</p>
+ * <p>
+ * Compares AvroKeys output from the map phase for sorting.
+ * </p>
  */
 public class AvroKeyComparator<T> extends Configured implements RawComparator<AvroKey<T>> {
   /** The schema of the Avro data in the key to compare. */

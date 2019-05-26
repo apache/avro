@@ -27,9 +27,11 @@ import java.net.InetSocketAddress;
 
 public class TestProtocolReflectMeta extends TestProtocolReflect {
 
-  @Before @Override
+  @Before
+  @Override
   public void testStartServer() throws Exception {
-    if (server != null) return;
+    if (server != null)
+      return;
     ReflectResponder rresp = new ReflectResponder(Simple.class, new TestImpl());
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key2"));
@@ -40,7 +42,7 @@ public class TestProtocolReflectMeta extends TestProtocolReflect {
     ReflectRequestor requestor = new ReflectRequestor(Simple.class, client);
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    proxy = ReflectRequestor.getClient(Simple.class, (ReflectRequestor)requestor);
+    proxy = ReflectRequestor.getClient(Simple.class, requestor);
   }
 
 }

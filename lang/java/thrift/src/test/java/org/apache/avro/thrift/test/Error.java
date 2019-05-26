@@ -21,10 +21,12 @@ import java.util.EnumSet;
 import java.util.Collections;
 import java.util.BitSet;
 
-public class Error extends TException implements org.apache.thrift.TBase<Error, Error._Fields>, java.io.Serializable, Cloneable, Comparable<Error> {
+public class Error extends TException
+    implements org.apache.thrift.TBase<Error, Error._Fields>, java.io.Serializable, Cloneable, Comparable<Error> {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Error");
 
-  private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("message", org.apache.thrift.protocol.TType.STRING, (short)1);
+  private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField(
+      "message", org.apache.thrift.protocol.TType.STRING, (short) 1);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
   static {
@@ -34,9 +36,12 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
 
   private String message; // required
 
-  /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+  /**
+   * The set of fields this struct contains, along with convenience methods for
+   * finding and manipulating them.
+   */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    MESSAGE((short)1, "message");
+    MESSAGE((short) 1, "message");
 
     private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -50,21 +55,22 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
      * Find the _Fields constant that matches fieldId, or null if its not found.
      */
     public static _Fields findByThriftId(int fieldId) {
-      switch(fieldId) {
-        case 1: // MESSAGE
-          return MESSAGE;
-        default:
-          return null;
+      switch (fieldId) {
+      case 1: // MESSAGE
+        return MESSAGE;
+      default:
+        return null;
       }
     }
 
     /**
-     * Find the _Fields constant that matches fieldId, throwing an exception
-     * if it is not found.
+     * Find the _Fields constant that matches fieldId, throwing an exception if it
+     * is not found.
      */
     public static _Fields findByThriftIdOrThrow(int fieldId) {
       _Fields fields = findByThriftId(fieldId);
-      if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+      if (fields == null)
+        throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
       return fields;
     }
 
@@ -83,10 +89,12 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
       _fieldName = fieldName;
     }
 
+    @Override
     public short getThriftFieldId() {
       return _thriftId;
     }
 
+    @Override
     public String getFieldName() {
       return _fieldName;
     }
@@ -96,8 +104,9 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
-    tmpMap.put(_Fields.MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT,
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.MESSAGE,
+        new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Error.class, metaDataMap);
   }
@@ -105,9 +114,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
   public Error() {
   }
 
-  public Error(
-    String message)
-  {
+  public Error(String message) {
     this();
     this.message = message;
   }
@@ -121,6 +128,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     }
   }
 
+  @Override
   public Error deepCopy() {
     return new Error(this);
   }
@@ -130,6 +138,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     this.message = null;
   }
 
+  @Override
   public String getMessage() {
     return this.message;
   }
@@ -142,7 +151,10 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     this.message = null;
   }
 
-  /** Returns true if field message is set (has been assigned a value) and false otherwise */
+  /**
+   * Returns true if field message is set (has been assigned a value) and false
+   * otherwise
+   */
   public boolean isSetMessage() {
     return this.message != null;
   }
@@ -153,19 +165,21 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     }
   }
 
+  @Override
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case MESSAGE:
       if (value == null) {
         unsetMessage();
       } else {
-        setMessage((String)value);
+        setMessage((String) value);
       }
       break;
 
     }
   }
 
+  @Override
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case MESSAGE:
@@ -175,7 +189,10 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     throw new IllegalStateException();
   }
 
-  /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+  /**
+   * Returns true if field corresponding to fieldID is set (has been assigned a
+   * value) and false otherwise
+   */
   public boolean isSet(_Fields field) {
     if (field == null) {
       throw new IllegalArgumentException();
@@ -193,7 +210,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     if (that == null)
       return false;
     if (that instanceof Error)
-      return this.equals((Error)that);
+      return this.equals((Error) that);
     return false;
   }
 
@@ -206,8 +223,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     if (this_present_message || that_present_message) {
       if (!(this_present_message && that_present_message))
         return false;
-      if (!this.message.equals(that.message))
-        return false;
+      return this.message.equals(that.message);
     }
 
     return true;
@@ -226,7 +242,7 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
 
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetMessage()).compareTo(other.isSetMessage());
+    lastComparison = Boolean.compare(isSetMessage(), other.isSetMessage());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -299,23 +315,22 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
     public void read(org.apache.thrift.protocol.TProtocol iprot, Error struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
-      while (true)
-      {
+      while (true) {
         schemeField = iprot.readFieldBegin();
         if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
           break;
         }
         switch (schemeField.id) {
-          case 1: // MESSAGE
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.message = iprot.readString();
-              struct.setMessageIsSet(true);
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          default:
+        case 1: // MESSAGE
+          if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+            struct.message = iprot.readString();
+            struct.setMessageIsSet(true);
+          } else {
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          break;
+        default:
+          org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
         iprot.readFieldEnd();
       }
@@ -371,4 +386,3 @@ public class Error extends TException implements org.apache.thrift.TBase<Error, 
   }
 
 }
-

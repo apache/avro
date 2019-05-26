@@ -249,7 +249,7 @@ namespace Avro.Generic
                 }
                 catch (Exception ex)
                 {
-                    throw new AvroException(ex.Message + " in field " + wf.Name);
+                    throw new AvroException(ex.Message + " in field " + wf.Name, ex);
                 }
             }
 

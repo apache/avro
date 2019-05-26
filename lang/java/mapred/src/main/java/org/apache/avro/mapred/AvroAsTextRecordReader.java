@@ -37,28 +37,28 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
   private long start;
   private long end;
 
-  public AvroAsTextRecordReader(JobConf job, FileSplit split)
-    throws IOException {
-    this(DataFileReader.openReader
-         (new FsInput(split.getPath(), job), new GenericDatumReader<>()), split);
+  public AvroAsTextRecordReader(JobConf job, FileSplit split) throws IOException {
+    this(DataFileReader.openReader(new FsInput(split.getPath(), job), new GenericDatumReader<>()), split);
   }
 
-  protected AvroAsTextRecordReader(FileReader<T> reader, FileSplit split)
-    throws IOException {
+  protected AvroAsTextRecordReader(FileReader<T> reader, FileSplit split) throws IOException {
     this.reader = reader;
-    reader.sync(split.getStart());                    // sync to start
+    reader.sync(split.getStart()); // sync to start
     this.start = reader.tell();
     this.end = split.getStart() + split.getLength();
   }
 
+  @Override
   public Text createKey() {
     return new Text();
   }
 
+  @Override
   public Text createValue() {
     return new Text();
   }
 
+  @Override
   public boolean next(Text key, Text ignore) throws IOException {
     if (!reader.hasNext() || reader.pastSync(end))
       return false;
@@ -81,19 +81,22 @@ class AvroAsTextRecordReader<T> implements RecordReader<Text, Text> {
     return true;
   }
 
+  @Override
   public float getProgress() throws IOException {
     if (end == start) {
       return 0.0f;
     } else {
-      return Math.min(1.0f, (getPos() - start) / (float)(end - start));
+      return Math.min(1.0f, (getPos() - start) / (float) (end - start));
     }
   }
 
+  @Override
   public long getPos() throws IOException {
     return reader.tell();
   }
 
-  public void close() throws IOException { reader.close(); }
-
-
+  @Override
+  public void close() throws IOException {
+    reader.close();
+  }
 }

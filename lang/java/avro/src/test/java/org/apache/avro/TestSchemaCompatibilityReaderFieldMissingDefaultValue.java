@@ -18,11 +18,10 @@
 package org.apache.avro;
 
 import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.A_INT_B_DINT_RECORD1;
-import static org.apache.avro.TestSchemas.A_INT_RECORD1;
-import static org.apache.avro.TestSchemas.EMPTY_RECORD1;
-import java.util.ArrayList;
-import java.util.List;
+import static org.apache.avro.TestSchemas.*;
+
+import java.util.Arrays;
+
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,11 +35,7 @@ public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
   public static Iterable<Object[]> data() {
     Object[][] fields = { //
         { A_INT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" }, { A_INT_B_DINT_RECORD1, EMPTY_RECORD1, "a", "/fields/0" } };
-    List<Object[]> list = new ArrayList<>(fields.length);
-    for (Object[] schemas : fields) {
-      list.add(schemas);
-    }
-    return list;
+    return Arrays.asList(fields);
   }
 
   @Parameter(0)
@@ -54,7 +49,7 @@ public class TestSchemaCompatibilityReaderFieldMissingDefaultValue {
 
   @Test
   public void testReaderFieldMissingDefaultValueSchemas() throws Exception {
-    validateIncompatibleSchemas(reader, writer,
-        SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, details, location);
+    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE, details,
+        location);
   }
 }

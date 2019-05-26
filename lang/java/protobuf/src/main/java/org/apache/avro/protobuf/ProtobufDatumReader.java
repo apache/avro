@@ -25,14 +25,15 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.ResolvingDecoder;
-import org.apache.avro.util.ClassUtils;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.ProtocolMessageEnum;
 
-/** {@link org.apache.avro.io.DatumReader DatumReader} for generated Protobuf
- * classes. */
+/**
+ * {@link org.apache.avro.io.DatumReader DatumReader} for generated Protobuf
+ * classes.
+ */
 public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
   public ProtobufDatumReader() {
     this(null, null, ProtobufData.get());
@@ -52,24 +53,23 @@ public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
     this(writer, reader, ProtobufData.get());
   }
 
-  protected ProtobufDatumReader(Schema writer, Schema reader,
-                                ProtobufData data) {
+  protected ProtobufDatumReader(Schema writer, Schema reader, ProtobufData data) {
     super(writer, reader, data);
   }
 
   @Override
-  protected Object readRecord(Object old, Schema expected,
-                              ResolvingDecoder in) throws IOException {
-    Message.Builder b = (Message.Builder)super.readRecord(old, expected, in);
-    return b.build();                             // build instance
+  protected Object readRecord(Object old, Schema expected, ResolvingDecoder in) throws IOException {
+    Message.Builder b = (Message.Builder) super.readRecord(old, expected, in);
+    return b.build(); // build instance
   }
 
   @Override
   protected Object createEnum(String symbol, Schema schema) {
     try {
-      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
-      if (c == null) return super.createEnum(symbol, schema); // punt to generic
-      return ((ProtocolMessageEnum)Enum.valueOf(c, symbol)).getValueDescriptor();
+      Class c = SpecificData.get().getClass(schema);
+      if (c == null)
+        return super.createEnum(symbol, schema); // punt to generic
+      return ((ProtocolMessageEnum) Enum.valueOf(c, symbol)).getValueDescriptor();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -77,8 +77,7 @@ public class ProtobufDatumReader<T> extends GenericDatumReader<T> {
 
   @Override
   protected Object readBytes(Object old, Decoder in) throws IOException {
-    return ByteString.copyFrom(((ByteBuffer)super.readBytes(old, in)).array());
+    return ByteString.copyFrom(((ByteBuffer) super.readBytes(old, in)).array());
   }
 
 }
-

@@ -35,13 +35,13 @@ import org.junit.Test;
 
 public class TestAvroKeyInputFormat {
   /**
-   * Verifies that a non-null record reader can be created, and the key/value types are
-   * as expected.
+   * Verifies that a non-null record reader can be created, and the key/value
+   * types are as expected.
    */
   @Test
   public void testCreateRecordReader() throws IOException, InterruptedException {
     // Set up the job configuration.
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setInputKeySchema(job, Schema.create(Schema.Type.STRING));
     Configuration conf = job.getConfiguration();
 
@@ -54,8 +54,7 @@ public class TestAvroKeyInputFormat {
 
     AvroKeyInputFormat inputFormat = new AvroKeyInputFormat();
     @SuppressWarnings("unchecked")
-    RecordReader<AvroKey<Object>, NullWritable> recordReader = inputFormat.createRecordReader(
-        inputSplit, context);
+    RecordReader<AvroKey<Object>, NullWritable> recordReader = inputFormat.createRecordReader(inputSplit, context);
     assertNotNull(inputFormat);
     recordReader.close();
 

@@ -18,12 +18,10 @@
 package org.apache.avro;
 
 import static org.apache.avro.TestSchemaCompatibility.validateIncompatibleSchemas;
-import static org.apache.avro.TestSchemas.A_DINT_B_DFIXED_4_BYTES_RECORD1;
-import static org.apache.avro.TestSchemas.A_DINT_B_DFIXED_8_BYTES_RECORD1;
-import static org.apache.avro.TestSchemas.FIXED_4_BYTES;
-import static org.apache.avro.TestSchemas.FIXED_8_BYTES;
-import java.util.ArrayList;
-import java.util.List;
+import static org.apache.avro.TestSchemas.*;
+
+import java.util.Arrays;
+
 import org.apache.avro.SchemaCompatibility.SchemaIncompatibilityType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,13 +37,11 @@ public class TestSchemaCompatibilityFixedSizeMismatch {
     Object[][] fields = { //
         { FIXED_4_BYTES, FIXED_8_BYTES, "expected: 8, found: 4", "/size" },
         { FIXED_8_BYTES, FIXED_4_BYTES, "expected: 4, found: 8", "/size" },
-        { A_DINT_B_DFIXED_8_BYTES_RECORD1, A_DINT_B_DFIXED_4_BYTES_RECORD1, "expected: 4, found: 8", "/fields/1/type/size" },
-        { A_DINT_B_DFIXED_4_BYTES_RECORD1, A_DINT_B_DFIXED_8_BYTES_RECORD1, "expected: 8, found: 4", "/fields/1/type/size" }, };
-    List<Object[]> list = new ArrayList<>(fields.length);
-    for (Object[] schemas : fields) {
-      list.add(schemas);
-    }
-    return list;
+        { A_DINT_B_DFIXED_8_BYTES_RECORD1, A_DINT_B_DFIXED_4_BYTES_RECORD1, "expected: 4, found: 8",
+            "/fields/1/type/size" },
+        { A_DINT_B_DFIXED_4_BYTES_RECORD1, A_DINT_B_DFIXED_8_BYTES_RECORD1, "expected: 8, found: 4",
+            "/fields/1/type/size" }, };
+    return Arrays.asList(fields);
   }
 
   @Parameter(0)
@@ -59,7 +55,6 @@ public class TestSchemaCompatibilityFixedSizeMismatch {
 
   @Test
   public void testFixedSizeMismatchSchemas() throws Exception {
-    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.FIXED_SIZE_MISMATCH,
-        details, location);
+    validateIncompatibleSchemas(reader, writer, SchemaIncompatibilityType.FIXED_SIZE_MISMATCH, details, location);
   }
 }

@@ -22,22 +22,25 @@ import org.apache.avro.generic.GenericData.StringType;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLClassLoader;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 
 /**
  * Generate Java classes and interfaces from Avro protocol files (.avpr)
  *
  * @goal protocol
  * @phase generate-sources
+ * @requiresDependencyResolution runtime
  * @threadSafe
  */
 public class ProtocolMojo extends AbstractAvroMojo {
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avpr</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avpr</code>
+   * is used to select grammar files.
    *
    * @parameter
    */
@@ -45,8 +48,8 @@ public class ProtocolMojo extends AbstractAvroMojo {
 
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
-   * directory for processing. By default, the pattern
-   * <code>**&#47;*.avpr</code> is used to select grammar files.
+   * directory for processing. By default, the pattern <code>**&#47;*.avpr</code>
+   * is used to select grammar files.
    *
    * @parameter
    */
@@ -56,12 +59,24 @@ public class ProtocolMojo extends AbstractAvroMojo {
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
     Protocol protocol = Protocol.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(protocol);
+    SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setCreateOptionalGetters(createOptionalGetters);
+    compiler.setGettersReturnOptional(gettersReturnOptional);
     compiler.setCreateSetters(createSetters);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
+    final URLClassLoader classLoader;
+    try {
+      classLoader = createClassLoader();
+      for (String customConversion : customConversions) {
+        compiler.addCustomConversion(classLoader.loadClass(customConversion));
+      }
+    } catch (DependencyResolutionRequiredException | ClassNotFoundException e) {
+      throw new IOException(e);
+    }
+    compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
     compiler.compileToDestination(src, outputDirectory);
   }
 

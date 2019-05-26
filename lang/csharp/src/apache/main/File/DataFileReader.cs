@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -418,7 +418,7 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format("Error ascertaining if data has next block: {0}", e));
+                throw new AvroRuntimeException(string.Format("Error ascertaining if data has next block: {0}", e), e);
             }
         }
     }

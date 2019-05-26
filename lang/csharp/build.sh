@@ -23,37 +23,49 @@ cd `dirname "$0"`                  # connect to root
 ROOT=../..
 VERSION=`cat $ROOT/share/VERSION.txt`
 
-export CONFIGURATION=Release
-export TARGETFRAMEWORKVERSION=v3.5
-
 case "$1" in
 
   test)
-    xbuild
-    nunit-console Avro.nunit
+    dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
+    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
+    dotnet test --configuration Release --framework netcoreapp2.0 ./src/apache/test/Avro.test.csproj
     ;;
 
   perf)
-    xbuild
-    mono build/perf/Release/Avro.perf.exe
+    pushd ./src/apache/perf/
+    dotnet run --configuration Release --framework netcoreapp2.0
     ;;
 
   dist)
     # build binary tarball
-    xbuild
+    dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
+    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
+    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/ipc/Avro.ipc.csproj
+
     # add the binary LICENSE and NOTICE to the tarball
+    mkdir build/
     cp LICENSE NOTICE build/
-    mkdir -p $ROOT/dist/csharp
-    (cd build; tar czf $ROOT/../dist/csharp/avro-csharp-$VERSION.tar.gz main codegen ipc LICENSE NOTICE)
+
+    # add binaries to the tarball
+    mkdir build/main/
+    cp -R src/apache/main/bin/Release/* build/main/
+    mkdir build/codegen/
+    cp -R src/apache/codegen/bin/Release/* build/codegen/
+    mkdir build/ipc/
+    cp -R src/apache/ipc/bin/Release/* build/ipc/
+
+    # build the tarball
+    mkdir -p ${ROOT}/dist/csharp
+    (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen ipc LICENSE NOTICE)
 
     # build documentation
     doxygen Avro.dox
-    mkdir -p $ROOT/build/avro-doc-$VERSION/api/csharp
-    cp -pr build/doc/* $ROOT/build/avro-doc-$VERSION/api/csharp
+    mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+    cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
     ;;
 
   clean)
-    rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/obj
+    rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
     rm -rf build
     rm -f  TestResult.xml
     ;;

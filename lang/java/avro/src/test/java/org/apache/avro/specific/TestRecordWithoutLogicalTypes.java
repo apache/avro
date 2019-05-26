@@ -5,23 +5,29 @@
  */
 package org.apache.avro.specific;
 
+import java.nio.ByteBuffer;
+
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
-import java.nio.ByteBuffer;
 
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
-public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"TestRecordWithoutLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.SpecificRecordBase
+    implements org.apache.avro.specific.SpecificRecord {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
+      "{\"type\":\"record\",\"name\":\"TestRecordWithoutLogicalTypes\",\"namespace\":\"org.apache.avro.specific\",\"fields\":[{\"name\":\"b\",\"type\":\"boolean\"},{\"name\":\"i32\",\"type\":\"int\"},{\"name\":\"i64\",\"type\":\"long\"},{\"name\":\"f32\",\"type\":\"float\"},{\"name\":\"f64\",\"type\":\"double\"},{\"name\":\"s\",\"type\":[\"null\",\"string\"],\"default\":null},{\"name\":\"d\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"t\",\"type\":{\"type\":\"int\",\"logicalType\":\"time-millis\"}},{\"name\":\"ts\",\"type\":{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}},{\"name\":\"dec\",\"type\":{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":9,\"scale\":2}}]}");
+
+  public static org.apache.avro.Schema getClassSchema() {
+    return SCHEMA$;
+  }
 
   private static SpecificData MODEL$ = new SpecificData();
 
-  private static final BinaryMessageEncoder<TestRecordWithoutLogicalTypes> ENCODER =
-      new BinaryMessageEncoder<TestRecordWithoutLogicalTypes>(MODEL$, SCHEMA$);
+  private static final BinaryMessageEncoder<TestRecordWithoutLogicalTypes> ENCODER = new BinaryMessageEncoder<TestRecordWithoutLogicalTypes>(
+      MODEL$, SCHEMA$);
 
-  private static final BinaryMessageDecoder<TestRecordWithoutLogicalTypes> DECODER =
-      new BinaryMessageDecoder<TestRecordWithoutLogicalTypes>(MODEL$, SCHEMA$);
+  private static final BinaryMessageDecoder<TestRecordWithoutLogicalTypes> DECODER = new BinaryMessageDecoder<TestRecordWithoutLogicalTypes>(
+      MODEL$, SCHEMA$);
 
   /** Serializes this ${schema.getName()} to a ByteBuffer. */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
@@ -29,33 +35,35 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
   }
 
   /** Deserializes a ${schema.getName()} from a ByteBuffer. */
-  public static TestRecordWithoutLogicalTypes fromByteBuffer(
-      java.nio.ByteBuffer b) throws java.io.IOException {
+  public static TestRecordWithoutLogicalTypes fromByteBuffer(java.nio.ByteBuffer b) throws java.io.IOException {
     return DECODER.decode(b);
   }
 
-   private boolean b;
-   private int i32;
-   private long i64;
-   private float f32;
-   private double f64;
-   private java.lang.String s;
-   private int d;
-   private int t;
-   private long ts;
-   private ByteBuffer dec;
+  private boolean b;
+  private int i32;
+  private long i64;
+  private float f32;
+  private double f64;
+  private java.lang.String s;
+  private int d;
+  private int t;
+  private long ts;
+  private ByteBuffer dec;
 
   /**
-   * Default constructor.  Note that this does not initialize fields
-   * to their default values from the schema.  If that is desired then
-   * one should use {@link \#newBuilder()}.
+   * Default constructor. Note that this does not initialize fields to their
+   * default values from the schema. If that is desired then one should use
+   * {@link \#newBuilder()}.
    */
-  public TestRecordWithoutLogicalTypes() {}
+  public TestRecordWithoutLogicalTypes() {
+  }
 
   /**
    * All-args constructor.
    */
-  public TestRecordWithoutLogicalTypes(java.lang.Boolean b, java.lang.Integer i32, java.lang.Long i64, java.lang.Float f32, java.lang.Double f64, java.lang.String s, java.lang.Integer d, java.lang.Integer t, java.lang.Long ts, java.nio.ByteBuffer dec) {
+  public TestRecordWithoutLogicalTypes(java.lang.Boolean b, java.lang.Integer i32, java.lang.Long i64,
+      java.lang.Float f32, java.lang.Double f64, java.lang.String s, java.lang.Integer d, java.lang.Integer t,
+      java.lang.Long ts, java.nio.ByteBuffer dec) {
     this.b = b;
     this.i32 = i32;
     this.i64 = i64;
@@ -68,38 +76,74 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     this.dec = dec;
   }
 
-  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
-  // Used by DatumWriter.  Applications should not call.
+  public org.apache.avro.Schema getSchema() {
+    return SCHEMA$;
+  }
+
+  // Used by DatumWriter. Applications should not call.
   public java.lang.Object get(int field$) {
     switch (field$) {
-    case 0: return b;
-    case 1: return i32;
-    case 2: return i64;
-    case 3: return f32;
-    case 4: return f64;
-    case 5: return s;
-    case 6: return d;
-    case 7: return t;
-    case 8: return ts;
-    case 9: return dec;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    case 0:
+      return b;
+    case 1:
+      return i32;
+    case 2:
+      return i64;
+    case 3:
+      return f32;
+    case 4:
+      return f64;
+    case 5:
+      return s;
+    case 6:
+      return d;
+    case 7:
+      return t;
+    case 8:
+      return ts;
+    case 9:
+      return dec;
+    default:
+      throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
-  // Used by DatumReader.  Applications should not call.
-  @SuppressWarnings(value="unchecked")
+
+  // Used by DatumReader. Applications should not call.
+  @SuppressWarnings(value = "unchecked")
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
-    case 0: b = (java.lang.Boolean)value$; break;
-    case 1: i32 = (java.lang.Integer)value$; break;
-    case 2: i64 = (java.lang.Long)value$; break;
-    case 3: f32 = (java.lang.Float)value$; break;
-    case 4: f64 = (java.lang.Double)value$; break;
-    case 5: s = (java.lang.String)value$; break;
-    case 6: d = (java.lang.Integer)value$; break;
-    case 7: t = (java.lang.Integer)value$; break;
-    case 8: ts = (java.lang.Long)value$; break;
-    case 9: dec = (java.nio.ByteBuffer) value$; break;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    case 0:
+      b = (java.lang.Boolean) value$;
+      break;
+    case 1:
+      i32 = (java.lang.Integer) value$;
+      break;
+    case 2:
+      i64 = (java.lang.Long) value$;
+      break;
+    case 3:
+      f32 = (java.lang.Float) value$;
+      break;
+    case 4:
+      f64 = (java.lang.Double) value$;
+      break;
+    case 5:
+      s = (java.lang.String) value$;
+      break;
+    case 6:
+      d = (java.lang.Integer) value$;
+      break;
+    case 7:
+      t = (java.lang.Integer) value$;
+      break;
+    case 8:
+      ts = (java.lang.Long) value$;
+      break;
+    case 9:
+      dec = (java.nio.ByteBuffer) value$;
+      break;
+    default:
+      throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
 
@@ -110,14 +154,12 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     return b;
   }
 
-
   /**
    * Gets the value of the 'i32' field.
    */
   public java.lang.Integer getI32() {
     return i32;
   }
-
 
   /**
    * Gets the value of the 'i64' field.
@@ -126,14 +168,12 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     return i64;
   }
 
-
   /**
    * Gets the value of the 'f32' field.
    */
   public java.lang.Float getF32() {
     return f32;
   }
-
 
   /**
    * Gets the value of the 'f64' field.
@@ -142,14 +182,12 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     return f64;
   }
 
-
   /**
    * Gets the value of the 's' field.
    */
   public java.lang.String getS() {
     return s;
   }
-
 
   /**
    * Gets the value of the 'd' field.
@@ -158,14 +196,12 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     return d;
   }
 
-
   /**
    * Gets the value of the 't' field.
    */
   public java.lang.Integer getT() {
     return t;
   }
-
 
   /**
    * Gets the value of the 'ts' field.
@@ -174,24 +210,30 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
     return ts;
   }
 
-
   /**
    * Gets the value of the 'ts' field.
    */
-  public java.nio.ByteBuffer getDec()  { return dec; }
-
+  public java.nio.ByteBuffer getDec() {
+    return dec;
+  }
 
   /** Creates a new TestRecordWithoutLogicalTypes RecordBuilder */
   public static TestRecordWithoutLogicalTypes.Builder newBuilder() {
     return new TestRecordWithoutLogicalTypes.Builder();
   }
 
-  /** Creates a new TestRecordWithoutLogicalTypes RecordBuilder by copying an existing Builder */
+  /**
+   * Creates a new TestRecordWithoutLogicalTypes RecordBuilder by copying an
+   * existing Builder
+   */
   public static TestRecordWithoutLogicalTypes.Builder newBuilder(TestRecordWithoutLogicalTypes.Builder other) {
     return new TestRecordWithoutLogicalTypes.Builder(other);
   }
 
-  /** Creates a new TestRecordWithoutLogicalTypes RecordBuilder by copying an existing TestRecordWithoutLogicalTypes instance */
+  /**
+   * Creates a new TestRecordWithoutLogicalTypes RecordBuilder by copying an
+   * existing TestRecordWithoutLogicalTypes instance
+   */
   public static TestRecordWithoutLogicalTypes.Builder newBuilder(TestRecordWithoutLogicalTypes other) {
     return new TestRecordWithoutLogicalTypes.Builder(other);
   }
@@ -200,7 +242,7 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
    * RecordBuilder for TestRecordWithoutLogicalTypes instances.
    */
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<TestRecordWithoutLogicalTypes>
-    implements org.apache.avro.data.RecordBuilder<TestRecordWithoutLogicalTypes> {
+      implements org.apache.avro.data.RecordBuilder<TestRecordWithoutLogicalTypes> {
 
     private boolean b;
     private int i32;
@@ -263,9 +305,12 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
       }
     }
 
-    /** Creates a Builder by copying an existing TestRecordWithoutLogicalTypes instance */
+    /**
+     * Creates a Builder by copying an existing TestRecordWithoutLogicalTypes
+     * instance
+     */
     private Builder(TestRecordWithoutLogicalTypes other) {
-            super(TestRecordWithoutLogicalTypes.SCHEMA$);
+      super(TestRecordWithoutLogicalTypes.SCHEMA$);
       if (isValidValue(fields()[0], other.b)) {
         this.b = data().deepCopy(fields()[0].schema(), other.b);
         fieldSetFlags()[0] = true;
@@ -548,7 +593,6 @@ public class TestRecordWithoutLogicalTypes extends org.apache.avro.specific.Spec
       fieldSetFlags()[9] = false;
       return this;
     }
-
 
     @Override
     public TestRecordWithoutLogicalTypes build() {

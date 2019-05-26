@@ -15,14 +15,19 @@ import java.util.EnumSet;
 import java.util.Collections;
 
 public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Fields> {
-  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("FooOrBar");
-  private static final org.apache.thrift.protocol.TField FOO_FIELD_DESC = new org.apache.thrift.protocol.TField("foo", org.apache.thrift.protocol.TType.STRING, (short)1);
-  private static final org.apache.thrift.protocol.TField BAR_FIELD_DESC = new org.apache.thrift.protocol.TField("bar", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct(
+      "FooOrBar");
+  private static final org.apache.thrift.protocol.TField FOO_FIELD_DESC = new org.apache.thrift.protocol.TField("foo",
+      org.apache.thrift.protocol.TType.STRING, (short) 1);
+  private static final org.apache.thrift.protocol.TField BAR_FIELD_DESC = new org.apache.thrift.protocol.TField("bar",
+      org.apache.thrift.protocol.TType.STRING, (short) 2);
 
-  /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+  /**
+   * The set of fields this struct contains, along with convenience methods for
+   * finding and manipulating them.
+   */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    FOO((short)1, "foo"),
-    BAR((short)2, "bar");
+    FOO((short) 1, "foo"), BAR((short) 2, "bar");
 
     private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -36,23 +41,24 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
      * Find the _Fields constant that matches fieldId, or null if its not found.
      */
     public static _Fields findByThriftId(int fieldId) {
-      switch(fieldId) {
-        case 1: // FOO
-          return FOO;
-        case 2: // BAR
-          return BAR;
-        default:
-          return null;
+      switch (fieldId) {
+      case 1: // FOO
+        return FOO;
+      case 2: // BAR
+        return BAR;
+      default:
+        return null;
       }
     }
 
     /**
-     * Find the _Fields constant that matches fieldId, throwing an exception
-     * if it is not found.
+     * Find the _Fields constant that matches fieldId, throwing an exception if it
+     * is not found.
      */
     public static _Fields findByThriftIdOrThrow(int fieldId) {
       _Fields fields = findByThriftId(fieldId);
-      if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+      if (fields == null)
+        throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
       return fields;
     }
 
@@ -71,10 +77,12 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
       _fieldName = fieldName;
     }
 
+    @Override
     public short getThriftFieldId() {
       return _thriftId;
     }
 
+    @Override
     public String getFieldName() {
       return _fieldName;
     }
@@ -83,10 +91,12 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
-    tmpMap.put(_Fields.FOO, new org.apache.thrift.meta_data.FieldMetaData("foo", org.apache.thrift.TFieldRequirementType.DEFAULT,
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.BAR, new org.apache.thrift.meta_data.FieldMetaData("bar", org.apache.thrift.TFieldRequirementType.DEFAULT,
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.FOO,
+        new org.apache.thrift.meta_data.FieldMetaData("foo", org.apache.thrift.TFieldRequirementType.DEFAULT,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.BAR,
+        new org.apache.thrift.meta_data.FieldMetaData("bar", org.apache.thrift.TFieldRequirementType.DEFAULT,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(FooOrBar.class, metaDataMap);
   }
@@ -102,6 +112,8 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
   public FooOrBar(FooOrBar other) {
     super(other);
   }
+
+  @Override
   public FooOrBar deepCopy() {
     return new FooOrBar(this);
   }
@@ -118,50 +130,52 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     return x;
   }
 
-
   @Override
   protected void checkType(_Fields setField, Object value) throws ClassCastException {
     switch (setField) {
-      case FOO:
-        if (value instanceof String) {
-          break;
-        }
-        throw new ClassCastException("Was expecting value of type String for field 'foo', but got " + value.getClass().getSimpleName());
-      case BAR:
-        if (value instanceof String) {
-          break;
-        }
-        throw new ClassCastException("Was expecting value of type String for field 'bar', but got " + value.getClass().getSimpleName());
-      default:
-        throw new IllegalArgumentException("Unknown field id " + setField);
+    case FOO:
+      if (value instanceof String) {
+        break;
+      }
+      throw new ClassCastException(
+          "Was expecting value of type String for field 'foo', but got " + value.getClass().getSimpleName());
+    case BAR:
+      if (value instanceof String) {
+        break;
+      }
+      throw new ClassCastException(
+          "Was expecting value of type String for field 'bar', but got " + value.getClass().getSimpleName());
+    default:
+      throw new IllegalArgumentException("Unknown field id " + setField);
     }
   }
 
   @Override
-  protected Object standardSchemeReadValue(org.apache.thrift.protocol.TProtocol iprot, org.apache.thrift.protocol.TField field) throws org.apache.thrift.TException {
+  protected Object standardSchemeReadValue(org.apache.thrift.protocol.TProtocol iprot,
+      org.apache.thrift.protocol.TField field) throws org.apache.thrift.TException {
     _Fields setField = _Fields.findByThriftId(field.id);
     if (setField != null) {
       switch (setField) {
-        case FOO:
-          if (field.type == FOO_FIELD_DESC.type) {
-            String foo;
-            foo = iprot.readString();
-            return foo;
-          } else {
-            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
-            return null;
-          }
-        case BAR:
-          if (field.type == BAR_FIELD_DESC.type) {
-            String bar;
-            bar = iprot.readString();
-            return bar;
-          } else {
-            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
-            return null;
-          }
-        default:
-          throw new IllegalStateException("setField wasn't null, but didn't match any of the case statements!");
+      case FOO:
+        if (field.type == FOO_FIELD_DESC.type) {
+          String foo;
+          foo = iprot.readString();
+          return foo;
+        } else {
+          org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+          return null;
+        }
+      case BAR:
+        if (field.type == BAR_FIELD_DESC.type) {
+          String bar;
+          bar = iprot.readString();
+          return bar;
+        } else {
+          org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
+          return null;
+        }
+      default:
+        throw new IllegalStateException("setField wasn't null, but didn't match any of the case statements!");
       }
     } else {
       org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
@@ -170,36 +184,38 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
   }
 
   @Override
-  protected void standardSchemeWriteValue(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+  protected void standardSchemeWriteValue(org.apache.thrift.protocol.TProtocol oprot)
+      throws org.apache.thrift.TException {
     switch (setField_) {
-      case FOO:
-        String foo = (String)value_;
-        oprot.writeString(foo);
-        return;
-      case BAR:
-        String bar = (String)value_;
-        oprot.writeString(bar);
-        return;
-      default:
-        throw new IllegalStateException("Cannot write union with unknown field " + setField_);
+    case FOO:
+      String foo = (String) value_;
+      oprot.writeString(foo);
+      return;
+    case BAR:
+      String bar = (String) value_;
+      oprot.writeString(bar);
+      return;
+    default:
+      throw new IllegalStateException("Cannot write union with unknown field " + setField_);
     }
   }
 
   @Override
-  protected Object tupleSchemeReadValue(org.apache.thrift.protocol.TProtocol iprot, short fieldID) throws org.apache.thrift.TException {
+  protected Object tupleSchemeReadValue(org.apache.thrift.protocol.TProtocol iprot, short fieldID)
+      throws org.apache.thrift.TException {
     _Fields setField = _Fields.findByThriftId(fieldID);
     if (setField != null) {
       switch (setField) {
-        case FOO:
-          String foo;
-          foo = iprot.readString();
-          return foo;
-        case BAR:
-          String bar;
-          bar = iprot.readString();
-          return bar;
-        default:
-          throw new IllegalStateException("setField wasn't null, but didn't match any of the case statements!");
+      case FOO:
+        String foo;
+        foo = iprot.readString();
+        return foo;
+      case BAR:
+        String bar;
+        bar = iprot.readString();
+        return bar;
+      default:
+        throw new IllegalStateException("setField wasn't null, but didn't match any of the case statements!");
       }
     } else {
       throw new TProtocolException("Couldn't find a field with field id " + fieldID);
@@ -209,28 +225,28 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
   @Override
   protected void tupleSchemeWriteValue(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
     switch (setField_) {
-      case FOO:
-        String foo = (String)value_;
-        oprot.writeString(foo);
-        return;
-      case BAR:
-        String bar = (String)value_;
-        oprot.writeString(bar);
-        return;
-      default:
-        throw new IllegalStateException("Cannot write union with unknown field " + setField_);
+    case FOO:
+      String foo = (String) value_;
+      oprot.writeString(foo);
+      return;
+    case BAR:
+      String bar = (String) value_;
+      oprot.writeString(bar);
+      return;
+    default:
+      throw new IllegalStateException("Cannot write union with unknown field " + setField_);
     }
   }
 
   @Override
   protected org.apache.thrift.protocol.TField getFieldDesc(_Fields setField) {
     switch (setField) {
-      case FOO:
-        return FOO_FIELD_DESC;
-      case BAR:
-        return BAR_FIELD_DESC;
-      default:
-        throw new IllegalArgumentException("Unknown field id " + setField);
+    case FOO:
+      return FOO_FIELD_DESC;
+    case BAR:
+      return BAR_FIELD_DESC;
+    default:
+      throw new IllegalArgumentException("Unknown field id " + setField);
     }
   }
 
@@ -244,35 +260,39 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     return _Fields.findByThriftIdOrThrow(id);
   }
 
+  @Override
   public _Fields fieldForId(int fieldId) {
     return _Fields.findByThriftId(fieldId);
   }
 
-
   public String getFoo() {
     if (getSetField() == _Fields.FOO) {
-      return (String)getFieldValue();
+      return (String) getFieldValue();
     } else {
-      throw new RuntimeException("Cannot get field 'foo' because union is currently set to " + getFieldDesc(getSetField()).name);
+      throw new RuntimeException(
+          "Cannot get field 'foo' because union is currently set to " + getFieldDesc(getSetField()).name);
     }
   }
 
   public void setFoo(String value) {
-    if (value == null) throw new NullPointerException();
+    if (value == null)
+      throw new NullPointerException();
     setField_ = _Fields.FOO;
     value_ = value;
   }
 
   public String getBar() {
     if (getSetField() == _Fields.BAR) {
-      return (String)getFieldValue();
+      return (String) getFieldValue();
     } else {
-      throw new RuntimeException("Cannot get field 'bar' because union is currently set to " + getFieldDesc(getSetField()).name);
+      throw new RuntimeException(
+          "Cannot get field 'bar' because union is currently set to " + getFieldDesc(getSetField()).name);
     }
   }
 
   public void setBar(String value) {
-    if (value == null) throw new NullPointerException();
+    if (value == null)
+      throw new NullPointerException();
     setField_ = _Fields.BAR;
     value_ = value;
   }
@@ -281,15 +301,14 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     return setField_ == _Fields.FOO;
   }
 
-
   public boolean isSetBar() {
     return setField_ == _Fields.BAR;
   }
 
-
+  @Override
   public boolean equals(Object other) {
     if (other instanceof FooOrBar) {
-      return equals((FooOrBar)other);
+      return equals((FooOrBar) other);
     } else {
       return false;
     }
@@ -308,9 +327,9 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     return lastComparison;
   }
 
-
   /**
-   * If you'd like this to perform more respectably, use the hashcode generator option.
+   * If you'd like this to perform more respectably, use the hashcode generator
+   * option.
    */
   @Override
   public int hashCode() {
@@ -325,7 +344,6 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
     }
   }
 
-
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
     try {
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
@@ -333,6 +351,5 @@ public class FooOrBar extends org.apache.thrift.TUnion<FooOrBar, FooOrBar._Field
       throw new java.io.IOException(te);
     }
   }
-
 
 }

@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <array>
 #include <boost/noncopyable.hpp>
 
 #include "Config.hh"
@@ -104,7 +105,7 @@ class ReaderImpl : private boost::noncopyable
         validator_.checkTypeExpected(AVRO_BYTES);
         size_t size = static_cast<size_t>(readSize());
         val.resize(size);
-        reader_.read(reinterpret_cast<char *>(&val[0]), size);
+        reader_.read(reinterpret_cast<char *>(val.data()), size);
     }
 
     void readFixed(uint8_t *val, size_t size) {
@@ -118,8 +119,8 @@ class ReaderImpl : private boost::noncopyable
     }
   
     template <size_t N>
-    void readFixed(boost::array<uint8_t, N> &val) {
-        this->readFixed(val.c_array(), N);
+    void readFixed(std::array<uint8_t, N> &val) {
+        this->readFixed(val.data(), N);
     }
   
     void readRecord() { 

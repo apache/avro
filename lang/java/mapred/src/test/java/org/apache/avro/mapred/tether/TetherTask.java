@@ -39,11 +39,12 @@ import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 
-/** Base class for Java tether mapreduce programs.  Useless except for testing,
+/**
+ * Base class for Java tether mapreduce programs. Useless except for testing,
  * since it's already possible to write Java MapReduce programs without
- * tethering.  Also serves as an example of how a framework may be
- * implemented. */
-public abstract class TetherTask<IN,MID,OUT> {
+ * tethering. Also serves as an example of how a framework may be implemented.
+ */
+public abstract class TetherTask<IN, MID, OUT> {
   static final Logger LOG = LoggerFactory.getLogger(TetherTask.class);
 
   private Transceiver clientTransceiver;
@@ -63,8 +64,6 @@ public abstract class TetherTask<IN,MID,OUT> {
   private Collector<MID> midCollector;
   private Collector<OUT> outCollector;
 
-  private TetheredProcess.Protocol proto;
-
   private static class Buffer extends ByteArrayOutputStream {
     public ByteBuffer data() {
       return ByteBuffer.wrap(buf, 0, count);
@@ -75,8 +74,7 @@ public abstract class TetherTask<IN,MID,OUT> {
   public class Collector<T> {
     private SpecificDatumWriter<T> writer;
     private Buffer buffer = new Buffer();
-    private BinaryEncoder encoder = new EncoderFactory()
-        .configureBlockSize(512).binaryEncoder(buffer, null);
+    private BinaryEncoder encoder = new EncoderFactory().configureBlockSize(512).binaryEncoder(buffer, null);
 
     private Collector(Schema schema) {
       this.writer = new SpecificDatumWriter<>(schema);
@@ -111,25 +109,25 @@ public abstract class TetherTask<IN,MID,OUT> {
       throw new RuntimeException("AVRO_TETHER_PROTOCOL env var is null");
     }
 
-    protocol=protocol.trim().toLowerCase();
+    protocol = protocol.trim().toLowerCase();
 
+    TetheredProcess.Protocol proto;
     if (protocol.equals("http")) {
-      proto=TetheredProcess.Protocol.HTTP;
+      proto = TetheredProcess.Protocol.HTTP;
     } else if (protocol.equals("sasl")) {
-      proto=TetheredProcess.Protocol.SASL;
+      proto = TetheredProcess.Protocol.SASL;
     } else {
-      throw new RuntimeException("AVROT_TETHER_PROTOCOL="+protocol+" but this protocol is unsupported");
+      throw new RuntimeException("AVROT_TETHER_PROTOCOL=" + protocol + " but this protocol is unsupported");
     }
 
     switch (proto) {
     case SASL:
-      this.clientTransceiver =
-      new SaslSocketTransceiver(new InetSocketAddress(clientPort));
+      this.clientTransceiver = new SaslSocketTransceiver(new InetSocketAddress(clientPort));
       this.outputClient = SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
       break;
 
     case HTTP:
-      this.clientTransceiver =new HttpTransceiver(new URL("http://127.0.0.1:"+clientPort));
+      this.clientTransceiver = new HttpTransceiver(new URL("http://127.0.0.1:" + clientPort));
       this.outputClient = SpecificRequestor.getClient(OutputProtocol.class, clientTransceiver);
       break;
     }
@@ -141,8 +139,8 @@ public abstract class TetherTask<IN,MID,OUT> {
   void configure(TaskType taskType, CharSequence inSchemaText, CharSequence outSchemaText) {
     this.taskType = taskType;
     try {
-      Schema inSchema = Schema.parse(inSchemaText.toString());
-      Schema outSchema = Schema.parse(outSchemaText.toString());
+      Schema inSchema = new Schema.Parser().parse(inSchemaText.toString());
+      Schema outSchema = new Schema.Parser().parse(outSchemaText.toString());
       switch (taskType) {
       case MAP:
         this.inReader = new SpecificDatumReader<>(inSchema);
@@ -158,10 +156,14 @@ public abstract class TetherTask<IN,MID,OUT> {
     }
   }
 
-  void partitions(int partitions) { this.partitions = partitions; }
+  void partitions(int partitions) {
+    this.partitions = partitions;
+  }
 
   /** Return the number of map output partitions of this job. */
-  public int partitions() { return partitions; }
+  public int partitions() {
+    return partitions;
+  }
 
   void input(ByteBuffer data, long count) {
     try {
@@ -183,7 +185,7 @@ public abstract class TetherTask<IN,MID,OUT> {
         }
       }
     } catch (Throwable e) {
-      LOG.warn("failing: "+e, e);
+      LOG.warn("failing: " + e, e);
       fail(e.toString());
     }
   }
@@ -193,7 +195,7 @@ public abstract class TetherTask<IN,MID,OUT> {
       try {
         reduceFlush(midRecord, outCollector);
       } catch (Throwable e) {
-        LOG.warn("failing: "+e, e);
+        LOG.warn("failing: " + e, e);
         fail(e.toString());
       }
     LOG.info("TetherTask: Sending complete to parent process.");
@@ -202,14 +204,13 @@ public abstract class TetherTask<IN,MID,OUT> {
   }
 
   /** Called with input values to generate intermediate values. */
-  public abstract void map(IN record, Collector<MID> collector)
-    throws IOException;
+  public abstract void map(IN record, Collector<MID> collector) throws IOException;
+
   /** Called with sorted intermediate values. */
-  public abstract void reduce(MID record, Collector<OUT> collector)
-    throws IOException;
+  public abstract void reduce(MID record, Collector<OUT> collector) throws IOException;
+
   /** Called with the last intermediate value in each equivalence run. */
-  public abstract void reduceFlush(MID record, Collector<OUT> collector)
-    throws IOException;
+  public abstract void reduceFlush(MID record, Collector<OUT> collector) throws IOException;
 
   /** Call to update task status. */
   public void status(String message) {
@@ -232,7 +233,8 @@ public abstract class TetherTask<IN,MID,OUT> {
     if (clientTransceiver != null)
       try {
         clientTransceiver.close();
-      } catch (IOException e) {}                  // ignore
+      } catch (IOException e) {
+      } // ignore
   }
 
 }

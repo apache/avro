@@ -32,7 +32,6 @@ public interface SchemaValidationStrategy {
    *
    * @throws SchemaValidationException if the schemas are not compatible.
    */
-  void validate(Schema toValidate, Schema existing)
-      throws SchemaValidationException;
+  void validate(Schema toValidate, Schema existing) throws SchemaValidationException;
 
 }

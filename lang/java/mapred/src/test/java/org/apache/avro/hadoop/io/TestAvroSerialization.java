@@ -56,12 +56,11 @@ public class TestAvroSerialization {
   public void testGetSerializerForKey() throws IOException {
     // Set the writer schema in the job configuration.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputKeySchema(job, writerSchema);
 
     // Get a serializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Serializer<AvroWrapper> serializer = serialization.getSerializer(AvroKey.class);
     assertTrue(serializer instanceof AvroSerializer);
@@ -75,12 +74,11 @@ public class TestAvroSerialization {
   public void testGetSerializerForValue() throws IOException {
     // Set the writer schema in the job configuration.
     Schema writerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputValueSchema(job, writerSchema);
 
     // Get a serializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Serializer<AvroWrapper> serializer = serialization.getSerializer(AvroValue.class);
     assertTrue(serializer instanceof AvroSerializer);
@@ -94,12 +92,11 @@ public class TestAvroSerialization {
   public void testGetDeserializerForKey() throws IOException {
     // Set the reader schema in the job configuration.
     Schema readerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputKeySchema(job, readerSchema);
 
     // Get a deserializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Deserializer<AvroWrapper> deserializer = serialization.getDeserializer(AvroKey.class);
     assertTrue(deserializer instanceof AvroKeyDeserializer);
@@ -113,12 +110,11 @@ public class TestAvroSerialization {
   public void testGetDeserializerForValue() throws IOException {
     // Set the reader schema in the job configuration.
     Schema readerSchema = Schema.create(Schema.Type.STRING);
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputValueSchema(job, readerSchema);
 
     // Get a deserializer from the configuration.
-    AvroSerialization serialization
-        = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     @SuppressWarnings("unchecked")
     Deserializer<AvroWrapper> deserializer = serialization.getDeserializer(AvroValue.class);
     assertTrue(deserializer instanceof AvroValueDeserializer);
@@ -128,25 +124,23 @@ public class TestAvroSerialization {
     assertEquals(readerSchema, avroDeserializer.getReaderSchema());
   }
 
-  @Test public void testClassPath() throws Exception {
+  @Test
+  public void testClassPath() throws Exception {
     Configuration conf = new Configuration();
     ClassLoader loader = conf.getClass().getClassLoader();
     AvroSerialization serialization = new AvroSerialization();
     serialization.setConf(conf);
-    AvroDeserializer des =
-      (AvroDeserializer)serialization.getDeserializer(AvroKey.class);
-    ReflectData data =
-      (ReflectData)((ReflectDatumReader)des.mAvroDatumReader).getData();
+    AvroDeserializer des = (AvroDeserializer) serialization.getDeserializer(AvroKey.class);
+    ReflectData data = (ReflectData) ((ReflectDatumReader) des.mAvroDatumReader).getData();
     Assert.assertEquals(loader, data.getClassLoader());
   }
 
   private <T, O> O roundTrip(Schema schema, T data, Class<? extends GenericData> modelClass) throws IOException {
-    Job job = new Job();
+    Job job = Job.getInstance();
     AvroJob.setMapOutputKeySchema(job, schema);
     if (modelClass != null)
       AvroJob.setDataModelClass(job, modelClass);
-    AvroSerialization serialization =
-      ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
+    AvroSerialization serialization = ReflectionUtils.newInstance(AvroSerialization.class, job.getConfiguration());
     Serializer<AvroKey<T>> serializer = serialization.getSerializer(AvroKey.class);
     Deserializer<AvroKey<O>> deserializer = serialization.getDeserializer(AvroKey.class);
 

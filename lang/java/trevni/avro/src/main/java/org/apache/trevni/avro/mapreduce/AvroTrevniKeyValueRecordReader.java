@@ -26,16 +26,19 @@ import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 
 /**
- * Reads Trevni generic records from an Trevni container file, where the records contain two
- * fields: 'key' and 'value'.
+ * Reads Trevni generic records from an Trevni container file, where the records
+ * contain two fields: 'key' and 'value'.
  *
- * <p>The contents of the 'key' field will be parsed into an AvroKey object. The contents
- * of the 'value' field will be parsed into an AvroValue object.</p>
+ * <p>
+ * The contents of the 'key' field will be parsed into an AvroKey object. The
+ * contents of the 'value' field will be parsed into an AvroValue object.
+ * </p>
  *
  * @param <K> The type of the Avro key to read.
  * @param <V> The type of the Avro value to read.
  */
-public class AvroTrevniKeyValueRecordReader<K, V> extends AvroTrevniRecordReaderBase<AvroKey<K>, AvroValue<V>, GenericRecord> {
+public class AvroTrevniKeyValueRecordReader<K, V>
+    extends AvroTrevniRecordReaderBase<AvroKey<K>, AvroValue<V>, GenericRecord> {
 
   /** The current key the reader is on. */
   private final AvroKey<K> mCurrentKey = new AvroKey<>();
@@ -44,15 +47,13 @@ public class AvroTrevniKeyValueRecordReader<K, V> extends AvroTrevniRecordReader
 
   /** {@inheritDoc} */
   @Override
-  public AvroKey<K> getCurrentKey() throws IOException,
-      InterruptedException {
+  public AvroKey<K> getCurrentKey() throws IOException, InterruptedException {
     return mCurrentKey;
   }
 
   /** {@inheritDoc} */
   @Override
-  public AvroValue<V> getCurrentValue() throws IOException,
-      InterruptedException {
+  public AvroValue<V> getCurrentValue() throws IOException, InterruptedException {
     return mCurrentValue;
   }
 

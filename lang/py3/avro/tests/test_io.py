@@ -206,7 +206,7 @@ class TestIO(unittest.TestCase):
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
       logging.debug('Schema: %r', example_schema)
       logging.debug('Datum: %r', datum)
-      validated = avro_io.validate(schema.Parse(example_schema), datum)
+      validated = avro_io.Validate(schema.Parse(example_schema), datum)
       logging.debug('Valid: %s', validated)
       if validated: passed += 1
     self.assertEqual(passed, len(SCHEMAS_TO_VALIDATE))
@@ -227,14 +227,18 @@ class TestIO(unittest.TestCase):
     """
     datum = {"field1": {"field2": 11, "field3": 11}}
 
-    avro_io.validate(schema.Parse(example_schema), datum)
+    result = avro_io.Validate(schema.Parse(example_schema), datum)
+
+    self.assertTrue(result)
 
   def testValidateUnion(self):
     example_schema = """\
     ["int", "null"]
     """
     datum = None
-    avro_io.validate(schema.Parse(example_schema), datum)
+    result = avro_io.Validate(schema.Parse(example_schema), datum)
+
+    self.assertTrue(result)
 
   def testValidateUnionError(self):
     example_schema = """\
@@ -244,7 +248,7 @@ class TestIO(unittest.TestCase):
     expected_regex = "datum should be one of following: \['int', 'null']"
 
     with self.assertRaisesRegex(avro_io.AvroTypeException, expected_regex):
-      avro_io.validate(schema.Parse(example_schema), datum)
+      avro_io.Validate(schema.Parse(example_schema), datum)
 
   def testValidateShouldRaiseFormattedError(self):
     example_schema = '{"type": "int"}'
@@ -254,7 +258,7 @@ class TestIO(unittest.TestCase):
                      " but as value we got 'aaa'"
 
     with self.assertRaisesRegex(avro_io.AvroPrimitiveTypeException, expected_regex):
-      avro_io.validate(schema.Parse(example_schema), datum)
+      avro_io.Validate(schema.Parse(example_schema), datum)
 
   def testValidateNestedShouldRaiseFormattedError(self):
     example_schema = """\
@@ -273,7 +277,7 @@ class TestIO(unittest.TestCase):
                      ' datum should be list type'
 
     with self.assertRaisesRegex(avro_io.AvroTypeException, expected_regex):
-      avro_io.validate(schema.Parse(example_schema), datum)
+      avro_io.Validate(schema.Parse(example_schema), datum)
 
   def testRoundTrip(self):
     correct = 0
@@ -416,6 +420,30 @@ class TestIO(unittest.TestCase):
     datum_to_write = {'E': 5, 'F': 'Bad'}
     self.assertRaises(
         avro_io.AvroTypeException, write_datum, datum_to_write, writer_schema)
+
+  def testUnionSchemaSpecificity(self):
+    union_schema = schema.Parse("""
+        [{
+         "type" : "record",
+         "name" : "A",
+         "fields" : [{"name" : "foo", "type" : ["string", "null"]}]
+        },
+        {
+         "type" : "record",
+         "name" : "B",
+         "fields" : [{"name" : "bar", "type" : ["string", "null"]}]
+        },
+        {
+         "type" : "record",
+         "name" : "AOrB",
+         "fields" : [{"name" : "entity", "type" : ["A", "B"]}]
+        }]
+    """)
+    sch = {s.name: s for s in union_schema.schemas}.get('AOrB')
+    datum_to_read = {'entity': {'foo': 'this is an instance of schema A'}}
+    writer, encoder, datum_writer = write_datum(datum_to_read, sch)
+    datum_read = read_datum(writer, sch, sch)
+    self.assertEqual(datum_to_read, datum_read)
 
 
 if __name__ == '__main__':

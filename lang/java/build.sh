@@ -38,12 +38,14 @@ for target in "$@"
 do
 
 function do_dist() {
-  mvn -P dist package -DskipTests -Davro.version=$VERSION javadoc:aggregate
+  mvn -P dist package -DskipTests javadoc:aggregate
 }
 
 case "$target" in
   test)
-    mvn test
+    mvn -B test
+    # Test the modules that depend on hadoop using Hadoop 3
+    mvn -B test -Phadoop3
     ;;
 
   dist)

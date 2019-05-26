@@ -20,7 +20,7 @@ package org.apache.avro.ipc.stats;
 import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 
 /** Implements Ticks with manual time-winding. */
-class FakeTicks implements Ticks {
+public class FakeTicks implements Ticks {
   long time = 0;
 
   @Override

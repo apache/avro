@@ -20,9 +20,8 @@ package org.apache.avro.io.parsing;
 import java.io.IOException;
 
 /**
- * A parser that capable of skipping as well read and write. This class is
- * used by decoders who (unlink encoders) are required to implement
- * methods to skip.
+ * A parser that capable of skipping as well read and write. This class is used
+ * by decoders who (unlink encoders) are required to implement methods to skip.
  */
 public class SkipParser extends Parser {
   /**
@@ -42,25 +41,20 @@ public class SkipParser extends Parser {
 
   private final SkipHandler skipHandler;
 
-  public SkipParser(Symbol root, ActionHandler symbolHandler,
-      SkipHandler skipHandler)
-    throws IOException {
+  public SkipParser(Symbol root, ActionHandler symbolHandler, SkipHandler skipHandler) throws IOException {
     super(root, symbolHandler);
     this.skipHandler = skipHandler;
   }
 
   /**
-   * Skips data by calling <code>skipXyz</code> or
-   * <code>readXyz</code> methods on <code>this</code>, until the
-   * parser stack reaches the target level.
+   * Skips data by calling <code>skipXyz</code> or <code>readXyz</code> methods on
+   * <code>this</code>, until the parser stack reaches the target level.
    */
   public final void skipTo(int target) throws IOException {
-    outer:
-    while (target < pos) {
+    outer: while (target < pos) {
       Symbol top = stack[pos - 1];
       while (top.kind != Symbol.Kind.TERMINAL) {
-        if (top.kind == Symbol.Kind.IMPLICIT_ACTION
-            || top.kind == Symbol.Kind.EXPLICIT_ACTION) {
+        if (top.kind == Symbol.Kind.IMPLICIT_ACTION || top.kind == Symbol.Kind.EXPLICIT_ACTION) {
           skipHandler.skipAction();
         } else {
           --pos;
@@ -85,6 +79,7 @@ public class SkipParser extends Parser {
 
   /**
    * Pushes the given symbol on to the skip and skips it.
+   * 
    * @param symToSkip The symbol that should be skipped.
    */
   public final void skipSymbol(Symbol symToSkip) throws IOException {
@@ -93,4 +88,3 @@ public class SkipParser extends Parser {
     skipTo(target);
   }
 }
-

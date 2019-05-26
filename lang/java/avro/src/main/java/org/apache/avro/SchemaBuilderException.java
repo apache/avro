@@ -20,7 +20,11 @@ package org.apache.avro;
 
 /** Thrown for errors building schemas. */
 public class SchemaBuilderException extends AvroRuntimeException {
-  public SchemaBuilderException(Throwable cause) { super(cause); }
-  public SchemaBuilderException(String message) { super(message); }
-}
+  public SchemaBuilderException(Throwable cause) {
+    super(cause);
+  }
 
+  public SchemaBuilderException(String message) {
+    super(message);
+  }
+}

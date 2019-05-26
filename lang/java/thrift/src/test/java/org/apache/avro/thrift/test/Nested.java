@@ -21,10 +21,13 @@ import java.util.EnumSet;
 import java.util.Collections;
 import java.util.BitSet;
 
-public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, java.io.Serializable, Cloneable, Comparable<Nested> {
-  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Nested");
+public class Nested
+    implements org.apache.thrift.TBase<Nested, Nested._Fields>, java.io.Serializable, Cloneable, Comparable<Nested> {
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct(
+      "Nested");
 
-  private static final org.apache.thrift.protocol.TField X_FIELD_DESC = new org.apache.thrift.protocol.TField("x", org.apache.thrift.protocol.TType.I32, (short)1);
+  private static final org.apache.thrift.protocol.TField X_FIELD_DESC = new org.apache.thrift.protocol.TField("x",
+      org.apache.thrift.protocol.TType.I32, (short) 1);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<>();
   static {
@@ -34,9 +37,12 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
 
   private int x; // required
 
-  /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+  /**
+   * The set of fields this struct contains, along with convenience methods for
+   * finding and manipulating them.
+   */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    X((short)1, "x");
+    X((short) 1, "x");
 
     private static final Map<String, _Fields> byName = new HashMap<>();
 
@@ -50,21 +56,22 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
      * Find the _Fields constant that matches fieldId, or null if its not found.
      */
     public static _Fields findByThriftId(int fieldId) {
-      switch(fieldId) {
-        case 1: // X
-          return X;
-        default:
-          return null;
+      switch (fieldId) {
+      case 1: // X
+        return X;
+      default:
+        return null;
       }
     }
 
     /**
-     * Find the _Fields constant that matches fieldId, throwing an exception
-     * if it is not found.
+     * Find the _Fields constant that matches fieldId, throwing an exception if it
+     * is not found.
      */
     public static _Fields findByThriftIdOrThrow(int fieldId) {
       _Fields fields = findByThriftId(fieldId);
-      if (fields == null) throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+      if (fields == null)
+        throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
       return fields;
     }
 
@@ -83,10 +90,12 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
       _fieldName = fieldName;
     }
 
+    @Override
     public short getThriftFieldId() {
       return _thriftId;
     }
 
+    @Override
     public String getFieldName() {
       return _fieldName;
     }
@@ -98,8 +107,9 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<>(_Fields.class);
-    tmpMap.put(_Fields.X, new org.apache.thrift.meta_data.FieldMetaData("x", org.apache.thrift.TFieldRequirementType.DEFAULT,
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+    tmpMap.put(_Fields.X,
+        new org.apache.thrift.meta_data.FieldMetaData("x", org.apache.thrift.TFieldRequirementType.DEFAULT,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Nested.class, metaDataMap);
   }
@@ -107,9 +117,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
   public Nested() {
   }
 
-  public Nested(
-    int x)
-  {
+  public Nested(int x) {
     this();
     this.x = x;
     setXIsSet(true);
@@ -123,6 +131,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     this.x = other.x;
   }
 
+  @Override
   public Nested deepCopy() {
     return new Nested(this);
   }
@@ -146,7 +155,10 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __X_ISSET_ID);
   }
 
-  /** Returns true if field x is set (has been assigned a value) and false otherwise */
+  /**
+   * Returns true if field x is set (has been assigned a value) and false
+   * otherwise
+   */
   public boolean isSetX() {
     return EncodingUtils.testBit(__isset_bitfield, __X_ISSET_ID);
   }
@@ -155,29 +167,35 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __X_ISSET_ID, value);
   }
 
+  @Override
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case X:
       if (value == null) {
         unsetX();
       } else {
-        setX((Integer)value);
+        setX((Integer) value);
       }
       break;
 
     }
   }
 
+  @Override
   public Object getFieldValue(_Fields field) {
     switch (field) {
     case X:
-      return Integer.valueOf(getX());
+      return getX();
 
     }
     throw new IllegalStateException();
   }
 
-  /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+  /**
+   * Returns true if field corresponding to fieldID is set (has been assigned a
+   * value) and false otherwise
+   */
+  @Override
   public boolean isSet(_Fields field) {
     if (field == null) {
       throw new IllegalArgumentException();
@@ -195,7 +213,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     if (that == null)
       return false;
     if (that instanceof Nested)
-      return this.equals((Nested)that);
+      return this.equals((Nested) that);
     return false;
   }
 
@@ -208,8 +226,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     if (this_present_x || that_present_x) {
       if (!(this_present_x && that_present_x))
         return false;
-      if (this.x != that.x)
-        return false;
+      return this.x == that.x;
     }
 
     return true;
@@ -228,7 +245,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
 
     int lastComparison = 0;
 
-    lastComparison = Boolean.valueOf(isSetX()).compareTo(other.isSetX());
+    lastComparison = Boolean.compare(isSetX(), other.isSetX());
     if (lastComparison != 0) {
       return lastComparison;
     }
@@ -241,14 +258,17 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
     return 0;
   }
 
+  @Override
   public _Fields fieldForId(int fieldId) {
     return _Fields.findByThriftId(fieldId);
   }
 
+  @Override
   public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
     schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
   }
 
+  @Override
   public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
     schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
   }
@@ -280,7 +300,8 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
     try {
-      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
+      // it doesn't seem like you should have to do this, but java serialization is
+      // wacky, and doesn't call the default constructor.
       __isset_bitfield = 0;
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
@@ -289,6 +310,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
   }
 
   private static class NestedStandardSchemeFactory implements SchemeFactory {
+    @Override
     public NestedStandardScheme getScheme() {
       return new NestedStandardScheme();
     }
@@ -296,26 +318,26 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
 
   private static class NestedStandardScheme extends StandardScheme<Nested> {
 
+    @Override
     public void read(org.apache.thrift.protocol.TProtocol iprot, Nested struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
-      while (true)
-      {
+      while (true) {
         schemeField = iprot.readFieldBegin();
         if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
           break;
         }
         switch (schemeField.id) {
-          case 1: // X
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.x = iprot.readI32();
-              struct.setXIsSet(true);
-            } else {
-              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-            }
-            break;
-          default:
+        case 1: // X
+          if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+            struct.x = iprot.readI32();
+            struct.setXIsSet(true);
+          } else {
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          break;
+        default:
+          org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
         iprot.readFieldEnd();
       }
@@ -323,6 +345,7 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
       struct.validate();
     }
 
+    @Override
     public void write(org.apache.thrift.protocol.TProtocol oprot, Nested struct) throws org.apache.thrift.TException {
       struct.validate();
 
@@ -369,4 +392,3 @@ public class Nested implements org.apache.thrift.TBase<Nested, Nested._Fields>, 
   }
 
 }
-

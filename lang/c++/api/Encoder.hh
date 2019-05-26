@@ -23,11 +23,10 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "ValidSchema.hh"
 #include "Stream.hh"
-
-#include <boost/shared_ptr.hpp>
 
 /// \file
 ///
@@ -60,6 +59,10 @@ public:
 
     /// Flushes any data in internal buffers.
     virtual void flush() = 0;
+
+    /// Returns the number of bytes produced so far.
+    /// For a meaningful value, do a flush() before invoking this function.
+    virtual int64_t byteCount() const = 0;
 
     /// Encodes a null to the current stream.
     virtual void encodeNull() = 0;
@@ -97,7 +100,7 @@ public:
      */
     void encodeBytes(const std::vector<uint8_t>& bytes) {
         uint8_t b = 0; 
-        encodeBytes(bytes.empty() ? &b : &bytes[0], bytes.size());
+        encodeBytes(bytes.empty() ? &b : bytes.data(), bytes.size());
     }
 
     /// Encodes fixed length binary to the current stream.
@@ -109,7 +112,7 @@ public:
      * of fixed.
      */
     void encodeFixed(const std::vector<uint8_t>& bytes) {
-        encodeFixed(&bytes[0], bytes.size());
+        encodeFixed(bytes.data(), bytes.size());
     }
 
     /// Encodes enum to the current stream.
@@ -141,7 +144,7 @@ public:
 /**
  * Shared pointer to Encoder.
  */
-typedef boost::shared_ptr<Encoder> EncoderPtr;
+typedef std::shared_ptr<Encoder> EncoderPtr;
 
 /**
  *  Returns an encoder that can encode binary Avro standard.

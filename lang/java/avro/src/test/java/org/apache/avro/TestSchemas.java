@@ -18,8 +18,10 @@
 package org.apache.avro;
 
 import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Collections;
+
 import org.apache.avro.Schema.Field;
 
 /** Schemas used by other tests in this package. Therefore package protected. */
@@ -43,10 +45,25 @@ public class TestSchemas {
   static final Schema STRING_MAP_SCHEMA = Schema.createMap(STRING_SCHEMA);
 
   static final Schema ENUM1_AB_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B"));
-  static final Schema ENUM1_ABC_SCHEMA = Schema.createEnum("Enum1", null, null,
-      list("A", "B", "C"));
+  static final Schema ENUM1_ABC_SCHEMA = Schema.createEnum("Enum1", null, null, list("A", "B", "C"));
   static final Schema ENUM1_BC_SCHEMA = Schema.createEnum("Enum1", null, null, list("B", "C"));
   static final Schema ENUM2_AB_SCHEMA = Schema.createEnum("Enum2", null, null, list("A", "B"));
+  static final Schema ENUM_ABC_ENUM_DEFAULT_A_SCHEMA = Schema.createEnum("Enum", null, null, list("A", "B", "C"), "A");
+  static final Schema ENUM_AB_ENUM_DEFAULT_A_SCHEMA = Schema.createEnum("Enum", null, null, list("A", "B"), "A");
+  static final Schema ENUM_ABC_ENUM_DEFAULT_A_RECORD = Schema.createRecord("Record", null, null, false);
+  static final Schema ENUM_AB_ENUM_DEFAULT_A_RECORD = Schema.createRecord("Record", null, null, false);
+  static final Schema ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD = Schema.createRecord("Record", null, null, false);
+  static final Schema ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD = Schema.createRecord("Record", null, null, false);
+  static {
+    ENUM_ABC_ENUM_DEFAULT_A_RECORD.setFields(
+        list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A", "B", "C"), "A"), null, null)));
+    ENUM_AB_ENUM_DEFAULT_A_RECORD.setFields(
+        list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A", "B"), "A"), null, null)));
+    ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD.setFields(
+        list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A", "B", "C"), "A"), null, "B")));
+    ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD.setFields(
+        list(new Schema.Field("Field", Schema.createEnum("Schema", null, null, list("A", "B"), "B"), null, "A")));
+  }
 
   static final Schema EMPTY_UNION_SCHEMA = Schema.createUnion(new ArrayList<>());
   static final Schema NULL_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA));
@@ -88,41 +105,32 @@ public class TestSchemas {
     EMPTY_RECORD2.setFields(Collections.emptyList());
     A_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null)));
     A_LONG_RECORD1.setFields(list(new Field("a", LONG_SCHEMA, null, null)));
-    A_INT_B_INT_RECORD1.setFields(
-        list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, null)));
+    A_INT_B_INT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, null)));
     A_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, 0)));
-    A_INT_B_DINT_RECORD1.setFields(
-        list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, 0)));
-    A_DINT_B_DINT_RECORD1
-        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_SCHEMA, null, 0)));
-    A_DINT_B_DFIXED_4_BYTES_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", FIXED_4_BYTES, null, null)));
-    A_DINT_B_DFIXED_8_BYTES_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", FIXED_8_BYTES, null, null)));
-    A_DINT_B_DINT_STRING_UNION_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", INT_STRING_UNION_SCHEMA, null, 0)));
-    A_DINT_B_DINT_UNION_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", INT_UNION_SCHEMA, null, 0)));
-    A_DINT_B_DENUM_1_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", ENUM1_AB_SCHEMA, null, null)));
-    A_DINT_B_DENUM_2_RECORD1.setFields(list(
-        new Field("a", INT_SCHEMA, null, 0),
-        new Field("b", ENUM2_AB_SCHEMA, null, null)));
+    A_INT_B_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, null), new Field("b", INT_SCHEMA, null, 0)));
+    A_DINT_B_DINT_RECORD1.setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_SCHEMA, null, 0)));
+    A_DINT_B_DFIXED_4_BYTES_RECORD1
+        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", FIXED_4_BYTES, null, null)));
+    A_DINT_B_DFIXED_8_BYTES_RECORD1
+        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", FIXED_8_BYTES, null, null)));
+    A_DINT_B_DINT_STRING_UNION_RECORD1
+        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_STRING_UNION_SCHEMA, null, 0)));
+    A_DINT_B_DINT_UNION_RECORD1
+        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", INT_UNION_SCHEMA, null, 0)));
+    A_DINT_B_DENUM_1_RECORD1
+        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", ENUM1_AB_SCHEMA, null, null)));
+    A_DINT_B_DENUM_2_RECORD1
+        .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", ENUM2_AB_SCHEMA, null, null)));
   }
 
   // Recursive records
   static final Schema INT_LIST_RECORD = Schema.createRecord("List", null, null, false);
   static final Schema LONG_LIST_RECORD = Schema.createRecord("List", null, null, false);
   static {
-    INT_LIST_RECORD.setFields(list(new Field("head", INT_SCHEMA, null, null),
-        new Field("tail", INT_LIST_RECORD, null, null)));
-    LONG_LIST_RECORD.setFields(list(new Field("head", LONG_SCHEMA, null, null),
-        new Field("tail", LONG_LIST_RECORD, null, null)));
+    INT_LIST_RECORD
+        .setFields(list(new Field("head", INT_SCHEMA, null, null), new Field("tail", INT_LIST_RECORD, null, null)));
+    LONG_LIST_RECORD
+        .setFields(list(new Field("head", LONG_SCHEMA, null, null), new Field("tail", LONG_LIST_RECORD, null, null)));
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -156,8 +164,7 @@ public class TestSchemas {
   static void assertSchemaContains(Schema schemaSubset, Schema original) {
     String subset = schemaSubset.toString(false);
     String whole = original.toString(false);
-    assertTrue(String.format("Subset '%s' not found in '%s'", subset, whole),
-        whole.contains(subset));
+    assertTrue(String.format("Subset '%s' not found in '%s'", subset, whole), whole.contains(subset));
   }
 
 }

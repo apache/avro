@@ -18,7 +18,6 @@
 
 #include <iostream>
 #include <string>
-#include <boost/static_assert.hpp>
 #include "Types.hh"
 
 namespace avro {
@@ -42,14 +41,15 @@ const std::string typeToString[] = {
     "symbolic"
 };
 
-BOOST_STATIC_ASSERT( (sizeof(typeToString)/sizeof(std::string)) == (AVRO_NUM_TYPES+1) );
+static_assert((sizeof(typeToString)/sizeof(std::string)) == (AVRO_NUM_TYPES+1),
+    "Incorrect Avro typeToString");
 
 } // namespace strings
 
 
 // this static assert exists because a 32 bit integer is used as a bit-flag for each type,
 // and it would be a problem for this flag if we ever supported more than 32 types
-BOOST_STATIC_ASSERT( AVRO_NUM_TYPES < 32 );
+static_assert(AVRO_NUM_TYPES < 32, "Too many Avro types");
 
 const std::string& toString(Type type)
 {

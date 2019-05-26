@@ -472,6 +472,19 @@ class TestSchema(unittest.TestCase):
     # it could be reparsed.
     self.assertEqual("X", t.fields[0].type.name)
 
+  def testNoName(self):
+    """Test that schema without a name
+    raise AttributeError when you try
+    to access their name."""
+    cases = [
+      '{"type": "array", "items": "int"}',
+      '{"type": "map", "values": "int"}',
+      '["null", "int"]',
+    ]
+    for case in (schema.Parse(case) for case in cases):
+      self.assertRaises(AttributeError, lambda: case.name)
+      self.assertEqual(getattr(case, "name", "default"), "default")
+
   def testParse(self):
     correct = 0
     for iexample, example in enumerate(EXAMPLES):
@@ -621,6 +634,16 @@ class TestSchema(unittest.TestCase):
       elif k == "cp_array":
         self.assertEqual(type(v), list)
     self.assertEqual(correct,len(OTHER_PROP_EXAMPLES))
+
+  def testDuplicateRecordField(self):
+    schema_string = """{
+      "type": "record",
+      "name": "Test",
+      "fields": [{"name": "foo", "type": "int"}, {"name": "foo", "type": "string"}]
+    }"""
+    with self.assertRaises(schema.SchemaParseException) as e:
+      schema.Parse(schema_string)
+    self.assertRegexpMatches(str(e.exception), 'Duplicate.*field name.*foo')
 
 
 # ------------------------------------------------------------------------------

@@ -77,7 +77,7 @@ See http://forrest.apache.org/docs/linking.html for more info
 	<index href="html/index.html" />
       </cpp>
       <csharp href="csharp/">
-	<index href="index.html" />
+	<index href="html/index.html" />
       </csharp>
       <java href="java/">
 	<index href="index.html" />

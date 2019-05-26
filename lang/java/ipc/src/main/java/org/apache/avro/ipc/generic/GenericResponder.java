@@ -46,7 +46,9 @@ public abstract class GenericResponder extends Responder {
     this.data = data;
   }
 
-  public GenericData getGenericData() { return data; }
+  public GenericData getGenericData() {
+    return data;
+  }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
     return new GenericDatumWriter<>(schema, data);
@@ -57,24 +59,20 @@ public abstract class GenericResponder extends Responder {
   }
 
   @Override
-  public Object readRequest(Schema actual, Schema expected, Decoder in)
-    throws IOException {
+  public Object readRequest(Schema actual, Schema expected, Decoder in) throws IOException {
     return getDatumReader(actual, expected).read(null, in);
   }
 
   @Override
-  public void writeResponse(Schema schema, Object response, Encoder out)
-    throws IOException {
+  public void writeResponse(Schema schema, Object response, Encoder out) throws IOException {
     getDatumWriter(schema).write(response, out);
   }
 
   @Override
-  public void writeError(Schema schema, Object error,
-                         Encoder out) throws IOException {
+  public void writeError(Schema schema, Object error, Encoder out) throws IOException {
     if (error instanceof AvroRemoteException)
-      error = ((AvroRemoteException)error).getValue();
+      error = ((AvroRemoteException) error).getValue();
     getDatumWriter(schema).write(error, out);
   }
 
 }
-

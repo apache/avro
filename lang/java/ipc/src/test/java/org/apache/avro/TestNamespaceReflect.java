@@ -28,11 +28,12 @@ import java.net.InetSocketAddress;
 
 public class TestNamespaceReflect extends TestNamespaceSpecific {
 
-  @Before @Override
+  @Before
+  @Override
   public void testStartServer() throws Exception {
-    if (server != null) return;
-    server = new SocketServer(new ReflectResponder(TestNamespace.class, new TestImpl()),
-                              new InetSocketAddress(0));
+    if (server != null)
+      return;
+    server = new SocketServer(new ReflectResponder(TestNamespace.class, new TestImpl()), new InetSocketAddress(0));
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = ReflectRequestor.getClient(TestNamespace.class, client);

@@ -17,7 +17,6 @@
  */
 package org.apache.avro.ipc.stats;
 
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -38,21 +37,21 @@ public class TestStopwatch {
     assertEquals(60, s.elapsedNanos());
   }
 
-  @Test(expected=IllegalStateException.class)
+  @Test(expected = IllegalStateException.class)
   public void testNotStarted1() {
     FakeTicks f = new FakeTicks();
     Stopwatch s = new Stopwatch(f);
     s.elapsedNanos();
   }
 
-  @Test(expected=IllegalStateException.class)
+  @Test(expected = IllegalStateException.class)
   public void testNotStarted2() {
     FakeTicks f = new FakeTicks();
     Stopwatch s = new Stopwatch(f);
     s.stop();
   }
 
-  @Test(expected=IllegalStateException.class)
+  @Test(expected = IllegalStateException.class)
   public void testTwiceStarted() {
     FakeTicks f = new FakeTicks();
     Stopwatch s = new Stopwatch(f);
@@ -60,7 +59,7 @@ public class TestStopwatch {
     s.start();
   }
 
-  @Test(expected=IllegalStateException.class)
+  @Test(expected = IllegalStateException.class)
   public void testTwiceStopped() {
     FakeTicks f = new FakeTicks();
     Stopwatch s = new Stopwatch(f);

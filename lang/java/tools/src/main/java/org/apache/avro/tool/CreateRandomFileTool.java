@@ -28,7 +28,7 @@ import joptsimple.OptionSpec;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumWriter;
-import org.apache.trevni.avro.RandomData;
+import org.apache.avro.util.RandomData;
 
 /** Creates a file filled with randomly-generated instances of a schema. */
 public class CreateRandomFileTool implements Tool {
@@ -43,46 +43,37 @@ public class CreateRandomFileTool implements Tool {
     return "Creates a file with randomly generated instances of a schema.";
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     OptionParser p = new OptionParser();
-    OptionSpec<Integer> count =
-      p.accepts("count", "Record Count")
-      .withRequiredArg()
-      .ofType(Integer.class);
+    OptionSpec<Integer> count = p.accepts("count", "Record Count").withRequiredArg().ofType(Integer.class);
     OptionSpec<String> codec = Util.compressionCodecOption(p);
     OptionSpec<Integer> level = Util.compressionLevelOption(p);
-    OptionSpec<String> file =
-        p.accepts("schema-file", "Schema File")
-        .withOptionalArg()
-        .ofType(String.class);
-    OptionSpec<String> inschema =
-        p.accepts("schema", "Schema")
-        .withOptionalArg()
-        .ofType(String.class);
+    OptionSpec<String> file = p.accepts("schema-file", "Schema File").withOptionalArg().ofType(String.class);
+    OptionSpec<String> inschema = p.accepts("schema", "Schema").withOptionalArg().ofType(String.class);
+    OptionSpec<Long> seedOpt = p.accepts("seed", "Seed for random").withOptionalArg().ofType(Long.class);
+
     OptionSet opts = p.parse(args.toArray(new String[0]));
     if (opts.nonOptionArguments().size() != 1) {
       err.println("Usage: outFile (filename or '-' for stdout)");
       p.printHelpOn(err);
       return 1;
     }
-    args = (List<String>)opts.nonOptionArguments();
+    args = (List<String>) opts.nonOptionArguments();
 
     String schemastr = inschema.value(opts);
     String schemafile = file.value(opts);
+    Long seed = seedOpt.value(opts);
     if (schemastr == null && schemafile == null) {
-        err.println("Need input schema (--schema-file) or (--schema)");
-        p.printHelpOn(err);
-        return 1;
+      err.println("Need input schema (--schema-file) or (--schema)");
+      p.printHelpOn(err);
+      return 1;
     }
-    Schema schema = (schemafile != null)
-        ? Util.parseSchemaFromFS(schemafile)
-        : new Schema.Parser().parse(schemastr);
+    Schema schema = (schemafile != null) ? Util.parseSchemaFromFS(schemafile) : new Schema.Parser().parse(schemastr);
 
-    DataFileWriter<Object> writer =
-      new DataFileWriter<>(new GenericDatumWriter<>());
+    DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     writer.setCodec(Util.codecFactory(opts, codec, level));
     writer.create(schema, Util.fileOrStdout(args.get(0), out));
 
@@ -90,10 +81,12 @@ public class CreateRandomFileTool implements Tool {
     if (countValue == null) {
       err.println("Need count (--count)");
       p.printHelpOn(err);
+      writer.close();
       return 1;
     }
 
-    for (Object datum : new RandomData(schema, countValue))
+    RandomData rd = seed == null ? new RandomData(schema, countValue) : new RandomData(schema, countValue, seed);
+    for (Object datum : rd)
       writer.append(datum);
 
     writer.close();

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -49,8 +49,6 @@ namespace Avro.Specific
         private readonly bool diffAssembly;
 
         public delegate object CtorDelegate();
-        private Type ctorType = typeof(CtorDelegate);
-        Dictionary<NameCtorKey, CtorDelegate> ctors;
 
         private ObjectCreator()
         {
@@ -61,8 +59,6 @@ namespace Avro.Specific
 
             GenericMapType = typeof(Dictionary<,>);
             GenericListType = typeof(List<>);
-
-            ctors = new Dictionary<NameCtorKey, CtorDelegate>();
         }
 
         public struct NameCtorKey : IEquatable<NameCtorKey>
@@ -142,7 +138,16 @@ namespace Avro.Specific
                     if (assembly.FullName.StartsWith("MonoDevelop.NUnit"))
                         continue;
 
-                    types = assembly.GetTypes();
+                    // Loading all types from all assemblies could fail for a variety of non-fatal
+                    // reasons. If we fail to load types from an assembly, continue.
+                    try
+                    {
+                        types = assembly.GetTypes();
+                    }
+                    catch
+                    {
+                        continue;
+                    }
 
                     // Change the search to look for Types by both NAME and FULLNAME
                     foreach (Type t in types)
@@ -273,28 +278,6 @@ namespace Avro.Specific
         }
 
         /// <summary>
-        /// Gets the default constructor for the specified type
-        /// </summary>
-        /// <param name="name">name of object for the type</param>
-        /// <param name="schemaType">schema type for the object</param>
-        /// <param name="type">type of the object</param>
-        /// <returns>Default constructor for the type</returns>
-        public CtorDelegate GetConstructor(string name, Schema.Type schemaType, Type type)
-        {
-            ConstructorInfo ctorInfo = type.GetConstructor(Type.EmptyTypes);
-            if (ctorInfo == null)
-                throw new AvroException("Class " + name + " has no default constructor");
-
-            DynamicMethod dynMethod = new DynamicMethod("DM$OBJ_FACTORY_" + name, typeof(object), null, type, true);
-            ILGenerator ilGen = dynMethod.GetILGenerator();
-            ilGen.Emit(OpCodes.Nop);
-            ilGen.Emit(OpCodes.Newobj, ctorInfo);
-            ilGen.Emit(OpCodes.Ret);
-
-            return (CtorDelegate)dynMethod.CreateDelegate(ctorType);
-        }
-
-        /// <summary>
         /// Creates new instance of the given type
         /// </summary>
         /// <param name="name">fully qualified name of the type</param>
@@ -302,20 +285,7 @@ namespace Avro.Specific
         /// <returns>new object of the given type</returns>
         public object New(string name, Schema.Type schemaType)
         {
-            NameCtorKey key = new NameCtorKey(name, schemaType);
-
-            CtorDelegate ctor;
-            lock(ctors)
-            {
-                if (!ctors.TryGetValue(key, out ctor))
-                {
-                    Type type = GetType(name, schemaType);
-                    ctor = GetConstructor(name, schemaType, type);
-
-                    ctors.Add(key, ctor);
-                }
-            }
-            return ctor();
+            return Activator.CreateInstance(GetType(name, schemaType));
         }
     }
 }
