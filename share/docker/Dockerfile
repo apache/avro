@@ -16,9 +16,8 @@
 
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
-ARG BASE_IMAGE="openjdk:8"
 
-FROM ${BASE_IMAGE}
+FROM openjdk:8
 
 WORKDIR /root
 
@@ -80,11 +79,11 @@ RUN apt-get -qq update && \
   rm -rf /var/lib/apt/lists/*
 
 # Install Forrest in /usr/local/apache-forrest
-RUN curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz" | tar -xzf - -C /usr/local/ && \
-    curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" | tar -xzf - -C /usr/local/ && \
-    mv /usr/local/apache-forrest-0.9 /usr/local/apache-forrest && \
-    cd /usr/local/apache-forrest/main && \
-    ./build.sh
+# RUN curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz" | tar -xzf - -C /usr/local/ && \
+#    curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" | tar -xzf - -C /usr/local/ && \
+#    mv /usr/local/apache-forrest-0.9 /usr/local/apache-forrest && \
+#    cd /usr/local/apache-forrest/main && \
+#    ./build.sh
 
 # The solution for https://issues.apache.org/jira/browse/PIG-3906
 # Configure where forrest can be found
