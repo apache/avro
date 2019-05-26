@@ -16,8 +16,9 @@
 
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
+ARG BASE_IMAGE="openjdk:8"
 
-FROM openjdk:8
+FROM ${BASE_IMAGE}
 
 WORKDIR /root
 
