@@ -78,13 +78,6 @@ RUN apt-get -qq update && \
   apt-get -qq clean && \
   rm -rf /var/lib/apt/lists/*
 
-# Install Forrest in /usr/local/apache-forrest
-# RUN curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-sources.tar.gz" | tar -xzf - -C /usr/local/ && \
-#    curl -L -s "http://www.apache.org/dyn/closer.lua?action=download&filename=/forrest/apache-forrest-0.9-dependencies.tar.gz" | tar -xzf - -C /usr/local/ && \
-#    mv /usr/local/apache-forrest-0.9 /usr/local/apache-forrest && \
-#    cd /usr/local/apache-forrest/main && \
-#    ./build.sh
-
 # The solution for https://issues.apache.org/jira/browse/PIG-3906
 # Configure where forrest can be found
 RUN mkdir -p /usr/local/apache-forrest/plugins       && chmod a+rwX -R /usr/local/apache-forrest/plugins && \
