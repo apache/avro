@@ -288,8 +288,9 @@ public class TestGenericLogicalTypes {
 
     // use the conversion directly instead of relying on the write side
     Long i1long = conversion.toLong(i1, longSchema, timestamp);
+    Long i2long = 0L;
 
-    File test = write(longSchema, i1long, 0L);
+    File test = write(longSchema, i1long, i2long);
     Assert.assertEquals("Should convert long to LocalDateTime", expected,
         read(GENERIC.createDatumReader(timestampSchema), test));
   }
@@ -306,7 +307,7 @@ public class TestGenericLogicalTypes {
     Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMillisConversion();
 
     Long d1long = conversion.toLong(i1, longSchema, timestamp);
-    Long d2long = conversion.toLong(i2, longSchema, timestamp);
+    Long d2long = 0L;
     List<Long> expected = Arrays.asList(d1long, d2long);
 
     File test = write(GENERIC, timestampSchema, i1, i2);
