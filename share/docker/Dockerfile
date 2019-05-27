@@ -78,14 +78,6 @@ RUN apt-get -qq update && \
   apt-get -qq clean && \
   rm -rf /var/lib/apt/lists/*
 
-# The solution for https://issues.apache.org/jira/browse/PIG-3906
-# Configure where forrest can be found
-RUN mkdir -p /usr/local/apache-forrest/plugins       && chmod a+rwX -R /usr/local/apache-forrest/plugins && \
-    mkdir -p /usr/local/apache-forrest/build/plugins && chmod a+rwX -R /usr/local/apache-forrest/build/plugins && \
-    echo 'forrest.home=/usr/local/apache-forrest' > build.properties
-
-ENV FORREST_HOME /usr/local/apache-forrest
-
 # Install Perl modules
 RUN curl -L http://cpanmin.us | perl - --self-upgrade && \
   cpanm install Module::Install Module::Install::ReadmeFromPod \
