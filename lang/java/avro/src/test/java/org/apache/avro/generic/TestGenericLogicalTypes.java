@@ -48,7 +48,7 @@ public class TestGenericLogicalTypes {
   public static final GenericData GENERIC = new GenericData();
 
   @BeforeClass
-  public static void addDecimalAndUUID() {
+  public static void addLogicalTypes() {
     GENERIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
     GENERIC.addLogicalTypeConversion(new Conversions.UUIDConversion());
     GENERIC.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
