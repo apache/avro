@@ -257,7 +257,8 @@ do
         DOCKER_XTRA_ARGS=$2
         shift 2
       fi
-      docker build -t avro-build -f share/docker/Dockerfile .
+      docker build -t avro-build-ci -f share/docker/Dockerfile .
+      docker build -t avro-build -f share/docker/DockerfileLocal .
       if [ "$(uname -s)" == "Linux" ]; then
         USER_NAME=${SUDO_USER:=$USER}
         USER_ID=$(id -u $USER_NAME)
