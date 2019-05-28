@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -24,15 +24,95 @@ using Avro;
 
 namespace Avro.POCO
 {
+    /// <summary>
+    /// Class holds a cache of C# classes and their properties. The key for the cache is the schema full name.
+    /// </summary>
     public static class ClassCache
     {
         private static ConcurrentDictionary<string, IDotnetClass> _nameClassMap = new ConcurrentDictionary<string, IDotnetClass>();
-
-        public static void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
+        private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
+        private static void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
             _nameClassMap.TryAdd(schema.Fullname, ProcessAttributes(schema, dotnetClass));
         }
 
+        /// <summary>
+        /// Add a default field converter
+        /// </summary>
+        /// <param name="converter"></param>
+        public static void AddDefaultConverter(IAvroFieldConverter converter)
+        {
+            _defaultConverters.Add(converter);
+        }
+
+        /// <summary>
+        /// Find a default converter
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="propType"></param>
+        /// <returns>The first matching converter - null if there isnt one</returns>
+        public static IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
+        {
+            Type avroType;
+            switch( tag )
+            {
+                case Avro.Schema.Type.Null:
+                    return null;
+                case Avro.Schema.Type.Boolean:
+                    avroType = typeof(bool);
+                    break;
+                case Avro.Schema.Type.Int:
+                    avroType = typeof(int);
+                    break;
+                case Avro.Schema.Type.Long:
+                    avroType = typeof(long);
+                    break;
+                case Avro.Schema.Type.Float:
+                    avroType = typeof(float);
+                    break;
+                case Avro.Schema.Type.Double:
+                    avroType = typeof(double);
+                    break;
+                case Avro.Schema.Type.Bytes:
+                    avroType = typeof(byte[]);
+                    break;
+                case Avro.Schema.Type.String:
+                    avroType = typeof(string);
+                    break;
+                case Avro.Schema.Type.Record:
+                    return null;
+                case Avro.Schema.Type.Enumeration:
+                    return null;
+                case Avro.Schema.Type.Array:
+                    return null;
+                case Avro.Schema.Type.Map:
+                    return null;
+                case Avro.Schema.Type.Union:
+                    return null;
+                case Avro.Schema.Type.Fixed:
+                    avroType = typeof(byte[]);
+                    break;
+                case Avro.Schema.Type.Error:
+                    return null;
+                default:
+                    return null;
+            }
+            foreach (var c in _defaultConverters )
+            {
+                if (c.GetAvroType() == avroType && c.GetPropertyType() == propType)
+                {
+                    return c;
+                }
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// Find a class that matches the schema full name.
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
         public static IDotnetClass GetClass(RecordSchema schema)
         {
             IDotnetClass c;
@@ -44,7 +124,7 @@ namespace Avro.POCO
             return c;
         }
 
-        public static IDotnetClass ProcessAttributes(RecordSchema schema, Type t)
+        private static IDotnetClass ProcessAttributes(RecordSchema schema, Type t)
         {
             IDotnetClass c;
 
@@ -77,12 +157,14 @@ namespace Avro.POCO
                 return new ByNameClass(t, schema);
             }
         }
+
+        /// <summary>
+        /// Add an entry to the class cache.
+        /// </summary>
+        /// <param name="objType">Type of the C# class</param>
+        /// <param name="s">Schema</param>
         public static void LoadClassCache(Type objType, Schema s)
         {
-            // if (s==null)
-            // {
-            //     return;
-            // }
             switch(s)
             {
                 case RecordSchema rs:
@@ -103,7 +185,7 @@ namespace Avro.POCO
                     var c = ClassCache.GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
-                        var t = c.GetFieldType(f);
+                        var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
                     }
                     break;
@@ -130,7 +212,7 @@ namespace Avro.POCO
                     }
                     if (!typeof(string).IsAssignableFrom(objType.GenericTypeArguments[0]))
                     {
-                        throw new AvroException($"First type parameter of {objType.Name} mustbe assignable to string");
+                        throw new AvroException($"First type parameter of {objType.Name} must be assignable to string");
                     }
 
                     LoadClassCache(objType.GenericTypeArguments[1], ms.ValueSchema);

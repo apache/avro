@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,11 +21,38 @@ using Avro;
 
 namespace Avro.POCO
 {
+    /// <summary>
+    /// Container for a C# class. Knows about attributes, converter etc.
+    /// </summary>
     public interface IDotnetClass
     {
+        /// <summary>
+        /// Returns the type of the class that is wrapped
+        /// </summary>
+        /// <returns></returns>
         Type GetClassType();
-        Type GetFieldType( Field f );
+
+        /// <summary>
+        /// Returns the type of a property corresponding to schema field f (after applying any converters)
+        /// </summary>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        Type GetPropertyType( Field f );
+
+        /// <summary>
+        /// Get the value of a property after converters are applied
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="f"></param>
+        /// <returns></returns>
         object GetValue(object o, Field f);
+
+        /// <summary>
+        /// Set the value of a property after converters are applied
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="f"></param>
+        /// <param name="v"></param>
         void SetValue(object o, Field f, object v);
     }
 }

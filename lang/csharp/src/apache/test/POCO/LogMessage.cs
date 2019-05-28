@@ -33,7 +33,7 @@ namespace Avro.Test
         [AvroField(1)]
         public string Message { get; set; }
 
-        [AvroField(2, typeof(DateTimeOffsetConverter))]
+        [AvroField(2, typeof(DateTimeOffsetToLongConverter))]
         public DateTimeOffset TimeStamp { get; set; }
 
         [AvroField(3)]

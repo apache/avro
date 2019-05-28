@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +28,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Avro.POCO
 {
-        /// <summary>
+    /// <summary>
     /// Reader wrapper class for reading data and storing into specific classes
     /// </summary>
     /// <typeparam name="T">Specific class type</typeparam>
@@ -60,6 +60,10 @@ namespace Avro.POCO
             reader = new POCODefaultReader(typeof(T), writerSchema, readerSchema);
         }
 
+        /// <summary>
+        /// Constructs a generic reader from an instance of a POCODefaultReader (non-generic)
+        /// </summary>
+        /// <param name="reader"></param>
         public POCOReader(POCODefaultReader reader)
         {
             this.reader = reader;
@@ -81,18 +85,35 @@ namespace Avro.POCO
     /// </summary>
     public class POCODefaultReader : SpecificDefaultReader
     {
+        /// <summary>
+        /// C# type to create when deserializing and array. Must implement IList&lt;&gt;
+        /// Default is System.Collections.Generic.List
+        /// </summary>
+        /// <value></value>
         public Type ListType { get => _listType; set => _listType = value; }
+        /// <summary>
+        /// C# type to create when deserializing a map. Must implement IDictionary&lt;,&gt; and the first
+        /// type parameter must be a string. Default is System.Collections.Generic.Dictionary
+        /// </summary>
+        /// <value></value>
         public Type MapType { get => _mapType; set => _mapType = value; }
         private Type _listType = typeof(List<>);
         private Type _mapType = typeof(Dictionary<,>);
+
+        /// <summary>
+        /// Delegate to a factory method to create objects of type x. If you are deserializing to interfaces
+        /// you could use an IoC container factory insread of the default. Default is Activator.CreateInstance()
+        /// </summary>
+        /// <returns></returns>
         public Func<Type, Object> RecordFactory = x=>Activator.CreateInstance(x);
 
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="writerSchema">schema of the object that wrote the data</param>
-        /// <param name="readerSchema">schema of the object that will store the data</param>
+        /// <param name="objType"></param>
+        /// <param name="writerSchema"></param>
+        /// <param name="readerSchema"></param>
         public POCODefaultReader(Type objType, Schema writerSchema, Schema readerSchema)
             : base(writerSchema, readerSchema)
         {
@@ -217,6 +238,12 @@ namespace Avro.POCO
             throw new Exception("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
 
+        /// <summary>
+        /// Gets the default value for a schema object
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
         public object GetDefaultValue(Schema s, JToken defaultValue)
         {
             if (defaultValue == null)
@@ -524,8 +551,7 @@ namespace Avro.POCO
         }
 
         /// <summary>
-        /// Deserialized an avro map. The default implemenation creats a new map using CreateMap() and then
-        /// adds elements to the map using AddMapEntry().
+        /// Deserialized an avro map.
         /// </summary>
         /// <param name="reuse">If appropriate, use this instead of creating a new map object.</param>
         /// <param name="writerSchema">The schema the writer used to write the map.</param>

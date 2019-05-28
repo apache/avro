@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,7 +32,18 @@ namespace Avro.POCO
     /// <typeparam name="T">type name of specific object</typeparam>
     public class POCOWriter<T> : SpecificWriter<T>
     {
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <returns></returns>
         public POCOWriter(Schema schema) : base(new POCODefaultWriter(typeof(T), schema)) { }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <returns></returns>
         public POCOWriter(POCODefaultWriter writer) : base(writer) { }
     }
     /// <summary>
@@ -41,10 +52,11 @@ namespace Avro.POCO
     public class POCODefaultWriter : SpecificDefaultWriter
     {
 
-         /// <summary>
+        /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="schema">schema of the object to be written</param>
+        /// <param name="objType"></param>
+        /// <param name="schema"></param>
         public POCODefaultWriter(Type objType, Schema schema)
             : base(schema)
         {
@@ -184,6 +196,13 @@ namespace Avro.POCO
             throw new AvroException("Cannot find a match for " + value.GetType() + " in " + us);
         }
 
+        /// <summary>
+        /// Determines whether an object matches a schema. In the case of enums and records the code looks up the
+        /// Enum and class caches respectively. Used when writing unions.
+        /// </summary>
+        /// <param name="sc"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
         protected override bool Matches(Schema sc, object obj)
         {
             if (obj == null && sc.Tag != Schema.Type.Null)

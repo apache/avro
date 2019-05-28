@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,12 +20,37 @@
 
 namespace Avro.POCO
 {
+    /// <summary>
+    /// Converters can be added to properties with an AvroField attribute. Converters convert between the
+    /// property type and the avro type.
+    /// </summary>
     public interface IAvroFieldConverter
     {
+        /// <summary>
+        /// Convert from the C# type to the avro type
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
         object ToAvroType(object o);
 
+        /// <summary>
+        /// Convert from the avro type to the C# type
+        /// </summary>
+        /// <param name="o"></param>
+        /// <returns></returns>
         object FromAvroType(object o);
 
+        /// <summary>
+        /// Avro type
+        /// </summary>
+        /// <returns></returns>
+        Type GetAvroType();
+
+        /// <summary>
+        /// Property type
+        /// </summary>
+        /// <returns></returns>
         Type GetPropertyType();
+
     }
 }

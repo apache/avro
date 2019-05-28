@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Collections.Concurrent;
 using Avro;
 
 namespace Avro.POCO
 {
-    public class ByNameClass : IDotnetClass
+    internal class ByNameClass : IDotnetClass
     {
         private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
@@ -44,13 +44,14 @@ namespace Avro.POCO
                     if (avroAttr != null)
                     {
                         hasAttribute = true;
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, avroAttr.Converter));
+                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag, avroAttr.Converter));
+                        break;
                     }
                 }
 
                 if (!hasAttribute)
                 {
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop));
+                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag));
                 }
             }
         }
@@ -91,7 +92,7 @@ namespace Avro.POCO
             return _type;
         }
 
-        public Type GetFieldType(Field f)
+        public Type GetPropertyType(Field f)
         {
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Name, out p))

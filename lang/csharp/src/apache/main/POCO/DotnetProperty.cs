@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,23 +16,88 @@
  * limitations under the License.
  */
 
- using System;
+using System;
 using System.Reflection;
+using System.Collections;
 
 namespace Avro.POCO
 {
-    public class DotnetProperty
+    internal class DotnetProperty
     {
         private PropertyInfo _property;
-        public IAvroFieldConverter Converter;
+        public IAvroFieldConverter Converter {get; set;}
 
-        public DotnetProperty(PropertyInfo property, IAvroFieldConverter converter)
+        private bool IsPropertyCompatible(Avro.Schema.Type schemaTag)
+        {
+            Type propType;
+
+            if (Converter == null)
+            {
+                propType = _property.PropertyType;
+            }
+            else
+            {
+                propType = Converter.GetAvroType();
+            }
+
+            switch( schemaTag )
+            {
+                case Avro.Schema.Type.Null:
+                    return (Nullable.GetUnderlyingType(propType) != null) || (!propType.IsValueType);
+                case Avro.Schema.Type.Boolean:
+                    return propType == typeof(bool);
+                case Avro.Schema.Type.Int:
+                    return propType == typeof(int);
+                case Avro.Schema.Type.Long:
+                    return propType == typeof(long);
+                case Avro.Schema.Type.Float:
+                    return propType == typeof(float);
+                case Avro.Schema.Type.Double:
+                    return propType == typeof(double);
+                case Avro.Schema.Type.Bytes:
+                    return propType == typeof(byte[]);
+                case Avro.Schema.Type.String:
+                    return typeof(string).IsAssignableFrom(propType);
+                case Avro.Schema.Type.Record:
+                    //TODO: this probably should work for struct too
+                    return propType.IsClass;
+                case Avro.Schema.Type.Enumeration:
+                    return propType.IsEnum;
+                case Avro.Schema.Type.Array:
+                    return typeof(IList).IsAssignableFrom(propType);
+                case Avro.Schema.Type.Map:
+                    return typeof(IDictionary).IsAssignableFrom(propType);
+                case Avro.Schema.Type.Union:
+                    return true;
+                case Avro.Schema.Type.Fixed:
+                    return propType == typeof(byte[]);
+                case Avro.Schema.Type.Error:
+                    return propType.IsClass;
+            }
+            return false;
+        }
+
+        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag,  IAvroFieldConverter converter)
         {
             _property = property;
             Converter = converter;
+
+            if (!IsPropertyCompatible(schemaTag))
+            {
+                if (Converter == null)
+                {
+                    var c = ClassCache.GetDefaultConverter(schemaTag, _property.PropertyType);
+                    if (c != null)
+                    {
+                        Converter = c;
+                        return;
+                    }
+                }
+                throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schemaTag}");
+            }
         }
 
-        public DotnetProperty(PropertyInfo property) : this(property, null)
+        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag) : this(property, schemaTag, null)
         {
         }
 
@@ -40,7 +105,7 @@ namespace Avro.POCO
         {
             if (Converter != null)
             {
-                return Converter.GetPropertyType();
+                return Converter.GetAvroType();
             }
 
             return _property.PropertyType;

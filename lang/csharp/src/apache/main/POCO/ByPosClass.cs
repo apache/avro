@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Reflection;
 using System.Collections.Concurrent;
@@ -23,7 +23,7 @@ using Avro;
 
 namespace Avro.POCO
 {
-    public class ByPosClass : IDotnetClass
+    internal class ByPosClass : IDotnetClass
     {
         private ConcurrentDictionary<int, DotnetProperty> _propertyMap = new ConcurrentDictionary<int, DotnetProperty>();
 
@@ -33,12 +33,17 @@ namespace Avro.POCO
         {
             return _type;
         }
+
         public ByPosClass(Type t, RecordSchema r)
         {
             _type = t;
+            ConcurrentDictionary<int, Field> fields = new ConcurrentDictionary<int, Field>();
+
             foreach (var f in r.Fields)
             {
                 _propertyMap.TryAdd(f.Pos, null);
+                fields.TryAdd(f.Pos, f);
+
             }
             foreach (var prop in _type.GetProperties())
             {
@@ -56,7 +61,9 @@ namespace Avro.POCO
                         {
                             throw new AvroException($"Avro record {r.Fullname} does not have field position {avroAttr.FieldPos}. Type {_type.Name}");
                         }
-                        var np = new DotnetProperty(prop, avroAttr.Converter);
+                        Field f;
+                        fields.TryGetValue(avroAttr.FieldPos, out f);
+                        var np = new DotnetProperty(prop, f.Schema.Tag, avroAttr.Converter);
                         _propertyMap.AddOrUpdate(avroAttr.FieldPos, np, (i,x)=>np);
                     }
                 }
@@ -90,7 +97,7 @@ namespace Avro.POCO
             p.SetValue(o, v);
         }
 
-        public Type GetFieldType(Field f)
+        public Type GetPropertyType(Field f)
         {
             DotnetProperty p;
             if (!_propertyMap.TryGetValue(f.Pos, out p))

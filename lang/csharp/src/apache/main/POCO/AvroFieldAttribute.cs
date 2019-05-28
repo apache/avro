@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,12 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 using System.Reflection;
 
 namespace Avro.POCO
 {
+    /// <summary>
+    /// Attribute that specifies the mapping between an Avro record schema and C# class property.
+    /// </summary>
     public class AvroFieldAttribute : Attribute
     {
         /// <summary>
@@ -48,6 +51,11 @@ namespace Avro.POCO
                 Converter = (IAvroFieldConverter)Activator.CreateInstance(converter);
             }
         }
+
+        /// <summary>
+        /// Used in property name mapping to specify a property type converter for the attribute.
+        /// </summary>
+        /// <param name="converter"></param>
         public AvroFieldAttribute(Type converter)
         {
             FieldPos = -1;

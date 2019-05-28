@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,28 +15,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 using System;
 
 namespace Avro.POCO
 {
-    public class DateTimeOffsetConverter : IAvroFieldConverter
+    /// <summary>
+    /// Convert C# DateTimeOffset properties to long unix time
+    /// </summary>
+    public class DateTimeOffsetToLongConverter : IAvroFieldConverter
     {
+        /// <summary>
+        /// Convert from DateTimeOffset to Unix long
+        /// </summary>
+        /// <param name="o">DateTimeOffset</param>
+        /// <returns></returns>
         public object ToAvroType(object o)
         {
             var dt = (DateTimeOffset)o;
             return dt.ToUnixTimeMilliseconds();
         }
 
+        /// <summary>
+        /// Convert from Unix long to DateTimeOffset
+        /// </summary>
+        /// <param name="o">long</param>
+        /// <returns></returns>
         public object FromAvroType(object o)
         {
             var dt = DateTimeOffset.FromUnixTimeMilliseconds((long)o);
             return dt;
         }
 
-        public Type GetPropertyType()
+        /// <summary>
+        /// Avro type
+        /// </summary>
+        /// <returns></returns>
+        public Type GetAvroType()
         {
             return typeof(long);
+        }
+
+        /// <summary>
+        /// Property type
+        /// </summary>
+        /// <returns></returns>
+        public Type GetPropertyType()
+        {
+            return typeof(DateTimeOffset);
         }
     }
 }

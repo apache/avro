@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,29 @@
 
 namespace Avro.POCO
 {
+    /// <summary>
+    /// Attribute to indicate how the class is mapped to the schema. If true the mapping is by position
+    /// and the class must have field attributes. If false the class is mapped by field name. Mapping by field
+    /// position allows you to use properties who's name doesnt match the schema.
+    ///
+    /// If there is no attribute mapping by name is the default.
+    /// </summary>
     public class AvroAttribute : Attribute
     {
+        /// <summary>
+        /// If true the class is mapped by position.
+        /// </summary>
+        /// <value></value>
         public bool ByPosition { get; set; }
 
+        /// <summary>
+        /// Attribute to indicate how the class is mapped to the schema. If true the mapping is by position
+        /// and the class must have field attributes. If false the class is mapped by field name. Mapping by field
+        /// position allows you to use properties who's name doesnt match the schema.
+        ///
+        /// If there is no attribute mapping by name is the default.
+        /// </summary>
+        /// <param name="byPosition"></param>
         public AvroAttribute(bool byPosition)
         {
             ByPosition = byPosition;
