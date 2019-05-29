@@ -18,7 +18,7 @@
 set -e # exit on error
 
 usage() {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {lint|test|dist|clean}"
 }
 
 main() {
@@ -29,7 +29,8 @@ main() {
   fi
   for target; do
     case "$target" in
-      clean|dist|test) : ;;
+      lint) set -- "$@" isort ;;
+      clean|dist|isort|test) : ;;
       *) usage; return 1 ;;
     esac
   done

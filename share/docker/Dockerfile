@@ -53,6 +53,7 @@ RUN apt-get -qq update && \
     g++ \
     gcc \
     git \
+    isort \
     libboost-all-dev \
     libfontconfig1-dev \
     libfreetype6-dev \
@@ -66,9 +67,12 @@ RUN apt-get -qq update && \
     perl \
     php5.6 \
     php5.6-gmp \
+    pycodestyle \
     python \
+    python-isort \
     python-setuptools \
     python-snappy \
+    python3-isort \
     python3-setuptools \
     python3-snappy \
     rake \

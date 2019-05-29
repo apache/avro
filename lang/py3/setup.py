@@ -26,14 +26,17 @@ The avro-python3 software is designed for Python 3, but this file and the packag
 https://pypi.org/project/avro-python3/
 """
 
+import distutils
 import distutils.command.clean
-import distutils.file_util
 import distutils.dir_util
+import distutils.file_util
 import distutils.log
 import fnmatch
 import os
+import subprocess
 
-from setuptools import setup
+import pycodestyle
+import setuptools
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
@@ -110,11 +113,32 @@ class CleanCommand(distutils.command.clean.clean):
                 os.remove(name)
 
 
+class LintCommand(setuptools.Command):
+    """Run pycodestyle on all your modules"""
+    description = __doc__
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            subprocess.run(['pycodestyle', '.'], check=True)
+        except subprocess.CalledProcessError:
+            raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
+
+
 def main():
     if not _is_distribution():
         _generate_package_data()
 
-    setup(cmdclass={"clean": CleanCommand})
+    setuptools.setup(cmdclass={
+        "clean": CleanCommand,
+        "lint": LintCommand,
+    })
 
 
 if __name__ == '__main__':

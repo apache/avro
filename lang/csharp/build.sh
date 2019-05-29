@@ -25,6 +25,10 @@ VERSION=`cat $ROOT/share/VERSION.txt`
 
 case "$1" in
 
+  lint)
+    echo 'This is a stub where someone can provide linting.'
+    ;;
+
   test)
     dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
     dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
@@ -71,7 +75,7 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: $0 {test|clean|dist|perf}"
+    echo "Usage: $0 {lint|test|clean|dist|perf}"
     exit 1
 esac
 
