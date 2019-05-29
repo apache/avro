@@ -26,15 +26,17 @@ The avro-python3 software is designed for Python 3, but this file and the packag
 https://pypi.org/project/avro-python3/
 """
 
-import distutils.cmd
+import distutils
 import distutils.command.clean
 import distutils.dir_util
 import distutils.file_util
 import distutils.log
 import fnmatch
 import os
+import subprocess
 
-from setuptools import setup
+import pycodestyle
+import setuptools
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
@@ -111,7 +113,7 @@ class CleanCommand(distutils.command.clean.clean):
                 os.remove(name)
 
 
-class GenerateInteropDataCommand(distutils.cmd.Command):
+class GenerateInteropDataCommand(setuptools.Command):
     """A command to generate Avro files for data interop test."""
 
     user_options = [
@@ -131,13 +133,32 @@ class GenerateInteropDataCommand(distutils.cmd.Command):
         gen_interop_data.generate(self.schema_file, self.output_path)
 
 
+class LintCommand(setuptools.Command):
+    """Run pycodestyle on all your modules"""
+    description = __doc__
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            subprocess.run(['pycodestyle', '.'], check=True)
+        except subprocess.CalledProcessError:
+            raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
+
+
 def main():
     if not _is_distribution():
         _generate_package_data()
 
-    setup(cmdclass={
+    setuptools.setup(cmdclass={
         "clean": CleanCommand,
         "generate_interop_data": GenerateInteropDataCommand,
+        "lint": LintCommand,
     })
 
 

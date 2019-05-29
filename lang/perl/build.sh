@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {lint|test|dist|clean}"
   exit 1
 }
 
@@ -44,6 +44,9 @@ function do_clean(){
 }
 
 case "$target" in
+  lint)
+    echo 'This is a stub where someone can provide linting.'
+    ;;
   test)
     perl ./Makefile.PL && make test
     ;;
