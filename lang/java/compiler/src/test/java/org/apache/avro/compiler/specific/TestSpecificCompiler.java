@@ -435,15 +435,21 @@ public class TestSpecificCompiler {
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeMicroSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     // Date/time types should always use upper level java classes, even though
     // their underlying representations are primitive types
     Assert.assertEquals("Should use Joda LocalDate for date type", "org.joda.time.LocalDate",
         compiler.javaUnbox(dateSchema));
     Assert.assertEquals("Should use Joda LocalTime for time-millis type", "org.joda.time.LocalTime",
         compiler.javaUnbox(timeSchema));
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.LocalTime",
+        compiler.javaUnbox(timeMicroSchema));
     Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
         compiler.javaUnbox(timestampSchema));
+    Assert.assertEquals("Should use Joda DateTime for timestamp-millis type", "org.joda.time.DateTime",
+        compiler.javaUnbox(timestampMicrosSchema));
   }
 
   @Test
@@ -638,7 +644,9 @@ public class TestSpecificCompiler {
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeMicroSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema decimalSchema = LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES));
     Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
@@ -646,9 +654,15 @@ public class TestSpecificCompiler {
         "new org.apache.avro.data.JodaTimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use time conversion for time type",
         "new org.apache.avro.data.JodaTimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use time conversion for time type",
+        "new org.apache.avro.data.JodaTimeConversions.TimeMicrosConversion()",
+        compiler.conversionInstance(timeMicroSchema));
     Assert.assertEquals("Should use timestamp conversion for date type",
         "new org.apache.avro.data.JodaTimeConversions.TimestampConversion()",
         compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use timestamp conversion for date type",
+        "new org.apache.avro.data.JodaTimeConversions.TimestampMicrosConversion()",
+        compiler.conversionInstance(timestampMicrosSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
         compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
@@ -662,7 +676,9 @@ public class TestSpecificCompiler {
 
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+    Schema timeMicroSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     Schema decimalSchema = LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES));
     Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
@@ -670,9 +686,15 @@ public class TestSpecificCompiler {
         "new org.apache.avro.data.JodaTimeConversions.DateConversion()", compiler.conversionInstance(dateSchema));
     Assert.assertEquals("Should use time conversion for time type",
         "new org.apache.avro.data.JodaTimeConversions.TimeConversion()", compiler.conversionInstance(timeSchema));
+    Assert.assertEquals("Should use time conversion for time type",
+        "new org.apache.avro.data.JodaTimeConversions.TimeMicrosConversion()",
+        compiler.conversionInstance(timeMicroSchema));
     Assert.assertEquals("Should use timestamp conversion for date type",
         "new org.apache.avro.data.JodaTimeConversions.TimestampConversion()",
         compiler.conversionInstance(timestampSchema));
+    Assert.assertEquals("Should use timestamp conversion for date type",
+        "new org.apache.avro.data.JodaTimeConversions.TimestampMicrosConversion()",
+        compiler.conversionInstance(timestampMicrosSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off",
         "new org.apache.avro.Conversions.DecimalConversion()", compiler.conversionInstance(decimalSchema));
     Assert.assertEquals("Should use null for decimal if the flag is off", "null",
