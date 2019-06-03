@@ -41,7 +41,6 @@ A schema may be one of:
 from types import MappingProxyType
 
 import abc
-import collections
 import json
 import logging
 import re
@@ -271,7 +270,9 @@ class Name(object):
       # name is relative, combine with explicit namespace:
       self._name = name
       self._namespace = namespace
-      self._fullname = '%s.%s' % (self._namespace, self._name)
+      self._fullname = (self._name
+                        if (not self._namespace) else
+                        '%s.%s' % (self._namespace, self._name))
 
       # Validate the fullname:
       if _RE_FULL_NAME.match(self._fullname) is None:
@@ -281,8 +282,8 @@ class Name(object):
 
   def __eq__(self, other):
     if not isinstance(other, Name):
-      return False
-    return (self.fullname == other.fullname)
+      return NotImplemented
+    return self.fullname == other.fullname
 
   @property
   def simple_name(self):
@@ -296,7 +297,7 @@ class Name(object):
 
   @property
   def fullname(self):
-    """Returns: the full name (always contains a period '.')."""
+    """Returns: the full name."""
     return self._fullname
 
 
