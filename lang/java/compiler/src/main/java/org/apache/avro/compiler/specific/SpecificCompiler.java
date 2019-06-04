@@ -39,7 +39,9 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.TimeConversions.DateConversion;
 import org.apache.avro.data.TimeConversions.TimeConversion;
+import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
 import org.apache.avro.data.TimeConversions.TimestampConversion;
+import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
 import org.apache.avro.specific.SpecificData;
 import org.codehaus.jackson.JsonNode;
 
@@ -97,6 +99,8 @@ public class SpecificCompiler {
     SPECIFIC.addLogicalTypeConversion(new DateConversion());
     SPECIFIC.addLogicalTypeConversion(new TimeConversion());
     SPECIFIC.addLogicalTypeConversion(new TimestampConversion());
+    SPECIFIC.addLogicalTypeConversion(new TimeMicrosConversion());
+    SPECIFIC.addLogicalTypeConversion(new TimestampMicrosConversion());
     SPECIFIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
@@ -669,8 +673,12 @@ public class SpecificCompiler {
       return "DATE_CONVERSION";
     } else if (LogicalTypes.timeMillis().equals(schema.getLogicalType())) {
       return "TIME_CONVERSION";
+    } else if (LogicalTypes.timeMicros().equals(schema.getLogicalType())) {
+      return "TIME_MICROS_CONVERSION";
     } else if (LogicalTypes.timestampMillis().equals(schema.getLogicalType())) {
       return "TIMESTAMP_CONVERSION";
+    } else if (LogicalTypes.timestampMicros().equals(schema.getLogicalType())) {
+      return "TIMESTAMP_MICROS_CONVERSION";
     } else if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass())) {
       return enableDecimalLogicalType ? "DECIMAL_CONVERSION" : "null";
     }
