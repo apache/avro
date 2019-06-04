@@ -295,13 +295,12 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     }
   }
 
-  protected Object[] instantiateAdditionalVelocityTools() {
-    Object[] velocityTools = new Object[velocityToolsClassesNames.length];
-    for (int i = 0; i < velocityTools.length; i++) {
-      String velocityToolClassName = velocityToolsClassesNames[i];
+  protected List<Object> instantiateAdditionalVelocityTools() {
+    List<Object> velocityTools = new ArrayList<>(velocityToolsClassesNames.length);
+    for (String velocityToolClassName : velocityToolsClassesNames) {
       try {
         Class klass = Class.forName(velocityToolClassName);
-        velocityTools[i] = klass.newInstance();
+        velocityTools.add(klass.newInstance());
       } catch (Exception e) {
         throw new RuntimeException(e);
       }

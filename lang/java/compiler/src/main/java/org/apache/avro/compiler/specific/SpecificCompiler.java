@@ -136,7 +136,7 @@ public class SpecificCompiler {
   private boolean enableDecimalLogicalType = false;
   private final DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation;
   private String suffix = ".java";
-  private Object[] additionalVelocityTools = new Object[0];
+  private List<Object> additionalVelocityTools = new ArrayList<>();
 
   /*
    * Used in the record.vm template.
@@ -217,7 +217,7 @@ public class SpecificCompiler {
    * Set additional Velocity tools (simple POJOs) to be injected into the Velocity
    * template context.
    */
-  public void setAdditionalVelocityTools(Object[] additionalVelocityTools) {
+  public void setAdditionalVelocityTools(List<Object> additionalVelocityTools) {
     this.additionalVelocityTools = additionalVelocityTools;
   }
 
