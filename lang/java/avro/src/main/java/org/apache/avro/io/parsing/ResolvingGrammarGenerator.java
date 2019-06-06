@@ -91,6 +91,11 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     } else if (action instanceof Resolver.Promote) {
       return Symbol.resolve(simpleGen(action.writer, seen), simpleGen(action.reader, seen));
 
+    } else if (action instanceof Resolver.ReaderUnion) {
+      Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
+      Symbol s = generate(ru.actualAction, seen);
+      return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
+
     } else if (action.writer.getType() == Schema.Type.ARRAY) {
       Symbol es = generate(((Resolver.Container) action).elementAction, seen);
       return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, es), Symbol.ARRAY_START);
@@ -112,12 +117,6 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         i++;
       }
       return Symbol.seq(Symbol.alt(symbols, labels), Symbol.WRITER_UNION_ACTION);
-
-    }
-    if (action instanceof Resolver.ReaderUnion) {
-      Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
-      Symbol s = generate(ru.actualAction, seen);
-      return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
 
     } else if (action instanceof Resolver.EnumAdjust) {
       Resolver.EnumAdjust e = (Resolver.EnumAdjust) action;
