@@ -280,7 +280,7 @@ public class TestGenericLogicalTypes {
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
-    LocalDateTime i1 = LocalDateTime.now();
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 42000000);
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC);
     List<LocalDateTime> expected = Arrays.asList(i1, i2);
 
@@ -301,7 +301,7 @@ public class TestGenericLogicalTypes {
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
-    LocalDateTime i1 = LocalDateTime.now();
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 42000000);
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC);
 
     Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMillisConversion();
@@ -321,7 +321,7 @@ public class TestGenericLogicalTypes {
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
-    LocalDateTime i1 = LocalDateTime.now();
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 420000);
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochSecond(0, 4000), ZoneOffset.UTC);
     List<LocalDateTime> expected = Arrays.asList(i1, i2);
 
@@ -342,7 +342,7 @@ public class TestGenericLogicalTypes {
     Schema longSchema = Schema.create(Schema.Type.LONG);
     Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
 
-    LocalDateTime i1 = LocalDateTime.now();
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 420000);
     LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochSecond(0, 4000), ZoneOffset.UTC);
 
     Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMicrosConversion();
