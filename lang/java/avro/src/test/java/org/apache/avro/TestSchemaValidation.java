@@ -76,6 +76,8 @@ public class TestSchemaValidation {
       new ReaderWriter(BYTES_UNION_SCHEMA, EMPTY_UNION_SCHEMA),
       new ReaderWriter(BYTES_UNION_SCHEMA, STRING_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_FLOAT_UNION_SCHEMA),
+      
+      new ReaderWriter(NULL_INT_ARRAY_UNION_SCHEMA, INT_ARRAY_SCHEMA),
 
       // Readers capable of reading all branches of a union are compatible
       new ReaderWriter(FLOAT_SCHEMA, INT_FLOAT_UNION_SCHEMA), new ReaderWriter(LONG_SCHEMA, INT_LONG_UNION_SCHEMA),
