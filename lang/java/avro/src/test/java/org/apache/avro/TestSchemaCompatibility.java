@@ -239,8 +239,7 @@ public class TestSchemaCompatibility {
 
       // This is comparing two records that have an inner array of records with
       // different namespaces.
-      new ReaderWriter(NS_RECORD1, NS_RECORD2)
-  );
+      new ReaderWriter(NS_RECORD1, NS_RECORD2));
 
   // -----------------------------------------------------------------------------------------------
 
