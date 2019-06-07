@@ -109,8 +109,6 @@ public class TestSchemaValidation {
 
       new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA),
 
-      // Only included here for now. SchemaCompatibility and Resolver have
-      // a different idea of what schemas are compatible. See AVRO-2400.
       // This is comparing two records that have an inner array of records with
       // different namespaces.
       new ReaderWriter(NS_RECORD1, NS_RECORD2));
