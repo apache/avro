@@ -80,7 +80,7 @@ DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& 
 
 DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
     const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(NULL),
+    filename_(),
     schema_(schema),
     encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
@@ -272,7 +272,7 @@ DataFileReaderBase::DataFileReaderBase(const char* filename) :
 }
 
 DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) :
-    filename_(NULL), stream_(std::move(inputStream)),
+    filename_(), stream_(std::move(inputStream)),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
