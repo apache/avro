@@ -17,13 +17,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Avro.msbuild</AssemblyName>
     <RootNamespace>Avro.msbuild</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Build.Framework" Version="15.6.82" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.6.82" />
+  </ItemGroup>
+
+ <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <PackageReference Include="Microsoft.Build.Framework" Version="15.6.82" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.6.82" />
   </ItemGroup>

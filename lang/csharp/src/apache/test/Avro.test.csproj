@@ -17,7 +17,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <RootNamespace>Avro.test</RootNamespace>
     <AssemblyName>Avro.test</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

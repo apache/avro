@@ -18,7 +18,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>Avro.perf</AssemblyName>
     <RootNamespace>Avro.perf</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>

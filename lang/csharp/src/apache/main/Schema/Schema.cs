@@ -71,19 +71,19 @@ namespace Avro
         }
 
         /// <summary>
-        /// If this is a record, enum or fixed, returns its name, otherwise the name the primitive type. 
+        /// If this is a record, enum or fixed, returns its name, otherwise the name the primitive type.
         /// </summary>
         public abstract string Name { get; }
-        
+
         /// <summary>
         /// The name of this schema. If this is a named schema such as an enum, it returns the fully qualified
         /// name for the schema. For other schemas, it returns the type of the schema.
         /// </summary>
-        public virtual string Fullname 
+        public virtual string Fullname
         {
             get { return Name; }
         }
-        
+
         /// <summary>
         /// Static class to return new instance of schema object
         /// </summary>
