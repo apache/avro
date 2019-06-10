@@ -93,6 +93,7 @@ public class SchemaMojo extends AbstractAvroMojo {
       throw new IOException(e);
     }
     compiler.setOutputCharacterEncoding(project.getProperties().getProperty("project.build.sourceEncoding"));
+    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
     compiler.compileToDestination(src, outputDirectory);
   }
 

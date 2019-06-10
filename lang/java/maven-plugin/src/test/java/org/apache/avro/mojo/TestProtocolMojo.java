@@ -30,6 +30,8 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-jsr310.xml");
+  protected File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/protocol/pom-injecting-velocity-tools.xml");
 
   public void testProtocolMojoJoda() throws Exception {
     ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jodaTestPom);
@@ -59,5 +61,20 @@ public class TestProtocolMojo extends AbstractAvroMojoTest {
 
     String protocolUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
     assertTrue(protocolUserContent.contains("java.time.Instant"));
+  }
+
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", injectingVelocityToolsTestPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/protocol/test");
+    String[] generatedFiles = new String[] { "ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java" };
+
+    assertFilesExist(outputDir, generatedFiles);
+
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
+    assertTrue(schemaUserContent.contains("It works!"));
   }
 }
