@@ -72,6 +72,8 @@ public class JsonGrammarGenerator extends ValidatingGrammarGenerator {
               Symbol.ITEM_END, generate(sc.getValueType(), seen),
               Symbol.MAP_KEY_MARKER, Symbol.STRING),
           Symbol.MAP_START);
+    case PARAM:
+      return generate(sc.getValueType(), seen);
     case RECORD: {
       LitS wsc = new LitS(sc);
       Symbol rresult = seen.get(wsc);

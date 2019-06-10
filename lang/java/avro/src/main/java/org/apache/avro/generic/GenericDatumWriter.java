@@ -31,6 +31,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData.Param;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -119,6 +120,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       case ENUM:   writeEnum(schema, datum, out);   break;
       case ARRAY:  writeArray(schema, datum, out);  break;
       case MAP:    writeMap(schema, datum, out);    break;
+      case PARAM:  writeParam(schema, datum, out);   break;
       case UNION:
         int index = resolveUnion(schema, datum);
         out.writeIndex(index);
@@ -239,6 +241,17 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw new ConcurrentModificationException("Size of map written was " +
           size + ", but number of entries written was " + actualSize + ". ");
     }
+  }
+
+  protected void writeParam(Schema schema, Object datum, Encoder out)
+    throws IOException {
+    Schema value = schema.getValueType();
+    Object reqDatum = datum;
+    if(datum instanceof GenericData.Param) {
+      Param paramDatum = (Param) datum;
+      reqDatum = paramDatum.getRecord();
+    }
+    writeRecord(value, reqDatum, out);
   }
 
   /** Called by the default implementation of {@link #writeMap} to get the size

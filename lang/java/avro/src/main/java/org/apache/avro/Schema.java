@@ -92,7 +92,7 @@ public abstract class Schema extends JsonProperties {
   /** The type of a schema. */
   public enum Type {
     RECORD, ENUM, ARRAY, MAP, UNION, FIXED, STRING, BYTES,
-      INT, LONG, FLOAT, DOUBLE, BOOLEAN, NULL;
+      INT, LONG, FLOAT, DOUBLE, BOOLEAN, PARAM, NULL;
     private String name;
     private Type() { this.name = this.name().toLowerCase(Locale.ENGLISH); }
     public String getName() { return name; }
@@ -182,6 +182,11 @@ public abstract class Schema extends JsonProperties {
   /** Create a map schema. */
   public static Schema createMap(Schema valueType) {
     return new MapSchema(valueType);
+  }
+
+  /** Create a param schema. */
+  public static Schema createParam(Schema valueType) {
+    return new ParamSchema(valueType);
   }
 
   /** Create a union schema. */
@@ -558,7 +563,7 @@ public abstract class Schema extends JsonProperties {
       if (this.equals(names.get(name))) {
         gen.writeString(name.getQualified(names.space()));
         return true;
-      } else if (name.name != null) {
+      } else if (name.name != null && !names.contains(this)) {
         names.put(name, this);
       }
       return false;
@@ -829,6 +834,34 @@ public abstract class Schema extends JsonProperties {
     void toJson(Names names, JsonGenerator gen) throws IOException {
       gen.writeStartObject();
       gen.writeStringField("type", "map");
+      gen.writeFieldName("values");
+      valueType.toJson(names, gen);
+      writeProps(gen);
+      gen.writeEndObject();
+    }
+  }
+
+  private static class ParamSchema extends Schema {
+    private final Schema valueType;
+    public ParamSchema(Schema valueType) {
+      super(Type.PARAM);
+      this.valueType = valueType;
+    }
+    public Schema getValueType() { return valueType; }
+    public boolean equals(Object o) {
+      if (o == this) return true;
+      if (!(o instanceof ParamSchema)) return false;
+      ParamSchema that = (ParamSchema) o;
+      return equalCachedHash(that)
+        && valueType.equals(that.valueType)
+        && props.equals(that.props);
+    }
+    @Override int computeHash() {
+      return super.computeHash() + valueType.computeHash();
+    }
+    void toJson(Names names, JsonGenerator gen) throws IOException {
+      gen.writeStartObject();
+      gen.writeStringField("type", "param");
       gen.writeFieldName("values");
       valueType.toJson(names, gen);
       writeProps(gen);
@@ -1124,9 +1157,11 @@ public abstract class Schema extends JsonProperties {
     }
     @Override
     public Schema put(Name name, Schema schema) {
-      if (containsKey(name))
+      if (containsKey(name)) {
         throw new SchemaParseException("Can't redefine: "+name);
-      return super.put(name, schema);
+      } else {
+        return super.put(name, schema);
+      }
     }
   }
 
@@ -1147,7 +1182,7 @@ public abstract class Schema extends JsonProperties {
       throw new SchemaParseException("Illegal initial character: "+name);
     for (int i = 1; i < length; i++) {
       char c = name.charAt(i);
-      if (!(Character.isLetterOrDigit(c) || c == '_'))
+      if (!(Character.isLetterOrDigit(c) || c == '_' || c == '$'))
         throw new SchemaParseException("Illegal character in: "+name);
     }
     return name;
@@ -1253,7 +1288,7 @@ public abstract class Schema extends JsonProperties {
       } else if (type.equals("record") || type.equals("error")) { // record
         List<Field> fields = new ArrayList<Field>();
         result = new RecordSchema(name, doc, type.equals("error"));
-        if (name != null) names.add(result);
+        if (name != null && !names.contains(result)) names.add(result);
         JsonNode fieldsNode = schema.get("fields");
         if (fieldsNode == null || !fieldsNode.isArray())
           throw new SchemaParseException("Record has no fields: "+schema);
@@ -1312,6 +1347,11 @@ public abstract class Schema extends JsonProperties {
         if (valuesNode == null)
           throw new SchemaParseException("Map has no values type: "+schema);
         result = new MapSchema(parse(valuesNode, names));
+      } else if (type.equals("param")) {
+        JsonNode valuesNode = schema.get("values");
+        if (valuesNode == null)
+          throw new SchemaParseException("Params has no values type: "+schema);
+        result = new ParamSchema(parse(valuesNode, names));
       } else if (type.equals("fixed")) {          // fixed
         JsonNode sizeNode = schema.get("size");
         if (sizeNode == null || !sizeNode.isInt())

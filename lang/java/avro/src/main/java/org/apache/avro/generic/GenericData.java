@@ -25,12 +25,14 @@ import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import java.util.Set;
 import org.apache.avro.AvroMissingFieldException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.AvroTypeException;
@@ -105,6 +107,10 @@ public class GenericData {
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
       new IdentityHashMap<Class<?>, Map<String, Conversion<?>>>();
 
+  private final Map<Class<?>, Class[]> classUnionTypes = new HashMap<Class<?>, Class[]>();
+
+  protected final Set<Class<?>> parameterisedTypes = new HashSet<Class<?>>();
+
   /**
    * Registers the given conversion to be used when reading and writing with
    * this data model.
@@ -122,6 +128,24 @@ public class GenericData {
       conversions.put(conversion.getLogicalTypeName(), conversion);
       conversionsByClass.put(type, conversions);
     }
+  }
+
+  protected void addParameterisedType(Class<?> clazz) {
+    parameterisedTypes.add(clazz);
+  }
+
+  /**
+   * add Union types for a given class. This is equivalent to adding an @Union annotation
+   * with values. But this can help in cases where you cannot mutate the class to annotate it
+   * @param clazz to add Union types for, typically the base classes
+   * @param unionTypes the class types to add to the union, typically the implementation classes
+   */
+  public void addUnionTypes(Class<?> clazz, Class[] unionTypes) {
+    classUnionTypes.put(clazz, unionTypes);
+  }
+
+  protected Class[] getUnionTypes(Class<?> clazz) {
+    return classUnionTypes.get(clazz);
   }
 
   /**
@@ -228,6 +252,64 @@ public class GenericData {
     }
     @Override public String toString() {
       return GenericData.get().toString(this);
+    }
+  }
+
+  public static class Param implements Comparable<Param>, GenericContainer {
+    private final Schema schema;
+    private Object record;
+    public Param(Schema schema) {
+      if (schema == null || !Type.PARAM.equals(schema.getType()))
+        throw new AvroRuntimeException("Not a param schema: "+schema);
+      this.schema = schema;
+    }
+
+    public Param(Schema schema, Object record) {
+      this(schema);
+      this.record = record;
+    }
+
+    public void setRecord(Record record) {
+      this.record = record;
+    }
+
+    public Object getRecord() {
+      return record;
+    }
+
+    @Override
+    public int compareTo(Param that) {
+      return GenericData.get().compare(this, that, schema);
+    }
+
+    @Override
+    public Schema getSchema() {
+      return schema;
+    }
+
+    @Override
+    public int hashCode() {
+      return GenericData.get().hashCode(this, schema);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Param param = (Param) o;
+      return getSchema().equals(param.getSchema());
+    }
+
+    @Override
+    public String toString() {
+      if(record != null)
+        return record.toString();
+      else
+        return GenericData.get().toString(schema);
     }
   }
 
@@ -736,7 +818,8 @@ public class GenericData {
       }
     }
 
-    Integer i = union.getIndexNamed(getSchemaName(datum));
+    String schemaName = getSchemaName(datum);
+    Integer i = union.getIndexNamed(schemaName);
     if (i != null)
       return i;
     throw new UnresolvedUnionException(union, datum);
@@ -755,6 +838,8 @@ public class GenericData {
       return Type.ARRAY.getName();
     if (isMap(datum))
       return Type.MAP.getName();
+    if (isParameterisedType(datum))
+      return Type.PARAM.getName();
     if (isFixed(datum))
       return getFixedSchema(datum).getFullName();
     if (isString(datum))
@@ -842,6 +927,14 @@ public class GenericData {
   /** Called by the default implementation of {@link #instanceOf}.*/
   protected boolean isMap(Object datum) {
     return datum instanceof Map;
+  }
+
+  protected boolean isParameterisedType(Class<?> clazz) {
+    return (clazz != null) && parameterisedTypes.contains(clazz);
+  }
+
+  public boolean isParameterisedType(Object datum) {
+    return (datum != null) && parameterisedTypes.contains(datum.getClass());
   }
 
   /** Called by the default implementation of {@link #instanceOf}.*/
@@ -1194,4 +1287,7 @@ public class GenericData {
     return new GenericData.Record(schema);
   }
 
+  public Object newParam(Schema schema, Object record) {
+    return new GenericData.Param(schema, record);
+  }
 }

@@ -651,6 +651,7 @@ public abstract class Symbol {
 
   public static final Symbol RECORD_START = new ImplicitAction(false);
   public static final Symbol RECORD_END = new ImplicitAction(true);
+
   public static final Symbol UNION_END = new ImplicitAction(true);
   public static final Symbol FIELD_END = new ImplicitAction(true);
 

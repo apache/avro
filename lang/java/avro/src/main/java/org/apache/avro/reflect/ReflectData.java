@@ -26,6 +26,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -176,6 +178,7 @@ public class ReflectData extends SpecificData {
     if (datum instanceof Collection) return false;
     if (datum instanceof Map) return false;
     if (datum instanceof GenericFixed) return false;
+    if (isParameterisedType(datum)) return false;
     return getSchema(datum.getClass()).getType() == Schema.Type.RECORD;
   }
 
@@ -426,6 +429,7 @@ public class ReflectData extends SpecificData {
   static final int NS_MAP_KEY_INDEX = 0;      // index of key field
   static final String NS_MAP_VALUE = "value"; // name of value field
   static final int NS_MAP_VALUE_INDEX = 1;    // index of value field
+  static final String NS_PARAM_VALUE = "value"; // name of param value field
 
   /*
    * Non-string map-keys need special handling and we convert it to an
@@ -492,6 +496,13 @@ public class ReflectData extends SpecificData {
     return false;
   }
 
+  static boolean isParamSchema(Schema s) {
+    if (s != null && s.getType() == Schema.Type.PARAM) {
+      return true;
+    }
+    return false;
+  }
+
   @Override
   protected Schema createSchema(Type type, Map<String,Schema> names) {
     if (type instanceof GenericArrayType) {                  // generic array
@@ -522,6 +533,48 @@ public class ReflectData extends SpecificData {
         Schema schema = Schema.createArray(createSchema(params[0], names));
         schema.addProp(CLASS_PROP, raw.getName());
         return schema;
+      } else if(params.length > 0) {
+        boolean hasWildCardParams = false;
+        for (Type param1 : params) {
+          if (param1 instanceof WildcardType) {
+            hasWildCardParams = true;
+            break;
+          }
+        }
+        if(!hasWildCardParams) {
+          //add raw type to parameterized type list
+          addParameterisedType(raw);
+          //build a recordName that is unique including just the param types
+          StringBuilder recordNameBuilder = new StringBuilder(raw.getSimpleName());
+          Map<String, Type> typeParamMap = new HashMap<String, Type>();
+          TypeVariable[] typeParameters = raw.getTypeParameters();
+          for (int i = 0; i < typeParameters.length; i++) {
+            TypeVariable typeVariable = typeParameters[i];
+            typeParamMap.put(typeVariable.getName(), params[i]);
+            recordNameBuilder.append(((Class) params[i]).getSimpleName());
+          }
+          List<Schema.Field> fields = new ArrayList<Schema.Field>();
+          Field[] cachedFields = getCachedFields(raw);
+          for (Field field : cachedFields) {
+            if ((field.getModifiers() & (Modifier.TRANSIENT | Modifier.STATIC)) == 0) {
+              Type fieldGenericType = field.getGenericType();
+              Type fieldType = fieldGenericType;
+              if(fieldGenericType instanceof TypeVariable) {
+                fieldType = typeParamMap.get(fieldGenericType.toString());
+              }
+              String fieldName = field.getName();
+              Schema schema = createSchema(fieldType, names);
+              Schema.Field schemaField = new Schema.Field(fieldName, schema, null, null);
+              fields.add(schemaField);
+            }
+          }
+          String recordName = recordNameBuilder.toString();
+          Schema paramSchema = Schema.createRecord(recordName, null,
+            raw.getPackage().getName(), false);
+          paramSchema.setFields(fields);
+          paramSchema.addProp(CLASS_PROP, raw.getName());
+          return Schema.createParam(paramSchema);
+        }
       }
     } else if ((type == Byte.class) || (type == Byte.TYPE)) {
       Schema result = Schema.create(Schema.Type.INT);
@@ -577,8 +630,11 @@ public class ReflectData extends SpecificData {
         if (c.getEnclosingClass() != null)                   // nested class
           space = c.getEnclosingClass().getName() + "$";
         Union union = c.getAnnotation(Union.class);
+        Schema unionSchema = getUnionSchema(c, names);
         if (union != null) {                                 // union annotated
           return getAnnotatedUnion(union, names);
+        } else if(unionSchema != null) {
+          return unionSchema;
         } else if (isStringable(c)) {                        // Stringable
           Schema result = Schema.create(Schema.Type.STRING);
           result.addProp(CLASS_PROP, c.getName());
@@ -650,6 +706,18 @@ public class ReflectData extends SpecificData {
     return super.createSchema(type, names);
   }
 
+  private String getFingerPrintStr(String recordName) {
+    try {
+      long fingerprint = SchemaNormalization.fingerprint64(recordName.getBytes("UTF-8"));
+      if (fingerprint < 0)
+        fingerprint = -fingerprint;  // ignore sign
+      return Long.toString(fingerprint, 16);
+    } catch (UnsupportedEncodingException e) {
+      throw new AvroRuntimeException("Unable to generate fingerprint"
+        + " for recordName: " + recordName, e);
+    }
+  }
+
   @Override protected boolean isStringable(Class<?> c) {
     return c.isAnnotationPresent(Stringable.class) || super.isStringable(c);
   }
@@ -669,8 +737,21 @@ public class ReflectData extends SpecificData {
 
   // construct a schema from a union annotation
   private Schema getAnnotatedUnion(Union union, Map<String,Schema> names) {
+    Class[] unionTypes = union.value();
+    return getUnionSchema(unionTypes, names);
+  }
+
+  private Schema getUnionSchema(Class<?> clazz, Map<String, Schema> names) {
+    Class[] unionTypes = getUnionTypes(clazz);
+    if(unionTypes != null) {
+      return getUnionSchema(unionTypes, names);
+    }
+    return null;
+  }
+
+  private Schema getUnionSchema(Class[] unionTypes, Map<String, Schema> names) {
     List<Schema> branches = new ArrayList<Schema>();
-    for (Class branch : union.value())
+    for (Class branch : unionTypes)
       branches.add(createSchema(branch, names));
     return Schema.createUnion(branches);
   }
@@ -788,7 +869,7 @@ public class ReflectData extends SpecificData {
     Type[] paramTypes = method.getGenericParameterTypes();
     Annotation[][] annotations = method.getParameterAnnotations();
     for (int i = 0; i < paramTypes.length; i++) {
-      Schema paramSchema = getSchema(paramTypes[i], names);
+      Schema paramSchema = getUnionSchema(paramTypes[i], names);
       for (int j = 0; j < annotations[i].length; j++) {
         Annotation annotation = annotations[i][j];
         if (annotation instanceof AvroSchema)     // explicit schema
@@ -808,7 +889,7 @@ public class ReflectData extends SpecificData {
 
     Union union = method.getAnnotation(Union.class);
     Schema response = union == null
-      ? getSchema(method.getGenericReturnType(), names)
+      ? getUnionSchema(method.getGenericReturnType(), names)
       : getAnnotatedUnion(union, names);
     if (method.isAnnotationPresent(Nullable.class))          // nullable
       response = makeNullable(response);
@@ -821,12 +902,12 @@ public class ReflectData extends SpecificData {
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw
     for (Type err : method.getGenericExceptionTypes())
       if (err != AvroRemoteException.class)
-        errs.add(getSchema(err, names));
+        errs.add(getUnionSchema(err, names));
     Schema errors = Schema.createUnion(errs);
     return protocol.createMessage(method.getName(), null /* doc */, request, response, errors);
   }
 
-  private Schema getSchema(Type type, Map<String,Schema> names) {
+  private Schema getUnionSchema(Type type, Map<String,Schema> names) {
     try {
       return createSchema(type, names);
     } catch (AvroTypeException e) {               // friendly exception
