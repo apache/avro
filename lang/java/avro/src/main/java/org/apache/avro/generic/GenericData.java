@@ -105,6 +105,8 @@ public class GenericData {
   private Map<Class<?>, Map<String, Conversion<?>>> conversionsByClass =
       new IdentityHashMap<Class<?>, Map<String, Conversion<?>>>();
 
+  private Map<Class<?>, Class[]> classUnionTypes = new HashMap<Class<?>, Class[]>();
+
   /**
    * Registers the given conversion to be used when reading and writing with
    * this data model.
@@ -122,6 +124,20 @@ public class GenericData {
       conversions.put(conversion.getLogicalTypeName(), conversion);
       conversionsByClass.put(type, conversions);
     }
+  }
+
+  /**
+   * add Union types for a given class. This is equivalent to adding an @Union annotation
+   * with values. But this can help in cases where you cannot mutate the class to annotate it
+   * @param clazz to add Union types for, typically the base classes
+   * @param unionTypes the class types to add to the union, typically the implementation classes
+   */
+  public void addUnionTypes(Class<?> clazz, Class[] unionTypes) {
+    classUnionTypes.put(clazz, unionTypes);
+  }
+
+  protected Class[] getUnionTypes(Class<?> clazz) {
+    return classUnionTypes.get(clazz);
   }
 
   /**

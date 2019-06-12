@@ -577,8 +577,11 @@ public class ReflectData extends SpecificData {
         if (c.getEnclosingClass() != null)                   // nested class
           space = c.getEnclosingClass().getName() + "$";
         Union union = c.getAnnotation(Union.class);
+        Schema unionSchema = getUnionSchema(c, names);
         if (union != null) {                                 // union annotated
           return getAnnotatedUnion(union, names);
+        } else if(unionSchema != null) {
+          return unionSchema;
         } else if (isStringable(c)) {                        // Stringable
           Schema result = Schema.create(Schema.Type.STRING);
           result.addProp(CLASS_PROP, c.getName());
@@ -669,8 +672,21 @@ public class ReflectData extends SpecificData {
 
   // construct a schema from a union annotation
   private Schema getAnnotatedUnion(Union union, Map<String,Schema> names) {
+    Class[] unionTypes = union.value();
+    return getUnionSchema(unionTypes, names);
+  }
+
+  private Schema getUnionSchema(Class<?> clazz, Map<String, Schema> names) {
+    Class[] unionTypes = getUnionTypes(clazz);
+    if(unionTypes != null) {
+      return getUnionSchema(unionTypes, names);
+    }
+    return null;
+  }
+
+  private Schema getUnionSchema(Class[] unionTypes, Map<String, Schema> names) {
     List<Schema> branches = new ArrayList<Schema>();
-    for (Class branch : union.value())
+    for (Class branch : unionTypes)
       branches.add(createSchema(branch, names));
     return Schema.createUnion(branches);
   }
@@ -788,7 +804,7 @@ public class ReflectData extends SpecificData {
     Type[] paramTypes = method.getGenericParameterTypes();
     Annotation[][] annotations = method.getParameterAnnotations();
     for (int i = 0; i < paramTypes.length; i++) {
-      Schema paramSchema = getSchema(paramTypes[i], names);
+      Schema paramSchema = getUnionSchema(paramTypes[i], names);
       for (int j = 0; j < annotations[i].length; j++) {
         Annotation annotation = annotations[i][j];
         if (annotation instanceof AvroSchema)     // explicit schema
@@ -808,7 +824,7 @@ public class ReflectData extends SpecificData {
 
     Union union = method.getAnnotation(Union.class);
     Schema response = union == null
-      ? getSchema(method.getGenericReturnType(), names)
+      ? getUnionSchema(method.getGenericReturnType(), names)
       : getAnnotatedUnion(union, names);
     if (method.isAnnotationPresent(Nullable.class))          // nullable
       response = makeNullable(response);
@@ -821,12 +837,12 @@ public class ReflectData extends SpecificData {
     errs.add(Protocol.SYSTEM_ERROR);              // every method can throw
     for (Type err : method.getGenericExceptionTypes())
       if (err != AvroRemoteException.class)
-        errs.add(getSchema(err, names));
+        errs.add(getUnionSchema(err, names));
     Schema errors = Schema.createUnion(errs);
     return protocol.createMessage(method.getName(), null /* doc */, request, response, errors);
   }
 
-  private Schema getSchema(Type type, Map<String,Schema> names) {
+  private Schema getUnionSchema(Type type, Map<String,Schema> names) {
     try {
       return createSchema(type, names);
     } catch (AvroTypeException e) {               // friendly exception
