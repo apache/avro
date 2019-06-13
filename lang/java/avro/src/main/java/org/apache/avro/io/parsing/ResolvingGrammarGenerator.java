@@ -54,7 +54,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
-   * 
+   *
    * @param writer The schema used by the writer
    * @param reader The schema used by the reader
    * @return The start symbol for the resolving grammar
@@ -91,6 +91,11 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     } else if (action instanceof Resolver.Promote) {
       return Symbol.resolve(simpleGen(action.writer, seen), simpleGen(action.reader, seen));
 
+    } else if (action instanceof Resolver.ReaderUnion) {
+      Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
+      Symbol s = generate(ru.actualAction, seen);
+      return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
+
     } else if (action.writer.getType() == Schema.Type.ARRAY) {
       Symbol es = generate(((Resolver.Container) action).elementAction, seen);
       return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, es), Symbol.ARRAY_START);
@@ -114,12 +119,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.seq(Symbol.alt(symbols, labels), Symbol.WRITER_UNION_ACTION);
 
     }
-    if (action instanceof Resolver.ReaderUnion) {
-      Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
-      Symbol s = generate(ru.actualAction, seen);
-      return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
-
-    } else if (action instanceof Resolver.EnumAdjust) {
+    if (action instanceof Resolver.EnumAdjust) {
       Resolver.EnumAdjust e = (Resolver.EnumAdjust) action;
       Object[] adjs = new Object[e.adjustments.length];
       for (int i = 0; i < adjs.length; i++)
@@ -224,7 +224,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Returns the Avro binary encoded version of <tt>n</tt> according to the schema
    * <tt>s</tt>.
-   * 
+   *
    * @param s The schema for encoding
    * @param n The Json node that has the value to be encoded.
    * @return The binary encoded version of <tt>n</tt>.
@@ -241,7 +241,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt> according
    * to the schema <tt>s</tt>.
-   * 
+   *
    * @param e The encoder to encode into.
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.

@@ -16,4 +16,8 @@ test-output
 /lang/java/compiler/nbactions.xml
 /lang/java/compiler/nb-configuration.xml
 /lang/java/compiler/nbproject/
+/lang/java/avro/nbproject/
 **/.vscode/**/*
+/lang/java/avro/nb-configuration.xml
+/lang/java/avro/pom.xml.versionsBackup
+dev-tools/target/**/*
