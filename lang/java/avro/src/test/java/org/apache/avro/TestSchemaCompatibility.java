@@ -235,9 +235,11 @@ public class TestSchemaCompatibility {
 
       new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA),
       new ReaderWriter(ENUM_AB_ENUM_DEFAULT_A_RECORD, ENUM_ABC_ENUM_DEFAULT_A_RECORD),
-      new ReaderWriter(ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD, ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD)
+      new ReaderWriter(ENUM_AB_FIELD_DEFAULT_A_ENUM_DEFAULT_B_RECORD, ENUM_ABC_FIELD_DEFAULT_B_ENUM_DEFAULT_A_RECORD),
 
-  );
+      // This is comparing two records that have an inner array of records with
+      // different namespaces.
+      new ReaderWriter(NS_RECORD1, NS_RECORD2));
 
   // -----------------------------------------------------------------------------------------------
 

@@ -94,6 +94,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         compiler.setCreateOptionalGetters(createOptionalGetters);
         compiler.setGettersReturnOptional(gettersReturnOptional);
         compiler.setCreateSetters(createSetters);
+        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
         compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
         for (String customConversion : customConversions) {
           compiler.addCustomConversion(projPathLoader.loadClass(customConversion));

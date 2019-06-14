@@ -30,6 +30,8 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-jsr310.xml");
+  protected File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
 
   public void testIdlProtocolMojoJoda() throws Exception {
     IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jodaTestPom);
@@ -57,5 +59,22 @@ public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
     String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
     assertTrue(idlUserContent.contains("java.time.Instant"));
+  }
+
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    injectingVelocityToolsTestPom = new File(getBasedir(),
+        "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
+    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", injectingVelocityToolsTestPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/idl/test");
+    String[] generatedFiles = new String[] { "IdlPrivacy.java", "IdlTest.java", "IdlUser.java", "IdlUserWrapper.java" };
+
+    assertFilesExist(outputDir, generatedFiles);
+
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
+    assertTrue(schemaUserContent.contains("It works!"));
   }
 }

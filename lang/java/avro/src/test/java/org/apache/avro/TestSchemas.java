@@ -102,6 +102,11 @@ public class TestSchemas {
   static final Schema FIXED_4_BYTES = Schema.createFixed("Fixed", null, null, 4);
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
 
+  static final Schema NS_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema NS_RECORD2 = Schema.createRecord("Record1", null, null, false);
+  static final Schema NS_INNER_RECORD1 = Schema.createRecord("InnerRecord1", null, "ns1", false);
+  static final Schema NS_INNER_RECORD2 = Schema.createRecord("InnerRecord1", null, "ns2", false);
+
   static {
     EMPTY_RECORD1.setFields(Collections.emptyList());
     EMPTY_RECORD2.setFields(Collections.emptyList());
@@ -123,6 +128,14 @@ public class TestSchemas {
         .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", ENUM1_AB_SCHEMA, null, null)));
     A_DINT_B_DENUM_2_RECORD1
         .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", ENUM2_AB_SCHEMA, null, null)));
+
+    NS_INNER_RECORD1.setFields(list(new Schema.Field("a", INT_SCHEMA)));
+    NS_INNER_RECORD2.setFields(list(new Schema.Field("a", INT_SCHEMA)));
+
+    NS_RECORD1
+        .setFields(list(new Schema.Field("f1", Schema.createUnion(NULL_SCHEMA, Schema.createArray(NS_INNER_RECORD1)))));
+    NS_RECORD2
+        .setFields(list(new Schema.Field("f1", Schema.createUnion(NULL_SCHEMA, Schema.createArray(NS_INNER_RECORD2)))));
   }
 
   // Recursive records
