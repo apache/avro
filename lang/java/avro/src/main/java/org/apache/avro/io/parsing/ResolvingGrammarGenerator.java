@@ -113,8 +113,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       }
       return Symbol.seq(Symbol.alt(symbols, labels), Symbol.WRITER_UNION_ACTION);
 
-    }
-    if (action instanceof Resolver.ReaderUnion) {
+    } else if (action instanceof Resolver.ReaderUnion) {
       Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
       Symbol s = generate(ru.actualAction, seen);
       return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);

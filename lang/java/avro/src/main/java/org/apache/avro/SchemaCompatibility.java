@@ -94,12 +94,11 @@ public class SchemaCompatibility {
    * @return whether the names of the named schemas match or not.
    */
   public static boolean schemaNameEquals(final Schema reader, final Schema writer) {
-    final String writerFullName = writer.getFullName();
-    if (objectsEqual(reader.getFullName(), writerFullName)) {
+    if (objectsEqual(reader.getName(), writer.getName())) {
       return true;
     }
     // Apply reader aliases:
-    return reader.getAliases().contains(writerFullName);
+    return reader.getAliases().contains(writer.getFullName());
   }
 
   /**

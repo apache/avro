@@ -1129,9 +1129,9 @@
           <ul>
             <li>both schemas are arrays whose item types match</li>
             <li>both schemas are maps whose value types match</li>
-            <li>both schemas are enums whose names match</li>
-            <li>both schemas are fixed whose sizes and names match</li>
-            <li>both schemas are records with the same name</li>
+            <li>both schemas are enums whose (unqualified) names match</li>
+            <li>both schemas are fixed whose sizes and (unqualified) names match</li>
+            <li>both schemas are records with the same (unqualified) name</li>
             <li>either schema is a union</li>
             <li>both schemas have same primitive type</li>
             <li>the writer's schema may be <em>promoted</em> to the

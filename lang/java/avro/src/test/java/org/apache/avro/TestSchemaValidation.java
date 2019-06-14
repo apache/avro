@@ -107,7 +107,11 @@ public class TestSchemaValidation {
       // new ReaderWriter(LONG_LIST_RECORD, LONG_LIST_RECORD),
       // new ReaderWriter(LONG_LIST_RECORD, INT_LIST_RECORD),
 
-      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA));
+      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA),
+
+      // This is comparing two records that have an inner array of records with
+      // different namespaces.
+      new ReaderWriter(NS_RECORD1, NS_RECORD2));
 
   /** Collection of reader/writer schema pair that are incompatible. */
   public static final List<ReaderWriter> INCOMPATIBLE_READER_WRITER_TEST_CASES = list(
