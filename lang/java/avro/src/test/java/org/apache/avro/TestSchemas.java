@@ -80,6 +80,9 @@ public class TestSchemas {
   static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA = Schema
       .createUnion(list(INT_SCHEMA, LONG_SCHEMA, FLOAT_SCHEMA, DOUBLE_SCHEMA));
 
+  static final Schema NULL_INT_ARRAY_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA, INT_ARRAY_SCHEMA));
+  static final Schema NULL_INT_MAP_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA, INT_MAP_SCHEMA));
+
   // Non recursive records:
   static final Schema EMPTY_RECORD1 = Schema.createRecord("Record1", null, null, false);
   static final Schema EMPTY_RECORD2 = Schema.createRecord("Record2", null, null, false);
