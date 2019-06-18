@@ -48,6 +48,6 @@ if (ASCIIDOC_EXECUTABLE AND SOURCE_HIGHLIGHT_EXECUTABLE)
         add_custom_target(docs DEPENDS "${_html_out}")
     endforeach(_file)
 else(ASCIIDOC_EXECUTABLE AND SOURCE_HIGHLIGHT_EXECUTABLE)
-    message(WARNING "asciidoc not found. HTML documentation will *NOT* be built.")
+    message(WARNING "asciidoc and/or source-highlight not found. HTML documentation will *NOT* be built.")
 endif(ASCIIDOC_EXECUTABLE AND SOURCE_HIGHLIGHT_EXECUTABLE)
 
