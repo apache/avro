@@ -64,8 +64,8 @@
 &#60;/dependency&#62;
 &#60;dependency&#62;
   &#60;groupId&#62;org.apache.hadoop&#60;/groupId&#62;
-  &#60;artifactId&#62;hadoop-core&#60;/artifactId&#62;
-  &#60;version&#62;1.1.0&#60;/version&#62;
+  &#60;artifactId&#62;hadoop-client&#60;/artifactId&#62;
+  &#60;version&#62;3.1.2&#60;/version&#62;
 &#60;/dependency&#62;
       </source>
       <p>
