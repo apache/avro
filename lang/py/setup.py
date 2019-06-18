@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -15,6 +15,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+
 try:
   from setuptools import setup
 except ImportError:
@@ -25,11 +27,19 @@ install_requires = []
 if version_info[:2] <= (2, 5):
     install_requires.append('simplejson >= 2.0.9')
 
+curdir = os.getcwd()
+version_file = ("VERSION.txt" if os.path.isfile("VERSION.txt")
+  else os.path.join(curdir[:curdir.index("lang/py")], "share/VERSION.txt"))
+with open(version_file) as verfile:
+  # To follow the naming convention defined by PEP 440
+  # in the case that the version is like "x.y.z-SNAPSHOT"
+  version = verfile.read().rstrip().replace("-", "+")
+
 setup(
   name = 'avro',
-  version = '@AVRO_VERSION@',
+  version = version,
   packages = ['avro',],
-  package_dir = {'avro': 'src/avro'},
+  package_dir = {'': 'src'},
   scripts = ["./scripts/avro"],
 
   #include_package_data=True,
