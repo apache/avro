@@ -25,19 +25,20 @@ from sys import version_info
 
 install_requires = []
 if version_info[:2] <= (2, 5):
-    install_requires.append('simplejson >= 2.0.9')
+  install_requires.append('simplejson >= 2.0.9')
 
-curdir = os.getcwd()
-version_file = ("VERSION.txt" if os.path.isfile("VERSION.txt")
-  else os.path.join(curdir[:curdir.index("lang/py")], "share/VERSION.txt"))
-with open(version_file) as verfile:
-  # To follow the naming convention defined by PEP 440
-  # in the case that the version is like "x.y.z-SNAPSHOT"
-  version = verfile.read().rstrip().replace("-", "+")
+def _get_version():
+  curdir = os.getcwd()
+  version_file = ("VERSION.txt" if os.path.isfile("VERSION.txt")
+    else os.path.join(curdir[:curdir.index("lang/py")], "share/VERSION.txt"))
+  with open(version_file) as verfile:
+    # To follow the naming convention defined by PEP 440
+    # in the case that the version is like "x.y.z-SNAPSHOT"
+    return verfile.read().rstrip().replace("-", "+")
 
 setup(
   name = 'avro',
-  version = version,
+  version = _get_version(),
   packages = ['avro',],
   package_dir = {'': 'src'},
   scripts = ["./scripts/avro"],
