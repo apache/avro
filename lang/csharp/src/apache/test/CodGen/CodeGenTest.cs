@@ -30,7 +30,7 @@ namespace Avro.Test
 
     class CodeGenTest
     {
-#if !NETCOREAPP2_0 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
+#if !NETCOREAPP2_2 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""ClassKeywords"",
@@ -148,7 +148,7 @@ namespace Avro.Test
         {
             var compileUnit = schema.GenerateCode();
 
-            var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
+            var comparam = new CompilerParameters(new string[] { "netstandard.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
             comparam.ReferencedAssemblies.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "Avro.dll"));
             comparam.GenerateInMemory = true;
