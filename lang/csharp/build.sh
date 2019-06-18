@@ -26,23 +26,20 @@ VERSION=`cat $ROOT/share/VERSION.txt`
 case "$1" in
 
   test)
-    dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
-    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
+    dotnet build --configuration Release Avro.sln
 
     # AVRO-2442: Explictly set LANG to work around ICU bug in `dotnet test`
-    LANG=en_US.UTF-8 dotnet test --configuration Release --framework netcoreapp2.0 ./src/apache/test/Avro.test.csproj
+    LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build Avro.sln
     ;;
 
   perf)
     pushd ./src/apache/perf/
-    dotnet run --configuration Release --framework netcoreapp2.0
+    dotnet run --configuration Release --framework netcoreapp2.2
     ;;
 
   dist)
-    # build binary tarball
-    dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
-    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
-    dotnet build --configuration Release --framework netstandard2.0 ./src/apache/ipc/Avro.ipc.csproj
+    # pack NuGet packages
+    dotnet pack --configuration Release Avro.sln
 
     # add the binary LICENSE and NOTICE to the tarball
     mkdir build/
@@ -53,12 +50,10 @@ case "$1" in
     cp -R src/apache/main/bin/Release/* build/main/
     mkdir build/codegen/
     cp -R src/apache/codegen/bin/Release/* build/codegen/
-    mkdir build/ipc/
-    cp -R src/apache/ipc/bin/Release/* build/ipc/
 
     # build the tarball
     mkdir -p ${ROOT}/dist/csharp
-    (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen ipc LICENSE NOTICE)
+    (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE)
 
     # build documentation
     doxygen Avro.dox

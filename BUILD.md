@@ -10,7 +10,7 @@ The following packages must be installed before Avro can be built:
  - Python 3: 3.5 or greater
  - C: gcc, cmake, asciidoc, source-highlight
  - C++: cmake 3.7.2 or greater, g++, flex, bison, libboost-dev
- - C#: mono-devel mono-gmcs nunit
+ - C#: .NET Core 2.2 SDK
  - JavaScript: Node 6.x+, nodejs, npm
  - Ruby: Ruby 2.3.3 or greater, ruby-dev, gem, rake, echoe, yajl-ruby
  - Perl: Perl 5.24.1 or greater, gmake, Module::Install,
