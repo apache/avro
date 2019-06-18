@@ -31,7 +31,7 @@ namespace Avro.Test
     [TestFixture]
     class SpecificTests
     {
-#if !NETCOREAPP2_0 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
+#if !NETCOREAPP2_2 // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         // The dynamically created assembly used in the test below can only be created
         // once otherwise repeated tests will fail as the same type name will exist in
         // multiple assemblies and so the type in the test and the type found by ObjectCreator
@@ -189,7 +189,7 @@ namespace Avro.Test
 
 
             // compile
-            var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
+            var comparam = new CompilerParameters(new string[] { "netstandard.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
             comparam.ReferencedAssemblies.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "Avro.dll"));
             comparam.GenerateInMemory = true;
