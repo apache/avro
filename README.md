@@ -301,6 +301,29 @@ Special notes relevant to using this plugin via the Gradle Kotlin DSL:
 * Apply the plugin declaratively using the `plugins {}` block.  Otherwise, various features may not work as intended.  See [Configuring Plugins in the Gradle Kotlin DSL](https://github.com/gradle/kotlin-dsl/blob/master/doc/getting-started/Configuring-Plugins.md) for more details.
 * Most configuration in the `avro {}` block can be used identically to the Groovy DSL.  Boolean settings are an exception, as they require an "is" prefix.  For example, instead of `createSetters = false`, one would use `isCreateSetters = false`.  See [Getters and Setters](https://kotlinlang.org/docs/reference/java-interop.html#getters-and-setters) for more details.
 
+### Example Kotlin DSL Setup:
+
+In `gradle.build.kts` add:
+
+```kotlin
+plugins {
+	// Find latest release here: https://github.com/commercehub-oss/gradle-avro-plugin/releases
+	id("com.commercehub.gradle.plugin.avro") version "0.17.0"
+}
+```
+
+And then in your `settings.gradle.kts` add:
+
+```kotlin
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+		jcenter()
+		maven (url="https://dl.bintray.com/gradle/gradle-plugins")
+	}
+}
+```
+
 # Generating schema files
 
 If desired, you can generate JSON schema files.
