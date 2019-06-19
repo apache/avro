@@ -98,8 +98,25 @@ namespace Avro.Reflect
         /// </summary>
         /// <value></value>
         public Type MapType { get => _mapType; set => _mapType = value; }
+        /// <summary>
+        /// C# type to create when deserializing a fixed. Valid values are byte[] or GenericFixed
+        /// </summary>
+        /// <value></value>
+        public Type FixedType
+        {
+            get => _fixedType;
+            set
+            {
+                if (value != typeof(byte[]) && value != typeof(GenericFixed))
+                {
+                    throw new AvroException("Fixed deserialization type must be either byte[] or GenericFixed");
+                }
+                _fixedType = value;
+            }
+        }
         private Type _listType = typeof(List<>);
         private Type _mapType = typeof(Dictionary<,>);
+        private Type _fixedType = typeof(byte[]);
 
         /// <summary>
         /// Delegate to a factory method to create objects of type x. If you are deserializing to interfaces
@@ -155,7 +172,7 @@ namespace Avro.Reflect
 
                 case Schema.Type.Fixed:
                 case Schema.Type.Bytes:
-                    return typeof(byte[]);
+                    return FixedType;
 
                 case Schema.Type.String:
                     return typeof(string);
@@ -322,8 +339,11 @@ namespace Avro.Reflect
                     {
                         throw new AvroException("Default fixed value " + defaultValue.ToString() + " is not of expected length " + len);
                     }
-
-                    return bb;
+                    if (FixedType == typeof(byte[]))
+                    {
+                        return bb;
+                    }
+                    return new GenericFixed(s as FixedSchema, bb);
 
                 case Schema.Type.String:
                     if (defaultValue.Type != JTokenType.String)
@@ -513,7 +533,11 @@ namespace Avro.Reflect
 
             byte[] fixedrec = new byte[rs.Size];
             d.ReadFixed(fixedrec);
-            return fixedrec;
+            if ( FixedType == typeof(byte[]))
+            {
+                return fixedrec;
+            }
+            return new GenericFixed(rs, fixedrec);
         }
 
 

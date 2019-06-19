@@ -103,18 +103,36 @@ namespace Avro.Reflect
         /// <param name="encoder">encoder to write to</param>
         protected override void WriteFixed(FixedSchema schema, object value, Encoder encoder)
         {
-            var fixedrec = value as byte[];
-            if (fixedrec == null)
+            if (value is byte[])
             {
-                throw new AvroTypeException("Fixed object is not derived from byte[]");
-            }
+                var fixedrec = value as byte[];
+                if (fixedrec == null)
+                {
+                    throw new AvroTypeException("Fixed object is not derived from byte[]");
+                }
 
-            if (fixedrec.Length != schema.Size)
+                if (fixedrec.Length != schema.Size)
+                {
+                    throw new AvroTypeException($"Fixed object length is not the same as schema length {schema.Size}");
+                }
+
+                encoder.WriteFixed(fixedrec);
+            }
+            else if (value is GenericFixed)
             {
-                throw new AvroTypeException($"Fixed object length is not the same as schema length {schema.Size}");
-            }
+                var fixedrec = value as GenericFixed;
+                if (fixedrec == null)
+                {
+                    throw new AvroTypeException("Fixed object is not derived from GenericFixed");
+                }
 
-            encoder.WriteFixed(fixedrec);
+                if (fixedrec.Value.Length != schema.Size)
+                {
+                    throw new AvroTypeException($"Fixed object length is not the same as schema length {schema.Size}");
+                }
+
+                encoder.WriteFixed(fixedrec.Value);
+            }
         }
 
         /// <summary>
@@ -156,46 +174,9 @@ namespace Avro.Reflect
                 throw new AvroTypeException("Map is null - use a union for nullable types");
             }
 
-            var map = value as System.Collections.IDictionary;
-            if (map == null)
-            {
-                throw new AvroTypeException("Map does not implement IDictionary");
-            }
-
-            encoder.WriteArrayStart();
-            encoder.SetItemCount(map.Count);
-            foreach (System.Collections.DictionaryEntry de in map)
-            {
-                encoder.StartItem();
-                encoder.WriteString(de.Key as string);
-                Write(schema.ValueSchema, de.Value, encoder);
-            }
-
-            encoder.WriteMapEnd();
+            base.WriteMap(schema, value, encoder);
         }
 
-        /// <summary>
-        /// Resolves the given value against the given UnionSchema and serializes the object against
-        /// the resolved schema member. The default implementation of this method uses
-        /// ResolveUnion to find the member schema within the UnionSchema.
-        /// </summary>
-        /// <param name="us">The UnionSchema to resolve against</param>
-        /// <param name="value">The value to be serialized</param>
-        /// <param name="encoder">The encoder for serialization</param>
-        protected override void WriteUnion(UnionSchema us, object value, Encoder encoder)
-        {
-            for (int i = 0; i < us.Count; i++)
-            {
-                if (Matches(us[i], value))
-                {
-                    encoder.WriteUnionIndex(i);
-                    Write(us[i], value, encoder);
-                    return;
-                }
-            }
-
-            throw new AvroException("Cannot find a match for " + value.GetType() + " in " + us);
-        }
 
         /// <summary>
         /// Determines whether an object matches a schema. In the case of enums and records the code looks up the
