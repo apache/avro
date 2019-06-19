@@ -10,9 +10,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.codegen", "src\apache\codegen\Avro.codegen.csproj", "{BF0D313C-1AA3-4900-B277-B0F5F9DDCDA8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.ipc", "src\apache\ipc\Avro.ipc.csproj", "{3B05043A-DC6C-49B6-85BF-9AB055D0B414}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AEB22F94-4ECF-4008-B159-389B3F05D54B} = {AEB22F94-4ECF-4008-B159-389B3F05D54B}
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.msbuild", "src\apache\msbuild\Avro.msbuild.csproj", "{AEB22F94-4ECF-4008-B159-389B3F05D54B}"
 EndProject
