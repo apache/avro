@@ -313,6 +313,67 @@ DECIMAL_LOGICAL_TYPE = [
   "scale": 2}""", True)
 ]
 
+DATE_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "date"} """, True),
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "date1"} """, False),
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "date"} """, False),
+]
+
+TIMEMILLIS_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "time-millis"} """, True),
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "time-milis"} """, False),
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "time-millis"} """, False),
+]
+
+TIMEMICROS_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "time-micros"} """, True),
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "time-micro"} """, False),
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "time-micros"} """, False),
+]
+
+TIMESTAMPMILLIS_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "timestamp-millis"} """, True),
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "timestamp-milis"} """, False),
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "timestamp-millis"} """, False),
+]
+
+TIMESTAMPMICROS_LOGICAL_TYPE = [
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "timestamp-micros"} """, True),
+  ExampleSchema("""{
+  "type": "long",
+  "logicalType": "timestamp-micro"} """, False),
+  ExampleSchema("""{
+  "type": "int",
+  "logicalType": "timestamp-micros"} """, False),
+]
+
+
 EXAMPLES = PRIMITIVE_EXAMPLES
 EXAMPLES += FIXED_EXAMPLES
 EXAMPLES += ENUM_EXAMPLES
@@ -322,6 +383,11 @@ EXAMPLES += UNION_EXAMPLES
 EXAMPLES += RECORD_EXAMPLES
 EXAMPLES += DOC_EXAMPLES
 EXAMPLES += DECIMAL_LOGICAL_TYPE
+EXAMPLES += DATE_LOGICAL_TYPE
+EXAMPLES += TIMEMILLIS_LOGICAL_TYPE
+EXAMPLES += TIMEMICROS_LOGICAL_TYPE
+EXAMPLES += TIMESTAMPMILLIS_LOGICAL_TYPE
+EXAMPLES += TIMESTAMPMICROS_LOGICAL_TYPE
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 
