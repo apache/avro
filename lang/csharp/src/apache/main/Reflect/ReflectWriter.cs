@@ -25,32 +25,32 @@ using Avro.IO;
 using Avro.Generic;
 using Avro.Specific;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     /// <summary>
     /// Generic wrapper class for writing data from specific objects
     /// </summary>
     /// <typeparam name="T">type name of specific object</typeparam>
-    public class POCOWriter<T> : SpecificWriter<T>
+    public class ReflectWriter<T> : SpecificWriter<T>
     {
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="schema"></param>
         /// <returns></returns>
-        public POCOWriter(Schema schema) : base(new POCODefaultWriter(typeof(T), schema)) { }
+        public ReflectWriter(Schema schema) : base(new ReflectDefaultWriter(typeof(T), schema)) { }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="writer"></param>
         /// <returns></returns>
-        public POCOWriter(POCODefaultWriter writer) : base(writer) { }
+        public ReflectWriter(ReflectDefaultWriter writer) : base(writer) { }
     }
     /// <summary>
     /// Class for writing data from any specific objects
     /// </summary>
-    public class POCODefaultWriter : SpecificDefaultWriter
+    public class ReflectDefaultWriter : SpecificDefaultWriter
     {
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Avro.POCO
         /// </summary>
         /// <param name="objType"></param>
         /// <param name="schema"></param>
-        public POCODefaultWriter(Type objType, Schema schema)
+        public ReflectDefaultWriter(Type objType, Schema schema)
             : base(schema)
         {
             var rs = schema as RecordSchema;

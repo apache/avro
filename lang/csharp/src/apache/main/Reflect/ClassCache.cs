@@ -23,18 +23,28 @@ using System.Collections.Concurrent;
 using System.Reflection;
 using Avro;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     /// <summary>
     /// Class holds a cache of C# classes and their properties. The key for the cache is the schema full name.
     /// </summary>
     public static class ClassCache
     {
-        private static ConcurrentDictionary<string, IDotnetClass> _nameClassMap = new ConcurrentDictionary<string, IDotnetClass>();
+        private static ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
         private static void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
-            _nameClassMap.TryAdd(schema.Fullname, ProcessAttributes(schema, dotnetClass));
+            if (schema != null && GetClass(schema)!=null)
+            {
+                return;
+            }
+
+            if (!dotnetClass.IsClass)
+            {
+                throw new AvroException( $"Type {dotnetClass.Name} is not a class");
+            }
+
+            _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema));
         }
 
         /// <summary>
@@ -114,49 +124,15 @@ namespace Avro.POCO
         /// </summary>
         /// <param name="schema"></param>
         /// <returns></returns>
-        public static IDotnetClass GetClass(RecordSchema schema)
+        public static DotnetClass GetClass(RecordSchema schema)
         {
-            IDotnetClass c;
+            DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
             {
                return null;
             }
 
             return c;
-        }
-
-        private static IDotnetClass ProcessAttributes(RecordSchema schema, Type t)
-        {
-            IDotnetClass c;
-
-            if (schema != null && _nameClassMap.TryGetValue(schema.Fullname, out c))
-            {
-                return c;
-            }
-
-            if (!t.IsClass)
-            {
-                throw new AvroException( $"Type {t.Name} is not a class");
-            }
-
-            bool byPosition = false;
-            foreach (var att in t.GetCustomAttributes())
-            {
-                AvroAttribute avroAttr = att as AvroAttribute;
-                if (avroAttr != null)
-                {
-                    byPosition = avroAttr.ByPosition;
-                }
-            }
-
-            if (byPosition)
-            {
-                return new ByPosClass(t, schema);
-            }
-            else
-            {
-                return new ByNameClass(t, schema);
-            }
         }
 
         /// <summary>

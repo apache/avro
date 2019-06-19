@@ -24,13 +24,13 @@ using Avro.IO;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using Avro;
-using Avro.POCO;
+using Avro.Reflect;
 using System.Reflection;
 
 namespace Avro.Test
 {
     [TestFixture]
-    class POCOTests
+    class ReflectTests
     {
 
         enum EnumResolutionEnum
@@ -69,7 +69,7 @@ namespace Avro.Test
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class
         {
             long initialPos = ms.Position;
-            var r = new POCOReader<S>(ws, rs);
+            var r = new ReflectReader<S>(ws, rs);
             Decoder d = new BinaryDecoder(ms);
             S output = r.Read(null, d);
             Assert.AreEqual(ms.Length, ms.Position); // Ensure we have read everything.
@@ -80,18 +80,18 @@ namespace Avro.Test
         private static void checkAlternateDeserializers<S>(S expected, Stream input, long startPos, Schema ws, Schema rs) where S : class
         {
             // input.Position = startPos;
-            // var reader = new POCODatumReader<S>(ws, rs);
+            // var reader = new ReflectDatumReader<S>(ws, rs);
             // Decoder d = new BinaryDecoder(input);
             // S output = reader.Read(null, d);
             // Assert.AreEqual(input.Length, input.Position); // Ensure we have read everything.
-            // AssertPOCORecordEqual(rs, expected, ws, output);
+            // AssertReflectRecordEqual(rs, expected, ws, output);
         }
 
         private static Stream serialize<T>(Schema ws, T actual)
         {
             var ms = new MemoryStream();
             Encoder e = new BinaryEncoder(ms);
-            var w = new POCOWriter<T>(ws);
+            var w = new ReflectWriter<T>(ws);
             w.Write(actual, e);
             ms.Flush();
             ms.Position = 0;
@@ -102,7 +102,7 @@ namespace Avro.Test
         private static void checkAlternateSerializers<T>(byte[] expected, T value, Schema ws)
         {
             // var ms = new MemoryStream();
-            // var writer = new POCODatumWriter<T>(ws);
+            // var writer = new ReflectDatumWriter<T>(ws);
             // var e = new BinaryEncoder(ms);
             // writer.Write(value, e);
             // var output = ms.ToArray();
@@ -111,7 +111,7 @@ namespace Avro.Test
             // Assert.True(expected.SequenceEqual(output));
         }
 
-        private static void AssertPOCORecordEqual(Schema schema1, object rec1, Schema schema2, object rec2)
+        private static void AssertReflectRecordEqual(Schema schema1, object rec1, Schema schema2, object rec2)
         {
             var recordSchema = (RecordSchema) schema1;
             foreach (var f in recordSchema.Fields)
@@ -120,7 +120,7 @@ namespace Avro.Test
                 var rec2Val = ClassCache.GetClass(recordSchema).GetValue(rec2, f);
                 if (rec1Val.GetType().IsClass)
                 {
-                    AssertPOCORecordEqual(f.Schema, rec1Val, f.Schema, rec2Val);
+                    AssertReflectRecordEqual(f.Schema, rec1Val, f.Schema, rec2Val);
                 }
                 else if (rec1Val is IList)
                 {
@@ -132,7 +132,7 @@ namespace Avro.Test
                         Assert.AreEqual(rec1List.Count, rec2List.Count);
                         for (int j = 0; j < rec1List.Count; j++)
                         {
-                            AssertPOCORecordEqual(schema1List.ItemSchema, rec1List[j], schema1List.ItemSchema, rec2List[j]);
+                            AssertReflectRecordEqual(schema1List.ItemSchema, rec1List[j], schema1List.ItemSchema, rec2List[j]);
                         }
                     }
                     else
@@ -152,7 +152,7 @@ namespace Avro.Test
                         var val2 = rec2Dict[key];
                         if (f.Schema is RecordSchema)
                         {
-                            AssertPOCORecordEqual(f.Schema as RecordSchema, val1, f.Schema as RecordSchema, val2);
+                            AssertReflectRecordEqual(f.Schema as RecordSchema, val1, f.Schema as RecordSchema, val2);
                         }
                         else
                         {

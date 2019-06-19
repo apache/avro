@@ -23,7 +23,7 @@ using Avro;
 using Avro.IO;
 using Avro.Generic;
 using Avro.Specific;
-using Avro.POCO;
+using Avro.Reflect;
 using NUnit.Framework;
 
 namespace Avro.Test
@@ -99,8 +99,8 @@ namespace Avro.Test
                     }
                 }
 
-                var avroWriter = new POCOWriter<Z>(schema);
-                var avroReader = new POCOReader<Z>(schema, schema);
+                var avroWriter = new ReflectWriter<Z>(schema);
+                var avroReader = new ReflectReader<Z>(schema, schema);
 
                 byte[] serialized;
 

@@ -21,7 +21,7 @@ using Avro;
 using Avro.IO;
 using Avro.Generic;
 using Avro.Specific;
-using Avro.POCO;
+using Avro.Reflect;
 using NUnit.Framework;
 
 namespace Avro.Test
@@ -56,8 +56,8 @@ namespace Avro.Test
         public void Serialize()
         {
             var schema = global::Avro.Schema.Parse(_logMessageSchemaV1);
-            var avroWriter = new POCOWriter<LogMessage>(schema);
-            var avroReader = new POCOReader<LogMessage>(schema, schema);
+            var avroWriter = new ReflectWriter<LogMessage>(schema);
+            var avroReader = new ReflectReader<LogMessage>(schema, schema);
 
             byte[] serialized;
 

@@ -17,43 +17,53 @@
  * limitations under the License.
  */
 
- using System;
-using Avro;
+using System;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     /// <summary>
-    /// Container for a C# class. Knows about attributes, converter etc.
+    /// Convert C# DateTimeOffset properties to long unix time
     /// </summary>
-    public interface IDotnetClass
+    public class DateTimeOffsetToLongConverter : IAvroFieldConverter
     {
         /// <summary>
-        /// Returns the type of the class that is wrapped
+        /// Convert from DateTimeOffset to Unix long
         /// </summary>
+        /// <param name="o">DateTimeOffset</param>
         /// <returns></returns>
-        Type GetClassType();
+        public object ToAvroType(object o)
+        {
+            var dt = (DateTimeOffset)o;
+            return dt.ToUnixTimeMilliseconds();
+        }
 
         /// <summary>
-        /// Returns the type of a property corresponding to schema field f (after applying any converters)
+        /// Convert from Unix long to DateTimeOffset
         /// </summary>
-        /// <param name="f"></param>
+        /// <param name="o">long</param>
         /// <returns></returns>
-        Type GetPropertyType( Field f );
+        public object FromAvroType(object o)
+        {
+            var dt = DateTimeOffset.FromUnixTimeMilliseconds((long)o);
+            return dt;
+        }
 
         /// <summary>
-        /// Get the value of a property after converters are applied
+        /// Avro type
         /// </summary>
-        /// <param name="o"></param>
-        /// <param name="f"></param>
         /// <returns></returns>
-        object GetValue(object o, Field f);
+        public Type GetAvroType()
+        {
+            return typeof(long);
+        }
 
         /// <summary>
-        /// Set the value of a property after converters are applied
+        /// Property type
         /// </summary>
-        /// <param name="o"></param>
-        /// <param name="f"></param>
-        /// <param name="v"></param>
-        void SetValue(object o, Field f, object v);
+        /// <returns></returns>
+        public Type GetPropertyType()
+        {
+            return typeof(DateTimeOffset);
+        }
     }
 }

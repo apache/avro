@@ -20,18 +20,18 @@
 using System;
 using System.Reflection;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     /// <summary>
     /// Attribute that specifies the mapping between an Avro record schema and C# class property.
     /// </summary>
-    public class AvroFieldAttribute : Attribute
+    public class AvroAttribute : Attribute
     {
         /// <summary>
         /// Sequence number of the field in the Avro Schema
         /// </summary>
         /// <value></value>
-        public int FieldPos { get; set; }
+        public string FieldName { get; set; }
 
         /// <summary>
         /// Convert the property into a standard Avro type - e.g. DateTimeOffset to long
@@ -42,11 +42,11 @@ namespace Avro.POCO
         /// <summary>
         /// Attribute to hold field position and optionally a converter
         /// </summary>
-        /// <param name="fieldPos"></param>
+        /// <param name="fieldName"></param>
         /// <param name="converter"></param>
-        public AvroFieldAttribute(int fieldPos, Type converter = null)
+        public AvroAttribute(string fieldName, Type converter = null)
         {
-            FieldPos = fieldPos;
+            FieldName = fieldName;
             if (converter != null)
             {
                 Converter = (IAvroFieldConverter)Activator.CreateInstance(converter);
@@ -57,9 +57,9 @@ namespace Avro.POCO
         /// Used in property name mapping to specify a property type converter for the attribute.
         /// </summary>
         /// <param name="converter"></param>
-        public AvroFieldAttribute(Type converter)
+        public AvroAttribute(Type converter)
         {
-            FieldPos = -1;
+            FieldName = null;
             if (converter != null)
             {
                 Converter = (IAvroFieldConverter)Activator.CreateInstance(converter);

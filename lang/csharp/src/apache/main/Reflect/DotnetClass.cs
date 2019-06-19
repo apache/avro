@@ -18,30 +18,27 @@
  */
 
 using System;
+using System.Reflection;
 using System.Collections.Concurrent;
 using Avro;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
-    internal class ByNameClass : IDotnetClass
+    public class DotnetClass
     {
         private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
-        public ByNameClass(Type t, RecordSchema r)
+        public DotnetClass(Type t, RecordSchema r)
         {
             _type = t;
             foreach (var f in r.Fields)
             {
                 bool hasAttribute = false;
-                var prop = _type.GetProperty(f.Name);
-                if (prop == null)
-                {
-                    throw new AvroException( $"Class {_type.Name} doesnt contain property {f.Name}");
-                }
+                PropertyInfo prop = GetPropertyInfo(f);
 
                 foreach (var attr in prop.GetCustomAttributes(true))
                 {
-                    var avroAttr = attr as AvroFieldAttribute;
+                    var avroAttr = attr as AvroAttribute;
                     if (avroAttr != null)
                     {
                         hasAttribute = true;
@@ -57,16 +54,30 @@ namespace Avro.POCO
             }
         }
 
-        private Type _type { get; set; }
-
-        private void AddProperty(Field f, DotnetProperty p)
+        private PropertyInfo GetPropertyInfo(Field f)
         {
-            if (_propertyMap.ContainsKey(f.Name))
+            var prop = _type.GetProperty(f.Name);
+            if (prop == null)
             {
-                throw new AvroException($"ByPosClass already contains property {f.Name}: {_propertyMap[f.Name]}");
+                foreach(var p in _type.GetProperties())
+                {
+                    foreach (var attr in p.GetCustomAttributes(true))
+                    {
+                        var avroAttr = attr as AvroAttribute;
+                        if (avroAttr != null && avroAttr.FieldName != null && avroAttr.FieldName == f.Name)
+                        {
+                            prop = p;
+                            break;
+                        }
+                    }
+                }
+                throw new AvroException($"Class {_type.Name} doesnt contain property {f.Name}");
             }
-            _propertyMap.AddOrUpdate(f.Name, p, (i, v)=>v);
+
+            return prop;
         }
+
+        private Type _type { get; set; }
 
         public object GetValue(object o, Field f)
         {

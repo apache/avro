@@ -19,7 +19,7 @@
 
  using System;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     /// <summary>
     /// Converters can be added to properties with an AvroField attribute. Converters convert between the

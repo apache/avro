@@ -21,7 +21,7 @@ using System;
 using System.Reflection;
 using System.Collections;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     internal class DotnetProperty
     {

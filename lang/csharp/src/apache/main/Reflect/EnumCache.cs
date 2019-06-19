@@ -20,7 +20,7 @@ using System;
 using System.Collections.Concurrent;
 using Avro;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     /// <summary>
     /// Cache of enum types. Cache key is the schema fullname.

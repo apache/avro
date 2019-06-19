@@ -27,18 +27,18 @@ using Avro.Generic;
 using Avro.Specific;
 using Newtonsoft.Json.Linq;
 
-namespace Avro.POCO
+namespace Avro.Reflect
 {
     /// <summary>
     /// Reader wrapper class for reading data and storing into specific classes
     /// </summary>
     /// <typeparam name="T">Specific class type</typeparam>
-    public class POCOReader<T> : DatumReader<T>
+    public class ReflectReader<T> : DatumReader<T>
     {
         /// <summary>
         /// Reader class for reading data and storing into specific classes
         /// </summary>
-        private readonly POCODefaultReader reader;
+        private readonly ReflectDefaultReader reader;
 
         /// <summary>
         /// Schema for the writer class
@@ -56,16 +56,16 @@ namespace Avro.POCO
         /// </summary>
         /// <param name="writerSchema">The schema used while generating the data</param>
         /// <param name="readerSchema">The schema desired by the reader</param>
-        public POCOReader(Schema writerSchema, Schema readerSchema)
+        public ReflectReader(Schema writerSchema, Schema readerSchema)
         {
-            reader = new POCODefaultReader(typeof(T), writerSchema, readerSchema);
+            reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema);
         }
 
         /// <summary>
-        /// Constructs a generic reader from an instance of a POCODefaultReader (non-generic)
+        /// Constructs a generic reader from an instance of a ReflectDefaultReader (non-generic)
         /// </summary>
         /// <param name="reader"></param>
-        public POCOReader(POCODefaultReader reader)
+        public ReflectReader(ReflectDefaultReader reader)
         {
             this.reader = reader;
         }
@@ -84,7 +84,7 @@ namespace Avro.POCO
     /// <summary>
     /// Reader class for reading data and storing into specific classes
     /// </summary>
-    public class POCODefaultReader : SpecificDefaultReader
+    public class ReflectDefaultReader : SpecificDefaultReader
     {
         /// <summary>
         /// C# type to create when deserializing and array. Must implement IList&lt;&gt;
@@ -115,7 +115,7 @@ namespace Avro.POCO
         /// <param name="objType"></param>
         /// <param name="writerSchema"></param>
         /// <param name="readerSchema"></param>
-        public POCODefaultReader(Type objType, Schema writerSchema, Schema readerSchema)
+        public ReflectDefaultReader(Type objType, Schema writerSchema, Schema readerSchema)
             : base(writerSchema, readerSchema)
         {
             var rs = readerSchema as RecordSchema;
