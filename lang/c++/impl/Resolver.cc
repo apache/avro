@@ -42,7 +42,7 @@ template<typename T> NoOp& operator<<(NoOp &noOp, const T&) {
     return noOp;
 }
 NoOp noop;
-#define DEBUG_OUT(str) noop << str 
+#define DEBUG_OUT(str) noop << str
 #endif
 
 template<typename T>
@@ -50,7 +50,7 @@ class PrimitiveSkipper : public Resolver
 {
   public:
 
-    PrimitiveSkipper() : 
+    PrimitiveSkipper() :
         Resolver()
     {}
 
@@ -67,7 +67,7 @@ class PrimitiveParser : public Resolver
 {
   public:
 
-    PrimitiveParser(const PrimitiveLayout &offset) : 
+    PrimitiveParser(const PrimitiveLayout &offset) :
         Resolver(),
         offset_(offset.offset())
     {}
@@ -89,7 +89,7 @@ class PrimitivePromoter : public Resolver
 {
   public:
 
-    PrimitivePromoter(const PrimitiveLayout &offset) : 
+    PrimitivePromoter(const PrimitiveLayout &offset) :
         Resolver(),
         offset_(offset.offset())
     {}
@@ -127,7 +127,7 @@ class PrimitiveSkipper<std::vector<uint8_t> > : public Resolver
 {
   public:
 
-    PrimitiveSkipper() : 
+    PrimitiveSkipper() :
         Resolver()
     {}
 
@@ -144,9 +144,9 @@ class PrimitiveParser<std::vector<uint8_t> > : public Resolver
 {
   public:
 
-    PrimitiveParser(const PrimitiveLayout &offset) : 
+    PrimitiveParser(const PrimitiveLayout &offset) :
         Resolver(),
-        offset_(offset.offset()) 
+        offset_(offset.offset())
     {}
 
     virtual void parse(Reader &reader, uint8_t *address) const
@@ -179,7 +179,7 @@ class RecordSkipper : public Resolver
     }
 
   protected:
-    
+
     ResolverPtrVector resolvers_;
 
 };
@@ -202,7 +202,7 @@ class RecordParser : public Resolver
     RecordParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets);
 
   protected:
-    
+
     ResolverPtrVector resolvers_;
 
 };
@@ -266,7 +266,7 @@ class MapParser : public Resolver
     }
 
   protected:
-    
+
     ResolverPtr  resolver_;
     size_t          offset_;
     size_t          setFuncOffset_;
@@ -292,7 +292,7 @@ class ArraySkipper : public Resolver
     }
 
   protected:
-   
+
     ResolverPtr resolver_;
 };
 
@@ -324,11 +324,11 @@ class ArrayParser : public Resolver
     }
 
   protected:
-    
+
     ArrayParser() :
         Resolver()
     {}
-    
+
     ResolverPtr resolver_;
     size_t         offset_;
     size_t         setFuncOffset_;
@@ -361,7 +361,7 @@ class EnumParser : public Resolver
         Resolver(),
         offset_(offsets.at(0).offset()),
         readerSize_(reader->names())
-    { 
+    {
         const size_t writerSize = writer->names();
 
         mapping_.reserve(writerSize);
@@ -391,7 +391,7 @@ protected:
     size_t offset_;
     size_t readerSize_;
     std::vector<size_t> mapping_;
-    
+
 };
 
 class UnionSkipper : public Resolver
@@ -408,7 +408,7 @@ class UnionSkipper : public Resolver
     }
 
   protected:
-    
+
     ResolverPtrVector resolvers_;
 };
 
@@ -436,7 +436,7 @@ class UnionParser : public Resolver
     }
 
   protected:
-    
+
     ResolverPtrVector resolvers_;
     std::vector<int64_t> choiceMapping_;
     size_t offset_;
@@ -460,7 +460,7 @@ class UnionToNonUnionParser : public Resolver
     }
 
   protected:
-    
+
     ResolverPtrVector resolvers_;
 };
 
@@ -486,7 +486,7 @@ class NonUnionToUnionParser : public Resolver
     }
 
   protected:
-    
+
     ResolverPtr resolver_;
     size_t choice_;
     size_t offset_;
@@ -499,7 +499,7 @@ class FixedSkipper : public Resolver
   public:
 
     FixedSkipper(ResolverFactory &factory, const NodePtr &writer) :
-        Resolver() 
+        Resolver()
     {
         size_ = writer->fixedSize();
     }
@@ -514,7 +514,7 @@ class FixedSkipper : public Resolver
   protected:
 
     int size_;
-    
+
 };
 
 class FixedParser : public Resolver
@@ -522,7 +522,7 @@ class FixedParser : public Resolver
   public:
 
     FixedParser(ResolverFactory &factory, const NodePtr &writer, const NodePtr &reader, const CompoundLayout &offsets) :
-        Resolver() 
+        Resolver()
     {
         size_ = writer->fixedSize();
         offset_ = offsets.at(0).offset();
@@ -539,7 +539,7 @@ class FixedParser : public Resolver
 
     int size_;
     size_t offset_;
-    
+
 };
 
 
@@ -547,7 +547,7 @@ class ResolverFactory : private boost::noncopyable {
 
     template<typename T>
     unique_ptr<Resolver>
-    constructPrimitiveSkipper(const NodePtr &writer) 
+    constructPrimitiveSkipper(const NodePtr &writer)
     {
         return unique_ptr<Resolver>(new PrimitiveSkipper<T>());
     }
@@ -562,7 +562,7 @@ class ResolverFactory : private boost::noncopyable {
 
         if (match == RESOLVE_NO_MATCH) {
             instruction = unique_ptr<Resolver>(new PrimitiveSkipper<T>());
-        } 
+        }
         else if (reader->type() == AVRO_UNION) {
             const CompoundLayout &compoundLayout = static_cast<const CompoundLayout &>(offset);
             instruction = unique_ptr<Resolver>(new NonUnionToUnionParser(*this, writer, reader, compoundLayout));
@@ -591,7 +591,7 @@ class ResolverFactory : private boost::noncopyable {
 
     template<typename Skipper>
     unique_ptr<Resolver>
-    constructCompoundSkipper(const NodePtr &writer) 
+    constructCompoundSkipper(const NodePtr &writer)
     {
         return unique_ptr<Resolver>(new Skipper(*this, writer));
     }
@@ -620,7 +620,7 @@ class ResolverFactory : private boost::noncopyable {
         else {
             const CompoundLayout &compoundLayout = dynamic_cast<const CompoundLayout &>(offset);
             instruction = unique_ptr<Resolver>(new Parser(*this, writer, reader, compoundLayout));
-        } 
+        }
 
         return instruction;
     }
@@ -640,7 +640,7 @@ class ResolverFactory : private boost::noncopyable {
             resolveSymbol(reader) : reader;
 
         static const BuilderFunc funcs[] = {
-            &ResolverFactory::constructPrimitive<std::string>, 
+            &ResolverFactory::constructPrimitive<std::string>,
             &ResolverFactory::constructPrimitive<std::vector<uint8_t> >,
             &ResolverFactory::constructPrimitive<int32_t>,
             &ResolverFactory::constructPrimitive<int64_t>,
@@ -666,7 +666,7 @@ class ResolverFactory : private boost::noncopyable {
     }
 
     unique_ptr<Resolver>
-    skipper(const NodePtr &writer) 
+    skipper(const NodePtr &writer)
     {
 
         typedef unique_ptr<Resolver> (ResolverFactory::*BuilderFunc)(const NodePtr &writer);
@@ -675,7 +675,7 @@ class ResolverFactory : private boost::noncopyable {
             writer->leafAt(0) : writer;
 
         static const BuilderFunc funcs[] = {
-            &ResolverFactory::constructPrimitiveSkipper<std::string>, 
+            &ResolverFactory::constructPrimitiveSkipper<std::string>,
             &ResolverFactory::constructPrimitiveSkipper<std::vector<uint8_t> >,
             &ResolverFactory::constructPrimitiveSkipper<int32_t>,
             &ResolverFactory::constructPrimitiveSkipper<int64_t>,
@@ -703,7 +703,7 @@ class ResolverFactory : private boost::noncopyable {
 
 
 RecordSkipper::RecordSkipper(ResolverFactory &factory, const NodePtr &writer) :
-    Resolver() 
+    Resolver()
 {
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
@@ -719,7 +719,7 @@ RecordParser::RecordParser(ResolverFactory &factory, const NodePtr &writer, cons
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
     for(size_t i = 0; i < leaves; ++i) {
-    
+
         const NodePtr &w = writer->leafAt(i);
 
         const std::string &name = writer->nameAt(i);
@@ -762,7 +762,7 @@ ArrayParser::ArrayParser(ResolverFactory &factory, const NodePtr &writer, const 
 { }
 
 UnionSkipper::UnionSkipper(ResolverFactory &factory, const NodePtr &writer) :
-    Resolver() 
+    Resolver()
 {
     size_t leaves = writer->leaves();
     resolvers_.reserve(leaves);
@@ -776,11 +776,11 @@ namespace {
 
 // asumes the writer is NOT a union, and the reader IS a union
 
-SchemaResolution    
+SchemaResolution
 checkUnionMatch(const NodePtr &writer, const NodePtr &reader, size_t &index)
 {
     SchemaResolution bestMatch = RESOLVE_NO_MATCH;
- 
+
     index = 0;
     size_t leaves = reader->leaves();
 

@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef avro_ValidSchema_hh__ 
-#define avro_ValidSchema_hh__ 
+#ifndef avro_ValidSchema_hh__
+#define avro_ValidSchema_hh__
 
 #include "Config.hh"
 #include "Node.hh"

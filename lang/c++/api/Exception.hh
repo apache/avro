@@ -38,7 +38,7 @@ class AVRO_DECL Exception : public virtual std::runtime_error
 
     Exception(const boost::format &msg) :
         std::runtime_error( boost::str(msg))
-    { }  
+    { }
 };
 
 } // namespace avro

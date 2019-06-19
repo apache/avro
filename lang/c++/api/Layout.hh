@@ -26,7 +26,7 @@
 ///
 
 namespace avro {
-    
+
 class AVRO_DECL Layout : private boost::noncopyable {
 
   protected:

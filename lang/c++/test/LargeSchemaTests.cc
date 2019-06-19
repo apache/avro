@@ -36,7 +36,7 @@ void testLargeSchema()
 }
 
 boost::unit_test::test_suite*
-init_unit_test_suite(int argc, char* argv[]) 
+init_unit_test_suite(int argc, char* argv[])
 {
     using namespace boost::unit_test;
 

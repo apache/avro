@@ -450,7 +450,7 @@ void DataFileReaderBase::readDataBlock()
         os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
         os_->push(boost::iostreams::basic_array_source<char>(
                                                              compressed_.data(), compressed_.size()));
-        
+
         std::unique_ptr<InputStream> in = nonSeekableIstreamInputStream(*os_);
         dataDecoder_->init(*in);
         dataStream_ = std::move(in);

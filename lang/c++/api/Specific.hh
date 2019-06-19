@@ -42,7 +42,7 @@
  * std::vector<T> for aribtrary type T gets encoded as an Avro array of T.
  * Similarly, std::map<std::string, T> for arbitrary type T gets encoded
  * as an Avro map with value type T.
- * 
+ *
  * Users can have their custom types encoded/decoded by specializing
  * avro::codec_traits class for their types.
  */

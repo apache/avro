@@ -190,7 +190,7 @@ class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     Codec codec_;
     int64_t blockStart_;
     int64_t blockEnd_;
-    
+
     ValidSchema readerSchema_;
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;

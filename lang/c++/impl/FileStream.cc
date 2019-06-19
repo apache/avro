@@ -107,7 +107,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         return false;
     }
 #endif
-  
+
 };
 
 struct IStreamBufferCopyIn : public BufferCopyIn {
@@ -284,7 +284,7 @@ struct FileBufferCopyOut : public BufferCopyOut {
         }
     }
 #endif
-  
+
 };
 
 struct OStreamBufferCopyOut : public BufferCopyOut {

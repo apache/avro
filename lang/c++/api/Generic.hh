@@ -143,7 +143,7 @@ template <> struct codec_traits<GenericDatum> {
         GenericReader::read(d, g);
     }
 };
-    
+
 }   // namespace avro
 #endif
 

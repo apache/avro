@@ -176,9 +176,9 @@ TestData data[] = {
 }   // namespace stream
 
 }   // namespace
-    
+
 boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite( int argc, char* argv[] )
 {
     boost::unit_test::test_suite* ts =
         BOOST_TEST_SUITE("Avro C++ unit test suite for streams");
