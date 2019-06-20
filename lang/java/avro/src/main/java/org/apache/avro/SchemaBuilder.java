@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,7 +43,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * <p>
  * A fluent interface for building {@link Schema} instances. The flow of the API
  * is designed to mimic the
- * <a href="http://avro.apache.org/docs/current/spec.html#schemas">Avro Schema
+ * <a href="https://avro.apache.org/docs/current/spec.html#schemas">Avro Schema
  * Specification</a>
  * </p>
  * For example, the below JSON schema and the fluent builder code to create it
