@@ -67,13 +67,26 @@ class Util {
    * and returns an OutputStream for it.
    * Relative paths will be opened in the default filesystem.
    * @param filename The filename to be opened
+   * @param append True to append, false to create new or overwrite.
    * @throws IOException
    */
-  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout)
+  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout, boolean append)
       throws IOException {
     return new BufferedOutputStream(filename.equals("-")
         ? stdout
-        : createFromFS(filename));
+        : createFromFS(filename, append));
+  }
+
+  /**
+   * Returns stdout if filename is "-", else opens the file from the owning filesystem
+   * and returns an OutputStream for it.
+   * Relative paths will be opened in the default filesystem.
+   * @param filename The filename to be opened
+   * @throws IOException
+   */
+  static BufferedOutputStream fileOrStdout(String filename, OutputStream stdout)
+          throws IOException {
+    return fileOrStdout(filename, stdout, false);
   }
 
   /**
@@ -118,8 +131,22 @@ class Util {
    * @throws IOException
    */
   static OutputStream createFromFS(String filename)
+          throws IOException {
+    return createFromFS(filename, false);
+  }
+  
+  /**
+   * Opens the file for writing in the owning filesystem,
+   * or the default if none is given.
+   * @param filename The filename to be opened.
+   * @param append True to append, false to create new or overwrite.
+   * @return An OutputStream to the specified file.
+   * @throws IOException
+   */
+  static OutputStream createFromFS(String filename, boolean append)
       throws IOException {
     Path p = new Path(filename);
+    if(append) return new BufferedOutputStream(p.getFileSystem(new Configuration()).append(p));
     return new BufferedOutputStream(p.getFileSystem(new Configuration()).create(p));
   }
 
