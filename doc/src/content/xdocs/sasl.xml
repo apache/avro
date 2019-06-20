@@ -28,7 +28,7 @@
   <body>
     <section id="intro">
       <title>Introduction</title>
-      <p>SASL (<a href="http://www.ietf.org/rfc/rfc2222.txt">RFC 2222</a>)
+      <p>SASL (<a href="https://www.ietf.org/rfc/rfc2222.txt">RFC 2222</a>)
       provides a framework for authentication and security of network
       protocols.  Each protocol that uses SASL is meant to define a
       SASL <em>profile</em>.  This document provides a SASL profile
@@ -126,7 +126,7 @@
     <section id="anonymous">
       <title>Anonymous Mechanism</title>
       <p>The SASL anonymous mechanism
-      (<a href="http://www.ietf.org/rfc/rfc2222.txt">RFC 2245</a>) is
+      (<a href="https://www.ietf.org/rfc/rfc2222.txt">RFC 2245</a>) is
       quite simple to implement.  In particular, an initial anonymous
       request may be prefixed by the following static sequence:</p>
       <source>| 0 | 0009 | ANONYMOUS | 0000 |</source>

@@ -2,7 +2,7 @@
  * g.Raphael 0.4.1 - Charting library, based on Raphaël
  *
  * Copyright (c) 2009 Dmitry Baranovskiy (http://g.raphaeljs.com)
- * Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
+ * Licensed under the MIT (https://www.opensource.org/licenses/mit-license.php) license.
  */
 Raphael.fn.g.barchart = function (x, y, width, height, values, opts) {
     opts = opts || {};

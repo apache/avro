@@ -421,7 +421,7 @@ class SchemaTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(json_decode('{"type": "null"}', true), array("type" => 'null'));
 
     // PHP now only accept lowercase true, and rejects TRUE etc.
-    // http://php.net/manual/en/migration56.incompatible.php#migration56.incompatible.json-decode
+    // https://php.net/manual/en/migration56.incompatible.php#migration56.incompatible.json-decode
     $this->assertEquals(json_decode('true', true), true, 'true');
 
     $this->assertEquals(json_decode('"boolean"'), 'boolean');

@@ -157,7 +157,7 @@ reader.close()
         Do make sure that you open your files in binary mode (i.e. using the modes
         <code>wb</code> or <code>rb</code> respectively). Otherwise you might
         generate corrupt files due to
-        <a href="http://docs.python.org/library/functions.html#open">
+        <a href="https://docs.python.org/library/functions.html#open">
         automatic replacement</a> of newline characters with the
         platform-specific representations.
       </p>

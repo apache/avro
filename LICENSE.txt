@@ -235,7 +235,7 @@ Some files include an additional copyright notice:
 ----------------------------------------------------------------------
 License for msinttypes.h and msstdint.h used in the C implementation:
 Source from:
-http://code.google.com/p/msinttypes/downloads/detail?name=msinttypes-r26.zip
+https://code.google.com/p/msinttypes/downloads/detail?name=msinttypes-r26.zip
 
 Copyright (c) 2006-2008 Alexander Chemeris
 
@@ -401,7 +401,7 @@ File: Castle.Core.dll
 Copyright (c) 2004-2015 Castle Project
 
 License: Apache License version 2.0 (see above)
-URL: http://opensource.org/licenses/Apache-2.0
+URL: https://opensource.org/licenses/Apache-2.0
 
 ----------------------------------------------------------------------
 License for the log4net binary included with the C# implementation:
@@ -527,17 +527,17 @@ All rights reserved.
 License for g.Raphael 0.4.1 used by the Java IPC implementation:
 
 Copyright (c) 2009 Dmitry Baranovskiy (http://g.raphaeljs.com)
-Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
+Licensed under the MIT (https://www.opensource.org/licenses/mit-license.php) license.
 
 ----------------------------------------------------------------------
 License for jQuery v1.4.2 used by the Java IPC implementation:
 
 Copyright 2010, John Resig
 Dual licensed under the MIT or GPL Version 2 licenses.
-http://jquery.org/license
+https://jquery.org/license
 
 jQuery includes Sizzle.js
-http://sizzlejs.com/
+https://sizzlejs.com/
 Copyright 2010, The Dojo Foundation
 Released under the MIT, BSD, and GPL Licenses.
 

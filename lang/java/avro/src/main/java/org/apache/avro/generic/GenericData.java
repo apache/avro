@@ -594,7 +594,7 @@ public class GenericData {
     }
   }
 
-  /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
+  /** Renders a Java datum as <a href="https://www.json.org/">JSON</a>. */
   public String toString(Object datum) {
     StringBuilder buffer = new StringBuilder();
     toString(datum, buffer, new IdentityHashMap<>(128));
@@ -603,7 +603,7 @@ public class GenericData {
 
   private static final String TOSTRING_CIRCULAR_REFERENCE_ERROR_TEXT = " \">>> CIRCULAR REFERENCE CANNOT BE PUT IN JSON STRING, ABORTING RECURSION <<<\" ";
 
-  /** Renders a Java datum as <a href="http://www.json.org/">JSON</a>. */
+  /** Renders a Java datum as <a href="https://www.json.org/">JSON</a>. */
   protected void toString(Object datum, StringBuilder buffer, IdentityHashMap<Object, Object> seenObjects) {
     if (isRecord(datum)) {
       if (seenObjects.containsKey(datum)) {
@@ -688,7 +688,7 @@ public class GenericData {
     }
   }
 
-  /* Adapted from http://code.google.com/p/json-simple */
+  /* Adapted from https://code.google.com/p/json-simple */
   private void writeEscapedString(CharSequence string, StringBuilder builder) {
     for (int i = 0; i < string.length(); i++) {
       char ch = string.charAt(i);
@@ -715,7 +715,7 @@ public class GenericData {
         builder.append("\\t");
         break;
       default:
-        // Reference: http://www.unicode.org/versions/Unicode5.1.0/
+        // Reference: https://www.unicode.org/versions/Unicode5.1.0/
         if ((ch >= '\u0000' && ch <= '\u001F') || (ch >= '\u007F' && ch <= '\u009F')
             || (ch >= '\u2000' && ch <= '\u20FF')) {
           String hex = Integer.toHexString(ch);

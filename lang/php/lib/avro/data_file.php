@@ -361,7 +361,7 @@ class AvroDataIOWriter
    */
   private static function generate_sync_marker()
   {
-    // From http://php.net/manual/en/function.mt-rand.php comments
+    // From https://php.net/manual/en/function.mt-rand.php comments
     return pack('S8',
                 mt_rand(0, 0xffff), mt_rand(0, 0xffff),
                 mt_rand(0, 0xffff),
