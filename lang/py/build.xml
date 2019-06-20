@@ -72,7 +72,7 @@
   </target>
 
   <target name="ivy-download" unless="ivy.jar.found" >
-    <get src="http://repo2.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar" dest="${ivy.jar}" usetimestamp="true" />
+    <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar" dest="${ivy.jar}" usetimestamp="true" />
   </target>
 
   <target name="build"
