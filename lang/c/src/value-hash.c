@@ -35,7 +35,7 @@
  * We currently use MurmurHash3 [1], which is public domain, as our hash
  * implementation.
  *
- * [1] http://code.google.com/p/smhasher/
+ * [1] https://code.google.com/p/smhasher/
  */
 
 /* Our seed is the MurmurHash3 of the string "avro.value" */

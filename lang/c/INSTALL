@@ -4,7 +4,7 @@ Installation instructions
 The Avro library is written in ANSI C.  It uses CMake [1] as its build
 manager.
 
-[1] http://www.cmake.org/
+[1] https://www.cmake.org/
 
 
 Prerequisites
@@ -23,10 +23,10 @@ To build the documentation you need asciidoc [3] and source-highlight [4]
 installed.  The build scripts will automatically detect whether these
 tools are installed, and will skip the documentation if they're not.
 
-[1] http://www.cmake.org/
+[1] https://www.cmake.org/
 [2] http://www.digip.org/jansson/
-[3] http://www.methods.co.nz/asciidoc
-[4] http://www.gnu.org/software/src-highlite/
+[3] https://www.methods.co.nz/asciidoc
+[4] https://www.gnu.org/software/src-highlite/
 
 
 Building from source

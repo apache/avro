@@ -126,7 +126,7 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 
 /* For a description on GCC vs Visual Studio 2008 usage of variadic
  * macros see:
- * http://stackoverflow.com/questions/2575864/the-problem-about-different
+ * https://stackoverflow.com/questions/2575864/the-problem-about-different
  * -treatment-to-va-args-when-using-vs-2008-and-gcc
  */
 #define expand_args(...) __VA_ARGS__

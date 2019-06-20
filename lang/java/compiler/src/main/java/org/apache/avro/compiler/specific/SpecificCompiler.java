@@ -82,8 +82,8 @@ public class SpecificCompiler {
    * arguments.
    *
    * @see <a href=
-   * "http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">JVM
-   * Spec: Section 4.10</a>
+   * "https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">
+   * JVM Spec: Section 4.10</a>
    */
   private static final int JVM_METHOD_ARG_LIMIT = 255;
 
