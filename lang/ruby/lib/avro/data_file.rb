@@ -316,7 +316,7 @@ module Avro
       def decompress(compressed)
         # Passing a negative number to Inflate puts it into "raw" RFC1951 mode
         # (without the RFC1950 header & checksum). See the docs for
-        # inflateInit2 in http://www.zlib.net/manual.html
+        # inflateInit2 in https://www.zlib.net/manual.html
         zstream = Zlib::Inflate.new(-Zlib::MAX_WBITS)
         data = zstream.inflate(compressed)
         data << zstream.finish

@@ -127,7 +127,7 @@ public class TestSpecificCompilerTool {
    * sources and do a deeper comparison.
    *
    * See
-   * http://download.oracle.com/javase/6/docs/api/javax/tools/JavaCompiler.html
+   * https://download.oracle.com/javase/6/docs/api/javax/tools/JavaCompiler.html
    */
   private static void assertFileMatch(File expected, File found) throws IOException {
     Assert.assertEquals("Found file: " + found + " does not match expected file: " + expected, readFile(expected),

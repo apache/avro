@@ -76,7 +76,7 @@ public class SpecificData extends GenericData {
 
   /**
    * List of Java reserved words from
-   * http://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.9 combined
+   * https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.9 combined
    * with the boolean and null literals. combined with the classnames used
    * internally in the generated avro code.
    */

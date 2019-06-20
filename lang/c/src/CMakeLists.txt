@@ -89,7 +89,7 @@ target_link_libraries(avro-static ${JANSSON_LIBRARIES} ${CODEC_LIBRARIES} ${THRE
 set_target_properties(avro-static PROPERTIES OUTPUT_NAME avro)
 
 if (NOT WIN32)
-# TODO: Create Windows DLLs. See http://www.cmake.org/Wiki/BuildingWinDLL
+# TODO: Create Windows DLLs. See https://www.cmake.org/Wiki/BuildingWinDLL
 add_library(avro-shared SHARED ${AVRO_SRC})
 target_link_libraries(avro-shared ${JANSSON_LIBRARIES} ${CODEC_LIBRARIES} ${THREADS_LIBRARIES})
 set_target_properties(avro-shared PROPERTIES

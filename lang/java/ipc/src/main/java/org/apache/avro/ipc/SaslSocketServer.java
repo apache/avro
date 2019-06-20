@@ -47,7 +47,7 @@ public class SaslSocketServer extends SocketServer {
 
   /**
    * Create using SASL's anonymous
-   * (<a href="http://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism.
+   * (<a href="https://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism.
    */
   public SaslSocketServer(Responder responder, SocketAddress addr) throws IOException {
     this(responder, addr, new SaslServerFactory() {

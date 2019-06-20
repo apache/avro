@@ -138,7 +138,7 @@ class Avro
    * Determines the endianness of the host platform and memoizes
    * the result to Avro::$endianness.
    *
-   * Based on a similar check perfomed in http://pear.php.net/package/Math_BinaryUtils
+   * Based on a similar check perfomed in https://pear.php.net/package/Math_BinaryUtils
    *
    * @throws AvroException if the endianness cannot be determined.
    */

@@ -346,14 +346,14 @@ public abstract class Schema extends JsonProperties {
     throw new AvroRuntimeException("Not fixed: " + this);
   }
 
-  /** Render this as <a href="http://json.org/">JSON</a>. */
+  /** Render this as <a href="https://json.org/">JSON</a>. */
   @Override
   public String toString() {
     return toString(false);
   }
 
   /**
-   * Render this as <a href="http://json.org/">JSON</a>.
+   * Render this as <a href="https://json.org/">JSON</a>.
    *
    * @param pretty if true, pretty-print JSON.
    */
@@ -1405,7 +1405,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   /**
-   * Construct a schema from <a href="http://json.org/">JSON</a> text.
+   * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
    * @deprecated use {@link Schema.Parser} instead.
    */
@@ -1415,7 +1415,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   /**
-   * Construct a schema from <a href="http://json.org/">JSON</a> text.
+   * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
    * @param validate true if names should be validated, false if not.
    * @deprecated use {@link Schema.Parser} instead.

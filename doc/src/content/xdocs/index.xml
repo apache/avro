@@ -61,7 +61,7 @@
 	schema, correspondence between same named fields, missing
 	fields, extra fields, etc. can all be easily resolved.</p>
       <p>Avro schemas are defined with
-	<a href="http://www.json.org/">JSON</a> .  This
+	<a href="https://www.json.org/">JSON</a> .  This
 	facilitates implementation in languages that already have
 	JSON libraries.</p>
     </section>

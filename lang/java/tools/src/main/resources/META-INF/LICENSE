@@ -247,8 +247,8 @@ License for SLF4J, include in this binary artifact:
 Copyright (c) 2004-2013 QOS.ch
 All rights reserved.
 
-Home page: http://www.slf4j.org/
-License: http://slf4j.org/license.html (MIT license)
+Home page: https://www.slf4j.org/
+License: https://slf4j.org/license.html (MIT license)
 SLF4J license text (MIT):
 
 | Permission is hereby granted, free  of charge, to any person obtaining
@@ -287,12 +287,12 @@ License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 Commons Compress includes files derived from the LZMA SDK, version 9.20 (C/ and
 CPP/7zip/), in the package org.apache.commons.compress.archivers.sevenz:
 
-| LZMA SDK is placed in the public domain. (http://www.7-zip.org/sdk.html)
+| LZMA SDK is placed in the public domain. (https://www.7-zip.org/sdk.html)
 
 ----------------------------------------------------------------------
 License for xz compression, included in this binary artifact:
 
-Home page: http://tukaani.org/xz/java.html
+Home page: https://tukaani.org/xz/java.html
 
 | This Java implementation of XZ has been put into the public domain, thus you
 | can do whatever you want with it. All the files in the package have been
@@ -335,7 +335,7 @@ License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 License for Netty, included in this binary artifact:
 
 Copyright: 2011-2013 The Netty Project
-Home page: http://netty.io/
+Home page: https://netty.io/
 License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 Netty contains the following code (copied from its NOTICE file with licenses
@@ -863,7 +863,7 @@ Apache Software License:
 |
 | ----------------------------------------------------------------
 |
-| Copyright (c) 2000 - 2011 The Legion Of The Bouncy Castle (http://www.bouncycastle.org)
+| Copyright (c) 2000 - 2011 The Legion Of The Bouncy Castle (https://www.bouncycastle.org)
 |
 | Permission is hereby granted, free of charge, to any person obtaining a
 | copy of this software and associated documentation files (the "Software"),

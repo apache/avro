@@ -29,7 +29,7 @@ is:
 The Odiago NOTICE at the time of the contribution:
 
 | This product includes software developed by Odiago, Inc.
-| (http://www.wibidata.com).
+| (https://www.wibidata.com).
 
 Apache Commons compress includes the following in its NOTICE file:
 
@@ -43,7 +43,7 @@ Apache Commons compress includes the following in its NOTICE file:
 | were derived from the LZMA SDK, version 9.20 (C/ and CPP/7zip/),
 | which has been placed in the public domain:
 |
-| "LZMA SDK is placed in the public domain." (http://www.7-zip.org/sdk.html)
+| "LZMA SDK is placed in the public domain." (https://www.7-zip.org/sdk.html)
 
 Apache Commons codec includes the following in its NOTICE file:
 
@@ -54,7 +54,7 @@ Apache Commons codec includes the following in its NOTICE file:
 | The Apache Software Foundation (https://www.apache.org/).
 |
 | The content of package org.apache.commons.codec.language.bm has been translated
-| from the original php source code available at http://stevemorse.org/phoneticinfo.htm
+| from the original php source code available at https://stevemorse.org/phoneticinfo.htm
 | with permission from the original authors.
 | Original source copyright:
 | Copyright (c) 2008 Alexander Beider & Stephen P. Morse.
@@ -90,14 +90,14 @@ Apache Commons math includes the following in its NOTICE file:
 | The BracketFinder (package org.apache.commons.math3.optimization.univariate)
 | and PowellOptimizer (package org.apache.commons.math3.optimization.general)
 | classes are based on the Python code in module "optimize.py" (version 0.5)
-| developed by Travis E. Oliphant for the SciPy library (http://www.scipy.org/)
+| developed by Travis E. Oliphant for the SciPy library (https://www.scipy.org/)
 | Copyright © 2003-2009 SciPy Developers.
 | ===============================================================================
 |
 | The LinearConstraint, LinearObjectiveFunction, LinearOptimizer,
 | RelationShip, SimplexSolver and SimplexTableau classes in package
 | org.apache.commons.math3.optimization.linear include software developed by
-| Benjamin McCann (http://www.benmccann.com) and distributed with
+| Benjamin McCann (https://www.benmccann.com) and distributed with
 | the following copyright: Copyright 2009 Google Inc.
 | ===============================================================================
 |
@@ -177,7 +177,7 @@ Jetty 6.1.26 includes the following in its NOTICE file:
 | granted provided that the copyright notice appears in all copies.
 |
 | The default JSP implementation is provided by the Glassfish JSP engine
-| from project Glassfish http://glassfish.dev.java.net.  Copyright 2005
+| from project Glassfish https://glassfish.dev.java.net.  Copyright 2005
 | Sun Microsystems, Inc. and portions Copyright Apache Software Foundation.
 |
 | Some portions of the code are Copyright:
@@ -201,7 +201,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |
 | Please visit the Netty web site for more information:
 |
-|   * http://netty.io/
+|   * https://netty.io/
 |
 | Copyright 2011 The Netty Project
 |
@@ -253,7 +253,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.protobuf.txt (New BSD License)
 |   * HOMEPAGE:
-|     * http://code.google.com/p/protobuf/
+|     * https://code.google.com/p/protobuf/
 |
 | This product optionally depends on 'SLF4J', a simple logging facade for Java,
 | which can be obtained at:
@@ -261,7 +261,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.slf4j.txt (MIT License)
 |   * HOMEPAGE:
-|     * http://www.slf4j.org/
+|     * https://www.slf4j.org/
 |
 | This product optionally depends on 'Apache Commons Logging', a logging
 | framework, which can be obtained at:
@@ -285,7 +285,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.jboss-logging.txt (GNU LGPL 2.1)
 |   * HOMEPAGE:
-|     * http://anonsvn.jboss.org/repos/common/common-logging-spi/
+|     * https://anonsvn.jboss.org/repos/common/common-logging-spi/
 |
 | [JBOSS LOGGING IS NOT INCLUDED IN AVRO TOOLS.]
 |

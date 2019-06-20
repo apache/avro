@@ -33,7 +33,7 @@ Limitations of Windows Build:
 
 2. The shared library, i.e. DLL, for avro has not been built. There
    are instructions on how to build DLLs using CMake at
-   http://www.cmake.org/Wiki/BuildingWinDLL
+   https://www.cmake.org/Wiki/BuildingWinDLL
 
 3. Currently avropipe.c and avromod.c do not compile under Windows. In
    order for them to compile we would have to either port getopt() to
@@ -102,7 +102,7 @@ Instructions for Maintenance
    preprocessor macro, whose only purpose is to properly expand its
    input. This method is described here:
 
-   http://stackoverflow.com/questions/2575864/the-problem-about-different-treatment-to-va-args-when-using-vs-2008-and-gcc
+   https://stackoverflow.com/questions/2575864/the-problem-about-different-treatment-to-va-args-when-using-vs-2008-and-gcc
    See the solution described by monkeyman.
 
    This method is used in the macro expand_args(...) in test_avro_values.c.

@@ -33,7 +33,7 @@ See https://forrest.apache.org/docs/linking.html for more info
   Use elements project-name and group-name in skinconfig to change name of
   your site or project that is usually shown at the top of page.
   No matter what you configure for the href attribute, Forrest will
-  always use index.html when you request http://yourHost/
+  always use index.html when you request https://yourHost/
   See FAQ: "How can I use a start-up-page other than index.html?"
 -->
 

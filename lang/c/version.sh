@@ -47,7 +47,7 @@ if test $# != 1; then
   exit 1
 fi
 
-# http://sources.redhat.com/autobook/autobook/autobook_91.html
+# https://www.sourceware.org/autobook/autobook/autobook_91.html
 # 'Current' is the most recent interface number that this library implements
 libcurrent=$(($libavro_micro_version - $libavro_interface_age))
 # The implementation number of the 'current' interface

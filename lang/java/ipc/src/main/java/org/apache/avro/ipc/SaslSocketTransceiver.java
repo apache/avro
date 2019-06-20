@@ -65,7 +65,7 @@ public class SaslSocketTransceiver extends Transceiver {
 
   /**
    * Create using SASL's anonymous
-   * (<a href="http://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism.
+   * (<a href="https://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism.
    */
   public SaslSocketTransceiver(SocketAddress address) throws IOException {
     this(address, new AnonymousClient());

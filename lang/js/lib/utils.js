@@ -130,7 +130,7 @@ function abstractFunction() { throw new Error('abstract'); }
 /**
  * Generator of random things.
  *
- * Inspired by: http://stackoverflow.com/a/424445/1062617
+ * Inspired by: https://stackoverflow.com/a/424445/1062617
  *
  */
 function Lcg(seed) {

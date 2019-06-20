@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.xerial.snappy.Snappy;
 
-/** Implements <a href="http://code.google.com/p/snappy/">Snappy</a> codec. */
+/** Implements <a href="https://code.google.com/p/snappy/">Snappy</a> codec. */
 final class SnappyCodec extends Codec {
 
   @Override

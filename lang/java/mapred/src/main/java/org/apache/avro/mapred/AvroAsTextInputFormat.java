@@ -35,7 +35,7 @@ import org.apache.hadoop.mapred.Reporter;
  * An {@link org.apache.hadoop.mapred.InputFormat} for Avro data files, which
  * converts each datum to string form in the input key. The input value is
  * always empty. The string representation is
- * <a href="http://www.json.org/">JSON</a>.
+ * <a href="https://www.json.org/">JSON</a>.
  * <p>
  * This {@link org.apache.hadoop.mapred.InputFormat} is useful for applications
  * that wish to process Avro data using tools like MapReduce Streaming.
