@@ -8,7 +8,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -361,7 +361,7 @@ class AvroDataIOWriter
    */
   private static function generate_sync_marker()
   {
-    // From http://php.net/manual/en/function.mt-rand.php comments
+    // From https://php.net/manual/en/function.mt-rand.php comments
     return pack('S8',
                 mt_rand(0, 0xffff), mt_rand(0, 0xffff),
                 mt_rand(0, 0xffff),

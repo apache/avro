@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,7 @@
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
-  <url>http://avro.apache.org</url>
+  <url>https://avro.apache.org</url>
   <description>Avro toplevel pom</description>
 
   <!-- This project is used for top level build tasks and artifact copying.
@@ -65,14 +65,14 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/avro/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/avro/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/avro/trunk</url>
+    <connection>scm:git:https://github.com/apache/avro</connection>
+    <developerConnection>scm:git:https://github.com/apache/avro</developerConnection>
+    <url>scm:git:https://github.com/apache/avro</url>
   </scm>
 
   <issueManagement>
     <system>jira</system>
-    <url>http://issues.apache.org/jira/browse/AVRO</url>
+    <url>https://issues.apache.org/jira/browse/AVRO</url>
   </issueManagement>
 
   <inceptionYear>2009</inceptionYear>
@@ -83,21 +83,21 @@
       <subscribe>dev-subscribe@avro.apache.org</subscribe>
       <unsubscribe>dev-unsubscribe@avro.apache.org</unsubscribe>
       <post>dev@avro.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/avro-dev/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/avro-dev/</archive>
     </mailingList>
     <mailingList>
       <name>Avro Users List</name>
       <subscribe>users-subscribe@avro.apache.org</subscribe>
       <unsubscribe>users-unsubscribe@avro.apache.org</unsubscribe>
       <post>users@avro.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/avro-users/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/avro-users/</archive>
     </mailingList>
     <mailingList>
       <name>Avro Commits List</name>
       <subscribe>commits-subscribe@avro.apache.org</subscribe>
       <unsubscribe>commits-unsubscribe@avro.apache.org</unsubscribe>
       <post>commits@avro.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/avro-commits/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/avro-commits/</archive>
     </mailingList>
   </mailingLists>
 
@@ -269,6 +269,17 @@
               </execution>
             </executions>
             <configuration>
+              <licenses>
+                <!-- TODO (low prio): Remove this simple workaround when Apache Rat 0.14 has been released. -->
+                <!-- See also: https://issues.apache.org/jira/browse/RAT-212 -->
+                <!-- and       https://issues.apache.org/jira/browse/LEGAL-265 -->
+                <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20">
+                  <notes>Also allow the license url to be https.</notes>
+                  <patterns>
+                    <pattern>https://www.apache.org/licenses/LICENSE-2.0</pattern>
+                  </patterns>
+                </license>
+              </licenses>
               <consoleOutput>true</consoleOutput>
               <excludeSubProjects>false</excludeSubProjects>
               <excludes>
@@ -286,6 +297,7 @@
                 <exclude>lang/js/node_modules/**</exclude>
                 <exclude>lang/c++/doc/html/**</exclude>
                 <exclude>lang/c++/build/**</exclude>
+                <exclude>lang/csharp/build/**</exclude>
                 <exclude>lang/perl/pm_to_blib</exclude>
                 <exclude>lang/perl/blib/**/.exists</exclude>
                 <exclude>lang/py/build/**</exclude>

@@ -8,7 +8,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 # 
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 # 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,7 +45,7 @@ setup(
   description = 'Avro is a serialization and RPC framework.',
   license = 'Apache License 2.0',
   keywords = 'avro serialization rpc',
-  url = 'http://avro.apache.org/',
+  url = 'https://avro.apache.org/',
   extras_require = {
     'snappy': ['python-snappy'],
   },

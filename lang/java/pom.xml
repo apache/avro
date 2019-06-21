@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@
   <packaging>pom</packaging>
 
   <name>Apache Avro Java</name>
-  <url>http://avro.apache.org</url>
+  <url>https://avro.apache.org</url>
   <description>Avro parent Java project</description>
 
   <properties>
@@ -62,7 +62,7 @@
     <joda.version>2.10.1</joda.version>
     <grpc.version>1.19.0</grpc.version>
     <netty-codec-http2.version>4.1.33.Final</netty-codec-http2.version>
-    <zstd-jni.version>1.3.8-6</zstd-jni.version>
+    <zstd-jni.version>1.4.0-1</zstd-jni.version>
 
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.0.1</archetype-plugin.version>
@@ -132,7 +132,7 @@
           <version>${jar-plugin.version}</version>
           <!--We want to be able to resuse the test-jars for mapred
               to test avro-tool
-              see http://maven.apache.org/guides/mini/guide-attached-tests.html
+              see https://maven.apache.org/guides/mini/guide-attached-tests.html
           -->
           <executions>
             <execution>
@@ -183,7 +183,7 @@
             <!-- TestSpecificCompiler instantiates a Java compiler to test output results,
                  this does not work with a manifest-only-jar to set the classpath for the javac.
                  This may cause problems on some platforms.
-                 See http://maven.apache.org/plugins/maven-surefire-plugin/examples/class-loading.html
+                 See https://maven.apache.org/plugins/maven-surefire-plugin/examples/class-loading.html
                  for more information. -->
             <useManifestOnlyJar>false</useManifestOnlyJar>
             <!-- configures unit test standard error and standard out to go to a file per test
@@ -200,7 +200,7 @@
           <configuration>
             <links>
               <link>https://docs.oracle.com/javase/8/docs/api/</link>
-              <link>http://hadoop.apache.org/common/docs/current/api/</link>
+              <link>https://hadoop.apache.org/common/docs/current/api/</link>
             </links>
             <tagletArtifacts>
               <tagletArtifact>

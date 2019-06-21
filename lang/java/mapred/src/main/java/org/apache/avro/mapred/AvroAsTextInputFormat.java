@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ import org.apache.hadoop.mapred.Reporter;
  * An {@link org.apache.hadoop.mapred.InputFormat} for Avro data files, which
  * converts each datum to string form in the input key. The input value is
  * always empty. The string representation is
- * <a href="http://www.json.org/">JSON</a>.
+ * <a href="https://www.json.org/">JSON</a>.
  * <p>
  * This {@link org.apache.hadoop.mapred.InputFormat} is useful for applications
  * that wish to process Avro data using tools like MapReduce Streaming.

@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -89,7 +89,7 @@ target_link_libraries(avro-static ${JANSSON_LIBRARIES} ${CODEC_LIBRARIES} ${THRE
 set_target_properties(avro-static PROPERTIES OUTPUT_NAME avro)
 
 if (NOT WIN32)
-# TODO: Create Windows DLLs. See http://www.cmake.org/Wiki/BuildingWinDLL
+# TODO: Create Windows DLLs. See https://www.cmake.org/Wiki/BuildingWinDLL
 add_library(avro-shared SHARED ${AVRO_SRC})
 target_link_libraries(avro-shared ${JANSSON_LIBRARIES} ${CODEC_LIBRARIES} ${THREADS_LIBRARIES})
 set_target_properties(avro-shared PROPERTIES

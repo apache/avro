@@ -7,7 +7,7 @@
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+      https://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,7 @@ Skin configuration file. This file contains details of your project,
 which will be used to configure the chosen Forrest skin.
 -->
 
-<!DOCTYPE skinconfig PUBLIC "-//APACHE//DTD Skin Configuration V0.6-3//EN" "http://forrest.apache.org/dtd/skinconfig-v06-3.dtd">
+<!DOCTYPE skinconfig PUBLIC "-//APACHE//DTD Skin Configuration V0.6-3//EN" "https://forrest.apache.org/dtd/skinconfig-v06-3.dtd">
 <skinconfig>
   <!-- To enable lucene search add provider="lucene" (default is google).
     Add box-location="alt" to move the search box to an alternate location
@@ -67,13 +67,13 @@ which will be used to configure the chosen Forrest skin.
   <!-- project logo -->
   <project-name>Avro</project-name>
   <project-description>Serialization System</project-description>
-  <project-url>http://avro.apache.org/</project-url>
+  <project-url>https://avro.apache.org/</project-url>
   <project-logo>images/avro-logo.png</project-logo>
 
   <!-- group logo -->
   <group-name>Apache</group-name>
   <group-description>The Apache Software Foundation</group-description>
-  <group-url>http://www.apache.org/</group-url>
+  <group-url>https://www.apache.org/</group-url>
   <group-logo>images/apache_feather.gif</group-logo>
 
   <!-- optional host logo (e.g. sourceforge logo)
@@ -87,7 +87,7 @@ which will be used to configure the chosen Forrest skin.
   <!-- The following are used to construct a copyright statement -->
   <year>2012</year>
   <vendor>The Apache Software Foundation.</vendor>
-  <copyright-link>http://www.apache.org/licenses/</copyright-link>
+  <copyright-link>https://www.apache.org/licenses/</copyright-link>
 
   <!-- Some skins use this to form a 'breadcrumb trail' of links.
     Use location="alt" to move the trail to an alternate location
@@ -97,9 +97,9 @@ which will be used to configure the chosen Forrest skin.
     For some skins just set the attributes to blank.
   -->
   <trail>
-    <link1 name="Apache" href="http://www.apache.org/"/>
-    <link2 name="Avro" href="http://avro.apache.org/"/>
-    <link3 name="Avro" href="http://avro.apache.org/"/>
+    <link1 name="Apache" href="https://www.apache.org/"/>
+    <link2 name="Avro" href="https://avro.apache.org/"/>
+    <link3 name="Avro" href="https://avro.apache.org/"/>
   </trail>
 
   <!-- Configure the TOC, i.e. the Table of Contents.
@@ -331,7 +331,7 @@ which will be used to configure the chosen Forrest skin.
   <credits>
     <credit box-location="alt">
       <name>Built with Apache Forrest</name>
-      <url>http://forrest.apache.org/</url>
+      <url>https://forrest.apache.org/</url>
       <image>images/built-with-forrest-button.png</image>
       <width>88</width>
       <height>31</height>
@@ -342,7 +342,7 @@ which will be used to configure the chosen Forrest skin.
     <!--
     <credit role="pdf">
       <name>Built with Apache Forrest</name>
-      <url>http://forrest.apache.org/</url>
+      <url>https://forrest.apache.org/</url>
     </credit>
     -->
   </credits>

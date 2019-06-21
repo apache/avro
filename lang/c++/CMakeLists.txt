@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -61,7 +61,7 @@ if (AVRO_ADD_PROTECTOR_FLAGS)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all -D_GLIBCXX_DEBUG")
     # Unset _GLIBCXX_DEBUG for avrogencpp.cc because using Boost Program Options
     # leads to linking errors when compiling with _GLIBCXX_DEBUG as described on
-    # http://stackoverflow.com/questions/19729036/
+    # https://stackoverflow.com/questions/19729036/
     set_source_files_properties(impl/avrogencpp.cc PROPERTIES COMPILE_FLAGS "-U_GLIBCXX_DEBUG")
 endif ()
 endif ()
