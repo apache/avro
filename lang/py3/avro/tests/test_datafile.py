@@ -77,13 +77,14 @@ SCHEMAS_TO_VALIDATE = (
    {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
 )
 
-CODECS_TO_VALIDATE = ('null', 'deflate')
-
-try:
-  import snappy
-  CODECS_TO_VALIDATE += ('snappy',)
-except ImportError:
-  logging.info('Snappy not present, will skip testing it.')
+def get_codecs_to_validate():
+  codecs = ('null', 'deflate')
+  try:
+    import snappy
+    codecs += ('snappy',)
+  except ImportError:
+    logging.warning('Snappy not present, will skip testing it.')
+  return codecs
 
 
 # ------------------------------------------------------------------------------
@@ -120,8 +121,9 @@ class TestDataFile(unittest.TestCase):
 
   def testRoundTrip(self):
     correct = 0
+    codecs_to_validate = get_codecs_to_validate()
     for iexample, (writer_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
+      for codec in codecs_to_validate:
         file_path = self.NewTempFile()
 
         # Write the datum this many times in the data file:
@@ -168,12 +170,13 @@ class TestDataFile(unittest.TestCase):
 
     self.assertEqual(
         correct,
-        len(CODECS_TO_VALIDATE) * len(SCHEMAS_TO_VALIDATE))
+        len(codecs_to_validate) * len(SCHEMAS_TO_VALIDATE))
 
   def testAppend(self):
     correct = 0
+    codecs_to_validate = get_codecs_to_validate()
     for iexample, (writer_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
+      for codec in codecs_to_validate:
         file_path = self.NewTempFile()
 
         logging.debug(
@@ -222,7 +225,7 @@ class TestDataFile(unittest.TestCase):
 
     self.assertEqual(
         correct,
-        len(CODECS_TO_VALIDATE) * len(SCHEMAS_TO_VALIDATE))
+        len(codecs_to_validate) * len(SCHEMAS_TO_VALIDATE))
 
   def testContextManager(self):
     file_path = self.NewTempFile()
