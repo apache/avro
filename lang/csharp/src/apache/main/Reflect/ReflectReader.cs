@@ -18,10 +18,8 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using Avro;
 using Avro.IO;
 using Avro.Generic;
 using Avro.Specific;
@@ -38,17 +36,19 @@ namespace Avro.Reflect
         /// <summary>
         /// Reader class for reading data and storing into specific classes
         /// </summary>
-        private readonly ReflectDefaultReader reader;
+        private readonly ReflectDefaultReader _reader;
+
+        public ReflectDefaultReader Reader { get => _reader; }
 
         /// <summary>
         /// Schema for the writer class
         /// </summary>
-        public Schema WriterSchema { get { return reader.WriterSchema; } }
+        public Schema WriterSchema { get { return _reader.WriterSchema; } }
 
         /// <summary>
         /// Schema for the reader class
         /// </summary>
-        public Schema ReaderSchema { get { return reader.ReaderSchema; } }
+        public Schema ReaderSchema { get { return _reader.ReaderSchema; } }
 
         /// <summary>
         /// Constructs a generic reader for the given schemas using the DefaultReader. If the
@@ -56,9 +56,9 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="writerSchema">The schema used while generating the data</param>
         /// <param name="readerSchema">The schema desired by the reader</param>
-        public ReflectReader(Schema writerSchema, Schema readerSchema)
+        public ReflectReader(Schema writerSchema, Schema readerSchema, ReflectArrayHelper arrayHelper = null)
         {
-            reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema);
+            _reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema, arrayHelper);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Avro.Reflect
         /// <param name="reader"></param>
         public ReflectReader(ReflectDefaultReader reader)
         {
-            this.reader = reader;
+            this._reader = reader;
         }
 
         /// <summary>
@@ -78,7 +78,17 @@ namespace Avro.Reflect
         /// <returns></returns>
         public T Read(T reuse, Decoder dec)
         {
-            return reader.Read(reuse, dec);
+            return _reader.Read(reuse, dec);
+        }
+
+        /// <summary>
+        /// Generic read function
+        /// </summary>
+        /// <param name="dec">decorder to use for reading data</param>
+        /// <returns></returns>
+        public T Read(Decoder dec)
+        {
+            return _reader.Read(default(T), dec);
         }
     }
     /// <summary>
@@ -87,36 +97,22 @@ namespace Avro.Reflect
     public class ReflectDefaultReader : SpecificDefaultReader
     {
         /// <summary>
-        /// C# type to create when deserializing and array. Must implement IList&lt;&gt;
+        /// C# type to create when deserializing an array. Must have a matching ReflectArray derived type.
         /// Default is System.Collections.Generic.List
         /// </summary>
         /// <value></value>
-        public Type ListType { get => _listType; set => _listType = value; }
+        public ReflectArrayHelper ArrayHelper { get; set; }
         /// <summary>
         /// C# type to create when deserializing a map. Must implement IDictionary&lt;,&gt; and the first
         /// type parameter must be a string. Default is System.Collections.Generic.Dictionary
         /// </summary>
         /// <value></value>
         public Type MapType { get => _mapType; set => _mapType = value; }
-        /// <summary>
-        /// C# type to create when deserializing a fixed. Valid values are byte[] or GenericFixed
-        /// </summary>
-        /// <value></value>
-        public Type FixedType
-        {
-            get => _fixedType;
-            set
-            {
-                if (value != typeof(byte[]) && value != typeof(GenericFixed))
-                {
-                    throw new AvroException("Fixed deserialization type must be either byte[] or GenericFixed");
-                }
-                _fixedType = value;
-            }
-        }
-        private Type _listType = typeof(List<>);
+
+        private ClassCache _classCache = new ClassCache();
+        public ClassCache ClassCache { get => _classCache; }
         private Type _mapType = typeof(Dictionary<,>);
-        private Type _fixedType = typeof(byte[]);
+
 
         /// <summary>
         /// Delegate to a factory method to create objects of type x. If you are deserializing to interfaces
@@ -132,14 +128,19 @@ namespace Avro.Reflect
         /// <param name="objType"></param>
         /// <param name="writerSchema"></param>
         /// <param name="readerSchema"></param>
-        public ReflectDefaultReader(Type objType, Schema writerSchema, Schema readerSchema)
+        /// <param name="listType"></param>
+        public ReflectDefaultReader(Type objType, Schema writerSchema, Schema readerSchema, ReflectArrayHelper arrayHelper)
             : base(writerSchema, readerSchema)
         {
-            var rs = readerSchema as RecordSchema;
-            if (rs != null)
+            if (arrayHelper != null)
             {
-                ClassCache.LoadClassCache(objType, rs);
+                ArrayHelper = arrayHelper;
             }
+            else
+            {
+                ArrayHelper = new ReflectArrayHelper();
+            }
+            _classCache.LoadClassCache(objType, readerSchema);
         }
 
         /// <summary>
@@ -172,7 +173,7 @@ namespace Avro.Reflect
 
                 case Schema.Type.Fixed:
                 case Schema.Type.Bytes:
-                    return FixedType;
+                    return typeof(byte[]);
 
                 case Schema.Type.String:
                     return typeof(string);
@@ -209,7 +210,7 @@ namespace Avro.Reflect
                     }
 
                     Type recordtype = null;
-                    recordtype = ClassCache.GetClass(recordSchema).GetClassType();
+                    recordtype = _classCache.GetClass(recordSchema).GetClassType();
                     if (recordtype == null)
                     {
                         throw new Exception(string.Format("Couldn't find type matching schema name {0}", recordSchema.Fullname));
@@ -224,7 +225,7 @@ namespace Avro.Reflect
                         throw new Exception("Unable to cast schema into an array schema");
                     }
 
-                    return ListType.MakeGenericType(new Type[] { GetTypeFromSchema(arraySchema.ItemSchema, false) });
+                    return ArrayHelper.ArrayType.MakeGenericType(new Type[] { GetTypeFromSchema(arraySchema.ItemSchema, false) });
 
                 case Schema.Type.Map:
                     var mapSchema = schema as MapSchema;
@@ -339,11 +340,7 @@ namespace Avro.Reflect
                     {
                         throw new AvroException("Default fixed value " + defaultValue.ToString() + " is not of expected length " + len);
                     }
-                    if (FixedType == typeof(byte[]))
-                    {
-                        return bb;
-                    }
-                    return new GenericFixed(s as FixedSchema, bb);
+                    return typeof(byte[]);
 
                 case Schema.Type.String:
                     if (defaultValue.Type != JTokenType.String)
@@ -376,11 +373,11 @@ namespace Avro.Reflect
                     }
 
                     JArray jarr = defaultValue as JArray;
-                    var array = (System.Collections.IList)Activator.CreateInstance(GetTypeFromSchema(s, false));
+                    var array = (IEnumerable)Activator.CreateInstance(GetTypeFromSchema(s, false));
 
                     foreach (JToken jitem in jarr)
                     {
-                        array.Add(GetDefaultValue((s as ArraySchema).ItemSchema, jitem));
+                        ArrayHelper.AddAction(array, GetDefaultValue((s as ArraySchema).ItemSchema, jitem));
                     }
 
                     return array;
@@ -410,7 +407,7 @@ namespace Avro.Reflect
                             throw new AvroException($"No default value for field {field.Name}");
                         }
 
-                        ClassCache.GetClass(rcs).SetValue(rec, field, GetDefaultValue(field.Schema, val));
+                        _classCache.GetClass(rcs).SetValue(rec, field, GetDefaultValue(field.Schema, val));
                     }
 
                     return rec;
@@ -478,7 +475,7 @@ namespace Avro.Reflect
                 }
             }
 
-            object obj;
+            object obj = null;
             foreach (Field wf in writerSchema)
             {
                 try
@@ -486,8 +483,8 @@ namespace Avro.Reflect
                     Field rf;
                     if (rs.TryGetField(wf.Name, out rf))
                     {
-                        obj = ClassCache.GetClass(writerSchema).GetValue(rec, rf);
-                        ClassCache.GetClass(writerSchema).SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
+//                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
+                        _classCache.GetClass(writerSchema).SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
                     }
                     else
                     {
@@ -507,7 +504,7 @@ namespace Avro.Reflect
                     continue;
                 }
 
-                ClassCache.GetClass(rs).SetValue(rec, rf, GetDefaultValue(rf.Schema, rf.DefaultValue));
+                _classCache.GetClass(rs).SetValue(rec, rf, GetDefaultValue(rf.Schema, rf.DefaultValue));
             }
 
             return rec;
@@ -533,11 +530,7 @@ namespace Avro.Reflect
 
             byte[] fixedrec = new byte[rs.Size];
             d.ReadFixed(fixedrec);
-            if ( FixedType == typeof(byte[]))
-            {
-                return fixedrec;
-            }
-            return new GenericFixed(rs, fixedrec);
+            return fixedrec;
         }
 
 
@@ -552,24 +545,26 @@ namespace Avro.Reflect
         protected override object ReadArray(object reuse, ArraySchema writerSchema, Schema readerSchema, Decoder dec)
         {
             ArraySchema rs = readerSchema as ArraySchema;
-            System.Collections.IList array;
+            IEnumerable array;
             if (reuse != null)
             {
-                array = reuse as System.Collections.IList;
+                array = reuse as IEnumerable;
                 if (array == null)
-                    throw new AvroException("array object does not implement non-generic IList");
-                array.Clear();
+                    throw new AvroException("array object does not has ReflectArray factory");
+                ArrayHelper.ClearAction(array);
             }
             else
             {
-                array = (System.Collections.IList)Activator.CreateInstance(GetTypeFromSchema(rs, false));
+                array = Activator.CreateInstance(GetTypeFromSchema(rs, false)) as IEnumerable;
             }
 
             int i = 0;
             for (int n = (int)dec.ReadArrayStart(); n != 0; n = (int)dec.ReadArrayNext())
             {
                 for (int j = 0; j < n; j++, i++)
-                    array.Add(Read(null, writerSchema.ItemSchema, rs.ItemSchema, dec));
+                {
+                    ArrayHelper.AddAction(array, Read(null, writerSchema.ItemSchema, rs.ItemSchema, dec));
+                }
             }
 
             return array;

@@ -30,8 +30,9 @@ namespace Avro.Reflect
         /// Convert from DateTimeOffset to Unix long
         /// </summary>
         /// <param name="o">DateTimeOffset</param>
+        /// <param name="s">Schema</param>
         /// <returns></returns>
-        public object ToAvroType(object o)
+        public object ToAvroType(object o, Schema s)
         {
             var dt = (DateTimeOffset)o;
             return dt.ToUnixTimeMilliseconds();
@@ -41,8 +42,9 @@ namespace Avro.Reflect
         /// Convert from Unix long to DateTimeOffset
         /// </summary>
         /// <param name="o">long</param>
+        /// <param name="s">Schema</param>
         /// <returns></returns>
-        public object FromAvroType(object o)
+        public object FromAvroType(object o, Schema s)
         {
             var dt = DateTimeOffset.FromUnixTimeMilliseconds((long)o);
             return dt;

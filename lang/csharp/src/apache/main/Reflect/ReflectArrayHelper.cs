@@ -1,4 +1,5 @@
-/**
+/*  Copyright 2019 Pitney Bowes Inc.
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,11 +16,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-namespace Avro.Test
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+
+namespace Avro.Reflect
 {
-    public class A
+    public class ReflectArrayHelper
     {
-        public long f1 { get; set; }
+        public Func<IEnumerable, int> CountFunc { get; set; }
+        public Action<IEnumerable, object> AddAction { get; set; }
+        public Action<IEnumerable> ClearAction { get; set; }
+
+        public Type ArrayType { get; set; }
+
+        public ReflectArrayHelper()
+        {
+            ArrayType = typeof(List<>);
+            CountFunc = e=>(e as IList).Count;
+            AddAction = (e,v)=>(e as IList).Add(v);
+            ClearAction = e=>(e as IList).Clear();
+        }
     }
 }

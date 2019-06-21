@@ -65,7 +65,7 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Enumeration:
                     return propType.IsEnum;
                 case Avro.Schema.Type.Array:
-                    return typeof(IList).IsAssignableFrom(propType);
+                    return typeof(IEnumerable).IsAssignableFrom(propType);
                 case Avro.Schema.Type.Map:
                     return typeof(IDictionary).IsAssignableFrom(propType);
                 case Avro.Schema.Type.Union:
@@ -78,7 +78,7 @@ namespace Avro.Reflect
             return false;
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag,  IAvroFieldConverter converter)
+        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag,  IAvroFieldConverter converter, ClassCache cache)
         {
             _property = property;
             Converter = converter;
@@ -87,7 +87,7 @@ namespace Avro.Reflect
             {
                 if (Converter == null)
                 {
-                    var c = ClassCache.GetDefaultConverter(schemaTag, _property.PropertyType);
+                    var c = cache.GetDefaultConverter(schemaTag, _property.PropertyType);
                     if (c != null)
                     {
                         Converter = c;
@@ -98,7 +98,7 @@ namespace Avro.Reflect
             }
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag) : this(property, schemaTag, null)
+        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag, ClassCache cache) : this(property, schemaTag, null, cache)
         {
         }
 
@@ -112,21 +112,21 @@ namespace Avro.Reflect
             return _property.PropertyType;
         }
 
-        virtual public object GetValue(object o)
+        virtual public object GetValue(object o, Schema s)
         {
             if (Converter != null)
             {
-                return Converter.ToAvroType(_property.GetValue(o));
+                return Converter.ToAvroType(_property.GetValue(o), s);
             }
 
             return _property.GetValue(o);
         }
 
-        virtual public void SetValue(object o, object v)
+        virtual public void SetValue(object o, object v, Schema s)
         {
             if (Converter != null)
             {
-                _property.SetValue(o, Converter.FromAvroType(v));
+                _property.SetValue(o, Converter.FromAvroType(v, s));
             }
             else
             {

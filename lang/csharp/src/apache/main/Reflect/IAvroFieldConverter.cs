@@ -32,14 +32,14 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        object ToAvroType(object o);
+        object ToAvroType(object o, Schema s);
 
         /// <summary>
         /// Convert from the avro type to the C# type
         /// </summary>
         /// <param name="o"></param>
         /// <returns></returns>
-        object FromAvroType(object o);
+        object FromAvroType(object o, Schema s);
 
         /// <summary>
         /// Avro type

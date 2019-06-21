@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,16 +16,28 @@
  * limitations under the License.
  */
 
-using Avro.Reflect;
+using System;
+using Avro.Generic;
 
-namespace Avro.Test
+namespace Avro.Reflect
 {
-    public enum MessageTypes
+    public class FuncFieldConverter<A,P> : TypedFieldConverter<A,P>
     {
-        None,
-        Verbose,
-        Info,
-        Warning,
-        Error
+        public FuncFieldConverter(Func<A,Schema, P> from, Func<P,Schema, A> to)
+        {
+            _from = from;
+            _to = to;
+        }
+
+        Func<A,Schema, P> _from { get; set; }
+        Func<P,Schema, A> _to { get; set; }
+        public override P From(A o, Schema s)
+        {
+            return _from(o, s);
+        }
+        public override A To(P o, Schema s)
+        {
+            return _to(o, s);
+        }
     }
 }

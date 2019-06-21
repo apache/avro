@@ -28,11 +28,11 @@ namespace Avro.Reflect
     /// <summary>
     /// Class holds a cache of C# classes and their properties. The key for the cache is the schema full name.
     /// </summary>
-    public static class ClassCache
+    public class ClassCache
     {
-        private static ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
-        private static void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
+        private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
             if (schema != null && GetClass(schema)!=null)
             {
@@ -44,7 +44,7 @@ namespace Avro.Reflect
                 throw new AvroException( $"Type {dotnetClass.Name} is not a class");
             }
 
-            _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema));
+            _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema, this));
         }
 
         /// <summary>
@@ -56,13 +56,19 @@ namespace Avro.Reflect
             _defaultConverters.Add(converter);
         }
 
+        public static void AddDefaultConverter<A,P>(Func<A,Schema, P> from, Func<P,Schema, A> to)
+        {
+            _defaultConverters.Add(new FuncFieldConverter<A,P>(from, to));
+        }
+
+
         /// <summary>
         /// Find a default converter
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="propType"></param>
         /// <returns>The first matching converter - null if there isnt one</returns>
-        public static IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
+        public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
         {
             Type avroType;
             switch( tag )
@@ -124,7 +130,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="schema"></param>
         /// <returns></returns>
-        public static DotnetClass GetClass(RecordSchema schema)
+        public DotnetClass GetClass(RecordSchema schema)
         {
             DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
@@ -140,7 +146,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="objType">Type of the C# class</param>
         /// <param name="s">Schema</param>
-        public static void LoadClassCache(Type objType, Schema s)
+        public void LoadClassCache(Type objType, Schema s)
         {
             switch(s)
             {
@@ -151,15 +157,15 @@ namespace Avro.Reflect
                     }
                     if (typeof(byte[]).IsAssignableFrom(objType)
                         || typeof(string).IsAssignableFrom(objType)
-                        || typeof(IList).IsAssignableFrom(objType)
+                        || typeof(IEnumerable).IsAssignableFrom(objType)
                         || typeof(IDictionary).IsAssignableFrom(objType)
                     )
                     {
                         throw new AvroException($"Cant map type {objType.Name} to record {rs.Fullname}");
                     }
 
-                    ClassCache.AddClassNameMapItem(rs, objType);
-                    var c = ClassCache.GetClass(rs);
+                    AddClassNameMapItem(rs, objType);
+                    var c = GetClass(rs);
                     foreach (var f in rs.Fields)
                     {
                         var t = c.GetPropertyType(f);
@@ -167,7 +173,7 @@ namespace Avro.Reflect
                     }
                     break;
                 case ArraySchema ars:
-                    if (!typeof(IList).IsAssignableFrom(objType))
+                    if (!typeof(IEnumerable).IsAssignableFrom(objType))
                     {
                         throw new AvroException($"Cant map type {objType.Name} to array {ars.Fullname}");
                     }

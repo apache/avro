@@ -18,9 +18,7 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Avro;
+using System.Collections;
 using Avro.IO;
 using Avro.Generic;
 using Avro.Specific;
@@ -31,41 +29,65 @@ namespace Avro.Reflect
     /// Generic wrapper class for writing data from specific objects
     /// </summary>
     /// <typeparam name="T">type name of specific object</typeparam>
-    public class ReflectWriter<T> : SpecificWriter<T>
+    public class ReflectWriter<T> : DatumWriter<T>
     {
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="schema"></param>
-        /// <returns></returns>
-        public ReflectWriter(Schema schema) : base(new ReflectDefaultWriter(typeof(T), schema)) { }
+        public ReflectDefaultWriter Writer { get => _writer; }
+
+        private readonly ReflectDefaultWriter _writer;
+        public ReflectWriter(Schema schema, ReflectArrayHelper arrayHelper = null) : this(new ReflectDefaultWriter(typeof(T), schema, arrayHelper), arrayHelper)
+        {
+
+        }
+
+        public Schema Schema { get { return _writer.Schema; } }
+
+        public ReflectWriter(ReflectDefaultWriter writer, ReflectArrayHelper arrayHelper = null)
+        {
+            this._writer = writer;
+        }
 
         /// <summary>
-        /// Constructor
+        /// Serializes the given object using this writer's schema.
         /// </summary>
-        /// <param name="writer"></param>
-        /// <returns></returns>
-        public ReflectWriter(ReflectDefaultWriter writer) : base(writer) { }
+        /// <param name="value">The value to be serialized</param>
+        /// <param name="encoder">The encoder to use for serializing</param>
+        public void Write(T value, Encoder encoder)
+        {
+            _writer.Write(value, encoder);
+        }
     }
     /// <summary>
     /// Class for writing data from any specific objects
     /// </summary>
     public class ReflectDefaultWriter : SpecificDefaultWriter
     {
+        private ClassCache _classCache = new ClassCache();
+        public ClassCache ClassCache { get => _classCache; }
+
+        /// <summary>
+        /// C# type to create when deserializing an array. Must have a matching ReflectArray derived type.
+        /// Default is System.Collections.Generic.List
+        /// </summary>
+        /// <value></value>
+        public ReflectArrayHelper ArrayHelper { get; set; }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="objType"></param>
         /// <param name="schema"></param>
-        public ReflectDefaultWriter(Type objType, Schema schema)
+        public ReflectDefaultWriter(Type objType, Schema schema, ReflectArrayHelper arrayHelper)
             : base(schema)
         {
-            var rs = schema as RecordSchema;
-            if (rs != null)
+            if (arrayHelper != null)
             {
-                ClassCache.LoadClassCache(objType, rs);
+                ArrayHelper = arrayHelper;
             }
+            else
+            {
+                ArrayHelper = new ReflectArrayHelper();
+            }
+            _classCache.LoadClassCache(objType, schema);
         }
 
         /// <summary>
@@ -83,7 +105,7 @@ namespace Avro.Reflect
             {
                 try
                 {
-                    var v = ClassCache.GetClass(schema).GetValue(value, field);
+                    var v = _classCache.GetClass(schema).GetValue(value, field);
 
                     Write(field.Schema, v, encoder);
                 }
@@ -103,36 +125,19 @@ namespace Avro.Reflect
         /// <param name="encoder">encoder to write to</param>
         protected override void WriteFixed(FixedSchema schema, object value, Encoder encoder)
         {
-            if (value is byte[])
+            var fixedrec = value as byte[];
+            if (fixedrec == null)
             {
-                var fixedrec = value as byte[];
-                if (fixedrec == null)
-                {
-                    throw new AvroTypeException("Fixed object is not derived from byte[]");
-                }
-
-                if (fixedrec.Length != schema.Size)
-                {
-                    throw new AvroTypeException($"Fixed object length is not the same as schema length {schema.Size}");
-                }
-
-                encoder.WriteFixed(fixedrec);
+                throw new AvroTypeException("Fixed object is not derived from byte[]");
             }
-            else if (value is GenericFixed)
+
+            if (fixedrec.Length != schema.Size)
             {
-                var fixedrec = value as GenericFixed;
-                if (fixedrec == null)
-                {
-                    throw new AvroTypeException("Fixed object is not derived from GenericFixed");
-                }
-
-                if (fixedrec.Value.Length != schema.Size)
-                {
-                    throw new AvroTypeException($"Fixed object length is not the same as schema length {schema.Size}");
-                }
-
-                encoder.WriteFixed(fixedrec.Value);
+                throw new AvroTypeException($"Fixed object length is not the same as schema length {schema.Size}");
             }
+
+            encoder.WriteFixed(fixedrec);
+
         }
 
         /// <summary>
@@ -145,17 +150,17 @@ namespace Avro.Reflect
         /// <param name="encoder">The encoder for serialization</param>
         protected override void WriteArray(ArraySchema schema, object value, Encoder encoder)
         {
-            var arr = value as System.Collections.IList;
+            var arr = value as IEnumerable;
             if (arr == null)
-                throw new AvroTypeException("Array does not implement IList");
+                throw new AvroTypeException("Array does not implement have registered ReflectArray derived type");
 
-            long l = arr.Count;
+            long l = ArrayHelper.CountFunc(arr);
             encoder.WriteArrayStart();
             encoder.SetItemCount(l);
-            for (int i = 0; i < l; i++)
+            foreach (var v in arr)
             {
                 encoder.StartItem();
-                Write(schema.ItemSchema, arr[i], encoder);
+                Write(schema.ItemSchema, v, encoder);
             }
 
             encoder.WriteArrayEnd();
@@ -212,13 +217,13 @@ namespace Avro.Reflect
                     return obj is string;
                 case Schema.Type.Error:
                 case Schema.Type.Record:
-                    return ClassCache.GetClass((sc as RecordSchema)).GetClassType() == obj.GetType();
+                    return _classCache.GetClass((sc as RecordSchema)).GetClassType() == obj.GetType();
                 case Schema.Type.Enumeration:
                     return EnumCache.GetEnumeration((sc as EnumSchema)) == obj.GetType();
                 case Schema.Type.Array:
-                    return obj is System.Collections.IList;
+                    return obj is IEnumerable;
                 case Schema.Type.Map:
-                    return obj is System.Collections.IDictionary;
+                    return obj is IDictionary;
                 case Schema.Type.Union:
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:

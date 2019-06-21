@@ -16,18 +16,57 @@
  * limitations under the License.
  */
 
- using System.IO;
-using Avro;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using Avro.IO;
-using Avro.Generic;
-using Avro.Specific;
 using Avro.Reflect;
 using NUnit.Framework;
 
 namespace Avro.Test
 {
+    public enum MessageTypes
+    {
+        None,
+        Verbose,
+        Info,
+        Warning,
+        Error
+    }
+
+    public class LogMessage
+    {
+        private Dictionary<string, string> _tags = new Dictionary<string, string>();
+
+        public string IP { get; set; }
+
+        public string Message { get; set; }
+
+        [Avro(typeof(DateTimeOffsetToLongConverter))]
+        public DateTimeOffset TimeStamp { get; set; }
+
+        public Dictionary<string, string> Tags { get => _tags; set => _tags = value; }
+
+        public MessageTypes Severity { get; set; }
+    }
+
+    public class LogMessage2
+    {
+        public string IP { get; set; }
+
+        public string Message { get; set; }
+
+        public DateTimeOffset TimeStamp { get; set; }
+
+        private Dictionary<string, string> _tags = new Dictionary<string, string>();
+
+        public Dictionary<string, string> Tags { get => _tags; set => _tags = value; }
+
+        public MessageTypes Severity { get; set; }
+    }
+
     [TestFixture]
-    public class SerializeLogMessage
+    public class TestLogMessage
     {
         private string _logMessageSchemaV1 = @"
         {
