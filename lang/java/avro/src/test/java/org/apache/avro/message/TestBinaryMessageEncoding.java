@@ -139,6 +139,23 @@ public class TestBinaryMessageEncoding {
   }
 
   @Test
+  public void testIdenticalReadWithSchemaFromLookup() throws Exception {
+    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<>(GenericData.get(), SCHEMA_V1);
+
+    SchemaStore.Cache schemaCache = new SchemaStore.Cache();
+    schemaCache.addSchema(SCHEMA_V1);
+    // The null readSchema should not throw an NPE, but trigger the
+    // BinaryMessageEncoder to use the write schema as read schema
+    BinaryMessageDecoder<Record> genericDecoder = new BinaryMessageDecoder<>(GenericData.get(), null, schemaCache);
+
+    ByteBuffer v1Buffer = v1Encoder.encode(V1_RECORDS.get(2));
+
+    Record record = genericDecoder.decode(v1Buffer);
+
+    Assert.assertEquals(V1_RECORDS.get(2), record);
+  }
+
+  @Test
   public void testBufferReuse() throws Exception {
     // This test depends on the serialized version of record 1 being smaller or
     // the same size as record 0 so that the reused ByteArrayOutputStream won't
