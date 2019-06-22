@@ -68,7 +68,9 @@ RUN apt-get -qq update && \
     php5.6-gmp \
     python \
     python-setuptools \
+    python-snappy \
     python3-setuptools \
+    python3-snappy \
     rake \
     ruby \
     ruby-dev \
