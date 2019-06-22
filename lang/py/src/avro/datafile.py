@@ -351,8 +351,7 @@ class DataFileReader(object):
           chunk = reader.read(16384)
           if not chunk:
             break
-          else:
-            uncompressed.extend(chunk)
+          uncompressed.extend(chunk)
       self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
     else:
       raise DataFileException("Unknown codec: %r" % self.codec)
