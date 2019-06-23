@@ -100,7 +100,7 @@ def _BuildCanonicalForm(env, s, o):
       elif st == FIXED:
         o.write(',"size":')
         o.write(str(s.size))
-      else: # st == RECORD or st == ERROR
+      else:  # st == RECORD or st == ERROR
         o.write(',"fields":[')
         for f in s.fields:
           if not first_time:
