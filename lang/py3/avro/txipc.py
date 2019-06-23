@@ -64,7 +64,7 @@ class RequestStreamingProducer(object):
     # We need a buffer length header for every buffer and an additional
     # zero-length buffer as the message terminator
     self._length += (self._length / ipc.BUFFER_SIZE + 2) \
-    * ipc.BUFFER_HEADER_LENGTH
+        * ipc.BUFFER_HEADER_LENGTH
     self._total_bytes_sent = 0
     self._deferred = Deferred()
 
@@ -91,7 +91,7 @@ class RequestStreamingProducer(object):
     # Keep writing data to the consumer until we're finished,
     # paused (pauseProducing()) or stopped (stopProducing())
     while self.length - self.total_bytes_sent > 0 and \
-    not self.paused and not self.stopped:
+        not self.paused and not self.stopped:
       self.write()
     # self.write will fire this deferred once it has written
     # the entire message to the consumer

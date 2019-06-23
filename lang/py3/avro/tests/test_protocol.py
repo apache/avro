@@ -81,7 +81,7 @@ EXAMPLES = [
   HELLO_WORLD,
 
   ExampleProtocol(
-  """
+      """
   {
     "namespace": "org.apache.avro.test",
     "protocol": "Simple",
@@ -129,7 +129,7 @@ EXAMPLES = [
   """),
 
   ExampleProtocol(
-  """
+      """
   {
     "namespace": "org.apache.avro.test.namespace",
     "protocol": "TestNamespace",
@@ -162,7 +162,7 @@ EXAMPLES = [
   """),
 
   ExampleProtocol(
-  """
+      """
   {
     "namespace": "org.apache.avro.test.namespace",
     "protocol": "TestImplicitNamespace",
@@ -204,7 +204,7 @@ EXAMPLES = [
   """),
 
   ExampleProtocol(
-  """
+      """
   {
     "namespace": "org.apache.avro.test.namespace",
     "protocol": "TestNamespaceTwo",
@@ -253,7 +253,7 @@ EXAMPLES = [
   """),
 
   ExampleProtocol(
-  """
+      """
   {
     "namespace": "org.apache.avro.test.namespace",
     "protocol": "TestValidRepeatedName",
@@ -291,7 +291,7 @@ EXAMPLES = [
   """),
 
   ExampleProtocol(
-  """
+      """
   {
     "namespace": "org.apache.avro.test.namespace",
     "protocol": "TestInvalidRepeatedName",
@@ -326,10 +326,10 @@ EXAMPLES = [
     }
   }
   """,
-  valid=False),
+      valid=False),
 
   ExampleProtocol(
-  """
+      """
   {
     "namespace": "org.apache.avro.test",
     "protocol": "BulkData",
@@ -348,7 +348,7 @@ EXAMPLES = [
   """),
 
   ExampleProtocol(
-  """
+      """
   {
     "protocol": "API",
     "namespace": "xyz.api",
