@@ -705,7 +705,7 @@ class EnumSchema(NamedSchema):
     symbols = tuple(symbols)
     symbol_set = frozenset(symbols)
     if (len(symbol_set) != len(symbols)
-        or not all(map(lambda symbol: isinstance(symbol, str), symbols))):
+            or not all(map(lambda symbol: isinstance(symbol, str), symbols))):
       raise AvroException(
           'Invalid symbols for enum schema: %r.' % (symbols,))
 

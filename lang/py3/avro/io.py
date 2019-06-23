@@ -454,7 +454,7 @@ class DatumReader(object):
 
     # schema resolution: reader's schema is a union, writer's schema is not
     if (writer_schema.type not in ['union', 'error_union']
-        and reader_schema.type in ['union', 'error_union']):
+            and reader_schema.type in ['union', 'error_union']):
       for s in reader_schema.schemas:
         if DatumReader.match_schemas(writer_schema, s):
           return self.read_data(writer_schema, s, decoder)
