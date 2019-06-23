@@ -149,7 +149,7 @@ EXAMPLES = [
 
 }
     """, True),
-ExampleProtocol("""\
+    ExampleProtocol("""\
 {"namespace": "org.apache.avro.test.namespace",
  "protocol": "TestImplicitNamespace",
 
@@ -183,7 +183,7 @@ ExampleProtocol("""\
 
 }
     """, True),
-ExampleProtocol("""\
+    ExampleProtocol("""\
 {"namespace": "org.apache.avro.test.namespace",
  "protocol": "TestNamespaceTwo",
 
@@ -220,7 +220,7 @@ ExampleProtocol("""\
 
 }
     """, True),
-ExampleProtocol("""\
+    ExampleProtocol("""\
 {"namespace": "org.apache.avro.test.namespace",
  "protocol": "TestValidRepeatedName",
 
@@ -253,7 +253,7 @@ ExampleProtocol("""\
 
 }
     """, True),
-ExampleProtocol("""\
+    ExampleProtocol("""\
 {"namespace": "org.apache.avro.test.namespace",
  "protocol": "TestInvalidRepeatedName",
 
@@ -365,7 +365,7 @@ class TestProtocol(unittest.TestCase):
                     self.fail("Coudl not parse valid protocol: %s" % (example.name,))
 
         fail_msg = "Parse behavior correct on %d out of %d protocols." % \
-        (num_correct, len(EXAMPLES))
+            (num_correct, len(EXAMPLES))
         self.assertEqual(num_correct, len(EXAMPLES), fail_msg)
 
     def test_inner_namespace_set(self):
@@ -409,7 +409,7 @@ class TestProtocol(unittest.TestCase):
                 print debug_msg
 
         fail_msg = "Cast to string success on %d out of %d protocols" % \
-        (num_correct, len(VALID_EXAMPLES))
+            (num_correct, len(VALID_EXAMPLES))
         self.assertEqual(num_correct, len(VALID_EXAMPLES), fail_msg)
 
     def test_equivalence_after_round_trip(self):
@@ -436,7 +436,7 @@ class TestProtocol(unittest.TestCase):
                 self.fail("Round trip failure: %s %s %s", (example.name, example.protocol_string, str(original_protocol)))
 
         fail_msg = "Round trip success on %d out of %d protocols" % \
-        (num_correct, len(VALID_EXAMPLES))
+            (num_correct, len(VALID_EXAMPLES))
         self.assertEqual(num_correct, len(VALID_EXAMPLES), fail_msg)
 
 

@@ -426,7 +426,7 @@ class TestSchema(unittest.TestCase):
                     self.fail("Valid schema failed to parse: " + example.schema_string)
 
         fail_msg = "Parse behavior correct on %d out of %d schemas." % \
-        (correct, len(EXAMPLES))
+            (correct, len(EXAMPLES))
         self.assertEqual(correct, len(EXAMPLES), fail_msg)
 
     def test_valid_cast_to_string_after_parse(self):
@@ -442,7 +442,7 @@ class TestSchema(unittest.TestCase):
             correct += 1
 
         fail_msg = "Cast to string success on %d out of %d schemas" % \
-        (correct, len(VALID_EXAMPLES))
+            (correct, len(VALID_EXAMPLES))
         self.assertEqual(correct, len(VALID_EXAMPLES), fail_msg)
 
     def test_equivalence_after_round_trip(self):
@@ -465,7 +465,7 @@ class TestSchema(unittest.TestCase):
                 self.fail("Round trip failure: %s, %s, %s" % (example.name, original_schema, str(original_schema)))
 
         fail_msg = "Round trip success on %d out of %d schemas" % \
-        (correct, len(VALID_EXAMPLES))
+            (correct, len(VALID_EXAMPLES))
         self.assertEqual(correct, len(VALID_EXAMPLES), fail_msg)
 
     # TODO(hammer): more tests
