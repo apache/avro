@@ -97,6 +97,10 @@ Using simplejson.tool from the shell to validate and pretty-print::
     $ echo '{ 1.2:3.4}' | python -m simplejson.tool
     Expecting property name: line 1 column 2 (char 2)
 """
+
+from decoder import JSONDecoder
+from encoder import JSONEncoder
+
 __version__ = '2.0.9'
 __all__ = [
     'dump', 'dumps', 'load', 'loads',
@@ -105,8 +109,6 @@ __all__ = [
 
 __author__ = 'Bob Ippolito <bob@redivi.com>'
 
-from decoder import JSONDecoder
-from encoder import JSONEncoder
 
 _default_encoder = JSONEncoder(
     skipkeys=False,

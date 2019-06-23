@@ -16,16 +16,6 @@
  * limitations under the License.
 """
 
-__all__ = ["TaskRunner"]
-
-if __name__ == "__main__":
-    # Relative imports don't work when being run directly
-    from avro import tether
-    from avro.tether import TetherTask, find_port, inputProtocol
-
-else:
-    from . import TetherTask, find_port, inputProtocol
-
 import logging
 import sys
 import threading
@@ -34,6 +24,15 @@ import weakref
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 from avro import ipc
+
+if __name__ == "__main__":
+    # Relative imports don't work when being run directly
+    from avro import tether
+    from avro.tether import TetherTask, find_port, inputProtocol
+else:
+    from . import TetherTask, find_port, inputProtocol
+
+__all__ = ["TaskRunner"]
 
 
 class TaskRunnerResponder(ipc.Responder):

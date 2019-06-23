@@ -16,11 +16,11 @@
  * limitations under the License.
 """
 
-__all__ = ["WordCountTask"]
-
 import logging
 
 from avro.tether import TetherTask
+
+__all__ = ["WordCountTask"]
 
 
 #TODO::Make the logging level a parameter we can set

@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 """
+import socket
 
 __all__ = ["find_port"]
-
-import socket
 
 
 def find_port():
