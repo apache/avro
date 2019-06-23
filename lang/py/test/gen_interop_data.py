@@ -37,10 +37,10 @@ DATUM = {
 }
 
 if __name__ == "__main__":
-  interop_schema = schema.parse(open(sys.argv[1], 'r').read())
-  writer = open(sys.argv[2], 'wb')
-  datum_writer = io.DatumWriter()
-  # NB: not using compression
-  dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema)
-  dfw.append(DATUM)
-  dfw.close()
+    interop_schema = schema.parse(open(sys.argv[1], 'r').read())
+    writer = open(sys.argv[2], 'wb')
+    datum_writer = io.DatumWriter()
+    # NB: not using compression
+    dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema)
+    dfw.append(DATUM)
+    dfw.close()

@@ -37,4 +37,4 @@ builddir=os.path.split(os.path.split(__file__)[0])[0]
 bpaths=filter(lambda s:s.startswith(builddir), sys.path)
 
 for p in bpaths:
-  sys.path.insert(0,p)
+    sys.path.insert(0,p)

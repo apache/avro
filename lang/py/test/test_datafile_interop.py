@@ -21,21 +21,21 @@ from avro import datafile, io
 
 
 class TestDataFileInterop(unittest.TestCase):
-  def test_interop(self):
-    print ''
-    print 'TEST INTEROP'
-    print '============'
-    print ''
-    for f in os.listdir('@INTEROP_DATA_DIR@'):
-      print 'READING %s' % f
-      print ''
+    def test_interop(self):
+        print ''
+        print 'TEST INTEROP'
+        print '============'
+        print ''
+        for f in os.listdir('@INTEROP_DATA_DIR@'):
+            print 'READING %s' % f
+            print ''
 
-      # read data in binary from file
-      reader = open(os.path.join('@INTEROP_DATA_DIR@', f), 'rb')
-      datum_reader = io.DatumReader()
-      dfr = datafile.DataFileReader(reader, datum_reader)
-      for datum in dfr:
-        assert datum is not None
+            # read data in binary from file
+            reader = open(os.path.join('@INTEROP_DATA_DIR@', f), 'rb')
+            datum_reader = io.DatumReader()
+            dfr = datafile.DataFileReader(reader, datum_reader)
+            for datum in dfr:
+                assert datum is not None
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

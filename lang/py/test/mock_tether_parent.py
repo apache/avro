@@ -23,72 +23,72 @@ from avro import ipc, protocol, tether
 
 
 def find_port():
-  """
-  Return an unbound port
-  """
-  s=socket.socket()
-  s.bind(("127.0.0.1",0))
+    """
+    Return an unbound port
+    """
+    s=socket.socket()
+    s.bind(("127.0.0.1",0))
 
-  port=s.getsockname()[1]
-  s.close()
+    port=s.getsockname()[1]
+    s.close()
 
-  return port
+    return port
 
 SERVER_ADDRESS = ('localhost', find_port())
 
 class MockParentResponder(ipc.Responder):
-  """
-  The responder for the mocked parent
-  """
-  def __init__(self):
-    ipc.Responder.__init__(self, tether.outputProtocol)
+    """
+    The responder for the mocked parent
+    """
+    def __init__(self):
+        ipc.Responder.__init__(self, tether.outputProtocol)
 
-  def invoke(self, message, request):
-    if message.name=='configure':
-      print "MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"])
+    def invoke(self, message, request):
+        if message.name=='configure':
+            print "MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"])
 
-    elif message.name=='status':
-      print "MockParentResponder: Recieved 'status': message={0}".format(request["message"])
-    elif message.name=='fail':
-      print "MockParentResponder: Recieved 'fail': message={0}".format(request["message"])
-    else:
-      print "MockParentResponder: Recieved {0}".format(message.name)
+        elif message.name=='status':
+            print "MockParentResponder: Recieved 'status': message={0}".format(request["message"])
+        elif message.name=='fail':
+            print "MockParentResponder: Recieved 'fail': message={0}".format(request["message"])
+        else:
+            print "MockParentResponder: Recieved {0}".format(message.name)
 
-    # flush the output so it shows up in the parent process
-    sys.stdout.flush()
+        # flush the output so it shows up in the parent process
+        sys.stdout.flush()
 
-    return None
+        return None
 
 class MockParentHandler(BaseHTTPRequestHandler):
-  """Create a handler for the parent.
-  """
-  def do_POST(self):
-    self.responder =MockParentResponder()
-    call_request_reader = ipc.FramedReader(self.rfile)
-    call_request = call_request_reader.read_framed_message()
-    resp_body = self.responder.respond(call_request)
-    self.send_response(200)
-    self.send_header('Content-Type', 'avro/binary')
-    self.end_headers()
-    resp_writer = ipc.FramedWriter(self.wfile)
-    resp_writer.write_framed_message(resp_body)
+    """Create a handler for the parent.
+    """
+    def do_POST(self):
+        self.responder =MockParentResponder()
+        call_request_reader = ipc.FramedReader(self.rfile)
+        call_request = call_request_reader.read_framed_message()
+        resp_body = self.responder.respond(call_request)
+        self.send_response(200)
+        self.send_header('Content-Type', 'avro/binary')
+        self.end_headers()
+        resp_writer = ipc.FramedWriter(self.wfile)
+        resp_writer.write_framed_message(resp_body)
 
 if __name__ == '__main__':
-  if (len(sys.argv)<=1):
-    raise ValueError("Usage: mock_tether_parent command")
+    if (len(sys.argv)<=1):
+        raise ValueError("Usage: mock_tether_parent command")
 
-  cmd=sys.argv[1].lower()
-  if (sys.argv[1]=='start_server'):
-    if (len(sys.argv)==3):
-      port=int(sys.argv[2])
-    else:
-      raise ValueError("Usage: mock_tether_parent start_server port")
+    cmd=sys.argv[1].lower()
+    if (sys.argv[1]=='start_server'):
+        if (len(sys.argv)==3):
+            port=int(sys.argv[2])
+        else:
+            raise ValueError("Usage: mock_tether_parent start_server port")
 
-    SERVER_ADDRESS=(SERVER_ADDRESS[0],port)
-    print "mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1])
+        SERVER_ADDRESS=(SERVER_ADDRESS[0],port)
+        print "mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1])
 
-    # flush the output so it shows up in the parent process
-    sys.stdout.flush()
-    parent_server = HTTPServer(SERVER_ADDRESS, MockParentHandler)
-    parent_server.allow_reuse_address = True
-    parent_server.serve_forever()
+        # flush the output so it shows up in the parent process
+        sys.stdout.flush()
+        parent_server = HTTPServer(SERVER_ADDRESS, MockParentHandler)
+        parent_server.allow_reuse_address = True
+        parent_server.serve_forever()

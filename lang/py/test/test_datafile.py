@@ -53,150 +53,150 @@ SCHEMAS_TO_VALIDATE = (
 FILENAME = 'test_datafile.out'
 CODECS_TO_VALIDATE = ('null', 'deflate')
 try:
-  import snappy
-  CODECS_TO_VALIDATE += ('snappy',)
+    import snappy
+    CODECS_TO_VALIDATE += ('snappy',)
 except ImportError:
-  print 'Snappy not present, will skip testing it.'
+    print 'Snappy not present, will skip testing it.'
 
 # TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):
-  def test_round_trip(self):
-    print ''
-    print 'TEST ROUND TRIP'
-    print '==============='
-    print ''
-    correct = 0
-    for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
+    def test_round_trip(self):
         print ''
-        print 'SCHEMA NUMBER %d' % (i + 1)
-        print '================'
+        print 'TEST ROUND TRIP'
+        print '==============='
         print ''
-        print 'Schema: %s' % example_schema
-        print 'Datum: %s' % datum
-        print 'Codec: %s' % codec
+        correct = 0
+        for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
+            for codec in CODECS_TO_VALIDATE:
+                print ''
+                print 'SCHEMA NUMBER %d' % (i + 1)
+                print '================'
+                print ''
+                print 'Schema: %s' % example_schema
+                print 'Datum: %s' % datum
+                print 'Codec: %s' % codec
 
-        # write data in binary to file 10 times
+                # write data in binary to file 10 times
+                writer = open(FILENAME, 'wb')
+                datum_writer = io.DatumWriter()
+                schema_object = schema.parse(example_schema)
+                dfw = datafile.DataFileWriter(writer, datum_writer, schema_object, codec=codec)
+                for i in range(10):
+                    dfw.append(datum)
+                dfw.close()
+
+                # read data in binary from file
+                reader = open(FILENAME, 'rb')
+                datum_reader = io.DatumReader()
+                dfr = datafile.DataFileReader(reader, datum_reader)
+                round_trip_data = []
+                for datum in dfr:
+                    round_trip_data.append(datum)
+
+                print 'Round Trip Data: %s' % round_trip_data
+                print 'Round Trip Data Length: %d' % len(round_trip_data)
+                is_correct = [datum] * 10 == round_trip_data
+                if is_correct: correct += 1
+                print 'Correct Round Trip: %s' % is_correct
+                print ''
+        os.remove(FILENAME)
+        self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
+
+    def test_append(self):
+        print ''
+        print 'TEST APPEND'
+        print '==========='
+        print ''
+        correct = 0
+        for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
+            for codec in CODECS_TO_VALIDATE:
+                print ''
+                print 'SCHEMA NUMBER %d' % (i + 1)
+                print '================'
+                print ''
+                print 'Schema: %s' % example_schema
+                print 'Datum: %s' % datum
+                print 'Codec: %s' % codec
+
+                # write data in binary to file once
+                writer = open(FILENAME, 'wb')
+                datum_writer = io.DatumWriter()
+                schema_object = schema.parse(example_schema)
+                dfw = datafile.DataFileWriter(writer, datum_writer, schema_object, codec=codec)
+                dfw.append(datum)
+                dfw.close()
+
+                # open file, write, and close nine times
+                for i in range(9):
+                    writer = open(FILENAME, 'ab+')
+                    dfw = datafile.DataFileWriter(writer, io.DatumWriter())
+                    dfw.append(datum)
+                    dfw.close()
+
+                # read data in binary from file
+                reader = open(FILENAME, 'rb')
+                datum_reader = io.DatumReader()
+                dfr = datafile.DataFileReader(reader, datum_reader)
+                appended_data = []
+                for datum in dfr:
+                    appended_data.append(datum)
+
+                print 'Appended Data: %s' % appended_data
+                print 'Appended Data Length: %d' % len(appended_data)
+                is_correct = [datum] * 10 == appended_data
+                if is_correct: correct += 1
+                print 'Correct Appended: %s' % is_correct
+                print ''
+        os.remove(FILENAME)
+        self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
+
+    def test_context_manager(self):
+        # Context manager was introduced as a first class
+        # member only in Python 2.6 and above.
+        import sys
+        if sys.version_info < (2,6):
+            print 'Skipping context manager tests on this Python version.'
+            return
+        # Test the writer with a 'with' statement.
         writer = open(FILENAME, 'wb')
         datum_writer = io.DatumWriter()
-        schema_object = schema.parse(example_schema)
-        dfw = datafile.DataFileWriter(writer, datum_writer, schema_object, codec=codec)
-        for i in range(10):
-          dfw.append(datum)
-        dfw.close()
+        sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
+        schema_object = schema.parse(sample_schema)
+        with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
+            dfw.append(sample_datum)
+        self.assertTrue(writer.closed)
 
-        # read data in binary from file
+        # Test the reader with a 'with' statement.
+        datums = []
         reader = open(FILENAME, 'rb')
         datum_reader = io.DatumReader()
-        dfr = datafile.DataFileReader(reader, datum_reader)
-        round_trip_data = []
-        for datum in dfr:
-          round_trip_data.append(datum)
+        with datafile.DataFileReader(reader, datum_reader) as dfr:
+            for datum in dfr:
+                datums.append(datum)
+        self.assertTrue(reader.closed)
 
-        print 'Round Trip Data: %s' % round_trip_data
-        print 'Round Trip Data Length: %d' % len(round_trip_data)
-        is_correct = [datum] * 10 == round_trip_data
-        if is_correct: correct += 1
-        print 'Correct Round Trip: %s' % is_correct
-        print ''
-    os.remove(FILENAME)
-    self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
-
-  def test_append(self):
-    print ''
-    print 'TEST APPEND'
-    print '==========='
-    print ''
-    correct = 0
-    for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
-        print ''
-        print 'SCHEMA NUMBER %d' % (i + 1)
-        print '================'
-        print ''
-        print 'Schema: %s' % example_schema
-        print 'Datum: %s' % datum
-        print 'Codec: %s' % codec
-
-        # write data in binary to file once
+    def test_metadata(self):
+        # Test the writer with a 'with' statement.
         writer = open(FILENAME, 'wb')
         datum_writer = io.DatumWriter()
-        schema_object = schema.parse(example_schema)
-        dfw = datafile.DataFileWriter(writer, datum_writer, schema_object, codec=codec)
-        dfw.append(datum)
-        dfw.close()
+        sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
+        schema_object = schema.parse(sample_schema)
+        with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
+            dfw.set_meta('test.string', 'foo')
+            dfw.set_meta('test.number', '1')
+            dfw.append(sample_datum)
+        self.assertTrue(writer.closed)
 
-        # open file, write, and close nine times
-        for i in range(9):
-          writer = open(FILENAME, 'ab+')
-          dfw = datafile.DataFileWriter(writer, io.DatumWriter())
-          dfw.append(datum)
-          dfw.close()
-
-        # read data in binary from file
+        # Test the reader with a 'with' statement.
+        datums = []
         reader = open(FILENAME, 'rb')
         datum_reader = io.DatumReader()
-        dfr = datafile.DataFileReader(reader, datum_reader)
-        appended_data = []
-        for datum in dfr:
-          appended_data.append(datum)
-
-        print 'Appended Data: %s' % appended_data
-        print 'Appended Data Length: %d' % len(appended_data)
-        is_correct = [datum] * 10 == appended_data
-        if is_correct: correct += 1
-        print 'Correct Appended: %s' % is_correct
-        print ''
-    os.remove(FILENAME)
-    self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
-
-  def test_context_manager(self):
-    # Context manager was introduced as a first class
-    # member only in Python 2.6 and above.
-    import sys
-    if sys.version_info < (2,6):
-      print 'Skipping context manager tests on this Python version.'
-      return
-    # Test the writer with a 'with' statement.
-    writer = open(FILENAME, 'wb')
-    datum_writer = io.DatumWriter()
-    sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
-    schema_object = schema.parse(sample_schema)
-    with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
-      dfw.append(sample_datum)
-    self.assertTrue(writer.closed)
-
-    # Test the reader with a 'with' statement.
-    datums = []
-    reader = open(FILENAME, 'rb')
-    datum_reader = io.DatumReader()
-    with datafile.DataFileReader(reader, datum_reader) as dfr:
-      for datum in dfr:
-        datums.append(datum)
-    self.assertTrue(reader.closed)
-
-  def test_metadata(self):
-    # Test the writer with a 'with' statement.
-    writer = open(FILENAME, 'wb')
-    datum_writer = io.DatumWriter()
-    sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
-    schema_object = schema.parse(sample_schema)
-    with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
-      dfw.set_meta('test.string', 'foo')
-      dfw.set_meta('test.number', '1')
-      dfw.append(sample_datum)
-    self.assertTrue(writer.closed)
-
-    # Test the reader with a 'with' statement.
-    datums = []
-    reader = open(FILENAME, 'rb')
-    datum_reader = io.DatumReader()
-    with datafile.DataFileReader(reader, datum_reader) as dfr:
-      self.assertEquals('foo', dfr.get_meta('test.string'))
-      self.assertEquals('1', dfr.get_meta('test.number'))
-      for datum in dfr:
-        datums.append(datum)
-    self.assertTrue(reader.closed)
+        with datafile.DataFileReader(reader, datum_reader) as dfr:
+            self.assertEquals('foo', dfr.get_meta('test.string'))
+            self.assertEquals('1', dfr.get_meta('test.number'))
+            for datum in dfr:
+                datums.append(datum)
+        self.assertTrue(reader.closed)
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()
