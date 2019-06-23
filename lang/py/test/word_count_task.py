@@ -18,9 +18,10 @@
 
 __all__=["WordCountTask"]
 
+import logging
+
 from avro.tether import TetherTask
 
-import logging
 
 #TODO::Make the logging level a parameter we can set
 #logging.basicConfig(level=logging.INFO)

@@ -15,13 +15,14 @@
 # limitations under the License.
 
 import inspect
+import os
 import subprocess
 import sys
 import time
 import unittest
-import os
 
 import set_avro_test_path
+
 
 class TestTetherWordCount(unittest.TestCase):
   """ unittest for a python tethered map-reduce job.
