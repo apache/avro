@@ -275,7 +275,7 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr, _key_separ
                          long=long,
                          str=str,
                          tuple=tuple,
-        ):
+                     ):
 
     def _iterencode_list(lst, _current_indent_level):
         if not lst:
