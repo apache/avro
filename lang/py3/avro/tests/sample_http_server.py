@@ -76,6 +76,7 @@ class MailHandler(BaseHTTPRequestHandler):
     resp_writer = ipc.FramedWriter(self.wfile)
     resp_writer.write_framed_message(resp_body)
 
+
 if __name__ == '__main__':
   mail_server = HTTPServer(SERVER_ADDRESS, MailHandler)
   mail_server.allow_reuse_address = True

@@ -32,5 +32,6 @@ class TestEnum(unittest.TestCase):
     enum = schema.EnumSchema('Test', '', ['B', 'A'], schema.Names(), '', {})
     self.assertEqual('B', enum.symbols[0])
 
+
 if __name__ == '__main__':
   raise Exception('Use run_tests.py')

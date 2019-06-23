@@ -61,6 +61,7 @@ def MakePrimitiveExamples():
     examples.append(ExampleSchema('{"type": "%s"}' % type, valid=True))
   return examples
 
+
 PRIMITIVE_EXAMPLES = MakePrimitiveExamples() + [
   ExampleSchema('"True"', valid=False),
   ExampleSchema('True', valid=False),

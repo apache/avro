@@ -210,6 +210,7 @@ def _Crc64AvroFingerprint(data):
   # implementation gives fingerprint bytes in little-endian order
   return result.to_bytes(length=8, byteorder='little', signed=False)
 
+
 _FP_TABLE = None
 
 

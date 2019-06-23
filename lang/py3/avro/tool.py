@@ -159,5 +159,6 @@ def main(args=sys.argv):
     send_message(uri, proto, msg, datum)
   return 0
 
+
 if __name__ == "__main__":
   sys.exit(main(sys.argv))
