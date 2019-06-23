@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 # Constants
 
 # Log level more verbose than DEBUG=10, INFO=20, etc.
-DEBUG_VERBOSE=5
+DEBUG_VERBOSE = 5
 
 
 NULL    = 'null'
