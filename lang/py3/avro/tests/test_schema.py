@@ -153,7 +153,7 @@ MAP_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
 ]
 
 UNION_EXAMPLES = [
@@ -167,7 +167,7 @@ UNION_EXAMPLES = [
     ]
     """,
                 valid=False,
-  ),
+                ),
 ]
 
 RECORD_EXAMPLES = [
@@ -179,7 +179,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "error",
@@ -188,7 +188,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -200,7 +200,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -221,7 +221,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -242,7 +242,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -268,7 +268,7 @@ RECORD_EXAMPLES = [
         }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -318,7 +318,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -333,7 +333,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -345,7 +345,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=False,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -357,7 +357,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=False,
-  ),
+                ),
   ExampleSchema("""
     {
       "type": "record",
@@ -366,7 +366,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=False,
-  ),
+                ),
   ExampleSchema("""
     {
       "name": ["Tom", "Jerry"],
@@ -375,7 +375,7 @@ RECORD_EXAMPLES = [
     }
     """,
                 valid=False,
-  ),
+                ),
 ]
 
 DOC_EXAMPLES = [
@@ -388,12 +388,12 @@ DOC_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {"type": "enum", "name": "Test", "symbols": ["A", "B"], "doc": "Doc String"}
     """,
                 valid=True,
-  ),
+                ),
 ]
 
 OTHER_PROP_EXAMPLES = [
@@ -411,7 +411,7 @@ OTHER_PROP_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema(
     '{"type": "map", "values": "long", "cp_boolean": true}',
     valid=True,
@@ -425,12 +425,12 @@ OTHER_PROP_EXAMPLES = [
     }
     """,
                 valid=True,
-  ),
+                ),
   ExampleSchema("""
     {"type": "long", "date": "true"}
     """,
                 valid=True,
-  ),
+                ),
 ]
 
 EXAMPLES = PRIMITIVE_EXAMPLES
