@@ -19,8 +19,7 @@
 # limitations under the License.
 import sys
 
-from avro import ipc
-from avro import protocol
+from avro import ipc, protocol
 
 MAIL_PROTOCOL_JSON = """\
 {"namespace": "example.proto",

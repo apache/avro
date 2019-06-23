@@ -21,7 +21,7 @@
 import hashlib
 from io import StringIO
 
-from avro.schema import (ERROR, RECORD, UNION, ARRAY, MAP, ENUM, FIXED)
+from avro.schema import ARRAY, ENUM, ERROR, FIXED, MAP, RECORD, UNION
 
 
 def ToParsingCanonicalForm(schema):
