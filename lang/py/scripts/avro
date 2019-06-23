@@ -38,7 +38,8 @@ def print_json(row):
     print(json.dumps(row))
 
 def print_json_pretty(row):
-    print(json.dumps(row, indent=4))
+    # Manually trim right-side whitespace to avoid https://bugs.python.org/issue16333
+    print('\n'.join(line.rstrip() for line in json.dumps(row, indent=4).split('\n')))
 
 _write_row = csv.writer(stdout).writerow
 _encoding = stdout.encoding or "UTF-8"
