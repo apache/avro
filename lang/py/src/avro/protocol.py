@@ -61,7 +61,7 @@ class Protocol(object):
     def _parse_messages(self, messages, names):
         message_objects = {}
         for name, body in messages.iteritems():
-            if message_objects.has_key(name):
+            if name in message_objects:
                 fail_msg = 'Message name "%s" repeated.' % name
                 raise ProtocolParseException(fail_msg)
             try:

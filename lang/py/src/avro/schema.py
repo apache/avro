@@ -239,11 +239,11 @@ class Names(object):
 
     def has_name(self, name_attr, space_attr):
         test = Name(name_attr, space_attr, self.default_namespace).fullname
-        return self.names.has_key(test)
+        return test in self.names
 
     def get_name(self, name_attr, space_attr):
         test = Name(name_attr, space_attr, self.default_namespace).fullname
-        if not self.names.has_key(test):
+        if test not in self.names:
             return None
         return self.names[test]
 
@@ -278,7 +278,7 @@ class Names(object):
         if to_add.fullname in VALID_TYPES:
             fail_msg = '%s is a reserved type name.' % to_add.fullname
             raise SchemaParseException(fail_msg)
-        elif self.names.has_key(to_add.fullname):
+        elif to_add.fullname in self.names:
             fail_msg = 'The name "%s" is already in use.' % to_add.fullname
             raise SchemaParseException(fail_msg)
 
@@ -727,7 +727,7 @@ class RecordSchema(NamedSchema):
                 # null values can have a default value of None
                 has_default = False
                 default = None
-                if field.has_key('default'):
+                if 'default' in field:
                     has_default = True
                     default = field.get('default')
 
