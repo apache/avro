@@ -21,10 +21,7 @@
 import sys
 from pathlib import Path
 
-from avro import datafile
-from avro import io
-from avro import schema
-
+from avro import datafile, io, schema
 
 DATUM = {
     'intField': 12,

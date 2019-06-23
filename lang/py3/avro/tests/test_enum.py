@@ -22,6 +22,7 @@ import unittest
 
 from avro import schema
 
+
 class TestEnum(unittest.TestCase):
   def testSymbolsInOrder(self):
     enum = schema.EnumSchema('Test', '', ['A', 'B'], schema.Names(), '', {})
