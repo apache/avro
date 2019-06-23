@@ -383,4 +383,4 @@ def generate_sixteen_random_bytes():
         return os.urandom(16)
     except:
         import random
-        return [ chr(random.randrange(256)) for i in range(16)]
+        return [chr(random.randrange(256)) for i in range(16)]

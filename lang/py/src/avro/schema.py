@@ -804,7 +804,7 @@ class RecordSchema(NamedSchema):
             names = Names()
         # Request records don't have names
         if self.type == 'request':
-            return [ f.to_json(names) for f in self.fields]
+            return [f.to_json(names) for f in self.fields]
 
         if self.fullname in names.names:
             return self.name_ref(names)
@@ -812,7 +812,7 @@ class RecordSchema(NamedSchema):
             names.names[self.fullname] = self
 
         to_dump = names.prune_namespace(self.props.copy())
-        to_dump['fields'] = [ f.to_json(names) for f in self.fields]
+        to_dump['fields'] = [f.to_json(names) for f in self.fields]
         return to_dump
 
     def __eq__(self, that):

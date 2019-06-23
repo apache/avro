@@ -131,7 +131,7 @@ class Protocol(object):
         if self.namespace:
             to_dump['namespace'] = self.namespace
         if self.types:
-            to_dump['types'] = [ t.to_json(names) for t in self.types]
+            to_dump['types'] = [t.to_json(names) for t in self.types]
         if self.messages:
             messages_dict = {}
             for name, body in self.messages.iteritems():
