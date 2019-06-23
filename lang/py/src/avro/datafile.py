@@ -191,7 +191,7 @@ class DataFileWriter(object):
             self.writer.write(self.sync_marker)
 
             # reset buffer
-            self.buffer_writer.truncate(0) 
+            self.buffer_writer.truncate(0)
             self.block_count = 0
 
     def append(self, datum):
@@ -296,7 +296,7 @@ class DataFileReader(object):
 
     def _read_header(self):
         # seek to the beginning of the file to get magic block
-        self.reader.seek(0, 0) 
+        self.reader.seek(0, 0)
 
         # read header into a dict
         header = self.datum_reader.read_data(
@@ -363,7 +363,7 @@ class DataFileReader(object):
             else:
                 self._read_block_header()
 
-        datum = self.datum_reader.read(self.datum_decoder) 
+        datum = self.datum_reader.read(self.datum_decoder)
         self.block_count -= 1
         return datum
 
