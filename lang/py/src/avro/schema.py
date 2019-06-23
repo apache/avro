@@ -917,7 +917,7 @@ def make_avsc_object(json_data, names=None):
 
     @arg names: A Name object (tracks seen names and default space)
     """
-    if names == None:
+    if names is None:
         names = Names()
 
     # JSON object (non-union)

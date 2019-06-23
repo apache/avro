@@ -384,7 +384,7 @@ class TetherTask(object):
 
                     # read the new record
                     self.midRecord = self.midReader.read(decoder)
-                    if (prev != None and not(keys_are_equal(self.midRecord, prev, self._red_fkeys))):
+                    if (prev is not None and not(keys_are_equal(self.midRecord, prev, self._red_fkeys))):
                         # since the key has changed we need to finalize the processing
                         # for this group of key,value pairs
                         self.reduceFlush(prev, self.outCollector)
