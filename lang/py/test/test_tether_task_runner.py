@@ -83,7 +83,8 @@ class TestTetherTaskRunner(unittest.TestCase):
             requestor.request("input", {"data": data, "count": 1})
 
             #Test the reducer
-            requestor.request("configure", {"taskType": TaskType.REDUCE, "inSchema": str(runner.task.midschema), "outSchema": str(runner.task.outschema)})
+            requestor.request("configure", {"taskType": TaskType.REDUCE, "inSchema": str(
+                runner.task.midschema), "outSchema": str(runner.task.outschema)})
 
             #Serialize some data so we can send it to the input function
             datum = {"key": "word", "value": 2}
