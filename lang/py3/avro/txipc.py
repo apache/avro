@@ -113,7 +113,7 @@ class RequestStreamingProducer(object):
     else:
       buffer_length = self.length - self.total_bytes_sent
     self.write_buffer(self.message[self.total_bytes_sent:
-                              (self.total_bytes_sent + buffer_length)])
+                                   (self.total_bytes_sent + buffer_length)])
     self.total_bytes_sent += buffer_length
     # Make sure we wrote the entire message
     if self.total_bytes_sent == self.length and not self.stopped:

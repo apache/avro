@@ -181,7 +181,7 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"type":"array","items":{"name":"Test'
-          '","type":"enum","symbols":["A","B"]}}')
+            '","type":"enum","symbols":["A","B"]}}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -201,7 +201,7 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"type":"map","values":{"name":"Test"'
-          ',"type":"enum","symbols":["A","B"]}}')
+            ',"type":"enum","symbols":["A","B"]}}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -251,8 +251,8 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"name":"Node","type":"record","fields":[{"na'
-          'me":"label","type":"string"},{"name":"childre'
-          'n","type":{"type":"array","items":"Node"}}]}')
+            'me":"label","type":"string"},{"name":"childre'
+            'n","type":{"type":"array","items":"Node"}}]}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -278,8 +278,8 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"name":"Lisp","type":"record","fields":[{"name":"value","type'
-          '":["null","string",{"name":"Cons","type":"record","fields":[{"'
-          'name":"car","type":"Lisp"},{"name":"cdr","type":"Lisp"}]}]}]}')
+            '":["null","string",{"name":"Cons","type":"record","fields":[{"'
+            'name":"car","type":"Lisp"},{"name":"cdr","type":"Lisp"}]}]}]}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -305,11 +305,11 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"name":"org.apache.avro.ipc.HandshakeRequest","type":"r'
-          'ecord","fields":[{"name":"clientHash","type":{"name":"or'
-          'g.apache.avro.ipc.MD5","type":"fixed","size":16}},{"name'
-          '":"clientProtocol","type":["null","string"]},{"name":"se'
-          'rverHash","type":"org.apache.avro.ipc.MD5"},{"name":"met'
-          'a","type":["null",{"type":"map","values":"bytes"}]}]}')
+            'ecord","fields":[{"name":"clientHash","type":{"name":"or'
+            'g.apache.avro.ipc.MD5","type":"fixed","size":16}},{"name'
+            '":"clientProtocol","type":["null","string"]},{"name":"se'
+            'rverHash","type":"org.apache.avro.ipc.MD5"},{"name":"met'
+            'a","type":["null",{"type":"map","values":"bytes"}]}]}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -340,12 +340,12 @@ class TestSchemaNormalization(unittest.TestCase):
         }
     """
     post = ('{"name":"org.apache.avro.ipc.HandshakeResponse","type":"rec'
-          'ord","fields":[{"name":"match","type":{"name":"org.apache.a'
-          'vro.ipc.HandshakeMatch","type":"enum","symbols":["BOTH","CL'
-          'IENT","NONE"]}},{"name":"serverProtocol","type":["null","st'
-          'ring"]},{"name":"serverHash","type":["null",{"name":"org.ap'
-          'ache.avro.ipc.MD5","type":"fixed","size":16}]},{"name":"met'
-          'a","type":["null",{"type":"map","values":"bytes"}]}]}')
+            'ord","fields":[{"name":"match","type":{"name":"org.apache.a'
+            'vro.ipc.HandshakeMatch","type":"enum","symbols":["BOTH","CL'
+            'IENT","NONE"]}},{"name":"serverProtocol","type":["null","st'
+            'ring"]},{"name":"serverHash","type":["null",{"name":"org.ap'
+            'ache.avro.ipc.MD5","type":"fixed","size":16}]},{"name":"met'
+            'a","type":["null",{"type":"map","values":"bytes"}]}]}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -400,21 +400,21 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"name":"org.apache.avro.Interop","type":"record","fields":[{"na'
-          'me":"intField","type":"int"},{"name":"longField","type":"long"},'
-          '{"name":"stringField","type":"string"},{"name":"boolField","type'
-          '":"boolean"},{"name":"floatField","type":"float"},{"name":"doubl'
-          'eField","type":"double"},{"name":"bytesField","type":"bytes"},{"'
-          'name":"nullField","type":"null"},{"name":"arrayField","type":{"t'
-          'ype":"array","items":"double"}},{"name":"mapField","type":{"type'
-          '":"map","values":{"name":"org.apache.avro.Foo","type":"record","'
-          'fields":[{"name":"label","type":"string"}]}}},{"name":"unionFiel'
-          'd","type":["boolean","double",{"type":"array","items":"bytes"}]}'
-          ',{"name":"enumField","type":{"name":"org.apache.avro.Kind","type'
-          '":"enum","symbols":["A","B","C"]}},{"name":"fixedField","type":{'
-          '"name":"org.apache.avro.MD5","type":"fixed","size":16}},{"name":'
-          '"recordField","type":{"name":"org.apache.avro.Node","type":"reco'
-          'rd","fields":[{"name":"label","type":"string"},{"name":"children'
-          '","type":{"type":"array","items":"org.apache.avro.Node"}}]}}]}')
+            'me":"intField","type":"int"},{"name":"longField","type":"long"},'
+            '{"name":"stringField","type":"string"},{"name":"boolField","type'
+            '":"boolean"},{"name":"floatField","type":"float"},{"name":"doubl'
+            'eField","type":"double"},{"name":"bytesField","type":"bytes"},{"'
+            'name":"nullField","type":"null"},{"name":"arrayField","type":{"t'
+            'ype":"array","items":"double"}},{"name":"mapField","type":{"type'
+            '":"map","values":{"name":"org.apache.avro.Foo","type":"record","'
+            'fields":[{"name":"label","type":"string"}]}}},{"name":"unionFiel'
+            'd","type":["boolean","double",{"type":"array","items":"bytes"}]}'
+            ',{"name":"enumField","type":{"name":"org.apache.avro.Kind","type'
+            '":"enum","symbols":["A","B","C"]}},{"name":"fixedField","type":{'
+            '"name":"org.apache.avro.MD5","type":"fixed","size":16}},{"name":'
+            '"recordField","type":{"name":"org.apache.avro.Node","type":"reco'
+            'rd","fields":[{"name":"label","type":"string"},{"name":"children'
+            '","type":{"type":"array","items":"org.apache.avro.Node"}}]}}]}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -434,8 +434,8 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"name":"ipAddr","type":"record","fields":[{"name"'
-          ':"addr","type":[{"name":"IPv6","type":"fixed","siz'
-          'e":16},{"name":"IPv4","type":"fixed","size":4}]}]}')
+            ':"addr","type":[{"name":"IPv6","type":"fixed","siz'
+            'e":16},{"name":"IPv4","type":"fixed","size":4}]}]}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)
@@ -450,7 +450,7 @@ class TestSchemaNormalization(unittest.TestCase):
     }
     """
     post = ('{"name":"TestDoc","type":"record","fiel'
-          'ds":[{"name":"name","type":"string"}]}')
+            'ds":[{"name":"name","type":"string"}]}')
     pre_schema = Parse(pre)
     canonical_form = ToParsingCanonicalForm(pre_schema)
     self.assertEqual(canonical_form, post)

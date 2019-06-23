@@ -79,21 +79,21 @@ FIXED_EXAMPLES = [
       "size": 1
     }
     """,
-    valid=True),
+                valid=True),
   ExampleSchema("""
     {
       "type": "fixed",
       "name": "Missing size"
     }
     """,
-    valid=False),
+                valid=False),
   ExampleSchema("""
     {
       "type": "fixed",
       "size": 314
     }
     """,
-    valid=False),
+                valid=False),
 ]
 
 ENUM_EXAMPLES = [
@@ -107,7 +107,7 @@ ENUM_EXAMPLES = [
       "symbols": "Normal Caution Critical"
     }
     """,
-    valid=False),
+                valid=False),
   ExampleSchema("""
     {
       "type": "enum",
@@ -115,14 +115,14 @@ ENUM_EXAMPLES = [
       "symbols": ["Golden", "Mean"]
     }
     """,
-    valid=False),
+                valid=False),
   ExampleSchema("""
     {
       "type": "enum",
       "symbols": ["I", "will", "fail", "no", "name"]
     }
     """,
-    valid=False),
+                valid=False),
   ExampleSchema("""
     {
       "type": "enum",
@@ -130,7 +130,7 @@ ENUM_EXAMPLES = [
       "symbols": ["AA", "AA"]
     }
     """,
-    valid=False),
+                valid=False),
 ]
 
 ARRAY_EXAMPLES = [
@@ -141,7 +141,7 @@ ARRAY_EXAMPLES = [
       "items": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}
     }
     """,
-    valid=True),
+                valid=True),
 ]
 
 MAP_EXAMPLES = [
@@ -152,7 +152,7 @@ MAP_EXAMPLES = [
       "values": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}
     }
     """,
-    valid=True,
+                valid=True,
   ),
 ]
 
@@ -166,7 +166,7 @@ UNION_EXAMPLES = [
       {"type": "array", "items": "string"}
     ]
     """,
-    valid=False,
+                valid=False,
   ),
 ]
 
@@ -178,7 +178,7 @@ RECORD_EXAMPLES = [
       "fields": [{"name": "f", "type": "long"}]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -187,7 +187,7 @@ RECORD_EXAMPLES = [
       "fields": [{"name": "f", "type": "long"}]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -199,7 +199,7 @@ RECORD_EXAMPLES = [
       ]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -220,7 +220,7 @@ RECORD_EXAMPLES = [
       }]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -241,7 +241,7 @@ RECORD_EXAMPLES = [
       ]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -267,7 +267,7 @@ RECORD_EXAMPLES = [
           "type": ["null", {"type": "map", "values": "bytes"}]}]
         }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -317,7 +317,7 @@ RECORD_EXAMPLES = [
       ]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -332,7 +332,7 @@ RECORD_EXAMPLES = [
       }]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {
@@ -344,7 +344,7 @@ RECORD_EXAMPLES = [
       ]
     }
     """,
-    valid=False,
+                valid=False,
   ),
   ExampleSchema("""
     {
@@ -356,7 +356,7 @@ RECORD_EXAMPLES = [
       ]
     }
     """,
-    valid=False,
+                valid=False,
   ),
   ExampleSchema("""
     {
@@ -365,7 +365,7 @@ RECORD_EXAMPLES = [
       "name", "Rainer"
     }
     """,
-    valid=False,
+                valid=False,
   ),
   ExampleSchema("""
     {
@@ -374,7 +374,7 @@ RECORD_EXAMPLES = [
       "fields": [{"name": "name", "type": "string"}]
     }
     """,
-    valid=False,
+                valid=False,
   ),
 ]
 
@@ -387,12 +387,12 @@ DOC_EXAMPLES = [
       "fields": [{"name": "name", "type": "string", "doc": "Doc String"}]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {"type": "enum", "name": "Test", "symbols": ["A", "B"], "doc": "Doc String"}
     """,
-    valid=True,
+                valid=True,
   ),
 ]
 
@@ -410,7 +410,7 @@ OTHER_PROP_EXAMPLES = [
       ]
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema(
     '{"type": "map", "values": "long", "cp_boolean": true}',
@@ -424,12 +424,12 @@ OTHER_PROP_EXAMPLES = [
       "cp_float": 1.0
     }
     """,
-    valid=True,
+                valid=True,
   ),
   ExampleSchema("""
     {"type": "long", "date": "true"}
     """,
-    valid=True,
+                valid=True,
   ),
 ]
 
