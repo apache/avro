@@ -42,6 +42,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
 _VERSION_FILE_NAME = 'VERSION.txt'
 
+
 def _is_distribution():
     """Tests whether setup.py is invoked from a distribution.
 

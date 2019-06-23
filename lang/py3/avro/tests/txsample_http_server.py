@@ -52,6 +52,7 @@ MAIL_PROTOCOL_JSON = """\
 MAIL_PROTOCOL = protocol.Parse(MAIL_PROTOCOL_JSON)
 SERVER_ADDRESS = ('localhost', 9090)
 
+
 class MailResponder(ipc.Responder):
   def __init__(self):
     ipc.Responder.__init__(self, MAIL_PROTOCOL)

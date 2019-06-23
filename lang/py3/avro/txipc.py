@@ -49,6 +49,7 @@ class TwistedRequestor(ipc.BaseRequestor):
     d.addCallback(self._process_handshake, message_name, request_datum)
     return d
 
+
 class RequestStreamingProducer(object):
   """A streaming producer for issuing requests with the Twisted.web Agent."""
   implements(IBodyProducer)
@@ -129,6 +130,7 @@ class RequestStreamingProducer(object):
   def write_buffer_length(self, n):
     self.consumer.write(ipc.BIG_ENDIAN_INT_STRUCT.pack(n))
 
+
 class AvroProtocol(Protocol):
 
   recvd = ''
@@ -157,6 +159,7 @@ class AvroProtocol(Protocol):
   def connectionLost(self, reason):
     if not self.done:
       self.finished.errback(ipc.ConnectionClosedException("Reader read 0 bytes."))
+
 
 class TwistedHTTPTransceiver(object):
   """This transceiver uses the Agent class present in Twisted.web >= 9.0
@@ -193,6 +196,7 @@ class TwistedHTTPTransceiver(object):
       headers=Headers(req_headers),
       bodyProducer=body_producer)
     return d.addCallback(self.read_framed_message)
+
 
 class AvroResponderResource(resource.Resource):
   """This Twisted.web resource can be placed anywhere in a URL hierarchy

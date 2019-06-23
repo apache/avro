@@ -482,6 +482,7 @@ class TestSchemaFingerprintAlgorithms(unittest.TestCase):
   def testSha256JavaNameIsAvailable(self):
     self.assertIn('SHA-256', FingerprintAlgorithmNames())
 
+
 class TestSchemaFingerprinting(unittest.TestCase):
 
   def testUnsupportedFingerprintAlgorithmRaisesValueError(self):
