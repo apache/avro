@@ -48,7 +48,6 @@ class TestTetherWordCount(unittest.TestCase):
             if not(os.path.exists(pdir)):
                 os.mkdir(pdir)
 
-
         with file(fname, 'w') as hf:
             inschema = """{"type":"string"}"""
             writer = DataFileWriter(hf, avio.DatumWriter(inschema), writers_schema=schema.parse(inschema))
@@ -59,9 +58,6 @@ class TestTetherWordCount(unittest.TestCase):
                 writer.append(datum)
 
             writer.close()
-
-
-
 
     def _count_words(self, lines):
         """Return a dictionary counting the words in lines
@@ -101,7 +97,6 @@ class TestTetherWordCount(unittest.TestCase):
 
         try:
 
-
             # TODO we use the tempfile module to generate random names
             # for the files
             base_dir = "/tmp/test_tether_word_count"
@@ -120,7 +115,6 @@ class TestTetherWordCount(unittest.TestCase):
 
             if not(os.path.exists(infile)):
                 self.fail("Missing the input file {0}".format(infile))
-
 
             # The schema for the output of the mapper and reducer
             oschema = """
@@ -148,7 +142,6 @@ class TestTetherWordCount(unittest.TestCase):
             args.append("java")
             args.append("-jar")
             args.append(os.path.abspath("@TOPDIR@/../java/tools/target/avro-tools-@AVRO_VERSION@.jar"))
-
 
             args.append("tether")
             args.extend(["--in", inpath])
@@ -187,7 +180,6 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
 
             print "Command:\n\t{0}".format(" ".join(args))
             proc = subprocess.Popen(args)
-
 
             proc.wait()
 

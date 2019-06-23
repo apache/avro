@@ -121,7 +121,6 @@ class Collector(object):
             self.outputClient.request("outputPartitioned", {"datum": self.buff.read(), "partition": partition})
 
 
-
 def keys_are_equal(rec1, rec2, fkeys):
     """Check if the "keys" in two records are equal. The key fields
     are all fields for which order isn't marked ignore.
@@ -210,7 +209,6 @@ class TetherTask(object):
 
         """
 
-
         if (inschema is None):
             raise ValueError("inschema can't be None")
 
@@ -225,7 +223,6 @@ class TetherTask(object):
         self.inschema = schema.parse(inschema)
         self.midschema = schema.parse(midschema)
         self.outschema = schema.parse(outschema)
-
 
         # declare various variables
         self.clienTransciever = None
@@ -270,7 +267,6 @@ class TetherTask(object):
 
         """
 
-
         # Open the connection to the parent process
         # The port the parent process is listening on is set in the environment
         # variable AVRO_TETHER_OUTPUT_PORT
@@ -307,7 +303,6 @@ class TetherTask(object):
         except Exception as e:
             estr = traceback.format_exc()
             self.fail(estr)
-
 
     def configure(self, taskType,  inSchemaText,  outSchemaText):
         """

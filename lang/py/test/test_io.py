@@ -27,7 +27,6 @@ except ImportError:
     from StringIO import StringIO
 
 
-
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
   ('"boolean"', True),

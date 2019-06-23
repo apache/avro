@@ -333,7 +333,6 @@ class BinaryDecoder(object):
         unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
         return unix_epoch_datetime + timedelta
 
-
     def check_crc32(self, bytes):
         checksum = STRUCT_CRC32.unpack(self.read(4))[0];
         if crc32(bytes) & 0xffffffff != checksum:

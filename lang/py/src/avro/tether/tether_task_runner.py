@@ -174,7 +174,6 @@ class TaskRunner(object):
         port = find_port()
         address = ("localhost", port)
 
-
         def thread_run(task_runner=None):
             task_runner.server = HTTPServer(address, HTTPHandlerGen(task_runner))
             task_runner.server.allow_reuse_address = True
