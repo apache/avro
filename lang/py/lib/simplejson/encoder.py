@@ -261,20 +261,20 @@ class JSONEncoder(object):
 
 
 def _make_iterencode(markers, _default, _encoder, _indent, _floatstr, _key_separator, _item_separator, _sort_keys, _skipkeys, _one_shot,
-                         # HACK: hand-optimized bytecode; turn globals into locals
-                         False=False,
-                         True=True,
-                         ValueError=ValueError,
-                         basestring=basestring,
-                         dict=dict,
-                         float=float,
-                         id=id,
-                         int=int,
-                         isinstance=isinstance,
-                         list=list,
-                         long=long,
-                         str=str,
-                         tuple=tuple,
+                     # HACK: hand-optimized bytecode; turn globals into locals
+                     False=False,
+                     True=True,
+                     ValueError=ValueError,
+                     basestring=basestring,
+                     dict=dict,
+                     float=float,
+                     id=id,
+                     int=int,
+                     isinstance=isinstance,
+                     list=list,
+                     long=long,
+                     str=str,
+                     tuple=tuple,
                      ):
 
     def _iterencode_list(lst, _current_indent_level):

@@ -89,7 +89,7 @@ class RequestStreamingProducer(object):
         # Keep writing data to the consumer until we're finished,
         # paused (pauseProducing()) or stopped (stopProducing())
         while self.length - self.total_bytes_sent > 0 and \
-            not self.paused and not self.stopped:
+                not self.paused and not self.stopped:
             self.write()
         # self.write will fire this deferred once it has written
         # the entire message to the consumer
