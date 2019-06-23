@@ -26,26 +26,26 @@ if version_info[:2] <= (2, 5):
     install_requires.append('simplejson >= 2.0.9')
 
 setup(
-  name = 'avro',
-  version = '@AVRO_VERSION@',
-  packages = ['avro'],
-  package_dir = {'avro': 'src/avro'},
-  scripts = ["./scripts/avro"],
+  name='avro',
+  version='@AVRO_VERSION@',
+  packages=['avro'],
+  package_dir={'avro': 'src/avro'},
+  scripts=["./scripts/avro"],
 
   package_data={'avro': ['LICENSE', 'NOTICE']},
 
   # Project uses simplejson, so ensure that it gets installed or upgraded
   # on the target machine
-  install_requires = install_requires,
+  install_requires=install_requires,
 
   # metadata for upload to PyPI
-  author = 'Apache Avro',
-  author_email = 'dev@avro.apache.org',
-  description = 'Avro is a serialization and RPC framework.',
-  license = 'Apache License 2.0',
-  keywords = 'avro serialization rpc',
-  url = 'https://avro.apache.org/',
-  extras_require = {
+  author='Apache Avro',
+  author_email='dev@avro.apache.org',
+  description='Avro is a serialization and RPC framework.',
+  license='Apache License 2.0',
+  keywords='avro serialization rpc',
+  url='https://avro.apache.org/',
+  extras_require={
     'snappy': ['python-snappy'],
   },
 )
