@@ -792,7 +792,7 @@ class RecordSchema(NamedSchema):
             names = Names()
         # Request records don't have names
         if self.type == 'request':
-            return [ f.to_json(names) for f in self.fields ]
+            return [ f.to_json(names) for f in self.fields]
 
         if self.fullname in names.names:
             return self.name_ref(names)
@@ -800,7 +800,7 @@ class RecordSchema(NamedSchema):
             names.names[self.fullname] = self
 
         to_dump = names.prune_namespace(self.props.copy())
-        to_dump['fields'] = [ f.to_json(names) for f in self.fields ]
+        to_dump['fields'] = [ f.to_json(names) for f in self.fields]
         return to_dump
 
     def __eq__(self, that):
@@ -908,7 +908,7 @@ def get_other_props(all_props, reserved_props):
     """
     if callable(getattr(all_props, 'items', None)):
         return dict([(k, v) for (k, v) in all_props.items() if k not in
-                     reserved_props ])
+                     reserved_props])
 
 
 def make_avsc_object(json_data, names=None):

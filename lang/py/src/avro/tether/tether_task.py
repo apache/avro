@@ -399,7 +399,7 @@ class TetherTask(object):
         """
         Process the complete request
         """
-        if ((self.taskType == TaskType.REDUCE ) and not(self.midRecord is None)):
+        if ((self.taskType == TaskType.REDUCE) and not(self.midRecord is None)):
             try:
                 self.reduceFlush(self.midRecord, self.outCollector)
             except Exception as e:
