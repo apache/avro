@@ -169,7 +169,7 @@ def dump(obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
     if (not skipkeys and ensure_ascii and
         check_circular and allow_nan and
         cls is None and indent is None and separators is None and
-        encoding == 'utf-8' and default is None and not kw):
+            encoding == 'utf-8' and default is None and not kw):
         iterable = _default_encoder.iterencode(obj)
     else:
         if cls is None:
@@ -229,7 +229,7 @@ def dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True,
     if (not skipkeys and ensure_ascii and
         check_circular and allow_nan and
         cls is None and indent is None and separators is None and
-        encoding == 'utf-8' and default is None and not kw):
+            encoding == 'utf-8' and default is None and not kw):
         return _default_encoder.encode(obj)
     if cls is None:
         cls = JSONEncoder

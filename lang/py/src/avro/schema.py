@@ -386,7 +386,7 @@ class Field(object):
         self._props.update(other_props or {})
 
         if (isinstance(type, basestring) and names is not None
-            and names.has_name(type, None)):
+                and names.has_name(type, None)):
             type_schema = names.get_name(type, None)
         else:
             try:
@@ -683,7 +683,7 @@ class UnionSchema(Schema):
                     raise SchemaParseException('Union item must be a valid Avro schema: %s' % str(e))
             # check the new schema
             if (new_schema.type in VALID_TYPES and new_schema.type not in NAMED_TYPES
-                and new_schema.type in [schema.type for schema in schema_objects]):
+                    and new_schema.type in [schema.type for schema in schema_objects]):
                 raise SchemaParseException('%s type already in Union' % new_schema.type)
             elif new_schema.type == 'union':
                 raise SchemaParseException('Unions cannot contain other unions.')

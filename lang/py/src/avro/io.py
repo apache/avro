@@ -673,7 +673,7 @@ class DatumReader(object):
 
         # schema resolution: reader's schema is a union, writer's schema is not
         if (writers_schema.type not in ['union', 'error_union']
-            and readers_schema.type in ['union', 'error_union']):
+                and readers_schema.type in ['union', 'error_union']):
             for s in readers_schema.schemas:
                 if DatumReader.match_schemas(writers_schema, s):
                     return self.read_data(writers_schema, s, decoder)
@@ -689,7 +689,7 @@ class DatumReader(object):
             return decoder.read_utf8()
         elif writers_schema.type == 'int':
             if (hasattr(writers_schema, 'logical_type') and
-                writers_schema.logical_type == constants.DATE):
+                    writers_schema.logical_type == constants.DATE):
                 return decoder.read_date_from_int()
             elif (hasattr(writers_schema, 'logical_type') and
               writers_schema.logical_type == constants.TIME_MILLIS):
@@ -698,7 +698,7 @@ class DatumReader(object):
                 return decoder.read_int()
         elif writers_schema.type == 'long':
             if (hasattr(writers_schema, 'logical_type') and
-                writers_schema.logical_type == constants.TIME_MICROS):
+                    writers_schema.logical_type == constants.TIME_MICROS):
                 return decoder.read_time_micros_from_long()
             elif (hasattr(writers_schema, 'logical_type') and
                   writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
@@ -1035,7 +1035,7 @@ class DatumWriter(object):
             encoder.write_utf8(datum)
         elif writers_schema.type == 'int':
             if (hasattr(writers_schema, 'logical_type') and
-                writers_schema.logical_type == constants.DATE):
+                    writers_schema.logical_type == constants.DATE):
                 encoder.write_date_int(datum)
             elif (hasattr(writers_schema, 'logical_type') and
                   writers_schema.logical_type == constants.TIME_MILLIS):
@@ -1044,7 +1044,7 @@ class DatumWriter(object):
                 encoder.write_int(datum)
         elif writers_schema.type == 'long':
             if (hasattr(writers_schema, 'logical_type') and
-                writers_schema.logical_type == constants.TIME_MICROS):
+                    writers_schema.logical_type == constants.TIME_MICROS):
                 encoder.write_time_micros_long(datum)
             elif (hasattr(writers_schema, 'logical_type') and
                   writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
