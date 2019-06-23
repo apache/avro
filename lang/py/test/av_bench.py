@@ -49,7 +49,7 @@ def write(n):
 
     schema = avro.schema.parse(schema_s)
     writer = avro.io.DatumWriter(schema)
-    dw = avro.datafile.DataFileWriter(out, writer, schema) #,codec='deflate')
+    dw = avro.datafile.DataFileWriter(out, writer, schema)
     for _ in xrange(n):
         response = rand_ip()
         query = rand_name()
