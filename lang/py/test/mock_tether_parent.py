@@ -37,6 +37,7 @@ def find_port():
 
 SERVER_ADDRESS = ('localhost', find_port())
 
+
 class MockParentResponder(ipc.Responder):
     """
     The responder for the mocked parent
@@ -59,6 +60,7 @@ class MockParentResponder(ipc.Responder):
         sys.stdout.flush()
 
         return None
+
 
 class MockParentHandler(BaseHTTPRequestHandler):
     """Create a handler for the parent.

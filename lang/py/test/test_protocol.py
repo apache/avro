@@ -347,6 +347,7 @@ ExampleProtocol("""\
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 
+
 class TestProtocol(unittest.TestCase):
     def test_parse(self):
         num_correct = 0

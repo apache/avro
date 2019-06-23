@@ -59,6 +59,8 @@ except ImportError:
     print 'Snappy not present, will skip testing it.'
 
 # TODO(hammer): clean up written files with ant, not os.remove
+
+
 class TestDataFile(unittest.TestCase):
     def test_round_trip(self):
         print ''

@@ -61,6 +61,7 @@ BUFFER_SIZE = 8192
 # Exceptions
 #
 
+
 class AvroRemoteException(schema.AvroException):
     """
     Raised when an error message is sent by an Avro requestor or responder.
@@ -68,12 +69,14 @@ class AvroRemoteException(schema.AvroException):
     def __init__(self, fail_msg=None):
         schema.AvroException.__init__(self, fail_msg)
 
+
 class ConnectionClosedException(schema.AvroException):
     pass
 
 #
 # Base IPC Classes (Requestor/Responder)
 #
+
 
 class BaseRequestor(object):
     """Base class for the client side of a protocol interaction."""
@@ -224,6 +227,7 @@ class BaseRequestor(object):
         datum_reader = io.DatumReader(writers_schema, readers_schema)
         return AvroRemoteException(datum_reader.read(decoder))
 
+
 class Requestor(BaseRequestor):
 
     def issue_request(self, call_request, message_name, request_datum):
@@ -236,6 +240,7 @@ class Requestor(BaseRequestor):
             return self.read_call_response(message_name, buffer_decoder)
         else:
             return self.request(message_name, request_datum)
+
 
 class Responder(object):
     """Base class for the server side of a protocol interaction."""
@@ -372,6 +377,7 @@ class Responder(object):
 # Utility classes
 #
 
+
 class FramedReader(object):
     """Wrapper around a file-like object to read framed data."""
     def __init__(self, reader):
@@ -399,6 +405,7 @@ class FramedReader(object):
         if read == '':
             raise ConnectionClosedException("Reader read 0 bytes.")
         return BIG_ENDIAN_INT_STRUCT.unpack(read)[0]
+
 
 class FramedWriter(object):
     """Wrapper around a file-like object to write framed data."""
@@ -433,6 +440,7 @@ class FramedWriter(object):
 #
 # Transceiver Implementations
 #
+
 
 class HTTPTransceiver(object):
     """

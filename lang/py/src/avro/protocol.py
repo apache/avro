@@ -37,12 +37,14 @@ VALID_TYPE_SCHEMA_TYPES = ('enum', 'record', 'error', 'fixed')
 # Exceptions
 #
 
+
 class ProtocolParseException(schema.AvroException):
     pass
 
 #
 # Base Classes
 #
+
 
 class Protocol(object):
     """An application protocol."""
@@ -142,6 +144,7 @@ class Protocol(object):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
 
+
 class Message(object):
     """A Protocol message."""
     def _parse_request(self, request, names):
@@ -201,6 +204,7 @@ class Message(object):
     def __eq__(self, that):
         return self.name == that.name and self.props == that.props
 
+
 def make_avpr_object(json_data):
     """Build Avro Protocol from data parsed out of JSON string."""
     try:
@@ -211,6 +215,7 @@ def make_avpr_object(json_data):
     except AttributeError:
         raise ProtocolParseException('Not a JSON object: %s' % json_data)
     return Protocol(name, namespace, types, messages)
+
 
 def parse(json_string):
     """Constructs the Protocol from the JSON text."""

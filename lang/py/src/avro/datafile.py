@@ -57,6 +57,7 @@ SCHEMA_KEY = "avro.schema"
 # Exceptions
 #
 
+
 class DataFileException(schema.AvroException):
     """
     Raised when there's a problem reading or writing file object containers.
@@ -67,6 +68,7 @@ class DataFileException(schema.AvroException):
 #
 # Write Path
 #
+
 
 class DataFileWriter(object):
     @staticmethod
@@ -220,6 +222,7 @@ class DataFileWriter(object):
         self.flush()
         self.writer.close()
 
+
 class DataFileReader(object):
     """Read files written by DataFileWriter."""
     # TODO(hammer): allow user to specify expected schema?
@@ -367,6 +370,7 @@ class DataFileReader(object):
     def close(self):
         """Close this reader."""
         self.reader.close()
+
 
 def generate_sixteen_random_bytes():
     try:

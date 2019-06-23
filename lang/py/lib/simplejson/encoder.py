@@ -31,6 +31,7 @@ for i in range(0x20):
 INFINITY = float('1e66666')
 FLOAT_REPR = repr
 
+
 def encode_basestring(s):
     """Return a JSON representation of a Python string
 
@@ -66,6 +67,7 @@ def py_encode_basestring_ascii(s):
 
 
 encode_basestring_ascii = c_encode_basestring_ascii or py_encode_basestring_ascii
+
 
 class JSONEncoder(object):
     """Extensible JSON <https://json.org> encoder for Python data structures.
@@ -257,6 +259,7 @@ class JSONEncoder(object):
                 self.key_separator, self.item_separator, self.sort_keys,
                 self.skipkeys, _one_shot)
         return _iterencode(o, 0)
+
 
 def _make_iterencode(markers, _default, _encoder, _indent, _floatstr, _key_separator, _item_separator, _sort_keys, _skipkeys, _one_shot,
         ## HACK: hand-optimized bytecode; turn globals into locals

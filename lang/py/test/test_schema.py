@@ -29,6 +29,7 @@ def print_test_name(test_name):
     print '=' * len(test_name)
     print ''
 
+
 class ExampleSchema(object):
     def __init__(self, schema_string, valid, name='', comment=''):
         self._schema_string = schema_string
@@ -51,6 +52,7 @@ class ExampleSchema(object):
 #
 # Example Schemas
 #
+
 
 def make_primitive_examples():
     examples = []
@@ -396,6 +398,8 @@ VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 # TODO(hammer): make verbose flag
 # TODO(hammer): show strack trace to user
 # TODO(hammer): use logging module?
+
+
 class TestSchema(unittest.TestCase):
 
     def test_correct_recursive_extraction(self):

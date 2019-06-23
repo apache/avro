@@ -136,6 +136,7 @@ LONG_RECORD_SCHEMA = schema.parse("""\
 
 LONG_RECORD_DATUM = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7}
 
+
 def avro_hexlify(reader):
     """Return the hex value, as a string, of a binary-encoded int or long."""
     bytes = []
@@ -146,11 +147,13 @@ def avro_hexlify(reader):
         bytes.append(hexlify(current_byte))
     return ' '.join(bytes)
 
+
 def print_test_name(test_name):
     print ''
     print test_name
     print '=' * len(test_name)
     print ''
+
 
 def write_datum(datum, writers_schema):
     writer = StringIO()
@@ -159,11 +162,13 @@ def write_datum(datum, writers_schema):
     datum_writer.write(datum, encoder)
     return writer, encoder, datum_writer
 
+
 def read_datum(buffer, writers_schema, readers_schema=None):
     reader = StringIO(buffer.getvalue())
     decoder = io.BinaryDecoder(reader)
     datum_reader = io.DatumReader(writers_schema, readers_schema)
     return datum_reader.read(decoder)
+
 
 def check_binary_encoding(number_type):
     print_test_name('TEST BINARY %s ENCODING' % number_type.upper())
@@ -181,6 +186,7 @@ def check_binary_encoding(number_type):
         if hex_encoding == hex_val: correct += 1
         print ''
     return correct
+
 
 def check_skip_number(number_type):
     print_test_name('TEST SKIP %s' % number_type.upper())
@@ -207,6 +213,7 @@ def check_skip_number(number_type):
         if read_value == VALUE_TO_READ: correct += 1
         print ''
     return correct
+
 
 class TestIO(unittest.TestCase):
     #

@@ -103,8 +103,10 @@ VALID_FIELD_SORT_ORDERS = (
 # Exceptions
 #
 
+
 class AvroException(Exception):
     pass
+
 
 class SchemaParseException(AvroException):
     pass
@@ -112,6 +114,7 @@ class SchemaParseException(AvroException):
 #
 # Base Classes
 #
+
 
 class Schema(object):
     """Base class for all Schema classes."""
@@ -159,6 +162,7 @@ class Schema(object):
         in the parameter names.
         """
         raise Exception("Must be implemented by subclasses.")
+
 
 class Name(object):
     """Class to describe Avro name."""
@@ -226,6 +230,7 @@ class Name(object):
         else:
             return ""
 
+
 class Names(object):
     """Track name set and default namespace during parsing."""
     def __init__(self, default_namespace=None):
@@ -280,6 +285,7 @@ class Names(object):
         self.names[to_add.fullname] = new_schema
         return to_add
 
+
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
     def __init__(self, type, name, namespace=None, names=None, other_props=None):
@@ -323,6 +329,7 @@ class NamedSchema(Schema):
 # Logical type class
 #
 
+
 class LogicalSchema(object):
     def __init__(self, logical_type):
         self.logical_type = logical_type
@@ -330,6 +337,7 @@ class LogicalSchema(object):
 #
 # Decimal logical schema
 #
+
 
 class DecimalLogicalSchema(LogicalSchema):
     def __init__(self, precision, scale=0):
@@ -426,6 +434,8 @@ class Field(object):
 #
 # Primitive Types
 #
+
+
 class PrimitiveSchema(Schema):
     """Valid primitive types are in PRIMITIVE_TYPES."""
     def __init__(self, type, other_props=None):
@@ -450,6 +460,7 @@ class PrimitiveSchema(Schema):
 #
 # Decimal Bytes Type
 #
+
 
 class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
     def __init__(self, precision, scale=0, other_props=None):
@@ -508,6 +519,7 @@ class FixedSchema(NamedSchema):
 #
 # Decimal Fixed Type
 #
+
 
 class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
     def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
@@ -570,6 +582,7 @@ class EnumSchema(NamedSchema):
 # Complex Types (recursive)
 #
 
+
 class ArraySchema(Schema):
     def __init__(self, items, names=None, other_props=None):
         # Call parent ctor
@@ -602,6 +615,7 @@ class ArraySchema(Schema):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
 
+
 class MapSchema(Schema):
     def __init__(self, values, names=None, other_props=None):
         # Call parent ctor
@@ -632,6 +646,7 @@ class MapSchema(Schema):
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
+
 
 class UnionSchema(Schema):
     """
@@ -681,6 +696,7 @@ class UnionSchema(Schema):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
 
+
 class ErrorUnionSchema(UnionSchema):
     def __init__(self, schemas, names=None):
         # Prepend "string" to handle system errors
@@ -695,6 +711,7 @@ class ErrorUnionSchema(UnionSchema):
             if schema.type == 'string': continue
             to_dump.append(schema.to_json(names))
         return to_dump
+
 
 class RecordSchema(NamedSchema):
     @staticmethod
@@ -819,6 +836,7 @@ class DateSchema(LogicalSchema, PrimitiveSchema):
 # time-millis Type
 #
 
+
 class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, constants.TIME_MILLIS)
@@ -833,6 +851,7 @@ class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
 #
 # time-micros Type
 #
+
 
 class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
@@ -849,6 +868,7 @@ class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
 # timestamp-millis Type
 #
 
+
 class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, constants.TIMESTAMP_MILLIS)
@@ -864,6 +884,7 @@ class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
 # timestamp-micros Type
 #
 
+
 class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, constants.TIMESTAMP_MICROS)
@@ -878,6 +899,8 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
 #
 # Module Methods
 #
+
+
 def get_other_props(all_props, reserved_props):
     """
     Retrieve the non-reserved properties from a dictionary of properties
@@ -970,6 +993,8 @@ def make_avsc_object(json_data, names=None):
         raise SchemaParseException(fail_msg)
 
 # TODO(hammer): make method for reading from a file?
+
+
 def parse(json_string):
     """Constructs the Schema from the JSON text."""
     # parse the JSON

@@ -64,6 +64,7 @@ if (outputProtocol is None):
 
     outputProtocol = protocol.parse(prototxt)
 
+
 class Collector(object):
     """
     Collector for map and reduce output values
