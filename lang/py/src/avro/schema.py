@@ -746,7 +746,7 @@ class RecordSchema(NamedSchema):
                 doc = field.get('doc')
                 other_props = get_other_props(field, FIELD_RESERVED_PROPS)
                 new_field = Field(type, name, has_default, default, order, names, doc,
-                                 other_props)
+                                  other_props)
                 # make sure field name has not been used yet
                 if new_field.name in field_names:
                     fail_msg = 'Field name %s already in use.' % new_field.name

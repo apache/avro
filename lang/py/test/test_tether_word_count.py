@@ -104,8 +104,8 @@ class TestTetherWordCount(unittest.TestCase):
             inpath = os.path.join(base_dir, "in")
             infile = os.path.join(inpath, "lines.avro")
             lines = ["the quick brown fox jumps over the lazy dog",
-                   "the cow jumps over the moon",
-                   "the rain in spain falls mainly on the plains"]
+                     "the cow jumps over the moon",
+                     "the rain in spain falls mainly on the plains"]
 
             self._write_lines(lines, infile)
 

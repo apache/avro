@@ -100,8 +100,8 @@ class JSONEncoder(object):
     key_separator = ': '
 
     def __init__(self, skipkeys=False, ensure_ascii=True,
-            check_circular=True, allow_nan=True, sort_keys=False,
-            indent=None, separators=None, encoding='utf-8', default=None):
+                 check_circular=True, allow_nan=True, sort_keys=False,
+                 indent=None, separators=None, encoding='utf-8', default=None):
         """Constructor for JSONEncoder, with sensible defaults.
 
         If skipkeys is false, then it is a TypeError to attempt
@@ -261,20 +261,20 @@ class JSONEncoder(object):
 
 
 def _make_iterencode(markers, _default, _encoder, _indent, _floatstr, _key_separator, _item_separator, _sort_keys, _skipkeys, _one_shot,
-        # HACK: hand-optimized bytecode; turn globals into locals
-        False=False,
-        True=True,
-        ValueError=ValueError,
-        basestring=basestring,
-        dict=dict,
-        float=float,
-        id=id,
-        int=int,
-        isinstance=isinstance,
-        list=list,
-        long=long,
-        str=str,
-        tuple=tuple,
+                     # HACK: hand-optimized bytecode; turn globals into locals
+                     False=False,
+                     True=True,
+                     ValueError=ValueError,
+                     basestring=basestring,
+                     dict=dict,
+                     float=float,
+                     id=id,
+                     int=int,
+                     isinstance=isinstance,
+                     list=list,
+                     long=long,
+                     str=str,
+                     tuple=tuple,
     ):
 
     def _iterencode_list(lst, _current_indent_level):

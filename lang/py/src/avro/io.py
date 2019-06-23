@@ -131,8 +131,8 @@ _valid = {
                          getattr(s, 'logical_type', None) == constants.TIME_MICROS) or
                         (isinstance(d, datetime.date) and
                          _is_timezone_aware_datetime(d) and
-                        getattr(s, 'logical_type', None) in (constants.TIMESTAMP_MILLIS,
-                                                             constants.TIMESTAMP_MICROS))),
+                         getattr(s, 'logical_type', None) in (constants.TIMESTAMP_MILLIS,
+                                                              constants.TIMESTAMP_MICROS))),
   'float': lambda s, d: isinstance(d, (int, long, float)),
   'fixed': lambda s, d: ((isinstance(d, str) and len(d) == s.size) or
                          (isinstance(d, Decimal) and
@@ -152,7 +152,7 @@ _valid['error'] = _valid['request'] = _valid['record']
 
 
 def validate(expected_schema, datum):
-    """Determines if a python datum is an instance of a schema.
+    """Determine if a python datum is an instance of a schema.
 
     Args:
       expected_schema: Schema to validate against.
@@ -692,7 +692,7 @@ class DatumReader(object):
                     writers_schema.logical_type == constants.DATE):
                 return decoder.read_date_from_int()
             elif (hasattr(writers_schema, 'logical_type') and
-              writers_schema.logical_type == constants.TIME_MILLIS):
+                  writers_schema.logical_type == constants.TIME_MILLIS):
                 return decoder.read_time_millis_from_int()
             else:
                 return decoder.read_int()

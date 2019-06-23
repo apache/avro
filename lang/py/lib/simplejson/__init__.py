@@ -123,8 +123,8 @@ _default_encoder = JSONEncoder(
 
 
 def dump(obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
-        allow_nan=True, cls=None, indent=None, separators=None,
-        encoding='utf-8', default=None, **kw):
+         allow_nan=True, cls=None, indent=None, separators=None,
+         encoding='utf-8', default=None, **kw):
     """Serialize ``obj`` as a JSON formatted stream to ``fp`` (a
     ``.write()``-supporting file-like object).
 
@@ -175,9 +175,9 @@ def dump(obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
         if cls is None:
             cls = JSONEncoder
         iterable = cls(skipkeys=skipkeys, ensure_ascii=ensure_ascii,
-            check_circular=check_circular, allow_nan=allow_nan, indent=indent,
-            separators=separators, encoding=encoding,
-            default=default, **kw).iterencode(obj)
+                       check_circular=check_circular, allow_nan=allow_nan, indent=indent,
+                       separators=separators, encoding=encoding,
+                       default=default, **kw).iterencode(obj)
     # could accelerate with writelines in some versions of Python, at
     # a debuggability cost
     for chunk in iterable:
@@ -185,8 +185,8 @@ def dump(obj, fp, skipkeys=False, ensure_ascii=True, check_circular=True,
 
 
 def dumps(obj, skipkeys=False, ensure_ascii=True, check_circular=True,
-        allow_nan=True, cls=None, indent=None, separators=None,
-        encoding='utf-8', default=None, **kw):
+          allow_nan=True, cls=None, indent=None, separators=None,
+          encoding='utf-8', default=None, **kw):
     """Serialize ``obj`` to a JSON formatted ``str``.
 
     If ``skipkeys`` is false then ``dict`` keys that are not basic types
@@ -244,7 +244,7 @@ _default_decoder = JSONDecoder(encoding=None, object_hook=None)
 
 
 def load(fp, encoding=None, cls=None, object_hook=None, parse_float=None,
-        parse_int=None, parse_constant=None, **kw):
+         parse_int=None, parse_constant=None, **kw):
     """Deserialize ``fp`` (a ``.read()``-supporting file-like object containing
     a JSON document) to a Python object.
 
@@ -265,13 +265,13 @@ def load(fp, encoding=None, cls=None, object_hook=None, parse_float=None,
 
     """
     return loads(fp.read(),
-        encoding=encoding, cls=cls, object_hook=object_hook,
-        parse_float=parse_float, parse_int=parse_int,
-        parse_constant=parse_constant, **kw)
+                 encoding=encoding, cls=cls, object_hook=object_hook,
+                 parse_float=parse_float, parse_int=parse_int,
+                 parse_constant=parse_constant, **kw)
 
 
 def loads(s, encoding=None, cls=None, object_hook=None, parse_float=None,
-        parse_int=None, parse_constant=None, **kw):
+          parse_int=None, parse_constant=None, **kw):
     """Deserialize ``s`` (a ``str`` or ``unicode`` instance containing a JSON
     document) to a Python object.
 

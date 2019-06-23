@@ -289,7 +289,7 @@ class JSONDecoder(object):
     """
 
     def __init__(self, encoding=None, object_hook=None, parse_float=None,
-            parse_int=None, parse_constant=None, strict=True):
+                 parse_int=None, parse_constant=None, strict=True):
         """``encoding`` determines the encoding used to interpret any ``str``
         objects decoded by this instance (utf-8 by default).  It has no
         effect when decoding ``unicode`` objects.
