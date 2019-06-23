@@ -31,7 +31,7 @@ def rand_name():
     return ''.join(sample(lowercase, 15))
 
 def rand_ip():
-    return "%s.%s.%s.%s" % (randint(0,255), randint(0,255), randint(0,255), randint(0,255))
+    return "%s.%s.%s.%s" % (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
 
 def write(n):
     schema_s = """
@@ -42,7 +42,7 @@ def write(n):
         {"name": "response", "type": "string"},
         {"name": "type", "type": "string", "default": "A"}
     ]}"""
-    out = open("datafile.avr",'w')
+    out = open("datafile.avr", 'w')
 
     schema = avro.schema.parse(schema_s)
     writer = avro.io.DatumWriter(schema)
@@ -58,7 +58,7 @@ def write(n):
 def read():
     f = open("datafile.avr")
     reader = avro.io.DatumReader()
-    af = avro.datafile.DataFileReader(f,reader)
+    af = avro.datafile.DataFileReader(f, reader)
 
     x = 0
     for _ in af:

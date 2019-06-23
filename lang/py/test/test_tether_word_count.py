@@ -28,7 +28,7 @@ class TestTetherWordCount(unittest.TestCase):
     """ unittest for a python tethered map-reduce job.
     """
 
-    def _write_lines(self,lines,fname):
+    def _write_lines(self, lines, fname):
         """
         Write the lines to an avro file named fname
 
@@ -38,7 +38,7 @@ class TestTetherWordCount(unittest.TestCase):
         fname - the name of the file to write to.
         """
         import avro.io as avio
-        from avro.datafile import DataFileReader,DataFileWriter
+        from avro.datafile import DataFileReader, DataFileWriter
         from avro import schema
 
         #recursively make all directories
@@ -49,9 +49,9 @@ class TestTetherWordCount(unittest.TestCase):
                 os.mkdir(pdir)
 
 
-        with file(fname,'w') as hf:
+        with file(fname, 'w') as hf:
             inschema = """{"type":"string"}"""
-            writer = DataFileWriter(hf,avio.DatumWriter(inschema),writers_schema=schema.parse(inschema))
+            writer = DataFileWriter(hf, avio.DatumWriter(inschema), writers_schema=schema.parse(inschema))
 
             #encoder = avio.BinaryEncoder(writer)
             #datum_writer = avio.DatumWriter()
@@ -63,7 +63,7 @@ class TestTetherWordCount(unittest.TestCase):
 
 
 
-    def _count_words(self,lines):
+    def _count_words(self, lines):
         """Return a dictionary counting the words in lines
         """
         counts = {}
@@ -114,7 +114,7 @@ class TestTetherWordCount(unittest.TestCase):
                    "the cow jumps over the moon",
                    "the rain in spain falls mainly on the plains"]
 
-            self._write_lines(lines,infile)
+            self._write_lines(lines, infile)
 
             true_counts = self._count_words(lines)
 
@@ -133,7 +133,7 @@ class TestTetherWordCount(unittest.TestCase):
 """
 
             # write the schema to a temporary file
-            osfile = tempfile.NamedTemporaryFile(mode='w',suffix=".avsc",prefix="wordcount",delete=False)
+            osfile = tempfile.NamedTemporaryFile(mode='w', suffix=".avsc", prefix="wordcount", delete=False)
             outschema = osfile.name
             osfile.write(oschema)
             osfile.close()
@@ -151,10 +151,10 @@ class TestTetherWordCount(unittest.TestCase):
 
 
             args.append("tether")
-            args.extend(["--in",inpath])
-            args.extend(["--out",outpath])
-            args.extend(["--outschema",outschema])
-            args.extend(["--protocol","http"])
+            args.extend(["--in", inpath])
+            args.extend(["--out", outpath])
+            args.extend(["--outschema", outschema])
+            args.extend(["--protocol", "http"])
 
             # form the arguments for the subprocess
             subargs = []
@@ -170,20 +170,20 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
             # We need to make sure avro is on the path
             # getsourcefile(avro) returns .../avro/__init__.py
             asrc = inspect.getsourcefile(avro)
-            apath = asrc.rsplit(os.sep,2)[0]
+            apath = asrc.rsplit(os.sep, 2)[0]
 
             # path to where the tests lie
             tpath = os.path.split(__file__)[0]
 
-            exhf = tempfile.NamedTemporaryFile(mode='w',prefix="exec_word_count_",delete=False)
+            exhf = tempfile.NamedTemporaryFile(mode='w', prefix="exec_word_count_", delete=False)
             exfile = exhf.name
-            exhf.write(script.format((os.pathsep).join([apath,tpath]),srcfile))
+            exhf.write(script.format((os.pathsep).join([apath, tpath]), srcfile))
             exhf.close()
 
             # make it world executable
-            os.chmod(exfile,0755)
+            os.chmod(exfile, 0755)
 
-            args.extend(["--program",exfile])
+            args.extend(["--program", exfile])
 
             print "Command:\n\t{0}".format(" ".join(args))
             proc = subprocess.Popen(args)
@@ -192,10 +192,10 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
             proc.wait()
 
             # read the output
-            with file(os.path.join(outpath,"part-00000.avro")) as hf:
+            with file(os.path.join(outpath, "part-00000.avro")) as hf:
                 reader = DataFileReader(hf, DatumReader())
                 for record in reader:
-                    self.assertEqual(record["value"],true_counts[record["key"]])
+                    self.assertEqual(record["value"], true_counts[record["key"]])
 
                 reader.close()
 

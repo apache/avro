@@ -40,14 +40,14 @@ class WordCountTask(TetherTask):
               {"name":"value","type":"long","order":"ignore"}]
               }"""
         outschema = midschema
-        TetherTask.__init__(self,inschema,midschema,outschema)
+        TetherTask.__init__(self, inschema, midschema, outschema)
 
 
         #keep track of the partial sums of the counts
         self.psum = 0
 
 
-    def map(self,record,collector):
+    def map(self, record, collector):
         """Implement the mapper for the word count example
 
         Parameters
@@ -60,9 +60,9 @@ class WordCountTask(TetherTask):
 
         for w in words:
             logging.info("WordCountTask.Map: word={0}".format(w))
-            collector.collect({"key":w,"value":1})
+            collector.collect({"key": w, "value": 1})
 
-    def reduce(self,record, collector):
+    def reduce(self, record, collector):
         """Called with input values to generate reducer output. Inputs are sorted by the mapper
         key.
 
@@ -77,7 +77,7 @@ class WordCountTask(TetherTask):
 
         self.psum += record["value"]
 
-    def reduceFlush(self,record, collector):
+    def reduceFlush(self, record, collector):
         """
         Called with the last intermediate value in each equivalence run.
         In other words, reduceFlush is invoked once for each key produced in the reduce
@@ -89,9 +89,9 @@ class WordCountTask(TetherTask):
         """
 
         #collect the current record
-        logging.info("WordCountTask.reduceFlush key={0} value={1}".format(record["key"],self.psum))
+        logging.info("WordCountTask.reduceFlush key={0} value={1}".format(record["key"], self.psum))
 
-        collector.collect({"key":record["key"],"value":self.psum})
+        collector.collect({"key": record["key"], "value": self.psum})
 
         #reset the sum
         self.psum = 0

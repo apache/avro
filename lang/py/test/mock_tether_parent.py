@@ -27,7 +27,7 @@ def find_port():
     Return an unbound port
     """
     s = socket.socket()
-    s.bind(("127.0.0.1",0))
+    s.bind(("127.0.0.1", 0))
 
     port = s.getsockname()[1]
     s.close()
@@ -84,7 +84,7 @@ if __name__ == '__main__':
         else:
             raise ValueError("Usage: mock_tether_parent start_server port")
 
-        SERVER_ADDRESS = (SERVER_ADDRESS[0],port)
+        SERVER_ADDRESS = (SERVER_ADDRESS[0], port)
         print "mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1])
 
         # flush the output so it shows up in the parent process

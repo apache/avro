@@ -40,7 +40,7 @@ class TaskRunnerResponder(ipc.Responder):
     """
     The responder for the thethered process
     """
-    def __init__(self,runner):
+    def __init__(self, runner):
         """
         Param
         ----------------------------------------------------------
@@ -52,7 +52,7 @@ class TaskRunnerResponder(ipc.Responder):
 
         # should we use weak references to avoid circular references?
         # We use weak references b\c self.runner owns this instance of TaskRunnerResponder
-        if isinstance(runner,weakref.ProxyType):
+        if isinstance(runner, weakref.ProxyType):
             self.runner = runner
         else:
             self.runner = weakref.proxy(runner)
@@ -63,7 +63,7 @@ class TaskRunnerResponder(ipc.Responder):
         try:
             if message.name == 'configure':
                 self.log.info("TetherTaskRunner: Recieved configure")
-                self.task.configure(request["taskType"],request["inSchema"],request["outSchema"])
+                self.task.configure(request["taskType"], request["inSchema"], request["outSchema"])
             elif message.name == 'partitions':
                 self.log.info("TetherTaskRunner: Recieved partitions")
                 try:
@@ -73,7 +73,7 @@ class TaskRunnerResponder(ipc.Responder):
                     raise
             elif message.name == 'input':
                 self.log.info("TetherTaskRunner: Recieved input")
-                self.task.input(request["data"],request["count"])
+                self.task.input(request["data"], request["count"])
             elif message.name == 'abort':
                 self.log.info("TetherTaskRunner: Recieved abort")
                 self.runner.close()
@@ -103,7 +103,7 @@ def HTTPHandlerGen(runner):
     runner - instance of the task runner
     """
 
-    if not(isinstance(runner,weakref.ProxyType)):
+    if not(isinstance(runner, weakref.ProxyType)):
         runnerref = weakref.proxy(runner)
     else:
         runnerref = runner
@@ -113,10 +113,10 @@ def HTTPHandlerGen(runner):
         """
 
         runner = runnerref
-        def __init__(self,*args,**param):
+        def __init__(self, *args, **param):
             """
             """
-            BaseHTTPRequestHandler.__init__(self,*args,**param)
+            BaseHTTPRequestHandler.__init__(self, *args, **param)
 
         def do_POST(self):
             self.responder = TaskRunnerResponder(self.runner)
@@ -137,7 +137,7 @@ class TaskRunner(object):
     implements the logic for the mapper and reducer phases
     """
 
-    def __init__(self,task):
+    def __init__(self, task):
         """
         Construct the runner
 
@@ -148,14 +148,14 @@ class TaskRunner(object):
 
         self.log = logging.getLogger("TaskRunner:")
 
-        if not(isinstance(task,TetherTask)):
+        if not(isinstance(task, TetherTask)):
             raise ValueError("task must be an instance of tether task")
         self.task = task
 
         self.server = None
         self.sthread = None
 
-    def start(self,outputport=None,join=True):
+    def start(self, outputport=None, join=True):
         """
         Start the server
 
@@ -173,7 +173,7 @@ class TaskRunner(object):
         """
 
         port = find_port()
-        address = ("localhost",port)
+        address = ("localhost", port)
 
 
         def thread_run(task_runner=None):
@@ -182,12 +182,12 @@ class TaskRunner(object):
             task_runner.server.serve_forever()
 
         # create a separate thread for the http server
-        sthread = threading.Thread(target=thread_run,kwargs={"task_runner":self})
+        sthread = threading.Thread(target=thread_run, kwargs={"task_runner": self})
         sthread.start()
 
         self.sthread = sthread
         # This needs to run in a separat thread b\c serve_forever() blocks
-        self.task.open(port,clientPort=outputport)
+        self.task.open(port, clientPort=outputport)
 
         # wait for the other thread to finish
         if (join):
@@ -216,13 +216,13 @@ if __name__ == '__main__':
         raise ValueError("Usage: tether_task_runner task_package.task_module.TaskClass")
 
     fullcls = sys.argv[1]
-    mod,cname = fullcls.rsplit(".",1)
+    mod, cname = fullcls.rsplit(".", 1)
 
     logging.info("tether_task_runner.__main__: Task: {0}".format(fullcls))
 
-    modobj = __import__(mod,fromlist=cname)
+    modobj = __import__(mod, fromlist=cname)
 
-    taskcls = getattr(modobj,cname)
+    taskcls = getattr(modobj, cname)
     task = taskcls()
 
     runner = TaskRunner(task=task)

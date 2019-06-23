@@ -154,7 +154,7 @@ class TestDataFile(unittest.TestCase):
         # Context manager was introduced as a first class
         # member only in Python 2.6 and above.
         import sys
-        if sys.version_info < (2,6):
+        if sys.version_info < (2, 6):
             print 'Skipping context manager tests on this Python version.'
             return
         # Test the writer with a 'with' statement.

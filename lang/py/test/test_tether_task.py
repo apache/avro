@@ -37,7 +37,7 @@ class TestTetherTask(unittest.TestCase):
         from avro import tether
         from avro import io as avio
         from avro import schema
-        from avro.tether import HTTPRequestor,inputProtocol, find_port
+        from avro.tether import HTTPRequestor, inputProtocol, find_port
 
         import StringIO
         import mock_tether_parent
@@ -54,21 +54,21 @@ class TestTetherTask(unittest.TestCase):
             server_port = find_port()
 
             pyfile = mock_tether_parent.__file__
-            proc = subprocess.Popen(["python", pyfile,"start_server","{0}".format(server_port)])
+            proc = subprocess.Popen(["python", pyfile, "start_server", "{0}".format(server_port)])
             input_port = find_port()
 
             print "Mock server started process pid={0}".format(proc.pid)
             # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
             # so we give the subprocess time to start up
             time.sleep(1)
-            task.open(input_port,clientPort=server_port)
+            task.open(input_port, clientPort=server_port)
 
             # TODO: We should validate that open worked by grabbing the STDOUT of the subproces
             # and ensuring that it outputted the correct message.
 
             #***************************************************************
             # Test the mapper
-            task.configure(tether.TaskType.MAP,str(task.inschema),str(task.midschema))
+            task.configure(tether.TaskType.MAP, str(task.inschema), str(task.midschema))
 
             # Serialize some data so we can send it to the input function
             datum = "This is a line of text"
@@ -81,13 +81,13 @@ class TestTetherTask(unittest.TestCase):
             data = writer.read()
 
             # Call input to simulate calling map
-            task.input(data,1)
+            task.input(data, 1)
 
             # Test the reducer
-            task.configure(tether.TaskType.REDUCE,str(task.midschema),str(task.outschema))
+            task.configure(tether.TaskType.REDUCE, str(task.midschema), str(task.outschema))
 
             # Serialize some data so we can send it to the input function
-            datum = {"key":"word","value":2}
+            datum = {"key": "word", "value": 2}
             writer = StringIO.StringIO()
             encoder = avio.BinaryEncoder(writer)
             datum_writer = avio.DatumWriter(task.midschema)
@@ -97,7 +97,7 @@ class TestTetherTask(unittest.TestCase):
             data = writer.read()
 
             # Call input to simulate calling reduce
-            task.input(data,1)
+            task.input(data, 1)
 
             task.complete()
 

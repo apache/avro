@@ -29,7 +29,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
     def test1(self):
         from word_count_task import WordCountTask
-        from avro.tether import TaskRunner, find_port,HTTPRequestor,inputProtocol, TaskType
+        from avro.tether import TaskRunner, find_port, HTTPRequestor, inputProtocol, TaskType
         from avro import io as avio
         import mock_tether_parent
         import subprocess
@@ -47,7 +47,7 @@ class TestTetherTaskRunner(unittest.TestCase):
             parent_port = find_port()
 
             pyfile = mock_tether_parent.__file__
-            proc = subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
+            proc = subprocess.Popen(["python", pyfile, "start_server", "{0}".format(parent_port)])
             input_port = find_port()
 
             print "Mock server started process pid={0}".format(proc.pid)
@@ -57,17 +57,17 @@ class TestTetherTaskRunner(unittest.TestCase):
 
             runner = TaskRunner(WordCountTask())
 
-            runner.start(outputport=parent_port,join=False)
+            runner.start(outputport=parent_port, join=False)
 
             # Test sending various messages to the server and ensuring they are
             # processed correctly
-            requestor = HTTPRequestor("localhost",runner.server.server_address[1],inputProtocol)
+            requestor = HTTPRequestor("localhost", runner.server.server_address[1], inputProtocol)
 
             # TODO: We should validate that open worked by grabbing the STDOUT of the subproces
             # and ensuring that it outputted the correct message.
 
             # Test the mapper
-            requestor.request("configure",{"taskType":TaskType.MAP,"inSchema":str(runner.task.inschema),"outSchema":str(runner.task.midschema)})
+            requestor.request("configure", {"taskType": TaskType.MAP, "inSchema": str(runner.task.inschema), "outSchema": str(runner.task.midschema)})
 
             # Serialize some data so we can send it to the input function
             datum = "This is a line of text"
@@ -81,13 +81,13 @@ class TestTetherTaskRunner(unittest.TestCase):
 
 
             # Call input to simulate calling map
-            requestor.request("input",{"data":data,"count":1})
+            requestor.request("input", {"data": data, "count": 1})
 
             #Test the reducer
-            requestor.request("configure",{"taskType":TaskType.REDUCE,"inSchema":str(runner.task.midschema),"outSchema":str(runner.task.outschema)})
+            requestor.request("configure", {"taskType": TaskType.REDUCE, "inSchema": str(runner.task.midschema), "outSchema": str(runner.task.outschema)})
 
             #Serialize some data so we can send it to the input function
-            datum = {"key":"word","value":2}
+            datum = {"key": "word", "value": 2}
             writer = StringIO.StringIO()
             encoder = avio.BinaryEncoder(writer)
             datum_writer = avio.DatumWriter(runner.task.midschema)
@@ -98,9 +98,9 @@ class TestTetherTaskRunner(unittest.TestCase):
 
 
             #Call input to simulate calling reduce
-            requestor.request("input",{"data":data,"count":1})
+            requestor.request("input", {"data": data, "count": 1})
 
-            requestor.request("complete",{})
+            requestor.request("complete", {})
 
 
             runner.task.ready_for_shutdown.wait()
@@ -134,7 +134,7 @@ class TestTetherTaskRunner(unittest.TestCase):
         in a separate thread.
         """
         from word_count_task import WordCountTask
-        from avro.tether import TaskRunner, find_port,HTTPRequestor,inputProtocol, TaskType
+        from avro.tether import TaskRunner, find_port, HTTPRequestor, inputProtocol, TaskType
         from avro.tether import tether_task_runner
         from avro import io as avio
         import mock_tether_parent
@@ -152,7 +152,7 @@ class TestTetherTaskRunner(unittest.TestCase):
             parent_port = find_port()
 
             pyfile = mock_tether_parent.__file__
-            proc = subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
+            proc = subprocess.Popen(["python", pyfile, "start_server", "{0}".format(parent_port)])
 
             #Possible race condition? when we start tether_task_runner it will call
             # open tries to connect to the subprocess before the subprocess is fully started
@@ -161,10 +161,10 @@ class TestTetherTaskRunner(unittest.TestCase):
 
 
             #start the tether_task_runner in a separate process
-            env = {"AVRO_TETHER_OUTPUT_PORT":"{0}".format(parent_port)}
+            env = {"AVRO_TETHER_OUTPUT_PORT": "{0}".format(parent_port)}
             env["PYTHONPATH"] = ':'.join(sys.path)
 
-            runnerproc = subprocess.Popen(["python",tether_task_runner.__file__,"word_count_task.WordCountTask"],env=env)
+            runnerproc = subprocess.Popen(["python", tether_task_runner.__file__, "word_count_task.WordCountTask"], env=env)
 
             #possible race condition wait for the process to start
             time.sleep(1)

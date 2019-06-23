@@ -357,7 +357,7 @@ class DecimalLogicalSchema(LogicalSchema):
 
 class Field(object):
     def __init__(self, type, name, has_default, default=None,
-                 order=None,names=None, doc=None, other_props=None):
+                 order=None, names=None, doc=None, other_props=None):
         # Ensure valid ctor args
         if not name:
             fail_msg = 'Fields must have a non-empty name.'
@@ -605,7 +605,7 @@ class ArraySchema(Schema):
 class MapSchema(Schema):
     def __init__(self, values, names=None, other_props=None):
         # Call parent ctor
-        Schema.__init__(self, 'map',other_props)
+        Schema.__init__(self, 'map', other_props)
 
         # Add class members
         if isinstance(values, basestring) and names.has_name(values, None):
@@ -878,13 +878,13 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
 #
 # Module Methods
 #
-def get_other_props(all_props,reserved_props):
+def get_other_props(all_props, reserved_props):
     """
     Retrieve the non-reserved properties from a dictionary of properties
     @args reserved_props: The set of reserved properties to exclude
     """
     if callable(getattr(all_props, 'items', None)):
-        return dict([(k,v) for (k,v) in all_props.items() if k not in
+        return dict([(k, v) for (k, v) in all_props.items() if k not in
                      reserved_props ])
 
 

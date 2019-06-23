@@ -28,7 +28,7 @@ if version_info[:2] <= (2, 5):
 setup(
   name = 'avro',
   version = '@AVRO_VERSION@',
-  packages = ['avro',],
+  packages = ['avro'],
   package_dir = {'avro': 'src/avro'},
   scripts = ["./scripts/avro"],
 
