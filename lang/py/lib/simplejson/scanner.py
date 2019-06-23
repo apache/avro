@@ -1,6 +1,7 @@
 """JSON token scanner
 """
 import re
+
 try:
     from simplejson._speedups import make_scanner as c_make_scanner
 except ImportError:

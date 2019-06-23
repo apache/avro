@@ -26,13 +26,15 @@ if __name__ == "__main__":
 else:
   from . import TetherTask, find_port, inputProtocol
 
-from avro import ipc
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import logging
-import weakref
-import threading
 import sys
+import threading
 import traceback
+import weakref
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+from avro import ipc
+
 
 class TaskRunnerResponder(ipc.Responder):
   """

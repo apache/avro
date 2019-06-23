@@ -33,15 +33,15 @@ A schema may be one of:
   A boolean; or
   Null.
 """
-from math import floor
-from math import log10
+from math import floor, log10
+
+from avro import constants
 
 try:
   import json
 except ImportError:
   import simplejson as json
 
-from avro import constants
 
 #
 # Constants

@@ -36,16 +36,13 @@ uses the following mapping:
   * Schema doubles are implemented as float.
   * Schema booleans are implemented as bool.
 """
+import datetime
 import struct
-from avro import schema
-from avro import constants
-from avro import timezones
 import sys
 from binascii import crc32
-import datetime
+from decimal import Decimal, getcontext
 
-from decimal import Decimal
-from decimal import getcontext
+from avro import constants, schema, timezones
 
 try:
 	import json

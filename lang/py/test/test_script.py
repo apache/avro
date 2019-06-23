@@ -13,20 +13,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import unittest
 import csv
+import unittest
 from cStringIO import StringIO
+from operator import itemgetter
+from os import remove
+from os.path import dirname, isfile, join
+from tempfile import NamedTemporaryFile
+
+import avro.schema
+from avro.datafile import DataFileWriter
+from avro.io import DatumWriter
+
 try:
     import json
 except ImportError:
     import simplejson as json
-from tempfile import NamedTemporaryFile
-import avro.schema
-from avro.io import DatumWriter
-from avro.datafile import DataFileWriter
-from os.path import dirname, join, isfile
-from os import remove
-from operator import itemgetter
 
 NUM_RECORDS = 7
 

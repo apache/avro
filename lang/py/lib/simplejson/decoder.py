@@ -1,10 +1,11 @@
 """Implementation of JSONDecoder
 """
 import re
-import sys
 import struct
+import sys
 
 from simplejson.scanner import make_scanner
+
 try:
     from simplejson._speedups import scanstring as c_scanstring
 except ImportError:
