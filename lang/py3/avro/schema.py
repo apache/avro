@@ -251,7 +251,8 @@ class Name(object):
       namespace: Optional explicit namespace if the name is relative.
     """
     # Normalize: namespace is always defined as a string, possibly empty.
-    if namespace is None: namespace = ''
+    if namespace is None:
+      namespace = ''
 
     if '.' in name:
       # name is absolute, namespace is ignored:
@@ -347,7 +348,8 @@ class Names(object):
     Returns:
       The specified name, resolved according to this tracker.
     """
-    if namespace is None: namespace = self._default_namespace
+    if namespace is None:
+      namespace = self._default_namespace
     return Name(name=name, namespace=namespace)
 
   def has_name(self, name, namespace=None):
@@ -890,7 +892,8 @@ class ErrorUnionSchema(UnionSchema):
     to_dump = []
     for schema in self.schemas:
       # Don't print the system error schema
-      if schema.type == STRING: continue
+      if schema.type == STRING:
+        continue
       to_dump.append(schema.to_json(names))
     return to_dump
 
@@ -1076,7 +1079,8 @@ def FilterKeysOut(items, keys):
     Filtered items.
   """
   for key, value in items.items():
-    if key in keys: continue
+    if key in keys:
+      continue
     yield (key, value)
 
 

@@ -486,7 +486,8 @@ class FramedReader(object):
     """
     message = io.BytesIO()
     # Read and append frames until we encounter a 0-size frame:
-    while self._ReadFrame(message) > 0: pass
+    while self._ReadFrame(message) > 0:
+      pass
     return message.getvalue()
 
   def _ReadFrame(self, message):

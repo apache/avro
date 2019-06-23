@@ -518,7 +518,8 @@ class DataFileReader(object):
       if self.is_EOF():
         raise StopIteration
       elif self._skip_sync():
-        if self.is_EOF(): raise StopIteration
+        if self.is_EOF():
+          raise StopIteration
         self._read_block_header()
       else:
         self._read_block_header()
