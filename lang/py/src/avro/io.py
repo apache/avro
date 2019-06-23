@@ -339,7 +339,7 @@ class BinaryDecoder(object):
         return unix_epoch_datetime + timedelta
 
     def check_crc32(self, bytes):
-        checksum = STRUCT_CRC32.unpack(self.read(4))[0];
+        checksum = STRUCT_CRC32.unpack(self.read(4))[0]
         if crc32(bytes) & 0xffffffff != checksum:
             raise schema.AvroException("Checksum failure")
 
@@ -408,7 +408,7 @@ class BinaryEncoder(object):
         """
         int and long values are written using variable-length, zig-zag coding.    
         """
-        self.write_long(datum);
+        self.write_long(datum)
 
     def write_long(self, datum):
         """
@@ -523,7 +523,7 @@ class BinaryEncoder(object):
         """
         A 4-byte, big-endian CRC32 checksum
         """
-        self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff));
+        self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff))
 
     def write_date_int(self, datum):
         """

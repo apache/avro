@@ -103,8 +103,8 @@ class Collector(object):
         """
 
         self.buff.truncate(0)
-        self.datum_writer.write(record, self.encoder);
-        self.buff.flush();
+        self.datum_writer.write(record, self.encoder)
+        self.buff.flush()
         self.buff.seek(0)
 
         # delete all the data in the buffer
@@ -383,7 +383,7 @@ class TetherTask(object):
                     prev = self.midRecord
 
                     # read the new record
-                    self.midRecord = self.midReader.read(decoder);
+                    self.midRecord = self.midReader.read(decoder)
                     if (prev != None and not(keys_are_equal(self.midRecord, prev, self._red_fkeys))):
                         # since the key has changed we need to finalize the processing
                         # for this group of key,value pairs
@@ -401,10 +401,10 @@ class TetherTask(object):
         """
         if ((self.taskType == TaskType.REDUCE ) and not(self.midRecord is None)):
             try:
-                self.reduceFlush(self.midRecord, self.outCollector);
+                self.reduceFlush(self.midRecord, self.outCollector)
             except Exception as e:
                 estr = traceback.format_exc()
-                self.log.warning("failing: "+estr);
+                self.log.warning("failing: "+estr)
                 self.fail(estr)
 
         self.outputClient.request("complete", dict())

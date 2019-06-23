@@ -334,7 +334,7 @@ class DataFileReader(object):
             data = self.raw_decoder.read(length - 4)
             uncompressed = snappy.decompress(data)
             self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
-            self.raw_decoder.check_crc32(uncompressed);
+            self.raw_decoder.check_crc32(uncompressed)
         else:
             raise DataFileException("Unknown codec: %r" % self.codec)
 

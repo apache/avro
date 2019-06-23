@@ -197,10 +197,10 @@ class Name(object):
             fail_msg = 'Default must be non-empty string or None.'
             raise SchemaParseException(fail_msg)
 
-        self._full = None;
+        self._full = None
 
         if name_attr is None or name_attr == "":
-            return;
+            return
 
         if (name_attr.find('.') < 0):
             if (space_attr is not None) and (space_attr != ""):
