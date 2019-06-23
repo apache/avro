@@ -296,7 +296,7 @@ class BinaryDecoder(object):
 
     def _build_time_object(self, value, scale_to_micro):
         value = value * scale_to_micro
-        value, microseconds =  value // 1000000, value % 1000000
+        value, microseconds = value // 1000000, value % 1000000
         value, seconds = value // 60, value % 60
         value, minutes = value // 60, value % 60
         hours = value

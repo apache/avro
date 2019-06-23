@@ -294,7 +294,7 @@ class TetherTask(object):
             # it and we want to check when we get the message fail whether the transciever
             # needs to be closed.
             # self.clientTranciever=None
-            self.outputClient =  HTTPRequestor("127.0.0.1", clientPort, outputProtocol)
+            self.outputClient = HTTPRequestor("127.0.0.1", clientPort, outputProtocol)
 
         else:
             raise NotImplementedError("Only http protocol is currently supported")
