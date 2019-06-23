@@ -42,16 +42,16 @@ class TestTetherWordCount(unittest.TestCase):
         from avro import schema
 
         #recursively make all directories
-        dparts=fname.split(os.sep)[:-1]
+        dparts = fname.split(os.sep)[:-1]
         for i in range(len(dparts)):
-            pdir=os.sep+os.sep.join(dparts[:i+1])
+            pdir = os.sep+os.sep.join(dparts[:i+1])
             if not(os.path.exists(pdir)):
                 os.mkdir(pdir)
 
 
         with file(fname,'w') as hf:
-            inschema="""{"type":"string"}"""
-            writer=DataFileWriter(hf,avio.DatumWriter(inschema),writers_schema=schema.parse(inschema))
+            inschema = """{"type":"string"}"""
+            writer = DataFileWriter(hf,avio.DatumWriter(inschema),writers_schema=schema.parse(inschema))
 
             #encoder = avio.BinaryEncoder(writer)
             #datum_writer = avio.DatumWriter()
@@ -66,16 +66,16 @@ class TestTetherWordCount(unittest.TestCase):
     def _count_words(self,lines):
         """Return a dictionary counting the words in lines
         """
-        counts={}
+        counts = {}
 
         for line in lines:
-            words=line.split()
+            words = line.split()
 
             for w in words:
                 if not(counts.has_key(w.strip())):
-                    counts[w.strip()]=0
+                    counts[w.strip()] = 0
 
-                counts[w.strip()]=counts[w.strip()]+1
+                counts[w.strip()] = counts[w.strip()]+1
 
         return counts
 
@@ -97,7 +97,7 @@ class TestTetherWordCount(unittest.TestCase):
         import tempfile
         import inspect
 
-        proc=None
+        proc = None
 
         try:
 
@@ -109,21 +109,21 @@ class TestTetherWordCount(unittest.TestCase):
                 shutil.rmtree(base_dir)
 
             inpath = os.path.join(base_dir, "in")
-            infile=os.path.join(inpath, "lines.avro")
-            lines=["the quick brown fox jumps over the lazy dog",
+            infile = os.path.join(inpath, "lines.avro")
+            lines = ["the quick brown fox jumps over the lazy dog",
                    "the cow jumps over the moon",
                    "the rain in spain falls mainly on the plains"]
 
             self._write_lines(lines,infile)
 
-            true_counts=self._count_words(lines)
+            true_counts = self._count_words(lines)
 
             if not(os.path.exists(infile)):
                 self.fail("Missing the input file {0}".format(infile))
 
 
             # The schema for the output of the mapper and reducer
-            oschema="""
+            oschema = """
 {"type":"record",
  "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
      {"name":"key","type":"string"},
@@ -133,8 +133,8 @@ class TestTetherWordCount(unittest.TestCase):
 """
 
             # write the schema to a temporary file
-            osfile=tempfile.NamedTemporaryFile(mode='w',suffix=".avsc",prefix="wordcount",delete=False)
-            outschema=osfile.name
+            osfile = tempfile.NamedTemporaryFile(mode='w',suffix=".avsc",prefix="wordcount",delete=False)
+            outschema = osfile.name
             osfile.write(oschema)
             osfile.close()
 
@@ -143,7 +143,7 @@ class TestTetherWordCount(unittest.TestCase):
 
             outpath = os.path.join(base_dir, "out")
 
-            args=[]
+            args = []
 
             args.append("java")
             args.append("-jar")
@@ -157,26 +157,26 @@ class TestTetherWordCount(unittest.TestCase):
             args.extend(["--protocol","http"])
 
             # form the arguments for the subprocess
-            subargs=[]
+            subargs = []
 
-            srcfile=inspect.getsourcefile(tether_task_runner)
+            srcfile = inspect.getsourcefile(tether_task_runner)
 
             # Create a shell script to act as the program we want to execute
             # We do this so we can set the python path appropriately
-            script="""#!/bin/bash
+            script = """#!/bin/bash
 export PYTHONPATH={0}
 python -m avro.tether.tether_task_runner word_count_task.WordCountTask
 """
             # We need to make sure avro is on the path
             # getsourcefile(avro) returns .../avro/__init__.py
-            asrc=inspect.getsourcefile(avro)
-            apath=asrc.rsplit(os.sep,2)[0]
+            asrc = inspect.getsourcefile(avro)
+            apath = asrc.rsplit(os.sep,2)[0]
 
             # path to where the tests lie
-            tpath=os.path.split(__file__)[0]
+            tpath = os.path.split(__file__)[0]
 
-            exhf=tempfile.NamedTemporaryFile(mode='w',prefix="exec_word_count_",delete=False)
-            exfile=exhf.name
+            exhf = tempfile.NamedTemporaryFile(mode='w',prefix="exec_word_count_",delete=False)
+            exfile = exhf.name
             exhf.write(script.format((os.pathsep).join([apath,tpath]),srcfile))
             exhf.close()
 
@@ -186,14 +186,14 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
             args.extend(["--program",exfile])
 
             print "Command:\n\t{0}".format(" ".join(args))
-            proc=subprocess.Popen(args)
+            proc = subprocess.Popen(args)
 
 
             proc.wait()
 
             # read the output
             with file(os.path.join(outpath,"part-00000.avro")) as hf:
-                reader=DataFileReader(hf, DatumReader())
+                reader = DataFileReader(hf, DatumReader())
                 for record in reader:
                     self.assertEqual(record["value"],true_counts[record["key"]])
 
@@ -210,5 +210,5 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
             if os.path.exists(exfile):
                 os.remove(exfile)
 
-if __name__== "__main__":
+if __name__ == "__main__":
     unittest.main()

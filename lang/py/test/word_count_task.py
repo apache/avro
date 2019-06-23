@@ -16,7 +16,7 @@
  * limitations under the License.
 """
 
-__all__=["WordCountTask"]
+__all__ = ["WordCountTask"]
 
 import logging
 
@@ -34,17 +34,17 @@ class WordCountTask(TetherTask):
         """
         """
 
-        inschema="""{"type":"string"}"""
-        midschema="""{"type":"record", "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
+        inschema = """{"type":"string"}"""
+        midschema = """{"type":"record", "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
               {"name":"key","type":"string"},
               {"name":"value","type":"long","order":"ignore"}]
               }"""
-        outschema=midschema
+        outschema = midschema
         TetherTask.__init__(self,inschema,midschema,outschema)
 
 
         #keep track of the partial sums of the counts
-        self.psum=0
+        self.psum = 0
 
 
     def map(self,record,collector):
@@ -56,7 +56,7 @@ class WordCountTask(TetherTask):
         collector - The collector to collect the output
         """
 
-        words=record.split()
+        words = record.split()
 
         for w in words:
             logging.info("WordCountTask.Map: word={0}".format(w))
@@ -75,7 +75,7 @@ class WordCountTask(TetherTask):
         collector - The collector to collect the output
         """
 
-        self.psum+=record["value"]
+        self.psum += record["value"]
 
     def reduceFlush(self,record, collector):
         """
@@ -94,4 +94,4 @@ class WordCountTask(TetherTask):
         collector.collect({"key":record["key"],"value":self.psum})
 
         #reset the sum
-        self.psum=0
+        self.psum = 0

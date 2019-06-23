@@ -31,10 +31,10 @@ def rand_name():
     return ''.join(sample(lowercase, 15))
 
 def rand_ip():
-    return "%s.%s.%s.%s" %(randint(0,255), randint(0,255), randint(0,255), randint(0,255))
+    return "%s.%s.%s.%s" % (randint(0,255), randint(0,255), randint(0,255), randint(0,255))
 
 def write(n):
-    schema_s="""
+    schema_s = """
     { "type": "record",
       "name": "Query",
     "fields" : [
@@ -58,9 +58,9 @@ def write(n):
 def read():
     f = open("datafile.avr")
     reader = avro.io.DatumReader()
-    af=avro.datafile.DataFileReader(f,reader)
+    af = avro.datafile.DataFileReader(f,reader)
 
-    x=0
+    x = 0
     for _ in af:
         pass
 

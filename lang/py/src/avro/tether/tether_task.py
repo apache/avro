@@ -16,7 +16,7 @@
  * limitations under the License.
 """
 
-__all__=["TetherTask","TaskType","inputProtocol","outputProtocol","HTTPRequestor"]
+__all__ = ["TetherTask","TaskType","inputProtocol","outputProtocol","HTTPRequestor"]
 
 import collections
 import io as pyio
@@ -33,36 +33,36 @@ from avro import ipc, protocol, schema
 # create protocol objects for the input and output protocols
 # The build process should copy InputProtocol.avpr and OutputProtocol.avpr
 # into the same directory as this module
-inputProtocol=None
-outputProtocol=None
+inputProtocol = None
+outputProtocol = None
 
-TaskType=None
+TaskType = None
 if (inputProtocol is None):
-    pfile=os.path.split(__file__)[0]+os.sep+"InputProtocol.avpr"
+    pfile = os.path.split(__file__)[0]+os.sep+"InputProtocol.avpr"
 
     if not(os.path.exists(pfile)):
         raise Exception("Could not locate the InputProtocol: {0} does not exist".format(pfile))
 
     with file(pfile,'r') as hf:
-        prototxt=hf.read()
+        prototxt = hf.read()
 
-    inputProtocol=protocol.parse(prototxt)
+    inputProtocol = protocol.parse(prototxt)
 
     # use a named tuple to represent the tasktype enumeration
-    taskschema=inputProtocol.types_dict["TaskType"]
-    _ttype=collections.namedtuple("_tasktype",taskschema.symbols)
-    TaskType=_ttype(*taskschema.symbols)
+    taskschema = inputProtocol.types_dict["TaskType"]
+    _ttype = collections.namedtuple("_tasktype",taskschema.symbols)
+    TaskType = _ttype(*taskschema.symbols)
 
 if (outputProtocol is None):
-    pfile=os.path.split(__file__)[0]+os.sep+"OutputProtocol.avpr"
+    pfile = os.path.split(__file__)[0]+os.sep+"OutputProtocol.avpr"
 
     if not(os.path.exists(pfile)):
         raise Exception("Could not locate the OutputProtocol: {0} does not exist".format(pfile))
 
     with file(pfile,'r') as hf:
-        prototxt=hf.read()
+        prototxt = hf.read()
 
-    outputProtocol=protocol.parse(prototxt)
+    outputProtocol = protocol.parse(prototxt)
 
 class Collector(object):
     """
@@ -79,17 +79,17 @@ class Collector(object):
         """
 
         if not(isinstance(scheme,schema.Schema)):
-            scheme=schema.parse(scheme)
+            scheme = schema.parse(scheme)
 
         if (outputClient is None):
             raise ValueError("output client can't be none.")
 
-        self.scheme=scheme
-        self.buff=StringIO()
-        self.encoder=avio.BinaryEncoder(self.buff)
+        self.scheme = scheme
+        self.buff = StringIO()
+        self.encoder = avio.BinaryEncoder(self.buff)
 
         self.datum_writer = avio.DatumWriter(writers_schema=self.scheme)
-        self.outputClient=outputClient
+        self.outputClient = outputClient
 
     def collect(self,record,partition=None):
         """Collect a map or reduce output value
@@ -134,7 +134,7 @@ def keys_are_equal(rec1,rec2,fkeys):
     """
 
     for f in fkeys:
-        if not(rec1[f]==rec2[f]):
+        if not(rec1[f] == rec2[f]):
             return False
 
     return True
@@ -160,13 +160,13 @@ class HTTPRequestor(object):
         protocol - The protocol for the communication
         """
 
-        self.server=server
-        self.port=port
-        self.protocol=protocol
+        self.server = server
+        self.port = port
+        self.protocol = protocol
 
     def request(self,*args,**param):
-        transciever=ipc.HTTPTransceiver(self.server,self.port)
-        requestor=ipc.Requestor(self.protocol, transciever)
+        transciever = ipc.HTTPTransceiver(self.server,self.port)
+        requestor = ipc.Requestor(self.protocol, transciever)
         return requestor.request(*args,**param)
 
 
@@ -222,38 +222,38 @@ class TetherTask(object):
 
         # make sure we can parse the schemas
         # Should we call fail if we can't parse the schemas?
-        self.inschema=schema.parse(inschema)
-        self.midschema=schema.parse(midschema)
-        self.outschema=schema.parse(outschema)
+        self.inschema = schema.parse(inschema)
+        self.midschema = schema.parse(midschema)
+        self.outschema = schema.parse(outschema)
 
 
         # declare various variables
-        self.clienTransciever=None
+        self.clienTransciever = None
 
         # output client is used to communicate with the parent process
         # in particular to transmit the outputs of the mapper and reducer
         self.outputClient = None
 
         # collectors for the output of the mapper and reducer
-        self.midCollector=None
-        self.outCollector=None
+        self.midCollector = None
+        self.outCollector = None
 
-        self._partitions=None
+        self._partitions = None
 
         # cache a list of the fields used by the reducer as the keys
         # we need the fields to decide when we have finished processing all values for
         # a given key. We cache the fields to be more efficient
-        self._red_fkeys=None
+        self._red_fkeys = None
 
         # We need to keep track of the previous record fed to the reducer
         # b\c we need to be able to determine when we start processing a new group
         # in the reducer
-        self.midRecord=None
+        self.midRecord = None
 
         # create an event object to signal when
         # http server is ready to be shutdown
-        self.ready_for_shutdown=threading.Event()
-        self.log=logging.getLogger("TetherTask")
+        self.ready_for_shutdown = threading.Event()
+        self.log = logging.getLogger("TetherTask")
 
     def open(self, inputport,clientPort=None):
         """Open the output client - i.e the connection to the parent process
@@ -287,7 +287,7 @@ class TetherTask(object):
 
         # We use the HTTP protocol although we hope to shortly have
         # support for SocketServer,
-        usehttp=True
+        usehttp = True
 
         if(usehttp):
             # self.outputClient =  ipc.Requestor(outputProtocol, self.clientTransceiver)
@@ -305,7 +305,7 @@ class TetherTask(object):
         try:
             self.outputClient.request('configure',{"port":inputport})
         except Exception as e:
-            estr= traceback.format_exc()
+            estr = traceback.format_exc()
             self.fail(estr)
 
 
@@ -331,29 +331,29 @@ class TetherTask(object):
             inSchema = schema.parse(inSchemaText)
             outSchema = schema.parse(outSchemaText)
 
-            if (taskType==TaskType.MAP):
-                self.inReader=avio.DatumReader(writers_schema=inSchema,readers_schema=self.inschema)
-                self.midCollector=Collector(outSchemaText,self.outputClient)
+            if (taskType == TaskType.MAP):
+                self.inReader = avio.DatumReader(writers_schema=inSchema,readers_schema=self.inschema)
+                self.midCollector = Collector(outSchemaText,self.outputClient)
 
-            elif(taskType==TaskType.REDUCE):
-                self.midReader=avio.DatumReader(writers_schema=inSchema,readers_schema=self.midschema)
+            elif(taskType == TaskType.REDUCE):
+                self.midReader = avio.DatumReader(writers_schema=inSchema,readers_schema=self.midschema)
                 # this.outCollector = new Collector<OUT>(outSchema);
-                self.outCollector=Collector(outSchemaText,self.outputClient)
+                self.outCollector = Collector(outSchemaText,self.outputClient)
 
                 # determine which fields in the input record are they keys for the reducer
-                self._red_fkeys=[f.name for f in self.midschema.fields if not(f.order=='ignore')]
+                self._red_fkeys = [f.name for f in self.midschema.fields if not(f.order == 'ignore')]
 
         except Exception as e:
 
-            estr= traceback.format_exc()
+            estr = traceback.format_exc()
             self.fail(estr)
 
     def set_partitions(self,npartitions):
 
         try:
-            self._partitions=npartitions
+            self._partitions = npartitions
         except Exception as e:
-            estr= traceback.format_exc()
+            estr = traceback.format_exc()
             self.fail(estr)
 
     def get_partitions():
@@ -371,17 +371,17 @@ class TetherTask(object):
         """
         try:
             # to avio.BinaryDecoder
-            bdata=StringIO(data)
+            bdata = StringIO(data)
             decoder = avio.BinaryDecoder(bdata)
 
             for i in range(count):
-                if (self.taskType==TaskType.MAP):
+                if (self.taskType == TaskType.MAP):
                     inRecord = self.inReader.read(decoder)
 
                     # Do we need to pass midCollector if its declared as an instance variable
                     self.map(inRecord, self.midCollector)
 
-                elif (self.taskType==TaskType.REDUCE):
+                elif (self.taskType == TaskType.REDUCE):
 
                     # store the previous record
                     prev = self.midRecord
@@ -395,7 +395,7 @@ class TetherTask(object):
                     self.reduce(self.midRecord, self.outCollector)
 
         except Exception as e:
-            estr= traceback.format_exc()
+            estr = traceback.format_exc()
             self.log.warning("failing: "+estr)
             self.fail(estr)
 
@@ -407,7 +407,7 @@ class TetherTask(object):
             try:
                 self.reduceFlush(self.midRecord, self.outCollector);
             except Exception as e:
-                estr=traceback.format_exc()
+                estr = traceback.format_exc()
                 self.log.warning("failing: "+estr);
                 self.fail(estr)
 
@@ -477,7 +477,7 @@ class TetherTask(object):
         try:
             self.outputClient.request("fail",{"message":message})
         except Exception as e:
-            estr=traceback.format_exc()
+            estr = traceback.format_exc()
             self.log.error("TetherTask.fail: an exception occured while trying to send the fail message to the output server:\n{0}".format(estr))
 
         self.close()

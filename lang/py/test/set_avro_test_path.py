@@ -33,8 +33,8 @@ import sys
 
 # determine the build directory and then make sure all paths that start with the
 # build directory are at the top of the path
-builddir=os.path.split(os.path.split(__file__)[0])[0]
-bpaths=filter(lambda s:s.startswith(builddir), sys.path)
+builddir = os.path.split(os.path.split(__file__)[0])[0]
+bpaths = filter(lambda s:s.startswith(builddir), sys.path)
 
 for p in bpaths:
     sys.path.insert(0,p)

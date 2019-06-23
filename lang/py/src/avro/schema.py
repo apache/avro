@@ -340,14 +340,14 @@ class DecimalLogicalSchema(LogicalSchema):
                                 is %s.""" % precision)
         elif precision > max_precision:
             raise SchemaParseException("Cannot store precision digits. Max is %s"
-                                       %(max_precision))
+                                       % (max_precision))
 
         if not isinstance(scale, int) or scale < 0:
             raise SchemaParseException("Scale %s must be a positive Integer." % scale)
 
         elif scale > precision:
             raise SchemaParseException("Invalid DECIMAL scale %s. Cannot be greater than precision %s"
-                                       %(scale, precision))
+                                       % (scale, precision))
 
         super(DecimalLogicalSchema, self).__init__('decimal')
 

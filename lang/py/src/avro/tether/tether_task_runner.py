@@ -16,7 +16,7 @@
  * limitations under the License.
 """
 
-__all__=["TaskRunner"]
+__all__ = ["TaskRunner"]
 
 if __name__ == "__main__":
     # Relative imports don't work when being run directly
@@ -48,36 +48,36 @@ class TaskRunnerResponder(ipc.Responder):
         """
         ipc.Responder.__init__(self, inputProtocol)
 
-        self.log=logging.getLogger("TaskRunnerResponder")
+        self.log = logging.getLogger("TaskRunnerResponder")
 
         # should we use weak references to avoid circular references?
         # We use weak references b\c self.runner owns this instance of TaskRunnerResponder
         if isinstance(runner,weakref.ProxyType):
-            self.runner=runner
+            self.runner = runner
         else:
-            self.runner=weakref.proxy(runner)
+            self.runner = weakref.proxy(runner)
 
-        self.task=weakref.proxy(runner.task)
+        self.task = weakref.proxy(runner.task)
 
     def invoke(self, message, request):
         try:
-            if message.name=='configure':
+            if message.name == 'configure':
                 self.log.info("TetherTaskRunner: Recieved configure")
                 self.task.configure(request["taskType"],request["inSchema"],request["outSchema"])
-            elif message.name=='partitions':
+            elif message.name == 'partitions':
                 self.log.info("TetherTaskRunner: Recieved partitions")
                 try:
                     self.task.set_partitions(request["partitions"])
                 except Exception as e:
                     self.log.error("Exception occured while processing the partitions message: Message:\n"+traceback.format_exc())
                     raise
-            elif message.name=='input':
+            elif message.name == 'input':
                 self.log.info("TetherTaskRunner: Recieved input")
                 self.task.input(request["data"],request["count"])
-            elif message.name=='abort':
+            elif message.name == 'abort':
                 self.log.info("TetherTaskRunner: Recieved abort")
                 self.runner.close()
-            elif message.name=='complete':
+            elif message.name == 'complete':
                 self.log.info("TetherTaskRunner: Recieved complete")
                 self.task.complete()
                 self.task.close()
@@ -87,7 +87,7 @@ class TaskRunnerResponder(ipc.Responder):
 
         except Exception as e:
             self.log.error("Error occured while processing message: {0}".format(message.name))
-            emsg=traceback.format_exc()
+            emsg = traceback.format_exc()
             self.task.fail(emsg)
 
         return None
@@ -104,22 +104,22 @@ def HTTPHandlerGen(runner):
     """
 
     if not(isinstance(runner,weakref.ProxyType)):
-        runnerref=weakref.proxy(runner)
+        runnerref = weakref.proxy(runner)
     else:
-        runnerref=runner
+        runnerref = runner
 
     class TaskRunnerHTTPHandler(BaseHTTPRequestHandler):
         """Create a handler for the parent.
         """
 
-        runner=runnerref
+        runner = runnerref
         def __init__(self,*args,**param):
             """
             """
             BaseHTTPRequestHandler.__init__(self,*args,**param)
 
         def do_POST(self):
-            self.responder =TaskRunnerResponder(self.runner)
+            self.responder = TaskRunnerResponder(self.runner)
             call_request_reader = ipc.FramedReader(self.rfile)
             call_request = call_request_reader.read_framed_message()
             resp_body = self.responder.respond(call_request)
@@ -146,14 +146,14 @@ class TaskRunner(object):
         task - An instance of tether task
         """
 
-        self.log=logging.getLogger("TaskRunner:")
+        self.log = logging.getLogger("TaskRunner:")
 
         if not(isinstance(task,TetherTask)):
             raise ValueError("task must be an instance of tether task")
-        self.task=task
+        self.task = task
 
-        self.server=None
-        self.sthread=None
+        self.server = None
+        self.sthread = None
 
     def start(self,outputport=None,join=True):
         """
@@ -172,8 +172,8 @@ class TaskRunner(object):
                     testing
         """
 
-        port=find_port()
-        address=("localhost",port)
+        port = find_port()
+        address = ("localhost",port)
 
 
         def thread_run(task_runner=None):
@@ -182,10 +182,10 @@ class TaskRunner(object):
             task_runner.server.serve_forever()
 
         # create a separate thread for the http server
-        sthread=threading.Thread(target=thread_run,kwargs={"task_runner":self})
+        sthread = threading.Thread(target=thread_run,kwargs={"task_runner":self})
         sthread.start()
 
-        self.sthread=sthread
+        self.sthread = sthread
         # This needs to run in a separat thread b\c serve_forever() blocks
         self.task.open(port,clientPort=outputport)
 
@@ -211,19 +211,19 @@ if __name__ == '__main__':
     # logging.basicConfig(level=logging.INFO,filename='/tmp/log',filemode='w')
     logging.basicConfig(level=logging.INFO)
 
-    if (len(sys.argv)<=1):
+    if (len(sys.argv) <= 1):
         print "Error: tether_task_runner.__main__: Usage: tether_task_runner task_package.task_module.TaskClass"
         raise ValueError("Usage: tether_task_runner task_package.task_module.TaskClass")
 
-    fullcls=sys.argv[1]
-    mod,cname=fullcls.rsplit(".",1)
+    fullcls = sys.argv[1]
+    mod,cname = fullcls.rsplit(".",1)
 
     logging.info("tether_task_runner.__main__: Task: {0}".format(fullcls))
 
-    modobj=__import__(mod,fromlist=cname)
+    modobj = __import__(mod,fromlist=cname)
 
-    taskcls=getattr(modobj,cname)
-    task=taskcls()
+    taskcls = getattr(modobj,cname)
+    task = taskcls()
 
-    runner=TaskRunner(task=task)
+    runner = TaskRunner(task=task)
     runner.start()
