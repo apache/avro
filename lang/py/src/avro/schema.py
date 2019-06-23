@@ -253,7 +253,7 @@ class Names(object):
         """given a properties, return properties with namespace removed if
         it matches the own default namespace"""
         if self.default_namespace is None:
-        # I have no default -- no change
+            # I have no default -- no change
             return properties
         if 'namespace' not in properties:
             # he has no namespace - no change
