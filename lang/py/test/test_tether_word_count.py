@@ -41,7 +41,7 @@ class TestTetherWordCount(unittest.TestCase):
         from avro.datafile import DataFileReader, DataFileWriter
         from avro import schema
 
-        #recursively make all directories
+        # recursively make all directories
         dparts = fname.split(os.sep)[:-1]
         for i in range(len(dparts)):
             pdir = os.sep+os.sep.join(dparts[:i+1])
@@ -52,8 +52,6 @@ class TestTetherWordCount(unittest.TestCase):
             inschema = """{"type":"string"}"""
             writer = DataFileWriter(hf, avio.DatumWriter(inschema), writers_schema=schema.parse(inschema))
 
-            #encoder = avio.BinaryEncoder(writer)
-            #datum_writer = avio.DatumWriter()
             for datum in lines:
                 writer.append(datum)
 

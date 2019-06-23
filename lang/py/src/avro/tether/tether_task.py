@@ -116,7 +116,7 @@ class Collector(object):
             # a bytearray but the byte array must be pre-allocated
             # self.outputClient.output(self.buff.buffer.read())
 
-            #its not a StringIO
+            # it's not a StringIO
             self.outputClient.request("output", {"datum": self.buff.read()})
         else:
             self.outputClient.request("outputPartitioned", {"datum": self.buff.read(), "partition": partition})

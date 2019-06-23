@@ -32,7 +32,6 @@ setup(
   package_dir = {'avro': 'src/avro'},
   scripts = ["./scripts/avro"],
 
-  #include_package_data=True,
   package_data={'avro': ['LICENSE', 'NOTICE']},
 
   # Project uses simplejson, so ensure that it gets installed or upgraded

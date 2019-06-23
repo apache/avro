@@ -23,8 +23,8 @@ from avro.tether import TetherTask
 __all__ = ["WordCountTask"]
 
 
-#TODO::Make the logging level a parameter we can set
-#logging.basicConfig(level=logging.INFO)
+# TODO::Make the logging level a parameter we can set
+# logging.basicConfig(level=logging.INFO)
 class WordCountTask(TetherTask):
     """
     Implements the mappper and reducer for the word count example
@@ -42,7 +42,7 @@ class WordCountTask(TetherTask):
         outschema = midschema
         TetherTask.__init__(self, inschema, midschema, outschema)
 
-        #keep track of the partial sums of the counts
+        # keep track of the partial sums of the counts
         self.psum = 0
 
     def map(self, record, collector):
@@ -86,10 +86,10 @@ class WordCountTask(TetherTask):
         record - the last record on which reduce was invoked.
         """
 
-        #collect the current record
+        # collect the current record
         logging.info("WordCountTask.reduceFlush key={0} value={1}".format(record["key"], self.psum))
 
         collector.collect({"key": record["key"], "value": self.psum})
 
-        #reset the sum
+        # reset the sum
         self.psum = 0

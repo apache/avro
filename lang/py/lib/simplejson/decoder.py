@@ -40,13 +40,9 @@ def errmsg(msg, doc, pos, end=None):
     # Note that this function is called from _speedups
     lineno, colno = linecol(doc, pos)
     if end is None:
-        #fmt = '{0}: line {1} column {2} (char {3})'
-        #return fmt.format(msg, lineno, colno, pos)
         fmt = '%s: line %d column %d (char %d)'
         return fmt % (msg, lineno, colno, pos)
     endlineno, endcolno = linecol(doc, end)
-    #fmt = '{0}: line {1} column {2} - line {3} column {4} (char {5} - {6})'
-    #return fmt.format(msg, lineno, colno, endlineno, endcolno, pos, end)
     fmt = '%s: line %d column %d - line %d column %d (char %d - %d)'
     return fmt % (msg, lineno, colno, endlineno, endcolno, pos, end)
 
@@ -99,7 +95,6 @@ def py_scanstring(s, end, encoding=None, strict=True, _b=BACKSLASH, _m=STRINGCHU
         elif terminator != '\\':
             if strict:
                 msg = "Invalid control character %r at" % (terminator,)
-                #msg = "Invalid control character {0!r} at".format(terminator)
                 raise ValueError(errmsg(msg, s, end))
             else:
                 _append(terminator)
