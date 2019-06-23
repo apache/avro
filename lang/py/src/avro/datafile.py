@@ -37,7 +37,7 @@ VERSION = 1
 MAGIC = 'Obj' + chr(VERSION)
 MAGIC_SIZE = len(MAGIC)
 SYNC_SIZE = 16
-SYNC_INTERVAL = 4000 * SYNC_SIZE # TODO(hammer): make configurable
+SYNC_INTERVAL = 4000 * SYNC_SIZE  # TODO(hammer): make configurable
 META_SCHEMA = schema.parse("""\
 {"type": "record", "name": "org.apache.avro.file.Header",
  "fields" : [
@@ -48,7 +48,7 @@ META_SCHEMA = schema.parse("""\
 VALID_CODECS = ['null', 'deflate']
 if has_snappy:
     VALID_CODECS.append('snappy')
-VALID_ENCODINGS = ['binary'] # not used yet
+VALID_ENCODINGS = ['binary']  # not used yet
 
 CODEC_KEY = "avro.codec"
 SCHEMA_KEY = "avro.schema"
@@ -174,7 +174,7 @@ class DataFileWriter(object):
                 compressed_data_length = len(compressed_data)
             elif self.get_meta(CODEC_KEY) == 'snappy':
                 compressed_data = snappy.compress(uncompressed_data)
-                compressed_data_length = len(compressed_data) + 4 # crc32
+                compressed_data_length = len(compressed_data) + 4  # crc32
             else:
                 fail_msg = '"%s" codec is not supported.' % self.get_meta(CODEC_KEY)
                 raise DataFileException(fail_msg)
@@ -233,7 +233,7 @@ class DataFileReader(object):
     def __init__(self, reader, datum_reader):
         self._reader = reader
         self._raw_decoder = io.BinaryDecoder(reader)
-        self._datum_decoder = None # Maybe reset at every block.
+        self._datum_decoder = None  # Maybe reset at every block.
         self._datum_reader = datum_reader
 
         # read the header: magic, meta, sync

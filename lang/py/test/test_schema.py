@@ -34,7 +34,7 @@ class ExampleSchema(object):
     def __init__(self, schema_string, valid, name='', comment=''):
         self._schema_string = schema_string
         self._valid = valid
-        self._name = name or schema_string # default to schema_string for name
+        self._name = name or schema_string  # default to schema_string for name
         self.comment = comment
 
     @property

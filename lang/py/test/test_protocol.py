@@ -25,7 +25,7 @@ class ExampleProtocol(object):
     def __init__(self, protocol_string, valid, name='', comment=''):
         self._protocol_string = protocol_string
         self._valid = valid
-        self._name = name or protocol_string # default to schema_string for name
+        self._name = name or protocol_string  # default to schema_string for name
         self._comment = comment
 
     # read-only properties
