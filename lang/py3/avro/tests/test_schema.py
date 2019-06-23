@@ -602,7 +602,7 @@ class TestSchema(unittest.TestCase):
             self.fail(
                 "Failed to preserve 'doc' in fields: "
                 + example.schema_string)
-    self.assertEqual(correct,len(DOC_EXAMPLES))
+    self.assertEqual(correct, len(DOC_EXAMPLES))
 
   def testOtherAttributes(self):
     correct = 0
@@ -610,14 +610,14 @@ class TestSchema(unittest.TestCase):
     for example in OTHER_PROP_EXAMPLES:
       original_schema = schema.Parse(example.schema_string)
       round_trip_schema = schema.Parse(str(original_schema))
-      self.assertEqual(original_schema.other_props,round_trip_schema.other_props)
+      self.assertEqual(original_schema.other_props, round_trip_schema.other_props)
       if original_schema.type == "record":
         field_props = 0
         for f in original_schema.fields:
           if f.other_props:
             props.update(f.other_props)
             field_props += 1
-        self.assertEqual(field_props,len(original_schema.fields))
+        self.assertEqual(field_props, len(original_schema.fields))
       if original_schema.other_props:
         props.update(original_schema.other_props)
         correct += 1
@@ -633,7 +633,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(type(v), float)
       elif k == "cp_array":
         self.assertEqual(type(v), list)
-    self.assertEqual(correct,len(OTHER_PROP_EXAMPLES))
+    self.assertEqual(correct, len(OTHER_PROP_EXAMPLES))
 
   def testDuplicateRecordField(self):
     schema_string = """{
