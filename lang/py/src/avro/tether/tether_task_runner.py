@@ -112,6 +112,7 @@ def HTTPHandlerGen(runner):
         """
 
         runner = runnerref
+
         def __init__(self, *args, **param):
             """
             """
