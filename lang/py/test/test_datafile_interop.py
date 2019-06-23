@@ -37,5 +37,6 @@ class TestDataFileInterop(unittest.TestCase):
             for datum in dfr:
                 assert datum is not None
 
+
 if __name__ == '__main__':
     unittest.main()

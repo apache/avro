@@ -34,6 +34,7 @@ def find_port():
 
     return port
 
+
 SERVER_ADDRESS = ('localhost', find_port())
 
 class MockParentResponder(ipc.Responder):
@@ -72,6 +73,7 @@ class MockParentHandler(BaseHTTPRequestHandler):
         self.end_headers()
         resp_writer = ipc.FramedWriter(self.wfile)
         resp_writer.write_framed_message(resp_body)
+
 
 if __name__ == '__main__':
     if (len(sys.argv) <= 1):

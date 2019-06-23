@@ -61,6 +61,7 @@ def make_requestor(server_host, server_port, protocol):
     client = txipc.TwistedHTTPTransceiver(SERVER_HOST, SERVER_PORT)
     return txipc.TwistedRequestor(protocol, client)
 
+
 if __name__ == '__main__':
     if len(sys.argv) not in [4, 5]:
         raise UsageError("Usage: <to> <from> <body> [<count>]")

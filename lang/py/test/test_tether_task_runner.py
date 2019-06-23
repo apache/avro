@@ -187,5 +187,6 @@ class TestTetherTaskRunner(unittest.TestCase):
             if not(proc is None):
                 proc.kill()
 
+
 if __name__ == ("__main__"):
     unittest.main()

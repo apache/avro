@@ -70,6 +70,7 @@ def t(f, *args):
     e = time.time()
     return e-s
 
+
 if __name__ == "__main__":
     n = int(sys.argv[1])
     print "Write %0.4f" % t(write, n)

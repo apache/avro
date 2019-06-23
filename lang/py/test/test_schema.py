@@ -59,6 +59,7 @@ def make_primitive_examples():
         examples.append(ExampleSchema('{"type": "%s"}' % type, True))
     return examples
 
+
 PRIMITIVE_EXAMPLES = [
   ExampleSchema('"True"', False),
   ExampleSchema('True', False),
@@ -647,6 +648,7 @@ class TestSchema(unittest.TestCase):
         bytes_decimal = schema.parse(bytes_decimal_schema.schema_string)
         self.assertEqual(4, bytes_decimal.get_prop('precision'))
         self.assertEqual(0, bytes_decimal.get_prop('scale'))
+
 
 if __name__ == '__main__':
     unittest.main()

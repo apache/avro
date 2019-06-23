@@ -198,5 +198,6 @@ class TestDataFile(unittest.TestCase):
                 datums.append(datum)
         self.assertTrue(reader.closed)
 
+
 if __name__ == '__main__':
     unittest.main()

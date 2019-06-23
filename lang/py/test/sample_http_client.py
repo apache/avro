@@ -59,6 +59,7 @@ def make_requestor(server_host, server_port, protocol):
     client = ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
     return ipc.Requestor(protocol, client)
 
+
 if __name__ == '__main__':
     if len(sys.argv) not in [4, 5]:
         raise UsageError("Usage: <to> <from> <body> [<count>]")

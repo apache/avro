@@ -22,6 +22,7 @@ def _floatconstants():
     nan, inf = struct.unpack('dd', _BYTES)
     return nan, inf, -inf
 
+
 NaN, PosInf, NegInf = _floatconstants()
 
 

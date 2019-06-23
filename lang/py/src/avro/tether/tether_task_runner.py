@@ -205,6 +205,7 @@ class TaskRunner(object):
 
         self.task.close()
 
+
 if __name__ == '__main__':
     # TODO::Make the logging level a parameter we can set
     # logging.basicConfig(level=logging.INFO,filename='/tmp/log',filemode='w')
