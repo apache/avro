@@ -117,242 +117,242 @@ LONG_RECORD_DATUM = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7}
 
 
 def avro_hexlify(reader):
-  """Return the hex value, as a string, of a binary-encoded int or long."""
-  bytes = []
-  current_byte = reader.read(1)
-  bytes.append(binascii.hexlify(current_byte).decode())
-  while (ord(current_byte) & 0x80) != 0:
+    """Return the hex value, as a string, of a binary-encoded int or long."""
+    bytes = []
     current_byte = reader.read(1)
     bytes.append(binascii.hexlify(current_byte).decode())
-  return ' '.join(bytes)
+    while (ord(current_byte) & 0x80) != 0:
+        current_byte = reader.read(1)
+        bytes.append(binascii.hexlify(current_byte).decode())
+    return ' '.join(bytes)
 
 
 def write_datum(datum, writer_schema):
-  writer = io.BytesIO()
-  encoder = avro_io.BinaryEncoder(writer)
-  datum_writer = avro_io.DatumWriter(writer_schema)
-  datum_writer.write(datum, encoder)
-  return writer, encoder, datum_writer
+    writer = io.BytesIO()
+    encoder = avro_io.BinaryEncoder(writer)
+    datum_writer = avro_io.DatumWriter(writer_schema)
+    datum_writer.write(datum, encoder)
+    return writer, encoder, datum_writer
 
 
 def read_datum(buffer, writer_schema, reader_schema=None):
-  reader = io.BytesIO(buffer.getvalue())
-  decoder = avro_io.BinaryDecoder(reader)
-  datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
-  return datum_reader.read(decoder)
+    reader = io.BytesIO(buffer.getvalue())
+    decoder = avro_io.BinaryDecoder(reader)
+    datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
+    return datum_reader.read(decoder)
 
 
 def check_binary_encoding(number_type):
-  logging.debug('Testing binary encoding for type %s', number_type)
-  correct = 0
-  for datum, hex_encoding in BINARY_ENCODINGS:
-    logging.debug('Datum: %d', datum)
-    logging.debug('Correct Encoding: %s', hex_encoding)
+    logging.debug('Testing binary encoding for type %s', number_type)
+    correct = 0
+    for datum, hex_encoding in BINARY_ENCODINGS:
+        logging.debug('Datum: %d', datum)
+        logging.debug('Correct Encoding: %s', hex_encoding)
 
-    writer_schema = schema.Parse('"%s"' % number_type.lower())
-    writer, encoder, datum_writer = write_datum(datum, writer_schema)
-    writer.seek(0)
-    hex_val = avro_hexlify(writer)
+        writer_schema = schema.Parse('"%s"' % number_type.lower())
+        writer, encoder, datum_writer = write_datum(datum, writer_schema)
+        writer.seek(0)
+        hex_val = avro_hexlify(writer)
 
-    logging.debug('Read Encoding: %s', hex_val)
-    if hex_encoding == hex_val:
-      correct += 1
-  return correct
+        logging.debug('Read Encoding: %s', hex_val)
+        if hex_encoding == hex_val:
+            correct += 1
+    return correct
 
 
 def check_skip_number(number_type):
-  logging.debug('Testing skip number for %s', number_type)
-  correct = 0
-  for value_to_skip, hex_encoding in BINARY_ENCODINGS:
-    VALUE_TO_READ = 6253
-    logging.debug('Value to Skip: %d', value_to_skip)
+    logging.debug('Testing skip number for %s', number_type)
+    correct = 0
+    for value_to_skip, hex_encoding in BINARY_ENCODINGS:
+        VALUE_TO_READ = 6253
+        logging.debug('Value to Skip: %d', value_to_skip)
 
-    # write the value to skip and a known value
-    writer_schema = schema.Parse('"%s"' % number_type.lower())
-    writer, encoder, datum_writer = write_datum(value_to_skip, writer_schema)
-    datum_writer.write(VALUE_TO_READ, encoder)
+        # write the value to skip and a known value
+        writer_schema = schema.Parse('"%s"' % number_type.lower())
+        writer, encoder, datum_writer = write_datum(value_to_skip, writer_schema)
+        datum_writer.write(VALUE_TO_READ, encoder)
 
-    # skip the value
-    reader = io.BytesIO(writer.getvalue())
-    decoder = avro_io.BinaryDecoder(reader)
-    decoder.skip_long()
+        # skip the value
+        reader = io.BytesIO(writer.getvalue())
+        decoder = avro_io.BinaryDecoder(reader)
+        decoder.skip_long()
 
-    # read data from string buffer
-    datum_reader = avro_io.DatumReader(writer_schema)
-    read_value = datum_reader.read(decoder)
+        # read data from string buffer
+        datum_reader = avro_io.DatumReader(writer_schema)
+        read_value = datum_reader.read(decoder)
 
-    logging.debug('Read Value: %d', read_value)
-    if read_value == VALUE_TO_READ:
-      correct += 1
-  return correct
+        logging.debug('Read Value: %d', read_value)
+        if read_value == VALUE_TO_READ:
+            correct += 1
+    return correct
 
 
 # ------------------------------------------------------------------------------
 
 
 class TestIO(unittest.TestCase):
-  #
-  # BASIC FUNCTIONALITY
-  #
+    #
+    # BASIC FUNCTIONALITY
+    #
 
-  def testValidate(self):
-    passed = 0
-    for example_schema, datum in SCHEMAS_TO_VALIDATE:
-      logging.debug('Schema: %r', example_schema)
-      logging.debug('Datum: %r', datum)
-      validated = avro_io.Validate(schema.Parse(example_schema), datum)
-      logging.debug('Valid: %s', validated)
-      if validated:
-        passed += 1
-    self.assertEqual(passed, len(SCHEMAS_TO_VALIDATE))
+    def testValidate(self):
+        passed = 0
+        for example_schema, datum in SCHEMAS_TO_VALIDATE:
+            logging.debug('Schema: %r', example_schema)
+            logging.debug('Datum: %r', datum)
+            validated = avro_io.Validate(schema.Parse(example_schema), datum)
+            logging.debug('Valid: %s', validated)
+            if validated:
+                passed += 1
+        self.assertEqual(passed, len(SCHEMAS_TO_VALIDATE))
 
-  def testRoundTrip(self):
-    correct = 0
-    for example_schema, datum in SCHEMAS_TO_VALIDATE:
-      logging.debug('Schema: %s', example_schema)
-      logging.debug('Datum: %s', datum)
+    def testRoundTrip(self):
+        correct = 0
+        for example_schema, datum in SCHEMAS_TO_VALIDATE:
+            logging.debug('Schema: %s', example_schema)
+            logging.debug('Datum: %s', datum)
 
-      writer_schema = schema.Parse(example_schema)
-      writer, encoder, datum_writer = write_datum(datum, writer_schema)
-      round_trip_datum = read_datum(writer, writer_schema)
+            writer_schema = schema.Parse(example_schema)
+            writer, encoder, datum_writer = write_datum(datum, writer_schema)
+            round_trip_datum = read_datum(writer, writer_schema)
 
-      logging.debug('Round Trip Datum: %s', round_trip_datum)
-      if datum == round_trip_datum:
-        correct += 1
-    self.assertEqual(correct, len(SCHEMAS_TO_VALIDATE))
+            logging.debug('Round Trip Datum: %s', round_trip_datum)
+            if datum == round_trip_datum:
+                correct += 1
+        self.assertEqual(correct, len(SCHEMAS_TO_VALIDATE))
 
-  #
-  # BINARY ENCODING OF INT AND LONG
-  #
+    #
+    # BINARY ENCODING OF INT AND LONG
+    #
 
-  def testBinaryIntEncoding(self):
-    correct = check_binary_encoding('int')
-    self.assertEqual(correct, len(BINARY_ENCODINGS))
+    def testBinaryIntEncoding(self):
+        correct = check_binary_encoding('int')
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
-  def testBinaryLongEncoding(self):
-    correct = check_binary_encoding('long')
-    self.assertEqual(correct, len(BINARY_ENCODINGS))
+    def testBinaryLongEncoding(self):
+        correct = check_binary_encoding('long')
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
-  def testSkipInt(self):
-    correct = check_skip_number('int')
-    self.assertEqual(correct, len(BINARY_ENCODINGS))
+    def testSkipInt(self):
+        correct = check_skip_number('int')
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
-  def testSkipLong(self):
-    correct = check_skip_number('long')
-    self.assertEqual(correct, len(BINARY_ENCODINGS))
+    def testSkipLong(self):
+        correct = check_skip_number('long')
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
-  #
-  # SCHEMA RESOLUTION
-  #
+    #
+    # SCHEMA RESOLUTION
+    #
 
-  def testSchemaPromotion(self):
-    # note that checking writer_schema.type in read_data
-    # allows us to handle promotion correctly
-    promotable_schemas = ['"int"', '"long"', '"float"', '"double"']
-    incorrect = 0
-    for i, ws in enumerate(promotable_schemas):
-      writer_schema = schema.Parse(ws)
-      datum_to_write = 219
-      for rs in promotable_schemas[i + 1:]:
-        reader_schema = schema.Parse(rs)
-        writer, enc, dw = write_datum(datum_to_write, writer_schema)
-        datum_read = read_datum(writer, writer_schema, reader_schema)
-        logging.debug('Writer: %s Reader: %s', writer_schema, reader_schema)
-        logging.debug('Datum Read: %s', datum_read)
-        if datum_read != datum_to_write:
-          incorrect += 1
-    self.assertEqual(incorrect, 0)
+    def testSchemaPromotion(self):
+        # note that checking writer_schema.type in read_data
+        # allows us to handle promotion correctly
+        promotable_schemas = ['"int"', '"long"', '"float"', '"double"']
+        incorrect = 0
+        for i, ws in enumerate(promotable_schemas):
+            writer_schema = schema.Parse(ws)
+            datum_to_write = 219
+            for rs in promotable_schemas[i + 1:]:
+                reader_schema = schema.Parse(rs)
+                writer, enc, dw = write_datum(datum_to_write, writer_schema)
+                datum_read = read_datum(writer, writer_schema, reader_schema)
+                logging.debug('Writer: %s Reader: %s', writer_schema, reader_schema)
+                logging.debug('Datum Read: %s', datum_read)
+                if datum_read != datum_to_write:
+                    incorrect += 1
+        self.assertEqual(incorrect, 0)
 
-  def testUnknownSymbol(self):
-    writer_schema = schema.Parse("""\
+    def testUnknownSymbol(self):
+        writer_schema = schema.Parse("""\
       {"type": "enum", "name": "Test",
        "symbols": ["FOO", "BAR"]}""")
-    datum_to_write = 'FOO'
+        datum_to_write = 'FOO'
 
-    reader_schema = schema.Parse("""\
+        reader_schema = schema.Parse("""\
       {"type": "enum", "name": "Test",
        "symbols": ["BAR", "BAZ"]}""")
 
-    writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
-    reader = io.BytesIO(writer.getvalue())
-    decoder = avro_io.BinaryDecoder(reader)
-    datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
-    self.assertRaises(avro_io.SchemaResolutionException, datum_reader.read, decoder)
+        writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
+        reader = io.BytesIO(writer.getvalue())
+        decoder = avro_io.BinaryDecoder(reader)
+        datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
+        self.assertRaises(avro_io.SchemaResolutionException, datum_reader.read, decoder)
 
-  def testDefaultValue(self):
-    writer_schema = LONG_RECORD_SCHEMA
-    datum_to_write = LONG_RECORD_DATUM
+    def testDefaultValue(self):
+        writer_schema = LONG_RECORD_SCHEMA
+        datum_to_write = LONG_RECORD_DATUM
 
-    correct = 0
-    for field_type, default_json, default_datum in DEFAULT_VALUE_EXAMPLES:
-      reader_schema = schema.Parse("""\
+        correct = 0
+        for field_type, default_json, default_datum in DEFAULT_VALUE_EXAMPLES:
+            reader_schema = schema.Parse("""\
         {"type": "record", "name": "Test",
          "fields": [{"name": "H", "type": %s, "default": %s}]}
         """ % (field_type, default_json))
-      datum_to_read = {'H': default_datum}
+            datum_to_read = {'H': default_datum}
 
-      writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
-      datum_read = read_datum(writer, writer_schema, reader_schema)
-      logging.debug('Datum Read: %s', datum_read)
-      if datum_to_read == datum_read:
-        correct += 1
-    self.assertEqual(correct, len(DEFAULT_VALUE_EXAMPLES))
+            writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
+            datum_read = read_datum(writer, writer_schema, reader_schema)
+            logging.debug('Datum Read: %s', datum_read)
+            if datum_to_read == datum_read:
+                correct += 1
+        self.assertEqual(correct, len(DEFAULT_VALUE_EXAMPLES))
 
-  def testNoDefaultValue(self):
-    writer_schema = LONG_RECORD_SCHEMA
-    datum_to_write = LONG_RECORD_DATUM
+    def testNoDefaultValue(self):
+        writer_schema = LONG_RECORD_SCHEMA
+        datum_to_write = LONG_RECORD_DATUM
 
-    reader_schema = schema.Parse("""\
+        reader_schema = schema.Parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "H", "type": "int"}]}""")
 
-    writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
-    reader = io.BytesIO(writer.getvalue())
-    decoder = avro_io.BinaryDecoder(reader)
-    datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
-    self.assertRaises(avro_io.SchemaResolutionException, datum_reader.read, decoder)
+        writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
+        reader = io.BytesIO(writer.getvalue())
+        decoder = avro_io.BinaryDecoder(reader)
+        datum_reader = avro_io.DatumReader(writer_schema, reader_schema)
+        self.assertRaises(avro_io.SchemaResolutionException, datum_reader.read, decoder)
 
-  def testProjection(self):
-    writer_schema = LONG_RECORD_SCHEMA
-    datum_to_write = LONG_RECORD_DATUM
+    def testProjection(self):
+        writer_schema = LONG_RECORD_SCHEMA
+        datum_to_write = LONG_RECORD_DATUM
 
-    reader_schema = schema.Parse("""\
+        reader_schema = schema.Parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "E", "type": "int"},
                   {"name": "F", "type": "int"}]}""")
-    datum_to_read = {'E': 5, 'F': 6}
+        datum_to_read = {'E': 5, 'F': 6}
 
-    writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
-    datum_read = read_datum(writer, writer_schema, reader_schema)
-    logging.debug('Datum Read: %s', datum_read)
-    self.assertEqual(datum_to_read, datum_read)
+        writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
+        datum_read = read_datum(writer, writer_schema, reader_schema)
+        logging.debug('Datum Read: %s', datum_read)
+        self.assertEqual(datum_to_read, datum_read)
 
-  def testFieldOrder(self):
-    writer_schema = LONG_RECORD_SCHEMA
-    datum_to_write = LONG_RECORD_DATUM
+    def testFieldOrder(self):
+        writer_schema = LONG_RECORD_SCHEMA
+        datum_to_write = LONG_RECORD_DATUM
 
-    reader_schema = schema.Parse("""\
+        reader_schema = schema.Parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")
-    datum_to_read = {'E': 5, 'F': 6}
+        datum_to_read = {'E': 5, 'F': 6}
 
-    writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
-    datum_read = read_datum(writer, writer_schema, reader_schema)
-    logging.debug('Datum Read: %s', datum_read)
-    self.assertEqual(datum_to_read, datum_read)
+        writer, encoder, datum_writer = write_datum(datum_to_write, writer_schema)
+        datum_read = read_datum(writer, writer_schema, reader_schema)
+        logging.debug('Datum Read: %s', datum_read)
+        self.assertEqual(datum_to_read, datum_read)
 
-  def testTypeException(self):
-    writer_schema = schema.Parse("""\
+    def testTypeException(self):
+        writer_schema = schema.Parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")
-    datum_to_write = {'E': 5, 'F': 'Bad'}
-    self.assertRaises(
-        avro_io.AvroTypeException, write_datum, datum_to_write, writer_schema)
+        datum_to_write = {'E': 5, 'F': 'Bad'}
+        self.assertRaises(
+            avro_io.AvroTypeException, write_datum, datum_to_write, writer_schema)
 
-  def testUnionSchemaSpecificity(self):
-    union_schema = schema.Parse("""
+    def testUnionSchemaSpecificity(self):
+        union_schema = schema.Parse("""
         [{
          "type" : "record",
          "name" : "A",
@@ -369,12 +369,12 @@ class TestIO(unittest.TestCase):
          "fields" : [{"name" : "entity", "type" : ["A", "B"]}]
         }]
     """)
-    sch = {s.name: s for s in union_schema.schemas}.get('AOrB')
-    datum_to_read = {'entity': {'foo': 'this is an instance of schema A'}}
-    writer, encoder, datum_writer = write_datum(datum_to_read, sch)
-    datum_read = read_datum(writer, sch, sch)
-    self.assertEqual(datum_to_read, datum_read)
+        sch = {s.name: s for s in union_schema.schemas}.get('AOrB')
+        datum_to_read = {'entity': {'foo': 'this is an instance of schema A'}}
+        writer, encoder, datum_writer = write_datum(datum_to_read, sch)
+        datum_read = read_datum(writer, sch, sch)
+        self.assertEqual(datum_to_read, datum_read)
 
 
 if __name__ == '__main__':
-  raise Exception('Use run_tests.py')
+    raise Exception('Use run_tests.py')

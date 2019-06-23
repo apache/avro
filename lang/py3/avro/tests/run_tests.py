@@ -58,20 +58,20 @@ from avro.tests.test_script import *
 
 
 def SetupLogging():
-  log_level = int(os.environ.get('PYTHON_LOG_LEVEL', logging.INFO))
+    log_level = int(os.environ.get('PYTHON_LOG_LEVEL', logging.INFO))
 
-  log_formatter = logging.Formatter(
-      '%(asctime)s %(levelname)s %(filename)s:%(lineno)s : %(message)s')
-  logging.root.handlers = list()  # list.clear() only exists in python 3.3+
-  logging.root.setLevel(log_level)
-  console_handler = logging.StreamHandler()
-  console_handler.setFormatter(log_formatter)
-  console_handler.setLevel(logging.DEBUG)
-  logging.root.addHandler(console_handler)
+    log_formatter = logging.Formatter(
+        '%(asctime)s %(levelname)s %(filename)s:%(lineno)s : %(message)s')
+    logging.root.handlers = list()  # list.clear() only exists in python 3.3+
+    logging.root.setLevel(log_level)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+    console_handler.setLevel(logging.DEBUG)
+    logging.root.addHandler(console_handler)
 
 
 SetupLogging()
 
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()
