@@ -714,7 +714,7 @@ class DatumReader(object):
             return decoder.read_double()
         elif writers_schema.type == 'bytes':
             if (hasattr(writers_schema, 'logical_type') and
-                            writers_schema.logical_type == 'decimal'):
+                    writers_schema.logical_type == 'decimal'):
                 return decoder.read_decimal_from_bytes(
                   writers_schema.get_prop('precision'),
                   writers_schema.get_prop('scale')
@@ -723,7 +723,7 @@ class DatumReader(object):
                 return decoder.read_bytes()
         elif writers_schema.type == 'fixed':
             if (hasattr(writers_schema, 'logical_type') and
-                            writers_schema.logical_type == 'decimal'):
+                    writers_schema.logical_type == 'decimal'):
                 return decoder.read_decimal_from_fixed(
                   writers_schema.get_prop('precision'),
                   writers_schema.get_prop('scale'),
@@ -1060,13 +1060,13 @@ class DatumWriter(object):
             encoder.write_double(datum)
         elif writers_schema.type == 'bytes':
             if (hasattr(writers_schema, 'logical_type') and
-                            writers_schema.logical_type == 'decimal'):
+                    writers_schema.logical_type == 'decimal'):
                 encoder.write_decimal_bytes(datum, writers_schema.get_prop('scale'))
             else:
                 encoder.write_bytes(datum)
         elif writers_schema.type == 'fixed':
             if (hasattr(writers_schema, 'logical_type') and
-                            writers_schema.logical_type == 'decimal'):
+                    writers_schema.logical_type == 'decimal'):
                 encoder.write_decimal_fixed(
                   datum,
                   writers_schema.get_prop('scale'),

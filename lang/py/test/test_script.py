@@ -170,7 +170,7 @@ class TestCat(unittest.TestCase):
         # Empty fields should get all
         out = self._run('--fields', '')
         assert json.loads(out[0]) == \
-                {'first': 'daffy', 'last': 'duck', 'type': 'duck'}
+        {'first': 'daffy', 'last': 'duck', 'type': 'duck'}
 
         # Non existing fields are ignored
         out = self._run('--fields', 'first,last,age')
