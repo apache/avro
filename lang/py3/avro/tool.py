@@ -66,6 +66,7 @@ class StoppableHTTPServer(HTTPServer):
   """HTTPServer.shutdown added in Python 2.6. FML."""
   stopped = False
   allow_reuse_address = True
+
   def __init__(self, *args, **kw):
     HTTPServer.__init__(self, *args, **kw)
     self.allow_reuse_address = True
