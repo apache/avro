@@ -125,7 +125,7 @@ def Validate(expected_schema, datum):
   try:
     return _valid[expected_schema.type](expected_schema, datum)
   except KeyError:
-    raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
+    raise AvroTypeException(expected_schema, datum)
 
 
 # ------------------------------------------------------------------------------
