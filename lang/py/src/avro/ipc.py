@@ -66,6 +66,7 @@ class AvroRemoteException(schema.AvroException):
     """
     Raised when an error message is sent by an Avro requestor or responder.
     """
+
     def __init__(self, fail_msg=None):
         schema.AvroException.__init__(self, fail_msg)
 
@@ -80,6 +81,7 @@ class ConnectionClosedException(schema.AvroException):
 
 class BaseRequestor(object):
     """Base class for the client side of a protocol interaction."""
+
     def __init__(self, local_protocol, transceiver):
         self._local_protocol = local_protocol
         self._transceiver = transceiver
@@ -244,6 +246,7 @@ class Requestor(BaseRequestor):
 
 class Responder(object):
     """Base class for the server side of a protocol interaction."""
+
     def __init__(self, local_protocol):
         self._local_protocol = local_protocol
         self._local_hash = self.local_protocol.md5
@@ -258,6 +261,7 @@ class Responder(object):
     # utility functions to manipulate protocol cache
     def get_protocol_cache(self, hash):
         return self.protocol_cache.get(hash)
+
     def set_protocol_cache(self, hash, protocol):
         self.protocol_cache[hash] = protocol
 
@@ -380,6 +384,7 @@ class Responder(object):
 
 class FramedReader(object):
     """Wrapper around a file-like object to read framed data."""
+
     def __init__(self, reader):
         self._reader = reader
 
@@ -409,6 +414,7 @@ class FramedReader(object):
 
 class FramedWriter(object):
     """Wrapper around a file-like object to write framed data."""
+
     def __init__(self, writer):
         self._writer = writer
 
@@ -447,6 +453,7 @@ class HTTPTransceiver(object):
     A simple HTTP-based transceiver implementation.
     Useful for clients but not for servers
     """
+
     def __init__(self, host, port, req_resource='/'):
         self.req_resource = req_resource
         self.conn = httplib.HTTPConnection(host, port)

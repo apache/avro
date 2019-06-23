@@ -48,6 +48,7 @@ class ProtocolParseException(schema.AvroException):
 
 class Protocol(object):
     """An application protocol."""
+
     def _parse_types(self, types, type_names):
         type_objects = []
         for type in types:
@@ -119,6 +120,7 @@ class Protocol(object):
     # utility functions to manipulate properties dict
     def get_prop(self, key):
         return self.props.get(key)
+
     def set_prop(self, key, value):
         self.props[key] = value
 
@@ -147,6 +149,7 @@ class Protocol(object):
 
 class Message(object):
     """A Protocol message."""
+
     def _parse_request(self, request, names):
         if not isinstance(request, list):
             fail_msg = 'Request property not a list: %s' % request
@@ -185,6 +188,7 @@ class Message(object):
     # utility functions to manipulate properties dict
     def get_prop(self, key):
         return self.props.get(key)
+
     def set_prop(self, key, value):
         self.props[key] = value
 

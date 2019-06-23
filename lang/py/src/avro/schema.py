@@ -119,6 +119,7 @@ class SchemaParseException(AvroException):
 class Schema(object):
     """Base class for all Schema classes."""
     _props = None
+
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
         if not isinstance(type, basestring):
@@ -233,6 +234,7 @@ class Name(object):
 
 class Names(object):
     """Track name set and default namespace during parsing."""
+
     def __init__(self, default_namespace=None):
         self.names = {}
         self.default_namespace = default_namespace
@@ -288,6 +290,7 @@ class Names(object):
 
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
+
     def __init__(self, type, name, namespace=None, names=None, other_props=None):
         # Ensure valid ctor args
         if not name:
@@ -417,6 +420,7 @@ class Field(object):
 # utility functions to manipulate properties dict
     def get_prop(self, key):
         return self._props.get(key)
+
     def set_prop(self, key, value):
         self._props[key] = value
 
@@ -441,6 +445,7 @@ class Field(object):
 
 class PrimitiveSchema(Schema):
     """Valid primitive types are in PRIMITIVE_TYPES."""
+
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
         if type not in PRIMITIVE_TYPES:
@@ -656,6 +661,7 @@ class UnionSchema(Schema):
     """
     names is a dictionary of schema objects
     """
+
     def __init__(self, schemas, names=None):
         # Ensure valid ctor args
         if not isinstance(schemas, list):
