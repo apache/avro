@@ -281,7 +281,6 @@ class BinaryEncoder(object):
     """Reports the writer used by this encoder."""
     return self._writer
 
-
   def write(self, datum):
     """Write a sequence of bytes.
 
