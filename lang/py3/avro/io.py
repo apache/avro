@@ -434,12 +434,12 @@ class DatumReader(object):
   def set_writer_schema(self, writer_schema):
     self._writer_schema = writer_schema
   writer_schema = property(lambda self: self._writer_schema,
-                            set_writer_schema)
+                           set_writer_schema)
 
   def set_reader_schema(self, reader_schema):
     self._reader_schema = reader_schema
   reader_schema = property(lambda self: self._reader_schema,
-                            set_reader_schema)
+                           set_reader_schema)
 
   def read(self, decoder):
     if self.reader_schema is None:
@@ -769,7 +769,7 @@ class DatumWriter(object):
   def set_writer_schema(self, writer_schema):
     self._writer_schema = writer_schema
   writer_schema = property(lambda self: self._writer_schema,
-                            set_writer_schema)
+                           set_writer_schema)
 
   def write(self, datum, encoder):
     # validate datum

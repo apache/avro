@@ -526,7 +526,7 @@ class TestSchema(unittest.TestCase):
       correct += 1
 
     fail_msg = "Cast to string success on %d out of %d schemas" % \
-      (correct, len(VALID_EXAMPLES))
+    (correct, len(VALID_EXAMPLES))
     self.assertEqual(correct, len(VALID_EXAMPLES), fail_msg)
 
   def testEquivalenceAfterRoundTrip(self):
@@ -550,7 +550,7 @@ class TestSchema(unittest.TestCase):
             % (example.name, original_schema, str(original_schema)))
 
     fail_msg = "Round trip success on %d out of %d schemas" % \
-      (correct, len(VALID_EXAMPLES))
+    (correct, len(VALID_EXAMPLES))
     self.assertEqual(correct, len(VALID_EXAMPLES), fail_msg)
 
   def testFullname(self):
