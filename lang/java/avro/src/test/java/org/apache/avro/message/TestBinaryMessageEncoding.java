@@ -144,6 +144,8 @@ public class TestBinaryMessageEncoding {
 
     SchemaStore.Cache schemaCache = new SchemaStore.Cache();
     schemaCache.addSchema(SCHEMA_V1);
+    // The null readSchema should not throw an NPE, but trigger the
+    // BinaryMessageEncoder to use the write schema as read schema
     BinaryMessageDecoder<Record> genericDecoder = new BinaryMessageDecoder<>(GenericData.get(), null, schemaCache);
 
     ByteBuffer v1Buffer = v1Encoder.encode(V1_RECORDS.get(2));
