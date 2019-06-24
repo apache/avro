@@ -58,7 +58,7 @@ $ python3
         so you can also use pip for installation:
       </p>
       <source>
-$ pip3 install avro-python3  # run as root if you want to install it globally
+$ pip3 install avro-python3
 $ python3
 >>> import avro # should not raise ImportError
       </source>
