@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ uses the following mapping:
   * Schema longs are implemented as long.
   * Schema floats are implemented as float.
   * Schema doubles are implemented as float.
-  * Schema booleans are implemented as bool. 
+  * Schema booleans are implemented as bool.
 """
 import struct
 from avro import schema
@@ -106,65 +106,59 @@ class SchemaResolutionException(schema.AvroException):
 #
 # Validate
 #
-
 def _is_timezone_aware_datetime(dt):
   return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
 
+_valid = {
+  'null': lambda s, d: d is None,
+  'boolean': lambda s, d: isinstance(d, bool),
+  'string': lambda s, d: isinstance(d, basestring),
+  'bytes': lambda s, d: ((isinstance(d, str)) or
+                         (isinstance(d, Decimal) and
+                          getattr(s, 'logical_type', None) == constants.DECIMAL)),
+  'int': lambda s, d: ((isinstance(d, (int, long))) and (INT_MIN_VALUE <= d <= INT_MAX_VALUE) or
+                       (isinstance(d, datetime.date) and
+                        getattr(s, 'logical_type', None) == constants.DATE) or
+                       (isinstance(d, datetime.time) and
+                        getattr(s, 'logical_type', None) == constants.TIME_MILLIS)),
+  'long': lambda s, d: ((isinstance(d, (int, long))) and (LONG_MIN_VALUE <= d <= LONG_MAX_VALUE) or
+                        (isinstance(d, datetime.time) and
+                         getattr(s, 'logical_type', None) == constants.TIME_MICROS) or
+                        (isinstance(d, datetime.date) and
+                         _is_timezone_aware_datetime(d) and
+                        getattr(s, 'logical_type', None) in (constants.TIMESTAMP_MILLIS,
+                                                             constants.TIMESTAMP_MICROS))),
+  'float': lambda s, d: isinstance(d, (int, long, float)),
+  'fixed': lambda s, d: ((isinstance(d, str) and len(d) == s.size) or
+                         (isinstance(d, Decimal) and
+                          getattr(s, 'logical_type', None) == constants.DECIMAL)),
+  'enum': lambda s, d: d in s.symbols,
+  'array': lambda s, d: isinstance(d, list) and all(validate(s.items, item) for item in d),
+  'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, basestring) for key in d)
+                       and all(validate(s.values, value) for value in d.values())),
+  'union': lambda s, d: any(validate(branch, d) for branch in s.schemas),
+  'record': lambda s, d: (isinstance(d, dict)
+                          and all(validate(f.type, d.get(f.name)) for f in s.fields)
+                          and {f.name for f in s.fields}.issuperset(d.keys())),
+}
+_valid['double'] = _valid['float']
+_valid['error_union'] = _valid['union']
+_valid['error'] = _valid['request'] = _valid['record']
+
+
 def validate(expected_schema, datum):
-  """Determine if a python datum is an instance of a schema."""
-  schema_type = expected_schema.type
-  if schema_type == 'null':
-    return datum is None
-  elif schema_type == 'boolean':
-    return isinstance(datum, bool)
-  elif schema_type == 'string':
-    return isinstance(datum, basestring)
-  elif schema_type == 'bytes':
-    if (hasattr(expected_schema, 'logical_type') and
-            expected_schema.logical_type == 'decimal'):
-      return isinstance(datum, Decimal)
-    return isinstance(datum, str)
-  elif schema_type == 'int':
-    if hasattr(expected_schema, 'logical_type'):
-      if expected_schema.logical_type == constants.DATE:
-        return isinstance(datum, datetime.date)
-      elif expected_schema.logical_type == constants.TIME_MILLIS:
-        return isinstance(datum, datetime.time)
-    return (isinstance(datum, (int, long))
-            and INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
-  elif schema_type == 'long':
-    if hasattr(expected_schema, 'logical_type'):
-      if expected_schema.logical_type == constants.TIME_MICROS:
-        return isinstance(datum, datetime.time)
-      elif expected_schema.logical_type in [constants.TIMESTAMP_MILLIS, constants.TIMESTAMP_MICROS]:
-        return isinstance(datum, datetime.datetime) and _is_timezone_aware_datetime(datum)
-    return (isinstance(datum, (int, long))
-            and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
-  elif schema_type in ['float', 'double']:
-    return (isinstance(datum, int) or isinstance(datum, long)
-            or isinstance(datum, float))
-  # Check for int, float, long and decimal
-  elif schema_type == 'fixed':
-    if (hasattr(expected_schema, 'logical_type') and
-                    expected_schema.logical_type == 'decimal'):
-      return isinstance(datum, Decimal)
-    return isinstance(datum, str) and len(datum) == expected_schema.size
-  elif schema_type == 'enum':
-    return datum in expected_schema.symbols
-  elif schema_type == 'array':
-    return (isinstance(datum, list) and
-      False not in [validate(expected_schema.items, d) for d in datum])
-  elif schema_type == 'map':
-    return (isinstance(datum, dict) and
-      False not in [isinstance(k, basestring) for k in datum.keys()] and
-      False not in
-        [validate(expected_schema.values, v) for v in datum.values()])
-  elif schema_type in ['union', 'error_union']:
-    return True in [validate(s, datum) for s in expected_schema.schemas]
-  elif schema_type in ['record', 'error', 'request']:
-    return (isinstance(datum, dict) and
-      False not in
-        [validate(f.type, datum.get(f.name)) for f in expected_schema.fields])
+  """Determines if a python datum is an instance of a schema.
+
+  Args:
+    expected_schema: Schema to validate against.
+    datum: Datum to validate.
+  Returns:
+    True if the datum is an instance of the schema.
+  """
+  try:
+    return _valid[expected_schema.type](expected_schema, datum)
+  except KeyError:
+    raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
 
 #
 # Decoder/Encoder
@@ -1040,7 +1034,7 @@ class DatumWriter(object):
     # validate datum
     if not validate(self.writers_schema, datum):
       raise AvroTypeException(self.writers_schema, datum)
-    
+
     self.write_data(self.writers_schema, datum, encoder)
 
   def write_data(self, writers_schema, datum, encoder):
