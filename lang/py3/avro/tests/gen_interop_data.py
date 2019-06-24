@@ -32,7 +32,7 @@ DATUM = {
     'boolField': True,
     'floatField': 1234.0,
     'doubleField': -1234.0,
-    'bytesField': '12312adf',
+    'bytesField': b'12312adf',
     'nullField': None,
     'arrayField': [5.0, 0.0, 12.0],
     'mapField': {'a': {'label': 'a'}, 'bee': {'label': 'cee'}},
