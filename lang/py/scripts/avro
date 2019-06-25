@@ -15,16 +15,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Command line utlity for reading and writing Avro files."""
+
+"""Command line utility for reading and writing Avro files."""
 
 from avro.io import DatumReader, DatumWriter
 from avro.datafile import DataFileReader, DataFileWriter
 import avro.schema
 
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 import csv
 from sys import stdout, stdin
 from itertools import ifilter, imap
