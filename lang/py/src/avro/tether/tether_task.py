@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -208,7 +208,7 @@ class TetherTask(object):
     The subclass provides these schemas in order to tell this class which schemas it expects.
     The configure request will also provide the schemas that the parent process is using.
     This allows us to check whether the schemas match and if not whether we can resolve
-    the differences (see http://avro.apache.org/docs/current/spec.html#Schema+Resolution))
+    the differences (see https://avro.apache.org/docs/current/spec.html#Schema+Resolution))
 
     """
 
@@ -320,7 +320,7 @@ class TetherTask(object):
              - This is an enumeration which is specified in the input protocol
     inSchemaText -  string containing the input schema
                  - This is the actual schema with which the data was encoded
-                   i.e it is the writer_schema (see http://avro.apache.org/docs/current/spec.html#Schema+Resolution)
+                   i.e it is the writer_schema (see https://avro.apache.org/docs/current/spec.html#Schema+Resolution)
                    This is the schema the parent process is using which might be different
                    from the one provided by the subclass of tether_task
 

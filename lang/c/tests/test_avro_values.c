@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -126,7 +126,7 @@ _check_invalid_methods(const char *name, avro_value_t *val)
 
 /* For a description on GCC vs Visual Studio 2008 usage of variadic
  * macros see:
- * http://stackoverflow.com/questions/2575864/the-problem-about-different
+ * https://stackoverflow.com/questions/2575864/the-problem-about-different
  * -treatment-to-va-args-when-using-vs-2008-and-gcc
  */
 #define expand_args(...) __VA_ARGS__

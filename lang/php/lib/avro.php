@@ -8,7 +8,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +38,7 @@ class AvroException extends Exception {}
  * Contains library details such as version number and platform checks.
  *
  * This port is an implementation of the
- * {@link http://avro.apache.org/docs/1.3.3/spec.html Avro 1.3.3 Specification}
+ * {@link https://avro.apache.org/docs/1.3.3/spec.html Avro 1.3.3 Specification}
  *
  * @package Avro
  *
@@ -138,7 +138,7 @@ class Avro
    * Determines the endianness of the host platform and memoizes
    * the result to Avro::$endianness.
    *
-   * Based on a similar check perfomed in http://pear.php.net/package/Math_BinaryUtils
+   * Based on a similar check perfomed in https://pear.php.net/package/Math_BinaryUtils
    *
    * @throws AvroException if the endianness cannot be determined.
    */

@@ -14,8 +14,8 @@
     }
   ],
   "repository": {
-    "type": "svn",
-    "url": "http://svn.apache.org/repos/asf/avro/trunk/lang/js/"
+    "type": "git",
+    "url": "https://github.com/apache/avro"
   },
   "keywords": [
     "avro",
