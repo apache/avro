@@ -293,6 +293,7 @@ static {
   /**
    * RecordBuilder for ${this.mangle($schema.getName())} instances.
    */
+  @org.apache.avro.specific.AvroGenerated
   public static class Builder extends#if ($schema.isError()) org.apache.avro.specific.SpecificErrorBuilderBase<${this.mangle($schema.getName())}>#else org.apache.avro.specific.SpecificRecordBuilderBase<${this.mangle($schema.getName())}>#end
 
     implements#if ($schema.isError()) org.apache.avro.data.ErrorBuilder<${this.mangle($schema.getName())}>#else org.apache.avro.data.RecordBuilder<${this.mangle($schema.getName())}>#end {
