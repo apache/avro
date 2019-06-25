@@ -230,6 +230,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   /**
    * RecordBuilder for Player instances.
    */
+  @org.apache.avro.specific.AvroGenerated
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Player>
     implements org.apache.avro.data.RecordBuilder<Player> {
 

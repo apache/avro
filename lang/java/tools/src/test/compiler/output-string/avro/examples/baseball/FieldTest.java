@@ -294,6 +294,7 @@ static {
   /**
    * RecordBuilder for FieldTest instances.
    */
+  @org.apache.avro.specific.AvroGenerated
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<FieldTest>
     implements org.apache.avro.data.RecordBuilder<FieldTest> {
 
