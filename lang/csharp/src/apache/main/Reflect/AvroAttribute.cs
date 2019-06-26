@@ -23,7 +23,7 @@ using System.Reflection;
 namespace Avro.Reflect
 {
     /// <summary>
-    /// Attribute that specifies the mapping between an Avro record schema and C# class property.
+    /// Attribute that specifies the mapping between an Avro field and C# class property.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class AvroAttribute : Attribute
