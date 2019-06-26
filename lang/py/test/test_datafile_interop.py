@@ -35,8 +35,11 @@ class TestDataFileInterop(unittest.TestCase):
       reader = open(os.path.join('@INTEROP_DATA_DIR@', f), 'rb')
       datum_reader = io.DatumReader()
       dfr = datafile.DataFileReader(reader, datum_reader)
+      i = 0
       for datum in dfr:
+        i += 1
         assert datum is not None
+      assert 0 < i
 
 if __name__ == '__main__':
   unittest.main()
