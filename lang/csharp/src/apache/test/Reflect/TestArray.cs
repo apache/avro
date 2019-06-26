@@ -48,7 +48,7 @@ namespace Avro.Test
         {
             ""namespace"": ""MessageTypes"",
             ""type"": ""array"",
-            ""doc"": ""A simple list with a string."",
+            ""doc"": ""A list with a custom type containing a string."",
             ""name"": ""A"",
             ""items"": {
                 ""type"": ""record"",
