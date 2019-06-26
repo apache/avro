@@ -120,6 +120,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 var fixedRecRead = reader.Read(new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.Count == 1);
+                Assert.AreEqual(fixedRecWrite[0].S,fixedRecRead[0].S);
             }
         }
 
