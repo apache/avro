@@ -23,12 +23,13 @@ using System.Reflection;
 namespace Avro.Reflect
 {
     /// <summary>
-    /// Attribute that specifies the mapping between an Avro record schema and C# class property.
+    /// Attribute that specifies the mapping between an Avro field and C# class property.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class AvroAttribute : Attribute
     {
         /// <summary>
-        /// Sequence number of the field in the Avro Schema
+        /// Name of the field in the Avro Schema
         /// </summary>
         /// <value></value>
         public string FieldName { get; set; }
@@ -40,7 +41,7 @@ namespace Avro.Reflect
         public IAvroFieldConverter Converter { get; set; }
 
         /// <summary>
-        /// Attribute to hold field position and optionally a converter
+        /// Attribute to hold a field name and optionally a converter
         /// </summary>
         /// <param name="fieldName"></param>
         /// <param name="converter"></param>

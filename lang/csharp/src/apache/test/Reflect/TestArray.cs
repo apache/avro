@@ -48,7 +48,7 @@ namespace Avro.Test
         {
             ""namespace"": ""MessageTypes"",
             ""type"": ""array"",
-            ""doc"": ""A simple list with a string."",
+            ""doc"": ""A list with a custom type containing a string."",
             ""name"": ""A"",
             ""items"": {
                 ""type"": ""record"",
@@ -120,6 +120,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 var fixedRecRead = reader.Read(new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.Count == 1);
+                Assert.AreEqual(fixedRecWrite[0].S,fixedRecRead[0].S);
             }
         }
 

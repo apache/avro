@@ -98,7 +98,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 fixedRecRead = reader.Read(null, new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.myFixed.Length == 16);
-                Assert.AreEqual(fixedRecWrite.myFixed[5],fixedRecRead.myFixed[5]);
+                Assert.IsTrue(fixedRecWrite.myFixed.SequenceEqual(fixedRecRead.myFixed));
             }
         }
 
@@ -127,7 +127,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 fixedRecRead = reader.Read(null, new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.myFixed.Value.Length == 16);
-                Assert.AreEqual(fixedRecWrite.myFixed.Value[5],fixedRecRead.myFixed.Value[5]);
+                Assert.IsTrue(fixedRecWrite.myFixed.SequenceEqual(fixedRecRead.myFixed));
             }
         }
 
@@ -157,7 +157,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 fixedRecRead = reader.Read(null, new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.myFixed.Value.Length == 16);
-                Assert.AreEqual(fixedRecWrite.myFixed.Value[5],fixedRecRead.myFixed.Value[5]);
+                Assert.IsTrue(fixedRecWrite.myFixed.SequenceEqual(fixedRecRead.myFixed));
             }
         }
     }
