@@ -41,7 +41,7 @@ namespace Avro.Reflect
         public IAvroFieldConverter Converter { get; set; }
 
         /// <summary>
-        /// Attribute to hold field position and optionally a converter
+        /// Attribute to hold a field name and optionally a converter
         /// </summary>
         /// <param name="fieldName"></param>
         /// <param name="converter"></param>
