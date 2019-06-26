@@ -96,7 +96,7 @@ namespace Avro.Test
     [TestFixture]
     public class TestFromAvroProject
     {
-        private string _avroTestSchemaV1 = @"{
+        private const string _avroTestSchemaV1 = @"{
         ""protocol"" : ""MyProtocol"",
         ""namespace"" : ""com.foo"",
         ""types"" :

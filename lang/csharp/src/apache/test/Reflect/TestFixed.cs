@@ -58,7 +58,7 @@ namespace Avro.Test
             [Avro(typeof(GenericFixedConverter))]
             public GenericFixed myFixed { get; set; }
         }
-        private string _fixedSchema = @"
+        private const string _fixedSchema = @"
         {
             ""namespace"": ""MessageTypes"",
             ""type"": ""record"",
@@ -78,7 +78,7 @@ namespace Avro.Test
         [TestCase]
         public void ByteArray()
         {
-            var schema = global::Avro.Schema.Parse(_fixedSchema);
+            var schema = Schema.Parse(_fixedSchema);
             var fixedRecWrite = new ByteArrayFixedRec() { myFixed = new byte[16] {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6} };
             var fixedRecBad = new ByteArrayFixedRec() { myFixed = new byte[10] };
             ByteArrayFixedRec fixedRecRead = null;
@@ -105,7 +105,7 @@ namespace Avro.Test
         [TestCase]
         public void GenericFixedConverterTest()
         {
-            var schema = global::Avro.Schema.Parse(_fixedSchema);
+            var schema = Schema.Parse(_fixedSchema);
             var rs = schema as RecordSchema;
             FixedSchema fs = null;
             foreach (var f in rs.Fields)
@@ -134,7 +134,7 @@ namespace Avro.Test
         [TestCase]
         public void GenericFixedDefaultConverter()
         {
-            var schema = global::Avro.Schema.Parse(_fixedSchema);
+            var schema = Schema.Parse(_fixedSchema);
             var rs = schema as RecordSchema;
             FixedSchema fs = null;
             foreach (var f in rs.Fields)

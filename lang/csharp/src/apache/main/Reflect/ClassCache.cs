@@ -56,6 +56,14 @@ namespace Avro.Reflect
             _defaultConverters.Add(converter);
         }
 
+        /// <summary>
+        /// Add a converter defined using Func&lt;&gt;. The converter will be used whenever the source and target types
+        /// match and a specific attribute is not defined.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <typeparam name="A"></typeparam>
+        /// <typeparam name="P"></typeparam>
         public static void AddDefaultConverter<A,P>(Func<A,Schema, P> from, Func<P,Schema, A> to)
         {
             _defaultConverters.Add(new FuncFieldConverter<A,P>(from, to));

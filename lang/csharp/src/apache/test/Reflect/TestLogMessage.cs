@@ -68,7 +68,7 @@ namespace Avro.Test
     [TestFixture]
     public class TestLogMessage
     {
-        private string _logMessageSchemaV1 = @"
+        private const string _logMessageSchemaV1 = @"
         {
             ""namespace"": ""MessageTypes"",
             ""type"": ""record"",
@@ -94,7 +94,7 @@ namespace Avro.Test
         [TestCase]
         public void Serialize()
         {
-            var schema = global::Avro.Schema.Parse(_logMessageSchemaV1);
+            var schema = Schema.Parse(_logMessageSchemaV1);
             var avroWriter = new ReflectWriter<LogMessage>(schema);
             var avroReader = new ReflectReader<LogMessage>(schema, schema);
 

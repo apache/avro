@@ -35,7 +35,7 @@ namespace Avro.Test
             public string S { get; set; }
         }
 
-        private string _simpleList = @"
+        private const string _simpleList = @"
         {
             ""namespace"": ""MessageTypes"",
             ""type"": ""array"",
@@ -44,7 +44,7 @@ namespace Avro.Test
             ""items"": ""string""
         }";
 
-        private string _recordList = @"
+        private const string _recordList = @"
         {
             ""namespace"": ""MessageTypes"",
             ""type"": ""array"",
@@ -63,7 +63,7 @@ namespace Avro.Test
         [TestCase]
         public void ListTest()
         {
-            var schema = global::Avro.Schema.Parse(_simpleList);
+            var schema = Schema.Parse(_simpleList);
             var fixedRecWrite = new List<string>() {"value"};
 
             var writer = new ReflectWriter<List<string>>(schema);
@@ -82,7 +82,7 @@ namespace Avro.Test
         [TestCase]
         public void ListRecTest()
         {
-            var schema = global::Avro.Schema.Parse(_recordList);
+            var schema = Schema.Parse(_recordList);
             var fixedRecWrite = new List<ListRec>() { new ListRec() { S = "hello"}};
 
             var writer = new ReflectWriter<List<ListRec>>(schema);
@@ -101,7 +101,7 @@ namespace Avro.Test
         [TestCase]
         public void ConcurrentQueueTest()
         {
-            var schema = global::Avro.Schema.Parse(_recordList);
+            var schema = Schema.Parse(_recordList);
             var fixedRecWrite = new ConcurrentQueue<ListRec>();
             fixedRecWrite.Enqueue(new ListRec() { S = "hello"});
 
