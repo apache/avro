@@ -643,7 +643,7 @@ class TestSchema(unittest.TestCase):
     }"""
     with self.assertRaises(schema.SchemaParseException) as e:
       schema.Parse(schema_string)
-    self.assertRegexpMatches(str(e.exception), 'Duplicate.*field name.*foo')
+    self.assertRegex(str(e.exception), 'Duplicate.*field name.*foo')
 
 
 # ------------------------------------------------------------------------------
