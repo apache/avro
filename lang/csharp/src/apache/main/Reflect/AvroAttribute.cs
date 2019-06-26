@@ -29,7 +29,7 @@ namespace Avro.Reflect
     public class AvroAttribute : Attribute
     {
         /// <summary>
-        /// Sequence number of the field in the Avro Schema
+        /// Name of the field in the Avro Schema
         /// </summary>
         /// <value></value>
         public string FieldName { get; set; }
