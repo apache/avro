@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -15,29 +15,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-try:
-  from setuptools import setup
-except ImportError:
-  from distutils.core import setup
-from sys import version_info
 
-install_requires = []
-if version_info[:2] <= (2, 5):
-    install_requires.append('simplejson >= 2.0.9')
+import setuptools
 
-setup(
+
+setuptools.setup(
   name = 'avro',
   version = '@AVRO_VERSION@',
-  packages = ['avro',],
+  packages = ['avro'],
   package_dir = {'avro': 'src/avro'},
   scripts = ["./scripts/avro"],
 
   #include_package_data=True,
   package_data={'avro': ['LICENSE', 'NOTICE']},
-
-  # Project uses simplejson, so ensure that it gets installed or upgraded
-  # on the target machine
-  install_requires = install_requires,
 
   # metadata for upload to PyPI
   author = 'Apache Avro',
