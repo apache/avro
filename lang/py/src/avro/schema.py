@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Contains the Schema classes.
 
@@ -33,13 +34,11 @@ A schema may be one of:
   A boolean; or
   Null.
 """
+
 from math import floor
 from math import log10
 
-try:
-  import json
-except ImportError:
-  import simplejson as json
+import json
 
 from avro import constants
 

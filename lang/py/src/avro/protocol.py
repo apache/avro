@@ -13,17 +13,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Protocol implementation.
 """
+
 try:
   from hashlib import md5
 except ImportError:
   from md5 import md5
-try:
-  import json
-except ImportError:
-  import simplejson as json
+
+import json
 from avro import schema
 
 #

@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Input/Output utilities, including:
 
@@ -36,6 +37,7 @@ uses the following mapping:
   * Schema doubles are implemented as float.
   * Schema booleans are implemented as bool.
 """
+
 import struct
 from avro import schema
 from avro import constants
@@ -47,10 +49,7 @@ import datetime
 from decimal import Decimal
 from decimal import getcontext
 
-try:
-	import json
-except ImportError:
-	import simplejson as json
+import json
 
 #
 # Constants
