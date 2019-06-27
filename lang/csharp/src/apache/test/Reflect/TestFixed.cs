@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using Avro.IO;
 using Avro.Generic;
@@ -55,7 +53,7 @@ namespace Avro.Test
 
         public class GenericFixedConverterRec
         {
-            [Avro(typeof(GenericFixedConverter))]
+            [AvroField(typeof(GenericFixedConverter))]
             public GenericFixed myFixed { get; set; }
         }
         private const string _fixedSchema = @"
@@ -127,7 +125,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 fixedRecRead = reader.Read(null, new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.myFixed.Value.Length == 16);
-                Assert.IsTrue(fixedRecWrite.myFixed.SequenceEqual(fixedRecRead.myFixed));
+                Assert.IsTrue(fixedRecWrite.myFixed.Value.SequenceEqual(fixedRecRead.myFixed.Value));
             }
         }
 
@@ -157,7 +155,7 @@ namespace Avro.Test
                 stream.Seek(0, SeekOrigin.Begin);
                 fixedRecRead = reader.Read(null, new BinaryDecoder(stream));
                 Assert.IsTrue(fixedRecRead.myFixed.Value.Length == 16);
-                Assert.IsTrue(fixedRecWrite.myFixed.SequenceEqual(fixedRecRead.myFixed));
+                Assert.IsTrue(fixedRecWrite.myFixed.Value.SequenceEqual(fixedRecRead.myFixed.Value));
             }
         }
     }

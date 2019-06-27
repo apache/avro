@@ -42,7 +42,7 @@ namespace Avro.Test
 
         public string Message { get; set; }
 
-        [Avro(typeof(DateTimeOffsetToLongConverter))]
+        [AvroField(typeof(DateTimeOffsetToLongConverter))]
         public DateTimeOffset TimeStamp { get; set; }
 
         public Dictionary<string, string> Tags { get => _tags; set => _tags = value; }
@@ -118,6 +118,10 @@ namespace Avro.Test
             {
                 deserialized = avroReader.Read(default(LogMessage), new BinaryDecoder(stream));
             }
+            Assert.IsNotNull(deserialized);
+            Assert.AreEqual(logMessage.IP, deserialized.IP);
+            Assert.AreEqual(logMessage.Message, deserialized.Message);
+            Assert.AreEqual(logMessage.Severity, deserialized.Severity);
         }
     }
 }

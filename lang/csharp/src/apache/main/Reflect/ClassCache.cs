@@ -31,6 +31,7 @@ namespace Avro.Reflect
     public class ClassCache
     {
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
@@ -132,6 +133,26 @@ namespace Avro.Reflect
             return null;
         }
 
+        public void AddArrayHelper(string name, Type helperType)
+        {
+            if ( !typeof(ArrayHelper).IsAssignableFrom(helperType) )
+            {
+                throw new AvroException($"{helperType.Name} is not an ArrayHelper");
+            }
+            _nameArrayMap.TryAdd(name, helperType);
+        }
+
+        public ArrayHelper GetArrayHelper(ArraySchema schema, IEnumerable enumerable)
+        {
+            Type h;
+            // note ArraySchema is unamed and doesnt have a FulllName
+            if (!_nameArrayMap.TryGetValue(schema.Name, out h))
+            {
+                return (ArrayHelper) Activator.CreateInstance(typeof(ArrayHelper), enumerable);
+            }
+
+            return (ArrayHelper) Activator.CreateInstance(h, enumerable);
+        }
 
         /// <summary>
         /// Find a class that matches the schema full name.
@@ -187,9 +208,17 @@ namespace Avro.Reflect
                     }
                     if (!objType.IsGenericType)
                     {
-                        throw new AvroException($"Cant map non-generic type {objType.Name} to array {ars.Fullname}");
+                        throw new AvroException($"{objType.Name} needs to be a generic type");
                     }
-
+                    foreach (var attr in objType.GetCustomAttributes())
+                    {
+                        var arrayAttr = attr as AvroArrayAttribute;
+                        if (arrayAttr != null)
+                        {
+                            _nameArrayMap.TryAdd( ars.Fullname, arrayAttr.Helper);
+                            break;
+                        }
+                    }
                     LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
                     break;
                 case MapSchema ms:

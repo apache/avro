@@ -34,14 +34,17 @@ namespace Avro.Reflect
         public ReflectDefaultWriter Writer { get => _writer; }
 
         private readonly ReflectDefaultWriter _writer;
-        public ReflectWriter(Schema schema, ReflectArrayHelper arrayHelper = null) : this(new ReflectDefaultWriter(typeof(T), schema, arrayHelper), arrayHelper)
+        public ReflectWriter(Schema schema, ClassCache cache = null) : this(new ReflectDefaultWriter(typeof(T), schema, cache))
         {
-
         }
 
         public Schema Schema { get { return _writer.Schema; } }
 
-        public ReflectWriter(ReflectDefaultWriter writer, ReflectArrayHelper arrayHelper = null)
+        /// <summary>
+        /// Constructor with already created default writer.
+        /// </summary>
+        /// <param name="writer"></param>
+        public ReflectWriter(ReflectDefaultWriter writer)
         {
             this._writer = writer;
         }
@@ -65,27 +68,17 @@ namespace Avro.Reflect
         public ClassCache ClassCache { get => _classCache; }
 
         /// <summary>
-        /// C# type to create when deserializing an array. Must have a matching ReflectArray derived type.
-        /// Default is System.Collections.Generic.List
-        /// </summary>
-        /// <value></value>
-        public ReflectArrayHelper ArrayHelper { get; set; }
-
-        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="objType"></param>
         /// <param name="schema"></param>
-        public ReflectDefaultWriter(Type objType, Schema schema, ReflectArrayHelper arrayHelper)
+        /// <param name="cache"></param>
+        public ReflectDefaultWriter(Type objType, Schema schema, ClassCache cache)
             : base(schema)
         {
-            if (arrayHelper != null)
+            if (cache != null)
             {
-                ArrayHelper = arrayHelper;
-            }
-            else
-            {
-                ArrayHelper = new ReflectArrayHelper();
+                _classCache = cache;
             }
             _classCache.LoadClassCache(objType, schema);
         }
@@ -153,8 +146,8 @@ namespace Avro.Reflect
             var arr = value as IEnumerable;
             if (arr == null)
                 throw new AvroTypeException("Array does not implement have registered ReflectArray derived type");
-
-            long l = ArrayHelper.CountFunc(arr);
+            var arrayHelper = _classCache.GetArrayHelper(schema, (IEnumerable)value);
+            long l = arrayHelper.Count();
             encoder.WriteArrayStart();
             encoder.SetItemCount(l);
             foreach (var v in arr)

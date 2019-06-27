@@ -38,7 +38,7 @@ namespace Avro.Reflect
 
                 foreach (var attr in prop.GetCustomAttributes(true))
                 {
-                    var avroAttr = attr as AvroAttribute;
+                    var avroAttr = attr as AvroFieldAttribute;
                     if (avroAttr != null)
                     {
                         hasAttribute = true;
@@ -63,7 +63,7 @@ namespace Avro.Reflect
                 {
                     foreach (var attr in p.GetCustomAttributes(true))
                     {
-                        var avroAttr = attr as AvroAttribute;
+                        var avroAttr = attr as AvroFieldAttribute;
                         if (avroAttr != null && avroAttr.FieldName != null && avroAttr.FieldName == f.Name)
                         {
                             prop = p;

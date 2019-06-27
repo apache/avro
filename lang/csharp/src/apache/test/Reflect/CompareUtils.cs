@@ -1,5 +1,4 @@
-/*  Copyright 2019 Pitney Bowes Inc.
- *
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -18,26 +17,34 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
-
-namespace Avro.Reflect
+using System.Linq;
+namespace Avro.Test
 {
-    public class ReflectArrayHelper
+    public static class ExtensionMethods
     {
-        public Func<IEnumerable, int> CountFunc { get; set; }
-        public Action<IEnumerable, object> AddAction { get; set; }
-        public Action<IEnumerable> ClearAction { get; set; }
-
-        public Type ArrayType { get; set; }
-
-        public ReflectArrayHelper()
+        public static bool SequenceEqual(this byte[] source, byte[] target)
         {
-            ArrayType = typeof(List<>);
-            CountFunc = e=>(e as IList).Count;
-            AddAction = (e,v)=>(e as IList).Add(v);
-            ClearAction = e=>(e as IList).Clear();
+            if (source.Length != target.Length)
+            {
+                return false;
+            }
+            for (int i = 0; i < source.Length; i++)
+            {
+                if (source[i] != target[i])
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public static void ForEach<T1,T2>( this IEnumerable<T1> e1, IEnumerable<T2> e2, Action<T1,T2> action)
+        {
+            foreach(var items in e1.Zip(e2, Tuple.Create))
+            {
+                action(items.Item1, items.Item2);
+            }
         }
     }
 }

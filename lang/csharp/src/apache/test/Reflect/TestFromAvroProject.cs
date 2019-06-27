@@ -207,8 +207,124 @@ namespace Avro.Test
             };
 
             var zz = SerializeDeserialize(z);
+            DoAssertions(z, zz);
+
         }
 
+        private void DoAssertions(Z z, Z zz)
+        {
+                        Assert.IsNotNull(zz);
+            Assert.AreEqual(z.myUInt, zz.myUInt);
+            Assert.AreEqual(z.myULong, zz.myULong);
+            Assert.AreEqual(z.myUBool, zz.myUBool);
+            Assert.AreEqual(z.myUDouble, zz.myUDouble);
+            Assert.AreEqual(z.myUFloat, zz.myUFloat);
+            if (z.myUBytes == null)
+            {
+                Assert.IsNull(zz.myUBytes);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myUBytes);
+                Assert.IsTrue(z.myUBytes.SequenceEqual(zz.myUBytes));
+            }
+            Assert.AreEqual(z.myUString, zz.myUString);
+            Assert.AreEqual(z.myInt, zz.myInt);
+            Assert.AreEqual(z.myLong, zz.myLong);
+            Assert.AreEqual(z.myBool, zz.myBool);
+            Assert.AreEqual(z.myDouble, zz.myDouble);
+            Assert.AreEqual(z.myFloat, zz.myFloat);
+            if (z.myBytes == null)
+            {
+                Assert.IsNull(zz.myBytes);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myBytes);
+                Assert.IsTrue(z.myBytes.SequenceEqual(zz.myBytes));
+            }
+            Assert.AreEqual(z.myString, zz.myString);
+            Assert.AreEqual(z.myNull, zz.myNull);
+            if (z.myFixed == null)
+            {
+                Assert.IsNull(zz.myFixed);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myFixed);
+                Assert.AreEqual(z.myFixed.Length, zz.myFixed.Length);
+                Assert.IsTrue(z.myFixed.SequenceEqual(zz.myFixed));
+            }
+            if (z.myA == null)
+            {
+                Assert.IsNull(zz.myA);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myA);
+                Assert.AreEqual(z.myA.f1, zz.myA.f1);
+            }
+            Assert.AreEqual(z.myE, zz.myE);
+            if (z.myArray == null)
+            {
+                Assert.IsNull(zz.myArray);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myArray);
+                Assert.AreEqual(z.myArray.Count, zz.myArray.Count);
+                z.myArray.ForEach(zz.myArray, (i1,i2)=>Assert.IsTrue(i1.SequenceEqual(i2)));
+            }
+            if (z.myArray2 == null)
+            {
+                Assert.IsNull(zz.myArray2);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myArray2);
+                Assert.AreEqual(z.myArray2.Count, zz.myArray2.Count);
+                z.myArray2.ForEach(zz.myArray2, (i1,i2)=>Assert.AreEqual(i1.f1, i2.f1));
+            }
+            if (z.myArray3 == null)
+            {
+                Assert.IsNull(zz.myArray3);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myArray3);
+                Assert.AreEqual(z.myArray3.Count, zz.myArray3.Count);
+                z.myArray3.ForEach(zz.myArray3, (i1,i2)=>i1.ForEach(i2, (j1,j2)=>Assert.AreEqual(j1,j2)));
+            }
+            if (z.myMap == null)
+            {
+                Assert.IsNull(zz.myMap);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myMap);
+                Assert.AreEqual(z.myMap.Count, zz.myMap.Count);
+                z.myMap.ForEach(zz.myMap, (i1,i2)=>{Assert.AreEqual(i1.Key, i2.Key); Assert.AreEqual(i1.Value, i2.Value);});
+            }
+            if (z.myMap2 == null)
+            {
+                Assert.IsNull(zz.myMap2);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myMap2);
+                Assert.AreEqual(z.myMap2.Count, zz.myMap2.Count);
+                z.myMap2.ForEach(zz.myMap2, (i1,i2)=>{Assert.AreEqual(i1.Key, i2.Key); Assert.AreEqual(i1.Value.f1, i2.Value.f1);});
+            }
+             if (z.myObject == null)
+            {
+                Assert.IsNull(zz.myObject);
+            }
+            else
+            {
+                Assert.IsNotNull(zz.myObject);
+                Assert.IsTrue(z.myObject.GetType() == zz.myObject.GetType());
+            }
+        }
         [TestCase]
         public void PopulatedZ()
         {
@@ -247,6 +363,7 @@ namespace Avro.Test
             };
 
             var zz = SerializeDeserialize(z);
+            DoAssertions(z, zz);
         }
     }
 }

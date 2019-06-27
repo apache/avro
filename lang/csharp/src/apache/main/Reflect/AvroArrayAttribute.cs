@@ -25,46 +25,24 @@ namespace Avro.Reflect
     /// <summary>
     /// Attribute that specifies the mapping between an Avro field and C# class property.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class AvroAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class|AttributeTargets.Property, AllowMultiple = false)]
+    public class AvroArrayAttribute : Attribute
     {
-        /// <summary>
-        /// Name of the field in the Avro Schema
-        /// </summary>
-        /// <value></value>
-        public string FieldName { get; set; }
 
         /// <summary>
         /// Convert the property into a standard Avro type - e.g. DateTimeOffset to long
         /// </summary>
         /// <value></value>
-        public IAvroFieldConverter Converter { get; set; }
+        public Type Helper { get; set; }
 
-        /// <summary>
-        /// Attribute to hold a field name and optionally a converter
-        /// </summary>
-        /// <param name="fieldName"></param>
-        /// <param name="converter"></param>
-        public AvroAttribute(string fieldName, Type converter = null)
-        {
-            FieldName = fieldName;
-            if (converter != null)
-            {
-                Converter = (IAvroFieldConverter)Activator.CreateInstance(converter);
-            }
-        }
 
         /// <summary>
         /// Used in property name mapping to specify a property type converter for the attribute.
         /// </summary>
-        /// <param name="converter"></param>
-        public AvroAttribute(Type converter)
+        /// <param name="helper"></param>
+        public AvroArrayAttribute(Type helper)
         {
-            FieldName = null;
-            if (converter != null)
-            {
-                Converter = (IAvroFieldConverter)Activator.CreateInstance(converter);
-            }
+            Helper = helper;
         }
     }
 }

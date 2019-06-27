@@ -56,9 +56,9 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="writerSchema">The schema used while generating the data</param>
         /// <param name="readerSchema">The schema desired by the reader</param>
-        public ReflectReader(Schema writerSchema, Schema readerSchema, ReflectArrayHelper arrayHelper = null)
+        public ReflectReader(Schema writerSchema, Schema readerSchema, ClassCache cache = null)
         {
-            _reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema, arrayHelper);
+            _reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema, cache);
         }
 
         /// <summary>
@@ -97,12 +97,6 @@ namespace Avro.Reflect
     public class ReflectDefaultReader : SpecificDefaultReader
     {
         /// <summary>
-        /// C# type to create when deserializing an array. Must have a matching ReflectArray derived type.
-        /// Default is System.Collections.Generic.List
-        /// </summary>
-        /// <value></value>
-        public ReflectArrayHelper ArrayHelper { get; set; }
-        /// <summary>
         /// C# type to create when deserializing a map. Must implement IDictionary&lt;,&gt; and the first
         /// type parameter must be a string. Default is System.Collections.Generic.Dictionary
         /// </summary>
@@ -128,17 +122,13 @@ namespace Avro.Reflect
         /// <param name="objType"></param>
         /// <param name="writerSchema"></param>
         /// <param name="readerSchema"></param>
-        /// <param name="listType"></param>
-        public ReflectDefaultReader(Type objType, Schema writerSchema, Schema readerSchema, ReflectArrayHelper arrayHelper)
+        /// <param name="cache"></param>
+        public ReflectDefaultReader(Type objType, Schema writerSchema, Schema readerSchema, ClassCache cache)
             : base(writerSchema, readerSchema)
         {
-            if (arrayHelper != null)
+            if (cache != null)
             {
-                ArrayHelper = arrayHelper;
-            }
-            else
-            {
-                ArrayHelper = new ReflectArrayHelper();
+                _classCache = cache;
             }
             _classCache.LoadClassCache(objType, readerSchema);
         }
@@ -224,8 +214,8 @@ namespace Avro.Reflect
                     {
                         throw new Exception("Unable to cast schema into an array schema");
                     }
-
-                    return ArrayHelper.ArrayType.MakeGenericType(new Type[] { GetTypeFromSchema(arraySchema.ItemSchema, false) });
+                    var arrayHelper = _classCache.GetArrayHelper(arraySchema, null);
+                    return arrayHelper.ArrayType.MakeGenericType(new Type[] { GetTypeFromSchema(arraySchema.ItemSchema, false) });
 
                 case Schema.Type.Map:
                     var mapSchema = schema as MapSchema;
@@ -374,10 +364,10 @@ namespace Avro.Reflect
 
                     JArray jarr = defaultValue as JArray;
                     var array = (IEnumerable)Activator.CreateInstance(GetTypeFromSchema(s, false));
-
+                    var arrayHelper = _classCache.GetArrayHelper(s as ArraySchema, array);
                     foreach (JToken jitem in jarr)
                     {
-                        ArrayHelper.AddAction(array, GetDefaultValue((s as ArraySchema).ItemSchema, jitem));
+                        arrayHelper.Add(GetDefaultValue((s as ArraySchema).ItemSchema, jitem));
                     }
 
                     return array;
@@ -546,16 +536,21 @@ namespace Avro.Reflect
         {
             ArraySchema rs = readerSchema as ArraySchema;
             IEnumerable array;
+            ArrayHelper arrayHelper;
             if (reuse != null)
             {
                 array = reuse as IEnumerable;
                 if (array == null)
-                    throw new AvroException("array object does not has ReflectArray factory");
-                ArrayHelper.ClearAction(array);
+                    throw new AvroException("array object is not an IEnumerable");
+                arrayHelper = _classCache.GetArrayHelper(rs, array);
+
+                arrayHelper.Clear();
             }
             else
             {
                 array = Activator.CreateInstance(GetTypeFromSchema(rs, false)) as IEnumerable;
+                arrayHelper = _classCache.GetArrayHelper(rs, array);
+
             }
 
             int i = 0;
@@ -563,7 +558,7 @@ namespace Avro.Reflect
             {
                 for (int j = 0; j < n; j++, i++)
                 {
-                    ArrayHelper.AddAction(array, Read(null, writerSchema.ItemSchema, rs.ItemSchema, dec));
+                    arrayHelper.Add(Read(null, writerSchema.ItemSchema, rs.ItemSchema, dec));
                 }
             }
 
