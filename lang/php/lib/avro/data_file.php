@@ -165,7 +165,7 @@ class AvroDataIO
    * @param string $codec
    * @returns AvroDataIOWriter
    */
-  protected function open_writer($io, $schema, $codec)
+  protected function open_writer($io, $schema, $codec=self::NULL_CODEC)
   {
     $writer = new AvroIODatumWriter($schema);
     return new AvroDataIOWriter($io, $writer, $schema, $codec);
