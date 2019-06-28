@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,9 @@ case "$1" in
   test)
     dotnet build --configuration Release --framework netcoreapp2.0 ./src/apache/codegen/Avro.codegen.csproj
     dotnet build --configuration Release --framework netstandard2.0 ./src/apache/msbuild/Avro.msbuild.csproj
-    dotnet test --configuration Release --framework netcoreapp2.0 ./src/apache/test/Avro.test.csproj
+
+    # AVRO-2442: Explictly set LANG to work around ICU bug in `dotnet test`
+    LANG=en_US.UTF-8 dotnet test --configuration Release --framework netcoreapp2.0 ./src/apache/test/Avro.test.csproj
     ;;
 
   perf)
