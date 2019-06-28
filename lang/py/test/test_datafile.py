@@ -154,13 +154,7 @@ class TestDataFile(unittest.TestCase):
     self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
 
   def test_context_manager(self):
-    # Context manager was introduced as a first class
-    # member only in Python 2.6 and above.
-    import sys
-    if sys.version_info < (2,6):
-      print 'Skipping context manager tests on this Python version.'
-      return
-    # Test the writer with a 'with' statement.
+    """Test the writer with a 'with' statement."""
     writer = open(FILENAME, 'wb')
     datum_writer = io.DatumWriter()
     sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
