@@ -60,6 +60,11 @@ try:
   CODECS_TO_VALIDATE += ('snappy',)
 except ImportError:
   print 'Snappy not present, will skip testing it.'
+try:
+  import zstandard
+  CODECS_TO_VALIDATE += ('zstandard',)
+except ImportError:
+  print 'Zstandard not present, will skip testing it.'
 
 # TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):
