@@ -42,13 +42,13 @@
         Releases</a> page.  This guide uses Avro &AvroVersion;, the latest
         version at the time of writing.  Download and unzip
         <em>avro-python3-&AvroVersion;.tar.gz</em>, and install via <code>python3
-        setup.py</code> (this will probably require root privileges).  Ensure
-        that you can <code>import avro</code> from a Python prompt.
+        setup.py</code>.  Ensure that you can <code>import avro</code> from a
+        Python prompt.
       </p>
       <source>
 $ tar xvf avro-python3-&AvroVersion;.tar.gz
 $ cd avro-python3-&AvroVersion;
-$ sudo python3 setup.py install
+$ python3 setup.py install --user
 $ python3
 >>> import avro # should not raise ImportError
       </source>
@@ -68,7 +68,7 @@ $ python3
       </p>
       <source>
 $ cd lang/py3/
-$ sudo python3 setup.py install
+$ python3 setup.py install --user
 $ python3
 >>> import avro # should not raise ImportError
       </source>
