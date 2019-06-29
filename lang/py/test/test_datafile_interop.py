@@ -36,9 +36,9 @@ class TestDataFileInterop(unittest.TestCase):
       datum_reader = io.DatumReader()
       dfr = datafile.DataFileReader(reader, datum_reader)
       i = 0
-      for i, datum in enumerate(dfr):
+      for i, datum in enumerate(dfr, 1):
         assert datum is not None
-      assert 0 < i
+      assert i > 0
 
 if __name__ == '__main__':
   unittest.main()
