@@ -50,8 +50,7 @@ namespace Avro.Test
         {
             ""namespace"": ""MessageTypes"",
             ""type"": ""array"",
-            ""doc"": ""A list with a custom type containing a string."",
-            ""name"": ""A"",
+            ""helper"": ""arrayOfA"",
             ""items"": {
                 ""type"": ""record"",
                 ""doc"": ""A simple type with a fixed."",
@@ -164,7 +163,7 @@ namespace Avro.Test
             var fixedRecWrite = new ConcurrentQueue<ConcurrentQueueRec>();
             fixedRecWrite.Enqueue(new ConcurrentQueueRec() { S = "hello"});
             var cache = new ClassCache();
-            cache.AddArrayHelper("array", typeof(ConcurrentQueueHelper<ConcurrentQueueRec>));
+            cache.AddArrayHelper("arrayOfA", typeof(ConcurrentQueueHelper<ConcurrentQueueRec>));
             var writer = new ReflectWriter<ConcurrentQueue<ConcurrentQueueRec>>(schema, cache);
             var reader = new ReflectReader<ConcurrentQueue<ConcurrentQueueRec>>(schema, schema, cache);
 
@@ -193,14 +192,13 @@ namespace Avro.Test
                 { ""name"" : ""one"", ""type"" :
                     {
                         ""type"": ""array"",
-                        ""name"": ""genericList"",
                         ""items"": ""string""
                     }
                 },
                 { ""name"" : ""two"", ""type"" :
                     {
                         ""type"": ""array"",
-                        ""name"": ""concurrentQueue"",
+                        ""helper"": ""twoArray"",
                         ""items"": ""string""
                     }
                 }
@@ -220,8 +218,10 @@ namespace Avro.Test
             var fixedRecWrite = new MultiList() { one = new List<string>(), two = new ConcurrentQueue<string>() };
             fixedRecWrite.one.Add("hola");
             fixedRecWrite.two.Enqueue("hello");
-            var writer = new ReflectWriter<MultiList>(schema);
-            var reader = new ReflectReader<MultiList>(schema, schema);
+            var cache = new ClassCache();
+            cache.AddArrayHelper("twoArray", typeof(ConcurrentQueueHelper<ConcurrentQueueRec>));
+            var writer = new ReflectWriter<MultiList>(schema, cache);
+            var reader = new ReflectReader<MultiList>(schema, schema, cache);
 
             using (var stream = new MemoryStream(256))
             {

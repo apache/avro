@@ -31,6 +31,11 @@ namespace Avro.Reflect
     public class ArrayHelper
     {
         private static Type _defaultType = typeof(List<>);
+
+        /// <summary>
+        /// Collection type to apply by default to all array objects. If not set this defaults to a generic List.
+        /// </summary>
+        /// <value></value>
         public static Type DefaultType
         {
             get => _defaultType;

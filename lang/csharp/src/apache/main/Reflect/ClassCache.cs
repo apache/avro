@@ -133,6 +133,11 @@ namespace Avro.Reflect
             return null;
         }
 
+        /// <summary>
+        /// Add an array helper. Array helpers are used for collections that are not generic lists.
+        /// </summary>
+        /// <param name="name">Name of the helper. Corresponds to metadata "helper" field in the schema.</param>
+        /// <param name="helperType">Type of helper. Inherited from ArrayHelper</param>
         public void AddArrayHelper(string name, Type helperType)
         {
             if ( !typeof(ArrayHelper).IsAssignableFrom(helperType) )
@@ -142,16 +147,36 @@ namespace Avro.Reflect
             _nameArrayMap.TryAdd(name, helperType);
         }
 
+        /// <summary>
+        /// Find an array helper for an array schema node.
+        /// </summary>
+        /// <param name="schema">Schema</param>
+        /// <param name="enumerable">The array object. If it is null then Add(), Count() and Clear methods will throw exceptions.</param>
+        /// <returns></returns>
         public ArrayHelper GetArrayHelper(ArraySchema schema, IEnumerable enumerable)
         {
             Type h;
-            // note ArraySchema is unamed and doesnt have a FulllName
-            if (!_nameArrayMap.TryGetValue(schema.Name, out h))
+            // note ArraySchema is unamed and doesnt have a FulllName, use "helper" metadata
+            // metadata is json string, strip quotes
+            string s = null;
+            if ( schema.Props != null )
             {
-                return (ArrayHelper) Activator.CreateInstance(typeof(ArrayHelper), enumerable);
+                s = schema.Props["helper"];
+                if (s != null && s.Length > 2)
+                {
+                    s = s.Substring(1, s.Length - 2);
+                }
+                else
+                {
+                    s = null;
+                }
+            }
+            if (s != null && _nameArrayMap.TryGetValue(s, out h))
+            {
+                return (ArrayHelper) Activator.CreateInstance(h, enumerable);
             }
 
-            return (ArrayHelper) Activator.CreateInstance(h, enumerable);
+            return (ArrayHelper) Activator.CreateInstance(typeof(ArrayHelper), enumerable);
         }
 
         /// <summary>
