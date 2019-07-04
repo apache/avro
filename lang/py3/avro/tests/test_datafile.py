@@ -83,8 +83,13 @@ try:
   import snappy
   CODECS_TO_VALIDATE += ('snappy',)
 except ImportError:
-  logging.info('Snappy not present, will skip testing it.')
+  logging.warning('Snappy not present, will skip testing it.')
 
+try:
+  import zstandard
+  CODECS_TO_VALIDATE += ('zstandard',)
+except ImportError:
+  logging.warning('Zstandard not present, will skip testing it.')
 
 # ------------------------------------------------------------------------------
 

@@ -69,8 +69,10 @@ RUN apt-get -qq update && \
     python \
     python-setuptools \
     python-snappy \
+    python3-pip \
     python3-setuptools \
     python3-snappy \
+    python3-wheel \
     rake \
     ruby \
     ruby-dev \
@@ -90,6 +92,9 @@ RUN curl -L https://cpanmin.us | perl - --mirror https://www.cpan.org/ --self-up
 
 # Install PHPUnit
 RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
+
+# Install Python packages
+RUN pip3 install zstandard
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy
