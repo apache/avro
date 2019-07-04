@@ -1,0 +1,19 @@
+{"namespace": "org.apache.avro.codegentest.testdata",
+  "type": "record",
+  "name": "NullableSpecificJavaClass",
+  "doc" : "Test unions with java-class in generated Java classes",
+  "fields": [
+    {
+      "name": "date",
+      "type": {"type": "string", "java-class": "java.util.Date"}
+    },
+    {
+      "name": "nullableDate",
+      "type": ["null", {"type": "string", "java-class": "java.util.Date"}],
+      "default": null
+    }
+  ]
+}
+
+
+
