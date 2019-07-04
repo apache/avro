@@ -75,10 +75,8 @@ class AvroDataIO
 
   /**
    * @var array array of valid codec names
-   * @todo Avro implementations are required to implement deflate codec as well,
-   *       so implement it already!
    */
-  private static $valid_codecs = array(self::NULL_CODEC);
+  private static $valid_codecs = array(self::NULL_CODEC, self::DEFLATE_CODEC);
 
   /**
    * @var AvroSchema cached version of metadata schema object
@@ -111,13 +109,14 @@ class AvroDataIO
    * @param string $file_path file_path of file to open
    * @param string $mode one of AvroFile::READ_MODE or AvroFile::WRITE_MODE
    * @param string $schema_json JSON of writer's schema
+   * @param string $codec compression codec
    * @returns AvroDataIOWriter instance of AvroDataIOWriter
    *
    * @throws AvroDataIOException if $writers_schema is not provided
    *         or if an invalid $mode is given.
    */
   public static function open_file($file_path, $mode=AvroFile::READ_MODE,
-                                   $schema_json=null)
+                                   $schema_json=null, $codec=self::NULL_CODEC)
   {
     $schema = !is_null($schema_json)
       ? AvroSchema::parse($schema_json) : null;
@@ -129,7 +128,7 @@ class AvroDataIO
         if (is_null($schema))
           throw new AvroDataIOException('Writing an Avro file requires a schema.');
         $file = new AvroFile($file_path, AvroFile::WRITE_MODE);
-        $io = self::open_writer($file, $schema);
+        $io = self::open_writer($file, $schema, $codec);
         break;
       case AvroFile::READ_MODE:
         $file = new AvroFile($file_path, AvroFile::READ_MODE);
@@ -146,7 +145,7 @@ class AvroDataIO
   /**
    * @returns array array of valid codecs
    */
-  private static function valid_codecs()
+  public static function valid_codecs()
   {
     return self::$valid_codecs;
   }
@@ -163,12 +162,13 @@ class AvroDataIO
   /**
    * @param AvroIO $io
    * @param AvroSchema $schema
+   * @param string $codec
    * @returns AvroDataIOWriter
    */
-  protected function open_writer($io, $schema)
+  protected function open_writer($io, $schema, $codec=self::NULL_CODEC)
   {
     $writer = new AvroIODatumWriter($schema);
-    return new AvroDataIOWriter($io, $writer, $schema);
+    return new AvroDataIOWriter($io, $writer, $schema, $codec);
   }
 
   /**
@@ -222,10 +222,17 @@ class AvroDataIOReader
   private $block_count;
 
   /**
+   * @var compression codec
+   */
+  private $codec;
+
+  /**
    * @param AvroIO $io source from which to read
    * @param AvroIODatumReader $datum_reader reader that understands
    *                                        the data schema
    * @throws AvroDataIOException if $io is not an instance of AvroIO
+   *                             or the codec specified in the header
+   *                             is not supported
    * @uses read_header()
    */
   public function __construct($io, $datum_reader)
@@ -243,6 +250,7 @@ class AvroDataIOReader
                                    AvroDataIO::METADATA_CODEC_ATTR);
     if ($codec && !AvroDataIO::is_valid_codec($codec))
       throw new AvroDataIOException(sprintf('Unknown codec: %s', $codec));
+    $this->codec = $codec;
 
     $this->block_count = 0;
     // FIXME: Seems unsanitary to set writers_schema here.
@@ -294,9 +302,15 @@ class AvroDataIOReader
           if ($this->is_eof())
             break;
 
-        $this->read_block_header();
+        $length = $this->read_block_header();
+        $decoder = $this->decoder;
+        if ($this->codec == AvroDataIO::DEFLATE_CODEC) {
+          $compressed = $decoder->read($length);
+          $datum = gzinflate($compressed);
+          $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+        }
       }
-      $data []= $this->datum_reader->read($this->decoder);
+      $data []= $this->datum_reader->read($decoder);
       $this->block_count -= 1;
     }
     return $data;
@@ -406,11 +420,17 @@ class AvroDataIOWriter
   private $metadata;
 
   /**
+   * @var compression codec
+   */
+  private $codec;
+
+  /**
    * @param AvroIO $io
    * @param AvroIODatumWriter $datum_writer
    * @param AvroSchema $writers_schema
+   * @param string $codec
    */
-  public function __construct($io, $datum_writer, $writers_schema=null)
+  public function __construct($io, $datum_writer, $writers_schema=null, $codec=AvroDataIO::NULL_CODEC)
   {
     if (!($io instanceof AvroIO))
       throw new AvroDataIOException('io must be instance of AvroIO');
@@ -425,8 +445,12 @@ class AvroDataIOWriter
 
     if ($writers_schema)
     {
+      if (!AvroDataIO::is_valid_codec($codec))
+        throw new AvroDataIOException(
+          sprintf('codec %s is not supported', $codec));
+
       $this->sync_marker = self::generate_sync_marker();
-      $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = AvroDataIO::NULL_CODEC;
+      $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = $this->codec = $codec;
       $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = strval($writers_schema);
       $this->write_header();
     }
@@ -434,8 +458,8 @@ class AvroDataIOWriter
     {
       $dfr = new AvroDataIOReader($this->io, new AvroIODatumReader());
       $this->sync_marker = $dfr->sync_marker;
-      $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = $dfr->metadata[AvroDataIO::METADATA_CODEC_ATTR];
-
+      $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = $this->codec
+                                                       = $dfr->metadata[AvroDataIO::METADATA_CODEC_ATTR];
       $schema_from_file = $dfr->metadata[AvroDataIO::METADATA_SCHEMA_ATTR];
       $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = $schema_from_file;
       $this->datum_writer->writers_schema = AvroSchema::parse($schema_from_file);
@@ -479,10 +503,6 @@ class AvroDataIOWriter
 
   /**
    * Writes a block of data to the AvroIO object container.
-   * @throws AvroDataIOException if the codec provided by the encoder
-   *         is not supported
-   * @internal Should the codec check happen in the constructor?
-   *           Why wait until we're writing data?
    */
   private function write_block()
   {
@@ -490,16 +510,12 @@ class AvroDataIOWriter
     {
       $this->encoder->write_long($this->block_count);
       $to_write = strval($this->buffer);
+
+      if ($this->codec == AvroDataIO::DEFLATE_CODEC)
+        $to_write = gzdeflate($to_write);
+
       $this->encoder->write_long(strlen($to_write));
-
-      if (AvroDataIO::is_valid_codec(
-            $this->metadata[AvroDataIO::METADATA_CODEC_ATTR]))
-        $this->write($to_write);
-      else
-        throw new AvroDataIOException(
-          sprintf('codec %s is not supported',
-                  $this->metadata[AvroDataIO::METADATA_CODEC_ATTR]));
-
+      $this->write($to_write);
       $this->write($this->sync_marker);
       $this->buffer->truncate();
       $this->block_count = 0;
