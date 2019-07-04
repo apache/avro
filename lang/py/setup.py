@@ -15,15 +15,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import setuptools
+
+
+def _get_version():
+  curdir = os.getcwd()
+  version_file = ("VERSION.txt" if os.path.isfile("VERSION.txt")
+    else os.path.join(curdir[:curdir.index("lang/py")], "share/VERSION.txt"))
+  with open(version_file) as verfile:
+    # To follow the naming convention defined by PEP 440
+    # in the case that the version is like "x.y.z-SNAPSHOT"
+    return verfile.read().rstrip().replace("-", "+")
 
 
 setuptools.setup(
   name = 'avro',
-  version = '@AVRO_VERSION@',
+  version = _get_version(),
   packages = ['avro'],
-  package_dir = {'avro': 'src/avro'},
+  package_dir = {'': 'src'},
   scripts = ["./scripts/avro"],
 
   #include_package_data=True,

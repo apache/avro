@@ -71,8 +71,10 @@ RUN apt-get -qq update && \
     python-setuptools \
     python-snappy \
     python-wheel \
+    python3-pip \
     python3-setuptools \
     python3-snappy \
+    python3-wheel \
     rake \
     ruby \
     ruby-dev \
@@ -95,6 +97,9 @@ RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && c
 
 # Install Python2 packages
 RUN pip install zstandard
+
+# Install Python3 packages
+RUN pip3 install zstandard
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy

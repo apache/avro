@@ -80,9 +80,12 @@ public class DataFileInteropTest {
     for (File f : Objects.requireNonNull(DATAFILE_DIR.listFiles())) {
       System.out.println("Reading: " + f.getName());
       try (FileReader<? extends Object> reader = DataFileReader.openReader(f, provider.get())) {
+        int i = 0;
         for (Object datum : reader) {
+          i++;
           Assert.assertNotNull(datum);
         }
+        Assert.assertNotEquals(0, i);
       }
     }
   }
