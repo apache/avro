@@ -97,7 +97,7 @@ RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && c
 RUN pip3 install zstandard
 
 # Install Ruby modules
-RUN gem install echoe yajl-ruby multi_json snappy
+RUN gem install echoe yajl-ruby multi_json snappy zstd-ruby
 
 # Install global Node modules
 RUN npm install -g grunt-cli

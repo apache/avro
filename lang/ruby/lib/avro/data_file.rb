@@ -372,9 +372,32 @@ module Avro
       end
     end
 
+    class ZstandardCodec
+      def codec_name; 'zstandard'; end
+
+      def decompress(data)
+        load_zstandard!
+        Zstd.decompress(data)
+      end
+
+      def compress(data)
+        load_zstandard!
+        Zstd.compress(data)
+      end
+
+      private
+
+      def load_zstandard!
+        require 'zstd-ruby' unless defined?(Zstd)
+      rescue LoadError
+        raise LoadError, "Zstandard compression is not available, please install the `zstd-ruby` gem."
+      end
+    end
+
     DataFile.register_codec NullCodec
     DataFile.register_codec DeflateCodec
     DataFile.register_codec SnappyCodec
+    DataFile.register_codec ZstandardCodec
 
     # TODO this constant won't be updated if you register another codec.
     # Deprecated in favor of Avro::DataFile::codecs
