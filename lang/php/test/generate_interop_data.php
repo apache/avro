@@ -9,7 +9,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,6 @@
 
 require_once('test_helper.php');
 
-$data_file = join(DIRECTORY_SEPARATOR, array(AVRO_BUILD_DATA_DIR, 'php.avro'));
 $datum = array('nullField' => null,
                'boolField' => true,
                'intField' => -42,
@@ -41,6 +40,10 @@ $datum = array('nullField' => null,
                                               'children' => array()))));
 
 $schema_json = file_get_contents(AVRO_INTEROP_SCHEMA);
-$io_writer = AvroDataIO::open_file($data_file, 'w', $schema_json);
-$io_writer->append($datum);
-$io_writer->close();
+foreach (AvroDataIO::valid_codecs() as $codec) {
+  $file_name = $codec == AvroDataIO::NULL_CODEC ? 'php.avro' : sprintf('php_%s.avro', $codec);
+  $data_file = join(DIRECTORY_SEPARATOR, array(AVRO_BUILD_DATA_DIR, $file_name));
+  $io_writer = AvroDataIO::open_file($data_file, 'w', $schema_json, $codec);
+  $io_writer->append($datum);
+  $io_writer->close();
+}

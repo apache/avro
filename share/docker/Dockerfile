@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -68,7 +68,11 @@ RUN apt-get -qq update && \
     php5.6-gmp \
     python \
     python-setuptools \
+    python-snappy \
+    python3-pip \
     python3-setuptools \
+    python3-snappy \
+    python3-wheel \
     rake \
     ruby \
     ruby-dev \
@@ -88,6 +92,9 @@ RUN curl -L https://cpanmin.us | perl - --mirror https://www.cpan.org/ --self-up
 
 # Install PHPUnit
 RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
+
+# Install Python packages
+RUN pip3 install zstandard
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy

@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,7 @@ DATUM = {
     'boolField': True,
     'floatField': 1234.0,
     'doubleField': -1234.0,
-    'bytesField': '12312adf',
+    'bytesField': b'12312adf',
     'nullField': None,
     'arrayField': [5.0, 0.0, 12.0],
     'mapField': {'a': {'label': 'a'}, 'bee': {'label': 'cee'}},

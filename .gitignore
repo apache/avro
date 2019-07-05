@@ -9,6 +9,7 @@
 .classpath
 target
 *.pyc
+*.egg-info
 .svn
 /build
 test-output

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,9 +22,9 @@
 <h2>Introduction to Avro C++</h2>
 
 <p>Avro is a data serialization system. See
-<a href="http://avro.apache.org/docs/current/">http://avro.apache.org/docs/current/</a>
+<a href="https://avro.apache.org/docs/current/">https://avro.apache.org/docs/current/</a>
 for background information.</p>
-<p>Avro C++ is a C++ library which implements parts of the <a href="http://avro.apache.org/docs/current/spec.html"> Avro Specification</a>. The library includes the following functionality:</p>
+<p>Avro C++ is a C++ library which implements parts of the <a href="https://avro.apache.org/docs/current/spec.html"> Avro Specification</a>. The library includes the following functionality:</p>
 <ul>
 	<li>Assembling schemas programmatically.
     <li>A schema parser, which can parse Avro schema (written in JSON) into a Schema object.
@@ -47,7 +47,7 @@ Presently there is no support for the following specified in Avro specification.
     <li>Avro RPC
 </ul>
 
-<b>Note:</b> Prior to Avro release 1.5, some of the functionality mentioned above was available through a somewhat different API and set tools. They are partially incompatible to the present ones. They continue to be available but will be deprecated and discontinued sometime in the future. The documentation on that API can be found at <a href="http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html">http://avro.apache.org/docs/1.4.0/api/cpp/html/index.html</a> 
+<b>Note:</b> Prior to Avro release 1.5, some of the functionality mentioned above was available through a somewhat different API and set tools. They are partially incompatible to the present ones. They continue to be available but will be deprecated and discontinued sometime in the future. The documentation on that API can be found at <a href="https://avro.apache.org/docs/1.4.0/api/cpp/html/index.html">https://avro.apache.org/docs/1.4.0/api/cpp/html/index.html</a>
 
 <h2>Installing Avro C++</h2>
 <h3>Supported platforms and pre-requisites</h3>
@@ -56,8 +56,8 @@ One should be able to build Avro C++ on (1) any UNIX flavor including cygwin for
 In order to build Avro C++, one needs the following:
 <ul>
     <li>A C++ compiler and runtime libraries.
-    <li>Boost library version 1.38 or later. Apart from the header-only libraries of Boost, Avro C++ requires filesystem, iostreams, system and program_options libraries. Please see <a href="http://www.boost.org/">http://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform. 
-    <li>CMake build tool version 2.6 or later. Please see <a href="http://www.cmake.org">http://www.cmake.org</a> or your platform's documentation for details on how to set up CMake for your system.
+    <li>Boost library version 1.38 or later. Apart from the header-only libraries of Boost, Avro C++ requires filesystem, iostreams, system and program_options libraries. Please see <a href="https://www.boost.org/">https://www.boost.org</a> or your platform's documentation for details on how to set up Boost for your platform.
+    <li>CMake build tool version 2.6 or later. Please see <a href="https://www.cmake.org">https://www.cmake.org</a> or your platform's documentation for details on how to set up CMake for your system.
     <li>Python. If not already present, please consult your platform-specific documentation on how to install Python on your system.
 </ul>
 

@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -79,13 +79,20 @@ SCHEMAS_TO_VALIDATE = (
 
 def get_codecs_to_validate():
   codecs = ('null', 'deflate')
+
   try:
     import snappy
     codecs += ('snappy',)
   except ImportError:
     logging.warning('Snappy not present, will skip testing it.')
-  return codecs
 
+  try:
+    import zstandard
+    codecs += ('zstandard',)
+  except ImportError:
+    logging.warning('Zstandard not present, will skip testing it.')
+
+  return codecs
 
 # ------------------------------------------------------------------------------
 
