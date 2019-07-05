@@ -1540,7 +1540,7 @@ void initFPTable() {
           The <code>local-timestamp-millis</code> logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
         </p>
         <p>
-          A <code>local-timestamp-millis</code> logical type annotates an Avro <code>long</code>, where the long stores the number of milliseconds, 1 January 1970 00:00:00.000.
+          A <code>local-timestamp-millis</code> logical type annotates an Avro <code>long</code>, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
         </p>
       </section>
 
@@ -1550,7 +1550,7 @@ void initFPTable() {
           The <code>local-timestamp-micros</code> logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one microsecond.
         </p>
         <p>
-          A <code>local-timestamp-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds, 1 January 1970 00:00:00.000000.
+          A <code>local-timestamp-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
         </p>
       </section>
 
