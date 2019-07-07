@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -53,6 +53,10 @@ namespace Avro.Specific
         private readonly Assembly entryAssembly;
         private readonly bool diffAssembly;
 
+        /// <summary>
+        /// Obsolete: This will be removed from the public API in a future version.
+        /// </summary>
+        /// <returns>Obsolete</returns>
         [Obsolete("This will be removed from the public API in a future version.")]
         public delegate object CtorDelegate();
 
@@ -69,6 +73,10 @@ namespace Avro.Specific
             diffAssembly = entryAssembly != null && execAssembly != entryAssembly;
         }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+        /// <summary>
+        /// Obsolete: This will be removed from the public API in a future version.
+        /// </summary>
         [Obsolete("This will be removed from the public API in a future version.")]
         public struct NameCtorKey : IEquatable<NameCtorKey>
         {
@@ -108,6 +116,7 @@ namespace Avro.Specific
                 return !left.Equals(right);
             }
         }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         /// <summary>
         /// Find the type with the given name

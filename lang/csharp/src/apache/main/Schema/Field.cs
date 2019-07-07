@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -34,8 +33,19 @@ namespace Avro
         /// </summary>
         public enum SortOrder
         {
+            /// <summary>
+            /// Ascending order.
+            /// </summary>
             ascending,
+
+            /// <summary>
+            /// Descending order.
+            /// </summary>
             descending,
+
+            /// <summary>
+            /// Ignore sort order.
+            /// </summary>
             ignore
         }
 
@@ -102,6 +112,7 @@ namespace Avro
         /// <param name="doc">documentation for the field</param>
         /// <param name="defaultValue">field's default value if it exists</param>
         /// <param name="sortorder">sort order of the field</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         internal Field(Schema schema, string name, IList<string> aliases, int pos, string doc,
                         JToken defaultValue, SortOrder sortorder, PropertyMap props)
         {
