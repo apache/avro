@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,9 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace Avro
 {
@@ -53,6 +51,7 @@ namespace Avro
         /// </summary>
         /// <param name="type">type of record schema, either record or error</param>
         /// <param name="jtok">JSON object for the record schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="encspace">enclosing namespace of the records schema</param>
         /// <returns>new RecordSchema object</returns>
@@ -181,10 +180,29 @@ namespace Avro
             return fieldLookup.ContainsKey(fieldName);
         }
 
+        /// <summary>
+        /// Gets a field with a specified name.
+        /// </summary>
+        /// <param name="fieldName">Name of the field to get.</param>
+        /// <param name="field">
+        /// When this method returns true, contains the field with the specified name. When this
+        /// method returns false, null.
+        /// </param>
+        /// <returns>True if a field with the specified name exists; false otherwise.</returns>
         public bool TryGetField(string fieldName, out Field field)
         {
             return fieldLookup.TryGetValue(fieldName, out field);
         }
+
+        /// <summary>
+        /// Gets a field with a specified alias.
+        /// </summary>
+        /// <param name="fieldName">Alias of the field to get.</param>
+        /// <param name="field">
+        /// When this method returns true, contains the field with the specified alias. When this
+        /// method returns false, null.
+        /// </param>
+        /// <returns>True if a field with the specified alias exists; false otherwise.</returns>
         public bool TryGetFieldAlias(string fieldName, out Field field)
         {
             return fieldAliasLookup.TryGetValue(fieldName, out field);

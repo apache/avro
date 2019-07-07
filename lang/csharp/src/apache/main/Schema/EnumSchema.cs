@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,6 +46,7 @@ namespace Avro
         /// Static function to return new instance of EnumSchema
         /// </summary>
         /// <param name="jtok">JSON object for enum schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schema already parsed in</param>
         /// <param name="encspace">enclosing namespace for the enum schema</param>
         /// <returns>new instance of enum schema</returns>
