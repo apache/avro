@@ -29,7 +29,8 @@ case "$1" in
     dotnet build --configuration Release Avro.sln
 
     # AVRO-2442: Explictly set LANG to work around ICU bug in `dotnet test`
-    LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build Avro.sln
+    LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build \
+        --filter "TestCategory!=Interop" Avro.sln
     ;;
 
   perf)
@@ -61,6 +62,14 @@ case "$1" in
     cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
     ;;
 
+  interop-data-generate)
+    dotnet run --project src/apache/test/Avro.test.csproj --framework netcoreapp2.2 ../../share/test/schemas/interop.avsc ../../build/interop/data
+    ;;
+
+  interop-data-test)
+    LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop"
+    ;;
+
   clean)
     rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
     rm -rf build
@@ -68,7 +77,7 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: $0 {test|clean|dist|perf}"
+    echo "Usage: $0 {test|clean|dist|perf|interop-data-generate|interop-data-test}"
     exit 1
 esac
 
