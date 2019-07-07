@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace Avro
 {
+    /// <summary>
+    /// Represents a message in an Avro protocol.
+    /// </summary>
     public class Message
     {
         /// <summary>
@@ -68,6 +68,11 @@ namespace Avro
         /// <param name="request">list of parameters</param>
         /// <param name="response">response property</param>
         /// <param name="error">error union schema</param>
+        /// <param name="oneway">
+        /// Indicates that this is a one-way message. This may only be true when
+        /// <paramref name="response"/> is <see cref="Schema.Type.Null"/> and there are no errors
+        /// listed.
+        /// </param>
         public Message(string name, string doc, RecordSchema request, Schema response, UnionSchema error, bool? oneway)
         {
             if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -31,6 +31,7 @@ namespace Avro
         /// Constructor for primitive schema
         /// </summary>
         /// <param name="type"></param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         private PrimitiveSchema(Type type, PropertyMap props) : base(type, props)
         {
         }
@@ -39,6 +40,7 @@ namespace Avro
         /// Static function to return new instance of primitive schema
         /// </summary>
         /// <param name="type">primitive type</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <returns></returns>
         public static PrimitiveSchema NewInstance(string type, PropertyMap props = null)
         {

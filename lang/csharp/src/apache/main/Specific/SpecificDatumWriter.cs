@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,14 +24,19 @@ namespace Avro.Specific
 {
     /// <summary>
     /// PreresolvingDatumWriter for writing data from ISpecificRecord classes.
-    /// <see cref="PreresolvingDatumWriter{T}">For more information about performance considerations for choosing this implementation</see>
     /// </summary>
+    /// <see cref="PreresolvingDatumWriter{T}">For more information about performance considerations for choosing this implementation</see>
     public class SpecificDatumWriter<T> : PreresolvingDatumWriter<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpecificDatumWriter{T}"/> class.
+        /// </summary>
+        /// <param name="schema">Schema to use when writing data.</param>
         public SpecificDatumWriter(Schema schema) : base(schema, new SpecificArrayAccess(), new DictionaryMapAccess())
         {
         }
 
+        /// <inheritdoc/>
         protected override void WriteRecordFields(object recordObj, RecordFieldWriter[] writers, Encoder encoder)
         {
             var record = (ISpecificRecord) recordObj;
@@ -42,17 +47,20 @@ namespace Avro.Specific
             }
         }
 
+        /// <inheritdoc/>
         protected override void EnsureRecordObject(RecordSchema recordSchema, object value)
         {
             if (!(value is ISpecificRecord))
                 throw new AvroTypeException("Record object is not derived from ISpecificRecord");
         }
 
+        /// <inheritdoc/>
         protected override void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder)
         {
             writer(((ISpecificRecord)record).Get(fieldPos), encoder);
         }
 
+        /// <inheritdoc/>
         protected override WriteItem ResolveEnum(EnumSchema es)
         {
             var type = ObjectCreator.Instance.GetType(es);
@@ -94,6 +102,7 @@ namespace Avro.Specific
                        };
         }
 
+        /// <inheritdoc/>
         protected override void WriteFixed(FixedSchema schema, object value, Encoder encoder)
         {
             var fixedrec = value as SpecificFixed;
@@ -103,6 +112,7 @@ namespace Avro.Specific
             encoder.WriteFixed(fixedrec.Value);
         }
 
+        /// <inheritdoc/>
         protected override bool UnionBranchMatches( Schema sc, object obj )
         {
             if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;

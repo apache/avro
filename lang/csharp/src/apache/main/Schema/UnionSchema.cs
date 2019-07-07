@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -42,6 +42,7 @@ namespace Avro
         /// Static function to return instance of the union schema
         /// </summary>
         /// <param name="jarr">JSON object for the union schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <returns>new UnionSchema object</returns>
@@ -71,6 +72,7 @@ namespace Avro
         /// Contructor for union schema
         /// </summary>
         /// <param name="schemas"></param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         private UnionSchema(List<Schema> schemas, PropertyMap props) : base(Type.Union, props)
         {
             if (schemas == null)

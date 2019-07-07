@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -27,6 +27,9 @@ using System.IO;
 
 namespace Avro
 {
+    /// <summary>
+    /// Generates C# code from Avro schemas and protocols.
+    /// </summary>
     public class CodeGen
     {
         /// <summary>
@@ -257,7 +260,6 @@ namespace Avro
         /// Creates a class declaration for fixed schema
         /// </summary>
         /// <param name="schema">fixed schema</param>
-        /// <param name="ns">namespace object</param>
         protected virtual void processFixed(Schema schema)
         {
             FixedSchema fixedSchema = schema as FixedSchema;
@@ -311,7 +313,6 @@ namespace Avro
         /// Creates an enum declaration
         /// </summary>
         /// <param name="schema">enum schema</param>
-        /// <param name="ns">namespace</param>
         protected virtual void processEnum(Schema schema)
         {
             EnumSchema enumschema = schema as EnumSchema;
@@ -342,6 +343,10 @@ namespace Avro
             codens.Types.Add(ctd);
         }
 
+        /// <summary>
+        /// Generates code for an individual protocol.
+        /// </summary>
+        /// <param name="protocol">Protocol to generate code for.</param>
         protected virtual void processInterface(Protocol protocol)
         {
             // Create abstract class
@@ -529,8 +534,7 @@ namespace Avro
         /// Creates a class declaration
         /// </summary>
         /// <param name="schema">record schema</param>
-        /// <param name="ns">namespace</param>
-        /// <returns></returns>
+        /// <returns>A new class code type declaration</returns>
         protected virtual CodeTypeDeclaration processRecord(Schema schema)
         {
             RecordSchema recordSchema = schema as RecordSchema;
@@ -677,7 +681,11 @@ namespace Avro
         /// </summary>
         /// <param name="schema">schema</param>
         /// <param name="nullible">flag to indicate union with null</param>
-        /// <returns></returns>
+        /// <param name="nullibleEnum">
+        /// This method sets this value to indicate whether the enum is nullable. True indicates
+        /// that it is nullable. False indicates that it is not nullable.
+        /// </param>
+        /// <returns>Name of the schema's C# type representation.</returns>
         internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)
         {
             switch (schema.Tag)
@@ -779,6 +787,10 @@ namespace Avro
         /// </summary>
         /// <param name="schema">schema</param>
         /// <param name="ctd">CodeTypeDeclaration for the class</param>
+        /// <param name="overrideFlag">
+        /// Indicates whether we should add the <see cref="MemberAttributes.Override"/> to the
+        /// generated property.
+        /// </param>
         protected virtual void createSchemaField(Schema schema, CodeTypeDeclaration ctd, bool overrideFlag)
         {
             // create schema field
