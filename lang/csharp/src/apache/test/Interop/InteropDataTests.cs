@@ -23,11 +23,18 @@ using Avro.Generic;
 namespace Avro.Test.Interop
 {
     [TestFixture]
+    [Category("Interop")]
     public class InteropDataTests
     {
         [TestCase("../../../../../../../../build/interop/data")]
-        public void TestInterOp(string inputDir)
+        public void TestInterop(string inputDir)
         {
+            // Resolve inputDir relative to the TestDirectory
+            inputDir = Path.Combine(TestContext.CurrentContext.TestDirectory, inputDir);
+
+            Assert.True(Directory.Exists(inputDir),
+                "Input directory does not exist. Run `build.sh interop-data-generate` first.");
+
             foreach (var avroFile in Directory.EnumerateFiles(inputDir, "*.avro"))
             {
                 var codec = Path.GetFileNameWithoutExtension(avroFile).Split('_');

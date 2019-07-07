@@ -29,7 +29,8 @@ case "$1" in
     dotnet build --configuration Release Avro.sln
 
     # AVRO-2442: Explictly set LANG to work around ICU bug in `dotnet test`
-    LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build Avro.sln
+    LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build \
+        --filter "TestCategory!=Interop" Avro.sln
     ;;
 
   perf)
@@ -66,7 +67,7 @@ case "$1" in
     ;;
 
   interop-data-test)
-    LANG=en_US.UTF-8 dotnet test --filter "FullyQualifiedName~Avro.Test.Interop.InteropDataTests"
+    LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop"
     ;;
 
   clean)
