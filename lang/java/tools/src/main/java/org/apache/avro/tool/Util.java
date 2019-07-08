@@ -251,7 +251,12 @@ class Util {
   }
 
   static OptionSpec<String> compressionCodecOption(OptionParser optParser) {
-    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class).defaultsTo("null");
+    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class)
+        .defaultsTo(DEFLATE_CODEC);
+  }
+
+  static OptionSpec<String> compressionCodecOptionWithDefault(OptionParser optParser, String s) {
+    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class).defaultsTo(s);
   }
 
   static OptionSpec<Integer> compressionLevelOption(OptionParser optParser) {

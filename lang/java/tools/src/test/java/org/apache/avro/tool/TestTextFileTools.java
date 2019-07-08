@@ -19,18 +19,21 @@ package org.apache.avro.tool;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 import org.apache.avro.Schema;
@@ -130,5 +133,14 @@ public class TestTextFileTools {
         assertEquals(-1, after.read());
       }
     }
+  }
+
+  @Test
+  public void testDefaultCodec() throws Exception {
+    // The default codec for fromtext is deflate
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream err = new PrintStream(baos);
+    new FromTextTool().run(null, null, err, Collections.emptyList());
+    Assert.assertTrue(baos.toString().contains("Compression codec (default: deflate)"));
   }
 }
