@@ -1514,6 +1514,8 @@ void initFPTable() {
         <title>Timestamp (millisecond precision)</title>
         <p>
           The <code>timestamp-millis</code> logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond.
+          Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation.
+          In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
         </p>
         <p>
           A <code>timestamp-millis</code> logical type annotates an Avro <code>long</code>, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
@@ -1524,9 +1526,31 @@ void initFPTable() {
         <title>Timestamp (microsecond precision)</title>
         <p>
           The <code>timestamp-micros</code> logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one microsecond.
+          Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation.
+          In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
         </p>
         <p>
           A <code>timestamp-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
+        </p>
+      </section>
+
+      <section>
+        <title>Local timestamp (millisecond precision)</title>
+        <p>
+          The <code>local-timestamp-millis</code> logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
+        </p>
+        <p>
+          A <code>local-timestamp-millis</code> logical type annotates an Avro <code>long</code>, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
+        </p>
+      </section>
+
+      <section>
+        <title>Local timestamp (microsecond precision)</title>
+        <p>
+          The <code>local-timestamp-micros</code> logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one microsecond.
+        </p>
+        <p>
+          A <code>local-timestamp-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
         </p>
       </section>
 

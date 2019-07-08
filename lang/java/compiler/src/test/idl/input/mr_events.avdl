@@ -66,6 +66,7 @@ protocol Events {
     string jobName;
     string userName;
     timestamp_ms submitTime;
+    local_timestamp_ms submitTimeLocal;
     string jobConfPath;
   }
 
