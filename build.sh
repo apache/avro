@@ -61,6 +61,8 @@ do
       (cd lang/perl; ./build.sh test)
 
       (cd lang/py; ant interop-data-generate)
+      (cd lang/py3; python3 setup.py generate_interop_data \
+        --schema-file=../../share/test/schemas/interop.avsc --output-path=../../build/interop/data)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
       (cd lang/csharp; ./build.sh interop-data-generate)
@@ -70,6 +72,7 @@ do
       # run interop data tests
       (cd lang/java; mvn -B test -P interop-data-test)
       (cd lang/py; ant interop-data-test)
+      (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
       (cd lang/csharp; ./build.sh interop-data-test)

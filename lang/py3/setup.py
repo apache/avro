@@ -26,9 +26,10 @@ The avro-python3 software is designed for Python 3, but this file and the packag
 https://pypi.org/project/avro-python3/
 """
 
+import distutils.cmd
 import distutils.command.clean
-import distutils.file_util
 import distutils.dir_util
+import distutils.file_util
 import distutils.log
 import fnmatch
 import os
@@ -110,11 +111,34 @@ class CleanCommand(distutils.command.clean.clean):
                 os.remove(name)
 
 
+class GenerateInteropDataCommand(distutils.cmd.Command):
+    """A command to generate Avro files for data interop test."""
+
+    user_options = [
+      ('schema-file=', None, 'path to input Avro schema file'),
+      ('output-path=', None, 'path to output Avro data files'),
+    ]
+
+    def initialize_options(self):
+        self.schema_file = os.path.join(os.getcwd(), 'interop.avsc')
+        self.output_path = os.getcwd()
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from avro.tests import gen_interop_data
+        gen_interop_data.generate(self.schema_file, self.output_path)
+
+
 def main():
     if not _is_distribution():
         _generate_package_data()
 
-    setup(cmdclass={"clean": CleanCommand})
+    setup(cmdclass={
+        "clean": CleanCommand,
+        "generate_interop_data": GenerateInteropDataCommand,
+    })
 
 
 if __name__ == '__main__':
