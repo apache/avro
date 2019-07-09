@@ -23,6 +23,18 @@ import os
 import tempfile
 import unittest
 
+try:
+  import snappy
+  HAS_SNAPPY = True
+except ImportError:
+  HAS_SNAPPY = False
+
+try:
+  import zstandard
+  HAS_ZSTANDARD = True
+except ImportError:
+  HAS_ZSTANDARD = False
+
 from avro import datafile
 from avro import io
 from avro import schema
@@ -80,16 +92,14 @@ SCHEMAS_TO_VALIDATE = (
 def get_codecs_to_validate():
   codecs = ('null', 'deflate')
 
-  try:
-    import snappy
+  if HAS_SNAPPY:
     codecs += ('snappy',)
-  except ImportError:
+  else:
     logging.warning('Snappy not present, will skip testing it.')
 
-  try:
-    import zstandard
+  if HAS_ZSTANDARD:
     codecs += ('zstandard',)
-  except ImportError:
+  else:
     logging.warning('Zstandard not present, will skip testing it.')
 
   return codecs
