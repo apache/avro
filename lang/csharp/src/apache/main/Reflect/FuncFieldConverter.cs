@@ -21,20 +21,23 @@ using Avro.Generic;
 
 namespace Avro.Reflect
 {
-    public class FuncFieldConverter<A,P> : TypedFieldConverter<A,P>
+    public class FuncFieldConverter<A, P> : TypedFieldConverter<A, P>
     {
-        public FuncFieldConverter(Func<A,Schema, P> from, Func<P,Schema, A> to)
+        public FuncFieldConverter(Func<A, Schema, P> from, Func<P, Schema, A> to)
         {
             _from = from;
             _to = to;
         }
 
-        Func<A,Schema, P> _from { get; set; }
-        Func<P,Schema, A> _to { get; set; }
+        private Func<A, Schema, P> _from;
+
+        private Func<P, Schema, A> _to;
+
         public override P From(A o, Schema s)
         {
             return _from(o, s);
         }
+
         public override A To(P o, Schema s)
         {
             return _to(o, s);

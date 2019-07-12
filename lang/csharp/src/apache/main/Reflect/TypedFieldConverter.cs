@@ -21,17 +21,19 @@ using System.Reflection;
 
 namespace Avro.Reflect
 {
-    abstract public class TypedFieldConverter<A,P> : IAvroFieldConverter
+    public abstract class TypedFieldConverter<A, P> : IAvroFieldConverter
     {
         public abstract P From(A o, Schema s);
+
         public abstract A To(P o, Schema s);
 
         public object FromAvroType(object o, Schema s)
         {
-            if(!typeof(A).IsAssignableFrom(o.GetType()))
+            if (!typeof(A).IsAssignableFrom(o.GetType()))
             {
                 throw new AvroException($"Converter from {typeof(A).Name} to {typeof(P).Name} cannot convert object of type {o.GetType().Name} to {typeof(A).Name}, object {o.ToString()}");
             }
+
             return From((A)o, s);
         }
 
@@ -47,10 +49,11 @@ namespace Avro.Reflect
 
         public object ToAvroType(object o, Schema s)
         {
-            if(!typeof(P).IsAssignableFrom(o.GetType()))
+            if (!typeof(P).IsAssignableFrom(o.GetType()))
             {
                 throw new AvroException($"Converter from {typeof(A).Name} to {typeof(P).Name} cannot convert object of type {o.GetType().Name} to {typeof(P).Name}, object {o.ToString()}");
             }
+
             return To((P)o, s);
         }
     }

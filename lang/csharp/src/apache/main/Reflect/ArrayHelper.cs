@@ -41,11 +41,13 @@ namespace Avro.Reflect
             get => _defaultType;
             set => _defaultType = value;
         }
+
         /// <summary>
         /// The array
         /// </summary>
         /// <value></value>
         public IEnumerable Enumerable { get; set; }
+
         /// <summary>
         /// Return the number of elements in the array.
         /// </summary>
@@ -55,6 +57,7 @@ namespace Avro.Reflect
             IList e = (IList)Enumerable;
             return e.Count;
         }
+
         /// <summary>
         /// Add an element to the array.
         /// </summary>
@@ -64,6 +67,7 @@ namespace Avro.Reflect
             IList e = (IList)Enumerable;
             e.Add(o);
         }
+
         /// <summary>
         /// Clear the array.
         /// </summary>

@@ -52,6 +52,5 @@ namespace Avro.Reflect
         /// </summary>
         /// <returns></returns>
         Type GetPropertyType();
-
     }
 }

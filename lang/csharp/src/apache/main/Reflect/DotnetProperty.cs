@@ -26,7 +26,8 @@ namespace Avro.Reflect
     internal class DotnetProperty
     {
         private PropertyInfo _property;
-        public IAvroFieldConverter Converter {get; set;}
+
+        public IAvroFieldConverter Converter { get; set; }
 
         private bool IsPropertyCompatible(Avro.Schema.Type schemaTag)
         {
@@ -41,7 +42,7 @@ namespace Avro.Reflect
                 propType = Converter.GetAvroType();
             }
 
-            switch( schemaTag )
+            switch (schemaTag)
             {
                 case Avro.Schema.Type.Null:
                     return (Nullable.GetUnderlyingType(propType) != null) || (!propType.IsValueType);
@@ -75,6 +76,7 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Error:
                     return propType.IsClass;
             }
+
             return false;
         }
 
@@ -94,15 +96,17 @@ namespace Avro.Reflect
                         return;
                     }
                 }
+
                 throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schemaTag}");
             }
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag, ClassCache cache) : this(property, schemaTag, null, cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag, ClassCache cache)
+            : this(property, schemaTag, null, cache)
         {
         }
 
-        virtual public Type GetPropertyType()
+        public virtual Type GetPropertyType()
         {
             if (Converter != null)
             {
@@ -112,7 +116,7 @@ namespace Avro.Reflect
             return _property.PropertyType;
         }
 
-        virtual public object GetValue(object o, Schema s)
+        public virtual object GetValue(object o, Schema s)
         {
             if (Converter != null)
             {
@@ -122,7 +126,7 @@ namespace Avro.Reflect
             return _property.GetValue(o);
         }
 
-        virtual public void SetValue(object o, object v, Schema s)
+        public virtual void SetValue(object o, object v, Schema s)
         {
             if (Converter != null)
             {

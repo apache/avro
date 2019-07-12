@@ -1,4 +1,4 @@
-/* Copyright 2019 Pitney Bowes Inc.
+/*  Copyright 2019 Pitney Bowes Inc.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,30 +17,24 @@
  * limitations under the License.
  */
 
-using System;
-using System.Reflection;
-
 namespace Avro.Reflect
 {
-    /// <summary>
-    /// Attribute that specifies the mapping between an Avro field and C# class property.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = false)]
-    public class AvroArrayAttribute : Attribute
+    public static class ArraySchemaExtensions
     {
-        /// <summary>
-        /// Convert the property into a standard Avro type - e.g. DateTimeOffset to long
-        /// </summary>
-        /// <value></value>
-        public Type Helper { get; set; }
-
-        /// <summary>
-        /// Used in property name mapping to specify a property type converter for the attribute.
-        /// </summary>
-        /// <param name="helper"></param>
-        public AvroArrayAttribute(Type helper)
+        public static string GetHelper(this ArraySchema ars)
         {
-            Helper = helper;
+            string s = null;
+            s = ars.GetProperty("helper");
+            if (s != null && s.Length > 2)
+            {
+                s = s.Substring(1, s.Length - 2);
+            }
+            else
+            {
+                s = null;
+            }
+
+            return s;
         }
     }
 }

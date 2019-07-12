@@ -30,19 +30,22 @@ namespace Avro.Reflect
     /// </summary>
     public class ClassCache
     {
-        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
-        private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
+
+        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+
+        private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
+
         private void AddClassNameMapItem(RecordSchema schema, Type dotnetClass)
         {
-            if (schema != null && GetClass(schema)!=null)
+            if (schema != null && GetClass(schema) != null)
             {
                 return;
             }
 
             if (!dotnetClass.IsClass)
             {
-                throw new AvroException( $"Type {dotnetClass.Name} is not a class");
+                throw new AvroException($"Type {dotnetClass.Name} is not a class");
             }
 
             _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema, this));
@@ -65,11 +68,10 @@ namespace Avro.Reflect
         /// <param name="to"></param>
         /// <typeparam name="A"></typeparam>
         /// <typeparam name="P"></typeparam>
-        public static void AddDefaultConverter<A,P>(Func<A,Schema, P> from, Func<P,Schema, A> to)
+        public static void AddDefaultConverter<A, P>(Func<A, Schema, P> from, Func<P, Schema, A> to)
         {
-            _defaultConverters.Add(new FuncFieldConverter<A,P>(from, to));
+            _defaultConverters.Add(new FuncFieldConverter<A, P>(from, to));
         }
-
 
         /// <summary>
         /// Find a default converter
@@ -80,7 +82,7 @@ namespace Avro.Reflect
         public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
         {
             Type avroType;
-            switch( tag )
+            switch (tag)
             {
                 case Avro.Schema.Type.Null:
                     return null;
@@ -123,13 +125,15 @@ namespace Avro.Reflect
                 default:
                     return null;
             }
-            foreach (var c in _defaultConverters )
+
+            foreach (var c in _defaultConverters)
             {
                 if (c.GetAvroType() == avroType && c.GetPropertyType() == propType)
                 {
                     return c;
                 }
             }
+
             return null;
         }
 
@@ -140,10 +144,11 @@ namespace Avro.Reflect
         /// <param name="helperType">Type of helper. Inherited from ArrayHelper</param>
         public void AddArrayHelper(string name, Type helperType)
         {
-            if ( !typeof(ArrayHelper).IsAssignableFrom(helperType) )
+            if (!typeof(ArrayHelper).IsAssignableFrom(helperType))
             {
                 throw new AvroException($"{helperType.Name} is not an ArrayHelper");
             }
+
             _nameArrayMap.TryAdd(name, helperType);
         }
 
@@ -159,24 +164,14 @@ namespace Avro.Reflect
             // note ArraySchema is unamed and doesnt have a FulllName, use "helper" metadata
             // metadata is json string, strip quotes
             string s = null;
-            if ( schema.Props != null )
-            {
-                s = schema.Props["helper"];
-                if (s != null && s.Length > 2)
-                {
-                    s = s.Substring(1, s.Length - 2);
-                }
-                else
-                {
-                    s = null;
-                }
-            }
+            s = schema.GetHelper();
+
             if (s != null && _nameArrayMap.TryGetValue(s, out h))
             {
-                return (ArrayHelper) Activator.CreateInstance(h, enumerable);
+                return (ArrayHelper)Activator.CreateInstance(h, enumerable);
             }
 
-            return (ArrayHelper) Activator.CreateInstance(typeof(ArrayHelper), enumerable);
+            return (ArrayHelper)Activator.CreateInstance(typeof(ArrayHelper), enumerable);
         }
 
         /// <summary>
@@ -202,18 +197,18 @@ namespace Avro.Reflect
         /// <param name="s">Schema</param>
         public void LoadClassCache(Type objType, Schema s)
         {
-            switch(s)
+            switch (s)
             {
                 case RecordSchema rs:
                     if (!objType.IsClass)
                     {
                         throw new AvroException($"Cant map scalar type {objType.Name} to record {rs.Fullname}");
                     }
+
                     if (typeof(byte[]).IsAssignableFrom(objType)
                         || typeof(string).IsAssignableFrom(objType)
                         || typeof(IEnumerable).IsAssignableFrom(objType)
-                        || typeof(IDictionary).IsAssignableFrom(objType)
-                    )
+                        || typeof(IDictionary).IsAssignableFrom(objType))
                     {
                         throw new AvroException($"Cant map type {objType.Name} to record {rs.Fullname}");
                     }
@@ -225,36 +220,42 @@ namespace Avro.Reflect
                         var t = c.GetPropertyType(f);
                         LoadClassCache(t, f.Schema);
                     }
+
                     break;
                 case ArraySchema ars:
                     if (!typeof(IEnumerable).IsAssignableFrom(objType))
                     {
-                        throw new AvroException($"Cant map type {objType.Name} to array {ars.Fullname}");
+                        throw new AvroException($"Cant map type {objType.Name} to array {ars.Name}");
                     }
+
                     if (!objType.IsGenericType)
                     {
                         throw new AvroException($"{objType.Name} needs to be a generic type");
                     }
+
                     foreach (var attr in objType.GetCustomAttributes())
                     {
                         var arrayAttr = attr as AvroArrayAttribute;
                         if (arrayAttr != null)
                         {
-                            _nameArrayMap.TryAdd( ars.Fullname, arrayAttr.Helper);
+                            _nameArrayMap.TryAdd(ars.GetHelper(), arrayAttr.Helper);
                             break;
                         }
                     }
+
                     LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
                     break;
                 case MapSchema ms:
                     if (!typeof(IDictionary).IsAssignableFrom(objType))
                     {
-                        throw new AvroException($"Cant map type {objType.Name} to map {ms.Fullname}");
+                        throw new AvroException($"Cant map type {objType.Name} to map {ms.Name}");
                     }
+
                     if (!objType.IsGenericType)
                     {
-                        throw new AvroException($"Cant map non-generic type {objType.Name} to map {ms.Fullname}");
+                        throw new AvroException($"Cant map non-generic type {objType.Name} to map {ms.Name}");
                     }
+
                     if (!typeof(string).IsAssignableFrom(objType.GenericTypeArguments[0]))
                     {
                         throw new AvroException($"First type parameter of {objType.Name} must be assignable to string");

@@ -28,6 +28,8 @@ namespace Avro.Reflect
     {
         private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
+        private Type _type;
+
         public DotnetClass(Type t, RecordSchema r, ClassCache cache)
         {
             _type = t;
@@ -59,7 +61,7 @@ namespace Avro.Reflect
             var prop = _type.GetProperty(f.Name);
             if (prop == null)
             {
-                foreach(var p in _type.GetProperties())
+                foreach (var p in _type.GetProperties())
                 {
                     foreach (var attr in p.GetCustomAttributes(true))
                     {
@@ -71,13 +73,12 @@ namespace Avro.Reflect
                         }
                     }
                 }
+
                 throw new AvroException($"Class {_type.Name} doesnt contain property {f.Name}");
             }
 
             return prop;
         }
-
-        private Type _type { get; set; }
 
         public object GetValue(object o, Field f)
         {
@@ -86,6 +87,7 @@ namespace Avro.Reflect
             {
                 throw new AvroException($"ByPosClass doesnt contain property {f.Name}");
             }
+
             return p.GetValue(o, f.Schema);
         }
 
@@ -96,6 +98,7 @@ namespace Avro.Reflect
             {
                 throw new AvroException($"ByPosClass doesnt contain property {f.Name}");
             }
+
             p.SetValue(o, v, f.Schema);
         }
 
@@ -111,6 +114,7 @@ namespace Avro.Reflect
             {
                 throw new AvroException($"ByPosClass doesnt contain property {f.Name}");
             }
+
             return p.GetPropertyType();
         }
     }

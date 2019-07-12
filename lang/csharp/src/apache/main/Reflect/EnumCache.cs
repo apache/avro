@@ -27,7 +27,6 @@ namespace Avro.Reflect
     /// </summary>
     public static class EnumCache
     {
-
         private static ConcurrentDictionary<string, Type> _nameEnumMap = new ConcurrentDictionary<string, Type>();
 
         /// <summary>
@@ -52,6 +51,7 @@ namespace Avro.Reflect
             {
                 throw new AvroException($"Couldnt find enumeration for avro fullname: {schema.Fullname}");
             }
+
             return t;
         }
     }
