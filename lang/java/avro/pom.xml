@@ -133,6 +133,36 @@
                 </configuration>
                 <goals><goal>java</goal></goals>
               </execution>
+              <!-- Generate random data for interop tests, using snappy codec -->
+              <execution>
+                <id>interop-generate-snappy-codec</id>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <mainClass>org.apache.avro.util.RandomData</mainClass>
+                  <arguments>
+                    <argument>../../../share/test/schemas/interop.avsc</argument>
+                    <argument>../../../build/interop/data/java_snappy.avro</argument>
+                    <argument>100</argument>
+                    <argument>snappy</argument>
+                  </arguments>
+                </configuration>
+                <goals><goal>java</goal></goals>
+              </execution>
+              <!-- Generate random data for interop tests, using zstandard codec -->
+              <execution>
+                <id>interop-generate-zstandard-codec</id>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <mainClass>org.apache.avro.util.RandomData</mainClass>
+                  <arguments>
+                    <argument>../../../share/test/schemas/interop.avsc</argument>
+                    <argument>../../../build/interop/data/java_zstandard.avro</argument>
+                    <argument>100</argument>
+                    <argument>zstandard</argument>
+                  </arguments>
+                </configuration>
+                <goals><goal>java</goal></goals>
+              </execution>
             </executions>
           </plugin>
         </plugins>
@@ -156,7 +186,6 @@
     <dependency>
       <groupId>org.xerial.snappy</groupId>
       <artifactId>snappy-java</artifactId>
-      <scope>provided</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -169,7 +198,6 @@
     <dependency>
       <groupId>com.github.luben</groupId>
       <artifactId>zstd-jni</artifactId>
-      <scope>provided</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
