@@ -67,8 +67,10 @@ RUN apt-get -qq update && \
     php5.6 \
     php5.6-gmp \
     python \
+    python-pip \
     python-setuptools \
     python-snappy \
+    python-wheel \
     python3-pip \
     python3-setuptools \
     python3-snappy \
@@ -93,7 +95,10 @@ RUN curl -L https://cpanmin.us | perl - --mirror https://www.cpan.org/ --self-up
 # Install PHPUnit
 RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
 
-# Install Python packages
+# Install Python2 packages
+RUN pip install zstandard
+
+# Install Python3 packages
 RUN pip3 install zstandard
 
 # Install Ruby modules
