@@ -28,14 +28,16 @@ all_from 'lib/Avro.pm';
 build_requires 'Test::More', 0.88;
 test_requires 'Math::BigInt';
 test_requires 'Test::Exception';
+requires 'Compress::Zlib';
+requires 'Compress::Zstd';
+requires 'Encode';
+requires 'Error::Simple';
+requires 'IO::String';
 requires 'JSON::XS';
+requires 'Object::Tiny';
+requires 'Regexp::Common';
 requires 'Try::Tiny';
 requires 'parent';
-requires 'Regexp::Common';
-requires 'Encode';
-requires 'IO::String';
-requires 'Object::Tiny';
-requires 'Compress::Zlib';
 unless ($Config{use64bitint}) {
     requires 'Math::BigInt';
 }

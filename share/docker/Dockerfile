@@ -90,7 +90,7 @@ RUN curl -L https://cpanmin.us | perl - --mirror https://www.cpan.org/ --self-up
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
-  Test::Exception Test::Pod
+  Test::Exception Test::Pod Compress::Zstd
 
 # Install PHPUnit
 RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit

@@ -117,6 +117,33 @@ is_deeply $all[0], $data, "Our data is intact!";
     my @all = $read_file->all;
     is scalar @all, 1, "one object back";
     is_deeply $all[0], $data, "Our data is intact!";
+
+    ## zstandard!
+    $zfh = File::Temp->new(UNLINK => 0);
+    $write_file = Avro::DataFileWriter->new(
+        fh            => $zfh,
+        writer_schema => $schema,
+        codec         => 'zstandard',
+        metadata      => {
+            some => 'metadata',
+        },
+    );
+    $write_file->print($data);
+    $write_file->flush;
+
+    ## rewind
+    seek $zfh, 0, 0;
+
+    $read_file = Avro::DataFileReader->new(
+        fh            => $zfh,
+        reader_schema => $schema,
+    );
+    is $read_file->metadata->{'avro.codec'}, 'zstandard', 'avro.codec';
+    is $read_file->metadata->{'some'}, 'metadata', 'custom meta';
+
+    @all = $read_file->all;
+    is scalar @all, 1, "one object back";
+    is_deeply $all[0], $data, "Our data is intact!";
 }
 
 done_testing;

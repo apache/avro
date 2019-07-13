@@ -34,8 +34,9 @@ our $HEADER_SCHEMA = Avro::Schema->parse(<<EOH);
 EOH
 
 our %ValidCodec = (
-    null    => 1,
-    deflate => 1,
+    null      => 1,
+    deflate   => 1,
+    zstandard => 1,
 );
 
 sub is_codec_valid {
