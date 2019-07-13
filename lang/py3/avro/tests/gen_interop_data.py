@@ -18,8 +18,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
+from pathlib import Path
 
 from avro import datafile
 from avro import io
@@ -51,11 +51,13 @@ def generate(schema_file, output_path):
   interop_schema = schema.Parse(open(schema_file, 'r').read())
   datum_writer = io.DatumWriter()
   for codec in datafile.VALID_CODECS:
-    filename = "py3{}.avro".format('' if codec == 'null' else '_' + codec)
-    writer = open(os.path.join(output_path, filename), 'wb')
-    dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema, codec)
-    dfw.append(DATUM)
-    dfw.close()
+    filename = 'py3'
+    if codec != 'null':
+      filename += '_' + codec
+    with Path(output_path, filename).with_suffix('.avro').open('wb') as writer:
+      dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema, codec)
+      dfw.append(DATUM)
+      dfw.close()
 
 
 if __name__ == "__main__":
