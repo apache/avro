@@ -19,6 +19,7 @@
 # limitations under the License.
 
 import sys
+from pathlib import Path
 
 from avro import datafile
 from avro import io
@@ -46,11 +47,17 @@ DATUM = {
 }
 
 
-if __name__ == "__main__":
-  interop_schema = schema.Parse(open(sys.argv[1], 'r').read())
-  writer = open(sys.argv[2], 'wb')
+def generate(schema_file, output_path):
+  interop_schema = schema.Parse(open(schema_file, 'r').read())
   datum_writer = io.DatumWriter()
-  # NB: not using compression
-  dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema)
-  dfw.append(DATUM)
-  dfw.close()
+  for codec in datafile.VALID_CODECS:
+    filename = 'py3'
+    if codec != 'null':
+      filename += '_' + codec
+    with Path(output_path, filename).with_suffix('.avro').open('wb') as writer, \
+      datafile.DataFileWriter(writer, datum_writer, interop_schema, codec) as dfw:
+      dfw.append(DATUM)
+
+
+if __name__ == "__main__":
+    generate(sys.argv[1], sys.argv[2])
