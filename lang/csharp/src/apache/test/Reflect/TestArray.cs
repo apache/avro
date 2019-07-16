@@ -208,10 +208,9 @@ namespace Avro.Test
         private class MultiList
         {
             public List<string> one {get;set;}
-            [AvroArray(typeof(ConcurrentQueueHelper<string>))]
             public ConcurrentQueue<string> two {get;set;}
         }
-        //[TestCase]
+        [TestCase]
         public void MultiQueueTest()
         {
             var schema = Schema.Parse(_multiList);
@@ -219,7 +218,7 @@ namespace Avro.Test
             fixedRecWrite.one.Add("hola");
             fixedRecWrite.two.Enqueue("hello");
             var cache = new ClassCache();
-            cache.AddArrayHelper("twoArray", typeof(ConcurrentQueueHelper<ConcurrentQueueRec>));
+            cache.AddArrayHelper("twoArray", typeof(ConcurrentQueueHelper<string>));
             var writer = new ReflectWriter<MultiList>(schema, cache);
             var reader = new ReflectReader<MultiList>(schema, schema, cache);
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,12 +21,35 @@ using System.Reflection;
 
 namespace Avro.Reflect
 {
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <typeparam name="A">Avro type</typeparam>
+    /// <typeparam name="P">Property type</typeparam>
     public abstract class TypedFieldConverter<A, P> : IAvroFieldConverter
     {
+        /// <summary>
+        /// Convert from Avro type to property type
+        /// </summary>
+        /// <param name="o">Avro value</param>
+        /// <param name="s">Schema</param>
+        /// <returns>Property value</returns>
         public abstract P From(A o, Schema s);
 
+        /// <summary>
+        /// Convert from property type to Avro type
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public abstract A To(P o, Schema s);
 
+        /// <summary>
+        /// Implement untyped interface
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public object FromAvroType(object o, Schema s)
         {
             if (!typeof(A).IsAssignableFrom(o.GetType()))
@@ -37,16 +60,30 @@ namespace Avro.Reflect
             return From((A)o, s);
         }
 
+        /// <summary>
+        /// Implement untyped interface
+        /// </summary>
+        /// <returns></returns>
         public Type GetAvroType()
         {
             return typeof(A);
         }
 
+        /// <summary>
+        /// Implement untyped interface
+        /// </summary>
+        /// <returns></returns>
         public Type GetPropertyType()
         {
             return typeof(P);
         }
 
+        /// <summary>
+        /// Implement untyped interface
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public object ToAvroType(object o, Schema s)
         {
             if (!typeof(P).IsAssignableFrom(o.GetType()))

@@ -233,16 +233,6 @@ namespace Avro.Reflect
                         throw new AvroException($"{objType.Name} needs to be a generic type");
                     }
 
-                    foreach (var attr in objType.GetCustomAttributes())
-                    {
-                        var arrayAttr = attr as AvroArrayAttribute;
-                        if (arrayAttr != null)
-                        {
-                            _nameArrayMap.TryAdd(ars.GetHelper(), arrayAttr.Helper);
-                            break;
-                        }
-                    }
-
                     LoadClassCache(objType.GenericTypeArguments[0], ars.ItemSchema);
                     break;
                 case MapSchema ms:

@@ -28,15 +28,28 @@ namespace Avro.Reflect
     /// <typeparam name="T">type name of specific object</typeparam>
     public class ReflectWriter<T> : DatumWriter<T>
     {
+        /// <summary>
+        /// Default writer
+        /// </summary>
+        /// <value></value>
         public ReflectDefaultWriter Writer { get => _writer; }
 
         private readonly ReflectDefaultWriter _writer;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="cache"></param>
         public ReflectWriter(Schema schema, ClassCache cache = null)
             : this(new ReflectDefaultWriter(typeof(T), schema, cache))
         {
         }
 
+        /// <summary>
+        /// The schema
+        /// </summary>
+        /// <value></value>
         public Schema Schema { get => _writer.Schema; }
 
         /// <summary>

@@ -40,6 +40,10 @@ namespace Avro.Reflect
 
         private ClassCache _classCache = new ClassCache();
 
+        /// <summary>
+        /// Class cache
+        /// </summary>
+        /// <value></value>
         public ClassCache ClassCache { get => _classCache; }
 
         private Type _mapType = typeof(Dictionary<,>);

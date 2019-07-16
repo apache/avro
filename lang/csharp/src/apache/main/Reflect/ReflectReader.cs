@@ -33,6 +33,10 @@ namespace Avro.Reflect
         /// </summary>
         private readonly ReflectDefaultReader _reader;
 
+        /// <summary>
+        /// Default reader
+        /// </summary>
+        /// <value></value>
         public ReflectDefaultReader Reader { get => _reader; }
 
         /// <summary>
@@ -51,6 +55,7 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="writerSchema">The schema used while generating the data</param>
         /// <param name="readerSchema">The schema desired by the reader</param>
+        /// <param name="cache">Class cache</param>
         public ReflectReader(Schema writerSchema, Schema readerSchema, ClassCache cache = null)
         {
             _reader = new ReflectDefaultReader(typeof(T), writerSchema, readerSchema, cache);

@@ -30,15 +30,17 @@ namespace Avro.Reflect
         /// <summary>
         /// Convert from the C# type to the avro type
         /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
+        /// <param name="o">Value to convert</param>
+        /// <param name="s">Schema</param>
+        /// <returns>Converted value</returns>
         object ToAvroType(object o, Schema s);
 
         /// <summary>
         /// Convert from the avro type to the C# type
         /// </summary>
-        /// <param name="o"></param>
-        /// <returns></returns>
+        /// <param name="o">Value to convert</param>
+        /// <param name="s">Schema</param>
+        /// <returns>Converted value</returns>
         object FromAvroType(object o, Schema s);
 
         /// <summary>

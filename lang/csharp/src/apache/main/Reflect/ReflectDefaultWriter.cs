@@ -31,6 +31,10 @@ namespace Avro.Reflect
     {
         private ClassCache _classCache = new ClassCache();
 
+        /// <summary>
+        /// Class cache
+        /// </summary>
+        /// <value></value>
         public ClassCache ClassCache { get => _classCache; }
 
         /// <summary>
@@ -50,6 +54,10 @@ namespace Avro.Reflect
             _classCache.LoadClassCache(objType, schema);
         }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="schema"></param>
         public ReflectDefaultWriter(Schema schema)
             : base(schema)
         {

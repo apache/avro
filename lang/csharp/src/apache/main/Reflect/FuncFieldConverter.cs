@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -21,8 +21,18 @@ using Avro.Generic;
 
 namespace Avro.Reflect
 {
+    /// <summary>
+    /// Field converter using a Func
+    /// </summary>
+    /// <typeparam name="A">Avro type</typeparam>
+    /// <typeparam name="P">Property type</typeparam>
     public class FuncFieldConverter<A, P> : TypedFieldConverter<A, P>
     {
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="from">Delegate to convert from C# type to Avro type</param>
+        /// <param name="to">Delegate to convert from Avro type to C# type</param>
         public FuncFieldConverter(Func<A, Schema, P> from, Func<P, Schema, A> to)
         {
             _from = from;
@@ -33,11 +43,23 @@ namespace Avro.Reflect
 
         private Func<P, Schema, A> _to;
 
+        /// <summary>
+        /// Inherited conversion method - call the Func.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public override P From(A o, Schema s)
         {
             return _from(o, s);
         }
 
+        /// <summary>
+        /// Inherited conversion method - call the Func.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public override A To(P o, Schema s)
         {
             return _to(o, s);
