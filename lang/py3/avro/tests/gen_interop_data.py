@@ -54,10 +54,9 @@ def generate(schema_file, output_path):
     filename = 'py3'
     if codec != 'null':
       filename += '_' + codec
-    with Path(output_path, filename).with_suffix('.avro').open('wb') as writer:
-      dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema, codec)
+    with Path(output_path, filename).with_suffix('.avro').open('wb') as writer, \
+      datafile.DataFileWriter(writer, datum_writer, interop_schema, codec) as dfw:
       dfw.append(DATUM)
-      dfw.close()
 
 
 if __name__ == "__main__":
