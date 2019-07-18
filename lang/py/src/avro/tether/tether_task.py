@@ -18,19 +18,17 @@
 
 __all__=["TetherTask","TaskType","inputProtocol","outputProtocol","HTTPRequestor"]
 
-from avro import schema, protocol
-from avro import io as avio
-from avro import ipc
-
-import io as pyio
-import sys
-import os
-import traceback
-import logging
 import collections
-from StringIO import StringIO
+import io as pyio
+import logging
+import os
+import sys
 import threading
+import traceback
+from StringIO import StringIO
 
+from avro import io as avio
+from avro import ipc, protocol, schema
 
 # create protocol objects for the input and output protocols
 # The build process should copy InputProtocol.avpr and OutputProtocol.avpr

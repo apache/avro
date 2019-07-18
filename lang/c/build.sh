@@ -19,7 +19,6 @@
 #
 
 set -e        # exit on error
-#set -x
 
 root_dir=$(pwd)
 build_dir="../../build/c"
@@ -57,6 +56,10 @@ case "$1" in
     $build_dir/tests/test_interop_data "../../build/interop/data"
     ;;
 
+  lint)
+    echo 'This is a stub where someone can provide linting.'
+    ;;
+
   test)
     prepare_build
     make -C $build_dir
@@ -88,7 +91,7 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: $0 {interop-data-generate|interop-data-test|test|dist|clean}"
+    echo "Usage: $0 {interop-data-generate|interop-data-test|lint|test|dist|clean}"
     exit 1
 esac
 

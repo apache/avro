@@ -25,6 +25,10 @@ VERSION=`cat $ROOT/share/VERSION.txt`
 
 case "$1" in
 
+  lint)
+    echo 'This is a stub where someone can provide linting.'
+    ;;
+
   test)
     dotnet build --configuration Release Avro.sln
 
@@ -77,8 +81,6 @@ case "$1" in
     ;;
 
   *)
-    echo "Usage: $0 {test|clean|dist|perf|interop-data-generate|interop-data-test}"
+    echo "Usage: $0 {lint|test|clean|dist|perf|interop-data-generate|interop-data-test}"
     exit 1
 esac
-
-exit 0

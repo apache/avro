@@ -20,12 +20,11 @@ Command-line tool
 NOTE: The API for the command-line tool is experimental.
 """
 import sys
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 import urlparse
-from avro import io
-from avro import datafile
-from avro import protocol
-from avro import ipc
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+from avro import datafile, io, ipc, protocol
+
 
 class GenericResponder(ipc.Responder):
   def __init__(self, proto, msg, datum):

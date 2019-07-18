@@ -21,11 +21,10 @@
 Protocol implementation.
 """
 
-from types import MappingProxyType
-
 import hashlib
 import json
 import logging
+from types import MappingProxyType
 
 from avro import schema
 

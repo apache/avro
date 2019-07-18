@@ -24,6 +24,7 @@ import unittest
 
 import set_avro_test_path
 
+
 class TestTetherTask(unittest.TestCase):
   """
   TODO: We should validate the the server response by looking at stdout
