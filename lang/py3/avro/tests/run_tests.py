@@ -49,12 +49,12 @@ import unittest
 
 from avro.tests.test_datafile import *
 from avro.tests.test_datafile_interop import *
+from avro.tests.test_enum import *
 from avro.tests.test_io import *
 from avro.tests.test_ipc import *
 from avro.tests.test_protocol import *
 from avro.tests.test_schema import *
 from avro.tests.test_script import *
-from avro.tests.test_enum import *
 
 
 def SetupLogging():

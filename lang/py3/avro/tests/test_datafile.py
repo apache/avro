@@ -23,10 +23,18 @@ import os
 import tempfile
 import unittest
 
-from avro import datafile
-from avro import io
-from avro import schema
+from avro import datafile, io, schema
 
+try:
+  import snappy
+  HAS_SNAPPY = True
+except ImportError:
+  HAS_SNAPPY = False
+try:
+  import zstandard
+  HAS_ZSTANDARD = True
+except ImportError:
+  HAS_ZSTANDARD = False
 
 # ------------------------------------------------------------------------------
 

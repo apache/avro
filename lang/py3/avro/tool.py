@@ -25,13 +25,10 @@ NOTE: The API for the command-line tool is experimental.
 
 import sys
 import urllib
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from avro import datafile, io, ipc, protocol
 
-from avro import io
-from avro import datafile
-from avro import protocol
-from avro import ipc
 
 class GenericResponder(ipc.Responder):
   def __init__(self, proto, msg, datum):

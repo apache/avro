@@ -53,6 +53,10 @@ case "$1" in
        phpunit test/InterOpTest.php
        ;;
 
+    lint)
+      echo 'This is a stub where someone can provide linting.'
+      ;;
+
      test)
        phpunit test/AllTests.php
        ;;
@@ -66,7 +70,7 @@ case "$1" in
        ;;
 
      *)
-       echo "Usage: $0 {interop-data-generate|test-interop|test|dist|clean}"
+       echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
 esac
 
 

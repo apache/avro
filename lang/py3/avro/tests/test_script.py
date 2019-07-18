@@ -32,7 +32,6 @@ import avro.datafile
 import avro.io
 import avro.schema
 
-
 # ------------------------------------------------------------------------------
 
 

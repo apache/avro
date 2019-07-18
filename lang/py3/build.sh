@@ -18,7 +18,7 @@
 set -e # exit on error
 
 usage() {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {isort|lint|test|dist|clean}"
 }
 
 main() {
@@ -29,8 +29,9 @@ main() {
   fi
   for target; do
     case "$target" in
-      clean|dist|test) : ;;
-      *) usage; return 1 ;;
+      lint) set -- isort "$@";;
+      clean|dist|isort|test) :;;
+      *) usage; return 1;;
     esac
   done
   python3 setup.py "$@"

@@ -13,22 +13,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 import unittest
-
+from binascii import hexlify
 from decimal import Decimal
+
+import set_avro_test_path
+from avro import io, schema, timezones
 
 try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from binascii import hexlify
-import datetime
 
-import set_avro_test_path
 
-from avro import schema
-from avro import io
-from avro import timezones
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),

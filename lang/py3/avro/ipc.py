@@ -29,8 +29,7 @@ import os
 import socketserver
 
 from avro import io as avro_io
-from avro import protocol
-from avro import schema
+from avro import protocol, schema
 
 logger = logging.getLogger(__name__)
 

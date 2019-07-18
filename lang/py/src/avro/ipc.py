@@ -17,13 +17,13 @@
 Support for inter-process calls.
 """
 import httplib
+
+from avro import io, protocol, schema
+
 try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from avro import io
-from avro import protocol
-from avro import schema
 
 #
 # Constants
@@ -482,4 +482,3 @@ class HTTPTransceiver(object):
 #
 # Server Implementations (none yet)
 #
-

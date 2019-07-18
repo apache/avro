@@ -27,5 +27,5 @@ for lang in /avro/lang/*/
 do
   headline "Run tests: $lang"
   cd "$lang"
-  ./build.sh test
+  ./build.sh lint test
 done

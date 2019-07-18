@@ -27,9 +27,7 @@ import threading
 import time
 import unittest
 
-from avro import ipc
-from avro import protocol
-from avro import schema
+from avro import ipc, protocol, schema
 
 
 def NowMS():

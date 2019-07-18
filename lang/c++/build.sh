@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean|install|doc}"
+  echo "Usage: $0 {lint|test|dist|clean|install|doc}"
   exit 1
 }
 
@@ -76,6 +76,10 @@ for target in "$@"
 do
 
 case "$target" in
+  lint)
+    echo 'This is a stub where someone can provide linting.'
+    ;;
+
   test)
     (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 .. && make && cd .. \
       && ./build/buffertest \
