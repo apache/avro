@@ -18,11 +18,10 @@ Test the schema parsing logic.
 """
 import unittest
 
-from avro.schema import SchemaParseException, AvroException
-
 import set_avro_test_path
-
 from avro import schema
+from avro.schema import AvroException, SchemaParseException
+
 
 def print_test_name(test_name):
   print ''

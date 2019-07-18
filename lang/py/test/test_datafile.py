@@ -17,10 +17,7 @@ import os
 import unittest
 
 import set_avro_test_path
-
-from avro import schema
-from avro import io
-from avro import datafile
+from avro import datafile, io, schema
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),

@@ -18,13 +18,12 @@
 
 import sys
 import time
-from random import sample, choice, randint
+from random import choice, randint, sample
 from string import lowercase
 
 import avro.datafile
-import avro.schema
 import avro.io
-
+import avro.schema
 
 types = ["A", "CNAME"]
 

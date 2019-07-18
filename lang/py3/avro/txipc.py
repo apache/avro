@@ -20,12 +20,11 @@
 
 import io
 
-from avro import io as avro_io
-from avro import ipc
-
 from zope.interface import implements
 
-from twisted.internet.defer import maybeDeferred, Deferred
+from avro import io as avro_io
+from avro import ipc
+from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.internet.protocol import Protocol
 from twisted.web import resource, server
 from twisted.web.client import Agent

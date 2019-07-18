@@ -17,9 +17,8 @@ import os
 import unittest
 
 import set_avro_test_path
+from avro import datafile, io
 
-from avro import io
-from avro import datafile
 
 class TestDataFileInterop(unittest.TestCase):
   def test_interop(self):

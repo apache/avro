@@ -35,10 +35,8 @@ A schema may be one of:
   Null.
 """
 
-from math import floor
-from math import log10
-
 import json
+from math import floor, log10
 
 from avro import constants
 

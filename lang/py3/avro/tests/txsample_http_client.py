@@ -19,11 +19,9 @@
 # limitations under the License.
 import sys
 
-from twisted.internet import reactor, defer
+from avro import protocol, txipc
+from twisted.internet import defer, reactor
 from twisted.python.util import println
-
-from avro import protocol
-from avro import txipc
 
 MAIL_PROTOCOL_JSON = """\
 {"namespace": "example.proto",

@@ -28,8 +28,8 @@ being built. To work around this the unittests import this module before
 importing AVRO. This module in turn adjusts the python path so that the test
 build of AVRO is higher on the path then any installed eggs.
 """
-import sys
 import os
+import sys
 
 # determine the build directory and then make sure all paths that start with the
 # build directory are at the top of the path
