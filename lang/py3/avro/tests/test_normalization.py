@@ -21,7 +21,7 @@
 import unittest
 
 from avro.schema import Parse
-from avro.schemanormalization import ToParsingCanonicalForm, Fingerprint, FingerprintAlgorithmNames
+from avro.schemanormalization import Fingerprint, FingerprintAlgorithmNames, ToParsingCanonicalForm
 
 
 class TestSchemaNormalization(unittest.TestCase):

@@ -17,9 +17,8 @@
 # limitations under the License.
 import os
 import sys
-from avro import schema
-from avro import io
-from avro import datafile
+
+from avro import datafile, io, schema
 
 DATUM = {
   'intField': 12,
