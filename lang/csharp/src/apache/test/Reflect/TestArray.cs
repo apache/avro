@@ -129,7 +129,11 @@ namespace Avro.Test
             public override void Clear()
             {
                 ConcurrentQueue<T> e = (ConcurrentQueue<T>)Enumerable;
+#if NET461
+                while (e.TryDequeue(out _)) { }
+#else
                 e.Clear();
+#endif
             }
 
             /// <summary>
