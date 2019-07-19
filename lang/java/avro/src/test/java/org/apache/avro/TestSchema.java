@@ -19,6 +19,12 @@ package org.apache.avro;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -175,6 +181,23 @@ public class TestSchema {
 
   private Schema createDefaultRecord() {
     return Schema.createRecord("name", "doc", "namespace", false);
+  }
+
+  @Test
+  public void testSerialization() throws IOException, ClassNotFoundException {
+    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        InputStream jsonSchema = getClass().getResourceAsStream("/SchemaBuilder.avsc")) {
+
+      Schema payload = new Schema.Parser().parse(jsonSchema);
+      oos.writeObject(payload);
+
+      try (ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+          ObjectInputStream ois = new ObjectInputStream(bis)) {
+        Schema sp = (Schema) ois.readObject();
+        assertEquals(payload, sp);
+      }
+    }
   }
 
 }
