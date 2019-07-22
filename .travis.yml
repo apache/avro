@@ -35,8 +35,8 @@ matrix:
   - os: windows
     language: bash
 
-before_install: "if [ -f ./.travis/before_install.sh   ] ; then ./.travis/before_install.sh ; fi"
-install:        "if [ -f ./.travis/install.sh          ] ; then ./.travis/install.sh        ; fi"
-before_script:  "if [ -f ./.travis/before_script.sh    ] ; then ./.travis/before_script.sh  ; fi"
-script:         "if [ -f ./.travis/script.sh           ] ; then ./.travis/script.sh         ; fi"
-after_script:   "if [ -f ./.travis/after_script.sh     ] ; then ./.travis/after_script.sh   ; fi"
+before_install: "if [ -x ./.travis/before_install.sh   ] ; then ./.travis/before_install.sh ; fi"
+install:        "if [ -x ./.travis/install.sh          ] ; then ./.travis/install.sh        ; fi"
+before_script:  "if [ -x ./.travis/before_script.sh    ] ; then ./.travis/before_script.sh  ; fi"
+script:         "if [ -x ./.travis/script.sh           ] ; then ./.travis/script.sh         ; fi"
+after_script:   "if [ -x ./.travis/after_script.sh     ] ; then ./.travis/after_script.sh   ; fi"
