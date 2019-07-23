@@ -1,2 +1,2 @@
 {"name": "org.apache.avro.test.Reserved", "type": "enum",
- "symbols": ["default","class","int"]},
+ "symbols": ["default","class","int"]}
