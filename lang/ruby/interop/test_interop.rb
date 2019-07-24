@@ -19,11 +19,19 @@ require 'rubygems'
 require 'test/unit'
 require 'avro'
 
+CODECS_TO_VALIDATE = ['deflate']  # The 'null' codec is implicitly included
+
 class TestInterop < Test::Unit::TestCase
   HERE = File.expand_path(File.dirname(__FILE__))
   SHARE = HERE + '/../../../share'
   SCHEMAS = SHARE + '/test/schemas'
-  Dir[HERE + '/../../../build/interop/data/*'].each do |fn|
+
+  files = Dir[HERE + '/../../../build/interop/data/*.avro'].select do |fn|
+    sep, codec = File.basename(fn, 'avro').rpartition('_')[1, 2]
+    sep.empty? || CODECS_TO_VALIDATE.include?(codec)
+  end
+
+  files.each do |fn|
     define_method("test_read_#{File.basename(fn, 'avro')}") do
       projection = Avro::Schema.parse(File.read(SCHEMAS+'/interop.avsc'))
 

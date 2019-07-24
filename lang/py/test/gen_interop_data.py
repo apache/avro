@@ -15,10 +15,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 import sys
-from avro import schema
-from avro import io
-from avro import datafile
+
+from avro import datafile, io, schema
 
 DATUM = {
   'intField': 12,
@@ -37,11 +37,28 @@ DATUM = {
   'recordField': {'label': 'blah', 'children': [{'label': 'inner', 'children': []}]},
 }
 
+CODECS_TO_VALIDATE = ('null', 'deflate')
+try:
+  import snappy
+  CODECS_TO_VALIDATE += ('snappy',)
+except ImportError:
+  print 'Snappy not present, will skip generating it.'
+try:
+  import zstandard
+  CODECS_TO_VALIDATE += ('zstandard',)
+except ImportError:
+  print 'Zstandard not present, will skip generating it.'
+
 if __name__ == "__main__":
-  interop_schema = schema.parse(open(sys.argv[1], 'r').read())
-  writer = open(sys.argv[2], 'wb')
-  datum_writer = io.DatumWriter()
-  # NB: not using compression
-  dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema)
-  dfw.append(DATUM)
-  dfw.close()
+  for codec in CODECS_TO_VALIDATE:
+    interop_schema = schema.parse(open(sys.argv[1], 'r').read())
+    filename = sys.argv[2]
+    if codec != 'null':
+      base, ext = os.path.splitext(filename)
+      filename = base + "_" + codec + ext
+    writer = open(filename, 'wb')
+    datum_writer = io.DatumWriter()
+    # NB: not using compression
+    dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema, codec=codec)
+    dfw.append(DATUM)
+    dfw.close()

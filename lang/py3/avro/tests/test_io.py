@@ -27,7 +27,6 @@ import unittest
 from avro import io as avro_io
 from avro import schema
 
-
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
   ('"boolean"', True),

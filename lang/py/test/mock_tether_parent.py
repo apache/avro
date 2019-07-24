@@ -14,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import set_avro_test_path
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from avro import ipc
-from avro import protocol
-from avro import tether
-
 import socket
+import sys
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+import set_avro_test_path
+from avro import ipc, protocol, tether
+
 
 def find_port():
   """

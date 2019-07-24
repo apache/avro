@@ -17,12 +17,13 @@
 Read/Write Avro File Object Containers.
 """
 import zlib
+
+from avro import io, schema
+
 try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from avro import schema
-from avro import io
 try:
   import snappy
   has_snappy = True
