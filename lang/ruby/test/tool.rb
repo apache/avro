@@ -27,7 +27,7 @@ class GenericResponder < Avro::IPC::Responder
     @datum = datum
   end
 
-  def call(message, request)
+  def call(message, _)
     if message.name == @msg
       STDERR.puts "Message: #{message.name} Datum: #{@datum.inspect}"
       @datum
@@ -101,7 +101,7 @@ def main
       case ARGV[4]
       when "-file"
         Avro::DataFile.open(ARGV[5]) {|f|
-          f.each{|d| datum = d; break }
+          f.each{|e| datum = e; break }
         }
       when "-data"
         puts "JSON Decoder not yet implemented."
@@ -124,7 +124,7 @@ def main
     if ARGV.size > 4
       case ARGV[4]
       when "-file"
-        Avro::DataFile.open(ARGV[5]){|f| f.each{|d| datum = d; break } }
+        Avro::DataFile.open(ARGV[5]){|f| f.each{|e| datum = e; break } }
       when "-data"
         puts "JSON Decoder not yet implemented"
         return 1

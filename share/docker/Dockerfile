@@ -106,7 +106,7 @@ RUN pip install zstandard
 RUN pip3 install zstandard
 
 # Install Ruby modules
-RUN gem install echoe yajl-ruby multi_json snappy zstd-ruby
+RUN gem install echoe yajl-ruby multi_json snappy zstd-ruby rubocop
 
 # Install global Node modules
 RUN npm install -g grunt-cli
