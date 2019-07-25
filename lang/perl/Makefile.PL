@@ -27,6 +27,7 @@ readme_from 'lib/Avro.pm';
 all_from 'lib/Avro.pm';
 build_requires 'Test::More', 0.88;
 test_requires 'Math::BigInt';
+test_requires 'Perl::Critic';
 test_requires 'Test::Exception';
 requires 'JSON::XS';
 requires 'Try::Tiny';

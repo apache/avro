@@ -61,8 +61,8 @@ sub from_struct {
 
     my $types = $class->parse_types($struct->{types});
 
-    my $messages = $class->parse_messages($struct->{messages}, $types)
-        if $struct->{messages};
+    my $messages = $struct->{messages} ?
+        $class->parse_messages($struct->{messages}, $types) : undef;
 
     my $protocol = $class->SUPER::new(
         name      => $name,
