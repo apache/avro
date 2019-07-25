@@ -33,7 +33,7 @@
   -->
 
   <tab label="Project" href="https://avro.apache.org/" />
-  <tab label="Wiki" href="https://wiki.apache.org/hadoop/Avro/" />
+  <tab label="Wiki" href="https://cwiki.apache.org/confluence/display/AVRO/Index" />
   <tab label="Avro &AvroVersion; Documentation" dir="" />
 
 </tabs>
