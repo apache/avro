@@ -45,6 +45,7 @@ RUN apt-get -qq update && \
     asciidoc \
     bison \
     bzip2 \
+    bundler \
     cmake \
     curl \
     dotnet-sdk-2.2 \
@@ -106,7 +107,8 @@ RUN pip install zstandard
 RUN pip3 install zstandard
 
 # Install Ruby modules
-RUN gem install echoe yajl-ruby multi_json snappy zstd-ruby rubocop
+COPY lang/ruby/Gemfile /tmp
+RUN bundle install --gemfile=/tmp/Gemfile
 
 # Install global Node modules
 RUN npm install -g grunt-cli

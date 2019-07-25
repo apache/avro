@@ -172,7 +172,7 @@ module Avro
       end
 
       # null is written as zero bytes
-      def write_null(*)
+      def write_null(_datum)
         nil
       end
 
@@ -292,7 +292,7 @@ module Avro
         readers_schema.type_adapter.decode(datum)
       end
 
-      def read_fixed(writers_schema, _, decoder)
+      def read_fixed(writers_schema, _readers_schema, decoder)
         decoder.read(writers_schema.size)
       end
 
@@ -468,7 +468,7 @@ module Avro
         decoder.skip(writers_schema.size)
       end
 
-      def skip_enum(_, decoder)
+      def skip_enum(_writers_schema, decoder)
         decoder.skip_int
       end
 
@@ -545,7 +545,7 @@ module Avro
         end
       end
 
-      def write_fixed(_, datum, encoder)
+      def write_fixed(_writers_schema, datum, encoder)
         encoder.write(datum)
       end
 

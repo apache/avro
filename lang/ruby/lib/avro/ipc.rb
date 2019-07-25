@@ -350,7 +350,7 @@ module Avro::IPC
       remote_protocol
     end
 
-    def call(*)
+    def call(_local_message, _request)
       # Actual work done by server: cf. handler in thrift.
       raise NotImplementedError
     end
