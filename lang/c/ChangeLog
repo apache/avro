@@ -1,4 +1,10 @@
+Revision history for Avro C Library
 
+Unreleased 
+  - [bugfix] fwrite failure ignored, corrupting files.
 
+14 May 2019: Avro 1.9.0
+
+20 May 2017: Avro 1.8.2
 
 
