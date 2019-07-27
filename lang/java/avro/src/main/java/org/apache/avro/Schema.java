@@ -238,7 +238,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return createUnion(new LockableArrayList<>(types));
   }
 
-  /** Create a union schema. */
+  /** Create a fixed schema. */
   public static Schema createFixed(String name, String doc, String space, int size) {
     return new FixedSchema(new Name(name, space), doc, size);
   }
