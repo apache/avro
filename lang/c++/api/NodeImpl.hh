@@ -128,7 +128,7 @@ class NodeImpl : public Node
         return leafAttributes_.get(index);
     }
 
-    void doAddName(const std::string &name) {
+    void doAddName(const Name &name) {
         if (! nameIndex_.add(name, leafNameAttributes_.size())) {
             throw Exception(boost::format("Cannot add duplicate name: %1%") % name);
         }
@@ -139,11 +139,11 @@ class NodeImpl : public Node
         return leafNameAttributes_.size();
     }
 
-    const std::string &nameAt(int index) const {
+    const Name &nameAt(int index) const {
         return leafNameAttributes_.get(index);
     }
 
-    bool nameIndex(const std::string &name, size_t &index) const {
+    bool nameIndex(const Name &name, size_t &index) const {
         return nameIndex_.lookup(name, index);
     }
 
@@ -218,8 +218,8 @@ typedef concepts::NoAttribute<NodePtr>      NoLeaves;
 typedef concepts::SingleAttribute<NodePtr>  SingleLeaf;
 typedef concepts::MultiAttribute<NodePtr>   MultiLeaves;
 
-typedef concepts::NoAttribute<std::string>     NoLeafNames;
-typedef concepts::MultiAttribute<std::string>  LeafNames;
+typedef concepts::NoAttribute<Name>     NoLeafNames;
+typedef concepts::MultiAttribute<Name>  LeafNames;
 
 typedef concepts::NoAttribute<int>     NoSize;
 typedef concepts::SingleAttribute<int> HasSize;

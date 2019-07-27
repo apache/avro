@@ -134,7 +134,39 @@ void checkRecord(const T1& r1, const T2& r2)
     BOOST_CHECK_EQUAL(static_cast<unsigned int>(r1.myenum), static_cast<unsigned int>(r2.myenum));
 }
 
-void checkDefaultValues(const testgen_r::RootRecord& r)
+template <typename T1, typename T2>
+void checkRecordAliased(const T1& r1, const T2& r2)
+{
+	BOOST_CHECK_EQUAL(r1.mylongAliased, r2.mylong);
+	BOOST_CHECK_EQUAL(r1.nestedrecord.inval1, r2.nestedrecord.inval1);
+	BOOST_CHECK_EQUAL(r1.nestedrecord.inval2, r2.nestedrecord.inval2);
+	BOOST_CHECK_EQUAL(r1.nestedrecord.inval3, r2.nestedrecord.inval3);
+	BOOST_CHECK(r1.mymap == r2.mymap);
+	BOOST_CHECK(r1.myarray == r2.myarray);
+	BOOST_CHECK_EQUAL(r1.myunion.idx(), r2.myunion.idx());
+	BOOST_CHECK(r1.myunion.get_map() == r2.myunion.get_map());
+	BOOST_CHECK_EQUAL(r1.anotherunion.idx(), r2.anotherunion.idx());
+	BOOST_CHECK(r1.anotherunion.get_bytes() == r2.anotherunion.get_bytes());
+	BOOST_CHECK_EQUAL(r1.mybool, r2.mybool);
+	BOOST_CHECK_EQUAL(r1.anothernested.inval1, r2.anothernested.inval1);
+	BOOST_CHECK_EQUAL(r1.anothernested.inval2, r2.anothernested.inval2);
+	BOOST_CHECK_EQUAL(r1.anothernested.inval3, r2.anothernested.inval3);
+	BOOST_CHECK_EQUAL_COLLECTIONS(r1.myfixed.begin(), r1.myfixed.end(),
+		 r2.myfixed.begin(), r2.myfixed.end());
+	BOOST_CHECK_EQUAL(r1.anotherint, r2.anotherint);
+	BOOST_CHECK_EQUAL(r1.bytes.size(), r2.bytes.size());
+	BOOST_CHECK_EQUAL_COLLECTIONS(r1.bytes.begin(), r1.bytes.end(),
+		 r2.bytes.begin(), r2.bytes.end());
+	/**
+	 * Usually, comparing two different enums is not reliable. But here it fine because we
+	 * know the generated code and are merely checking if Avro did the right job.
+	 * Also, converting enum into unsigned int is not always safe. There are cases there could be
+	 * truncation. Again, we have a controlled situation and it is safe here.
+	 */
+	BOOST_CHECK_EQUAL(static_cast<unsigned int>(r1.myenum), static_cast<unsigned int>(r2.myenum));
+}
+
+void checkDefaultValues(const testgen_r::RootRecordAliased& r)
 {
     BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "\"sval\\u8352\"");
     BOOST_CHECK_EQUAL(r.withDefaultValue.i1, 99);
@@ -189,18 +221,18 @@ void testResolution()
     unique_ptr<InputStream> is = memoryInputStream(*os);
     dd->init(*is);
     DecoderPtr rd = resolvingDecoder(s_w, s_r, dd);
-    testgen_r::RootRecord t2;
+    testgen_r::RootRecordAliased t2;
     avro::decode(*rd, t2);
 
-    checkRecord(t2, t1);
+	 checkRecordAliased(t2, t1);
     checkDefaultValues(t2);
 
     //Re-use the resolving decoder to decode again.
     unique_ptr<InputStream> is1 = memoryInputStream(*os);
     rd->init(*is1);
-    testgen_r::RootRecord t3;
+    testgen_r::RootRecordAliased t3;
     avro::decode(*rd, t3);
-    checkRecord(t3, t1);
+	 checkRecordAliased(t3, t1);
     checkDefaultValues(t3);
 
     // Test serialization of default values.
@@ -212,7 +244,7 @@ void testResolution()
     std::unique_ptr<InputStream> is2 = memoryInputStream(*os);
     dd->init(*is2);
     rd = resolvingDecoder(s_w, s_rs, dd);
-    testgen_r::RootRecord t4;
+    testgen_r::RootRecordAliased t4;
     avro::decode(*rd, t4);
     checkDefaultValues(t4);
 

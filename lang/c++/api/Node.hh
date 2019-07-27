@@ -40,6 +40,7 @@ typedef std::shared_ptr<Node> NodePtr;
 class AVRO_DECL Name {
     std::string ns_;
     std::string simpleName_;
+	 std::vector<std::string> aliases_;
 public:
     Name() { }
     Name(const std::string& fullname);
@@ -52,6 +53,8 @@ public:
     void ns(const std::string& n) { ns_ = n; }
     void simpleName(const std::string& n) { simpleName_ = n; }
     void fullname(const std::string& n);
+	 void addAlias(const std::string& alias);
+	 bool hasAlias();
 
     bool operator < (const Name& n) const;
     void check() const;
@@ -147,8 +150,8 @@ class AVRO_DECL Node : private boost::noncopyable
         doAddName(name);
     }
     virtual size_t names() const = 0;
-    virtual const std::string &nameAt(int index) const = 0;
-    virtual bool nameIndex(const std::string &name, size_t &index) const = 0;
+    virtual const Name &nameAt(int index) const = 0;
+    virtual bool nameIndex(const Name &name, size_t &index) const = 0;
 
     void setFixedSize(int size) {
         checkLock();
@@ -187,7 +190,7 @@ class AVRO_DECL Node : private boost::noncopyable
     virtual void doSetDoc(const std::string &name) = 0;
 
     virtual void doAddLeaf(const NodePtr &newLeaf) = 0;
-    virtual void doAddName(const std::string &name) = 0;
+    virtual void doAddName(const Name &name) = 0;
     virtual void doSetFixedSize(int size) = 0;
 
   private:

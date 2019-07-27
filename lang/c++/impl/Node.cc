@@ -50,6 +50,16 @@ void Name::fullname(const string& name)
     check();
 }
 
+void Name::addAlias(const std::string& alias)
+{
+	aliases_.emplace_back(alias);
+}
+
+bool Name::hasAlias()
+{
+	return aliases_.size() > 0;
+}
+
 bool Name::operator < (const Name& n) const
 {
     return (ns_ < n.ns_) ? true :
@@ -79,7 +89,30 @@ void Name::check() const
 
 bool Name::operator == (const Name& n) const
 {
-    return ns_ == n.ns_ && simpleName_ == n.simpleName_;
+	if (ns_ == n.ns_ && simpleName_ == n.simpleName_)
+		return true;
+
+	const std::string& myFullName = fullname();
+	const std::string& theirFullName = n.fullname();
+
+	for (const auto& theirAlias : n.aliases_)
+	{
+		if (myFullName == theirAlias)
+			return true;
+	}
+
+	for (const auto &myAlias : aliases_)
+	{
+		if (myAlias == theirFullName)
+			return true;
+		for (const auto& theirAlias : n.aliases_)
+		{
+			if (myAlias == theirAlias)
+				return true;
+		}
+	}
+
+	return false;
 }
 
 void Node::setLogicalType(LogicalType logicalType) {

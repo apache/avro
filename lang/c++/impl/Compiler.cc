@@ -81,6 +81,25 @@ static bool isFullName(const string &s)
     return s.find('.') != string::npos;
 }
 
+static void addAliases(Name& nm, const Array * aliasesPtr)
+{
+	if (aliasesPtr)
+	{
+		for (const Entity& item : *aliasesPtr)
+		{
+			string itemVal = item.stringValue();
+			bool missingNs = nm.ns().empty();
+			if(missingNs || isFullName(itemVal))
+				nm.addAlias(itemVal);
+			else
+			{
+				itemVal += ("." + nm.ns());
+				nm.addAlias(itemVal);
+			}
+		}
+	}
+}
+
 static Name getName(const string &name, const string &ns)
 {
     return (isFullName(name)) ? Name(name) : Name(name, ns);
@@ -166,10 +185,10 @@ const string getDocField(const Entity& e, const Object& m)
 }
 
 struct Field {
-    const string name;
+    const Name name;
     const NodePtr schema;
     const GenericDatum defaultValue;
-    Field(const string& n, const NodePtr& v, GenericDatum dv) :
+    Field(const Name& n, const NodePtr& v, GenericDatum dv) :
         name(n), schema(v), defaultValue(dv) { }
 };
 
@@ -295,7 +314,17 @@ static GenericDatum makeGenericDatum(NodePtr n,
 static Field makeField(const Entity& e, SymbolTable& st, const string& ns)
 {
     const Object& m = e.objectValue();
-    const string& n = getStringField(e, m, "name");
+    Name n = getStringField(e, m, "name");
+
+	 const Array *aliasesPtr = nullptr;
+
+	 if (containsField(m, "aliases"))
+	 {
+		 const Array& aliases = getArrayField(e, m, "aliases");
+		 for (const Entity& alias : aliases)
+			 n.addAlias(alias.stringValue());
+	 }
+
     Object::const_iterator it = findField(e, m, "type");
     map<string, Entity>::const_iterator it2 = m.find("default");
     NodePtr node = makeNode(it->second, st, ns);
@@ -312,7 +341,7 @@ static NodePtr makeRecordNode(const Entity& e, const Name& name,
                               const string* doc, const Object& m,
                               SymbolTable& st, const string& ns) {
     const Array& v = getArrayField(e, m, "fields");
-    concepts::MultiAttribute<string> fieldNames;
+    concepts::MultiAttribute<Name> fieldNames;
     concepts::MultiAttribute<NodePtr> fieldValues;
     vector<GenericDatum> defaultValues;
 
@@ -375,7 +404,7 @@ static NodePtr makeEnumNode(const Entity& e,
     const Name& name, const Object& m)
 {
     const Array& v = getArrayField(e, m, "symbols");
-    concepts::MultiAttribute<string> symbols;
+    concepts::MultiAttribute<Name> symbols;
     for (Array::const_iterator it = v.begin(); it != v.end(); ++it) {
         if (it->type() != json::etString) {
             throw Exception(boost::format("Enum symbol not a string: %1%") %
@@ -434,9 +463,17 @@ static NodePtr makeMapNode(const Entity& e, const Object& m,
 static Name getName(const Entity& e, const Object& m, const string& ns)
 {
     const string& name = getStringField(e, m, "name");
+	 const Array *aliasesPtr = nullptr;
+
+	 if (containsField(m, "aliases"))
+	 {
+		 aliasesPtr = &getArrayField(e, m, "aliases");
+	 }
 
     if (isFullName(name)) {
-        return Name(name);
+		 Name nm(name);
+		 addAliases(nm, aliasesPtr);
+		 return nm;
     } else {
         Object::const_iterator it = m.find("namespace");
         if (it != m.end()) {
@@ -447,9 +484,12 @@ static Name getName(const Entity& e, const Object& m, const string& ns)
                         it->second.toString());
             }
             Name result = Name(name, it->second.stringValue());
+				addAliases(result, aliasesPtr);
             return result;
         }
-        return Name(name, ns);
+        Name nm(name, ns);
+		  addAliases(nm, aliasesPtr);
+		  return nm;
     }
 }
 
