@@ -104,6 +104,7 @@ public class SpecificData extends GenericData {
     stringableClasses.add(java.net.URI.class);
     stringableClasses.add(java.net.URL.class);
     stringableClasses.add(java.io.File.class);
+    stringableClasses.add(java.util.Date.class);
   }
 
   /** For subclasses. Applications normally use {@link SpecificData#get()}. */
