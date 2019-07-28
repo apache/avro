@@ -21,8 +21,8 @@
 import binascii
 import io
 import logging
-import sys
 import unittest
+from unittest.mock import patch
 
 from avro import io as avro_io
 from avro import schema
@@ -187,7 +187,14 @@ def check_skip_number(number_type):
 
 # ------------------------------------------------------------------------------
 
+class MockedColors:
+  GREEN = ''
+  BLUE = ''
+  RED = ''
+  ENDC = ''
 
+
+@patch('avro.io.TermColors', MockedColors)
 class TestIO(unittest.TestCase):
   #
   # BASIC FUNCTIONALITY
@@ -196,25 +203,88 @@ class TestIO(unittest.TestCase):
   def testValidate(self):
     passed = 0
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
-      logging.debug('Schema: %r', example_schema)
-      logging.debug('Datum: %r', datum)
       validated = avro_io.Validate(schema.Parse(example_schema), datum)
       logging.debug('Valid: %s', validated)
       if validated: passed += 1
     self.assertEqual(passed, len(SCHEMAS_TO_VALIDATE))
 
+  def testValidateNested(self):
+    example_schema = """\
+    {"type": "record",
+     "name": "a",
+     "fields": [
+      {"name": "field1", "type": {
+        "type": "record", "name": "b", "fields": [
+          {"name": "field2", "type": "long"},
+          {"name": "field3", "type": "int"}
+        ]}
+        }
+     ]
+    }
+    """
+    datum = {"field1": {"field2": 11, "field3": 11}}
+
+    result = avro_io.Validate(schema.Parse(example_schema), datum)
+
+    self.assertTrue(result)
+
+  def testValidateUnion(self):
+    example_schema = """\
+    ["int", "null"]
+    """
+    datum = None
+    result = avro_io.Validate(schema.Parse(example_schema), datum)
+
+    self.assertTrue(result)
+
+  def testValidateUnionError(self):
+    example_schema = """\
+    ["int", "null"]
+    """
+    datum = "there should not be a string here"
+    expected_regex = "datum should be one of following: \\['int', 'null']"
+
+    with self.assertRaisesRegex(avro_io.AvroTypeException, expected_regex):
+      avro_io.Validate(schema.Parse(example_schema), datum)
+
+  def testValidateShouldRaiseFormattedError(self):
+    example_schema = '{"type": "int"}'
+    datum = "aaa"
+
+    expected_regex = "datum should be int type," \
+                     " but as value we got\n'aaa'"
+
+    with self.assertRaisesRegex(avro_io.AvroTypeException, expected_regex):
+      avro_io.Validate(schema.Parse(example_schema), datum)
+
+  def testValidateNestedShouldRaiseFormattedError(self):
+    example_schema = """\
+    {"type": "record",
+     "name": "a",
+     "fields": [
+      {"name": "field1", "type": {
+        "type": "array", "items": "int"}
+        }
+     ]
+    }
+    """
+    datum = {"field1": ["bbb", 111]}
+
+    expected_regex = "datum should be int type, but as value we got\n'bbb'"
+
+    with self.assertRaisesRegex(avro_io.AvroTypeException, expected_regex):
+      avro_io.Validate(schema.Parse(example_schema), datum)
+
   def testRoundTrip(self):
     correct = 0
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
-      logging.debug('Schema: %s', example_schema)
-      logging.debug('Datum: %s', datum)
-
       writer_schema = schema.Parse(example_schema)
       writer, encoder, datum_writer = write_datum(datum, writer_schema)
       round_trip_datum = read_datum(writer, writer_schema)
 
       logging.debug('Round Trip Datum: %s', round_trip_datum)
-      if datum == round_trip_datum: correct += 1
+      self.assertEqual(datum, round_trip_datum)
+      if datum == round_trip_datum:correct += 1
     self.assertEqual(correct, len(SCHEMAS_TO_VALIDATE))
 
   #
@@ -342,6 +412,16 @@ class TestIO(unittest.TestCase):
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")
     datum_to_write = {'E': 5, 'F': 'Bad'}
+    self.assertRaises(
+        avro_io.AvroTypeException, write_datum, datum_to_write, writer_schema)
+
+  def testTypeExceptionBool(self):
+    # Python boolean type is subclass of the int, we check here against this fact.
+    writer_schema = schema.Parse("""\
+      {"type": "record", "name": "Test",
+       "fields": [{"name": "F", "type": "int"},
+                  {"name": "E", "type": "int"}]}""")
+    datum_to_write = {'E': 5, 'F': False}
     self.assertRaises(
         avro_io.AvroTypeException, write_datum, datum_to_write, writer_schema)
 
