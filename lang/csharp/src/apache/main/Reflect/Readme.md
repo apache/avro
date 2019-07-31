@@ -19,7 +19,7 @@ Basic serialization is performed as in the following example:
     var avroWriter = new ReflectWriter<T>(schema);
     using (var stream = new MemoryStream(256))
     {
-        avroWriter.Write(logMessage, new BinaryEncoder(stream));
+        avroWriter.Write(myObject, new BinaryEncoder(stream));
     }
 ```
 
