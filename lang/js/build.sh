@@ -21,7 +21,7 @@ cd `dirname "$0"`
 
 case "$1" in
   lint)
-    echo 'This is a stub where someone can provide linting.'
+    npm run lint
     ;;
   test)
     npm install
