@@ -27,7 +27,7 @@ class GenericResponder < Avro::IPC::Responder
     @datum = datum
   end
 
-  def call(message)
+  def call(message, _request)
     if message.name == @msg
       STDERR.puts "Message: #{message.name} Datum: #{@datum.inspect}"
       @datum
