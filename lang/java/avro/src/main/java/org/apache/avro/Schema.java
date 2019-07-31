@@ -191,7 +191,16 @@ public abstract class Schema extends JsonProperties implements Serializable {
     this.logicalType = logicalType;
   }
 
-  /** Create an anonymous record schema. */
+  /**
+   * Create an anonymous record schema.
+   *
+   * @deprecated This method allows to create Schema objects that cannot be parsed
+   *             by {@link Schema.Parser#parse(String)}. It will be removed in a
+   *             future version of Avro. Better use
+   *             i{@link #createRecord(String, String, String, boolean, List)} to
+   *             produce a fully qualified Schema.
+   */
+  @Deprecated
   public static Schema createRecord(List<Field> fields) {
     Schema result = createRecord(null, null, null, false);
     result.setFields(fields);
