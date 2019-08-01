@@ -47,7 +47,6 @@ import java.nio.file.StandardOpenOption;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class TestEncoders {
@@ -138,7 +137,7 @@ public class TestEncoders {
     byte[] avroBytes = fromJsonToAvro(value, schema);
     ObjectMapper mapper = new ObjectMapper();
 
-    assertEquals(mapper.readTree("{\"b\":\"myVal\",\"a\":1}"),
+    Assert.assertEquals(mapper.readTree("{\"b\":\"myVal\",\"a\":1}"),
       mapper.readTree(fromAvroToJson(avroBytes, schema, false)));
   }
 
@@ -151,7 +150,7 @@ public class TestEncoders {
     byte[] avroBytes = fromJsonToAvro(value, schema);
     ObjectMapper mapper = new ObjectMapper();
 
-    assertEquals(mapper.readTree("{\"b\":{\"string\":\"myVal\"},\"a\":1}"),
+    Assert.assertEquals(mapper.readTree("{\"b\":{\"string\":\"myVal\"},\"a\":1}"),
       mapper.readTree(fromAvroToJson(avroBytes, schema, true)));
   }
 
