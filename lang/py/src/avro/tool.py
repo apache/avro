@@ -19,13 +19,14 @@ Command-line tool
 
 NOTE: The API for the command-line tool is experimental.
 """
+
 import sys
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+import threading
 import urlparse
-from avro import io
-from avro import datafile
-from avro import protocol
-from avro import ipc
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+from avro import datafile, io, ipc, protocol
+
 
 class GenericResponder(ipc.Responder):
   def __init__(self, proto, msg, datum):
@@ -55,24 +56,9 @@ class GenericHandler(BaseHTTPRequestHandler):
     resp_writer.write_framed_message(resp_body)
     if server_should_shutdown:
       print >> sys.stderr, "Shutting down server."
-      self.server.force_stop()
-
-class StoppableHTTPServer(HTTPServer):
-  """HTTPServer.shutdown added in Python 2.6. FML."""
-  stopped = False
-  allow_reuse_address = True
-  def __init__(self, *args, **kw):
-    HTTPServer.__init__(self, *args, **kw)
-    self.allow_reuse_address = True
-
-  def serve_forever(self):
-    while not self.stopped:
-      self.handle_request()
-
-  def force_stop(self):
-    self.server_close()
-    self.stopped = True
-    self.serve_forever()
+      quitter = threading.Thread(target=self.server.shutdown)
+      quitter.daemon = True
+      quitter.start()
 
 def run_server(uri, proto, msg, datum):
   url_obj = urlparse.urlparse(uri)
@@ -81,7 +67,7 @@ def run_server(uri, proto, msg, datum):
   global server_should_shutdown
   server_should_shutdown = False
   responder = GenericResponder(proto, msg, datum)
-  server = StoppableHTTPServer(server_addr, GenericHandler)
+  server = HTTPServer(server_addr, GenericHandler)
   print "Port: %s" % server.server_port
   sys.stdout.flush()
   server.allow_reuse_address = True

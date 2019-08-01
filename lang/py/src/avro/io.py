@@ -38,18 +38,14 @@ uses the following mapping:
   * Schema booleans are implemented as bool.
 """
 
+import datetime
+import json
 import struct
-from avro import schema
-from avro import constants
-from avro import timezones
 import sys
 from binascii import crc32
-import datetime
+from decimal import Decimal, getcontext
 
-from decimal import Decimal
-from decimal import getcontext
-
-import json
+from avro import constants, schema, timezones
 
 #
 # Constants

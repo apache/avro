@@ -23,7 +23,7 @@ VERSION=`cat share/VERSION.txt`
 DOCKER_XTRA_ARGS=""
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
+  echo "Usage: $0 {lint|test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
 }
 
@@ -40,6 +40,12 @@ do
   shift
   case "$target" in
 
+    lint)
+      for lang_dir in lang/*; do
+        (cd "$lang_dir" && ./build.sh lint)
+      done
+      ;;
+
     test)
       # run lang-specific tests
       (cd lang/java; ./build.sh test)
@@ -50,8 +56,8 @@ do
 
       # install java artifacts required by other builds and interop tests
       mvn -B install -DskipTests
-      (cd lang/py; ./build.sh test)
-      (cd lang/py3; ./build.sh test)
+      (cd lang/py && ./build.sh lint test)
+      (cd lang/py3 && ./build.sh lint test)
       (cd lang/c; ./build.sh test)
       (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
@@ -61,6 +67,8 @@ do
       (cd lang/perl; ./build.sh test)
 
       (cd lang/py; ant interop-data-generate)
+      (cd lang/py3; python3 setup.py generate_interop_data \
+        --schema-file=../../share/test/schemas/interop.avsc --output-path=../../build/interop/data)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
       (cd lang/csharp; ./build.sh interop-data-generate)
@@ -70,6 +78,7 @@ do
       # run interop data tests
       (cd lang/java; mvn -B test -P interop-data-test)
       (cd lang/py; ant interop-data-test)
+      (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
       (cd lang/csharp; ./build.sh interop-data-test)

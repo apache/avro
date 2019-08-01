@@ -17,36 +17,16 @@
 
 set -e
 
-# connect to avro ruby root directory
-cd `dirname "$0"`
-
-# maintain our gems here
-export GEM_HOME=.gem/
-export PATH="$PATH:.gem/bin"
-
-# bootstrap bundler
-gem install --no-document -v 1.17.3 bundler
-bundle install
-
-case "$1" in
-    lint)
-      echo 'This is a stub where someone can provide linting.'
-      ;;
-
-    test)
-      bundle exec rake test
-      ;;
-
-    dist)
-      bundle exec rake dist
-      ;;
-
-    clean)
-      bundle exec rake clean
-      rm -rf tmp avro.gemspec data.avr
-      ;;
-
-    *)
-      echo "Usage: $0 {lint|test|dist|clean}"
-      exit 1
+case "$TRAVIS_OS_NAME" in
+"linux")
+    sed -i.bak "s/openjdk:8/openjdk:${JAVA}/" share/docker/Dockerfile
+    /tmp/yetus-0.8.0/bin/test-patch --plugins=buildtest --java-home=/usr/local/openjdk-"${JAVA}" --user-plugins=share/precommit/ --run-tests --empty-patch --docker --dockerfile=share/docker/Dockerfile --dirty-workspace --verbose=true
+    ;;
+"windows")
+    ./lang/csharp/build.sh test
+    ;;
+*)
+    echo "Invalid PLATFORM"
+    exit 1
+    ;;
 esac

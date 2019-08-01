@@ -38,12 +38,11 @@ A schema may be one of:
  - Null.
 """
 
-from types import MappingProxyType
-
 import abc
 import json
 import logging
 import re
+from types import MappingProxyType
 
 logger = logging.getLogger(__name__)
 

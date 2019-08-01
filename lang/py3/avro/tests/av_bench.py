@@ -28,7 +28,6 @@ import avro.datafile
 import avro.io
 import avro.schema
 
-
 TYPES = ('A', 'CNAME',)
 FILENAME = 'datafile.avr'
 

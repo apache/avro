@@ -23,6 +23,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <thread>
+#include <chrono>
+
 #include <sstream>
 
 #include "DataFile.hh"
@@ -589,7 +592,7 @@ public:
         }
         {
             avro::DataFileReader<ComplexInteger> reader(filename, dschema);
-            sleep(1);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             std::vector<int64_t> found;
             ComplexInteger record;
             while (reader.read(record)) {

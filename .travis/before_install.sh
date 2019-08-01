@@ -17,36 +17,19 @@
 
 set -e
 
-# connect to avro ruby root directory
-cd `dirname "$0"`
-
-# maintain our gems here
-export GEM_HOME=.gem/
-export PATH="$PATH:.gem/bin"
-
-# bootstrap bundler
-gem install --no-document -v 1.17.3 bundler
-bundle install
-
-case "$1" in
-    lint)
-      echo 'This is a stub where someone can provide linting.'
-      ;;
-
-    test)
-      bundle exec rake test
-      ;;
-
-    dist)
-      bundle exec rake dist
-      ;;
-
-    clean)
-      bundle exec rake clean
-      rm -rf tmp avro.gemspec data.avr
-      ;;
-
-    *)
-      echo "Usage: $0 {lint|test|dist|clean}"
-      exit 1
+case "$TRAVIS_OS_NAME" in
+"linux")
+    sudo apt-get -q update
+    sudo apt-get -q install --no-install-recommends -y curl git gnupg-agent locales pinentry-curses pkg-config rsync software-properties-common
+    sudo apt-get -q clean
+    sudo rm -rf /var/lib/apt/lists/*
+    curl -L https://www-us.apache.org/dist/yetus/0.8.0/yetus-0.8.0-bin.tar.gz | tar xvz -C /tmp/
+    ;;
+"windows")
+    choco install dotnetcore-sdk --version 2.2.300
+    ;;
+*)
+    echo "Invalid PLATFORM"
+    exit 1
+    ;;
 esac
