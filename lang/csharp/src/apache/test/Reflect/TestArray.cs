@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -129,7 +129,11 @@ namespace Avro.Test
             public override void Clear()
             {
                 ConcurrentQueue<T> e = (ConcurrentQueue<T>)Enumerable;
+#if NET461
+                while (e.TryDequeue(out _)) { }
+#else
                 e.Clear();
+#endif
             }
 
             /// <summary>
@@ -208,7 +212,6 @@ namespace Avro.Test
         private class MultiList
         {
             public List<string> one {get;set;}
-            [AvroArray(typeof(ConcurrentQueueHelper<string>))]
             public ConcurrentQueue<string> two {get;set;}
         }
         [TestCase]
@@ -219,7 +222,7 @@ namespace Avro.Test
             fixedRecWrite.one.Add("hola");
             fixedRecWrite.two.Enqueue("hello");
             var cache = new ClassCache();
-            cache.AddArrayHelper("twoArray", typeof(ConcurrentQueueHelper<ConcurrentQueueRec>));
+            cache.AddArrayHelper("twoArray", typeof(ConcurrentQueueHelper<string>));
             var writer = new ReflectWriter<MultiList>(schema, cache);
             var reader = new ReflectReader<MultiList>(schema, schema, cache);
 

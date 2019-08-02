@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -691,8 +691,12 @@ public class Resolver {
     Schema.Type wt = w.getType();
     if (wt != r.getType())
       return false;
+
+    // Previously, the spec was somewhat ambiguous as to whether getFullName or
+    // getName should be used here. Using name rather than fully qualified name
+    // maintains backwards compatibility.
     if ((wt == Schema.Type.RECORD || wt == Schema.Type.FIXED || wt == Schema.Type.ENUM)
-        && !(w.getFullName() == null || w.getFullName().equals(r.getFullName())))
+        && !(w.getName() == null || w.getName().equals(r.getName())))
       return false;
 
     switch (w.getType()) {

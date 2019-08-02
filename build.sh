@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,7 @@ VERSION=`cat share/VERSION.txt`
 DOCKER_XTRA_ARGS=""
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
+  echo "Usage: $0 {lint|test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
 }
 
@@ -40,6 +40,12 @@ do
   shift
   case "$target" in
 
+    lint)
+      for lang_dir in lang/*; do
+        (cd "$lang_dir" && ./build.sh lint)
+      done
+      ;;
+
     test)
       # run lang-specific tests
       (cd lang/java; ./build.sh test)
@@ -50,8 +56,8 @@ do
 
       # install java artifacts required by other builds and interop tests
       mvn -B install -DskipTests
-      (cd lang/py; ./build.sh test)
-      (cd lang/py3; ./build.sh test)
+      (cd lang/py && ./build.sh lint test)
+      (cd lang/py3 && ./build.sh lint test)
       (cd lang/c; ./build.sh test)
       (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
@@ -61,16 +67,21 @@ do
       (cd lang/perl; ./build.sh test)
 
       (cd lang/py; ant interop-data-generate)
+      (cd lang/py3; python3 setup.py generate_interop_data \
+        --schema-file=../../share/test/schemas/interop.avsc --output-path=../../build/interop/data)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
+      (cd lang/csharp; ./build.sh interop-data-generate)
       (cd lang/ruby; rake generate_interop)
       (cd lang/php; ./build.sh interop-data-generate)
 
       # run interop data tests
       (cd lang/java; mvn -B test -P interop-data-test)
       (cd lang/py; ant interop-data-test)
+      (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
+      (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/ruby; rake interop)
       (cd lang/php; ./build.sh test-interop)
 
@@ -246,7 +257,8 @@ do
         DOCKER_XTRA_ARGS=$2
         shift 2
       fi
-      docker build -t avro-build -f share/docker/Dockerfile .
+      docker build -t avro-build-ci -f share/docker/Dockerfile .
+      docker build -t avro-build -f share/docker/DockerfileLocal .
       if [ "$(uname -s)" == "Linux" ]; then
         USER_NAME=${SUDO_USER:=$USER}
         USER_ID=$(id -u $USER_NAME)

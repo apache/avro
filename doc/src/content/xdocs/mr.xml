@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+   https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
    limitations under the License.
   -->
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
-   "http://forrest.apache.org/dtd/document-v20.dtd" [
+   "https://forrest.apache.org/dtd/document-v20.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -36,7 +36,7 @@
     </p>
     <p>
       This guide assumes basic familiarity with both Hadoop MapReduce and Avro.
-      See the <a href="http://hadoop.apache.org/docs/current/">Hadoop
+      See the <a href="https://hadoop.apache.org/docs/current/">Hadoop
       documentation</a> and the <a href="gettingstartedjava.html">Avro getting
       started guide</a> for introductions to these projects.  This guide uses
       the old MapReduce API (<code>org.apache.hadoop.mapred</code>) and the new
@@ -64,8 +64,8 @@
 &#60;/dependency&#62;
 &#60;dependency&#62;
   &#60;groupId&#62;org.apache.hadoop&#60;/groupId&#62;
-  &#60;artifactId&#62;hadoop-core&#60;/artifactId&#62;
-  &#60;version&#62;1.1.0&#60;/version&#62;
+  &#60;artifactId&#62;hadoop-client&#60;/artifactId&#62;
+  &#60;version&#62;3.1.2&#60;/version&#62;
 &#60;/dependency&#62;
       </source>
       <p>
@@ -99,7 +99,7 @@
       </p>
       <p>
         Alternatively, Avro jars can be downloaded directly from the <a
-        href="http://avro.apache.org/releases.html">Apache Avro&#153;
+        href="https://avro.apache.org/releases.html">Apache Avro&#153;
         Releases</a> page.  The relevant Avro jars for this guide are
         <em>avro-&AvroVersion;.jar</em> and
         <em>avro-mapred-&AvroVersion;.jar</em>, as well as
@@ -559,9 +559,9 @@ AvroJob.setOutputSchema(conf, Pair.getPairSchema(Schema.create(Type.STRING),
 
       <p>
         The mapred package has API <a
-        href="http://avro.apache.org/docs/current/api/java/org/apache/avro/mapred/package-summary.html">
+        href="https://avro.apache.org/docs/current/api/java/org/apache/avro/mapred/package-summary.html">
         <code>org.apache.avro.mapred</code> documentation</a> as does the <a
-        href="http://avro.apache.org/docs/current/api/java/org/apache/avro/mapreduce/package-summary.html">
+        href="https://avro.apache.org/docs/current/api/java/org/apache/avro/mapreduce/package-summary.html">
         <code>org.apache.avro.mapreduce</code> package</a>.
         MapReduce API (<code>org.apache.hadoop.mapreduce</code>). Similarily to the mapreduce package,
         it's possible with the mapred API to implement your own <code>Mapper</code>s and

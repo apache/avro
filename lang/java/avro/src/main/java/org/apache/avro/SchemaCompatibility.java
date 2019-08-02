@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -94,12 +94,11 @@ public class SchemaCompatibility {
    * @return whether the names of the named schemas match or not.
    */
   public static boolean schemaNameEquals(final Schema reader, final Schema writer) {
-    final String writerFullName = writer.getFullName();
-    if (objectsEqual(reader.getFullName(), writerFullName)) {
+    if (objectsEqual(reader.getName(), writer.getName())) {
       return true;
     }
     // Apply reader aliases:
-    return reader.getAliases().contains(writerFullName);
+    return reader.getAliases().contains(writer.getFullName());
   }
 
   /**

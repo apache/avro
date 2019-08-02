@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -127,7 +127,7 @@ public class TestSpecificCompilerTool {
    * sources and do a deeper comparison.
    *
    * See
-   * http://download.oracle.com/javase/6/docs/api/javax/tools/JavaCompiler.html
+   * https://download.oracle.com/javase/6/docs/api/javax/tools/JavaCompiler.html
    */
   private static void assertFileMatch(File expected, File found) throws IOException {
     Assert.assertEquals("Found file: " + found + " does not match expected file: " + expected, readFile(expected),

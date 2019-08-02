@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,13 +26,15 @@ if __name__ == "__main__":
 else:
   from . import TetherTask, find_port, inputProtocol
 
-from avro import ipc
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import logging
-import weakref
-import threading
 import sys
+import threading
 import traceback
+import weakref
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+
+from avro import ipc
+
 
 class TaskRunnerResponder(ipc.Responder):
   """

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -471,11 +471,11 @@ namespace Avro.Test.File
         [TestCase(specificSchema, Codec.Type.Null, 2, 0, 1)]
         [TestCase(specificSchema, Codec.Type.Null, 10, 1, 4)]
         [TestCase(specificSchema, Codec.Type.Null, 200, 111, 15)]
-        // Disabled due to long runtime [TestCase(specificSchema, Codec.Type.Null, 1000, 588, 998)]
+        [TestCase(specificSchema, Codec.Type.Null, 1000, 588, 998)]
         [TestCase(specificSchema, Codec.Type.Deflate, 2, 0, 1)]
         [TestCase(specificSchema, Codec.Type.Deflate, 10, 1, 4)]
         [TestCase(specificSchema, Codec.Type.Deflate, 200, 111, 15)]
-        // Disabled due to long runtime [TestCase(specificSchema, Codec.Type.Deflate, 1000, 588, 998)]
+        [TestCase(specificSchema, Codec.Type.Deflate, 1000, 588, 998)]
         public void TestSyncAndSeekPositions(string schemaStr, Codec.Type codecType, int iterations, int firstSyncPosition, int secondSyncPosition)
         {
             // create and write out

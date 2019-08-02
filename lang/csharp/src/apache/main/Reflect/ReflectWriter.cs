@@ -1,5 +1,4 @@
-/*  Copyright 2019 Pitney Bowes Inc.
- *
+/* 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -8,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,15 +27,28 @@ namespace Avro.Reflect
     /// <typeparam name="T">type name of specific object</typeparam>
     public class ReflectWriter<T> : DatumWriter<T>
     {
+        /// <summary>
+        /// Default writer
+        /// </summary>
+        /// <value></value>
         public ReflectDefaultWriter Writer { get => _writer; }
 
         private readonly ReflectDefaultWriter _writer;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="cache"></param>
         public ReflectWriter(Schema schema, ClassCache cache = null)
             : this(new ReflectDefaultWriter(typeof(T), schema, cache))
         {
         }
 
+        /// <summary>
+        /// The schema
+        /// </summary>
+        /// <value></value>
         public Schema Schema { get => _writer.Schema; }
 
         /// <summary>

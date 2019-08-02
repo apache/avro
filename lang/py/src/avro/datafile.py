@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,17 +17,23 @@
 Read/Write Avro File Object Containers.
 """
 import zlib
+
+from avro import io, schema
+
 try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from avro import schema
-from avro import io
 try:
   import snappy
   has_snappy = True
 except ImportError:
   has_snappy = False
+try:
+  import zstandard as zstd
+  has_zstandard = True
+except ImportError:
+  has_zstandard = False
 #
 # Constants
 #
@@ -47,6 +53,8 @@ META_SCHEMA = schema.parse("""\
 VALID_CODECS = ['null', 'deflate']
 if has_snappy:
     VALID_CODECS.append('snappy')
+if has_zstandard:
+    VALID_CODECS.append('zstandard')
 VALID_ENCODINGS = ['binary'] # not used yet
 
 CODEC_KEY = "avro.codec"
@@ -170,6 +178,9 @@ class DataFileWriter(object):
       elif self.get_meta(CODEC_KEY) == 'snappy':
         compressed_data = snappy.compress(uncompressed_data)
         compressed_data_length = len(compressed_data) + 4 # crc32
+      elif self.get_meta(CODEC_KEY) == 'zstandard':
+        compressed_data = zstd.ZstdCompressor().compress(uncompressed_data)
+        compressed_data_length = len(compressed_data)
       else:
         fail_msg = '"%s" codec is not supported.' % self.get_meta(CODEC_KEY)
         raise DataFileException(fail_msg)
@@ -331,6 +342,18 @@ class DataFileReader(object):
       uncompressed = snappy.decompress(data)
       self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
       self.raw_decoder.check_crc32(uncompressed);
+    elif self.codec == 'zstandard':
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length)
+      uncompressed = bytearray()
+      dctx = zstd.ZstdDecompressor()
+      with dctx.stream_reader(StringIO(data)) as reader:
+        while True:
+          chunk = reader.read(16384)
+          if not chunk:
+            break
+          uncompressed.extend(chunk)
+      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
     else:
       raise DataFileException("Unknown codec: %r" % self.codec)
 

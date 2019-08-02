@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,25 +40,11 @@ namespace Avro.Test
 
         public string IP { get; set; }
 
-        public string Message { get; set; }
+        [AvroField("Message")]
+        public string message { get; set; }
 
         [AvroField(typeof(DateTimeOffsetToLongConverter))]
         public DateTimeOffset TimeStamp { get; set; }
-
-        public Dictionary<string, string> Tags { get => _tags; set => _tags = value; }
-
-        public MessageTypes Severity { get; set; }
-    }
-
-    public class LogMessage2
-    {
-        public string IP { get; set; }
-
-        public string Message { get; set; }
-
-        public DateTimeOffset TimeStamp { get; set; }
-
-        private Dictionary<string, string> _tags = new Dictionary<string, string>();
 
         public Dictionary<string, string> Tags { get => _tags; set => _tags = value; }
 
@@ -103,7 +89,7 @@ namespace Avro.Test
             var logMessage = new LogMessage()
             {
                 IP = "10.20.30.40",
-                Message = "Log entry",
+                message = "Log entry",
                 Severity = MessageTypes.Error
             };
 
@@ -120,7 +106,7 @@ namespace Avro.Test
             }
             Assert.IsNotNull(deserialized);
             Assert.AreEqual(logMessage.IP, deserialized.IP);
-            Assert.AreEqual(logMessage.Message, deserialized.Message);
+            Assert.AreEqual(logMessage.message, deserialized.message);
             Assert.AreEqual(logMessage.Severity, deserialized.Severity);
         }
     }

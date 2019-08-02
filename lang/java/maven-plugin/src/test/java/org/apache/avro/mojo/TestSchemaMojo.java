@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,6 +30,8 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
 
   protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-joda.xml");
   protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-jsr310.xml");
+  protected File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/schema/pom-injecting-velocity-tools.xml");
 
   public void testSchemaMojoJoda() throws Exception {
     SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jodaTestPom);
@@ -61,5 +63,21 @@ public class TestSchemaMojo extends AbstractAvroMojoTest {
 
     String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
     assertTrue(schemaUserContent.contains("java.time.Instant"));
+  }
+
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", injectingVelocityToolsTestPom);
+
+    assertNotNull(mojo);
+    mojo.execute();
+
+    File outputDir = new File(getBasedir(), "target/test-harness/schema/test");
+    String[] generatedFiles = new String[] { "PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java",
+        "SchemaUser.java" };
+
+    assertFilesExist(outputDir, generatedFiles);
+
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
+    assertTrue(schemaUserContent.contains("It works!"));
   }
 }

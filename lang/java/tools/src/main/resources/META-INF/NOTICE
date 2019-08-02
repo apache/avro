@@ -2,7 +2,7 @@ Apache Avro
 Copyright 2010-2015 The Apache Software Foundation
 
 This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
+The Apache Software Foundation (https://www.apache.org/).
 
 Based upon the representations of upstream licensors, it is understood that
 portions of the mapreduce API included in the Java implementation are licensed
@@ -18,7 +18,7 @@ is:
 | (the "License"); you may not use this file except in compliance
 | with the License.  You may obtain a copy of the License at
 |
-|     http://www.apache.org/licenses/LICENSE-2.0
+|     https://www.apache.org/licenses/LICENSE-2.0
 |
 | Unless required by applicable law or agreed to in writing, software
 | distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,7 +29,7 @@ is:
 The Odiago NOTICE at the time of the contribution:
 
 | This product includes software developed by Odiago, Inc.
-| (http://www.wibidata.com).
+| (https://www.wibidata.com).
 
 Apache Commons compress includes the following in its NOTICE file:
 
@@ -37,13 +37,13 @@ Apache Commons compress includes the following in its NOTICE file:
 | Copyright 2002-2014 The Apache Software Foundation
 |
 | This product includes software developed at
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 |
 | The files in the package org.apache.commons.compress.archivers.sevenz
 | were derived from the LZMA SDK, version 9.20 (C/ and CPP/7zip/),
 | which has been placed in the public domain:
 |
-| "LZMA SDK is placed in the public domain." (http://www.7-zip.org/sdk.html)
+| "LZMA SDK is placed in the public domain." (https://www.7-zip.org/sdk.html)
 
 Apache Commons codec includes the following in its NOTICE file:
 
@@ -51,10 +51,10 @@ Apache Commons codec includes the following in its NOTICE file:
 | Copyright 2002-2015 The Apache Software Foundation
 |
 | This product includes software developed at
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 |
 | The content of package org.apache.commons.codec.language.bm has been translated
-| from the original php source code available at http://stevemorse.org/phoneticinfo.htm
+| from the original php source code available at https://stevemorse.org/phoneticinfo.htm
 | with permission from the original authors.
 | Original source copyright:
 | Copyright (c) 2008 Alexander Beider & Stephen P. Morse.
@@ -65,7 +65,7 @@ Apache Commons lang includes the following in its NOTICE file:
 | Copyright 2001-2011 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Velocity includes the following in its NOTICE file:
 
@@ -73,7 +73,7 @@ Apache Velocity includes the following in its NOTICE file:
 | Copyright (C) 2000-2007 The Apache Software Foundation
 |
 | This product includes software developed at
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons collections includes the following in its NOTICE file:
 
@@ -81,7 +81,7 @@ Apache Commons collections includes the following in its NOTICE file:
 | Copyright 2001-2008 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons math includes the following in its NOTICE file:
 
@@ -90,14 +90,14 @@ Apache Commons math includes the following in its NOTICE file:
 | The BracketFinder (package org.apache.commons.math3.optimization.univariate)
 | and PowellOptimizer (package org.apache.commons.math3.optimization.general)
 | classes are based on the Python code in module "optimize.py" (version 0.5)
-| developed by Travis E. Oliphant for the SciPy library (http://www.scipy.org/)
+| developed by Travis E. Oliphant for the SciPy library (https://www.scipy.org/)
 | Copyright © 2003-2009 SciPy Developers.
 | ===============================================================================
 |
 | The LinearConstraint, LinearObjectiveFunction, LinearOptimizer,
 | RelationShip, SimplexSolver and SimplexTableau classes in package
 | org.apache.commons.math3.optimization.linear include software developed by
-| Benjamin McCann (http://www.benmccann.com) and distributed with
+| Benjamin McCann (https://www.benmccann.com) and distributed with
 | the following copyright: Copyright 2009 Google Inc.
 | ===============================================================================
 |
@@ -177,7 +177,7 @@ Jetty 6.1.26 includes the following in its NOTICE file:
 | granted provided that the copyright notice appears in all copies.
 |
 | The default JSP implementation is provided by the Glassfish JSP engine
-| from project Glassfish http://glassfish.dev.java.net.  Copyright 2005
+| from project Glassfish https://glassfish.dev.java.net.  Copyright 2005
 | Sun Microsystems, Inc. and portions Copyright Apache Software Foundation.
 |
 | Some portions of the code are Copyright:
@@ -201,7 +201,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |
 | Please visit the Netty web site for more information:
 |
-|   * http://netty.io/
+|   * https://netty.io/
 |
 | Copyright 2011 The Netty Project
 |
@@ -209,7 +209,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 | version 2.0 (the "License"); you may not use this file except in compliance
 | with the License. You may obtain a copy of the License at:
 |
-| http://www.apache.org/licenses/LICENSE-2.0
+| https://www.apache.org/licenses/LICENSE-2.0
 |
 | Unless required by applicable law or agreed to in writing, software
 | distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -253,7 +253,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.protobuf.txt (New BSD License)
 |   * HOMEPAGE:
-|     * http://code.google.com/p/protobuf/
+|     * https://code.google.com/p/protobuf/
 |
 | This product optionally depends on 'SLF4J', a simple logging facade for Java,
 | which can be obtained at:
@@ -261,7 +261,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.slf4j.txt (MIT License)
 |   * HOMEPAGE:
-|     * http://www.slf4j.org/
+|     * https://www.slf4j.org/
 |
 | This product optionally depends on 'Apache Commons Logging', a logging
 | framework, which can be obtained at:
@@ -269,7 +269,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.commons-logging.txt (Apache License 2.0)
 |   * HOMEPAGE:
-|     * http://commons.apache.org/logging/
+|     * https://commons.apache.org/logging/
 |
 | This product optionally depends on 'Apache Log4J', a logging framework,
 | which can be obtained at:
@@ -277,7 +277,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.log4j.txt (Apache License 2.0)
 |   * HOMEPAGE:
-|     * http://logging.apache.org/log4j/
+|     * https://logging.apache.org/log4j/
 |
 | This product optionally depends on 'JBoss Logging', a logging framework,
 | which can be obtained at:
@@ -285,7 +285,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.jboss-logging.txt (GNU LGPL 2.1)
 |   * HOMEPAGE:
-|     * http://anonsvn.jboss.org/repos/common/common-logging-spi/
+|     * https://anonsvn.jboss.org/repos/common/common-logging-spi/
 |
 | [JBOSS LOGGING IS NOT INCLUDED IN AVRO TOOLS.]
 |
@@ -295,7 +295,7 @@ Netty 3.5.13.Final includes the following in its NOTICE file:
 |   * LICENSE:
 |     * license/LICENSE.felix.txt (Apache License 2.0)
 |   * HOMEPAGE:
-|     * http://felix.apache.org/
+|     * https://felix.apache.org/
 |
 | [FELIX IS NOT INCLUDED IN AVRO TOOLS.]
 |
@@ -315,7 +315,7 @@ Apache Commons CLI includes the following in its NOTICE file:
 | Copyright 2001-2009 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons logging includes the following in its NOTICE file:
 
@@ -323,7 +323,7 @@ Apache Commons logging includes the following in its NOTICE file:
 | Copyright 2003-2007 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons HttpClient includes the following in its NOTICE file:
 
@@ -331,12 +331,12 @@ Apache Commons HttpClient includes the following in its NOTICE file:
 | Copyright 1999-2007 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Hadoop includes the following in its NOTICE file:
 
 | This product includes software developed by The Apache Software
-| Foundation (http://www.apache.org/).
+| Foundation (https://www.apache.org/).
 
 Apache Commons IO includes the following in its NOTICE file:
 
@@ -344,7 +344,7 @@ Apache Commons IO includes the following in its NOTICE file:
 | Copyright 2002-2012 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons Net includes the following in its NOTICE file:
 
@@ -352,7 +352,7 @@ Apache Commons Net includes the following in its NOTICE file:
 | Copyright 2001-2012 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Log4j includes the following in its NOTICE file:
 
@@ -360,7 +360,7 @@ Apache Log4j includes the following in its NOTICE file:
 | Copyright 2010 The Apache Software Foundation
 |
 | This product includes software developed at
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons configuration includes the following in its NOTICE file:
 
@@ -368,7 +368,7 @@ Apache Commons configuration includes the following in its NOTICE file:
 | Copyright 2001-2008 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons digester includes the following in its NOTICE file:
 
@@ -376,7 +376,7 @@ Apache Commons digester includes the following in its NOTICE file:
 | Copyright 2001-2006 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Commons beanutils includes the following in its NOTICE file:
 
@@ -384,7 +384,7 @@ Apache Commons beanutils includes the following in its NOTICE file:
 | Copyright 2000-2008 The Apache Software Foundation
 |
 | This product includes software developed by
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Directory includes the following in its NOTICE file:
 
@@ -392,7 +392,7 @@ Apache Directory includes the following in its NOTICE file:
 | Copyright 2003-2015 The Apache Software Foundation
 |
 | This product includes software developed at
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 
 Apache Zookeeper includes the following in its NOTICE file:
 
@@ -400,4 +400,4 @@ Apache Zookeeper includes the following in its NOTICE file:
 | Copyright 2009-2014 The Apache Software Foundation
 |
 | This product includes software developed at
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).

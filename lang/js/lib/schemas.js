@@ -9,7 +9,7 @@
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -2151,7 +2151,7 @@ function stringify(obj, noDeref) {
   // Since JS objects are unordered, this implementation (unfortunately)
   // relies on engines returning properties in the same order that they are
   // inserted in. This is not in the JS spec, but can be "somewhat" safely
-  // assumed (more here: http://stackoverflow.com/q/5525795/1062617).
+  // assumed (more here: https://stackoverflow.com/q/5525795/1062617).
   return (function (registry) {
     return JSON.stringify(obj, function (key, value) {
       if (value instanceof Field) {

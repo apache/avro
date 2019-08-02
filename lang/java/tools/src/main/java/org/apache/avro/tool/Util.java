@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -255,8 +255,8 @@ class Util {
   }
 
   static OptionSpec<Integer> compressionLevelOption(OptionParser optParser) {
-    return optParser.accepts("level", "Compression level (only applies to deflate and xz)").withRequiredArg()
-        .ofType(Integer.class).defaultsTo(Deflater.DEFAULT_COMPRESSION);
+    return optParser.accepts("level", "Compression level (only applies to deflate, xz, and zstandard)")
+        .withRequiredArg().ofType(Integer.class).defaultsTo(Deflater.DEFAULT_COMPRESSION);
   }
 
   static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level) {
@@ -270,6 +270,8 @@ class Util {
       return CodecFactory.deflateCodec(level.value(opts));
     } else if (codecName.equals(DataFileConstants.XZ_CODEC)) {
       return CodecFactory.xzCodec(level.value(opts));
+    } else if (codecName.equals(DataFileConstants.ZSTANDARD_CODEC)) {
+      return CodecFactory.zstandardCodec(level.value(opts));
     } else {
       return CodecFactory.fromString(codec.value(opts));
     }

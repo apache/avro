@@ -8,7 +8,7 @@ Usage
   use ```require('avro-js')``` in your program.
 
 * *Outside of node.js (e.g., browser)*: Include the validator.js file and the
-  [underscore.js library](http://underscorejs.org/).
+  [underscore.js library](https://underscorejs.org/).
 
 
 Running tests

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,9 +22,13 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 import org.apache.avro.*;
+import org.apache.avro.data.TimeConversions;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
@@ -44,9 +48,11 @@ public class TestGenericLogicalTypes {
   public static final GenericData GENERIC = new GenericData();
 
   @BeforeClass
-  public static void addDecimalAndUUID() {
+  public static void addLogicalTypes() {
     GENERIC.addLogicalTypeConversion(new Conversions.DecimalConversion());
     GENERIC.addLogicalTypeConversion(new Conversions.UUIDConversion());
+    GENERIC.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
+    GENERIC.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
   }
 
   @Test
@@ -268,4 +274,85 @@ public class TestGenericLogicalTypes {
     Assert.assertEquals(original, copy);
   }
 
+  @Test
+  public void testReadLocalTimestampMillis() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMillis();
+    Schema longSchema = Schema.create(Schema.Type.LONG);
+    Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
+
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 42000000);
+    LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC);
+    List<LocalDateTime> expected = Arrays.asList(i1, i2);
+
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMillisConversion();
+
+    // use the conversion directly instead of relying on the write side
+    Long i1long = conversion.toLong(i1, longSchema, timestamp);
+    Long i2long = 0L;
+
+    File test = write(longSchema, i1long, i2long);
+    Assert.assertEquals("Should convert long to LocalDateTime", expected,
+        read(GENERIC.createDatumReader(timestampSchema), test));
+  }
+
+  @Test
+  public void testWriteLocalTimestampMillis() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMillis();
+    Schema longSchema = Schema.create(Schema.Type.LONG);
+    Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
+
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 42000000);
+    LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochMilli(0), ZoneOffset.UTC);
+
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMillisConversion();
+
+    Long d1long = conversion.toLong(i1, longSchema, timestamp);
+    Long d2long = 0L;
+    List<Long> expected = Arrays.asList(d1long, d2long);
+
+    File test = write(GENERIC, timestampSchema, i1, i2);
+    Assert.assertEquals("Should read LocalDateTime as longs", expected,
+        read(GenericData.get().createDatumReader(timestampSchema), test));
+  }
+
+  @Test
+  public void testReadLocalTimestampMicros() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMicros();
+    Schema longSchema = Schema.create(Schema.Type.LONG);
+    Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
+
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 420000);
+    LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochSecond(0, 4000), ZoneOffset.UTC);
+    List<LocalDateTime> expected = Arrays.asList(i1, i2);
+
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMicrosConversion();
+
+    // use the conversion directly instead of relying on the write side
+    Long i1long = conversion.toLong(i1, longSchema, timestamp);
+    Long i2long = conversion.toLong(i2, longSchema, timestamp);
+
+    File test = write(longSchema, i1long, i2long);
+    Assert.assertEquals("Should convert long to LocalDateTime", expected,
+        read(GENERIC.createDatumReader(timestampSchema), test));
+  }
+
+  @Test
+  public void testWriteLocalTimestampMicros() throws IOException {
+    LogicalType timestamp = LogicalTypes.localTimestampMicros();
+    Schema longSchema = Schema.create(Schema.Type.LONG);
+    Schema timestampSchema = timestamp.addToSchema(Schema.create(Schema.Type.LONG));
+
+    LocalDateTime i1 = LocalDateTime.of(1986, 06, 26, 12, 07, 11, 420000);
+    LocalDateTime i2 = LocalDateTime.ofInstant(Instant.ofEpochSecond(0, 4000), ZoneOffset.UTC);
+
+    Conversion<LocalDateTime> conversion = new TimeConversions.LocalTimestampMicrosConversion();
+
+    Long d1long = conversion.toLong(i1, longSchema, timestamp);
+    Long d2long = conversion.toLong(i2, longSchema, timestamp);
+    List<Long> expected = Arrays.asList(d1long, d2long);
+
+    File test = write(GENERIC, timestampSchema, i1, i2);
+    Assert.assertEquals("Should read LocalDateTime as longs", expected,
+        read(GenericData.get().createDatumReader(timestampSchema), test));
+  }
 }

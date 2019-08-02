@@ -1,5 +1,4 @@
-/*  Copyright 2019 Pitney Bowes Inc.
- *
+/*  
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -8,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,8 +18,16 @@
 
 namespace Avro.Reflect
 {
+    /// <summary>
+    /// Extension methods for ArraySchema - make helper metadata look more like a property
+    /// </summary>
     public static class ArraySchemaExtensions
     {
+        /// <summary>
+        /// Return the name of the array helper
+        /// </summary>
+        /// <param name="ars">this</param>
+        /// <returns>value of the helper metadata - null if it isnt present</returns>
         public static string GetHelper(this ArraySchema ars)
         {
             string s = null;

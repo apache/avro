@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {lint|test|dist|clean}"
   exit 1
 }
 
@@ -44,6 +44,9 @@ function do_clean(){
 }
 
 case "$target" in
+  lint)
+    echo 'This is a stub where someone can provide linting.'
+    ;;
   test)
     perl ./Makefile.PL && make test
     ;;

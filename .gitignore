@@ -9,6 +9,7 @@
 .classpath
 target
 *.pyc
+*.egg-info
 .svn
 /build
 test-output
@@ -18,3 +19,4 @@ test-output
 /lang/java/compiler/nbproject/
 **/.vscode/**/*
 .DS_Store
+.factorypath

@@ -5,14 +5,15 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Input/Output utilities, including:
 
@@ -34,20 +35,17 @@ uses the following mapping:
   * Schema longs are implemented as long.
   * Schema floats are implemented as float.
   * Schema doubles are implemented as float.
-  * Schema booleans are implemented as bool. 
+  * Schema booleans are implemented as bool.
 """
+
+import datetime
+import json
 import struct
-from avro import schema
 import sys
 from binascii import crc32
+from decimal import Decimal, getcontext
 
-from decimal import Decimal
-from decimal import getcontext
-
-try:
-	import json
-except ImportError:
-	import simplejson as json
+from avro import constants, schema, timezones
 
 #
 # Constants
@@ -71,14 +69,13 @@ else:
       return struct.unpack(self.format, *args)
   struct_class = SimpleStruct
 
-STRUCT_INT = struct_class('!I')             # big-endian unsigned int
-STRUCT_LONG = struct_class('!Q')            # big-endian unsigned long long
-STRUCT_FLOAT = struct_class('!f')           # big-endian float
-STRUCT_DOUBLE = struct_class('!d')          # big-endian double
+STRUCT_FLOAT = struct_class('<f')           # big-endian float
+STRUCT_DOUBLE = struct_class('<d')          # big-endian double
 STRUCT_CRC32 = struct_class('>I')           # big-endian unsigned int
 STRUCT_SIGNED_SHORT = struct_class('>h')    # big-endian signed short
 STRUCT_SIGNED_INT = struct_class('>i')      # big-endian signed int
 STRUCT_SIGNED_LONG = struct_class('>q')     # big-endian signed long
+
 
 #
 # Exceptions
@@ -103,52 +100,59 @@ class SchemaResolutionException(schema.AvroException):
 #
 # Validate
 #
+def _is_timezone_aware_datetime(dt):
+  return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
+
+_valid = {
+  'null': lambda s, d: d is None,
+  'boolean': lambda s, d: isinstance(d, bool),
+  'string': lambda s, d: isinstance(d, basestring),
+  'bytes': lambda s, d: ((isinstance(d, str)) or
+                         (isinstance(d, Decimal) and
+                          getattr(s, 'logical_type', None) == constants.DECIMAL)),
+  'int': lambda s, d: ((isinstance(d, (int, long))) and (INT_MIN_VALUE <= d <= INT_MAX_VALUE) or
+                       (isinstance(d, datetime.date) and
+                        getattr(s, 'logical_type', None) == constants.DATE) or
+                       (isinstance(d, datetime.time) and
+                        getattr(s, 'logical_type', None) == constants.TIME_MILLIS)),
+  'long': lambda s, d: ((isinstance(d, (int, long))) and (LONG_MIN_VALUE <= d <= LONG_MAX_VALUE) or
+                        (isinstance(d, datetime.time) and
+                         getattr(s, 'logical_type', None) == constants.TIME_MICROS) or
+                        (isinstance(d, datetime.date) and
+                         _is_timezone_aware_datetime(d) and
+                        getattr(s, 'logical_type', None) in (constants.TIMESTAMP_MILLIS,
+                                                             constants.TIMESTAMP_MICROS))),
+  'float': lambda s, d: isinstance(d, (int, long, float)),
+  'fixed': lambda s, d: ((isinstance(d, str) and len(d) == s.size) or
+                         (isinstance(d, Decimal) and
+                          getattr(s, 'logical_type', None) == constants.DECIMAL)),
+  'enum': lambda s, d: d in s.symbols,
+  'array': lambda s, d: isinstance(d, list) and all(validate(s.items, item) for item in d),
+  'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, basestring) for key in d)
+                       and all(validate(s.values, value) for value in d.values())),
+  'union': lambda s, d: any(validate(branch, d) for branch in s.schemas),
+  'record': lambda s, d: (isinstance(d, dict)
+                          and all(validate(f.type, d.get(f.name)) for f in s.fields)
+                          and {f.name for f in s.fields}.issuperset(d.keys())),
+}
+_valid['double'] = _valid['float']
+_valid['error_union'] = _valid['union']
+_valid['error'] = _valid['request'] = _valid['record']
+
 
 def validate(expected_schema, datum):
-  """Determine if a python datum is an instance of a schema."""
-  schema_type = expected_schema.type
-  if schema_type == 'null':
-    return datum is None
-  elif schema_type == 'boolean':
-    return isinstance(datum, bool)
-  elif schema_type == 'string':
-    return isinstance(datum, basestring)
-  elif schema_type == 'bytes':
-    if (hasattr(expected_schema, 'logical_type') and
-            expected_schema.logical_type == 'decimal'):
-      return isinstance(datum, Decimal)
-    return isinstance(datum, str)
-  elif schema_type == 'int':
-    return ((isinstance(datum, int) or isinstance(datum, long)) 
-            and INT_MIN_VALUE <= datum <= INT_MAX_VALUE)
-  elif schema_type == 'long':
-    return ((isinstance(datum, int) or isinstance(datum, long)) 
-            and LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE)
-  elif schema_type in ['float', 'double']:
-    return (isinstance(datum, int) or isinstance(datum, long)
-            or isinstance(datum, float))
-  # Check for int, float, long and decimal
-  elif schema_type == 'fixed':
-    if (hasattr(expected_schema, 'logical_type') and
-                    expected_schema.logical_type == 'decimal'):
-      return isinstance(datum, Decimal)
-    return isinstance(datum, str) and len(datum) == expected_schema.size
-  elif schema_type == 'enum':
-    return datum in expected_schema.symbols
-  elif schema_type == 'array':
-    return (isinstance(datum, list) and
-      False not in [validate(expected_schema.items, d) for d in datum])
-  elif schema_type == 'map':
-    return (isinstance(datum, dict) and
-      False not in [isinstance(k, basestring) for k in datum.keys()] and
-      False not in
-        [validate(expected_schema.values, v) for v in datum.values()])
-  elif schema_type in ['union', 'error_union']:
-    return True in [validate(s, datum) for s in expected_schema.schemas]
-  elif schema_type in ['record', 'error', 'request']:
-    return (isinstance(datum, dict) and
-      False not in
-        [validate(f.type, datum.get(f.name)) for f in expected_schema.fields])
+  """Determines if a python datum is an instance of a schema.
+
+  Args:
+    expected_schema: Schema to validate against.
+    datum: Datum to validate.
+  Returns:
+    True if the datum is an instance of the schema.
+  """
+  try:
+    return _valid[expected_schema.type](expected_schema, datum)
+  except KeyError:
+    raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
 
 #
 # Decoder/Encoder
@@ -210,11 +214,7 @@ class BinaryDecoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xffL)) |
-      ((ord(self.read(1)) & 0xffL) <<  8) |
-      ((ord(self.read(1)) & 0xffL) << 16) |
-      ((ord(self.read(1)) & 0xffL) << 24))
-    return STRUCT_FLOAT.unpack(STRUCT_INT.pack(bits))[0]
+    return STRUCT_FLOAT.unpack(self.read(4))[0]
 
   def read_double(self):
     """
@@ -222,15 +222,7 @@ class BinaryDecoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xffL)) |
-      ((ord(self.read(1)) & 0xffL) <<  8) |
-      ((ord(self.read(1)) & 0xffL) << 16) |
-      ((ord(self.read(1)) & 0xffL) << 24) |
-      ((ord(self.read(1)) & 0xffL) << 32) |
-      ((ord(self.read(1)) & 0xffL) << 40) |
-      ((ord(self.read(1)) & 0xffL) << 48) |
-      ((ord(self.read(1)) & 0xffL) << 56))
-    return STRUCT_DOUBLE.unpack(STRUCT_LONG.pack(bits))[0]
+    return STRUCT_DOUBLE.unpack(self.read(8))[0]
 
   def read_decimal_from_bytes(self, precision, scale):
     """
@@ -279,6 +271,66 @@ class BinaryDecoder(object):
     that many bytes of UTF-8 encoded character data.
     """
     return unicode(self.read_bytes(), "utf-8")
+
+  def read_date_from_int(self):
+    """
+    int is decoded as python date object.
+    int stores the number of days from
+    the unix epoch, 1 January 1970 (ISO calendar).
+    """
+    days_since_epoch = self.read_int()
+    return datetime.date(1970, 1, 1) + datetime.timedelta(days_since_epoch)
+
+  def _build_time_object(self, value, scale_to_micro):
+    value = value * scale_to_micro
+    value, microseconds =  value // 1000000, value % 1000000
+    value, seconds = value // 60, value % 60
+    value, minutes = value // 60, value % 60
+    hours = value
+
+    return datetime.time(
+      hour=hours,
+      minute=minutes,
+      second=seconds,
+      microsecond=microseconds
+    )
+
+  def read_time_millis_from_int(self):
+    """
+    int is decoded as python time object which represents 
+    the number of milliseconds after midnight, 00:00:00.000.
+    """
+    milliseconds = self.read_int()
+    return self._build_time_object(milliseconds, 1000)
+
+  def read_time_micros_from_long(self):
+    """
+    long is decoded as python time object which represents 
+    the number of microseconds after midnight, 00:00:00.000000.
+    """
+    microseconds = self.read_long()
+    return self._build_time_object(microseconds, 1)
+
+  def read_timestamp_millis_from_long(self):
+    """
+    long is decoded as python datetime object which represents 
+    the number of milliseconds from the unix epoch, 1 January 1970.
+    """
+    timestamp_millis = self.read_long()
+    timedelta = datetime.timedelta(microseconds=timestamp_millis * 1000)
+    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc) 
+    return unix_epoch_datetime + timedelta
+
+  def read_timestamp_micros_from_long(self):
+    """
+    long is decoded as python datetime object which represents 
+    the number of microseconds from the unix epoch, 1 January 1970.
+    """
+    timestamp_micros = self.read_long()
+    timedelta = datetime.timedelta(microseconds=timestamp_micros)
+    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+    return unix_epoch_datetime + timedelta
+
 
   def check_crc32(self, bytes):
     checksum = STRUCT_CRC32.unpack(self.read(4))[0];
@@ -367,11 +419,7 @@ class BinaryEncoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = STRUCT_INT.unpack(STRUCT_FLOAT.pack(datum))[0]
-    self.write(chr((bits) & 0xFF))
-    self.write(chr((bits >> 8) & 0xFF))
-    self.write(chr((bits >> 16) & 0xFF))
-    self.write(chr((bits >> 24) & 0xFF))
+    self.write(STRUCT_FLOAT.pack(datum))
 
   def write_double(self, datum):
     """
@@ -379,15 +427,7 @@ class BinaryEncoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = STRUCT_LONG.unpack(STRUCT_DOUBLE.pack(datum))[0]
-    self.write(chr((bits) & 0xFF))
-    self.write(chr((bits >> 8) & 0xFF))
-    self.write(chr((bits >> 16) & 0xFF))
-    self.write(chr((bits >> 24) & 0xFF))
-    self.write(chr((bits >> 32) & 0xFF))
-    self.write(chr((bits >> 40) & 0xFF))
-    self.write(chr((bits >> 48) & 0xFF))
-    self.write(chr((bits >> 56) & 0xFF))
+    self.write(STRUCT_DOUBLE.pack(datum))
 
   def write_decimal_bytes(self, datum, scale):
     """
@@ -477,6 +517,56 @@ class BinaryEncoder(object):
     A 4-byte, big-endian CRC32 checksum
     """
     self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff));
+
+  def write_date_int(self, datum):
+    """
+    Encode python date object as int.
+    It stores the number of days from
+    the unix epoch, 1 January 1970 (ISO calendar).
+    """
+    delta_date = datum - datetime.date(1970, 1, 1)
+    self.write_int(delta_date.days)
+
+  def write_time_millis_int(self, datum):
+    """
+    Encode python time object as int.
+    It stores the number of milliseconds from midnight, 00:00:00.000
+    """
+    milliseconds = datum.hour*3600000 + datum.minute * 60000 + datum.second * 1000 + datum.microsecond // 1000
+    self.write_int(milliseconds)
+
+  def write_time_micros_long(self, datum):
+    """
+    Encode python time object as long.
+    It stores the number of microseconds from midnight, 00:00:00.000000
+    """
+    microseconds = datum.hour*3600000000 + datum.minute * 60000000 + datum.second * 1000000 + datum.microsecond
+    self.write_long(microseconds)
+
+  def _timedelta_total_microseconds(self, timedelta):
+    return (
+        timedelta.microseconds + (timedelta.seconds + timedelta.days * 24 * 3600) * 10 ** 6)
+
+  def write_timestamp_millis_long(self, datum):
+    """
+    Encode python datetime object as long.
+    It stores the number of milliseconds from midnight of unix epoch, 1 January 1970.
+    """
+    datum = datum.astimezone(tz=timezones.utc)
+    timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+    milliseconds = self._timedelta_total_microseconds(timedelta) / 1000
+    self.write_long(long(milliseconds))
+
+  def write_timestamp_micros_long(self, datum):
+    """
+    Encode python datetime object as long.
+    It stores the number of microseconds from midnight of unix epoch, 1 January 1970.
+    """
+    datum = datum.astimezone(tz=timezones.utc)
+    timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+    microseconds = self._timedelta_total_microseconds(timedelta)
+    self.write_long(long(microseconds))
+
 
 #
 # DatumReader/Writer
@@ -583,9 +673,26 @@ class DatumReader(object):
     elif writers_schema.type == 'string':
       return decoder.read_utf8()
     elif writers_schema.type == 'int':
-      return decoder.read_int()
+      if (hasattr(writers_schema, 'logical_type') and
+          writers_schema.logical_type == constants.DATE):
+        return decoder.read_date_from_int()
+      elif (hasattr(writers_schema, 'logical_type') and
+        writers_schema.logical_type == constants.TIME_MILLIS):
+        return decoder.read_time_millis_from_int()
+      else:
+        return decoder.read_int()
     elif writers_schema.type == 'long':
-      return decoder.read_long()
+      if (hasattr(writers_schema, 'logical_type') and 
+          writers_schema.logical_type == constants.TIME_MICROS):
+        return decoder.read_time_micros_from_long()
+      elif (hasattr(writers_schema, 'logical_type') and 
+            writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
+        return decoder.read_timestamp_millis_from_long()
+      elif (hasattr(writers_schema, 'logical_type') and 
+            writers_schema.logical_type == constants.TIMESTAMP_MICROS):
+        return decoder.read_timestamp_micros_from_long()
+      else:
+        return decoder.read_long()
     elif writers_schema.type == 'float':
       return decoder.read_float()
     elif writers_schema.type == 'double':
@@ -897,7 +1004,7 @@ class DatumWriter(object):
     # validate datum
     if not validate(self.writers_schema, datum):
       raise AvroTypeException(self.writers_schema, datum)
-    
+
     self.write_data(self.writers_schema, datum, encoder)
 
   def write_data(self, writers_schema, datum, encoder):
@@ -909,9 +1016,26 @@ class DatumWriter(object):
     elif writers_schema.type == 'string':
       encoder.write_utf8(datum)
     elif writers_schema.type == 'int':
-      encoder.write_int(datum)
+      if (hasattr(writers_schema, 'logical_type') and
+          writers_schema.logical_type == constants.DATE):
+        encoder.write_date_int(datum)
+      elif (hasattr(writers_schema, 'logical_type') and
+            writers_schema.logical_type == constants.TIME_MILLIS):
+        encoder.write_time_millis_int(datum)
+      else:
+        encoder.write_int(datum)
     elif writers_schema.type == 'long':
-      encoder.write_long(datum)
+      if (hasattr(writers_schema, 'logical_type') and
+          writers_schema.logical_type == constants.TIME_MICROS):
+        encoder.write_time_micros_long(datum)
+      elif (hasattr(writers_schema, 'logical_type') and
+            writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
+        encoder.write_timestamp_millis_long(datum)
+      elif (hasattr(writers_schema, 'logical_type') and
+            writers_schema.logical_type == constants.TIMESTAMP_MICROS):
+        encoder.write_timestamp_micros_long(datum)
+      else:
+        encoder.write_long(datum)
     elif writers_schema.type == 'float':
       encoder.write_float(datum)
     elif writers_schema.type == 'double':
