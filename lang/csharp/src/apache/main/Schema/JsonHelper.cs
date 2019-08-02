@@ -56,7 +56,11 @@ namespace Avro
         public static string GetRequiredString(JToken jtok, string field)
         {
             string value = GetOptionalString(jtok, field);
+<<<<<<< HEAD
             if (string.IsNullOrEmpty(value)) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at {jtok.Path}");
+=======
+            if (string.IsNullOrEmpty(value)) throw new SchemaParseException($"No \"{field}\" JSON field: {jtok} at {jtok.Path}");
+>>>>>>> cf3b820edf3c0528778f069a3026aa581163d20e
             return value;
         }
 
@@ -71,7 +75,11 @@ namespace Avro
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException($"name at {jtok.Path}");
 
             JToken child = jtok[field];
+<<<<<<< HEAD
             if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at {jtok.Path}");
+=======
+            if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {jtok} at {jtok.Path}");
+>>>>>>> cf3b820edf3c0528778f069a3026aa581163d20e
 
             if (child.Type == JTokenType.Integer) return (int) child;
             throw new SchemaParseException($"Field {field} is not an integer at {jtok.Path}");
