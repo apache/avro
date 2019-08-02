@@ -21,13 +21,25 @@ using System.Text;
 
 namespace Avro
 {
+    /// <summary>
+    /// Exception parsing protocol
+    /// </summary>
     public class ProtocolParseException:AvroException
     {
+        /// <summary>
+        /// Exception parsing protocol
+        /// </summary>
+        /// <param name="s">Message</param>
         public ProtocolParseException(string s)
             : base(s)
         {
         }
 
+        /// <summary>
+        /// Exception parsing protocol
+        /// </summary>
+        /// <param name="s">Message</param>
+        /// <param name="inner">Inner Exception</param>
         public ProtocolParseException(string s, Exception inner)
             : base(s, inner)
         {

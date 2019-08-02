@@ -43,9 +43,15 @@ namespace Avro
         {
             SchemaName name = NamedSchema.GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
-
-            return new FixedSchema(name, aliases, JsonHelper.GetRequiredInteger(jtok, "size"), props, names,
-                JsonHelper.GetOptionalString(jtok, "doc"));
+            try
+            {
+                return new FixedSchema(name, aliases, JsonHelper.GetRequiredInteger(jtok, "size"), props, names,
+                    JsonHelper.GetOptionalString(jtok, "doc"));
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"E{e.Message} at {jtok.Path}", e);
+            }
         }
 
         /// <summary>

@@ -108,7 +108,7 @@ namespace Avro
             }
             catch (Exception ex)
             {
-                throw new ProtocolParseException("Invalid JSON format: " + jstring, ex);
+                throw new ProtocolParseException($"Invalid JSON format: {jstring} at {jtok.Path}", ex);
             }
             return Parse(jtok);
         }
@@ -147,8 +147,14 @@ namespace Avro
                     messages.Add(message.Name, message);
                 }
             }
-
-            return new Protocol(name, space, doc, types, messages);
+            try
+            {
+                return new Protocol(name, space, doc, types, messages);
+            }
+            catch (Exception e)
+            {
+                throw new ProtocolParseException($"Error creating Protocol at {jtok.Path}");
+            }
         }
 
         /// <summary>

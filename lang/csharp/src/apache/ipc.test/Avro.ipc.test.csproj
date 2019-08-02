@@ -17,7 +17,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net40</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <RootNamespace>Avro.ipc.test</RootNamespace>
     <AssemblyName>Avro.ipc.test</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
