@@ -211,7 +211,7 @@ namespace Avro.Test
             [AvroArray(typeof(ConcurrentQueueHelper<string>))]
             public ConcurrentQueue<string> two {get;set;}
         }
-        //[TestCase]
+        [TestCase]
         public void MultiQueueTest()
         {
             var schema = Schema.Parse(_multiList);

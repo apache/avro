@@ -121,12 +121,18 @@ namespace Avro
             {
                 Schema errorSchema = Schema.ParseJson(jerrors, names, encspace);
                 if (!(errorSchema is UnionSchema))
-                    throw new AvroException("");
+                    throw new AvroException($"Not a UnionSchema at {jerrors.Path}");
 
                 uerrorSchema = errorSchema as UnionSchema;
             }
-
-            return new Message(name, doc, schema, response, uerrorSchema, oneway);
+            try
+            {
+                return new Message(name, doc, schema, response, uerrorSchema, oneway);
+            }
+            catch (Exception e)
+            {
+                throw new ProtocolParseException($"Error creating Message at {jmessage.Path}", e);
+            }
         }
 
         /// <summary>

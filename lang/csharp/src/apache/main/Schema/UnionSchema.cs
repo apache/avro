@@ -54,17 +54,23 @@ namespace Avro
             {
                 Schema unionType = Schema.ParseJson(jvalue, names, encspace);
                 if (null == unionType)
-                    throw new SchemaParseException("Invalid JSON in union" + jvalue.ToString());
+                    throw new SchemaParseException($"Invalid JSON in union {jvalue.ToString()} at {jvalue.Path}");
 
                 string name = unionType.Fullname;
                 if (uniqueSchemas.ContainsKey(name))
-                    throw new SchemaParseException("Duplicate type in union: " + name);
+                    throw new SchemaParseException($"Duplicate type in union: {name} at {jvalue.Path}");
 
                 uniqueSchemas.Add(name, name);
                 schemas.Add(unionType);
             }
-
-            return new UnionSchema(schemas, props);
+            try
+            {
+                return new UnionSchema(schemas, props);
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"Error creating UnionSchema at {jarr.Path}");
+            }
         }
 
         /// <summary>

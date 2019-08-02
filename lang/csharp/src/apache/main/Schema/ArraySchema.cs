@@ -41,9 +41,16 @@ namespace Avro
         internal static ArraySchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jitem = jtok["items"];
-            if (null == jitem) throw new AvroTypeException("Array does not have 'items'");
-
-            return new ArraySchema(Schema.ParseJson(jitem, names, encspace), props);
+            if (null == jitem) throw new AvroTypeException($"Array does not have 'items' at {jtok.Path}");
+            var schema = Schema.ParseJson(jitem, names, encspace);
+            try
+            {
+                return new ArraySchema(schema, props);
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"Error creating ArraySchema at {jitem.Path}", e);
+            }
         }
 
         /// <summary>

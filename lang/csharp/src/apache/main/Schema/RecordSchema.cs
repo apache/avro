@@ -66,17 +66,25 @@ namespace Avro
                 if (null != jfields) request = true;
             }
             if (null == jfields)
-                throw new SchemaParseException("'fields' cannot be null for record");
+                throw new SchemaParseException($"'fields' cannot be null for record at {jtok.Path}");
             if (jfields.Type != JTokenType.Array)
-                throw new SchemaParseException("'fields' not an array for record");
+                throw new SchemaParseException($"'fields' not an array for record at {jtok.Path}");
 
             var name = GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
             var fields = new List<Field>();
             var fieldMap = new Dictionary<string, Field>();
             var fieldAliasMap = new Dictionary<string, Field>();
-            var result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
-                JsonHelper.GetOptionalString(jtok, "doc"));
+            RecordSchema result;
+            try
+            {
+                result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
+                    JsonHelper.GetOptionalString(jtok, "doc"));
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"Error creating RecordSchema at {jtok.Path}", e);
+            }
 
             int fieldPos = 0;
             foreach (JObject jfield in jfields)
@@ -143,10 +151,16 @@ namespace Avro
 
             JToken jtype = jfield["type"];
             if (null == jtype)
-                throw new SchemaParseException("'type' was not found for field: " + name);
+                throw new SchemaParseException($"'type' was not found for field: name at {jfield.Path}");
             var schema = Schema.ParseJson(jtype, names, encspace);
-
-            return new Field(schema, name, aliases, pos, doc, defaultValue, sortorder, props);
+            try
+            {
+                return new Field(schema, name, aliases, pos, doc, defaultValue, sortorder, props);
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"Error creating Field at {jfield.Path}", e);
+            }
         }
 
         private static void addToFieldMap(Dictionary<string, Field> map, string name, Field field)

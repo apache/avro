@@ -21,11 +21,28 @@ using System.Text;
 
 namespace Avro
 {
+    /// <summary>
+    /// Exception while parsing
+    /// </summary>
     public class SchemaParseException:AvroException
     {
+        /// <summary>
+        /// Exception while parsing
+        /// </summary>
+        /// <param name="s">Message</param>
         public SchemaParseException(string s)
             : base(s)
         {
         }
+        /// <summary>
+        /// Exception while parsing
+        /// </summary>
+        /// <param name="s">Message</param>
+        /// <param name="inner">Inner Exception</param>
+        public SchemaParseException(string s, Exception inner)
+            : base(s, inner)
+        {
+        }
+
     }
 }

@@ -127,7 +127,14 @@ namespace Avro
         {
             String n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages
             String ns = JsonHelper.GetOptionalString(jtok, "namespace");
-            return new SchemaName(n, ns, encspace);
+            try
+            {
+                return new SchemaName(n, ns, encspace);
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"Error creating SchemaName at {jtok.Path}");
+            }
         }
 
         /// <summary>
