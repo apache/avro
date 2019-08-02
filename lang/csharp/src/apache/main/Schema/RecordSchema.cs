@@ -83,7 +83,7 @@ namespace Avro
             }
             catch (Exception e)
             {
-                throw new SchemaParseException($"Error creating RecordSchema at {jtok.Path}", e);
+                throw new SchemaParseException($"{e.Message} at {jtok.Path}", e);
             }
 
             int fieldPos = 0;
@@ -92,12 +92,19 @@ namespace Avro
                 string fieldName = JsonHelper.GetRequiredString(jfield, "name");
                 Field field = createField(jfield, fieldPos++, names, name.Namespace);  // add record namespace for field look up
                 fields.Add(field);
+                try
+                {
                 addToFieldMap(fieldMap, fieldName, field);
                 addToFieldMap(fieldAliasMap, fieldName, field);
 
                 if (null != field.aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
                     foreach (string alias in field.aliases)
                         addToFieldMap(fieldAliasMap, alias, field);
+                }
+                catch (Exception e)
+                {
+                    throw new SchemaParseException($"{e.Message} at {jfield.Path}", e);
+                }
             }
             return result;
         }
@@ -159,7 +166,7 @@ namespace Avro
             }
             catch (Exception e)
             {
-                throw new SchemaParseException($"Error creating Field at {jfield.Path}", e);
+                throw new SchemaParseException($"{e.Message} {jfield.Path}", e);
             }
         }
 

@@ -133,7 +133,7 @@ namespace Avro
             }
             catch (Exception e)
             {
-                throw new SchemaParseException($"Error creating SchemaName at {jtok.Path}");
+                throw new SchemaParseException($"{e.Message} {jtok.Path}", e);
             }
         }
 
@@ -151,13 +151,13 @@ namespace Avro
                 return null;
 
             if (jaliases.Type != JTokenType.Array)
-                throw new SchemaParseException("Aliases must be of format JSON array of strings");
+                throw new SchemaParseException($"Aliases must be of format JSON array of strings at {jtok.Path}");
 
             var aliases = new List<SchemaName>();
             foreach (JToken jalias in jaliases)
             {
                 if (jalias.Type != JTokenType.String)
-                    throw new SchemaParseException("Aliases must be of format JSON array of strings");
+                    throw new SchemaParseException($"Aliases must be of format JSON array of strings at {jtok.Path}");
 
                 aliases.Add(new SchemaName((string)jalias, space, encspace));
             }
