@@ -57,7 +57,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "No \"name\" JSON field: {\n  \"name\": \"\",\n  \"type\": \"string\"\n} at types[0].fields[0]" ) );
+            Assert.That( ex.Message, Is.EqualTo( "No \"name\" JSON field: {  \"name\": \"\",  \"type\": \"string\"} at types[0].fields[0]" ) );
 
             protocol = @"{
                 ""protocol"": ""TestProtocol"",

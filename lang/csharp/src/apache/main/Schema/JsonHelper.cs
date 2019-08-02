@@ -17,7 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -56,7 +56,7 @@ namespace Avro
         public static string GetRequiredString(JToken jtok, string field)
         {
             string value = GetOptionalString(jtok, field);
-            if (string.IsNullOrEmpty(value)) throw new SchemaParseException($"No \"{field}\" JSON field: {jtok} at {jtok.Path}");
+            if (string.IsNullOrEmpty(value)) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at {jtok.Path}");
             return value;
         }
 
@@ -71,7 +71,7 @@ namespace Avro
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException($"name at {jtok.Path}");
 
             JToken child = jtok[field];
-            if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {jtok} at {jtok.Path}");
+            if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at {jtok.Path}");
 
             if (child.Type == JTokenType.Integer) return (int) child;
             throw new SchemaParseException($"Field {field} is not an integer at {jtok.Path}");
