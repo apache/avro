@@ -184,7 +184,7 @@ public class CaseFinder {
   /**
    * Reads and returns content of a heredoc. Assumes we just read a
    * start-of-here-doc marker for a here-doc labeled "docMarker." Replaces
-   * arbitrary newlines with sytem newlines, but strips newline from final line of
+   * arbitrary newlines with system newlines, but strips newline from final line of
    * heredoc. Throws IOException if EOF is reached before heredoc is terminate.
    */
   private static String processHereDoc(BufferedReader in, String docStart) throws IOException {
