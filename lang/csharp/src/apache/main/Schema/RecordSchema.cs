@@ -81,7 +81,7 @@ namespace Avro
                 result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
                     JsonHelper.GetOptionalString(jtok, "doc"));
             }
-            catch (Exception e)
+            catch (SchemaParseException e)
             {
                 throw new SchemaParseException($"{e.Message} at {jtok.Path}", e);
             }
