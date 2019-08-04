@@ -68,7 +68,7 @@ namespace Avro
         /// <returns>property value</returns>
         public static int GetRequiredInteger(JToken jtok, string field)
         {
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException($"name at {jtok.Path}");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
 
             JToken child = jtok[field];
             if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at {jtok.Path}");
