@@ -50,7 +50,7 @@ namespace Avro
             }
             catch (Exception e)
             {
-                throw new SchemaParseException($"E{e.Message} at {jtok.Path}", e);
+                throw new SchemaParseException($"{e.Message} at {jtok.Path}", e);
             }
         }
 
