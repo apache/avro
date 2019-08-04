@@ -101,7 +101,7 @@ namespace Avro
                     foreach (string alias in field.aliases)
                         addToFieldMap(fieldAliasMap, alias, field);
                 }
-                catch (Exception e)
+                catch (SchemaParseException e)
                 {
                     throw new SchemaParseException($"{e.Message} at {jfield.Path}", e);
                 }
