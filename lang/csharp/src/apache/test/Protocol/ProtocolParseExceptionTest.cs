@@ -24,7 +24,7 @@ namespace Avro.Test
     public class ProtocolParseExceptionTest
     {
         [TestCase]
-        public void TestRecord()
+        public void TestProtocolParseExceptions()
         {
             var protocol = @"{
                 ""protocol"": ""TestProtocol"",
