@@ -50,7 +50,7 @@ namespace Avro
             if (null == jvalue) throw new AvroTypeException($"Map does not have 'values' at {jtok.Path}");
             try
             {
-                return new MapSchema(Schema.ParseJson(jvalue, names, encspace), props);
+                return new MapSchema(ParseJson(jvalue, names, encspace), props);
             }
             catch (Exception e)
             {
