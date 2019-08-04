@@ -75,7 +75,7 @@ namespace Avro
                 return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
                     JsonHelper.GetOptionalString(jtok, "doc"));
             }
-            catch (Exception e)
+            catch (SchemaParseException e)
             {
                 throw new SchemaParseException($"{e.Message} at {jtok.Path}", e);
             }
