@@ -35,7 +35,7 @@ namespace Avro
         public static string GetOptionalString(JToken jtok, string field)
         {
             if (null == jtok) throw new ArgumentNullException("jtok", "jtok cannot be null.");
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field", $"field cannot be null at {jtok.Path}.");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field", $"field cannot be null at '{jtok.Path}'");
 
             JToken child = jtok[field];
             if (null == child) return null;
@@ -44,7 +44,7 @@ namespace Avro
             {
                 return child.Value<string>();
             }
-            throw new SchemaParseException($"Field {field} is not a string at {jtok.Path}");
+            throw new SchemaParseException($"Field {field} is not a string at '{jtok.Path}'");
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Avro
         public static string GetRequiredString(JToken jtok, string field)
         {
             string value = GetOptionalString(jtok, field);
-            if (string.IsNullOrEmpty(value)) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at {jtok.Path}");
+            if (string.IsNullOrEmpty(value)) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at '{jtok.Path}'");
             return value;
         }
 
@@ -71,10 +71,10 @@ namespace Avro
             if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field));
 
             JToken child = jtok[field];
-            if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at {jtok.Path}");
+            if (null == child) throw new SchemaParseException($"No \"{field}\" JSON field: {Regex.Replace(jtok.ToString(), @"\r\n?|\n", "")} at '{jtok.Path}'");
 
             if (child.Type == JTokenType.Integer) return (int) child;
-            throw new SchemaParseException($"Field {field} is not an integer at {jtok.Path}");
+            throw new SchemaParseException($"Field {field} is not an integer at '{jtok.Path}'");
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Avro
         public static bool? GetOptionalBoolean(JToken jtok, string field)
         {
             if (null == jtok) throw new ArgumentNullException("jtok", "jtok cannot be null.");
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field", $"field cannot be null at {jtok.Path}.");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field", $"field cannot be null at '{jtok.Path}'");
 
             JToken child = jtok[field];
             if (null == child) return null;
@@ -94,7 +94,7 @@ namespace Avro
             if (child.Type == JTokenType.Boolean)
                 return (bool)child;
 
-            throw new SchemaParseException($"Field {field} is not a boolean at {jtok.Path}");
+            throw new SchemaParseException($"Field {field} is not a boolean at '{jtok.Path}'");
         }
 
         /// <summary>

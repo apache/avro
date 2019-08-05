@@ -35,28 +35,23 @@ namespace Avro
         /// Static class to return a new instance of ArraySchema
         /// </summary>
         /// <param name="jtok">JSON object for the array schema</param>
+        /// <param name="props">metadata properties</param>
         /// <param name="names">list of named schemas already parsed</param>
         /// <param name="encspace">enclosing namespace for the array schema</param>
         /// <returns></returns>
         internal static ArraySchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jitem = jtok["items"];
-            if (null == jitem) throw new AvroTypeException($"Array does not have 'items' at {jtok.Path}");
+            if (null == jitem) throw new AvroTypeException($"Array does not have 'items' at '{jtok.Path}'");
             var schema = Schema.ParseJson(jitem, names, encspace);
-            try
-            {
-                return new ArraySchema(schema, props);
-            }
-            catch (Exception e)
-            {
-                throw new SchemaParseException($"Error creating ArraySchema at {jitem.Path}", e);
-            }
+            return new ArraySchema(schema, props);
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="items">schema for the array items type</param>
+        /// <param name="props">metadata properties</param>
         private ArraySchema(Schema items, PropertyMap props) : base(Type.Array, props)
         {
             if (null == items) throw new ArgumentNullException("items");

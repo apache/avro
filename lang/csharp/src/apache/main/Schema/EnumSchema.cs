@@ -46,6 +46,7 @@ namespace Avro
         /// Static function to return new instance of EnumSchema
         /// </summary>
         /// <param name="jtok">JSON object for enum schema</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already parsed in</param>
         /// <param name="encspace">enclosing namespace for the enum schema</param>
         /// <returns>new instance of enum schema</returns>
@@ -56,7 +57,7 @@ namespace Avro
 
             JArray jsymbols = jtok["symbols"] as JArray;
             if (null == jsymbols)
-                throw new SchemaParseException($"Enum has no symbols: {name} at {jtok.Path}");
+                throw new SchemaParseException($"Enum has no symbols: {name} at '{jtok.Path}'");
 
             List<string> symbols = new List<string>();
             IDictionary<string, int> symbolMap = new Dictionary<string, int>();
@@ -65,7 +66,7 @@ namespace Avro
             {
                 string s = (string)jsymbol.Value;
                 if (symbolMap.ContainsKey(s))
-                    throw new SchemaParseException($"Duplicate symbol: {s} at {jtok.Path}");
+                    throw new SchemaParseException($"Duplicate symbol: {s} at '{jtok.Path}'");
 
                 symbolMap[s] = i++;
                 symbols.Add(s);
@@ -77,7 +78,7 @@ namespace Avro
             }
             catch (SchemaParseException e)
             {
-                throw new SchemaParseException($"{e.Message} at {jtok.Path}", e);
+                throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
             }
         }
 

@@ -42,6 +42,7 @@ namespace Avro
         /// Static function to return instance of the union schema
         /// </summary>
         /// <param name="jarr">JSON object for the union schema</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <returns>new UnionSchema object</returns>
@@ -54,23 +55,16 @@ namespace Avro
             {
                 Schema unionType = Schema.ParseJson(jvalue, names, encspace);
                 if (null == unionType)
-                    throw new SchemaParseException($"Invalid JSON in union {jvalue.ToString()} at {jvalue.Path}");
+                    throw new SchemaParseException($"Invalid JSON in union {jvalue.ToString()} at '{jvalue.Path}'");
 
                 string name = unionType.Fullname;
                 if (uniqueSchemas.ContainsKey(name))
-                    throw new SchemaParseException($"Duplicate type in union: {name} at {jvalue.Path}");
+                    throw new SchemaParseException($"Duplicate type in union: {name} at '{jvalue.Path}'");
 
                 uniqueSchemas.Add(name, name);
                 schemas.Add(unionType);
             }
-            try
-            {
-                return new UnionSchema(schemas, props);
-            }
-            catch (Exception e)
-            {
-                throw new SchemaParseException($"Error creating UnionSchema at {jarr.Path}");
-            }
+            return new UnionSchema(schemas, props);
         }
 
         /// <summary>

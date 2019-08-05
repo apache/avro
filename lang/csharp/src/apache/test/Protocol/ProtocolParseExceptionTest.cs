@@ -35,7 +35,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             SchemaParseException ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "Property type is required at types[0]" ) );
+            Assert.That( ex.Message, Is.EqualTo( "Property type is required at 'types[0]'" ) );
 
             protocol = @"{
                 ""protocol"": ""TestProtocol"",
@@ -46,7 +46,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "'type' was not found for field: name at types[0].fields[0]" ) );
+            Assert.That( ex.Message, Is.EqualTo( "'type' was not found for field: name at 'types[0].fields[0]'" ) );
 
             protocol = @"{
                 ""protocol"": ""TestProtocol"",
@@ -57,7 +57,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "No \"name\" JSON field: {  \"name\": \"\",  \"type\": \"string\"} at types[0].fields[0]" ) );
+            Assert.That( ex.Message, Is.EqualTo( "No \"name\" JSON field: {  \"name\": \"\",  \"type\": \"string\"} at 'types[0].fields[0]'" ) );
 
             protocol = @"{
                 ""protocol"": ""TestProtocol"",
@@ -68,7 +68,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "Aliases must be of format JSON array of strings at types[0].fields[0]" ) );
+            Assert.That( ex.Message, Is.EqualTo( "Aliases must be of format JSON array of strings at 'types[0].fields[0]'" ) );
 
             protocol = @"{
                 ""protocol"": ""TestProtocol"",
@@ -79,7 +79,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "Field name is not a string at types[0]" ) );
+            Assert.That( ex.Message, Is.EqualTo( "Field name is not a string at 'types[0]'" ) );
 
             protocol = @"{
                 ""protocol"": ""TestProtocol"",
@@ -90,7 +90,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "Field name is not a string at types[0].fields[0]" ) );
+            Assert.That( ex.Message, Is.EqualTo( "Field name is not a string at 'types[0].fields[0]'" ) );
 
             protocol = @"{
                 ""protocol"": ""TestProtocol"",
@@ -101,7 +101,7 @@ namespace Avro.Test
                     ]}
                 ]}";
             ex = Assert.Throws<SchemaParseException>(()=>Protocol.Parse(protocol) );
-            Assert.That( ex.Message, Is.EqualTo( "Undefined name: abc at types[0].fields[0].type" ) );
+            Assert.That( ex.Message, Is.EqualTo( "Undefined name: abc at 'types[0].fields[0].type'" ) );
 
         }
     }

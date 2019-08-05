@@ -105,7 +105,7 @@ namespace Avro
                 NamedSchema schema = null;
                 if (names.TryGetValue(value, null, encspace, out schema)) return schema;
 
-                throw new SchemaParseException($"Undefined name: {value} at {jtok.Path}");
+                throw new SchemaParseException($"Undefined name: {value} at '{jtok.Path}'");
             }
 
             if (jtok is JArray) // union schema with no 'type' property or union type for a record field
@@ -117,7 +117,7 @@ namespace Avro
 
                 JToken jtype = jo["type"];
                 if (null == jtype)
-                    throw new SchemaParseException($"Property type is required at {jtok.Path}");
+                    throw new SchemaParseException($"Property type is required at '{jtok.Path}'");
 
                 var props = Schema.GetProperties(jtok);
 
@@ -138,7 +138,7 @@ namespace Avro
                 else if (jtype.Type == JTokenType.Array)
                     return UnionSchema.NewInstance(jtype as JArray, props, names, encspace);
             }
-            throw new AvroTypeException($"Invalid JSON for schema: {jtok} at {jtok.Path}");
+            throw new AvroTypeException($"Invalid JSON for schema: {jtok} at '{jtok.Path}'");
         }
 
         /// <summary>

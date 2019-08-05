@@ -41,20 +41,21 @@ namespace Avro
         /// Static function to return new instance of map schema
         /// </summary>
         /// <param name="jtok">JSON object for the map schema</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the map schema</param>
         /// <returns></returns>
         internal static MapSchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jvalue = jtok["values"];
-            if (null == jvalue) throw new AvroTypeException($"Map does not have 'values' at {jtok.Path}");
+            if (null == jvalue) throw new AvroTypeException($"Map does not have 'values' at '{jtok.Path}'");
             try
             {
                 return new MapSchema(ParseJson(jvalue, names, encspace), props);
             }
             catch (Exception e)
             {
-                throw new SchemaParseException($"Error creating MapSchema at {jtok.Path}", e);
+                throw new SchemaParseException($"Error creating MapSchema at '{jtok.Path}'", e);
             }
         }
 
@@ -62,6 +63,7 @@ namespace Avro
         /// Constructor for map schema class
         /// </summary>
         /// <param name="valueSchema">schema for map values type</param>
+        /// <param name="props">custom properties on this schema</param>
         private MapSchema(Schema valueSchema, PropertyMap props) : base(Type.Map, props)
         {
             if (null == valueSchema) throw new ArgumentNullException("valueSchema", "valueSchema cannot be null.");

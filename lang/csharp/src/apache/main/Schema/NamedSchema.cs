@@ -127,14 +127,7 @@ namespace Avro
         {
             String n = JsonHelper.GetOptionalString(jtok, "name");      // Changed this to optional string for anonymous records in messages
             String ns = JsonHelper.GetOptionalString(jtok, "namespace");
-            try
-            {
-                return new SchemaName(n, ns, encspace);
-            }
-            catch (Exception e)
-            {
-                throw new SchemaParseException($"{e.Message} {jtok.Path}", e);
-            }
+            return new SchemaName(n, ns, encspace);
         }
 
         /// <summary>
@@ -151,13 +144,13 @@ namespace Avro
                 return null;
 
             if (jaliases.Type != JTokenType.Array)
-                throw new SchemaParseException($"Aliases must be of format JSON array of strings at {jtok.Path}");
+                throw new SchemaParseException($"Aliases must be of format JSON array of strings at '{jtok.Path}'");
 
             var aliases = new List<SchemaName>();
             foreach (JToken jalias in jaliases)
             {
                 if (jalias.Type != JTokenType.String)
-                    throw new SchemaParseException($"Aliases must be of format JSON array of strings at {jtok.Path}");
+                    throw new SchemaParseException($"Aliases must be of format JSON array of strings at '{jtok.Path}'");
 
                 aliases.Add(new SchemaName((string)jalias, space, encspace));
             }
