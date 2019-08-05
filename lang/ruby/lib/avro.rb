@@ -28,7 +28,7 @@ module Avro
 
   class AvroTypeError < Avro::AvroError
     def initialize(schm=nil, datum=nil, msg=nil)
-      msg ||= "Not a #{schm.to_s}: #{datum}"
+      msg ||= "Not a #{schm}: #{datum}"
       super(msg)
     end
   end

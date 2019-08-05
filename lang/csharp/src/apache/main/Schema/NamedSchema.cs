@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -71,6 +71,7 @@ namespace Avro
         /// Static function to return a new instance of the named schema
         /// </summary>
         /// <param name="jo">JSON object of the named schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the named schema</param>
         /// <returns></returns>
@@ -157,6 +158,14 @@ namespace Avro
             return aliases;
         }
 
+        /// <summary>
+        /// Determines whether the given schema name is one of this <see cref="NamedSchema"/>'s
+        /// aliases.
+        /// </summary>
+        /// <param name="name">Schema name to test.</param>
+        /// <returns>
+        /// True if <paramref name="name"/> is one of this schema's aliases; false otherwise.
+        /// </returns>
         protected bool InAliases(SchemaName name)
         {
             if (null != aliases)

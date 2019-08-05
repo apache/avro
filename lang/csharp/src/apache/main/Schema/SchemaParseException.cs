@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,21 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Avro
 {
     /// <summary>
-    /// Exception while parsing
+    /// Used to communicate an exception that occurred while parsing a schema.
     /// </summary>
-    public class SchemaParseException:AvroException
+    public class SchemaParseException : AvroException
     {
         /// <summary>
-        /// Exception while parsing
+        /// Initializes a new instance of the <see cref="SchemaParseException"/> class.
         /// </summary>
-        /// <param name="s">Message</param>
+        /// <param name="s">Exception message.</param>
         public SchemaParseException(string s)
             : base(s)
         {

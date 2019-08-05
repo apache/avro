@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Avro
 {
@@ -133,6 +132,7 @@ namespace Avro
             return obj1 == null ? obj2 == null : obj1.Equals(obj2);
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return string.IsNullOrEmpty(Fullname) ? 0 : 29 * Fullname.GetHashCode();

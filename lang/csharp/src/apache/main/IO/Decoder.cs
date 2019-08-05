@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.IO;
 
 namespace Avro.IO
 {
@@ -178,10 +176,20 @@ namespace Avro.IO
         /// </summary>
         void SkipString();
 
+        /// <summary>
+        /// Skips an enumeration.
+        /// </summary>
         void SkipEnum();
 
+        /// <summary>
+        /// Skips a union tag index.
+        /// </summary>
         void SkipUnionIndex();
 
+        /// <summary>
+        /// Skips a fixed of a specified length.
+        /// </summary>
+        /// <param name="len">Length of the fixed.</param>
         void SkipFixed(int len);
     }
 

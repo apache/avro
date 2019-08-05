@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,18 +16,31 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Avro
 {
+    /// <summary>
+    /// A generic Avro exception.
+    /// </summary>
     public class AvroException : Exception
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AvroException"/> class.
+        /// </summary>
+        /// <param name="s">The message that describes the error.</param>
         public AvroException(string s)
             : base(s)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AvroException"/> class.
+        /// </summary>
+        /// <param name="s">The message that describes the error.</param>
+        /// <param name="inner">
+        /// The exception that is the cause of the current exception, or a null reference
+        /// if no inner exception is specified.
+        /// </param>
         public AvroException(string s, Exception inner)
             : base(s, inner)
         {

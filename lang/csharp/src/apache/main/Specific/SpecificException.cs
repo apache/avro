@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,10 +20,18 @@ using System;
 
 namespace Avro.Specific
 {
+    /// <summary>
+    /// Base class for specific exceptions.
+    /// </summary>
     public abstract class SpecificException : Exception, ISpecificRecord
     {
+        /// <inheritdoc/>
         public abstract Schema Schema { get; }
+
+        /// <inheritdoc/>
         public abstract object Get(int fieldPos);
+
+        /// <inheritdoc/>
         public abstract void Put(int fieldPos, object fieldValue);
     }
 }

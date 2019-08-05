@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -35,7 +35,7 @@ namespace Avro
         /// Static class to return a new instance of ArraySchema
         /// </summary>
         /// <param name="jtok">JSON object for the array schema</param>
-        /// <param name="props">metadata properties</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schemas already parsed</param>
         /// <param name="encspace">enclosing namespace for the array schema</param>
         /// <returns></returns>
@@ -51,7 +51,7 @@ namespace Avro
         /// Constructor
         /// </summary>
         /// <param name="items">schema for the array items type</param>
-        /// <param name="props">metadata properties</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         private ArraySchema(Schema items, PropertyMap props) : base(Type.Array, props)
         {
             if (null == items) throw new ArgumentNullException("items");

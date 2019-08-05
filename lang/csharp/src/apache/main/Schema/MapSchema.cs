@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,6 +32,11 @@ namespace Avro
         /// </summary>
         public Schema ValueSchema { get; set; }
 
+        /// <summary>
+        /// Creates a new <see cref="MapSchema"/> from the given schema.
+        /// </summary>
+        /// <param name="type">Schema to create the map schema from.</param>
+        /// <returns>A new <see cref="MapSchema"/>.</returns>
         public static MapSchema CreateMap(Schema type)
         {
             return new MapSchema(type,null);
@@ -41,7 +46,7 @@ namespace Avro
         /// Static function to return new instance of map schema
         /// </summary>
         /// <param name="jtok">JSON object for the map schema</param>
-        /// <param name="props">custom properties on this schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the map schema</param>
         /// <returns></returns>
@@ -63,7 +68,7 @@ namespace Avro
         /// Constructor for map schema class
         /// </summary>
         /// <param name="valueSchema">schema for map values type</param>
-        /// <param name="props">custom properties on this schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         private MapSchema(Schema valueSchema, PropertyMap props) : base(Type.Map, props)
         {
             if (null == valueSchema) throw new ArgumentNullException("valueSchema", "valueSchema cannot be null.");

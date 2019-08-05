@@ -64,7 +64,7 @@ public abstract class Conversion<T> {
   /**
    * Certain logical types may require adjusting the code within the "setter"
    * methods to make sure the data that is set is properly formatted. This method
-   * allows teh Conversion to generate custom setter code if required.
+   * allows the Conversion to generate custom setter code if required.
    * 
    * @param varName
    * @param valParamName
