@@ -83,6 +83,18 @@ public class TestCircularReferences {
     }
   }
 
+  public static class ReferenceTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new Reference(schema);
+    }
+
+    @Override
+    public String getTypeName() {
+      return Reference.REFERENCE;
+    }
+  }
+
   public static class Referenceable extends LogicalType {
     private static final String REFERENCEABLE = "referenceable";
     private static final String ID_FIELD_NAME = "id-field-name";
@@ -125,10 +137,22 @@ public class TestCircularReferences {
     }
   }
 
+  public static class ReferenceableTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new Referenceable(schema);
+    }
+
+    @Override
+    public String getTypeName() {
+      return Referenceable.REFERENCEABLE;
+    }
+  }
+
   @BeforeClass
   public static void addReferenceTypes() {
-    LogicalTypes.register(Referenceable.REFERENCEABLE, Referenceable::new);
-    LogicalTypes.register(Reference.REFERENCE, Reference::new);
+    LogicalTypes.register(Referenceable.REFERENCEABLE, new ReferenceableTypeFactory());
+    LogicalTypes.register(Reference.REFERENCE, new ReferenceTypeFactory());
   }
 
   public static class ReferenceManager {

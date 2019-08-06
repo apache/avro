@@ -31,9 +31,7 @@ public class LogicalTypes {
   public interface LogicalTypeFactory {
     LogicalType fromSchema(Schema schema);
 
-    default String getTypeName() {
-      return this.getClass().getSimpleName();
-    }
+    String getTypeName();
   }
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES = new ConcurrentHashMap<>();
