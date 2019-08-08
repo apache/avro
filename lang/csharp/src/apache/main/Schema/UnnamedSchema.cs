@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Globalization;
 
 namespace Avro
 {
@@ -35,7 +36,7 @@ namespace Avro
         /// <inheritdoc/>
         public override string Name
         {
-            get { return Tag.ToString().ToLower(); }
+            get { return Tag.ToString().ToLower(CultureInfo.InvariantCulture); }
         }
     }
 }
