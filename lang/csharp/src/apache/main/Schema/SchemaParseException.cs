@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace Avro
 {
     /// <summary>
@@ -31,5 +33,15 @@ namespace Avro
             : base(s)
         {
         }
+        /// <summary>
+        /// Exception while parsing
+        /// </summary>
+        /// <param name="s">Message</param>
+        /// <param name="inner">Inner Exception</param>
+        public SchemaParseException(string s, Exception inner)
+            : base(s, inner)
+        {
+        }
+
     }
 }

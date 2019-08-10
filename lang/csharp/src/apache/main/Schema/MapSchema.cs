@@ -53,9 +53,15 @@ namespace Avro
         internal static MapSchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jvalue = jtok["values"];
-            if (null == jvalue) throw new AvroTypeException("Map does not have 'values'");
-
-            return new MapSchema(Schema.ParseJson(jvalue, names, encspace), props);
+            if (null == jvalue) throw new AvroTypeException($"Map does not have 'values' at '{jtok.Path}'");
+            try
+            {
+                return new MapSchema(ParseJson(jvalue, names, encspace), props);
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"Error creating MapSchema at '{jtok.Path}'", e);
+            }
         }
 
         /// <summary>
