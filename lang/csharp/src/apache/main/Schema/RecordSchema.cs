@@ -65,17 +65,25 @@ namespace Avro
                 if (null != jfields) request = true;
             }
             if (null == jfields)
-                throw new SchemaParseException("'fields' cannot be null for record");
+                throw new SchemaParseException($"'fields' cannot be null for record at '{jtok.Path}'");
             if (jfields.Type != JTokenType.Array)
-                throw new SchemaParseException("'fields' not an array for record");
+                throw new SchemaParseException($"'fields' not an array for record at '{jtok.Path}'");
 
             var name = GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
             var fields = new List<Field>();
             var fieldMap = new Dictionary<string, Field>();
             var fieldAliasMap = new Dictionary<string, Field>();
-            var result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
-                JsonHelper.GetOptionalString(jtok, "doc"));
+            RecordSchema result;
+            try
+            {
+                result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
+                    JsonHelper.GetOptionalString(jtok, "doc"));
+            }
+            catch (SchemaParseException e)
+            {
+                throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
+            }
 
             int fieldPos = 0;
             foreach (JObject jfield in jfields)
@@ -83,12 +91,19 @@ namespace Avro
                 string fieldName = JsonHelper.GetRequiredString(jfield, "name");
                 Field field = createField(jfield, fieldPos++, names, name.Namespace);  // add record namespace for field look up
                 fields.Add(field);
-                addToFieldMap(fieldMap, fieldName, field);
-                addToFieldMap(fieldAliasMap, fieldName, field);
+                try
+                {
+                    addToFieldMap(fieldMap, fieldName, field);
+                    addToFieldMap(fieldAliasMap, fieldName, field);
 
-                if (null != field.aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
-                    foreach (string alias in field.aliases)
-                        addToFieldMap(fieldAliasMap, alias, field);
+                    if (null != field.aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
+                        foreach (string alias in field.aliases)
+                            addToFieldMap(fieldAliasMap, alias, field);
+                }
+                catch (SchemaParseException e)
+                {
+                    throw new SchemaParseException($"{e.Message} at '{jfield.Path}'", e);
+                }
             }
             return result;
         }
@@ -142,9 +157,8 @@ namespace Avro
 
             JToken jtype = jfield["type"];
             if (null == jtype)
-                throw new SchemaParseException("'type' was not found for field: " + name);
+                throw new SchemaParseException($"'type' was not found for field: name at '{jfield.Path}'");
             var schema = Schema.ParseJson(jtype, names, encspace);
-
             return new Field(schema, name, aliases, pos, doc, defaultValue, sortorder, props);
         }
 
