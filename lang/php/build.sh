@@ -44,34 +44,36 @@ function dist {
     cp "$tarball" "../$dist_dir"
 }
 
-case "$1" in
-     interop-data-generate)
-       php test/generate_interop_data.php
-       ;;
+for target in "$@"
+do
+  case "$target" in
+    interop-data-generate)
+      php test/generate_interop_data.php
+      ;;
 
-     test-interop)
-       phpunit test/InterOpTest.php
-       ;;
+    test-interop)
+      phpunit test/InterOpTest.php
+      ;;
 
     lint)
       echo 'This is a stub where someone can provide linting.'
       ;;
 
-     test)
-       phpunit test/AllTests.php
-       ;;
+    test)
+      phpunit test/AllTests.php
+      ;;
 
-     dist)
-        dist
-       ;;
+    dist)
+      dist
+      ;;
 
-     clean)
-       clean
-       ;;
+    clean)
+      clean
+      ;;
 
-     *)
-       echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
-esac
-
+    *)
+      echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
+  esac
+done
 
 exit 0
