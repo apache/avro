@@ -211,16 +211,25 @@ namespace Avro.File
             {
                 bool done = false;
 
-                do // read until sync mark matched
+                // read until sync mark matched
+                do
                 {
                     _decoder.ReadFixed(_syncBuffer);
                     if (Enumerable.SequenceEqual(_syncBuffer, _header.SyncData))
+                    {
                         done = true;
+                    }
                     else
-                        _stream.Position = _stream.Position - (DataFileConstants.SyncSize - 1);
-                } while (!done);
+                    {
+                        _stream.Position -= DataFileConstants.SyncSize - 1;
+                    }
+                }
+                while (!done);
             }
-            catch (Exception) { } // could not find .. default to EOF
+            catch
+            {
+                // could not find .. default to EOF
+            }
 
             _blockStart = _stream.Position;
         }
