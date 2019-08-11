@@ -55,7 +55,19 @@ namespace Avro
         /// <summary>
         /// List of generated namespaces
         /// </summary>
+        [Obsolete("Use NamespaceLookup instead. This will be removed from the public API in a future version.")]
         protected Dictionary<string, CodeNamespace> namespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// List of generated namespaces.
+        /// </summary>
+        protected Dictionary<string, CodeNamespace> NamespaceLookup
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            get => namespaceLookup;
+            set => namespaceLookup = value;
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
 
         /// <summary>
         /// Default constructor
@@ -97,7 +109,7 @@ namespace Avro
 
             CodeNamespace ns = null;
 
-            if (!namespaceLookup.TryGetValue(name, out ns))
+            if (!NamespaceLookup.TryGetValue(name, out ns))
             {
                 string csharpNamespace;
                 ns = NamespaceMapping.TryGetValue(name, out csharpNamespace)
@@ -108,7 +120,7 @@ namespace Avro
                     ns.Imports.Add(nci);
 
                 CompileUnit.Namespaces.Add(ns);
-                namespaceLookup.Add(name, ns);
+                NamespaceLookup.Add(name, ns);
             }
             return ns;
         }
