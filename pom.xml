@@ -171,7 +171,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>${maven-plugin-plugin.version}</version>
         <configuration>
-          <goalPrefix>spotless</goalPrefix>
+          <goalPrefix>avro</goalPrefix>
         </configuration>
       </plugin>
     </plugins>
