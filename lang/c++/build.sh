@@ -44,10 +44,6 @@ DOC_CPP=$BUILD/$AVRO_DOC/api/cpp
 DIST_DIR=../../dist/cpp
 TARFILE=../dist/cpp/$AVRO_CPP.tar.gz
 
-(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
-for target in "$@"
-do
-
 function do_doc() {
   doxygen
   if [ -d doc ]
@@ -58,6 +54,7 @@ function do_doc() {
     exit 1
   fi
 }
+
 function do_dist() {
   rm -rf $BUILD_CPP/
   mkdir -p $BUILD_CPP
@@ -73,6 +70,10 @@ function do_dist() {
     exit 1
   fi
 }
+
+(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
+for target in "$@"
+do
 
 case "$target" in
   lint)
@@ -112,7 +113,7 @@ case "$target" in
 
   clean)
     (cd build && make clean)
-    rm -rf doc test.avro test6.df
+    rm -rf doc test.avro test?.df test_skip.df
     ;;
 
   install)
