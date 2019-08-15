@@ -23,7 +23,7 @@ VERSION=`cat share/VERSION.txt`
 DOCKER_XTRA_ARGS=""
 
 function usage {
-  echo "Usage: $0 {test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
+  echo "Usage: $0 {test|dist|sign|clean|veryclean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
 }
 
@@ -199,6 +199,7 @@ do
 
       (cd lang/perl; ./build.sh clean)
       ;;
+
     veryclean)
       rm -rf build dist
       (cd doc; ant clean)
@@ -232,8 +233,8 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
       rm -rf lang/c++/build
-      rm -rf lang/c++/test?.df
       rm -rf lang/js/node_modules
       rm -rf lang/perl/inc/
       rm -rf lang/ruby/.gem/
