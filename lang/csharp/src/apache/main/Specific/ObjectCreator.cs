@@ -236,7 +236,9 @@ namespace Avro.Specific
                                 {
                                     return GenericNullableType.MakeGenericType(itemType);
                                 }
-                                catch (Exception) { }
+                                catch
+                                {
+                                }
                             }
 
                             return itemType;
