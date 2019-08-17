@@ -96,8 +96,8 @@ namespace Avro
                     addToFieldMap(fieldMap, fieldName, field);
                     addToFieldMap(fieldAliasMap, fieldName, field);
 
-                    if (null != field.aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
-                        foreach (string alias in field.aliases)
+                    if (null != field.Aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
+                        foreach (string alias in field.Aliases)
                             addToFieldMap(fieldAliasMap, alias, field);
                 }
                 catch (SchemaParseException e)
@@ -315,8 +315,8 @@ namespace Avro
                 {
                     Field f2 = that[f.Name];
                     if (null == f2) // reader field not in writer field, check aliases of reader field if any match with a writer field
-                        if (null != f.aliases)
-                            foreach (string alias in f.aliases)
+                        if (null != f.Aliases)
+                            foreach (string alias in f.Aliases)
                             {
                                 f2 = that[alias];
                                 if (null != f2) break;
