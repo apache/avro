@@ -58,7 +58,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Add an element to the array.
         /// </summary>
-        /// <value></value>
+        /// <param name="o">Element to add to the array.</param>
         public virtual void Add(object o)
         {
             IList e = (IList)Enumerable;
@@ -86,6 +86,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="enumerable">Enumerable to initialize this helper with.</param>
         public ArrayHelper(IEnumerable enumerable)
         {
             Enumerable = enumerable;
