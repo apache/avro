@@ -17,8 +17,9 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using Avro.Generic;
 using Avro.IO;
 using Avro.Specific;
@@ -165,7 +166,7 @@ namespace Avro.File
         /// <inheritdoc/>
         public long GetMetaLong(string key)
         {
-            return long.Parse(GetMetaString(key));
+            return long.Parse(GetMetaString(key), CultureInfo.InvariantCulture);
         }
 
         /// <inheritdoc/>
@@ -182,7 +183,8 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format("Error fetching meta data for key: {0}", key), e);
+                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
+                    "Error fetching meta data for key: {0}", key), e);
             }
         }
 
@@ -285,7 +287,8 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format("Error fetching next object from block: {0}", e));
+                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
+                    "Error fetching next object from block: {0}", e));
             }
         }
 
@@ -402,7 +405,8 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format("Error fetching next object from block: {0}", e));
+                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
+                    "Error fetching next object from block: {0}", e));
             }
         }
 
@@ -471,7 +475,8 @@ namespace Avro.File
             }
             catch (Exception e)
             {
-                throw new AvroRuntimeException(string.Format("Error ascertaining if data has next block: {0}", e), e);
+                throw new AvroRuntimeException(string.Format(CultureInfo.InvariantCulture,
+                    "Error ascertaining if data has next block: {0}", e), e);
             }
         }
 
