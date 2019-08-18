@@ -186,7 +186,7 @@ namespace Avro
           if (!(obj is Message)) return false;
 
           Message that = obj as Message;
-          return this.Name.Equals(that.Name) &&
+          return this.Name.Equals(that.Name, StringComparison.Ordinal) &&
                  this.Request.Equals(that.Request) &&
                  areEqual(this.Response, that.Response) &&
                  areEqual(this.Error, that.Error);

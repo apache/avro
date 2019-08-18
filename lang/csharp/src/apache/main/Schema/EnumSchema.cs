@@ -178,7 +178,14 @@ namespace Avro
                 EnumSchema that = obj as EnumSchema;
                 if (SchemaName.Equals(that.SchemaName) && Count == that.Count)
                 {
-                    for (int i = 0; i < Count; i++) if (!Symbols[i].Equals(that.Symbols[i])) return false;
+                    for (int i = 0; i < Count; i++)
+                    {
+                        if (!Symbols[i].Equals(that.Symbols[i], StringComparison.Ordinal))
+                        {
+                            return false;
+                        }
+                    }
+
                     return areEqual(that.Props, this.Props);
                 }
             }

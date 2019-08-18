@@ -222,8 +222,10 @@ namespace Avro
 
             Protocol that = obj as Protocol;
 
-            return this.Name.Equals(that.Name) && this.Namespace.Equals(that.Namespace) &&
-                    TypesEquals(that.Types) && MessagesEquals(that.Messages);
+            return this.Name.Equals(that.Name, StringComparison.Ordinal)
+                && this.Namespace.Equals(that.Namespace, StringComparison.Ordinal)
+                && TypesEquals(that.Types)
+                && MessagesEquals(that.Messages);
         }
 
         /// <summary>
