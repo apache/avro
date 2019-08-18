@@ -51,6 +51,12 @@
     <!-- PrefixLocalCallsWithThis -->
     <Rule Id="SA1101" Action="None" />
 
+    <!-- SplitParametersMustStartOnLineAfterDeclaration -->
+    <Rule Id="SA1116" Action="None" />
+
+    <!-- ParametersMustBeOnSameLineOrSeparateLines -->
+    <Rule Id="SA1117" Action="None" />
+
     <!--
     Element Ordering Rules
     https://google.github.io/styleguide/javaguide.html#s3.4.2-ordering-class-contents
@@ -89,8 +95,6 @@
     <Rule Id="SA1106" Action="Info" />
     <Rule Id="SA1107" Action="Info" />
     <Rule Id="SA1108" Action="Info" />
-    <Rule Id="SA1116" Action="Info" />
-    <Rule Id="SA1117" Action="Info" />
     <Rule Id="SA1119" Action="Info" />
     <Rule Id="SA1121" Action="Info" />
     <Rule Id="SA1122" Action="Info" />
