@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,7 +17,6 @@
  */
 
 using System;
-using Avro.Generic;
 
 namespace Avro.Reflect
 {
@@ -29,7 +28,7 @@ namespace Avro.Reflect
     public class FuncFieldConverter<A, P> : TypedFieldConverter<A, P>
     {
         /// <summary>
-        ///
+        /// Initializes a new instance of the <see cref="FuncFieldConverter{A, P}"/> class.
         /// </summary>
         /// <param name="from">Delegate to convert from C# type to Avro type</param>
         /// <param name="to">Delegate to convert from Avro type to C# type</param>
