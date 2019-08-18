@@ -133,7 +133,6 @@
     <Rule Id="SA1516" Action="Info" />
     <Rule Id="SA1519" Action="Info" />
     <Rule Id="SA1520" Action="Info" />
-    <Rule Id="SA1610" Action="Info" />
     <Rule Id="SA1611" Action="Info" />
     <Rule Id="SA1614" Action="Info" />
     <Rule Id="SA1615" Action="Info" />

@@ -33,7 +33,6 @@ namespace Avro.Reflect
         /// <summary>
         /// Class cache
         /// </summary>
-        /// <value></value>
         public ClassCache ClassCache { get => _classCache; }
 
         /// <summary>
