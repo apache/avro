@@ -105,7 +105,7 @@ namespace Avro
         protected virtual CodeNamespace addNamespace(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "name cannot be null.");
+                throw new ArgumentNullException(nameof(name), "name cannot be null.");
 
             CodeNamespace ns = null;
 
