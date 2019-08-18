@@ -86,9 +86,9 @@ namespace Avro
                         string doc, IEnumerable<Schema> types,
                         IDictionary<string,Message> messages)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
-            if (null == types) throw new ArgumentNullException("types", "types cannot be null.");
-            if (null == messages) throw new ArgumentNullException("messages", "messages cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            if (null == types) throw new ArgumentNullException(nameof(types), "types cannot be null.");
+            if (null == messages) throw new ArgumentNullException(nameof(messages), "messages cannot be null.");
 
             this.Name = name;
             this.Namespace = space;

@@ -178,7 +178,7 @@ namespace Avro
         {
             get
             {
-                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
+                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
                 Field field;
                 return fieldLookup.TryGetValue(name, out field) ? field : null;
             }
