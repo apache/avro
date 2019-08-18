@@ -165,9 +165,9 @@ namespace Avro
             {
                 using (Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw))
                 {
-                    #if(DEBUG)
+#if DEBUG
                     writer.Formatting = Newtonsoft.Json.Formatting.Indented;
-                    #endif
+#endif
 
                     WriteJson(writer, new SchemaNames());
                     writer.Flush();
@@ -291,7 +291,7 @@ namespace Avro
         {
             int hash = Messages.Count;
             foreach (KeyValuePair<string, Message> pair in Messages)
-                hash += (pair.Key.GetHashCode() + pair.Value.GetHashCode());
+                hash += pair.Key.GetHashCode() + pair.Value.GetHashCode();
             return hash;
         }
     }

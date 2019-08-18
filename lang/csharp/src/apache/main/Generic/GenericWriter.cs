@@ -222,7 +222,7 @@ namespace Avro.Generic
         /// <param name="value">Ensure this object is a record</param>
         protected virtual void EnsureRecordObject(RecordSchema s, object value)
         {
-            if (value == null || !(value is GenericRecord) || !((value as GenericRecord).Schema.Equals(s)))
+            if (value == null || !(value is GenericRecord) || !(value as GenericRecord).Schema.Equals(s))
             {
                 throw TypeMismatch(value, "record", "GenericRecord");
             }
@@ -251,7 +251,7 @@ namespace Avro.Generic
         /// <param name="encoder">Encoder for serialization</param>
         protected virtual void WriteEnum(EnumSchema es, object value, Encoder encoder)
         {
-            if (value == null || !(value is GenericEnum) || !((value as GenericEnum).Schema.Equals(es)))
+            if (value == null || !(value is GenericEnum) || !(value as GenericEnum).Schema.Equals(es))
                 throw TypeMismatch(value, "enum", "GenericEnum");
             encoder.WriteEnum(es.Ordinal((value as GenericEnum).Value));
         }

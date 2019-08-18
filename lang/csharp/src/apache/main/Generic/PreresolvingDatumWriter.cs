@@ -445,7 +445,7 @@ namespace Avro.Generic
             /// <inheritdoc/>
             public void WriteMapValues(object map, WriteItem valueWriter, Encoder encoder)
             {
-                foreach (DictionaryEntry entry in ((IDictionary)map))
+                foreach (DictionaryEntry entry in (IDictionary)map)
                 {
                     encoder.StartItem();
                     encoder.WriteString(entry.Key.ToString());

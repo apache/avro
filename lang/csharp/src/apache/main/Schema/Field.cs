@@ -213,7 +213,7 @@ namespace Avro
         {
             if (null == this.Props) return null;
             string v;
-            return (this.Props.TryGetValue(key, out v)) ? v : null;
+            return this.Props.TryGetValue(key, out v) ? v : null;
         }
 
         /// <summary>

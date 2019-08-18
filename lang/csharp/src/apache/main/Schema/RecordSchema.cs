@@ -180,7 +180,7 @@ namespace Avro
             {
                 if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
                 Field field;
-                return (fieldLookup.TryGetValue(name, out field)) ? field : null;
+                return fieldLookup.TryGetValue(name, out field) ? field : null;
             }
         }
 
