@@ -21,6 +21,9 @@ namespace Avro.File
     /// <summary>
     /// Constants used in data files.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design",
+        "CA1052:Static holder types should be Static or NotInheritable",
+        Justification = "Maintain public API")]
     public class DataFileConstants
     {
         /// <summary>
