@@ -49,7 +49,7 @@ namespace Avro.Generic
         /// <inheritdoc/>
         protected override void EnsureRecordObject( RecordSchema recordSchema, object value )
         {
-            if( value == null || !( value is GenericRecord ) || !( ( value as GenericRecord ).Schema.Equals( recordSchema ) ) )
+            if( value == null || !( value is GenericRecord ) || ! ( value as GenericRecord ).Schema.Equals( recordSchema )  )
             {
                 throw TypeMismatch( value, "record", "GenericRecord" );
             }
@@ -66,7 +66,7 @@ namespace Avro.Generic
         {
             return (v,e) =>
                        {
-                            if( v == null || !(v is GenericEnum) || !((v as GenericEnum).Schema.Equals(es)))
+                            if( v == null || !(v is GenericEnum) || !(v as GenericEnum).Schema.Equals(es))
                                 throw TypeMismatch(v, "enum", "GenericEnum");
                             e.WriteEnum(es.Ordinal((v as GenericEnum ).Value));
                        };

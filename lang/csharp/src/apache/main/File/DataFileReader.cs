@@ -239,7 +239,7 @@ namespace Avro.File
         /// <inheritdoc/>
         public bool PastSync(long position)
         {
-            return ((_blockStart >= position + DataFileConstants.SyncSize) || (_blockStart >= _stream.Length));
+            return (_blockStart >= position + DataFileConstants.SyncSize) || (_blockStart >= _stream.Length);
         }
 
         /// <inheritdoc/>

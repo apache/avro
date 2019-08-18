@@ -95,7 +95,6 @@
     <Rule Id="SA1106" Action="Info" />
     <Rule Id="SA1107" Action="Info" />
     <Rule Id="SA1108" Action="Info" />
-    <Rule Id="SA1119" Action="Info" />
     <Rule Id="SA1121" Action="Info" />
     <Rule Id="SA1122" Action="Info" />
     <Rule Id="SA1128" Action="Info" />

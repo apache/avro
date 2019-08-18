@@ -210,7 +210,7 @@ namespace Avro.Generic
 
             public void AddElements(object mapObj, int elements, ReadItem itemReader, Decoder decoder, bool reuse)
             {
-                var map = ((IDictionary<string, object>)mapObj);
+                var map = (IDictionary<string, object>)mapObj;
                 for (int i = 0; i < elements; i++)
                 {
                     var key = decoder.ReadString();
