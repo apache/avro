@@ -300,6 +300,18 @@ namespace Avro.File
         /// <inheritdoc/>
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases resources associated with this <see cref="DataFileReader{T}"/>.
+        /// </summary>
+        /// <param name="disposing">
+        /// True if called from <see cref="Dispose()"/>; false otherwise.
+        /// </param>
+        protected virtual void Dispose(bool disposing)
+        {
             _stream.Close();
         }
 
