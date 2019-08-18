@@ -35,7 +35,6 @@ namespace Avro.Reflect
         /// <summary>
         /// Default reader
         /// </summary>
-        /// <value></value>
         public ReflectDefaultReader Reader { get => _reader; }
 
         /// <summary>

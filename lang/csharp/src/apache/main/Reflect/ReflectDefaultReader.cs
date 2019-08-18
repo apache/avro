@@ -35,7 +35,6 @@ namespace Avro.Reflect
         /// C# type to create when deserializing a map. Must implement IDictionary&lt;,&gt; and the first
         /// type parameter must be a string. Default is System.Collections.Generic.Dictionary
         /// </summary>
-        /// <value></value>
         public Type MapType { get => _mapType; set => _mapType = value; }
 
         private ClassCache _classCache = new ClassCache();
@@ -43,7 +42,6 @@ namespace Avro.Reflect
         /// <summary>
         /// Class cache
         /// </summary>
-        /// <value></value>
         public ClassCache ClassCache { get => _classCache; }
 
         private Type _mapType = typeof(Dictionary<,>);
