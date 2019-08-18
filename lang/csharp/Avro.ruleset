@@ -25,7 +25,6 @@
     We disabled these rules initially to get the code analyzers installed in the project.
     -->
     <Rule Id="CA1062" Action="Info" />
-    <Rule Id="CA1307" Action="Info" />
     <Rule Id="CA1507" Action="Info" />
     <Rule Id="CA1707" Action="Info" />
     <Rule Id="CA1710" Action="Info" />

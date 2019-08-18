@@ -45,7 +45,12 @@ namespace Avro
         public static PrimitiveSchema NewInstance(string type, PropertyMap props = null)
         {
             const string q = "\"";
-            if (type.StartsWith(q) && type.EndsWith(q)) type = type.Substring(1, type.Length - 2);
+            if (type.StartsWith(q, StringComparison.Ordinal)
+                && type.EndsWith(q, StringComparison.Ordinal))
+            {
+                type = type.Substring(1, type.Length - 2);
+            }
+
             switch (type)
             {
                 case "null":

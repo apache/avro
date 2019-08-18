@@ -107,7 +107,7 @@ namespace Avro.File
         /// <inheritdoc/>
         public bool IsReservedMeta(string key)
         {
-            return key.StartsWith(DataFileConstants.MetaDataReserved);
+            return key.StartsWith(DataFileConstants.MetaDataReserved, StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
