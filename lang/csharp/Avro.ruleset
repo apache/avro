@@ -21,7 +21,6 @@
     AVRO-2454: We need to evaluate each of these rules to determine whether we should enforce them.
     We disabled these rules initially to get the code analyzers installed in the project.
     -->
-    <Rule Id="CA1034" Action="Info" />
     <Rule Id="CA1052" Action="Info" />
     <Rule Id="CA1062" Action="Info" />
     <Rule Id="CA1063" Action="Info" />
