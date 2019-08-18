@@ -3,7 +3,12 @@
   "settings": {
     "documentationRules": {
       "companyName": "Apache Software Foundation (ASF)",
-      "fileNamingConvention": "stylecop"
+      "fileNamingConvention": "stylecop",
+      "documentInterfaces": false,
+      "documentExposedElements": true,
+      "documentInternalElements": false,
+      "documentPrivateElements": false,
+      "documentPrivateFields": false
     },
     "indentation": {
       "indentationSize": 4,
