@@ -22,7 +22,6 @@
     We disabled these rules initially to get the code analyzers installed in the project.
     -->
     <Rule Id="CA1062" Action="Info" />
-    <Rule Id="CA1063" Action="Info" />
     <Rule Id="CA1303" Action="Info" />
     <Rule Id="CA1305" Action="Info" />
     <Rule Id="CA1307" Action="Info" />
@@ -35,7 +34,6 @@
     <Rule Id="CA1721" Action="Info" />
     <Rule Id="CA1724" Action="Info" />
     <Rule Id="CA1801" Action="Info" />
-    <Rule Id="CA1816" Action="Info" />
     <Rule Id="CA1819" Action="Info" />
     <Rule Id="CA1820" Action="Info" />
     <Rule Id="CA1822" Action="Info" />
