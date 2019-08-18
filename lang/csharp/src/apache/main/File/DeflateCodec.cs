@@ -76,7 +76,7 @@ namespace Avro.File
         {
             if (this == other)
                 return true;
-            return (this.GetType().Name == other.GetType().Name);
+            return this.GetType().Name == other.GetType().Name;
         }
 
         /// <inheritdoc/>
