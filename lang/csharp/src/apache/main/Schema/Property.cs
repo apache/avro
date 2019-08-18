@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
@@ -61,7 +62,10 @@ namespace Avro
             string oldValue;
             if (TryGetValue(key, out oldValue))
             {
-                if (!oldValue.Equals(value)) throw new AvroException("Property cannot be overwritten: " + key);
+                if (!oldValue.Equals(value, StringComparison.Ordinal))
+                {
+                    throw new AvroException("Property cannot be overwritten: " + key);
+                }
             }
             else
                 Add(key, value);
@@ -100,7 +104,7 @@ namespace Avro
                 {
                     if (!that.ContainsKey(pair.Key))
                         return false;
-                    if (!pair.Value.Equals(that[pair.Key]))
+                    if (!pair.Value.Equals(that[pair.Key], StringComparison.Ordinal))
                         return false;
                 }
                 return true;
