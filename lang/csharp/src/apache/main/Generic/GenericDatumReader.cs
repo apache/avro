@@ -21,8 +21,13 @@ using Avro.IO;
 
 namespace Avro.Generic
 {
-    /// PreresolvingDatumReader for reading data to GenericRecord classes or primitives.
-    /// <see cref="PreresolvingDatumReader{T}">For more information about performance considerations for choosing this implementation</see>
+    /// <summary>
+    /// <see cref="PreresolvingDatumReader{T}"/> for reading data to <see cref="GenericRecord"/>
+    /// classes or primitives.
+    /// <see cref="PreresolvingDatumReader{T}">For more information about performance considerations
+    /// for choosing this implementation</see>.
+    /// </summary>
+    /// <typeparam name="T">Type to deserialize data into.</typeparam>
     public class GenericDatumReader<T> : PreresolvingDatumReader<T>
     {
         /// <summary>
