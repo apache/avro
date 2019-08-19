@@ -27,7 +27,6 @@
     <Rule Id="CA1062" Action="Info" />
     <Rule Id="CA1707" Action="Info" />
     <Rule Id="CA1710" Action="Info" />
-    <Rule Id="CA1715" Action="Info" />
     <Rule Id="CA1716" Action="Info" />
     <Rule Id="CA1720" Action="Info" />
     <Rule Id="CA1721" Action="Info" />
