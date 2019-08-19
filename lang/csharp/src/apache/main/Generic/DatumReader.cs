@@ -23,6 +23,8 @@ namespace Avro.Generic
     /// Defines the interface for an object that reads data of a schema.
     /// </summary>
     /// <typeparam name="T">Type of the in-memory data representation.</typeparam>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Naming",
+        "CA1715:Identifiers should have correct prefix", Justification = "Maintain public API")]
     public interface DatumReader<T>
     {
         /// <summary>

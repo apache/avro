@@ -179,14 +179,14 @@ namespace Avro.Generic
         /// <summary>
         /// A generic method to serialize primitive Avro types.
         /// </summary>
-        /// <typeparam name="S">Type of the C# type to be serialized</typeparam>
+        /// <typeparam name="T">Type of the C# type to be serialized</typeparam>
         /// <param name="value">The value to be serialized</param>
         /// <param name="tag">The schema type tag</param>
         /// <param name="writer">The writer which should be used to write the given type.</param>
-        protected virtual void Write<S>(object value, Schema.Type tag, Writer<S> writer)
+        protected virtual void Write<T>(object value, Schema.Type tag, Writer<T> writer)
         {
-            if (!(value is S)) throw TypeMismatch(value, tag.ToString(), typeof(S).ToString());
-            writer((S)value);
+            if (!(value is T)) throw TypeMismatch(value, tag.ToString(), typeof(T).ToString());
+            writer((T)value);
         }
 
         /// <summary>
