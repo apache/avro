@@ -40,3 +40,4 @@
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1065:Do not raise exceptions in unexpected locations", Justification = "Maintain public API", Scope = "member", Target = "~P:Avro.Protocol.MD5")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "Maintain public API", Scope = "member", Target = "~M:Avro.Schema.GetTypeString(Avro.Schema.Type)~System.String")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "Maintain public API", Scope = "member", Target = "~P:Avro.UnnamedSchema.Name")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1724:Type names should not match namespaces", Justification = "Reviewed", Scope = "type", Target = "~T:Avro.Schema")]
