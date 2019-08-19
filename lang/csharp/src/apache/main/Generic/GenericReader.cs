@@ -246,12 +246,12 @@ namespace Avro.Generic
         /// <summary>
         /// A generic function to read primitive types
         /// </summary>
-        /// <typeparam name="S">The .NET type to read</typeparam>
+        /// <typeparam name="T">The .NET type to read</typeparam>
         /// <param name="tag">The Avro type tag for the object on the stream</param>
         /// <param name="readerSchema">A schema compatible to the Avro type</param>
         /// <param name="reader">A function that can read the avro type from the stream</param>
         /// <returns>The primitive type just read</returns>
-        protected S Read<S>(Schema.Type tag, Schema readerSchema, Reader<S> reader)
+        protected T Read<T>(Schema.Type tag, Schema readerSchema, Reader<T> reader)
         {
             return reader();
         }

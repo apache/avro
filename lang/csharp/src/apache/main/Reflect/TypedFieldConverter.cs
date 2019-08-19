@@ -17,16 +17,15 @@
  */
 
 using System;
-using System.Reflection;
 
 namespace Avro.Reflect
 {
     /// <summary>
     /// Constructor
     /// </summary>
-    /// <typeparam name="A">Avro type</typeparam>
-    /// <typeparam name="P">Property type</typeparam>
-    public abstract class TypedFieldConverter<A, P> : IAvroFieldConverter
+    /// <typeparam name="TAvro">Avro type</typeparam>
+    /// <typeparam name="TProperty">Property type</typeparam>
+    public abstract class TypedFieldConverter<TAvro, TProperty> : IAvroFieldConverter
     {
         /// <summary>
         /// Convert from Avro type to property type
@@ -34,7 +33,7 @@ namespace Avro.Reflect
         /// <param name="o">Avro value</param>
         /// <param name="s">Schema</param>
         /// <returns>Property value</returns>
-        public abstract P From(A o, Schema s);
+        public abstract TProperty From(TAvro o, Schema s);
 
         /// <summary>
         /// Convert from property type to Avro type
@@ -42,7 +41,7 @@ namespace Avro.Reflect
         /// <param name="o"></param>
         /// <param name="s"></param>
         /// <returns></returns>
-        public abstract A To(P o, Schema s);
+        public abstract TAvro To(TProperty o, Schema s);
 
         /// <summary>
         /// Implement untyped interface
@@ -52,12 +51,12 @@ namespace Avro.Reflect
         /// <returns></returns>
         public object FromAvroType(object o, Schema s)
         {
-            if (!typeof(A).IsAssignableFrom(o.GetType()))
+            if (!typeof(TAvro).IsAssignableFrom(o.GetType()))
             {
-                throw new AvroException($"Converter from {typeof(A).Name} to {typeof(P).Name} cannot convert object of type {o.GetType().Name} to {typeof(A).Name}, object {o.ToString()}");
+                throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TAvro).Name}, object {o.ToString()}");
             }
 
-            return From((A)o, s);
+            return From((TAvro)o, s);
         }
 
         /// <summary>
@@ -66,7 +65,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public Type GetAvroType()
         {
-            return typeof(A);
+            return typeof(TAvro);
         }
 
         /// <summary>
@@ -75,7 +74,7 @@ namespace Avro.Reflect
         /// <returns></returns>
         public Type GetPropertyType()
         {
-            return typeof(P);
+            return typeof(TProperty);
         }
 
         /// <summary>
@@ -86,12 +85,12 @@ namespace Avro.Reflect
         /// <returns></returns>
         public object ToAvroType(object o, Schema s)
         {
-            if (!typeof(P).IsAssignableFrom(o.GetType()))
+            if (!typeof(TProperty).IsAssignableFrom(o.GetType()))
             {
-                throw new AvroException($"Converter from {typeof(A).Name} to {typeof(P).Name} cannot convert object of type {o.GetType().Name} to {typeof(P).Name}, object {o.ToString()}");
+                throw new AvroException($"Converter from {typeof(TAvro).Name} to {typeof(TProperty).Name} cannot convert object of type {o.GetType().Name} to {typeof(TProperty).Name}, object {o.ToString()}");
             }
 
-            return To((P)o, s);
+            return To((TProperty)o, s);
         }
     }
 }

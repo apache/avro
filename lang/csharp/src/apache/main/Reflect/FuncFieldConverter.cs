@@ -23,24 +23,24 @@ namespace Avro.Reflect
     /// <summary>
     /// Field converter using a Func
     /// </summary>
-    /// <typeparam name="A">Avro type</typeparam>
-    /// <typeparam name="P">Property type</typeparam>
-    public class FuncFieldConverter<A, P> : TypedFieldConverter<A, P>
+    /// <typeparam name="TAvro">Avro type</typeparam>
+    /// <typeparam name="TProperty">Property type</typeparam>
+    public class FuncFieldConverter<TAvro, TProperty> : TypedFieldConverter<TAvro, TProperty>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FuncFieldConverter{A, P}"/> class.
         /// </summary>
         /// <param name="from">Delegate to convert from C# type to Avro type</param>
         /// <param name="to">Delegate to convert from Avro type to C# type</param>
-        public FuncFieldConverter(Func<A, Schema, P> from, Func<P, Schema, A> to)
+        public FuncFieldConverter(Func<TAvro, Schema, TProperty> from, Func<TProperty, Schema, TAvro> to)
         {
             _from = from;
             _to = to;
         }
 
-        private Func<A, Schema, P> _from;
+        private Func<TAvro, Schema, TProperty> _from;
 
-        private Func<P, Schema, A> _to;
+        private Func<TProperty, Schema, TAvro> _to;
 
         /// <summary>
         /// Inherited conversion method - call the Func.
@@ -48,7 +48,7 @@ namespace Avro.Reflect
         /// <param name="o"></param>
         /// <param name="s"></param>
         /// <returns></returns>
-        public override P From(A o, Schema s)
+        public override TProperty From(TAvro o, Schema s)
         {
             return _from(o, s);
         }
@@ -59,7 +59,7 @@ namespace Avro.Reflect
         /// <param name="o"></param>
         /// <param name="s"></param>
         /// <returns></returns>
-        public override A To(P o, Schema s)
+        public override TAvro To(TProperty o, Schema s)
         {
             return _to(o, s);
         }
