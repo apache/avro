@@ -30,7 +30,6 @@
     <Rule Id="CA1716" Action="Info" />
     <Rule Id="CA1720" Action="Info" />
     <Rule Id="CA1721" Action="Info" />
-    <Rule Id="CA1724" Action="Info" />
     <Rule Id="CA1801" Action="Info" />
     <Rule Id="CA1819" Action="Info" />
     <Rule Id="CA1820" Action="Info" />
