@@ -404,8 +404,7 @@ public class SchemaCompatibility {
           if (!readerField.hasDefaultValue()) {
             // reader field has no default value. Check for the enum default value
             if (readerField.schema().getType() == Type.ENUM && readerField.schema().getEnumDefault() != null) {
-              result = result
-                  .mergedWith(getCompatibility("type", readerField.schema(), writer, location));
+              result = result.mergedWith(getCompatibility("type", readerField.schema(), writer, location));
             } else {
               result = result.mergedWith(
                   SchemaCompatibilityResult.incompatible(SchemaIncompatibilityType.READER_FIELD_MISSING_DEFAULT_VALUE,
