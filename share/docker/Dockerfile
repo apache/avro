@@ -79,8 +79,9 @@ RUN apt-get -qq update && \
   rm -rf /var/lib/apt/lists/*
 
 # Install Perl modules
-RUN curl -L http://cpanmin.us | perl - --self-upgrade && \
-  cpanm install Module::Install Module::Install::ReadmeFromPod \
+RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
+  cpanm --mirror https://www.cpan.org/ install \
+  Module::Install Module::Install::ReadmeFromPod \
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
