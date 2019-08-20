@@ -72,6 +72,7 @@ do
       (cd lang/csharp; ./build.sh interop-data-generate)
       (cd lang/ruby; rake generate_interop)
       (cd lang/php; ./build.sh interop-data-generate)
+      (cd lang/perl; ./build.sh interop-data-generate)
 
       # run interop data tests
       (cd lang/java/ipc; mvn -B test -P interop-data-test)
@@ -81,6 +82,7 @@ do
       (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/ruby; rake interop)
       (cd lang/php; ./build.sh test-interop)
+      (cd lang/perl; ./build.sh interop-data-test)
 
       # java needs to package the jars for the interop rpc tests
       (cd lang/java/tools; mvn -B package -DskipTests)

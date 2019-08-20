@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {lint|test|dist|clean}"
+  echo "Usage: $0 {lint|test|dist|clean|interop-data-generate|interop-data-test}"
   exit 1
 }
 
@@ -47,16 +47,25 @@ case "$target" in
   lint)
     echo 'This is a stub where someone can provide linting.'
     ;;
+
   test)
     perl ./Makefile.PL && make test
     ;;
 
   dist)
-     perl ./Makefile.PL && make dist
+    perl ./Makefile.PL && make dist
     ;;
 
   clean)
     do_clean
+    ;;
+
+  interop-data-generate)
+    perl -Ilib share/interop-data-generate
+    ;;
+
+  interop-data-test)
+    prove -Ilib xt/interop.t
     ;;
 
   *)
