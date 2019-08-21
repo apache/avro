@@ -15,6 +15,9 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.util.concurrent.Callable;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -33,11 +36,12 @@ import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModule;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.util.concurrent.Callable;
-
-import static com.commercehub.gradle.plugin.avro.Constants.*;
+import static com.commercehub.gradle.plugin.avro.Constants.GROUP_SOURCE_GENERATION;
+import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
+import static com.commercehub.gradle.plugin.avro.Constants.JAVA_EXTENSION;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_OUTPUT_CHARACTER_ENCODING;
+import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
+import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
 
 public class AvroPlugin implements Plugin<Project> {
     @Override

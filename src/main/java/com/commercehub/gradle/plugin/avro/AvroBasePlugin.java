@@ -15,15 +15,26 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.util.concurrent.Callable;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.internal.ConventionMapping;
 import org.gradle.api.internal.IConventionAware;
 
-import java.util.concurrent.Callable;
-
-import static com.commercehub.gradle.plugin.avro.Constants.*;
+import static com.commercehub.gradle.plugin.avro.Constants.AVRO_EXTENSION_NAME;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_CREATE_SETTERS;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_DATE_TIME_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_ENABLE_DECIMAL_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILITY;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_OUTPUT_CHARACTER_ENCODING;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_TEMPLATE_DIRECTORY;
 
 public class AvroBasePlugin implements Plugin<Project> {
     @Override

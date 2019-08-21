@@ -212,7 +212,8 @@ ruleset {
     JUnitFailWithoutMessage
     JUnitLostTest
     JUnitPublicField
-    JUnitPublicNonTestMethod
+    // Triggers incorrectly for Spock methods
+    // JUnitPublicNonTestMethod
     JUnitSetUpCallsSuper
     JUnitStyleAssertions
     JUnitTearDownCallsSuper

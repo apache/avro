@@ -15,6 +15,9 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.regex.Pattern;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.gradle.api.GradleException;
@@ -22,10 +25,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.TaskAction;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.regex.Pattern;
 
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;

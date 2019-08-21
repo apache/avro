@@ -15,6 +15,13 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
@@ -25,17 +32,21 @@ import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
-import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.TaskAction;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static com.commercehub.gradle.plugin.avro.Constants.*;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_DATE_TIME_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILITY;
+import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
+import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 
 /**
@@ -274,12 +285,12 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
-        String templateDirectory = getTemplateDirectory();
+        String configuredTemplateDirectory = getTemplateDirectory();
         compiler.setOutputCharacterEncoding(getOutputCharacterEncoding());
         compiler.setStringType(parsedStringType);
         compiler.setFieldVisibility(parsedFieldVisibility);
-        if (templateDirectory != null) {
-            compiler.setTemplateDir(templateDirectory);
+        if (configuredTemplateDirectory != null) {
+            compiler.setTemplateDir(configuredTemplateDirectory);
         }
         compiler.setCreateSetters(isCreateSetters());
         compiler.setEnableDecimalLogicalType(isEnableDecimalLogicalType());

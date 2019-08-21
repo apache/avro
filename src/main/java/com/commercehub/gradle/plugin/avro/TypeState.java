@@ -15,11 +15,10 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
-import org.apache.avro.Schema;
-import org.gradle.api.GradleException;
-
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.avro.Schema;
+import org.gradle.api.GradleException;
 
 class TypeState {
     private final String name;
@@ -30,11 +29,11 @@ class TypeState {
         this.name = name;
     }
 
-    void processTypeDefinition(String path, Schema schema) {
+    void processTypeDefinition(String path, Schema schemaToProcess) {
         locations.add(path);
         if (this.schema == null) {
-            this.schema = schema;
-        } else if (!this.schema.equals(schema)) {
+            this.schema = schemaToProcess;
+        } else if (!this.schema.equals(schemaToProcess)) {
             throw new GradleException(String.format("Found conflicting definition of type %s in %s", name, locations));
         } // Otherwise duplicate declaration of identical schema; nothing to do
     }

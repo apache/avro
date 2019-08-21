@@ -15,10 +15,9 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.nio.charset.Charset;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
-
-import java.nio.charset.Charset;
 
 public class DefaultAvroExtension implements AvroExtension {
     private String outputCharacterEncoding;

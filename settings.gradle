@@ -1,3 +1,1 @@
 rootProject.name = "gradle-avro-plugin"
-
-enableFeaturePreview("STABLE_PUBLISHING")

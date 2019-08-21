@@ -120,6 +120,7 @@ abstract class FunctionalSpec extends Specification {
         return gradleVersion >= GradleVersion.version("4.0")
     }
 
+    @SuppressWarnings("UnnecessaryGetter")
     protected String buildOutputClassPath(String suffix) {
         return isMultipleClassDirectoriesUsed() ? "build/classes/java/main/${suffix}" : "build/classes/main/${suffix}"
     }

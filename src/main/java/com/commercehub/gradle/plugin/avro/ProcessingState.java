@@ -15,17 +15,21 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import org.apache.avro.Schema;
 import org.gradle.api.Project;
-
-import java.io.File;
-import java.util.*;
 
 class ProcessingState {
     private final Map<String, TypeState> typeStates = new HashMap<>();
     private final Set<FileState> delayedFiles = new LinkedHashSet<>();
     private final Queue<FileState> filesToProcess = new LinkedList<>();
-    private int processedTotal = 0;
+    private int processedTotal;
 
     ProcessingState(Set<File> files, Project project) {
         for (File file : files) {

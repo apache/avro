@@ -15,6 +15,13 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.LinkedList;
+import java.util.List;
 import org.apache.avro.compiler.idl.Idl;
 import org.apache.avro.compiler.idl.ParseException;
 import org.gradle.api.GradleException;
@@ -26,14 +33,6 @@ import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.util.GradleVersion;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.LinkedList;
-import java.util.List;
 
 import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
