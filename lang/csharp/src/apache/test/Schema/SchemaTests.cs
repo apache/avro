@@ -317,5 +317,13 @@ namespace Avro.Test
             return name.Fullname;
         }
 
+        [TestCase("{ \"type\": \"int\" }", "int")]
+        [SetCulture("tr-TR")]
+        public void TestSchemaNameInTurkishCulture(string schemaJson, string expectedName)
+        {
+            var schema = Schema.Parse(schemaJson);
+
+            Assert.AreEqual(expectedName, schema.Name);
+        }
     }
 }

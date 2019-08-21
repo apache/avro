@@ -23,7 +23,7 @@ VERSION=`cat share/VERSION.txt`
 DOCKER_XTRA_ARGS=""
 
 function usage {
-  echo "Usage: $0 {lint|test|dist|sign|clean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
+  echo "Usage: $0 {lint|test|dist|sign|clean|veryclean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
 }
 
@@ -74,6 +74,7 @@ do
       (cd lang/csharp; ./build.sh interop-data-generate)
       (cd lang/ruby; rake generate_interop)
       (cd lang/php; ./build.sh interop-data-generate)
+      (cd lang/perl; ./build.sh interop-data-generate)
 
       # run interop data tests
       (cd lang/java; mvn -B test -P interop-data-test)
@@ -84,6 +85,7 @@ do
       (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/ruby; rake interop)
       (cd lang/php; ./build.sh test-interop)
+      (cd lang/perl; ./build.sh interop-data-test)
 
       # java needs to package the jars for the interop rpc tests
       (cd lang/java; mvn -B package -DskipTests)
@@ -208,6 +210,7 @@ do
 
       (cd lang/perl; ./build.sh clean)
       ;;
+
     veryclean)
       rm -rf build dist
       (cd doc; ant clean)
@@ -241,8 +244,8 @@ do
       (cd lang/php; ./build.sh clean)
 
       (cd lang/perl; ./build.sh clean)
+
       rm -rf lang/c++/build
-      rm -rf lang/c++/test?.df
       rm -rf lang/js/node_modules
       rm -rf lang/perl/inc/
       rm -rf lang/ruby/.gem/

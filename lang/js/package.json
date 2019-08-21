@@ -36,7 +36,8 @@
   "scripts": {
     "cover": "istanbul cover _mocha",
     "test": "mocha",
-    "clean": "rm -rf coverage node_modules"
+    "clean": "rm -rf coverage node_modules",
+    "lint": "jshint lib test"
   },
   "dependencies": {
     "underscore": "*"
@@ -44,6 +45,7 @@
   "devDependencies": {
     "coveralls": "^2.11.4",
     "istanbul": "^0.3.19",
+    "jshint": "^2.10.2",
     "mocha": "^2.3.2",
     "tmp": "^0.0.28"
   },

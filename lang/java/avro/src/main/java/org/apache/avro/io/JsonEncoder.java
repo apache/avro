@@ -49,6 +49,8 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
   final Parser parser;
   private JsonGenerator out;
+  private boolean includeNamespace = true;
+
   /**
    * Has anything been written into the collections?
    */
@@ -95,6 +97,14 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
       g.setPrettyPrinter(pp);
     }
     return g;
+  }
+
+  public boolean isIncludeNamespace() {
+    return includeNamespace;
+  }
+
+  public void setIncludeNamespace(final boolean includeNamespace) {
+    this.includeNamespace = includeNamespace;
   }
 
   /**
@@ -283,7 +293,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     parser.advance(Symbol.UNION);
     Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
     Symbol symbol = top.getSymbol(unionIndex);
-    if (symbol != Symbol.NULL) {
+    if (symbol != Symbol.NULL && includeNamespace) {
       out.writeStartObject();
       out.writeFieldName(top.getLabel(unionIndex));
       parser.pushSymbol(Symbol.UNION_END);

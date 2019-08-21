@@ -140,7 +140,10 @@ function Lcg(seed) {
   var state = Math.floor(seed || Math.random() * (m - 1));
 
   this._max = m;
-  this._nextInt = function () { return state = (a * state + c) % m; };
+  this._nextInt = function () {
+    state = (a * state + c) % m;
+    return state;
+  };
 }
 
 Lcg.prototype.nextBoolean = function () {

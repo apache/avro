@@ -41,7 +41,7 @@ public class RecodecTool implements Tool {
   public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     OptionParser optParser = new OptionParser();
-    OptionSpec<String> codecOpt = Util.compressionCodecOption(optParser);
+    OptionSpec<String> codecOpt = Util.compressionCodecOptionWithDefault(optParser, DataFileConstants.NULL_CODEC);
     OptionSpec<Integer> levelOpt = Util.compressionLevelOption(optParser);
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
 
