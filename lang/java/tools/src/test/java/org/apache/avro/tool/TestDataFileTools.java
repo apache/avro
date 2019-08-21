@@ -257,4 +257,13 @@ public class TestDataFileTools {
     }
     return outFile;
   }
+
+  @Test
+  public void testDefaultCodec() throws Exception {
+    // The default codec for fromjson is null
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream err = new PrintStream(baos);
+    new DataFileWriteTool().run(new ByteArrayInputStream(jsonData.getBytes()), null, err, Collections.emptyList());
+    assertTrue(baos.toString().contains("Compression codec (default: null)"));
+  }
 }

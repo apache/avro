@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -293,8 +291,7 @@ namespace Avro
         /// <returns>symbol name</returns>
         public static string GetTypeString(Type type)
         {
-            if (type != Type.Enumeration) return type.ToString().ToLower();
-            return "enum";
+            return type != Type.Enumeration ? type.ToString().ToLowerInvariant() : "enum";
         }
 
         /// <summary>

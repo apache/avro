@@ -16,23 +16,23 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Avro
 {
     class CodeGenException : AvroException
     {
+        public CodeGenException()
+        {
+        }
+
         public CodeGenException(string s)
             : base(s)
         {
-
         }
+
         public CodeGenException(string s, Exception inner)
             : base(s, inner)
         {
-
         }
     }
 }

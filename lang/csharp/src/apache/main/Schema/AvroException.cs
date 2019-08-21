@@ -27,6 +27,13 @@ namespace Avro
         /// <summary>
         /// Initializes a new instance of the <see cref="AvroException"/> class.
         /// </summary>
+        public AvroException()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AvroException"/> class.
+        /// </summary>
         /// <param name="s">The message that describes the error.</param>
         public AvroException(string s)
             : base(s)

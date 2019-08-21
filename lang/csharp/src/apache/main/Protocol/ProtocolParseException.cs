@@ -27,6 +27,13 @@ namespace Avro
         /// <summary>
         /// Initializes a new instance of the <see cref="ProtocolParseException"/> class.
         /// </summary>
+        public ProtocolParseException()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProtocolParseException"/> class.
+        /// </summary>
         /// <param name="s">Exception message.</param>
         public ProtocolParseException(string s)
             : base(s)

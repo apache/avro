@@ -93,7 +93,8 @@ function createType(attrs, opts) {
       // Reference to a primitive type. These are also defined names by default
       // so we create the appropriate type and it to the registry for future
       // reference.
-      return opts.registry[attrs] = createType({type: attrs}, opts);
+      type = opts.registry[attrs] = createType({type: attrs}, opts);
+      return type;
     }
     throw new Error(f('undefined type name: %s', attrs));
   }
@@ -1789,8 +1790,9 @@ LogicalType.prototype._write = function (tap, any) {
 };
 
 LogicalType.prototype._check = function (any, cb) {
+  var val;
   try {
-    var val = this._toValue(any);
+    val = this._toValue(any);
   } catch (err) {
     if (cb) {
       cb(PATH.slice(), any, this);
