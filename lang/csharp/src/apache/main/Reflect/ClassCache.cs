@@ -1,4 +1,4 @@
-/*  
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -254,6 +254,16 @@ namespace Avro.Reflect
                     break;
                 case NamedSchema ns:
                     EnumCache.AddEnumNameMapItem(ns, objType);
+                    break;
+                case UnionSchema us:
+                    foreach (var o in us.Schemas)
+                    {
+                        if (o.Tag != Avro.Schema.Type.Null)
+                        {
+                            LoadClassCache(objType, o);
+                        }
+                    }
+
                     break;
             }
         }
