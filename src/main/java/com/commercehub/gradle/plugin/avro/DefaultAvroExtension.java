@@ -1,5 +1,5 @@
 /**
- * Copyright © 2013-2015 Commerce Technologies, LLC.
+ * Copyright © 2013-2019 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,46 @@
 package com.commercehub.gradle.plugin.avro;
 
 import java.nio.charset.Charset;
+import javax.inject.Inject;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
+
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 
 public class DefaultAvroExtension implements AvroExtension {
-    private String outputCharacterEncoding;
-    private String stringType;
-    private String fieldVisibility;
-    private String templateDirectory;
-    private boolean createSetters;
-    private boolean enableDecimalLogicalType;
-    private String dateTimeLogicalType;
+    private final Property<String> outputCharacterEncoding;
+    private final Property<String> stringType;
+    private final Property<String> fieldVisibility;
+    private final Property<String> templateDirectory;
+    private final Property<Boolean> createSetters;
+    private final Property<Boolean> enableDecimalLogicalType;
+    private final Property<String> dateTimeLogicalType;
+
+    @Inject
+    public DefaultAvroExtension(ObjectFactory objects) {
+        this.outputCharacterEncoding = objects.property(String.class);
+        this.stringType = configurePropertyConvention(objects.property(String.class), DEFAULT_STRING_TYPE);
+        this.fieldVisibility = configurePropertyConvention(objects.property(String.class), DEFAULT_FIELD_VISIBILITY);
+        this.templateDirectory = objects.property(String.class);
+        this.createSetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_SETTERS);
+        this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
+        this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
+    }
 
     @Override
-    public String getOutputCharacterEncoding() {
+    public Property<String> getOutputCharacterEncoding() {
         return outputCharacterEncoding;
     }
 
     public void setOutputCharacterEncoding(String outputCharacterEncoding) {
-        this.outputCharacterEncoding = outputCharacterEncoding;
+        this.outputCharacterEncoding.set(outputCharacterEncoding);
     }
 
     public void setOutputCharacterEncoding(Charset outputCharacterEncoding) {
@@ -42,12 +63,12 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
-    public String getStringType() {
+    public Property<String> getStringType() {
         return stringType;
     }
 
     public void setStringType(String stringType) {
-        this.stringType = stringType;
+        this.stringType.set(stringType);
     }
 
     public void setStringType(GenericData.StringType stringType) {
@@ -55,12 +76,12 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
-    public String getFieldVisibility() {
+    public Property<String> getFieldVisibility() {
         return fieldVisibility;
     }
 
     public void setFieldVisibility(String fieldVisibility) {
-        this.fieldVisibility = fieldVisibility;
+        this.fieldVisibility.set(fieldVisibility);
     }
 
     public void setFieldVisibility(SpecificCompiler.FieldVisibility fieldVisibility) {
@@ -68,16 +89,16 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
-    public String getTemplateDirectory() {
+    public Property<String> getTemplateDirectory() {
         return templateDirectory;
     }
 
     public void setTemplateDirectory(String templateDirectory) {
-        this.templateDirectory = templateDirectory;
+        this.templateDirectory.set(templateDirectory);
     }
 
     @Override
-    public boolean isCreateSetters() {
+    public Property<Boolean> isCreateSetters() {
         return createSetters;
     }
 
@@ -86,11 +107,11 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     public void setCreateSetters(boolean createSetters) {
-        this.createSetters = createSetters;
+        this.createSetters.set(createSetters);
     }
 
     @Override
-    public boolean isEnableDecimalLogicalType() {
+    public Property<Boolean> isEnableDecimalLogicalType() {
         return enableDecimalLogicalType;
     }
 
@@ -99,16 +120,16 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     public void setEnableDecimalLogicalType(boolean enableDecimalLogicalType) {
-        this.enableDecimalLogicalType = enableDecimalLogicalType;
+        this.enableDecimalLogicalType.set(enableDecimalLogicalType);
     }
 
     @Override
-    public String getDateTimeLogicalType() {
+    public Property<String> getDateTimeLogicalType() {
         return dateTimeLogicalType;
     }
 
     public void setDateTimeLogicalType(String dateTimeLogicalType) {
-        this.dateTimeLogicalType = dateTimeLogicalType;
+        this.dateTimeLogicalType.set(dateTimeLogicalType);
     }
 
     public void setDateTimeLogicalType(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalType) {

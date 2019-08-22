@@ -1,5 +1,5 @@
 /**
- * Copyright © 2013-2015 Commerce Technologies, LLC.
+ * Copyright © 2013-2019 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.inject.Inject;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
@@ -31,6 +32,9 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -47,6 +51,7 @@ import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILI
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 
 /**
@@ -59,26 +64,45 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
     private static Set<String> SUPPORTED_EXTENSIONS = new SetBuilder<String>().add(PROTOCOL_EXTENSION).add(SCHEMA_EXTENSION).build();
 
-    private String outputCharacterEncoding;
-    private String stringType = DEFAULT_STRING_TYPE;
-    private String fieldVisibility = DEFAULT_FIELD_VISIBILITY;
-    private String templateDirectory;
-    private boolean createSetters = DEFAULT_CREATE_SETTERS;
-    private boolean enableDecimalLogicalType = DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
-    private String dateTimeLogicalType = DEFAULT_DATE_TIME_LOGICAL_TYPE;
+    private final Property<String> outputCharacterEncoding;
+    private final Property<String> stringType;
+    private final Property<String> fieldVisibility;
+    private final Property<String> templateDirectory;
+    private final Property<Boolean> createSetters;
+    private final Property<Boolean> enableDecimalLogicalType;
+    private final Property<String> dateTimeLogicalType;
 
-    private transient StringType parsedStringType;
-    private transient FieldVisibility parsedFieldVisibility;
-    private transient SpecificCompiler.DateTimeLogicalTypeImplementation parsedDateTimeLogicalTypeImplementation;
+    private final Provider<StringType> stringTypeProvider;
+    private final Provider<FieldVisibility> fieldVisibilityProvider;
+    private final Provider<SpecificCompiler.DateTimeLogicalTypeImplementation> dateTimeLogicalTypeImplementationProvider;
+
+    @Inject
+    public GenerateAvroJavaTask(ObjectFactory objects) {
+        super();
+        this.outputCharacterEncoding = objects.property(String.class);
+        this.stringType = configurePropertyConvention(objects.property(String.class), DEFAULT_STRING_TYPE);
+        this.fieldVisibility = configurePropertyConvention(objects.property(String.class), DEFAULT_FIELD_VISIBILITY);
+        this.templateDirectory = objects.property(String.class);
+        this.createSetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_SETTERS);
+        this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
+        this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
+        this.stringTypeProvider = getStringType()
+            .map(input -> Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), input));
+        this.fieldVisibilityProvider = getFieldVisibility()
+            .map(input -> Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), input));
+        this.dateTimeLogicalTypeImplementationProvider = getDateTimeLogicalType()
+            .map(input -> Enums.parseCaseInsensitive(OPTION_DATE_TIME_LOGICAL_TYPE,
+                SpecificCompiler.DateTimeLogicalTypeImplementation.values(), input));
+    }
 
     @Optional
     @Input
-    public String getOutputCharacterEncoding() {
+    public Property<String> getOutputCharacterEncoding() {
         return outputCharacterEncoding;
     }
 
     public void setOutputCharacterEncoding(String outputCharacterEncoding) {
-        this.outputCharacterEncoding = outputCharacterEncoding;
+        this.outputCharacterEncoding.set(outputCharacterEncoding);
     }
 
     public void setOutputCharacterEncoding(Charset outputCharacterEncoding) {
@@ -86,7 +110,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     @Input
-    public String getStringType() {
+    public Property<String> getStringType() {
         return stringType;
     }
 
@@ -95,16 +119,16 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     public void setStringType(String stringType) {
-        this.stringType = stringType;
+        this.stringType.set(stringType);
     }
 
     @Input
-    public String getFieldVisibility() {
+    public Property<String> getFieldVisibility() {
         return fieldVisibility;
     }
 
     public void setFieldVisibility(String fieldVisibility) {
-        this.fieldVisibility = fieldVisibility;
+        this.fieldVisibility.set(fieldVisibility);
     }
 
     public void setFieldVisibility(SpecificCompiler.FieldVisibility fieldVisibility) {
@@ -113,40 +137,48 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     @Optional
     @Input
-    public String getTemplateDirectory() {
+    public Property<String> getTemplateDirectory() {
         return templateDirectory;
     }
 
     public void setTemplateDirectory(String templateDirectory) {
-        this.templateDirectory = templateDirectory;
+        this.templateDirectory.set(templateDirectory);
+    }
+
+    public Property<Boolean> isCreateSetters() {
+        return createSetters;
     }
 
     @Input
-    public boolean isCreateSetters() {
+    public Property<Boolean> getCreateSetters() {
         return createSetters;
     }
 
     public void setCreateSetters(String createSetters) {
-        this.createSetters = Boolean.parseBoolean(createSetters);
+        this.createSetters.set(Boolean.parseBoolean(createSetters));
+    }
+
+    public Property<Boolean> isEnableDecimalLogicalType() {
+        return enableDecimalLogicalType;
     }
 
     @Input
-    public boolean isEnableDecimalLogicalType() {
+    public Property<Boolean> getEnableDecimalLogicalType() {
         return enableDecimalLogicalType;
     }
 
     public void setEnableDecimalLogicalType(String enableDecimalLogicalType) {
-        this.enableDecimalLogicalType = Boolean.parseBoolean(enableDecimalLogicalType);
+        this.enableDecimalLogicalType.set(Boolean.parseBoolean(enableDecimalLogicalType));
     }
 
     @Optional
     @Input
-    public String getDateTimeLogicalType() {
+    public Property<String> getDateTimeLogicalType() {
         return dateTimeLogicalType;
     }
 
     public void setDateTimeLogicalType(String dateTimeLogicalType) {
-        this.dateTimeLogicalType = dateTimeLogicalType;
+        this.dateTimeLogicalType.set(dateTimeLogicalType);
     }
 
     public void setDateTimeLogicalType(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalType) {
@@ -155,28 +187,20 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     @TaskAction
     protected void process() {
-        parsedStringType = Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), getStringType());
-        parsedFieldVisibility =
-            Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), getFieldVisibility());
-        parsedDateTimeLogicalTypeImplementation = Enums.parseCaseInsensitive(
-            OPTION_DATE_TIME_LOGICAL_TYPE,
-            SpecificCompiler.DateTimeLogicalTypeImplementation.values(), getDateTimeLogicalType()
-        );
-
-        getLogger().debug("Using outputCharacterEncoding {}", getOutputCharacterEncoding());
-        getLogger().debug("Using stringType {}", parsedStringType.name());
-        getLogger().debug("Using fieldVisibility {}", parsedFieldVisibility.name());
-        getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory());
-        getLogger().debug("Using createSetters {}", isCreateSetters());
-        getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType());
-        getLogger().debug("Using dateTimeLogicalType {}", parsedDateTimeLogicalTypeImplementation.name());
+        getLogger().debug("Using outputCharacterEncoding {}", getOutputCharacterEncoding().getOrNull());
+        getLogger().debug("Using stringType {}", stringTypeProvider.get().name());
+        getLogger().debug("Using fieldVisibility {}", fieldVisibilityProvider.get().name());
+        getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory().getOrNull());
+        getLogger().debug("Using createSetters {}", isCreateSetters().get());
+        getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType().get());
+        getLogger().debug("Using dateTimeLogicalType {}", dateTimeLogicalTypeImplementationProvider.get().name());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         processFiles();
     }
 
     private void failOnUnsupportedFiles() {
-        FileCollection unsupportedFiles = filterSources(new NotSpec<File>(new FileExtensionSpec(SUPPORTED_EXTENSIONS)));
+        FileCollection unsupportedFiles = filterSources(new NotSpec<>(new FileExtensionSpec(SUPPORTED_EXTENSIONS)));
         if (!unsupportedFiles.isEmpty()) {
             throw new GradleException(
                 String.format("Unsupported file extension for the following files: %s", unsupportedFiles));
@@ -277,24 +301,23 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void compile(Protocol protocol, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(protocol, parsedDateTimeLogicalTypeImplementation), sourceFile);
+        compile(new SpecificCompiler(protocol, dateTimeLogicalTypeImplementationProvider.get()), sourceFile);
     }
 
     private void compile(Schema schema, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(schema, parsedDateTimeLogicalTypeImplementation), sourceFile);
+        compile(new SpecificCompiler(schema, dateTimeLogicalTypeImplementationProvider.get()), sourceFile);
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
-        String configuredTemplateDirectory = getTemplateDirectory();
-        compiler.setOutputCharacterEncoding(getOutputCharacterEncoding());
-        compiler.setStringType(parsedStringType);
-        compiler.setFieldVisibility(parsedFieldVisibility);
-        if (configuredTemplateDirectory != null) {
-            compiler.setTemplateDir(configuredTemplateDirectory);
+        compiler.setOutputCharacterEncoding(getOutputCharacterEncoding().getOrNull());
+        compiler.setStringType(stringTypeProvider.get());
+        compiler.setFieldVisibility(fieldVisibilityProvider.get());
+        if (getTemplateDirectory().isPresent()) {
+            compiler.setTemplateDir(getTemplateDirectory().get());
         }
-        compiler.setCreateSetters(isCreateSetters());
-        compiler.setEnableDecimalLogicalType(isEnableDecimalLogicalType());
+        compiler.setCreateSetters(isCreateSetters().get());
+        compiler.setEnableDecimalLogicalType(isEnableDecimalLogicalType().get());
 
-        compiler.compileToDestination(sourceFile, getOutputDir());
+        compiler.compileToDestination(sourceFile, getOutputDir().get().getAsFile());
     }
 }

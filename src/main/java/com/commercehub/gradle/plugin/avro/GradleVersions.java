@@ -1,5 +1,5 @@
-/**
- * Copyright © 2013-2019 Commerce Technologies, LLC.
+/*
+ * Copyright © 2019 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.commercehub.gradle.plugin.avro;
 
-import org.gradle.api.provider.Property;
+import org.gradle.util.GradleVersion;
 
-public interface AvroExtension {
-    Property<String> getOutputCharacterEncoding();
-    Property<String> getStringType();
-    Property<String> getFieldVisibility();
-    Property<String> getTemplateDirectory();
-    Property<Boolean> isCreateSetters();
-    Property<Boolean> isEnableDecimalLogicalType();
-    Property<String> getDateTimeLogicalType();
+class GradleVersions {
+    static final GradleVersion v5_0 = GradleVersion.version("5.0");
+    static final GradleVersion v5_1 = GradleVersion.version("5.1");
+    static final GradleVersion v5_2 = GradleVersion.version("5.2");
 }

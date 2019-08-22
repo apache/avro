@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Commerce Technologies, LLC.
+ * Copyright © 2018-2019 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ public class GenerateAvroSchemaTask extends OutputDirTask {
             Protocol protocol = Protocol.parse(sourceFile);
             for (Schema schema : protocol.getTypes()) {
                 String path = schema.getNamespace().replaceAll(Pattern.quote("."), "/");
-                File schemaFile = new File(getOutputDir(), path + "/" + schema.getName() + "." + SCHEMA_EXTENSION);
+                File schemaFile = new File(getOutputDir().get().getAsFile(), path + "/" + schema.getName() + "." + SCHEMA_EXTENSION);
                 String schemaJson = schema.toString(true);
                 FileUtils.writeJsonFile(schemaFile, schemaJson);
                 getLogger().debug("Wrote {}", schemaFile.getPath());

@@ -10,24 +10,20 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 * Currently tested against Java 8-12
     * Java 11 support requires Gradle 4.8 or higher
-    * Java 9 support requires Gradle 4.2.1 or higher
     * If you need support for Java 7, version 0.16.0 was the last supported version
     * If you need support for Java 6, version 0.9.1 was the last supported version; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
-* Currently built against Gradle 5.1
-    * Currently tested against Gradle 3.0-3.5.1, 4.0-4.10.3, and 5.0-5.1
-        * Gradle 5.2+ is *mostly* supported; there is an incompatibility with setting `outputDir` that has not yet been addressed. 
+* Currently built against Gradle 5.6
+    * Currently tested against Gradle 4.4-4.10.3 and 5.0-5.6
+    * If you need support for Gradle 3.0-3.5.1 or 4.0-4.3, version 0.17.0 was the last version tested for compatibility
     * If you need support for Gradle 2.0-2.14.1, version 0.9.1 was the last version tested for compatibility; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
-    * Other versions may be compatible, but Gradle 1.x versions are unlikely to work
 * Currently built against Avro 1.9.0
-    * Currently tested against Avro 1.9.0; other versions may be compatible
+    * Currently tested against Avro 1.9.0
     * If you need support for Avro 1.8.2, try plugin version 0.16.0
     * If you need support for Avro 1.8.0-1.8.1, try plugin version 0.10.0
     * If you need support for Avro 1.7.7, try plugin version 0.8.1 (updated for Gradle 5.6)
     * Versions of Avro prior to 1.7.x are unlikely to work
 * Incubating: support for Kotlin
     * Currently tested against Kotlin 1.2.31
-    * Kotlin 1.1.2 and higher requires Java 8+
-    * Doesn't work with Gradle 3.2-3.2.1
 * Incubating: support for Gradle Kotlin DSL
     * No test coverage yet; will attempt to address incompatibilities as they are discovered
 

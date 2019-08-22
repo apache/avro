@@ -10,6 +10,7 @@
     <allow pkg="java.nio.charset"/>
     <allow pkg="java.util"/>
     <allow pkg="java.util.concurrent"/>
+    <allow pkg="javax.inject"/>
 
     <allow pkg="org.apache.avro"/>
     <allow pkg="org.apache.avro.compiler.idl"/>
@@ -19,6 +20,4 @@
     <allow pkg="org.gradle.api"/>
     <allow pkg="org.gradle.plugins.ide.idea"/>
     <allow pkg="org.gradle.util"/>
-    <!-- Ideally using internal packages wouldn't be needed -->
-    <allow pkg="org.gradle.api.internal"/>
 </import-control>

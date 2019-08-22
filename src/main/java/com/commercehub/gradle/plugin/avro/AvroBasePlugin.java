@@ -1,5 +1,5 @@
 /**
- * Copyright © 2014-2015 Commerce Technologies, LLC.
+ * Copyright © 2014-2019 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,12 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
-import java.util.concurrent.Callable;
-import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.internal.ConventionMapping;
-import org.gradle.api.internal.IConventionAware;
 
 import static com.commercehub.gradle.plugin.avro.Constants.AVRO_EXTENSION_NAME;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_CREATE_SETTERS;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_DATE_TIME_LOGICAL_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_ENABLE_DECIMAL_LOGICAL_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILITY;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_OUTPUT_CHARACTER_ENCODING;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_TEMPLATE_DIRECTORY;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.createExtensionWithObjectFactory;
 
 public class AvroBasePlugin implements Plugin<Project> {
     @Override
@@ -43,93 +29,15 @@ public class AvroBasePlugin implements Plugin<Project> {
     }
 
     private static void configureExtension(final Project project) {
-        final AvroExtension avroExtension = project.getExtensions().create(AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
-        ConventionMapping extensionMapping = conventionMapping(avroExtension);
-        extensionMapping.map(OPTION_STRING_TYPE, new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return DEFAULT_STRING_TYPE;
-            }
+        final AvroExtension avroExtension = createExtensionWithObjectFactory(project, AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
+        project.getTasks().withType(GenerateAvroJavaTask.class).all(task -> {
+            configurePropertyConvention(task.getOutputCharacterEncoding(), avroExtension.getOutputCharacterEncoding());
+            configurePropertyConvention(task.getStringType(), avroExtension.getStringType());
+            configurePropertyConvention(task.getFieldVisibility(), avroExtension.getFieldVisibility());
+            configurePropertyConvention(task.getTemplateDirectory(), avroExtension.getTemplateDirectory());
+            configurePropertyConvention(task.isCreateSetters(), avroExtension.isCreateSetters());
+            configurePropertyConvention(task.isEnableDecimalLogicalType(), avroExtension.isEnableDecimalLogicalType());
+            configurePropertyConvention(task.getDateTimeLogicalType(), avroExtension.getDateTimeLogicalType());
         });
-        extensionMapping.map(OPTION_FIELD_VISIBILITY, new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return DEFAULT_FIELD_VISIBILITY;
-            }
-        });
-        extensionMapping.map(OPTION_CREATE_SETTERS, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return DEFAULT_CREATE_SETTERS;
-            }
-        });
-        extensionMapping.map(OPTION_ENABLE_DECIMAL_LOGICAL_TYPE, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
-            }
-        });
-        extensionMapping.map(OPTION_DATE_TIME_LOGICAL_TYPE, new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return DEFAULT_DATE_TIME_LOGICAL_TYPE;
-            }
-        });
-        project.getTasks().withType(GenerateAvroJavaTask.class).all(new Action<GenerateAvroJavaTask>() {
-            @Override
-            public void execute(GenerateAvroJavaTask task) {
-                ConventionMapping taskMapping = conventionMapping(task);
-                taskMapping.map(OPTION_OUTPUT_CHARACTER_ENCODING, new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return avroExtension.getOutputCharacterEncoding();
-                    }
-                });
-                taskMapping.map(OPTION_STRING_TYPE, new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return avroExtension.getStringType();
-                    }
-                });
-                taskMapping.map(OPTION_FIELD_VISIBILITY, new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return avroExtension.getFieldVisibility();
-                    }
-                });
-                taskMapping.map(OPTION_TEMPLATE_DIRECTORY, new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return avroExtension.getTemplateDirectory();
-                    }
-                });
-                taskMapping.map(OPTION_CREATE_SETTERS, new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        return avroExtension.isCreateSetters();
-                    }
-                });
-                taskMapping.map(OPTION_ENABLE_DECIMAL_LOGICAL_TYPE, new Callable<Boolean>() {
-                    @Override
-                    public Boolean call() throws Exception {
-                        return avroExtension.isEnableDecimalLogicalType();
-                    }
-                });
-                taskMapping.map(OPTION_DATE_TIME_LOGICAL_TYPE, new Callable<String>() {
-                    @Override
-                    public String call() throws Exception {
-                        return avroExtension.getDateTimeLogicalType();
-                    }
-                });
-            }
-        });
-    }
-
-    private static ConventionMapping conventionMapping(Object conventionAware) {
-        // TODO: try other alternatives to convention mapping
-        // Convention mapping is an internal API.
-        // Other options here:
-        // http://forums.gradle.org/gradle/topics/how_can_i_do_convention_mappings_from_java_without_depending_on_an_internal_api
-        return ((IConventionAware) conventionAware).getConventionMapping();
     }
 }

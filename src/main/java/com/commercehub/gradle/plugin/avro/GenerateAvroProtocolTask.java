@@ -1,5 +1,5 @@
 /**
- * Copyright © 2013-2015 Commerce Technologies, LLC.
+ * Copyright © 2013-2019 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,10 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.UnknownConfigurationException;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.util.GradleVersion;
 
 import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
@@ -69,7 +69,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
 
     private void processIDLFile(File idlFile, ClassLoader loader) {
         getLogger().info("Processing {}", idlFile);
-        File protoFile = new File(getOutputDir(),
+        File protoFile = new File(getOutputDir().get().getAsFile(),
                 FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
         Idl idl = null;
         try {
@@ -92,7 +92,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
 
     private ClassLoader getRuntimeClassLoader(Project project) {
         List<URL> urls = new LinkedList<>();
-        String configurationName = getRuntimeConfigurationName();
+        String configurationName = JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
         try {
             Configuration configuration = project.getConfigurations().getByName(configurationName);
             for (File file : configuration) {
@@ -106,14 +106,6 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
             getLogger().debug("No configuration found with name {}; defaulting to system classloader", configurationName);
         }
         return urls.isEmpty() ? ClassLoader.getSystemClassLoader()
-                : new URLClassLoader(urls.toArray(new URL[urls.size()]), ClassLoader.getSystemClassLoader());
-    }
-
-    /**
-     * Backwards-compatible logic to return the appropriate configuration name for resolving the runtime classpath
-     */
-    private static String getRuntimeConfigurationName() {
-        return GradleVersion.current().compareTo(GradleVersion.version("3.5")) >= 0
-            ? Constants.RUNTIME_CLASSPATH_CONFIGURATION_NAME : Constants.RUNTIME_CONFIGURATION_NAME;
+                : new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
     }
 }

@@ -28,7 +28,6 @@ tasks.withType(AbstractCompile) {
 tasks.withType(JavaCompile) {
     options.compilerArgs << "-Xlint:all" << "-Xlint:-options" << "-Werror"
 }
-sourceCompatibility = 1.7
 
 version = "0.17.1-SNAPSHOT"
 group = "com.commercehub.gradle.plugin"
@@ -177,23 +176,18 @@ test {
     ]
 }
 
+// Java 8+ is required due to Avro 1.9.0 requirements
+// Java 8+ is also required by Gradle 5.x
+sourceCompatibility = 8
+
 def avroVersions = ["1.9.0"]
 def gradleVersions = []
-if (org.gradle.api.JavaVersion.current().isJava8Compatible()) {
-    // Support for running Gradle on Java 7 is deprecated and will be removed in Gradle 5, as per https://docs.gradle.org/4.2.1/release-notes.html
-    gradleVersions.addAll("5.0", "5.1", "5.1.1")
-    // Gradle 5.2 appears to introduce an incompatibility with the previous approach used for task property re-configuration.
-    // "5.2", "5.2.1", "5.3", "5.3.1", "5.4", "5.4.1", "5.5", "5.5.1", "5.6"
+if (!org.gradle.api.JavaVersion.current().isJava11Compatible()) { // Gradle 4.8 appears to be the first version that supports Java 11, as per https://github.com/gradle/gradle/pull/4759 and testing
+    gradleVersions.addAll("4.4", "4.4.1", "4.5", "4.5.1", "4.6", "4.7")
 }
-if (org.gradle.api.JavaVersion.current().isJava7Compatible()) {
-    gradleVersions.addAll("4.8", "4.8.1", "4.9", "4.10", "4.10.1", "4.10.2", "4.10.3")
-    if (!org.gradle.api.JavaVersion.current().isJava9Compatible()) { // Gradle 4.2.1 is the first version that supports modern Java 9, as per https://discuss.gradle.org/t/could-not-determine-java-version-from-9-0-1/24457
-        gradleVersions.addAll("3.0", "3.1", "3.2", "3.2.1", "3.3", "3.4", "3.4.1", "3.5", "3.5.1", "4.0", "4.0.1", "4.0.2", "4.1", "4.2")
-    }
-    if (!org.gradle.api.JavaVersion.current().isJava11Compatible()) { // Gradle 4.8 appears to be the first version that supports Java 11, as per https://github.com/gradle/gradle/pull/4759 and testing
-        gradleVersions.addAll("4.2.1", "4.3", "4.3.1", "4.4", "4.4.1", "4.5", "4.5.1", "4.6", "4.7")
-    }
-}
+gradleVersions.addAll("4.8", "4.8.1", "4.9", "4.10", "4.10.1", "4.10.2", "4.10.3")
+gradleVersions.addAll("5.0", "5.1", "5.1.1", "5.2", "5.2.1", "5.3", "5.3.1", "5.4", "5.4.1", "5.5", "5.5.1", "5.6")
+
 
 avroVersions.each { def avroVersion ->
     gradleVersions.each { def gradleVersion ->

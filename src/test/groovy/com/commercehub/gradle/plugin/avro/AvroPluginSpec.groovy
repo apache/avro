@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2015 Commerce Technologies, LLC.
+ * Copyright © 2013-2019 Commerce Technologies, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,8 @@ class AvroPluginSpec extends Specification {
         mainGenerateAvroProtoTask.group == Constants.GROUP_SOURCE_GENERATION
         testGenerateAvroProtoTask.group == Constants.GROUP_SOURCE_GENERATION
         // Can't easily test the sources
-        mainGenerateAvroProtoTask.outputDir == project.file("build/generated-main-avro-avpr")
-        testGenerateAvroProtoTask.outputDir == project.file("build/generated-test-avro-avpr")
+        mainGenerateAvroProtoTask.outputDir.get().asFile == project.file("build/generated-main-avro-avpr")
+        testGenerateAvroProtoTask.outputDir.get().asFile == project.file("build/generated-test-avro-avpr")
     }
 
     def "avro java generation tasks are registered"() {
@@ -48,8 +48,8 @@ class AvroPluginSpec extends Specification {
         mainGenerateAvroJavaTask.group == Constants.GROUP_SOURCE_GENERATION
         testGenerateAvroJavaTask.group == Constants.GROUP_SOURCE_GENERATION
         // Can't easily test the sources
-        mainGenerateAvroJavaTask.outputDir == project.file("build/generated-main-avro-java")
-        testGenerateAvroJavaTask.outputDir == project.file("build/generated-test-avro-java")
+        mainGenerateAvroJavaTask.outputDir.get().asFile == project.file("build/generated-main-avro-java")
+        testGenerateAvroJavaTask.outputDir.get().asFile == project.file("build/generated-test-avro-java")
     }
 
     OutputDirTask getTask(String name) {
