@@ -226,7 +226,7 @@ public class ProtobufData extends GenericData {
     }
   }
 
-  private String getNamespace(FileDescriptor fd, Descriptor containing) {
+  public String getNamespace(FileDescriptor fd, Descriptor containing) {
     FileOptions o = fd.getOptions();
     String p = o.hasJavaPackage() ? o.getJavaPackage() : fd.getPackage();
     String outer = "";
@@ -268,7 +268,7 @@ public class ProtobufData extends GenericData {
 
   private static final Schema NULL = Schema.create(Schema.Type.NULL);
 
-  private Schema getSchema(FieldDescriptor f) {
+  public Schema getSchema(FieldDescriptor f) {
     Schema s = getNonRepeatedSchema(f);
     if (f.isRepeated())
       s = Schema.createArray(s);
