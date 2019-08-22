@@ -80,7 +80,7 @@ DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& 
 
 DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
     const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(NULL),
+    filename_(),
     schema_(schema),
     encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
