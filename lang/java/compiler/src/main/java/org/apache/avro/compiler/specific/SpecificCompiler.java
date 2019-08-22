@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -82,8 +82,8 @@ public class SpecificCompiler {
    * arguments.
    *
    * @see <a href=
-   * "http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">JVM
-   * Spec: Section 4.10</a>
+   * "https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">
+   * JVM Spec: Section 4.10</a>
    */
   private static final int JVM_METHOD_ARG_LIMIT = 255;
 
@@ -136,6 +136,7 @@ public class SpecificCompiler {
   private boolean enableDecimalLogicalType = false;
   private final DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation;
   private String suffix = ".java";
+  private List<Object> additionalVelocityTools = new ArrayList<>();
 
   /*
    * Used in the record.vm template.
@@ -210,6 +211,14 @@ public class SpecificCompiler {
         "/org/apache/avro/compiler/specific/templates/java/classic/");
     initializeVelocity();
     initializeSpecificData();
+  }
+
+  /**
+   * Set additional Velocity tools (simple POJOs) to be injected into the Velocity
+   * template context.
+   */
+  public void setAdditionalVelocityTools(List<Object> additionalVelocityTools) {
+    this.additionalVelocityTools = additionalVelocityTools;
   }
 
   /**
@@ -384,7 +393,7 @@ public class SpecificCompiler {
     velocityEngine.setProperty("runtime.references.strict", true);
 
     // Set whitespace gobbling to Backward Compatible (BC)
-    // http://velocity.apache.org/engine/2.0/developer-guide.html#space-gobbling
+    // https://velocity.apache.org/engine/2.0/developer-guide.html#space-gobbling
     velocityEngine.setProperty("space.gobbling", "bc");
   }
 
@@ -549,6 +558,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("protocol", protocol);
     context.put("this", this);
+    for (Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
     String out = renderTemplate(templateDir + "protocol.vm", context);
 
     OutputFile outputFile = new OutputFile();
@@ -600,6 +613,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("this", this);
     context.put("schema", schema);
+    for (Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
 
     switch (schema.getType()) {
     case RECORD:

@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,10 +23,18 @@ import os
 import tempfile
 import unittest
 
-from avro import datafile
-from avro import io
-from avro import schema
+from avro import datafile, io, schema
 
+try:
+  import snappy
+  HAS_SNAPPY = True
+except ImportError:
+  HAS_SNAPPY = False
+try:
+  import zstandard
+  HAS_ZSTANDARD = True
+except ImportError:
+  HAS_ZSTANDARD = False
 
 # ------------------------------------------------------------------------------
 
@@ -77,14 +85,20 @@ SCHEMAS_TO_VALIDATE = (
    {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
 )
 
-CODECS_TO_VALIDATE = ('null', 'deflate')
+def get_codecs_to_validate():
+  codecs = ('null', 'deflate')
 
-try:
-  import snappy
-  CODECS_TO_VALIDATE += ('snappy',)
-except ImportError:
-  logging.info('Snappy not present, will skip testing it.')
+  if HAS_SNAPPY:
+    codecs += ('snappy',)
+  else:
+    logging.warning('Snappy not present, will skip testing it.')
 
+  if HAS_ZSTANDARD:
+    codecs += ('zstandard',)
+  else:
+    logging.warning('Zstandard not present, will skip testing it.')
+
+  return codecs
 
 # ------------------------------------------------------------------------------
 
@@ -120,8 +134,9 @@ class TestDataFile(unittest.TestCase):
 
   def testRoundTrip(self):
     correct = 0
+    codecs_to_validate = get_codecs_to_validate()
     for iexample, (writer_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
+      for codec in codecs_to_validate:
         file_path = self.NewTempFile()
 
         # Write the datum this many times in the data file:
@@ -168,12 +183,13 @@ class TestDataFile(unittest.TestCase):
 
     self.assertEqual(
         correct,
-        len(CODECS_TO_VALIDATE) * len(SCHEMAS_TO_VALIDATE))
+        len(codecs_to_validate) * len(SCHEMAS_TO_VALIDATE))
 
   def testAppend(self):
     correct = 0
+    codecs_to_validate = get_codecs_to_validate()
     for iexample, (writer_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
+      for codec in codecs_to_validate:
         file_path = self.NewTempFile()
 
         logging.debug(
@@ -222,7 +238,7 @@ class TestDataFile(unittest.TestCase):
 
     self.assertEqual(
         correct,
-        len(CODECS_TO_VALIDATE) * len(SCHEMAS_TO_VALIDATE))
+        len(codecs_to_validate) * len(SCHEMAS_TO_VALIDATE))
 
   def testContextManager(self):
     file_path = self.NewTempFile()

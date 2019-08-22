@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -184,8 +184,8 @@ public class CaseFinder {
   /**
    * Reads and returns content of a heredoc. Assumes we just read a
    * start-of-here-doc marker for a here-doc labeled "docMarker." Replaces
-   * arbitrary newlines with sytem newlines, but strips newline from final line of
-   * heredoc. Throws IOException if EOF is reached before heredoc is terminate.
+   * arbitrary newlines with system newlines, but strips newline from final line
+   * of heredoc. Throws IOException if EOF is reached before heredoc is terminate.
    */
   private static String processHereDoc(BufferedReader in, String docStart) throws IOException {
     Matcher m = START_LINE_PATTERN.matcher(docStart);

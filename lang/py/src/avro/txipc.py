@@ -8,7 +8,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,17 +19,16 @@ try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from avro import ipc
-from avro import io
-
 from zope.interface import implements
 
+from avro import io, ipc
+from twisted.internet.defer import Deferred, maybeDeferred
+from twisted.internet.protocol import Protocol
+from twisted.web import resource, server
 from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
-from twisted.internet.defer import maybeDeferred, Deferred
 from twisted.web.iweb import IBodyProducer
-from twisted.web import resource, server
-from twisted.internet.protocol import Protocol
+
 
 class TwistedRequestor(ipc.BaseRequestor):
   """A Twisted-compatible requestor. Returns a Deferred that will fire with the

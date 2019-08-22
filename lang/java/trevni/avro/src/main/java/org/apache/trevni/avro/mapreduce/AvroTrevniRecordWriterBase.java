@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,7 @@ import org.apache.trevni.avro.AvroColumnWriter;
  * @param <K> The type of key the record writer should generate.
  * @param <V> The type of value the record wrtier should generate.
  * @param <T> The type of the entries within the Trevni container file being
- *        writen.
+ *        written.
  */
 public abstract class AvroTrevniRecordWriterBase<K, V, T> extends RecordWriter<K, V> {
 

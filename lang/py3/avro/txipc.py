@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,12 +20,11 @@
 
 import io
 
-from avro import io as avro_io
-from avro import ipc
-
 from zope.interface import implements
 
-from twisted.internet.defer import maybeDeferred, Deferred
+from avro import io as avro_io
+from avro import ipc
+from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.internet.protocol import Protocol
 from twisted.web import resource, server
 from twisted.web.client import Agent

@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,16 +21,25 @@ using System.IO;
 
 namespace Avro.IO
 {
+    /// <summary>
+    /// Utility to present <see cref="MemoryStream"/>s as an <see cref="InputStream"/>.
+    /// </summary>
+    /// <seealso cref="ByteBufferOutputStream"/>
     public class ByteBufferInputStream : InputStream
     {
         private readonly IList<MemoryStream> _buffers;
         private int _currentBuffer;
 
+        /// <summary>
+        /// Initializes a new instance of a <see cref="ByteBufferInputStream"/>.
+        /// </summary>
+        /// <param name="buffers"></param>
         public ByteBufferInputStream(IList<MemoryStream> buffers)
         {
             _buffers = buffers;
         }
 
+        /// <inheritdoc/>
         public override int Read(byte[] b, int off, int len)
         {
             if (len == 0) return 0;
@@ -68,6 +77,12 @@ namespace Avro.IO
             throw new EndOfStreamException();
         }
 
+        /// <summary>
+        /// Throws a <see cref="NotSupportedException"/>.
+        /// </summary>
+        /// <exception cref="NotSupportedException">
+        /// Always thows.
+        /// </exception>
         public override long Length
         {
             get { throw new NotSupportedException(); }

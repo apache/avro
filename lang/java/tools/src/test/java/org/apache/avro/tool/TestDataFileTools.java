@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -256,5 +256,14 @@ public class TestDataFileTools {
       }
     }
     return outFile;
+  }
+
+  @Test
+  public void testDefaultCodec() throws Exception {
+    // The default codec for fromjson is null
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream err = new PrintStream(baos);
+    new DataFileWriteTool().run(new ByteArrayInputStream(jsonData.getBytes()), null, err, Collections.emptyList());
+    assertTrue(baos.toString().contains("Compression codec (default: null)"));
   }
 }

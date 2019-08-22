@@ -9,25 +9,20 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.test", "src\apache\tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.codegen", "src\apache\codegen\Avro.codegen.csproj", "{BF0D313C-1AA3-4900-B277-B0F5F9DDCDA8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.ipc", "src\apache\ipc\Avro.ipc.csproj", "{3B05043A-DC6C-49B6-85BF-9AB055D0B414}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AEB22F94-4ECF-4008-B159-389B3F05D54B} = {AEB22F94-4ECF-4008-B159-389B3F05D54B}
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.msbuild", "src\apache\msbuild\Avro.msbuild.csproj", "{AEB22F94-4ECF-4008-B159-389B3F05D54B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.perf", "src\apache\perf\Avro.perf.csproj", "{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avro.ipc.test", "src\apache\ipc.test\Avro.ipc.test.csproj", "{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8A671DF3-BC71-4E1A-BB06-0A225799A274}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.editorconfig = ..\..\.editorconfig
 		.gitignore = .gitignore
+		Avro.ruleset = Avro.ruleset
 		build.ps1 = build.ps1
 		build.sh = build.sh
 		common.props = common.props
 		README.md = README.md
+		stylecop.json = stylecop.json
 	EndProjectSection
 EndProject
 Global
@@ -72,16 +67,6 @@ Global
 		{BF0D313C-1AA3-4900-B277-B0F5F9DDCDA8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{BF0D313C-1AA3-4900-B277-B0F5F9DDCDA8}.Release|x86.ActiveCfg = Release|Any CPU
 		{BF0D313C-1AA3-4900-B277-B0F5F9DDCDA8}.Release|x86.Build.0 = Release|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{3B05043A-DC6C-49B6-85BF-9AB055D0B414}.Release|x86.ActiveCfg = Release|Any CPU
 		{AEB22F94-4ECF-4008-B159-389B3F05D54B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AEB22F94-4ECF-4008-B159-389B3F05D54B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEB22F94-4ECF-4008-B159-389B3F05D54B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -102,18 +87,6 @@ Global
 		{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{AC4E1909-2594-4D01-9B2B-B832C07BAFE5}.Release|x86.ActiveCfg = Release|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Debug|x86.Build.0 = Debug|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Release|x86.ActiveCfg = Release|Any CPU
-		{A5C8B22C-BC43-4763-8B92-EB0CEA739ED1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

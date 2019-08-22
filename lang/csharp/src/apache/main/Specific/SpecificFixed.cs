@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,9 +28,22 @@ namespace Avro.Specific
     /// </summary>
     public abstract class SpecificFixed : GenericFixed
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpecificFixed"/> class.
+        /// </summary>
+        /// <param name="size"></param>
         public SpecificFixed(uint size) : base(size) { }
+
+        /// <summary>
+        /// Schema of this instance.
+        /// </summary>
         public abstract new Schema Schema { get; }
 
+        /// <summary>
+        /// Determines whether the provided fixed is equivalent this this instance.
+        /// </summary>
+        /// <param name="obj">Fixed to compare.</param>
+        /// <returns>True if the fixed instances have equal values.</returns>
         protected bool Equals(SpecificFixed obj)
         {
             if (this == obj) return true;
@@ -47,6 +60,7 @@ namespace Avro.Specific
 
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -55,6 +69,7 @@ namespace Avro.Specific
             return Equals((SpecificFixed) obj);
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             int result = Schema.GetHashCode();

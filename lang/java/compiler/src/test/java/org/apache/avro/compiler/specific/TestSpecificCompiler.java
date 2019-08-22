@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -731,5 +731,27 @@ public class TestSpecificCompiler {
       }
     }
     assertEquals(17, optionalFound);
+  }
+
+  @Test
+  public void testAdditionalToolsAreInjectedIntoTemplate() throws Exception {
+    SpecificCompiler compiler = createCompiler();
+    List<Object> customTools = new ArrayList<>();
+    customTools.add(new String());
+    compiler.setAdditionalVelocityTools(customTools);
+    compiler.setTemplateDir("src/test/resources/templates_with_custom_tools/");
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int itWorksFound = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("It works!")) {
+          itWorksFound++;
+        }
+      }
+    }
+    assertEquals(1, itWorksFound);
   }
 }

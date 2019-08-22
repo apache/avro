@@ -6,47 +6,30 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 # 
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 # 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import unittest
+
 import csv
+import json
+import unittest
 from cStringIO import StringIO
-try:
-    import json
-except ImportError:
-    import simplejson as json
-from tempfile import NamedTemporaryFile
-import avro.schema
-from avro.io import DatumWriter
-from avro.datafile import DataFileWriter
-from os.path import dirname, join, isfile
-from os import remove
 from operator import itemgetter
+from os import remove
+from os.path import dirname, isfile, join
+from subprocess import check_call, check_output
+from tempfile import NamedTemporaryFile
+
+import avro.schema
+from avro.datafile import DataFileWriter
+from avro.io import DatumWriter
 
 NUM_RECORDS = 7
 
-try:
-    from subprocess import check_output
-except ImportError:
-    from subprocess import Popen, PIPE
-
-    def check_output(args):
-        pipe = Popen(args, stdout=PIPE)
-        if pipe.wait() != 0:
-            raise ValueError
-        return pipe.stdout.read()
-
-try:
-    from subprocess import check_call
-except ImportError:
-    def check_call(args, **kw):
-        pipe = Popen(args, **kw)
-        assert pipe.wait() == 0
 
 SCHEMA = '''
 {

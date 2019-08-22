@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -172,7 +172,7 @@ module Avro
       end
 
       # null is written as zero bytes
-      def write_null(datum)
+      def write_null(_datum)
         nil
       end
 
@@ -292,7 +292,7 @@ module Avro
         readers_schema.type_adapter.decode(datum)
       end
 
-      def read_fixed(writers_schema, readers_schema, decoder)
+      def read_fixed(writers_schema, _readers_schema, decoder)
         decoder.read(writers_schema.size)
       end
 
@@ -359,7 +359,7 @@ module Avro
         readers_fields_hash = readers_schema.fields_hash
         read_record = {}
         writers_schema.fields.each do |field|
-          if readers_field = readers_fields_hash[field.name]
+          if (readers_field = readers_fields_hash[field.name])
             field_val = read_data(field.type, readers_field.type, decoder)
             read_record[field.name] = field_val
           else
@@ -468,7 +468,7 @@ module Avro
         decoder.skip(writers_schema.size)
       end
 
-      def skip_enum(writers_schema, decoder)
+      def skip_enum(_writers_schema, decoder)
         decoder.skip_int
       end
 
@@ -545,7 +545,7 @@ module Avro
         end
       end
 
-      def write_fixed(writers_schema, datum, encoder)
+      def write_fixed(_writers_schema, datum, encoder)
         encoder.write(datum)
       end
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace Avro.IO
@@ -28,6 +27,10 @@ namespace Avro.IO
     {
         private readonly Stream stream;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BinaryDecoder"/> class.
+        /// </summary>
+        /// <param name="stream">Stream to decode.</param>
         public BinaryDecoder(Stream stream)
         {
             this.stream = stream;
@@ -56,17 +59,16 @@ namespace Avro.IO
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
-        /// <param name="?"></param>
-        /// <returns></returns>
+        /// <returns>An integer value.</returns>
         public int ReadInt()
         {
             return (int)ReadLong();
         }
+
         /// <summary>
         /// int and long values are written using variable-length, zig-zag coding.
         /// </summary>
-        /// <param name="?"></param>
-        /// <returns></returns>
+        /// <returns>A long value.</returns>
         public long ReadLong()
         {
             byte b = read();
@@ -109,8 +111,7 @@ namespace Avro.IO
         /// The double is converted into a 64-bit integer using a method equivalent to
         /// Java's doubleToLongBits and then encoded in little-endian format.
         /// </summary>
-        /// <param name="?"></param>
-        /// <returns></returns>
+        /// <returns>A double value.</returns>
         public double ReadDouble()
         {
             long bits = (stream.ReadByte() & 0xffL) |
@@ -133,6 +134,10 @@ namespace Avro.IO
             return read(ReadLong());
         }
 
+        /// <summary>
+        /// Reads a string written by <see cref="BinaryEncoder.WriteString(string)"/>.
+        /// </summary>
+        /// <returns>String read from the stream.</returns>
         public string ReadString()
         {
             int length = ReadInt();
@@ -142,97 +147,169 @@ namespace Avro.IO
             return System.Text.Encoding.UTF8.GetString(buffer);
         }
 
+        /// <summary>
+        /// Reads an enumeration.
+        /// </summary>
+        /// <returns>Ordinal value of the enum.</returns>
         public int ReadEnum()
         {
             return ReadInt();
         }
 
+        /// <summary>
+        /// Reads the size of the first block of an array.
+        /// </summary>
+        /// <returns>Size of the first block of an array.</returns>
         public long ReadArrayStart()
         {
             return doReadItemCount();
         }
 
+        /// <summary>
+        /// Processes the next block of an array and returns the number of items in the block and
+        /// let's the caller read those items.
+        /// </summary>
+        /// <returns>Number of items in the next block of an array.</returns>
         public long ReadArrayNext()
         {
             return doReadItemCount();
         }
 
+        /// <summary>
+        /// Reads the size of the next block of map-entries.
+        /// </summary>
+        /// <returns>Size of the next block of map-entries.</returns>
         public long ReadMapStart()
         {
             return doReadItemCount();
         }
 
+        /// <summary>
+        /// Processes the next block of map entries and returns the count of them.
+        /// </summary>
+        /// <returns>Number of entires in the next block of a map.</returns>
         public long ReadMapNext()
         {
             return doReadItemCount();
         }
 
+        /// <summary>
+        /// Reads the tag index of a union written by <see cref="BinaryEncoder.WriteUnionIndex(int)"/>.
+        /// </summary>
+        /// <returns>Tag index of a union.</returns>
         public int ReadUnionIndex()
         {
             return ReadInt();
         }
 
+        /// <summary>
+        /// Reads fixed sized binary object.
+        /// </summary>
+        /// <param name="buffer">Buffer to read the fixed value into.</param>
         public void ReadFixed(byte[] buffer)
         {
             ReadFixed(buffer, 0, buffer.Length);
         }
 
+        /// <summary>
+        /// Reads fixed sized binary object.
+        /// </summary>
+        /// <param name="buffer">Buffer to read the fixed value into.</param>
+        /// <param name="start">
+        /// Position to start writing the fixed value to in the <paramref name="buffer"/>.
+        /// </param>
+        /// <param name="length">
+        /// Number of bytes of the fixed to read.
+        /// </param>
         public void ReadFixed(byte[] buffer, int start, int length)
         {
             Read(buffer, start, length);
         }
 
+        /// <summary>
+        /// Skips over a null value.
+        /// </summary>
         public void SkipNull()
         {
             ReadNull();
         }
 
+        /// <summary>
+        /// Skips over a boolean value.
+        /// </summary>
         public void SkipBoolean()
         {
             ReadBoolean();
         }
 
-
+        /// <summary>
+        /// Skips over an int value.
+        /// </summary>
         public void SkipInt()
         {
             ReadInt();
         }
 
+        /// <summary>
+        /// Skips over a long value.
+        /// </summary>
         public void SkipLong()
         {
             ReadLong();
         }
 
+        /// <summary>
+        /// Skips over a float value.
+        /// </summary>
         public void SkipFloat()
         {
             Skip(4);
         }
 
+        /// <summary>
+        /// Skips over a double value.
+        /// </summary>
         public void SkipDouble()
         {
             Skip(8);
         }
 
+        /// <summary>
+        /// Skips a byte-string written by <see cref="BinaryEncoder.WriteBytes(byte[])"/>.
+        /// </summary>
         public void SkipBytes()
         {
             Skip(ReadLong());
         }
 
+        /// <summary>
+        /// Skips a string written by <see cref="BinaryEncoder.WriteString(string)"/>.
+        /// </summary>
         public void SkipString()
         {
             SkipBytes();
         }
 
+        /// <summary>
+        /// Skips an enum value.
+        /// </summary>
         public void SkipEnum()
         {
             ReadLong();
         }
 
+        /// <summary>
+        /// Skips a union tag index.
+        /// </summary>
         public void SkipUnionIndex()
         {
             ReadLong();
         }
 
+        /// <summary>
+        /// Skips a fixed value of a specified length.
+        /// </summary>
+        /// <param name="len">Length of the fixed to skip.</param>
         public void SkipFixed(int len)
         {
             Skip(len);
@@ -294,6 +371,5 @@ namespace Avro.IO
         {
             throw new NotImplementedException();
         }
-
     }
 }

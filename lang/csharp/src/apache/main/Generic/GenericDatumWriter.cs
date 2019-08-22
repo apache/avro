@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,10 +27,16 @@ namespace Avro.Generic
     /// </summary>
     public class GenericDatumWriter<T> : PreresolvingDatumWriter<T>
     {
-        public GenericDatumWriter( Schema schema ) : base(schema, new GenericArrayAccess(), new DictionaryMapAccess())
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericDatumWriter{T}"/> class.
+        /// </summary>
+        /// <param name="schema">Schema this writer will use.</param>
+        public GenericDatumWriter(Schema schema)
+            : base(schema, new GenericArrayAccess(), new DictionaryMapAccess())
         {
         }
 
+        /// <inheritdoc/>
         protected override void WriteRecordFields(object recordObj, RecordFieldWriter[] writers, Encoder encoder)
         {
             var record = (GenericRecord) recordObj;
@@ -40,6 +46,7 @@ namespace Avro.Generic
             }
         }
 
+        /// <inheritdoc/>
         protected override void EnsureRecordObject( RecordSchema recordSchema, object value )
         {
             if( value == null || !( value is GenericRecord ) || !( ( value as GenericRecord ).Schema.Equals( recordSchema ) ) )
@@ -48,11 +55,13 @@ namespace Avro.Generic
             }
         }
 
+        /// <inheritdoc/>
         protected override void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder)
         {
             writer(((GenericRecord)record)[fieldName], encoder);
         }
 
+        /// <inheritdoc/>
         protected override WriteItem ResolveEnum(EnumSchema es)
         {
             return (v,e) =>
@@ -63,6 +72,7 @@ namespace Avro.Generic
                        };
         }
 
+        /// <inheritdoc/>
         protected override void WriteFixed( FixedSchema es, object value, Encoder encoder )
         {
             if (value == null || !(value is GenericFixed) || !(value as GenericFixed).Schema.Equals(es))
@@ -73,12 +83,18 @@ namespace Avro.Generic
             encoder.WriteFixed(ba.Value);
         }
 
-        /*
-         * FIXME: This method of determining the Union branch has problems. If the data is IDictionary<string, object>
-         * if there are two branches one with record schema and the other with map, it choose the first one. Similarly if
-         * the data is byte[] and there are fixed and bytes schemas as branches, it choose the first one that matches.
-         * Also it does not recognize the arrays of primitive types.
-         */
+        /// <summary>
+        /// Tests whether the given schema an object are compatible.
+        /// </summary>
+        /// <remarks>
+        /// FIXME: This method of determining the Union branch has problems. If the data is IDictionary&lt;string, object&gt;
+        /// if there are two branches one with record schema and the other with map, it choose the first one. Similarly if
+        /// the data is byte[] and there are fixed and bytes schemas as branches, it choose the first one that matches.
+        /// Also it does not recognize the arrays of primitive types.
+        /// </remarks>
+        /// <param name="sc">Schema to compare</param>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>True if the two parameters are compatible, false otherwise.</returns>
         protected override bool UnionBranchMatches(Schema sc, object obj)
         {
             if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;

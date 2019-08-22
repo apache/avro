@@ -8,7 +8,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,12 +38,8 @@ class InterOpTest extends PHPUnit_Framework_TestCase
     if (!($dh = opendir($data_dir)))
       die("Could not open data dir '$data_dir'\n");
 
-    /* TODO This currently only tries to read files of the form 'language.avro',
-     * but not 'language_deflate.avro' as the PHP implementation is not yet
-     * able to read deflate data files. When deflate support is added, change
-     * this to match *.avro. */
     while ($file = readdir($dh))
-      if (0 < preg_match('/^[a-z]+\.avro$/', $file))
+      if (0 < preg_match('/^[a-z]+(_deflate)?\.avro$/', $file))
         $data_files []= join(DIRECTORY_SEPARATOR, array($data_dir, $file));
     closedir($dh);
 

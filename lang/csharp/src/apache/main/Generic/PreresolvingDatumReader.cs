@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,9 +28,18 @@ namespace Avro.Generic
     /// </summary>
     public abstract class PreresolvingDatumReader<T> : DatumReader<T>
     {
+        /// <inheritdoc/>
         public Schema ReaderSchema { get; private set; }
+
+        /// <inheritdoc/>
         public Schema WriterSchema { get; private set; }
 
+        /// <summary>
+        /// Defines the signature for a function that reads an item from a decoder.
+        /// </summary>
+        /// <param name="reuse">Optional object to deserialize the datum into. May be null.</param>
+        /// <param name="dec">Decoder to read data from.</param>
+        /// <returns>Deserialized datum.</returns>
         protected delegate object ReadItem(object reuse, Decoder dec);
 
         // read a specific field from a decoder
@@ -43,6 +52,11 @@ namespace Avro.Generic
         private readonly ReadItem _reader;
         private readonly Dictionary<SchemaPair,ReadItem> _recordReaders = new Dictionary<SchemaPair,ReadItem>();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PreresolvingDatumReader{T}"/> class.
+        /// </summary>
+        /// <param name="writerSchema">Schema that was used to write the data.</param>
+        /// <param name="readerSchema">Schema to use to read the data.</param>
         protected PreresolvingDatumReader(Schema writerSchema, Schema readerSchema)
         {
             ReaderSchema = readerSchema;
@@ -52,15 +66,45 @@ namespace Avro.Generic
             _reader = ResolveReader(writerSchema, readerSchema);
         }
 
+        /// <inheritdoc/>
         public T Read(T reuse, Decoder decoder)
         {
             return (T)_reader(reuse, decoder);
         }
 
+        /// <summary>
+        /// Returns an <see cref="ArrayAccess"/> implementation for the given schema.
+        /// </summary>
+        /// <param name="readerSchema">Schema for the array.</param>
+        /// <returns>An <see cref="ArrayAccess"/> implementation.</returns>
         protected abstract ArrayAccess GetArrayAccess(ArraySchema readerSchema);
+
+        /// <summary>
+        /// Returns an <see cref="EnumAccess"/> implementation for the given schema.
+        /// </summary>
+        /// <param name="readerSchema">Schema for the enum.</param>
+        /// <returns>An <see cref="EnumAccess"/> implementation.</returns>
         protected abstract EnumAccess GetEnumAccess(EnumSchema readerSchema);
+
+        /// <summary>
+        /// Returns a <see cref="MapAccess"/> implementation for the given schema.
+        /// </summary>
+        /// <param name="readerSchema">Schema for the map.</param>
+        /// <returns>A <see cref="MapAccess"/> implementation.</returns>
         protected abstract MapAccess GetMapAccess(MapSchema readerSchema);
+
+        /// <summary>
+        /// Returns a <see cref="RecordAccess"/> implementation for the given schema.
+        /// </summary>
+        /// <param name="readerSchema">Schema for the record.</param>
+        /// <returns>A <see cref="RecordAccess"/> implementation.</returns>
         protected abstract RecordAccess GetRecordAccess(RecordSchema readerSchema);
+
+        /// <summary>
+        /// Returns a <see cref="FixedAccess"/> implementation for the given schema.
+        /// </summary>
+        /// <param name="readerSchema">Schema for the fixed.</param>
+        /// <returns>A <see cref="FixedAccess"/> implementation.</returns>
         protected abstract FixedAccess GetFixedAccess(FixedSchema readerSchema);
 
         /// <summary>
@@ -364,6 +408,12 @@ namespace Avro.Generic
             return fixedrec;
         }
 
+        /// <summary>
+        /// Finds the branch of the union schema associated with the given schema.
+        /// </summary>
+        /// <param name="us">Union schema.</param>
+        /// <param name="s">Schema to find in the union schema.</param>
+        /// <returns>Schema branch in the union schema.</returns>
         protected static Schema FindBranch(UnionSchema us, Schema s)
         {
             int index = us.MatchingBranch(s);
@@ -464,6 +514,9 @@ namespace Avro.Generic
 
         // interfaces to handle details of working with Specific vs Generic objects
 
+        /// <summary>
+        /// Defines the interface for a class that provides access to a record implementation.
+        /// </summary>
         protected interface RecordAccess
         {
             /// <summary>
@@ -496,11 +549,23 @@ namespace Avro.Generic
             void AddField(object record, string fieldName, int fieldPos, object fieldValue);
         }
 
+        /// <summary>
+        /// Defines the interface for a class that provides access to an enum implementation.
+        /// </summary>
         protected interface EnumAccess
         {
+            /// <summary>
+            /// Creates an enum value.
+            /// </summary>
+            /// <param name="reuse">Optional object to reuse as the enum value. May be null.</param>
+            /// <param name="ordinal">Ordinal value of the enum entry.</param>
+            /// <returns>An object representing the enum value.</returns>
             object CreateEnum(object reuse, int ordinal);
         }
 
+        /// <summary>
+        /// Defines the interface for a class that provides access to a fixed implementation.
+        /// </summary>
         protected interface FixedAccess
         {
             /// <summary>
@@ -519,6 +584,9 @@ namespace Avro.Generic
             byte[] GetFixedBuffer(object f);
         }
 
+        /// <summary>
+        /// Defines the interface for a class that provides access to an array implementation.
+        /// </summary>
         protected interface ArrayAccess
         {
             /// <summary>
@@ -545,9 +613,24 @@ namespace Avro.Generic
             /// <param name="targetSize">The new size.</param>
             void Resize(ref object array, int targetSize);
 
+            /// <summary>
+            /// Adds elements to the given array by reading values from the decoder.
+            /// </summary>
+            /// <param name="array">Array to add elements to.</param>
+            /// <param name="elements">Number of elements to add.</param>
+            /// <param name="index">Start adding elements to the array at this index.</param>
+            /// <param name="itemReader">Delegate to read an item from the decoder.</param>
+            /// <param name="decoder">Decoder to read from.</param>
+            /// <param name="reuse">
+            /// True to reuse each element in the array when deserializing. False to create a new
+            /// object for each element.
+            /// </param>
             void AddElements( object array, int elements, int index, ReadItem itemReader, Decoder decoder, bool reuse );
         }
 
+        /// <summary>
+        /// Defines the interface for a class that provides access to a map implementation.
+        /// </summary>
         protected interface MapAccess
         {
             /// <summary>
@@ -557,6 +640,17 @@ namespace Avro.Generic
             /// <returns>An empty map object.</returns>
             object Create(object reuse);
 
+            /// <summary>
+            /// Adds elements to the given map by reading values from the decoder.
+            /// </summary>
+            /// <param name="map">Map to add elements to.</param>
+            /// <param name="elements">Number of elements to add.</param>
+            /// <param name="itemReader">Delegate to read an item from the decoder.</param>
+            /// <param name="decoder">Decoder to read from.</param>
+            /// <param name="reuse">
+            /// True to reuse each element in the map when deserializing. False to create a new
+            /// object for each element.
+            /// </param>
             void AddElements(object map, int elements, ReadItem itemReader, Decoder decoder, bool reuse);
         }
 

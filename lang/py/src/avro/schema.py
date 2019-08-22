@@ -6,13 +6,14 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Contains the Schema classes.
 
@@ -33,13 +34,11 @@ A schema may be one of:
   A boolean; or
   Null.
 """
-from math import floor
-from math import log10
 
-try:
-  import json
-except ImportError:
-  import simplejson as json
+import json
+from math import floor, log10
+
+from avro import constants
 
 #
 # Constants
@@ -347,7 +346,7 @@ class DecimalLogicalSchema(LogicalSchema):
       raise SchemaParseException("Invalid DECIMAL scale %s. Cannot be greater than precision %s"
                                  %(scale, precision))
 
-    LogicalSchema.__init__(self, 'decimal')
+    super(DecimalLogicalSchema, self).__init__('decimal')
 
   def _max_precision(self):
     raise NotImplementedError()
@@ -788,6 +787,91 @@ class RecordSchema(NamedSchema):
     to_cmp = json.loads(str(self))
     return to_cmp == json.loads(str(that))
 
+
+#
+# Logical Type
+#
+
+class LogicalSchema(object):
+   def __init__(self, logical_type):
+     self.logical_type = logical_type
+
+
+#
+# Date Type
+#
+
+class DateSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.DATE)
+    PrimitiveSchema.__init__(self, 'int', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# time-millis Type
+#
+
+class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIME_MILLIS)
+    PrimitiveSchema.__init__(self, 'int', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# time-micros Type
+#
+
+class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIME_MICROS)
+    PrimitiveSchema.__init__(self, 'long', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# timestamp-millis Type
+#
+
+class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIMESTAMP_MILLIS)
+    PrimitiveSchema.__init__(self, 'long', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
+#
+# timestamp-micros Type
+#
+
+class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
+  def __init__(self, other_props=None):
+    LogicalSchema.__init__(self, constants.TIMESTAMP_MICROS)
+    PrimitiveSchema.__init__(self, 'long', other_props)
+
+  def to_json(self, names=None):
+    return self.props
+
+  def __eq__(self, that):
+    return self.props == that.props
+
 #
 # Module Methods
 #
@@ -817,11 +901,20 @@ def make_avsc_object(json_data, names=None):
     logical_type = None
     if 'logicalType' in json_data:
       logical_type = json_data.get('logicalType')
-      if logical_type != 'decimal':
-       raise SchemaParseException("Currently does not support %s logical type" % logical_type)
+      if logical_type not in constants.SUPPORTED_LOGICAL_TYPE:
+        raise SchemaParseException("Currently does not support %s logical type" % logical_type)
     if type in PRIMITIVE_TYPES:
-      if type == 'bytes':
-        if logical_type == 'decimal':
+      if type == 'int' and logical_type == constants.DATE:
+        return DateSchema(other_props)
+      if type == 'int' and logical_type == constants.TIME_MILLIS:
+        return TimeMillisSchema(other_props=other_props)
+      if type == 'long' and logical_type == constants.TIME_MICROS:
+        return TimeMicrosSchema(other_props=other_props)
+      if type == 'long' and logical_type == constants.TIMESTAMP_MILLIS:
+        return TimestampMillisSchema(other_props=other_props)
+      if type == 'long' and logical_type == constants.TIMESTAMP_MICROS:
+        return TimestampMicrosSchema(other_props=other_props)
+      if type == 'bytes' and logical_type == constants.DECIMAL:
           precision = json_data.get('precision')
           scale = 0 if json_data.get('scale') is None else json_data.get('scale')
           return BytesDecimalSchema(precision, scale, other_props)

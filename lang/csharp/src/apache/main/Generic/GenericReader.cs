@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,11 @@ using System.IO;
 
 namespace Avro.Generic
 {
+    /// <summary>
+    /// A function that can read the Avro type from the stream.
+    /// </summary>
+    /// <typeparam name="T">Type to read.</typeparam>
+    /// <returns>The read object.</returns>
     public delegate T Reader<T>();
 
     /// <summary>
@@ -56,10 +61,24 @@ namespace Avro.Generic
             this.reader = reader;
         }
 
+        /// <summary>
+        /// Schema used to write the data.
+        /// </summary>
         public Schema WriterSchema { get { return reader.WriterSchema; } }
 
+        /// <summary>
+        /// Schema used to read the data.
+        /// </summary>
         public Schema ReaderSchema { get { return reader.ReaderSchema; } }
 
+        /// <summary>
+        /// Reads an object off the stream.
+        /// </summary>
+        /// <param name="reuse">
+        /// If not null, the implemenation will try to use to return the object
+        /// </param>
+        /// <param name="d">Decoder to read from.</param>
+        /// <returns>Object we read from the decoder.</returns>
         public T Read(T reuse, Decoder d)
         {
             return reader.Read(reuse, d);
@@ -80,7 +99,14 @@ namespace Avro.Generic
     /// </remarks>
     public class DefaultReader
     {
+        /// <summary>
+        /// Schema to use when reading data with this reader.
+        /// </summary>
         public Schema ReaderSchema { get; private set; }
+
+        /// <summary>
+        /// Schema used to write data that we are reading with this reader.
+        /// </summary>
         public Schema WriterSchema { get; private set; }
 
 
@@ -105,7 +131,7 @@ namespace Avro.Generic
         /// </typeparam>
         /// <param name="reuse">If not null, the implemenation will try to use to return the object</param>
         /// <param name="decoder">The decoder for deserialization</param>
-        /// <returns></returns>
+        /// <returns>Object read from the decoder.</returns>
         public T Read<T>(T reuse, Decoder decoder)
         {
             if (!ReaderSchema.CanRead(WriterSchema))
@@ -114,6 +140,16 @@ namespace Avro.Generic
             return (T)Read(reuse, WriterSchema, ReaderSchema, decoder);
         }
 
+        /// <summary>
+        /// Reads an object off the stream.
+        /// </summary>
+        /// <param name="reuse">
+        /// If not null, the implemenation will try to use to return the object.
+        /// </param>
+        /// <param name="writerSchema">Schema used to write the data.</param>
+        /// <param name="readerSchema">Schema to use when reading the data.</param>
+        /// <param name="d">Decoder to read from.</param>
+        /// <returns>Object read from the decoder.</returns>
         public object Read(object reuse, Schema writerSchema, Schema readerSchema, Decoder d)
         {
             if (readerSchema.Tag == Schema.Type.Union && writerSchema.Tag != Schema.Type.Union)
@@ -294,6 +330,7 @@ namespace Avro.Generic
         /// <param name="record">The record object to be probed into. This is guaranteed to be one that was returned
         /// by a previous call to CreateRecord.</param>
         /// <param name="fieldName">The name of the field to probe.</param>
+        /// <param name="fieldPos">Position of the field in the schema - not used in the base implementation.</param>
         /// <param name="value">The value of the field, if found. Null otherwise.</param>
         /// <returns>True if and only if a field with the given name is found.</returns>
         protected virtual bool TryGetField(object record, string fieldName, int fieldPos, out object value)
@@ -308,6 +345,7 @@ namespace Avro.Generic
         /// <param name="record">The record object to be probed into. This is guaranteed to be one that was returned
         /// by a previous call to CreateRecord.</param>
         /// <param name="fieldName">The name of the field to probe.</param>
+        /// <param name="fieldPos">Position of the field in the schema - not used in the base implementation.</param>
         /// <param name="fieldValue">The value to be added for the field</param>
         protected virtual void AddField(object record, string fieldName, int fieldPos, object fieldValue)
         {
@@ -381,6 +419,7 @@ namespace Avro.Generic
         /// should use GetArraySize() to determine the size. The default implementation creates an <c>object[]</c>.
         /// </summary>
         /// <param name="reuse">If appropriate use this instead of creating a new one.</param>
+        /// <param name="rs">Array schema, not used in base implementation</param>
         /// <returns>An object suitable to deserialize an avro array</returns>
         protected virtual object CreateArray(object reuse, ArraySchema rs)
         {
@@ -462,9 +501,10 @@ namespace Avro.Generic
 
         /// <summary>
         /// Used by the default implementation of ReadMap() to create a fresh map object. The default
-        /// implementaion of this method returns a IDictionary<string, map>.
+        /// implementaion of this method returns a IDictionary&lt;string, map&gt;.
         /// </summary>
         /// <param name="reuse">If appropriate, use this map object instead of creating a new one.</param>
+        /// <param name="ms">Map schema to use when creating the object.</param>
         /// <returns>An empty map object.</returns>
         protected virtual object CreateMap(object reuse, MapSchema ms)
         {
@@ -558,6 +598,11 @@ namespace Avro.Generic
             return (f as GenericFixed).Value;
         }
 
+        /// <summary>
+        /// Skip an instance of a schema.
+        /// </summary>
+        /// <param name="writerSchema">Schema to skip.</param>
+        /// <param name="d">Decoder we're reading from.</param>
         protected virtual void Skip(Schema writerSchema, Decoder d)
         {
             switch (writerSchema.Tag)
@@ -621,6 +666,12 @@ namespace Avro.Generic
             }
         }
 
+        /// <summary>
+        /// Finds the branch of the union schema associated with the given schema.
+        /// </summary>
+        /// <param name="us">Union schema.</param>
+        /// <param name="s">Schema to find in the union schema.</param>
+        /// <returns>Schema branch in the union schema.</returns>
         protected static Schema findBranch(UnionSchema us, Schema s)
         {
             int index = us.MatchingBranch(s);

@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,26 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using Avro.IO;
 
 namespace Avro.File
 {
+    /// <summary>
+    /// Header on an Avro data file.
+    /// </summary>
     public class Header
     {
-        private IDictionary<string, byte[]> _metaData;
-        private byte[] _syncData;
+        /// <summary>
+        /// Metadata in this header.
+        /// </summary>
+        public IDictionary<string, byte[]> MetaData { get; }
 
-        public IDictionary<string, byte[]> MetaData { get { return _metaData; }}
-        public byte[] SyncData { get { return _syncData; }}
+        /// <summary>
+        /// Sync token.
+        /// </summary>
+        public byte[] SyncData { get; }
+
+        /// <summary>
+        /// Avro schema.
+        /// </summary>
         public Schema Schema { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Header"/> class.
+        /// </summary>
         public Header()
         {
-            _metaData = new Dictionary<string, byte[]>();
-            _syncData = new byte[16];
+            MetaData = new Dictionary<string, byte[]>();
+            SyncData = new byte[16];
         }
     }
 }

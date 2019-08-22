@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 # 
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 # 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +17,8 @@ import os
 import unittest
 
 import set_avro_test_path
+from avro import datafile, io
 
-from avro import io
-from avro import datafile
 
 class TestDataFileInterop(unittest.TestCase):
   def test_interop(self):
@@ -35,8 +34,10 @@ class TestDataFileInterop(unittest.TestCase):
       reader = open(os.path.join('@INTEROP_DATA_DIR@', f), 'rb')
       datum_reader = io.DatumReader()
       dfr = datafile.DataFileReader(reader, datum_reader)
-      for datum in dfr:
+      i = 0
+      for i, datum in enumerate(dfr, 1):
         assert datum is not None
+      assert i > 0
 
 if __name__ == '__main__':
   unittest.main()

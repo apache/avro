@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 # 
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 # 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,10 +17,7 @@ import os
 import unittest
 
 import set_avro_test_path
-
-from avro import schema
-from avro import io
-from avro import datafile
+from avro import datafile, io, schema
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
@@ -60,6 +57,11 @@ try:
   CODECS_TO_VALIDATE += ('snappy',)
 except ImportError:
   print 'Snappy not present, will skip testing it.'
+try:
+  import zstandard
+  CODECS_TO_VALIDATE += ('zstandard',)
+except ImportError:
+  print 'Zstandard not present, will skip testing it.'
 
 # TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):
@@ -154,13 +156,7 @@ class TestDataFile(unittest.TestCase):
     self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
 
   def test_context_manager(self):
-    # Context manager was introduced as a first class
-    # member only in Python 2.6 and above.
-    import sys
-    if sys.version_info < (2,6):
-      print 'Skipping context manager tests on this Python version.'
-      return
-    # Test the writer with a 'with' statement.
+    """Test the writer with a 'with' statement."""
     writer = open(FILENAME, 'wb')
     datum_writer = io.DatumWriter()
     sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]

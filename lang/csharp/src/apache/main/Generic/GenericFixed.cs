@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Avro.Generic
 {
@@ -27,9 +24,15 @@ namespace Avro.Generic
     /// </summary>
     public class GenericFixed
     {
+        /// <summary>
+        /// Value of this fixed.
+        /// </summary>
         protected readonly byte[] value;
         private FixedSchema schema;
 
+        /// <summary>
+        /// Schema for this fixed.
+        /// </summary>
         public FixedSchema Schema
         {
             get
@@ -49,12 +52,21 @@ namespace Avro.Generic
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericFixed"/> class.
+        /// </summary>
+        /// <param name="schema">Schema for this fixed.</param>
         public GenericFixed(FixedSchema schema)
         {
             value = new byte[schema.Size];
             this.Schema = schema;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericFixed"/> class with a value.
+        /// </summary>
+        /// <param name="schema">Schema for this fixed.</param>
+        /// <param name="value">Value of the fixed.</param>
         public GenericFixed(FixedSchema schema, byte[] value)
         {
             this.value = new byte[schema.Size];
@@ -62,11 +74,18 @@ namespace Avro.Generic
             Value = value;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericFixed"/> class with a size.
+        /// </summary>
+        /// <param name="size">Size of the fixed in bytes.</param>
         protected GenericFixed(uint size)
         {
             this.value = new byte[size];
         }
 
+        /// <summary>
+        /// Value of this fixed.
+        /// </summary>
         public byte[] Value
         {
             get { return this.value; }
@@ -81,6 +100,7 @@ namespace Avro.Generic
             }
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             if (this == obj) return true;
@@ -96,6 +116,7 @@ namespace Avro.Generic
             return false;
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             int result = Schema.GetHashCode();

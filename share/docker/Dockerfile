@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,6 +45,7 @@ RUN apt-get -qq update && \
     asciidoc \
     bison \
     bzip2 \
+    bundler \
     cmake \
     curl \
     dotnet-sdk-2.2 \
@@ -53,6 +54,7 @@ RUN apt-get -qq update && \
     g++ \
     gcc \
     git \
+    isort \
     libboost-all-dev \
     libfontconfig1-dev \
     libfreetype6-dev \
@@ -66,9 +68,18 @@ RUN apt-get -qq update && \
     perl \
     php5.6 \
     php5.6-gmp \
+    pycodestyle \
     python \
+    python-isort \
+    python-pip \
     python-setuptools \
+    python-snappy \
+    python-wheel \
+    python3-isort \
+    python3-pip \
     python3-setuptools \
+    python3-snappy \
+    python3-wheel \
     rake \
     ruby \
     ruby-dev \
@@ -79,8 +90,8 @@ RUN apt-get -qq update && \
   rm -rf /var/lib/apt/lists/*
 
 # Install Perl modules
-RUN curl -L https://cpanmin.us | perl - --mirror https://www.cpan.org/ --self-upgrade && \
-  cpanm install --mirror https://www.cpan.org/ Module::Install Module::Install::ReadmeFromPod \
+RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
+  cpanm  --mirror https://www.cpan.org/ install Module::Install Module::Install::ReadmeFromPod \
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
@@ -89,8 +100,15 @@ RUN curl -L https://cpanmin.us | perl - --mirror https://www.cpan.org/ --self-up
 # Install PHPUnit
 RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
 
+# Install Python2 packages
+RUN pip install zstandard
+
+# Install Python3 packages
+RUN pip3 install zstandard
+
 # Install Ruby modules
-RUN gem install echoe yajl-ruby multi_json snappy
+COPY lang/ruby/Gemfile /tmp
+RUN bundle install --gemfile=/tmp/Gemfile
 
 # Install global Node modules
 RUN npm install -g grunt-cli

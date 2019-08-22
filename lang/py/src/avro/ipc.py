@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 # 
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 # 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,13 +17,13 @@
 Support for inter-process calls.
 """
 import httplib
+
+from avro import io, protocol, schema
+
 try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from avro import io
-from avro import protocol
-from avro import schema
 
 #
 # Constants
@@ -482,4 +482,3 @@ class HTTPTransceiver(object):
 #
 # Server Implementations (none yet)
 #
-

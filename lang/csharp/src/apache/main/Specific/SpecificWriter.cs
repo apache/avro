@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,17 @@ namespace Avro.Specific
     /// <typeparam name="T">type name of specific object</typeparam>
     public class SpecificWriter<T> : GenericWriter<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpecificWriter{T}"/> class.
+        /// </summary>
+        /// <param name="schema">Schema to use when writing.</param>
         public SpecificWriter(Schema schema) : base(new SpecificDefaultWriter(schema)) { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpecificWriter{T}"/> class using the
+        /// provided <see cref="SpecificDefaultWriter"/>.
+        /// </summary>
+        /// <param name="writer">Default writer to use.</param>
         public SpecificWriter(SpecificDefaultWriter writer) : base(writer) { }
     }
 
@@ -172,6 +182,7 @@ namespace Avro.Specific
             throw new AvroException("Cannot find a match for " + value.GetType() + " in " + us);
         }
 
+        /// <inheritdoc/>
         protected override bool Matches(Schema sc, object obj)
         {
             if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;

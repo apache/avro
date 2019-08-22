@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,19 +27,48 @@ namespace Avro.Generic
     /// </summary>
     public class GenericRecord : IEquatable<GenericRecord>
     {
+        /// <summary>
+        /// Schema for this record.
+        /// </summary>
         public RecordSchema Schema { get; private set; }
 
         private readonly Dictionary<string, object> contents = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericRecord"/> class.
+        /// </summary>
+        /// <param name="schema">Schema for this record.</param>
         public GenericRecord(RecordSchema schema)
         {
             this.Schema = schema;
         }
 
+        /// <summary>
+        /// Returns the value of the field with the given name.
+        /// </summary>
+        /// <param name="fieldName">Name of the field.</param>
+        /// <returns>Value of the field with the given name.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="fieldName"/> is null.
+        /// </exception>
+        /// <exception cref="KeyNotFoundException">
+        /// <paramref name="fieldName"/> does not exist in this record.
+        /// </exception>
         public object this[string fieldName]
         {
             get { return contents[fieldName]; }
         }
 
+        /// <summary>
+        /// Sets the value for a field. You may call this method multiple times with the same
+        /// field name to change its value. The given field name must exist in the schema. This
+        /// method does not ensure that the given field value is compatible with the field's schema.
+        /// </summary>
+        /// <param name="fieldName">Name of the field.</param>
+        /// <param name="fieldValue">Value of the field.</param>
+        /// <exception cref="AvroException">
+        /// <paramref name="fieldName"/> does not exist in this record.
+        /// </exception>
         public void Add(string fieldName, object fieldValue)
         {
             if (Schema.Contains(fieldName))
@@ -52,11 +81,25 @@ namespace Avro.Generic
             throw new AvroException("No such field: " + fieldName);
         }
 
+        /// <summary>
+        /// Gets the value the specified field name.
+        /// </summary>
+        /// <param name="fieldName">Name of the field.</param>
+        /// <param name="result">
+        /// When this method returns true, contains the value of the specified field;
+        /// otherwise, null.
+        /// </param>
+        /// <returns>
+        /// True if the field was found in the record. This method will only return true if
+        /// <see cref="Add(string, object)"/> has been called for the given field name. This method
+        /// cannot be used to determine whether or not the schema has a field with a given name.
+        /// </returns>
         public bool TryGetValue(string fieldName, out object result)
         {
             return contents.TryGetValue(fieldName, out result);
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             if (this == obj) return true;
@@ -64,6 +107,7 @@ namespace Avro.Generic
                 && Equals((GenericRecord)obj);
         }
 
+        /// <inheritdoc/>
         public bool Equals(GenericRecord other)
         {
             return Schema.Equals(other.Schema)
@@ -113,11 +157,13 @@ namespace Avro.Generic
             return true;
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return 31 * contents.GetHashCode()/* + 29 * Schema.GetHashCode()*/;
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();

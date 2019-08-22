@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
+
+#include <thread>
+#include <chrono>
 
 #include <sstream>
 
@@ -589,7 +592,7 @@ public:
         }
         {
             avro::DataFileReader<ComplexInteger> reader(filename, dschema);
-            sleep(1);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             std::vector<int64_t> found;
             ComplexInteger record;
             while (reader.read(record)) {
