@@ -95,7 +95,11 @@ module Avro
           fail TypeMismatchError unless datum.is_a?(Hash)
           expected_schema.fields.each do |field|
             deeper_path = deeper_path_for_hash(field.name, path)
-            validate_recursive(field.type, datum[field.name], deeper_path, result, options)
+            if field.type.type_sym == :enum then
+              validate_recursive(field.type, (if datum.key?(field.name) || field.default.nil? then datum[field.name] else field.default end), deeper_path, result, options)
+            else
+              validate_recursive(field.type, datum[field.name], deeper_path, result, options)
+            end
           end
           if options[:fail_on_extra_fields]
             datum_fields = datum.keys.map(&:to_s)
