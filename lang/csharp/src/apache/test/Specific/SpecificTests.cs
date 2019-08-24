@@ -25,6 +25,8 @@ using System.CodeDom;
 using System.CodeDom.Compiler;
 using Avro.Specific;
 using System.Reflection;
+using Avro.Test.Specific;
+using System.Collections.Generic;
 
 namespace Avro.Test
 {
@@ -244,6 +246,66 @@ namespace Avro.Test
             // deserialize
             var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
             Assert.AreEqual( EnumType.SECOND, rec2.enumType );
+        }
+
+        [Test]
+        public void TestEmbeddedGenerics()
+        {
+            var srcRecord = new EmbeddedGenericsRecord
+            {
+                OptionalIntList = new List<int?> { 1, 2, null, 3, null, null },
+                OptionalIntMatrix = new List<IList<IList<int?>>>
+                {
+                    new List<IList<int?>>
+                    {
+                        new List<int?> { null, 2, },
+                        new List<int?> { null, null },
+                    },
+                    new List<IList<int?>>
+                    {
+                        new List<int?> { 5, 6, },
+                    },
+                    new List<IList<int?>> { },
+                },
+                IntMatrix = new List<IList<IList<int>>>
+                {
+                    new List<IList<int>>
+                    {
+                        new List<int> { 1, 2, },
+                        new List<int> { 3, 4, },
+                    },
+                    new List<IList<int>>
+                    {
+                        new List<int> { 5, 6, },
+                    },
+                    new List<IList<int>> { },
+                }
+            };
+            var stream = serialize(EmbeddedGenericsRecord._SCHEMA, srcRecord);
+            var dstRecord = deserialize<EmbeddedGenericsRecord>(stream,
+                EmbeddedGenericsRecord._SCHEMA, EmbeddedGenericsRecord._SCHEMA);
+
+            Assert.NotNull(dstRecord);
+            Assert.AreEqual(1, dstRecord.OptionalIntList[0]);
+            Assert.AreEqual(2, dstRecord.OptionalIntList[1]);
+            Assert.AreEqual(null, dstRecord.OptionalIntList[2]);
+            Assert.AreEqual(3, dstRecord.OptionalIntList[3]);
+            Assert.AreEqual(null, dstRecord.OptionalIntList[4]);
+            Assert.AreEqual(null, dstRecord.OptionalIntList[5]);
+            Assert.AreEqual(null, dstRecord.OptionalIntMatrix[0][0][0]);
+            Assert.AreEqual(2, dstRecord.OptionalIntMatrix[0][0][1]);
+            Assert.AreEqual(null, dstRecord.OptionalIntMatrix[0][1][0]);
+            Assert.AreEqual(null, dstRecord.OptionalIntMatrix[0][1][1]);
+            Assert.AreEqual(5, dstRecord.OptionalIntMatrix[1][0][0]);
+            Assert.AreEqual(6, dstRecord.OptionalIntMatrix[1][0][1]);
+            Assert.AreEqual(0, dstRecord.OptionalIntMatrix[2].Count);
+            Assert.AreEqual(1, dstRecord.IntMatrix[0][0][0]);
+            Assert.AreEqual(2, dstRecord.IntMatrix[0][0][1]);
+            Assert.AreEqual(3, dstRecord.IntMatrix[0][1][0]);
+            Assert.AreEqual(4, dstRecord.IntMatrix[0][1][1]);
+            Assert.AreEqual(5, dstRecord.IntMatrix[1][0][0]);
+            Assert.AreEqual(6, dstRecord.IntMatrix[1][0][1]);
+            Assert.AreEqual(0, dstRecord.IntMatrix[2].Count);
         }
 
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
