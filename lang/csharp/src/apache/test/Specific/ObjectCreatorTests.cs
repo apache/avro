@@ -18,9 +18,10 @@
 using Avro.Specific;
 using Avro.Test.File;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 
-namespace Avro.test.Specific
+namespace Avro.Test.Specific
 {
     [TestFixture()]
     public class ObjectCreatorTests
@@ -77,6 +78,25 @@ namespace Avro.test.Specific
             // Map of Foo
             Assert.True(typeof(IDictionary<string, Foo>).IsAssignableFrom(
                 objectCreator.GetType("Foo", Schema.Type.Map)));
+        }
+
+        [TestCase(typeof(MyNullableFoo), "MyNullableFoo",
+            TestName = "TestComplexGetTypes_NullableInName")]
+        [TestCase(typeof(MyIListFoo), "MyIListFoo",
+            TestName = "TestComplexGetTypes_IListInName")]
+        public void TestComplexGetTypes(Type expecteType, string name)
+        {
+            var objectCreator = new ObjectCreator();
+
+            Assert.AreEqual(expecteType, objectCreator.GetType(name, Schema.Type.Record));
+        }
+
+        private class MyNullableFoo
+        {
+        }
+
+        private class MyIListFoo
+        {
         }
     }
 }
