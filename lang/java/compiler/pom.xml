@@ -63,6 +63,17 @@
       </testResource>
     </testResources>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.apache.avro.compiler</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
       <!-- Avro generates a parser class with javacc. By default, this looks in src/main/javacc
         and outputs to target/generated-sources/javacc See http://mojo.codehaus.org/javacc-maven-plugin/javacc-mojo.html
         for more info on using this plugin. -->
