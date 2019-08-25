@@ -126,6 +126,7 @@ public class Perf {
     new TestDescriptor(GenericOneTimeDecoderUse.class, "-Gotd").add(GENERIC_ONETIME);
     new TestDescriptor(GenericOneTimeReaderUse.class, "-Gotr").add(GENERIC_ONETIME);
     new TestDescriptor(GenericOneTimeUse.class, "-Got").add(GENERIC_ONETIME);
+    BATCHES.put("-specific", SPECIFIC);
     new TestDescriptor(FooBarSpecificRecordTest.class, "-Sf").add(SPECIFIC);
     BATCHES.put("-reflect", REFLECT);
     new TestDescriptor(ReflectRecordTest.class, "-REFr").add(REFLECT);
