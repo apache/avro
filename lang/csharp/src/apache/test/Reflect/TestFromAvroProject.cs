@@ -78,6 +78,7 @@ namespace Avro.Test
         public byte[] myFixed { get; set; }
 
         public A myA { get; set; }
+
         public A myNullableA { get; set; }
 
         public MyEnum myE { get; set; }
