@@ -66,8 +66,8 @@ RUN apt-get -qq update && \
     maven \
     nodejs \
     perl \
-    php5.6 \
-    php5.6-gmp \
+    php7.1 \
+    php7.1-gmp \
     pycodestyle \
     python \
     python-isort \
@@ -98,7 +98,7 @@ RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
   Test::Exception Test::Pod
 
 # Install PHPUnit
-RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
+RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-7.1.phar && chmod +x /usr/local/bin/phpunit
 
 # Install Python2 packages
 RUN pip install zstandard

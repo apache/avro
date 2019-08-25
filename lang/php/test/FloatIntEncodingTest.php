@@ -18,7 +18,7 @@
  */
 require_once('test_helper.php');
 
-class FloatIntEncodingTest extends PHPUnit_Framework_TestCase
+class FloatIntEncodingTest extends PHPUnit\Framework\TestCase
 {
   const FLOAT_TYPE = 'float';
   const DOUBLE_TYPE = 'double';

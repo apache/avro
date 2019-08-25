@@ -18,7 +18,7 @@
  */
 require_once('test_helper.php');
 
-class LongEncodingTest extends PHPUnit_Framework_TestCase
+class LongEncodingTest extends PHPUnit\Framework\TestCase
 {
 
   function setUp()
