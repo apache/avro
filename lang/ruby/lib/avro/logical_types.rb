@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# frozen_string_literal: true
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -42,7 +43,8 @@ module Avro
       end
 
       def self.decode(int)
-        s, ms = int / 1000, int % 1000
+        s = int / 1000
+        ms = int % 1000
         Time.at(s, ms * 1000).utc
       end
     end
@@ -52,11 +54,12 @@ module Avro
         return value.to_i if value.is_a?(Numeric)
 
         time = value.to_time
-        time.to_i * 1000_000 + time.usec
+        time.to_i * 1_000_000 + time.usec
       end
 
       def self.decode(int)
-        s, us = int / 1000_000, int % 1000_000
+        s = int / 1_000_000
+        us = int % 1_000_000
         Time.at(s, us).utc
       end
     end
@@ -72,13 +75,13 @@ module Avro
     end
 
     TYPES = {
-      "int" => {
-        "date" => IntDate
+      'int' => {
+        'date' => IntDate
       },
-      "long" => {
-        "timestamp-millis" => TimestampMillis,
-        "timestamp-micros" => TimestampMicros
-      },
+      'long' => {
+        'timestamp-millis' => TimestampMillis,
+        'timestamp-micros' => TimestampMicros
+      }
     }.freeze
 
     def self.type_adapter(type, logical_type)

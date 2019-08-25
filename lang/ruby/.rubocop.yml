@@ -1,0 +1,23 @@
+AllCops:
+  Include:
+    - lib/**/*.rb
+Style/Documentation:
+  Enabled: false
+Style/NegatedIf:
+  Enabled: false
+Metrics/LineLength:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Metrics/ParameterLists:
+  Enabled: false
+Naming/UncommunicativeMethodParamName:
+  Enabled: false

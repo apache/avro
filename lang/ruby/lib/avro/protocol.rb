@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -24,31 +26,23 @@ module Avro
     def self.parse(protocol_string)
       json_data = MultiJson.load(protocol_string)
 
-      if json_data.is_a? Hash
-        name = json_data['protocol']
-        namespace = json_data['namespace']
-        types = json_data['types']
-        messages = json_data['messages']
-        doc = json_data['doc']
-        Protocol.new(name, namespace, types, messages, doc)
-      else
-        raise ProtocolParseError, "Not a JSON object: #{json_data}"
-      end
+      raise ProtocolParseError, "Not a JSON object: #{json_data}" unless json_data.is_a? Hash
+
+      name = json_data['protocol']
+      namespace = json_data['namespace']
+      types = json_data['types']
+      messages = json_data['messages']
+      doc = json_data['doc']
+      Protocol.new(name, namespace, types, messages, doc)
     end
 
-    def initialize(name, namespace=nil, types=nil, messages=nil, doc=nil)
+    def initialize(name, namespace = nil, types = nil, messages = nil, doc = nil)
       # Ensure valid ctor args
-      if !name
-        raise ProtocolParseError, 'Protocols must have a non-empty name.'
-      elsif !name.is_a?(String)
-        raise ProtocolParseError, 'The name property must be a string.'
-      elsif !namespace.is_a?(String)
-        raise ProtocolParseError, 'The namespace property must be a string.'
-      elsif !types.is_a?(Array)
-        raise ProtocolParseError, 'The types property must be a list.'
-      elsif !messages.is_a?(Hash)
-        raise ProtocolParseError, 'The messages property must be a JSON object.'
-      end
+      raise ProtocolParseError, 'Protocols must have a non-empty name.' if !name
+      raise ProtocolParseError, 'The name property must be a string.' if !name.is_a?(String)
+      raise ProtocolParseError, 'The namespace property must be a string.' if !namespace.is_a?(String)
+      raise ProtocolParseError, 'The types property must be a list.' if !types.is_a?(Array)
+      raise ProtocolParseError, 'The messages property must be a JSON object.' if !messages.is_a?(Hash)
 
       @name = name
       @namespace = namespace
@@ -68,9 +62,10 @@ module Avro
     end
 
     private
+
     def parse_types(types, type_names)
       types.collect do |type|
-        # FIXME adding type.name to type_names is not defined in the
+        # FIXME: adding type.name to type_names is not defined in the
         # spec. Possible bug in the python impl and the spec.
         type_object = Schema.real_parse(type, type_names, namespace)
         unless VALID_TYPE_SCHEMA_TYPES_SYM.include?(type_object.type_sym)
@@ -84,11 +79,8 @@ module Avro
     def parse_messages(messages, names)
       message_objects = {}
       messages.each do |name, body|
-        if message_objects.has_key?(name)
-          raise ProtocolParseError, "Message name \"#{name}\" repeated."
-        elsif !body.is_a?(Hash)
-          raise ProtocolParseError, "Message name \"#{name}\" has non-object body #{body.inspect}"
-        end
+        raise ProtocolParseError, "Message name \"#{name}\" repeated." if message_objects.key?(name)
+        raise ProtocolParseError, "Message name \"#{name}\" has non-object body #{body.inspect}" if !body.is_a?(Hash)
 
         request  = body['request']
         response = body['response']
@@ -100,14 +92,13 @@ module Avro
     end
 
     protected
-    def to_avro(names=Set.new)
-      hsh = {'protocol' => name}
-      hsh['namespace'] = namespace if namespace
-      hsh['types'] = types.map{|t| t.to_avro(names) } if types
 
-      if messages
-        hsh['messages'] = messages.inject({}) {|h, (k,t)| h[k] = t.to_avro(names); h }
-      end
+    def to_avro(names = Set.new)
+      hsh = { 'protocol' => name }
+      hsh['namespace'] = namespace if namespace
+      hsh['types'] = types.map { |t| t.to_avro(names) } if types
+
+      hsh['messages'] = messages.each_with_object({}) { |(k, t), h| h[k] = t.to_avro(names); } if messages
 
       hsh
     end
@@ -115,7 +106,7 @@ module Avro
     class Message
       attr_reader :name, :request, :response, :errors, :default_namespace, :doc
 
-      def initialize(name, request, response, errors=nil, names=nil, default_namespace=nil, doc=nil)
+      def initialize(name, request, response, errors = nil, names = nil, default_namespace = nil, doc = nil)
         @name = name
         @default_namespace = default_namespace
         @request = parse_request(request, names)
@@ -124,7 +115,7 @@ module Avro
         @doc = doc
       end
 
-      def to_avro(names=Set.new)
+      def to_avro(names = Set.new)
         {
           'request' => request.to_avro(names),
           'response' => response.to_avro(names)
@@ -139,9 +130,8 @@ module Avro
       end
 
       def parse_request(request, names)
-        unless request.is_a?(Array)
-          raise ProtocolParseError, "Request property not an Array: #{request.inspect}"
-        end
+        raise ProtocolParseError, "Request property not an Array: #{request.inspect}" unless request.is_a?(Array)
+
         Schema::RecordSchema.new(nil, default_namespace, request, names, :request)
       end
 
@@ -155,9 +145,8 @@ module Avro
       end
 
       def parse_errors(errors, names)
-        unless errors.is_a?(Array)
-          raise ProtocolParseError, "Errors property not an Array: #{errors}"
-        end
+        raise ProtocolParseError, "Errors property not an Array: #{errors}" unless errors.is_a?(Array)
+
         Schema.real_parse(errors, names, default_namespace)
       end
     end

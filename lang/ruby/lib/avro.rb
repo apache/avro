@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -22,12 +24,12 @@ require 'stringio'
 require 'zlib'
 
 module Avro
-  VERSION = "FIXME"
+  VERSION = 'FIXME'
 
   class AvroError < StandardError; end
 
   class AvroTypeError < Avro::AvroError
-    def initialize(schm=nil, datum=nil, msg=nil)
+    def initialize(schm = nil, datum = nil, msg = nil)
       msg ||= "Not a #{schm}: #{datum}"
       super(msg)
     end

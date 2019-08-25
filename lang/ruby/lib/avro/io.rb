@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -26,8 +28,8 @@ module Avro
     # Raised when writer's and reader's schema do not match
     class SchemaMatchException < AvroError
       def initialize(writers_schema, readers_schema)
-        super("Writer's schema #{writers_schema} and Reader's schema " +
-              "#{readers_schema} do not match.")
+        super("Writer's schema #{writers_schema} and Reader's schema " \
+          "#{readers_schema} do not match.")
       end
     end
 
@@ -55,7 +57,9 @@ module Avro
         byte! == 1
       end
 
-      def read_int; read_long; end
+      def read_int
+        read_long
+      end
 
       def read_long
         # int and long values are written using variable-length,
@@ -76,7 +80,7 @@ module Avro
         # The float is converted into a 32-bit integer using a method
         # equivalent to Java's floatToIntBits and then encoded in
         # little-endian format.
-        read_and_unpack(4, 'e'.freeze)
+        read_and_unpack(4, 'e')
       end
 
       def read_double
@@ -84,7 +88,7 @@ module Avro
         # The double is converted into a 64-bit integer using a method
         # equivalent to Java's doubleToLongBits and then encoded in
         # little-endian format.
-        read_and_unpack(8, 'E'.freeze)
+        read_and_unpack(8, 'E')
       end
 
       def read_bytes
@@ -97,7 +101,7 @@ module Avro
         # A string is encoded as a long followed by that many bytes of
         # UTF-8 encoded character data.
         read_bytes.tap do |string|
-          string.force_encoding('UTF-8'.freeze) if string.respond_to? :force_encoding
+          string.force_encoding('UTF-8') if string.respond_to? :force_encoding
         end
       end
 
@@ -120,9 +124,7 @@ module Avro
 
       def skip_long
         b = byte!
-        while (b & 0x80) != 0
-          b = byte!
-        end
+        b = byte! while (b & 0x80) != 0
       end
 
       def skip_float
@@ -142,7 +144,7 @@ module Avro
       end
 
       def skip(n)
-        reader.seek(reader.tell() + n)
+        reader.seek(reader.tell + n)
       end
 
       private
@@ -205,7 +207,7 @@ module Avro
       # equivalent to Java's floatToIntBits and then encoded in
       # little-endian format.
       def write_float(datum)
-        @writer.write([datum].pack('e'.freeze))
+        @writer.write([datum].pack('e'))
       end
 
       # A double is written as 8 bytes.
@@ -213,7 +215,7 @@ module Avro
       # equivalent to Java's doubleToLongBits and then encoded in
       # little-endian format.
       def write_double(datum)
-        @writer.write([datum].pack('E'.freeze))
+        @writer.write([datum].pack('E'))
       end
 
       # Bytes are encoded as a long followed by that many bytes of data.
@@ -225,7 +227,7 @@ module Avro
       # A string is encoded as a long followed by that many bytes of
       # UTF-8 encoded character data
       def write_string(datum)
-        datum = datum.encode('utf-8'.freeze) if datum.respond_to? :encode
+        datum = datum.encode('utf-8') if datum.respond_to? :encode
         write_bytes(datum)
       end
 
@@ -242,7 +244,7 @@ module Avro
 
       attr_accessor :writers_schema, :readers_schema
 
-      def initialize(writers_schema=nil, readers_schema=nil)
+      def initialize(writers_schema = nil, readers_schema = nil)
         @writers_schema = writers_schema
         @readers_schema = readers_schema
       end
@@ -254,40 +256,39 @@ module Avro
 
       def read_data(writers_schema, readers_schema, decoder)
         # schema matching
-        unless self.class.match_schemas(writers_schema, readers_schema)
-          raise SchemaMatchException.new(writers_schema, readers_schema)
-        end
+        raise SchemaMatchException.new(writers_schema, readers_schema) unless self.class.match_schemas(writers_schema, readers_schema)
 
         # schema resolution: reader's schema is a union, writer's
         # schema is not
         if writers_schema.type_sym != :union && readers_schema.type_sym == :union
-          rs = readers_schema.schemas.find{|s|
+          rs = readers_schema.schemas.find do |s|
             self.class.match_schemas(writers_schema, s)
-          }
+          end
           return read_data(writers_schema, rs, decoder) if rs
+
           raise SchemaMatchException.new(writers_schema, readers_schema)
         end
 
         # function dispatch for reading data based on type of writer's
         # schema
         datum = case writers_schema.type_sym
-        when :null;    decoder.read_null
-        when :boolean; decoder.read_boolean
-        when :string;  decoder.read_string
-        when :int;     decoder.read_int
-        when :long;    decoder.read_long
-        when :float;   decoder.read_float
-        when :double;  decoder.read_double
-        when :bytes;   decoder.read_bytes
-        when :fixed;   read_fixed(writers_schema, readers_schema, decoder)
-        when :enum;    read_enum(writers_schema, readers_schema, decoder)
-        when :array;   read_array(writers_schema, readers_schema, decoder)
-        when :map;     read_map(writers_schema, readers_schema, decoder)
-        when :union;   read_union(writers_schema, readers_schema, decoder)
-        when :record, :error, :request;  read_record(writers_schema, readers_schema, decoder)
-        else
-          raise AvroError, "Cannot read unknown schema type: #{writers_schema.type}"
-        end
+                when :null then    decoder.read_null
+                when :boolean then decoder.read_boolean
+                when :string then  decoder.read_string
+                when :int then     decoder.read_int
+                when :long then    decoder.read_long
+                when :float then   decoder.read_float
+                when :double then  decoder.read_double
+                when :bytes then   decoder.read_bytes
+                when :fixed then   read_fixed(writers_schema, readers_schema, decoder)
+                when :enum then    read_enum(writers_schema, readers_schema, decoder)
+                when :array then   read_array(writers_schema, readers_schema, decoder)
+                when :map then     read_map(writers_schema, readers_schema, decoder)
+                when :union then   read_union(writers_schema, readers_schema, decoder)
+                when :record, :error, :request then read_record(writers_schema, readers_schema, decoder)
+                else
+                  raise AvroError, "Cannot read unknown schema type: #{writers_schema.type}"
+                end
 
         readers_schema.type_adapter.decode(datum)
       end
@@ -313,7 +314,7 @@ module Avro
         read_items = []
         block_count = decoder.read_long
         while block_count != 0
-          if block_count < 0
+          if block_count.negative?
             block_count = -block_count
             _block_size = decoder.read_long
           end
@@ -332,7 +333,7 @@ module Avro
         read_items = {}
         block_count = decoder.read_long
         while block_count != 0
-          if block_count < 0
+          if block_count.negative?
             block_count = -block_count
             _block_size = decoder.read_long
           end
@@ -371,14 +372,12 @@ module Avro
         if readers_fields_hash.size > read_record.size
           writers_fields_hash = writers_schema.fields_hash
           readers_fields_hash.each do |field_name, field|
-            unless writers_fields_hash.has_key? field_name
-              if field.default?
-                field_val = read_default_value(field.type, field.default)
-                read_record[field.name] = field_val
-              else
-                raise AvroError, "Missing data for #{field.type} with no default"
-              end
-            end
+            next if writers_fields_hash.key? field_name
+
+            raise AvroError, "Missing data for #{field.type} with no default" unless field.default?
+
+            field_val = read_default_value(field.type, field.default)
+            read_record[field.name] = field_val
           end
         end
 
@@ -389,40 +388,40 @@ module Avro
         # Basically a JSON Decoder?
         case field_schema.type_sym
         when :null
-          return nil
+          nil
         when :boolean
-          return default_value
+          default_value
         when :int, :long
-          return Integer(default_value)
+          Integer(default_value)
         when :float, :double
-          return Float(default_value)
+          Float(default_value)
         when :enum, :fixed, :string, :bytes
-          return default_value
+          default_value
         when :array
           read_array = []
           default_value.each do |json_val|
             item_val = read_default_value(field_schema.items, json_val)
             read_array << item_val
           end
-          return read_array
+          read_array
         when :map
           read_map = {}
           default_value.each do |key, json_val|
             map_val = read_default_value(field_schema.values, json_val)
             read_map[key] = map_val
           end
-          return read_map
+          read_map
         when :union
-          return read_default_value(field_schema.schemas[0], default_value)
+          read_default_value(field_schema.schemas[0], default_value)
         when :record, :error
           read_record = {}
           field_schema.fields.each do |field|
             json_val = default_value[field.name]
-            json_val = field.default unless json_val
+            json_val ||= field.default
             field_val = read_default_value(field.type, json_val)
             read_record[field.name] = field_val
           end
-          return read_record
+          read_record
         else
           fail_msg = "Unknown type: #{field_schema.type}"
           raise AvroError, fail_msg
@@ -482,21 +481,22 @@ module Avro
       end
 
       def skip_map(writers_schema, decoder)
-        skip_blocks(decoder) {
+        skip_blocks(decoder) do
           decoder.skip_string
           skip_data(writers_schema.values, decoder)
-        }
+        end
       end
 
       def skip_record(writers_schema, decoder)
-        writers_schema.fields.each{|f| skip_data(f.type, decoder) }
+        writers_schema.fields.each { |f| skip_data(f.type, decoder) }
       end
 
       private
+
       def skip_blocks(decoder, &blk)
         block_count = decoder.read_long
         while block_count != 0
-          if block_count < 0
+          if block_count.negative?
             decoder.skip(decoder.read_long)
           else
             block_count.times(&blk)
@@ -504,12 +504,12 @@ module Avro
           block_count = decoder.read_long
         end
       end
-    end # DatumReader
+    end
 
     # DatumWriter for generic ruby objects
     class DatumWriter
       attr_accessor :writers_schema
-      def initialize(writers_schema=nil)
+      def initialize(writers_schema = nil)
         @writers_schema = writers_schema
       end
 
@@ -520,28 +520,26 @@ module Avro
       def write_data(writers_schema, logical_datum, encoder)
         datum = writers_schema.type_adapter.encode(logical_datum)
 
-        unless Schema.validate(writers_schema, datum, { recursive: false, encoded: true })
-          raise AvroTypeError.new(writers_schema, datum)
-        end
+        raise AvroTypeError.new(writers_schema, datum) unless Schema.validate(writers_schema, datum, recursive: false, encoded: true)
 
         # function dispatch to write datum
         case writers_schema.type_sym
-        when :null;    encoder.write_null(datum)
-        when :boolean; encoder.write_boolean(datum)
-        when :string;  encoder.write_string(datum)
-        when :int;     encoder.write_int(datum)
-        when :long;    encoder.write_long(datum)
-        when :float;   encoder.write_float(datum)
-        when :double;  encoder.write_double(datum)
-        when :bytes;   encoder.write_bytes(datum)
-        when :fixed;   write_fixed(writers_schema, datum, encoder)
-        when :enum;    write_enum(writers_schema, datum, encoder)
-        when :array;   write_array(writers_schema, datum, encoder)
-        when :map;     write_map(writers_schema, datum, encoder)
-        when :union;   write_union(writers_schema, datum, encoder)
-        when :record, :error, :request;  write_record(writers_schema, datum, encoder)
+        when :null then    encoder.write_null(datum)
+        when :boolean then encoder.write_boolean(datum)
+        when :string then  encoder.write_string(datum)
+        when :int then     encoder.write_int(datum)
+        when :long then    encoder.write_long(datum)
+        when :float then   encoder.write_float(datum)
+        when :double then  encoder.write_double(datum)
+        when :bytes then   encoder.write_bytes(datum)
+        when :fixed then   write_fixed(writers_schema, datum, encoder)
+        when :enum then    write_enum(writers_schema, datum, encoder)
+        when :array then   write_array(writers_schema, datum, encoder)
+        when :map then     write_map(writers_schema, datum, encoder)
+        when :union then   write_union(writers_schema, datum, encoder)
+        when :record, :error, :request then write_record(writers_schema, datum, encoder)
         else
-          raise AvroError.new("Unknown type: #{writers_schema.type}")
+          raise AvroError, "Unknown type: #{writers_schema.type}"
         end
       end
 
@@ -556,7 +554,8 @@ module Avro
 
       def write_array(writers_schema, datum, encoder)
         raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Array)
-        if datum.size > 0
+
+        if !datum.empty?
           encoder.write_long(datum.size)
           datum.each do |item|
             write_data(writers_schema.items, item, encoder)
@@ -567,9 +566,10 @@ module Avro
 
       def write_map(writers_schema, datum, encoder)
         raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
-        if datum.size > 0
+
+        if !datum.empty?
           encoder.write_long(datum.size)
-          datum.each do |k,v|
+          datum.each do |k, v|
             encoder.write_string(k)
             write_data(writers_schema.values, v, encoder)
           end
@@ -579,21 +579,23 @@ module Avro
 
       def write_union(writers_schema, datum, encoder)
         index_of_schema = -1
-        found = writers_schema.schemas.
-          find{|e| index_of_schema += 1; found = Schema.validate(e, datum) }
-        unless found  # Because find_index doesn't exist in 1.8.6
-          raise AvroTypeError.new(writers_schema, datum)
+        found = writers_schema.schemas.find do |e|
+          index_of_schema += 1
+          found = Schema.validate(e, datum)
         end
+        raise AvroTypeError.new(writers_schema, datum) unless found # Because find_index doesn't exist in 1.8.6
+
         encoder.write_long(index_of_schema)
         write_data(writers_schema.schemas[index_of_schema], datum, encoder)
       end
 
       def write_record(writers_schema, datum, encoder)
         raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
+
         writers_schema.fields.each do |field|
           write_data(field.type, datum[field.name], encoder)
         end
       end
-    end # DatumWriter
+    end
   end
 end

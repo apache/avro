@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -34,33 +36,31 @@ module Avro
       type = schema.type_sym.to_s
 
       if Schema::NAMED_TYPES.include?(type)
-        if @processed_names.include?(schema.name)
-          return schema.name
-        else
-          @processed_names << schema.name
-        end
+        return schema.name if @processed_names.include?(schema.name)
+
+        @processed_names << schema.name
       end
 
       case type
       when *Schema::PRIMITIVE_TYPES
         type
-      when "record"
-        fields = schema.fields.map {|field| normalize_field(field) }
+      when 'record'
+        fields = schema.fields.map { |field| normalize_field(field) }
 
         normalize_named_type(schema, fields: fields)
-      when "enum"
+      when 'enum'
         normalize_named_type(schema, symbols: schema.symbols)
-      when "fixed"
+      when 'fixed'
         normalize_named_type(schema, size: schema.size)
-      when "array"
+      when 'array'
         { type: type, items: normalize_schema(schema.items) }
-      when "map"
+      when 'map'
         { type: type, values: normalize_schema(schema.values) }
-      when "union"
+      when 'union'
         if schema.schemas.nil?
           []
         else
-          schema.schemas.map {|s| normalize_schema(s) }
+          schema.schemas.map { |s| normalize_schema(s) }
         end
       else
         raise "unknown type #{type}"

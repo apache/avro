@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,23 +19,22 @@ require 'openssl'
 module Avro
   module DataFile
     VERSION = 1
-    MAGIC = "Obj" + [VERSION].pack('c')
+    MAGIC = 'Obj' + [VERSION].pack('c')
     MAGIC.force_encoding('BINARY') if MAGIC.respond_to?(:force_encoding)
     MAGIC_SIZE = MAGIC.respond_to?(:bytesize) ? MAGIC.bytesize : MAGIC.size
     SYNC_SIZE = 16
     SYNC_INTERVAL = 4000 * SYNC_SIZE
     META_SCHEMA = Schema.parse('{"type": "map", "values": "bytes"}')
-    VALID_ENCODINGS = ['binary'] # not used yet
+    VALID_ENCODINGS = ['binary'].freeze # not used yet
 
     class DataFileError < AvroError; end
 
-    def self.open(file_path, mode='r', schema=nil, codec=nil)
+    def self.open(file_path, mode = 'r', schema = nil, codec = nil)
       schema = Avro::Schema.parse(schema) if schema
       case mode
       when 'w'
-        unless schema
-          raise DataFileError, "Writing an Avro file requires a schema."
-        end
+        raise DataFileError, 'Writing an Avro file requires a schema.' unless schema
+
         io = open_writer(File.open(file_path, 'wb'), schema, codec)
       when 'r'
         io = open_reader(File.open(file_path, 'rb'), schema)
@@ -74,7 +73,8 @@ module Avro
 
     class << self
       private
-      def open_writer(file, schema, codec=nil)
+
+      def open_writer(file, schema, codec = nil)
         writer = Avro::IO::DatumWriter.new(schema)
         Avro::DataFile::Writer.new(file, writer, schema, codec)
       end
@@ -93,7 +93,7 @@ module Avro
       attr_reader :writer, :encoder, :datum_writer, :buffer_writer, :buffer_encoder, :sync_marker, :meta, :codec
       attr_accessor :block_count
 
-      def initialize(writer, datum_writer, writers_schema=nil, codec=nil, meta={})
+      def initialize(writer, datum_writer, writers_schema = nil, codec = nil, meta = {})
         # If writers_schema is not present, presume we're appending
         @writer = writer
         @encoder = IO::BinaryEncoder.new(@writer)
@@ -127,7 +127,7 @@ module Avro
           datum_writer.writers_schema = Schema.parse(schema_from_file)
 
           # seek to the end of the file and prepare for writing
-          writer.seek(0,2)
+          writer.seek(0, 2)
         end
       end
 
@@ -138,9 +138,7 @@ module Avro
 
         # if the data to write is larger than the sync interval, write
         # the block
-        if buffer_writer.tell >= SYNC_INTERVAL
-          write_block
-        end
+        write_block if buffer_writer.tell >= SYNC_INTERVAL
       end
 
       # Return the current position as a value that may be passed to
@@ -178,23 +176,23 @@ module Avro
       # TODO(jmhodges): make a schema for blocks and use datum_writer
       # TODO(jmhodges): do we really need the number of items in the block?
       def write_block
-        if block_count > 0
-          # write number of items in block and block size in bytes
-          encoder.write_long(block_count)
-          to_write = codec.compress(buffer_writer.string)
-          encoder.write_long(to_write.respond_to?(:bytesize) ? to_write.bytesize : to_write.size)
+        return unless block_count.positive?
 
-          # write block contents
-          writer.write(to_write)
+        # write number of items in block and block size in bytes
+        encoder.write_long(block_count)
+        to_write = codec.compress(buffer_writer.string)
+        encoder.write_long(to_write.respond_to?(:bytesize) ? to_write.bytesize : to_write.size)
 
-          # write sync marker
-          writer.write(sync_marker)
+        # write block contents
+        writer.write(to_write)
 
-          # reset buffer
-          buffer_writer.truncate(0)
-          buffer_writer.rewind
-          self.block_count = 0
-        end
+        # write sync marker
+        writer.write(sync_marker)
+
+        # reset buffer
+        buffer_writer.truncate(0)
+        buffer_writer.rewind
+        self.block_count = 0
       end
     end
 
@@ -230,15 +228,13 @@ module Avro
       # TODO(jmhodges): handle block of length zero
       def each
         loop do
-          if block_count == 0
-            case
-            when eof?; break
-            when skip_sync
+          if block_count.zero?
+            break if eof?
+
+            if skip_sync
               break if eof?
-              read_block_header
-            else
-              read_block_header
             end
+            read_block_header
           end
 
           datum = datum_reader.read(block_decoder)
@@ -247,13 +243,16 @@ module Avro
         end
       end
 
-      def eof?; reader.eof?; end
+      def eof?
+        reader.eof?
+      end
 
       def close
         reader.close
       end
 
       private
+
       def read_header
         # seek to the beginning of the file to get magic block
         reader.seek(0, 0)
@@ -297,21 +296,30 @@ module Avro
       end
     end
 
-
     class NullCodec
-      def codec_name; 'null'; end
-      def decompress(data); data; end
-      def compress(data); data; end
+      def codec_name
+        'null'
+      end
+
+      def decompress(data)
+        data
+      end
+
+      def compress(data)
+        data
+      end
     end
 
     class DeflateCodec
       attr_reader :level
 
-      def initialize(level=Zlib::DEFAULT_COMPRESSION)
+      def initialize(level = Zlib::DEFAULT_COMPRESSION)
         @level = level
       end
 
-      def codec_name; 'deflate'; end
+      def codec_name
+        'deflate'
+      end
 
       def decompress(compressed)
         # Passing a negative number to Inflate puts it into "raw" RFC1951 mode
@@ -334,7 +342,9 @@ module Avro
     end
 
     class SnappyCodec
-      def codec_name; 'snappy'; end
+      def codec_name
+        'snappy'
+      end
 
       def decompress(data)
         load_snappy!
@@ -368,12 +378,14 @@ module Avro
       def load_snappy!
         require 'snappy' unless defined?(Snappy)
       rescue LoadError
-        raise LoadError, "Snappy compression is not available, please install the `snappy` gem."
+        raise LoadError, 'Snappy compression is not available, please install the `snappy` gem.'
       end
     end
 
     class ZstandardCodec
-      def codec_name; 'zstandard'; end
+      def codec_name
+        'zstandard'
+      end
 
       def decompress(data)
         load_zstandard!
@@ -390,7 +402,7 @@ module Avro
       def load_zstandard!
         require 'zstd-ruby' unless defined?(Zstd)
       rescue LoadError
-        raise LoadError, "Zstandard compression is not available, please install the `zstd-ruby` gem."
+        raise LoadError, 'Zstandard compression is not available, please install the `zstd-ruby` gem.'
       end
     end
 
@@ -399,7 +411,7 @@ module Avro
     DataFile.register_codec SnappyCodec
     DataFile.register_codec ZstandardCodec
 
-    # TODO this constant won't be updated if you register another codec.
+    # TODO: this constant won't be updated if you register another codec.
     # Deprecated in favor of Avro::DataFile::codecs
     VALID_CODECS = DataFile.codecs.keys
   end

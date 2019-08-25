@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -37,9 +39,7 @@ module Avro
       r_type = readers_schema.type_sym
 
       # This conditional is begging for some OO love.
-      if w_type == :union || r_type == :union
-        return true
-      end
+      return true if w_type == :union || r_type == :union
 
       if w_type == r_type
         return true if Schema::PRIMITIVE_TYPES_SYM.include?(r_type)
@@ -53,7 +53,7 @@ module Avro
           return true
         when :fixed
           return writers_schema.fullname == readers_schema.fullname &&
-            writers_schema.size == readers_schema.size
+                 writers_schema.size == readers_schema.size
         when :enum
           return writers_schema.fullname == readers_schema.fullname
         when :map
@@ -64,19 +64,13 @@ module Avro
       end
 
       # Handle schema promotion
-      if w_type == :int && [:long, :float, :double].include?(r_type)
-        return true
-      elsif w_type == :long && [:float, :double].include?(r_type)
-        return true
-      elsif w_type == :float && r_type == :double
-        return true
-      elsif w_type == :string && r_type == :bytes
-        return true
-      elsif w_type == :bytes && r_type == :string
-        return true
-      end
+      return true if w_type == :int && %i[long float double].include?(r_type)
+      return true if w_type == :long && %i[float double].include?(r_type)
+      return true if w_type == :float && r_type == :double
+      return true if w_type == :string && r_type == :bytes
+      return true if w_type == :bytes && r_type == :string
 
-      return false
+      false
     end
 
     class Checker
@@ -104,9 +98,7 @@ module Avro
 
         return false unless Avro::SchemaCompatibility.match_schemas(writers_schema, readers_schema)
 
-        if writers_schema.type_sym != :union && SIMPLE_CHECKS.include?(readers_schema.type_sym)
-          return true
-        end
+        return true if writers_schema.type_sym != :union && SIMPLE_CHECKS.include?(readers_schema.type_sym)
 
         case readers_schema.type_sym
         when :record
@@ -152,7 +144,7 @@ module Avro
           end
         end
 
-        return true
+        true
       end
 
       def recursion_in_progress?(writers_schema, readers_schema)

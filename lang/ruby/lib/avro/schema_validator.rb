@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,11 +18,11 @@
 
 module Avro
   class SchemaValidator
-    ROOT_IDENTIFIER = '.'.freeze
-    PATH_SEPARATOR = '.'.freeze
-    INT_RANGE = Schema::INT_MIN_VALUE..Schema::INT_MAX_VALUE
-    LONG_RANGE = Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE
-    COMPLEX_TYPES = [:array, :error, :map, :record, :request].freeze
+    ROOT_IDENTIFIER = '.'
+    PATH_SEPARATOR = '.'
+    INT_RANGE = (Schema::INT_MIN_VALUE..Schema::INT_MAX_VALUE).freeze
+    LONG_RANGE = (Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE).freeze
+    COMPLEX_TYPES = %i[array error map record request].freeze
     BOOLEAN_VALUES = [true, false].freeze
 
     class Result
@@ -73,7 +75,8 @@ module Avro
         else
           validate_simple(expected_schema, logical_datum, ROOT_IDENTIFIER, result, options)
         end
-        fail ValidationError, result if result.failure?
+        raise ValidationError, result if result.failure?
+
         result
       end
 
@@ -92,7 +95,8 @@ module Avro
         when :union
           validate_union(expected_schema, datum, path, result, options)
         when :record, :error, :request
-          fail TypeMismatchError unless datum.is_a?(Hash)
+          raise TypeMismatchError unless datum.is_a?(Hash)
+
           expected_schema.fields.each do |field|
             deeper_path = deeper_path_for_hash(field.name, path)
             validate_recursive(field.type, datum[field.name], deeper_path, result, options)
@@ -115,19 +119,21 @@ module Avro
 
         case expected_schema.type_sym
         when :null
-          fail TypeMismatchError unless datum.nil?
+          raise TypeMismatchError unless datum.nil?
         when :boolean
-          fail TypeMismatchError unless BOOLEAN_VALUES.include?(datum)
+          raise TypeMismatchError unless BOOLEAN_VALUES.include?(datum)
         when :string, :bytes
-          fail TypeMismatchError unless datum.is_a?(String)
+          raise TypeMismatchError unless datum.is_a?(String)
         when :int
-          fail TypeMismatchError unless datum.is_a?(Integer)
+          raise TypeMismatchError unless datum.is_a?(Integer)
+
           result.add_error(path, "out of bound value #{datum}") unless INT_RANGE.cover?(datum)
         when :long
-          fail TypeMismatchError unless datum.is_a?(Integer)
+          raise TypeMismatchError unless datum.is_a?(Integer)
+
           result.add_error(path, "out of bound value #{datum}") unless LONG_RANGE.cover?(datum)
         when :float, :double
-          fail TypeMismatchError unless datum.is_a?(Float) || datum.is_a?(Integer)
+          raise TypeMismatchError unless datum.is_a?(Float) || datum.is_a?(Integer)
         when :fixed
           if datum.is_a? String
             result.add_error(path, fixed_string_message(expected_schema.size, datum)) unless datum.bytesize == expected_schema.size
@@ -145,14 +151,18 @@ module Avro
         if encoded
           logical_datum
         else
-          expected_schema.type_adapter.encode(logical_datum) rescue nil
+          begin
+            expected_schema.type_adapter.encode(logical_datum)
+          rescue StandardError
+            nil
+          end
         end
       end
 
       def validate_type(expected_schema)
-        unless Avro::Schema::VALID_TYPES_SYM.include?(expected_schema.type_sym)
-          fail "Unexpected schema type #{expected_schema.type_sym} #{expected_schema.inspect}"
-        end
+        return if Avro::Schema::VALID_TYPES_SYM.include?(expected_schema.type_sym)
+
+        raise "Unexpected schema type #{expected_schema.type_sym} #{expected_schema.inspect}"
       end
 
       def fixed_string_message(size, datum)
@@ -164,14 +174,16 @@ module Avro
       end
 
       def validate_array(expected_schema, datum, path, result, options = {})
-        fail TypeMismatchError unless datum.is_a?(Array)
+        raise TypeMismatchError unless datum.is_a?(Array)
+
         datum.each_with_index do |d, i|
           validate_recursive(expected_schema.items, d, path + "[#{i}]", result, options)
         end
       end
 
       def validate_map(expected_schema, datum, path, result, options = {})
-        fail TypeMismatchError unless datum.is_a?(Hash)
+        raise TypeMismatchError unless datum.is_a?(Hash)
+
         datum.keys.each do |k|
           result.add_error(path, "unexpected key type '#{ruby_to_avro_type(k.class)}' in map") unless k.is_a?(String)
         end

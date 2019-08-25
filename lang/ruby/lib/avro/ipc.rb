@@ -14,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "net/http"
+require 'net/http'
 
 module Avro::IPC
-
   class AvroRemoteError < Avro::AvroError; end
 
   HANDSHAKE_REQUEST_SCHEMA = Avro::Schema.parse <<-JSON
@@ -63,8 +62,8 @@ module Avro::IPC
   SYSTEM_ERROR_SCHEMA = Avro::Schema.parse('["string"]')
 
   # protocol cache
-  REMOTE_HASHES = {}
-  REMOTE_PROTOCOLS = {}
+  REMOTE_HASHES = {}.freeze
+  REMOTE_PROTOCOLS = {}.freeze
 
   BUFFER_HEADER_LENGTH = 4
   BUFFER_SIZE = 8192
@@ -130,9 +129,7 @@ module Avro::IPC
         'clientHash' => local_hash,
         'serverHash' => remote_hash
       }
-      if send_protocol
-        request_datum['clientProtocol'] = local_protocol.to_s
-      end
+      request_datum['clientProtocol'] = local_protocol.to_s if send_protocol
       HANDSHAKE_REQUESTOR_WRITER.write(request_datum, encoder)
     end
 
@@ -143,14 +140,13 @@ module Avro::IPC
       #   * the message parameters. Parameters are serialized according to
       #     the message's request declaration.
 
-      # TODO request metadata (not yet implemented)
+      # TODO: request metadata (not yet implemented)
       request_metadata = {}
       META_WRITER.write(request_metadata, encoder)
 
       message = local_protocol.messages[message_name]
-      unless message
-        raise AvroError, "Unknown message: #{message_name}"
-      end
+      raise AvroError, "Unknown message: #{message_name}" unless message
+
       encoder.write_string(message.name)
 
       write_request(message.request, request_datum, encoder)
@@ -170,21 +166,23 @@ module Avro::IPC
         self.send_protocol = false
         we_have_matching_schema = true
       when 'CLIENT'
-        raise AvroError.new('Handshake failure. match == CLIENT') if send_protocol
+        raise AvroError, 'Handshake failure. match == CLIENT' if send_protocol
+
         self.remote_protocol = Avro::Protocol.parse(handshake_response['serverProtocol'])
         self.remote_hash = handshake_response['serverHash']
         self.send_protocol = false
         we_have_matching_schema = true
       when 'NONE'
-        raise AvroError.new('Handshake failure. match == NONE') if send_protocol
+        raise AvroError, 'Handshake failure. match == NONE' if send_protocol
+
         self.remote_protocol = Avro::Protocol.parse(handshake_response['serverProtocol'])
         self.remote_hash = handshake_response['serverHash']
         self.send_protocol = true
       else
-        raise AvroError.new("Unexpected match: #{match}")
+        raise AvroError, "Unexpected match: #{match}"
       end
 
-      return we_have_matching_schema
+      we_have_matching_schema
     end
 
     def read_call_response(message_name, decoder)
@@ -199,13 +197,11 @@ module Avro::IPC
 
       # remote response schema
       remote_message_schema = remote_protocol.messages[message_name]
-      raise AvroError.new("Unknown remote message: #{message_name}") unless remote_message_schema
+      raise AvroError, "Unknown remote message: #{message_name}" unless remote_message_schema
 
       # local response schema
       local_message_schema = local_protocol.messages[message_name]
-      unless local_message_schema
-        raise AvroError.new("Unknown local message: #{message_name}")
-      end
+      raise AvroError, "Unknown local message: #{message_name}" unless local_message_schema
 
       # error flag
       if !decoder.read_boolean
@@ -242,7 +238,7 @@ module Avro::IPC
 
     # Called by a server to deserialize a request, compute and serialize
     # a response or error. Compare to 'handle()' in Thrift.
-    def respond(call_request, transport=nil)
+    def respond(call_request, transport = nil)
       buffer_decoder = Avro::IO::BinaryDecoder.new(StringIO.new(call_request))
       buffer_writer = StringIO.new(''.force_encoding('BINARY'))
       buffer_encoder = Avro::IO::BinaryEncoder.new(buffer_writer)
@@ -252,9 +248,7 @@ module Avro::IPC
       begin
         remote_protocol = process_handshake(buffer_decoder, buffer_encoder, transport)
         # handshake failure
-        unless remote_protocol
-          return buffer_writer.string
-        end
+        return buffer_writer.string unless remote_protocol
 
         # read request using remote protocol
         _request_metadata = META_READER.read(buffer_decoder)
@@ -263,13 +257,11 @@ module Avro::IPC
         # get remote and local request schemas so we can do
         # schema resolution (one fine day)
         remote_message = remote_protocol.messages[remote_message_name]
-        unless remote_message
-          raise AvroError.new("Unknown remote message: #{remote_message_name}")
-        end
+        raise AvroError, "Unknown remote message: #{remote_message_name}" unless remote_message
+
         local_message = local_protocol.messages[remote_message_name]
-        unless local_message
-          raise AvroError.new("Unknown local message: #{remote_message_name}")
-        end
+        raise AvroError, "Unknown local message: #{remote_message_name}" unless local_message
+
         writers_schema = remote_message.request
         readers_schema = local_message.request
         request = read_request(writers_schema, readers_schema, buffer_decoder)
@@ -294,19 +286,18 @@ module Avro::IPC
         end
       rescue Avro::AvroError => e
         error = AvroRemoteException.new(e.to_s)
-        # TODO does the stuff written here ever get used?
+        # TODO: does the stuff written here ever get used?
         buffer_encoder = Avro::IO::BinaryEncoder.new(StringIO.new)
         META_WRITER.write(response_metadata, buffer_encoder)
         buffer_encoder.write_boolean(true)
-        self.write_error(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
+        write_error(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
       end
       buffer_writer.string
     end
 
-    def process_handshake(decoder, encoder, connection=nil)
-      if connection && connection.is_connected?
-        return connection.protocol
-      end
+    def process_handshake(decoder, encoder, connection = nil)
+      return connection.protocol if connection&.is_connected?
+
       handshake_request = HANDSHAKE_RESPONDER_READER.read(decoder)
       handshake_response = {}
 
@@ -322,19 +313,18 @@ module Avro::IPC
 
       # evaluate remote's guess of the local protocol
       server_hash = handshake_request['serverHash']
-      if local_hash == server_hash
-        if !remote_protocol
-          handshake_response['match'] = 'NONE'
+      handshake_response['match'] =
+        if local_hash == server_hash
+          if !remote_protocol
+            'NONE'
+          else
+            'BOTH'
+          end
+        elsif !remote_protocol
+          'NONE'
         else
-          handshake_response['match'] = 'BOTH'
+          'CLIENT'
         end
-      else
-        if !remote_protocol
-          handshake_response['match'] = 'NONE'
-        else
-          handshake_response['match'] = 'CLIENT'
-        end
-      end
 
       if handshake_response['match'] != 'BOTH'
         handshake_response['serverProtocol'] = local_protocol.to_s
@@ -343,9 +333,7 @@ module Avro::IPC
 
       HANDSHAKE_RESPONDER_WRITER.write(handshake_response, encoder)
 
-      if connection && handshake_response['match'] != 'NONE'
-        connection.protocol = remote_protocol
-      end
+      connection.protocol = remote_protocol if connection && handshake_response['match'] != 'NONE'
 
       remote_protocol
     end
@@ -382,7 +370,7 @@ module Avro::IPC
       @protocol = nil
     end
 
-    def is_connected?()
+    def is_connected?
       !!@protocol
     end
 
@@ -396,14 +384,12 @@ module Avro::IPC
       loop do
         buffer = StringIO.new(''.force_encoding('BINARY'))
         buffer_length = read_buffer_length
-        if buffer_length == 0
-          return message.join
-        end
+        return message.join if buffer_length.zero?
+
         while buffer.tell < buffer_length
           chunk = sock.read(buffer_length - buffer.tell)
-          if chunk == ''
-            raise ConnectionClosedException.new("Socket read 0 bytes.")
-          end
+          raise ConnectionClosedException, 'Socket read 0 bytes.' if chunk == ''
+
           buffer.write(chunk)
         end
         message << buffer.string
@@ -413,13 +399,14 @@ module Avro::IPC
     def write_framed_message(message)
       message_length = message.bytesize
       total_bytes_sent = 0
-      while message_length - total_bytes_sent > 0
-        if message_length - total_bytes_sent > BUFFER_SIZE
-          buffer_length = BUFFER_SIZE
-        else
-          buffer_length = message_length - total_bytes_sent
-        end
-        write_buffer(message[total_bytes_sent,buffer_length])
+      while (message_length - total_bytes_sent).positive?
+        buffer_length =
+          if message_length - total_bytes_sent > BUFFER_SIZE
+            BUFFER_SIZE
+          else
+            message_length - total_bytes_sent
+          end
+        write_buffer(message[total_bytes_sent, buffer_length])
         total_bytes_sent += buffer_length
       end
       # A message is always terminated by a zero-length buffer.
@@ -431,26 +418,22 @@ module Avro::IPC
       write_buffer_length(buffer_length)
       total_bytes_sent = 0
       while total_bytes_sent < buffer_length
-        bytes_sent = self.sock.write(chunk[total_bytes_sent..-1])
-        if bytes_sent == 0
-          raise ConnectionClosedException.new("Socket sent 0 bytes.")
-        end
+        bytes_sent = sock.write(chunk[total_bytes_sent..-1])
+        raise ConnectionClosedException, 'Socket sent 0 bytes.' if bytes_sent.zero?
+
         total_bytes_sent += bytes_sent
       end
     end
 
     def write_buffer_length(n)
       bytes_sent = sock.write([n].pack('N'))
-      if bytes_sent == 0
-        raise ConnectionClosedException.new("socket sent 0 bytes")
-      end
+      raise ConnectionClosedException, 'socket sent 0 bytes' if bytes_sent.zero?
     end
 
     def read_buffer_length
       read = sock.read(BUFFER_HEADER_LENGTH)
-      if read == '' || read == nil
-        raise ConnectionClosedException.new("Socket read 0 bytes.")
-      end
+      raise ConnectionClosedException, 'Socket read 0 bytes.' if read == '' || read.nil?
+
       read.unpack('N')[0]
     end
 
@@ -470,21 +453,25 @@ module Avro::IPC
     def write_framed_message(message)
       message_size = message.bytesize
       total_bytes_sent = 0
-      while message_size - total_bytes_sent > 0
-        if message_size - total_bytes_sent > BUFFER_SIZE
-          buffer_size = BUFFER_SIZE
-        else
-          buffer_size = message_size - total_bytes_sent
-        end
+      while (message_size - total_bytes_sent).zero?
+        buffer_size =
+          if message_size - total_bytes_sent > BUFFER_SIZE
+            BUFFER_SIZE
+          else
+            message_size - total_bytes_sent
+          end
         write_buffer(message[total_bytes_sent, buffer_size])
         total_bytes_sent += buffer_size
       end
       write_buffer_size(0)
     end
 
-    def to_s; writer.string; end
+    def to_s
+      writer.string
+    end
 
     private
+
     def write_buffer(chunk)
       buffer_size = chunk.bytesize
       write_buffer_size(buffer_size)
@@ -509,7 +496,7 @@ module Avro::IPC
         buffer = ''.force_encoding('BINARY')
         buffer_size = read_buffer_size
 
-        return message.join if buffer_size == 0
+        return message.join if buffer_size.zero?
 
         while buffer.bytesize < buffer_size
           chunk = reader.read(buffer_size - buffer.bytesize)
@@ -521,6 +508,7 @@ module Avro::IPC
     end
 
     private
+
     def read_buffer_size
       header = reader.read(BUFFER_HEADER_LENGTH)
       chunk_error?(header)
@@ -528,7 +516,7 @@ module Avro::IPC
     end
 
     def chunk_error?(chunk)
-      raise ConnectionClosedError.new("Reader read 0 bytes") if chunk == ''
+      raise ConnectionClosedError, 'Reader read 0 bytes' if chunk == ''
     end
   end
 
@@ -536,7 +524,8 @@ module Avro::IPC
   class HTTPTransceiver
     attr_reader :remote_name, :host, :port
     def initialize(host, port)
-      @host, @port = host, port
+      @host = host
+      @port = port
       @remote_name = "#{host}:#{port}"
       @conn = Net::HTTP.start host, port
     end
@@ -544,7 +533,7 @@ module Avro::IPC
     def transceive(message)
       writer = FramedWriter.new(StringIO.new(''.force_encoding('BINARY')))
       writer.write_framed_message(message)
-      resp = @conn.post('/', writer.to_s, {'Content-Type' => 'avro/binary'})
+      resp = @conn.post('/', writer.to_s, 'Content-Type' => 'avro/binary')
       FramedReader.new(StringIO.new(resp.body)).read_framed_message
     end
   end
