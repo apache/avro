@@ -19,6 +19,8 @@
 
 FROM openjdk:8
 
+ENV PHP_VERSION 7.1
+
 WORKDIR /root
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -66,8 +68,8 @@ RUN apt-get -qq update && \
     maven \
     nodejs \
     perl \
-    php7.1 \
-    php7.1-gmp \
+    php${PHP_VERSION} \
+    php${PHP_VERSION}-gmp \
     pycodestyle \
     python \
     python-isort \
@@ -98,7 +100,7 @@ RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
   Test::Exception Test::Pod
 
 # Install PHPUnit
-RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-7.1.phar && chmod +x /usr/local/bin/phpunit
+RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-${PHP_VERSION}.phar && chmod +x /usr/local/bin/phpunit
 
 # Install Python2 packages
 RUN pip install zstandard
