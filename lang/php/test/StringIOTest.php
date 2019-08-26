@@ -34,17 +34,30 @@ class StringIOTest extends PHPUnit_Framework_TestCase
 
   public function test_seek()
   {
-    $this->markTestIncomplete('This test has not been implemented yet.');
+    $strio = new AvroStringIO('abcdefghijklmnopqrstuvwxyz');
+    $strio->seek(4, AvroIO::SEEK_SET);
+    $this->assertEquals('efgh', $strio->read(4));
+    $strio->seek(4, AvroIO::SEEK_CUR);
+    $this->assertEquals('mnop', $strio->read(4));
+    $strio->seek(-4, AvroIO::SEEK_END);
+    $this->assertEquals('wxyz', $strio->read(4));
   }
 
   public function test_tell()
   {
-    $this->markTestIncomplete('This test has not been implemented yet.');
+    $strio = new AvroStringIO('foobar');
+    $this->assertEquals(0, $strio->tell());
+    $strlen = 3;
+    $strio->read($strlen);
+    $this->assertEquals($strlen, $strio->tell());
   }
 
   public function test_read()
   {
-    $this->markTestIncomplete('This test has not been implemented yet.');
+    $str = 'foobar';
+    $strio = new AvroStringIO($str);
+    $strlen = 3;
+    $this->assertEquals(substr($str, 0, $strlen), $strio->read($strlen));
   }
 
   public function test_string_rep()
