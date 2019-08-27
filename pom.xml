@@ -307,6 +307,7 @@
                 <exclude>lang/ruby/.gem/**</exclude>
                 <exclude>lang/ruby/pkg/**</exclude>
                 <exclude>lang/ruby/.bundle/**</exclude>
+                <exclude>lang/ruby/.rubocop.yml</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithJsr310LogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithLogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
