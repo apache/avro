@@ -581,9 +581,9 @@ module Avro
         index_of_schema = -1
         found = writers_schema.schemas.find do |e|
           index_of_schema += 1
-          found = Schema.validate(e, datum)
+          Schema.validate(e, datum)
         end
-        raise AvroTypeError.new(writers_schema, datum) unless found # Because find_index doesn't exist in 1.8.6
+        raise AvroTypeError.new(writers_schema, datum) unless found
 
         encoder.write_long(index_of_schema)
         write_data(writers_schema.schemas[index_of_schema], datum, encoder)
