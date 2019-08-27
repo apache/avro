@@ -62,8 +62,8 @@ module Avro::IPC
   SYSTEM_ERROR_SCHEMA = Avro::Schema.parse('["string"]')
 
   # protocol cache
-  REMOTE_HASHES = {}.freeze
-  REMOTE_PROTOCOLS = {}.freeze
+  REMOTE_HASHES = {}
+  REMOTE_PROTOCOLS = {}
 
   BUFFER_HEADER_LENGTH = 4
   BUFFER_SIZE = 8192

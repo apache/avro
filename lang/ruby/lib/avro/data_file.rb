@@ -25,7 +25,7 @@ module Avro
     SYNC_SIZE = 16
     SYNC_INTERVAL = 4000 * SYNC_SIZE
     META_SCHEMA = Schema.parse('{"type": "map", "values": "bytes"}')
-    VALID_ENCODINGS = ['binary'].freeze # not used yet
+    VALID_ENCODINGS = ['binary'] # not used yet
 
     class DataFileError < AvroError; end
 

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -18,8 +16,8 @@
 
 module Avro
   class SchemaValidator
-    ROOT_IDENTIFIER = '.'
-    PATH_SEPARATOR = '.'
+    ROOT_IDENTIFIER = '.'.freeze
+    PATH_SEPARATOR = '.'.freeze
     INT_RANGE = (Schema::INT_MIN_VALUE..Schema::INT_MAX_VALUE).freeze
     LONG_RANGE = (Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE).freeze
     COMPLEX_TYPES = %i[array error map record request].freeze
