@@ -87,7 +87,7 @@ module Avro
     def self.type_adapter(type, logical_type)
       return unless logical_type
 
-      TYPES.fetch(type, {}).fetch(logical_type, Identity)
+      TYPES.fetch(type, {}.freeze).fetch(logical_type, Identity)
     end
   end
 end
