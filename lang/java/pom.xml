@@ -55,7 +55,7 @@
     <maven.version>2.0.11</maven.version>
     <ant.version>1.10.5</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
-    <commons-compress.version>1.18</commons-compress.version>
+    <commons-compress.version>1.19</commons-compress.version>
     <commons-lang.version>3.8.1</commons-lang.version>
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.0.2</easymock.version>
