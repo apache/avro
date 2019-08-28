@@ -211,20 +211,18 @@ module Avro
         field_objects = []
         field_names = Set.new
         field_data.each do |field|
-          if field.respond_to?(:[]) # TODO(jmhodges) wtffffff
-            type = field['type']
-            name = field['name']
-            default = field.key?('default') ? field['default'] : :no_default
-            order = field['order']
-            doc = field['doc']
-            new_field = Field.new(type, name, default, order, names, namespace, doc)
-            # make sure field name has not been used yet
-            raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use" if field_names.include?(new_field.name)
+          raise SchemaParseError, "Not a valid field: #{field}" unless field.respond_to?(:[]) # TODO(jmhodges) wtffffff
 
-            field_names << new_field.name
-          else
-            raise SchemaParseError, "Not a valid field: #{field}"
-          end
+          type = field['type']
+          name = field['name']
+          default = field.key?('default') ? field['default'] : :no_default
+          order = field['order']
+          doc = field['doc']
+          new_field = Field.new(type, name, default, order, names, namespace, doc)
+          # make sure field name has not been used yet
+          raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use" if field_names.include?(new_field.name)
+
+          field_names << new_field.name
           field_objects << new_field
         end
         field_objects

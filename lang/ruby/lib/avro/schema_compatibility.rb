@@ -77,7 +77,6 @@ module Avro
       SIMPLE_CHECKS = Schema::PRIMITIVE_TYPES_SYM.dup.add(:fixed).freeze
 
       attr_reader :recursion_set
-      private :recursion_set
 
       def initialize
         @recursion_set = Set.new

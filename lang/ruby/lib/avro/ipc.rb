@@ -276,7 +276,7 @@ module Avro::IPC
 
         # write response using local protocol
         META_WRITER.write(response_metadata, buffer_encoder)
-        buffer_encoder.write_boolean(!!error)
+        buffer_encoder.write_boolean(error ? true : false)
         if error.nil?
           writers_schema = local_message.response
           write_response(writers_schema, response, buffer_encoder)
@@ -296,7 +296,7 @@ module Avro::IPC
     end
 
     def process_handshake(decoder, encoder, connection = nil)
-      return connection.protocol if connection&.is_connected?
+      return connection.protocol if connection&.connected?
 
       handshake_request = HANDSHAKE_RESPONDER_READER.read(decoder)
       handshake_response = {}
@@ -370,8 +370,8 @@ module Avro::IPC
       @protocol = nil
     end
 
-    def is_connected?
-      !!@protocol
+    def connected?
+      @protocol ? true : false
     end
 
     def transceive(request)
