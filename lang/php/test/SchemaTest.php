@@ -38,7 +38,7 @@ class SchemaExample
   }
 }
 
-class SchemaTest extends PHPUnit_Framework_TestCase
+class SchemaTest extends PHPUnit\Framework\TestCase
 {
   static $examples = array();
   static $valid_examples = array();

@@ -42,7 +42,7 @@ class NameExample
   }
 }
 
-class NameTest extends PHPUnit_Framework_TestCase
+class NameTest extends PHPUnit\Framework\TestCase
 {
 
   function fullname_provider()
@@ -101,6 +101,6 @@ class NameTest extends PHPUnit_Framework_TestCase
    */
   function test_name($name, $is_well_formed)
   {
-    $this->assertEquals(AvroName::is_well_formed_name($name), $is_well_formed, $name);
+    $this->assertEquals(AvroName::is_well_formed_name($name), $is_well_formed);
   }
 }
