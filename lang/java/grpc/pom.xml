@@ -51,6 +51,17 @@
       </resource>
     </resources>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.apache.avro.grpc</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
       <!-- Allow guava because hadoop brings it as a transitive dependency. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

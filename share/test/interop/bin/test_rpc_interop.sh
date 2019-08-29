@@ -24,16 +24,17 @@ VERSION=`cat share/VERSION.txt`
 java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
 java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
 
-py_client="python lang/py/build/src/avro/tool.py rpcsend"
-py_server="python lang/py/build/src/avro/tool.py rpcreceive"
+py_client="env PYTHONPATH=lang/py/build/src python lang/py/build/src/avro/tool.py rpcsend"
+py_server="env PYTHONPATH=lang/py/build/src python lang/py/build/src/avro/tool.py rpcreceive"
+
+py3_client="env PYTHONPATH=lang/py3 python3 lang/py3/avro/tool.py rpcsend"
+py3_server="env PYTHONPATH=lang/py3 python3 lang/py3/avro/tool.py rpcreceive"
 
 ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
 ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
 
-export PYTHONPATH=lang/py/build/src      # path to avro Python module
-
-clients=("$java_client" "$py_client" "$ruby_client")
-servers=("$java_server" "$py_server" "$ruby_server")
+clients=("$java_client" "$py_client" "$py3_client" "$ruby_client")
+servers=("$java_server" "$py_server" "$py3_server" "$ruby_server")
 
 proto=share/test/schemas/simple.avpr
 

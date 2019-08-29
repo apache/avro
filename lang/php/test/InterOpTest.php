@@ -19,7 +19,7 @@
 
 require_once('test_helper.php');
 
-class InterOpTest extends PHPUnit_Framework_TestCase
+class InterOpTest extends PHPUnit\Framework\TestCase
 {
   var $projection_json;
   var $projection;

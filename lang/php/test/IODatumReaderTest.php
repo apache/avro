@@ -19,7 +19,7 @@
 
 require_once('test_helper.php');
 
-class IODatumReaderTest extends PHPUnit_Framework_TestCase
+class IODatumReaderTest extends PHPUnit\Framework\TestCase
 {
 
   public function testSchemaMatching()

@@ -49,8 +49,7 @@ sub new {
     my $err_struct = $struct->{errors};
 
     my $response = Avro::Schema->parse_struct($resp_struct, $types);
-    my $errors   = Avro::Schema->parse_struct($err_struct, $types)
-        if $err_struct;
+    my $errors = $err_struct ? Avro::Schema->parse_struct($err_struct, $types) : undef;
 
     return $class->SUPER::new(
         doc      => $struct->{doc},
