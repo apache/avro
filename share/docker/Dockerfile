@@ -102,7 +102,7 @@ RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
-  Test::Exception Test::Pod
+  Test::Exception Test::Pod Perl::Critic
 
 # Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
 # TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future

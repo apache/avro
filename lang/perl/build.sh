@@ -43,9 +43,21 @@ function do_clean(){
   rm -rf lang/perl/inc/
 }
 
+function do_lint(){
+  local failures=0
+  for i in $(find lib t xt -name '*.p[lm]' -or -name '*.t'); do
+    if ! perlcritic --verbose 1 ${i}; then
+      ((failures=failures+1))
+    fi
+  done
+  if [ ${failures} -gt 0 ]; then
+    return 1
+  fi
+}
+
 case "$target" in
   lint)
-    echo 'This is a stub where someone can provide linting.'
+    do_lint
     ;;
 
   test)
