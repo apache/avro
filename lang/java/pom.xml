@@ -42,7 +42,7 @@
     <hadoop.version>2.7.3</hadoop.version>
     <jackson.version>2.9.9</jackson.version>
     <jackson.databind.version>2.9.9.3</jackson.databind.version>
-    <servlet-api.version>3.1.0</servlet-api.version>
+    <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.20.v20190813</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.12</junit.version>
