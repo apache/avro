@@ -18,18 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using System.IO;
 using Avro.Test.Utils;
-using Avro;
 
 namespace Avro.Test
 {
     [TestFixture]
     public class SchemaNormalizationTests
     {
+        private const long Empty64 = -4513414715797952619;
         private static readonly long One = -9223372036854775808;
         private static readonly byte[] Postfix = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -70,8 +69,8 @@ namespace Avro.Test
 
         private static long AltFingerprint(string s)
         {
-            long tmp = AltExtended(SchemaNormalization.Empty64, 64, One, Encoding.UTF8.GetBytes(s));
-            return AltExtended(SchemaNormalization.Empty64, 64, tmp, Postfix);
+            long tmp = AltExtended(Empty64, 64, One, Encoding.UTF8.GetBytes(s));
+            return AltExtended(Empty64, 64, tmp, Postfix);
         }
 
         private static long AltExtended(long poly, int degree, long fp, byte[] b)

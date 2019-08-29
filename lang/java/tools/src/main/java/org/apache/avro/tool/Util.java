@@ -251,12 +251,17 @@ class Util {
   }
 
   static OptionSpec<String> compressionCodecOption(OptionParser optParser) {
-    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class).defaultsTo("null");
+    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class)
+        .defaultsTo(DEFLATE_CODEC);
+  }
+
+  static OptionSpec<String> compressionCodecOptionWithDefault(OptionParser optParser, String s) {
+    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class).defaultsTo(s);
   }
 
   static OptionSpec<Integer> compressionLevelOption(OptionParser optParser) {
-    return optParser.accepts("level", "Compression level (only applies to deflate and xz)").withRequiredArg()
-        .ofType(Integer.class).defaultsTo(Deflater.DEFAULT_COMPRESSION);
+    return optParser.accepts("level", "Compression level (only applies to deflate, xz, and zstandard)")
+        .withRequiredArg().ofType(Integer.class).defaultsTo(Deflater.DEFAULT_COMPRESSION);
   }
 
   static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level) {
@@ -270,6 +275,8 @@ class Util {
       return CodecFactory.deflateCodec(level.value(opts));
     } else if (codecName.equals(DataFileConstants.XZ_CODEC)) {
       return CodecFactory.xzCodec(level.value(opts));
+    } else if (codecName.equals(DataFileConstants.ZSTANDARD_CODEC)) {
+      return CodecFactory.zstandardCodec(level.value(opts));
     } else {
       return CodecFactory.fromString(codec.value(opts));
     }

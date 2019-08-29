@@ -19,6 +19,10 @@
 
 FROM openjdk:8
 
+# TODO: Consolidate them into a single version (7.x) when we drop PHP 5.6 support in the future
+ENV PHP5_VERSION 5.6
+ENV PHP7_VERSION 7.1
+
 WORKDIR /root
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -39,12 +43,14 @@ RUN curl https://packages.sury.org/php/apt.gpg | apt-key add --no-tty - && \
       echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
 
 # Install dependencies from packages
+# TODO: remove php5-related packages when we drop PHP 5.6 support in the future
 RUN apt-get -qq update && \
   apt-get -qq install --no-install-recommends -y \
     ant \
     asciidoc \
     bison \
     bzip2 \
+    bundler \
     cmake \
     curl \
     dotnet-sdk-2.2 \
@@ -53,6 +59,7 @@ RUN apt-get -qq update && \
     g++ \
     gcc \
     git \
+    isort \
     libboost-all-dev \
     libfontconfig1-dev \
     libfreetype6-dev \
@@ -64,13 +71,18 @@ RUN apt-get -qq update && \
     maven \
     nodejs \
     perl \
-    php5.6 \
-    php5.6-gmp \
+    php${PHP5_VERSION} \
+    php${PHP5_VERSION}-gmp \
+    php${PHP7_VERSION} \
+    php${PHP7_VERSION}-gmp \
+    pycodestyle \
     python \
+    python-isort \
     python-pip \
     python-setuptools \
     python-snappy \
     python-wheel \
+    python3-isort \
     python3-pip \
     python3-setuptools \
     python3-snappy \
@@ -85,15 +97,16 @@ RUN apt-get -qq update && \
   rm -rf /var/lib/apt/lists/*
 
 # Install Perl modules
-RUN curl -L https://cpanmin.us | perl - --mirror https://www.cpan.org/ --self-upgrade && \
-  cpanm install --mirror https://www.cpan.org/ Module::Install Module::Install::ReadmeFromPod \
+RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
+  cpanm  --mirror https://www.cpan.org/ install Module::Install Module::Install::ReadmeFromPod \
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
-  Test::Exception Test::Pod Compress::Zstd
+  Test::Exception Test::Pod Perl::Critic Compress::Zstd
 
-# Install PHPUnit
-RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
+# Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
+# TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future
+RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar && chmod +x /usr/local/bin/phpunit
 
 # Install Python2 packages
 RUN pip install zstandard
@@ -102,7 +115,8 @@ RUN pip install zstandard
 RUN pip3 install zstandard
 
 # Install Ruby modules
-RUN gem install echoe yajl-ruby multi_json snappy zstd-ruby
+COPY lang/ruby/Gemfile /tmp
+RUN bundle install --gemfile=/tmp/Gemfile
 
 # Install global Node modules
 RUN npm install -g grunt-cli

@@ -18,7 +18,7 @@
 set -e # exit on error
 
 function usage {
-  echo "Usage: $0 {test|dist|clean|install|doc}"
+  echo "Usage: $0 {lint|test|dist|clean|install|doc}"
   exit 1
 }
 
@@ -44,10 +44,6 @@ DOC_CPP=$BUILD/$AVRO_DOC/api/cpp
 DIST_DIR=../../dist/cpp
 TARFILE=../dist/cpp/$AVRO_CPP.tar.gz
 
-(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
-for target in "$@"
-do
-
 function do_doc() {
   doxygen
   if [ -d doc ]
@@ -58,6 +54,7 @@ function do_doc() {
     exit 1
   fi
 }
+
 function do_dist() {
   rm -rf $BUILD_CPP/
   mkdir -p $BUILD_CPP
@@ -74,7 +71,15 @@ function do_dist() {
   fi
 }
 
+(mkdir -p build; cd build; cmake -G "Unix Makefiles" ..)
+for target in "$@"
+do
+
 case "$target" in
+  lint)
+    echo 'This is a stub where someone can provide linting.'
+    ;;
+
   test)
     (cd build && cmake -G "Unix Makefiles" -D CMAKE_BUILD_TYPE=Debug -D AVRO_ADD_PROTECTOR_FLAGS=1 .. && make && cd .. \
       && ./build/buffertest \
@@ -108,7 +113,7 @@ case "$target" in
 
   clean)
     (cd build && make clean)
-    rm -rf doc test.avro test6.df
+    rm -rf doc test.avro test?.df test_skip.df
     ;;
 
   install)

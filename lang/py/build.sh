@@ -15,46 +15,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e # exit on error
+set -e
 
-function usage {
-  echo "Usage: $0 {test|dist|clean}"
+usage() {
+  echo "Usage: $0 {lint|test|dist|clean}"
   exit 1
 }
 
-if [ $# -eq 0 ]
-then
-  usage
-fi
+main() {
+  local target
+  (( $# )) || usage
+  for target; do
+    case "$target" in
+      lint)
+        ./setup.py isort
+        pycodestyle .
+        ;;
+      test)
+        ant test
+        ;;
+      dist)
+        ant dist
+        ;;
+      clean)
+        ant clean
+        rm -rf userlogs/
+        ;;
+      *)
+        usage
+        ;;
+    esac
+  done
+}
 
-if [ -f VERSION.txt ]
-then
-  VERSION=`cat VERSION.txt`
-else
-  VERSION=`cat ../../share/VERSION.txt`
-fi
-
-for target in "$@"
-do
-
-case "$target" in
-  test)
-    ant test
-    ;;
-
-  dist)
-     ant dist
-    ;;
-
-  clean)
-    ant clean
-    rm -rf userlogs/
-    ;;
-
-  *)
-    usage
-esac
-
-done
-
-exit 0
+main "$@"

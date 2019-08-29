@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -46,6 +46,7 @@ namespace Avro
         /// Static function to return new instance of EnumSchema
         /// </summary>
         /// <param name="jtok">JSON object for enum schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schema already parsed in</param>
         /// <param name="encspace">enclosing namespace for the enum schema</param>
         /// <returns>new instance of enum schema</returns>
@@ -56,7 +57,7 @@ namespace Avro
 
             JArray jsymbols = jtok["symbols"] as JArray;
             if (null == jsymbols)
-                throw new SchemaParseException("Enum has no symbols: " + name);
+                throw new SchemaParseException($"Enum has no symbols: {name} at '{jtok.Path}'");
 
             List<string> symbols = new List<string>();
             IDictionary<string, int> symbolMap = new Dictionary<string, int>();
@@ -65,13 +66,20 @@ namespace Avro
             {
                 string s = (string)jsymbol.Value;
                 if (symbolMap.ContainsKey(s))
-                    throw new SchemaParseException("Duplicate symbol: " + s);
+                    throw new SchemaParseException($"Duplicate symbol: {s} at '{jtok.Path}'");
 
                 symbolMap[s] = i++;
                 symbols.Add(s);
             }
-            return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
-                JsonHelper.GetOptionalString(jtok, "doc"));
+            try
+            {
+                return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
+                    JsonHelper.GetOptionalString(jtok, "doc"));
+            }
+            catch (SchemaParseException e)
+            {
+                throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
+            }
         }
 
         /// <summary>

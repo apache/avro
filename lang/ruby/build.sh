@@ -29,23 +29,24 @@ gem install --no-document -v 1.17.3 bundler
 bundle install
 
 case "$1" in
-     test)
-        bundle exec rake test
-       ;;
+    lint)
+      rubocop --lint
+      ;;
 
-     dist)
-        bundle exec rake dist
-       ;;
+    test)
+      bundle exec rake test
+      ;;
 
-     clean)
-        bundle exec rake clean
-        rm -rf tmp avro.gemspec data.avr
-       ;;
+    dist)
+      bundle exec rake dist
+      ;;
 
-     *)
-       echo "Usage: $0 {test|dist|clean}"
-       exit 1
+    clean)
+      bundle exec rake clean
+      rm -rf tmp avro.gemspec data.avr
+      ;;
 
+    *)
+      echo "Usage: $0 {lint|test|dist|clean}"
+      exit 1
 esac
-
-exit 0

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +84,27 @@ import org.apache.avro.util.internal.JacksonUtils;
  * property.
  * </ul>
  */
-public abstract class Schema extends JsonProperties {
+public abstract class Schema extends JsonProperties implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
+  protected Object writeReplace() {
+    SerializableSchema ss = new SerializableSchema();
+    ss.schemaString = toString();
+    return ss;
+  }
+
+  private static final class SerializableSchema implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String schemaString;
+
+    private Object readResolve() {
+      return new Schema.Parser().parse(schemaString);
+    }
+  }
+
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
@@ -170,7 +191,16 @@ public abstract class Schema extends JsonProperties {
     this.logicalType = logicalType;
   }
 
-  /** Create an anonymous record schema. */
+  /**
+   * Create an anonymous record schema.
+   *
+   * @deprecated This method allows to create Schema objects that cannot be parsed
+   *             by {@link Schema.Parser#parse(String)}. It will be removed in a
+   *             future version of Avro. Better use
+   *             i{@link #createRecord(String, String, String, boolean, List)} to
+   *             produce a fully qualified Schema.
+   */
+  @Deprecated
   public static Schema createRecord(List<Field> fields) {
     Schema result = createRecord(null, null, null, false);
     result.setFields(fields);
@@ -217,7 +247,7 @@ public abstract class Schema extends JsonProperties {
     return createUnion(new LockableArrayList<>(types));
   }
 
-  /** Create a union schema. */
+  /** Create a fixed schema. */
   public static Schema createFixed(String name, String doc, String space, int size) {
     return new FixedSchema(new Name(name, space), doc, size);
   }

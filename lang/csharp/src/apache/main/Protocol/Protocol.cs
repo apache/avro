@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,13 +17,14 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
+    /// <summary>
+    /// A set of messages forming an application protocol.
+    /// </summary>
     public class Protocol
     {
         /// <summary>
@@ -52,6 +53,10 @@ namespace Avro
         public IDictionary<string,Message> Messages { get; set; }
 
         private byte[] md5;
+
+        /// <summary>
+        /// MD5 hash of the text of this protocol.
+        /// </summary>
         public byte[] MD5
         {
             get
@@ -108,7 +113,7 @@ namespace Avro
             }
             catch (Exception ex)
             {
-                throw new ProtocolParseException("Invalid JSON format: " + jstring, ex);
+                throw new ProtocolParseException($"Invalid JSON format: {jstring} at '{jtok.Path}'", ex);
             }
             return Parse(jtok);
         }
@@ -147,7 +152,6 @@ namespace Avro
                     messages.Add(message.Name, message);
                 }
             }
-
             return new Protocol(name, space, doc, types, messages);
         }
 

@@ -53,12 +53,23 @@ case "$1" in
        phpunit test/InterOpTest.php
        ;;
 
+     lint)
+       echo 'This is a stub where someone can provide linting.'
+       ;;
+
      test)
-       phpunit test/AllTests.php
+       phpunit -v test/AllTests.php
+
+       # Check backward compatibility with PHP 5.x if both PHP 5.6 and PHPUnit 5.7 are installed.
+       # TODO: remove this check when we drop PHP 5.x support in the future
+       if command -v php5.6 > /dev/null && phpunit --version | grep -q 'PHPUnit 5.7'; then
+         echo 'Checking backward compatibility with PHP 5.x'
+         php5.6 $(which phpunit) -v test/AllTests.php
+       fi
        ;;
 
      dist)
-        dist
+       dist
        ;;
 
      clean)
@@ -66,7 +77,7 @@ case "$1" in
        ;;
 
      *)
-       echo "Usage: $0 {interop-data-generate|test-interop|test|dist|clean}"
+       echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
 esac
 
 

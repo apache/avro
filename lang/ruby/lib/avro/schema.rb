@@ -143,11 +143,11 @@ module Avro
       SchemaCompatibility.mutual_read?(other_schema, self)
     end
 
-    def ==(other, seen=nil)
+    def ==(other, _seen=nil)
       other.is_a?(Schema) && type_sym == other.type_sym
     end
 
-    def hash(seen=nil)
+    def hash(_seen=nil)
       type_sym.hash
     end
 
@@ -165,7 +165,7 @@ module Avro
       end
     end
 
-    def to_avro(names=nil)
+    def to_avro(_names=nil)
       props = {'type' => type}
       props['logicalType'] = logical_type if logical_type
       props
@@ -182,7 +182,7 @@ module Avro
         super(type, logical_type)
         @name, @namespace = Name.extract_namespace(name, namespace)
         @doc  = doc
-        names = Name.add_name(names, self)
+        Name.add_name(names, self)
       end
 
       def to_avro(names=Set.new)
@@ -206,7 +206,7 @@ module Avro
 
       def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
-        field_data.each_with_index do |field, i|
+        field_data.each do |field|
           if field.respond_to?(:[]) # TODO(jmhodges) wtffffff
             type = field['type']
             name = field['name']
@@ -324,7 +324,7 @@ module Avro
         @symbols = symbols
       end
 
-      def to_avro(names=Set.new)
+      def to_avro(_names=Set.new)
         avro = super
         avro.is_a?(Hash) ? avro.merge('symbols' => symbols) : avro
       end

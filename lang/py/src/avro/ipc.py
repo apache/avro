@@ -17,13 +17,13 @@
 Support for inter-process calls.
 """
 import httplib
+
+from avro import io, protocol, schema
+
 try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from avro import io
-from avro import protocol
-from avro import schema
 
 #
 # Constants
@@ -443,16 +443,7 @@ class HTTPTransceiver(object):
     self.req_resource = req_resource
     self.conn = httplib.HTTPConnection(host, port)
     self.conn.connect()
-
-  # read-only properties
-  sock = property(lambda self: self.conn.sock)
-  remote_name = property(lambda self: self.sock.getsockname())
-
-  # read/write properties
-  def set_conn(self, new_conn):
-    self._conn = new_conn
-  conn = property(lambda self: self._conn, set_conn)
-  req_resource = '/'
+    self.remote_name = self.conn.sock.getsockname()
 
   def transceive(self, request):
     self.write_framed_message(request)
@@ -482,4 +473,3 @@ class HTTPTransceiver(object):
 #
 # Server Implementations (none yet)
 #
-

@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
 namespace Avro
 {
+    /// <summary>
+    /// Provides access to custom properties (those not defined in the Avro spec) in a JSON object.
+    /// </summary>
     public class PropertyMap : Dictionary<string, string>
     {
         /// <summary>

@@ -52,25 +52,15 @@
     </resources>
     <plugins>
       <plugin>
-        <groupId>${project.groupId}</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <version>${project.version}</version>
-        <executions>
-          <execution>
-            <id>schemas</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>schema</goal>
-              <goal>protocol</goal>
-              <goal>idl-protocol</goal>
-            </goals>
-            <configuration>
-              <stringType>String</stringType>
-              <testSourceDirectory>${project.basedir}/src/test/avro</testSourceDirectory>
-              <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
-            </configuration>
-          </execution>
-        </executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.apache.avro.grpc</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
       </plugin>
       <!-- Allow guava because hadoop brings it as a transitive dependency. -->
       <plugin>
@@ -90,6 +80,27 @@
                   </includes>
                 </bannedDependencies>
               </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <id>schemas</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+              <goal>protocol</goal>
+              <goal>idl-protocol</goal>
+            </goals>
+            <configuration>
+              <stringType>String</stringType>
+              <testSourceDirectory>${project.basedir}/src/test/avro</testSourceDirectory>
+              <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
             </configuration>
           </execution>
         </executions>

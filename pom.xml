@@ -57,7 +57,7 @@
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
     <source-plugin.version>3.0.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.21.1</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>1.24.1</spotless-maven-plugin.version>
   </properties>
 
   <modules>
@@ -171,7 +171,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>${maven-plugin-plugin.version}</version>
         <configuration>
-          <goalPrefix>spotless</goalPrefix>
+          <goalPrefix>avro</goalPrefix>
         </configuration>
       </plugin>
     </plugins>
@@ -321,7 +321,7 @@
                 <exclude>lang/csharp/src/apache/perf/com/foo/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/ipc/org/apache/avro/ipc/*.cs</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
-                <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/_SUCCESS</exclude>
+                <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/*</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/Test.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/A.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/Foo.java</exclude>

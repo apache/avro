@@ -44,7 +44,7 @@ class CaseFinder
   private
 
   def scan_case
-    if id = @scanner.scan(/\/\/ \d+\n/)
+    if (id = @scanner.scan(/\/\/ \d+\n/))
       while @scanner.skip(/\/\/ .*\n/); end
 
       input = scan_input
@@ -61,7 +61,7 @@ class CaseFinder
   def scan_item(name)
     if @scanner.scan(/<<#{name}\n/)
       lines = []
-      while line = @scanner.scan(/.+\n/)
+      while (line = @scanner.scan(/.+\n/))
         break if line.chomp == name
         lines << line
       end

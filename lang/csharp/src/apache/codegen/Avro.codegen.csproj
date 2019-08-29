@@ -44,9 +44,13 @@
     </Description>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
 
 </Project>
-

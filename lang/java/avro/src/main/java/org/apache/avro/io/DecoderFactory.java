@@ -239,7 +239,7 @@ public class DecoderFactory {
   }
 
   /**
-   * Creates a {@link JsonDecoder} using the InputStrim provided for reading data
+   * Creates a {@link JsonDecoder} using the InputStream provided for reading data
    * that conforms to the Schema provided.
    * <p/>
    *

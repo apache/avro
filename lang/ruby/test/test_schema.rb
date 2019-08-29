@@ -455,5 +455,5 @@ class TestSchema < Test::Unit::TestCase
     end
     assert_equal('Error validating default for veggies: at . expected type null, got string with value "apple"',
                  exception.to_s)
-    end
+  end
 end

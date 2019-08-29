@@ -32,7 +32,7 @@ class AllTests
 {
   public static function suite()
   {
-    $suite = new PHPUnit_Framework_TestSuite('AvroAllTests');
+    $suite = new PHPUnit\Framework\TestSuite('AvroAllTests');
     $suite->addTestSuite('DataFileTest');
     $suite->addTestSuite('SchemaTest');
     $suite->addTestSuite('NameTest');

@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -20,18 +20,23 @@ using System;
 
 namespace Avro.IO
 {
+    /// <summary>
+    /// Obsolete - This will be removed from the public API in a future version.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    [Obsolete("This will be removed from the public API in a future version.")]
     public interface ICallback<in T>
     {
-        /**
-         * Receives a callback result.
-         * @param result the result returned in the callback.
-         */
+        /// <summary>
+        /// Receives a callback result.
+        /// </summary>
+        /// <param name="result">Result returned in the callback.</param>
         void HandleResult(T result);
 
-        /**
-         * Receives an error.
-         * @param error the error returned in the callback.
-         */
+        /// <summary>
+        /// Receives an error.
+        /// </summary>
+        /// <param name="exception">Error returned in the callback.</param>
         void HandleException(Exception exception);
     }
 }

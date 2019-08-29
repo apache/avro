@@ -278,7 +278,7 @@ module Avro::IPC
           response = call(local_message, request)
         rescue AvroRemoteError => e
           error = e
-        rescue Exception => e
+        rescue Exception => e # rubocop:disable Lint/RescueException
           error = AvroRemoteError.new(e.to_s)
         end
 
@@ -350,7 +350,7 @@ module Avro::IPC
       remote_protocol
     end
 
-    def call(local_message, request)
+    def call(_local_message, _request)
       # Actual work done by server: cf. handler in thrift.
       raise NotImplementedError
     end

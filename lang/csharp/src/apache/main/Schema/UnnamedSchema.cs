@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,10 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 
 namespace Avro
 {
@@ -27,13 +24,19 @@ namespace Avro
     /// </summary>
     public abstract class UnnamedSchema : Schema
     {
+        /// <summary>
+        /// Base constructor for an <see cref="UnnamedSchema"/>.
+        /// </summary>
+        /// <param name="type">Type of schema.</param>
+        /// <param name="props">Dictionary that provides access to custom properties</param>
         protected UnnamedSchema(Type type, PropertyMap props) : base(type, props)
         {
         }
 
+        /// <inheritdoc/>
         public override string Name
         {
-            get { return Tag.ToString().ToLower(); }
+            get { return Tag.ToString().ToLower(CultureInfo.InvariantCulture); }
         }
     }
 }
