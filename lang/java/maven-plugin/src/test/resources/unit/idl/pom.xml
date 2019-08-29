@@ -45,9 +45,8 @@
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/idl-jsr310</outputDirectory>
+          <outputDirectory>${basedir}/target/test-harness/idl</outputDirectory>
           <stringType>String</stringType>
-          <dateTimeLogicalTypeImplementation>jsr310</dateTimeLogicalTypeImplementation>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>
@@ -65,5 +64,4 @@
       <version>${jackson.databind.version}</version>
     </dependency>
   </dependencies>
-
 </project>

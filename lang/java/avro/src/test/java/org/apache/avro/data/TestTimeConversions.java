@@ -67,7 +67,7 @@ public class TestTimeConversions {
   }
 
   @Test
-  public void testTimeMillisConversion() throws Exception {
+  public void testTimeMillisConversion() {
     TimeMillisConversion conversion = new TimeMillisConversion();
     LocalTime oneAM = LocalTime.of(1, 0);
     LocalTime afternoon = LocalTime.of(15, 14, 15, 926_000_000);
