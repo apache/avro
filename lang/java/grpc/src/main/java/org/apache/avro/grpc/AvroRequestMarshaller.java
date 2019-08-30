@@ -18,10 +18,10 @@
 
 package org.apache.avro.grpc;
 
+import com.google.common.io.ByteStreams;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.grpc.internal.IoUtils;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -84,7 +84,7 @@ public class AvroRequestMarshaller implements MethodDescriptor.Marshaller<Object
     public int drainTo(OutputStream target) throws IOException {
       int written;
       if (getPartial() != null) {
-        written = (int) IoUtils.copy(getPartial(), target);
+        written = (int) ByteStreams.copy(getPartial(), target);
       } else {
         Schema reqSchema = message.getRequest();
         CountingOutputStream outputStream = new CountingOutputStream(target);
