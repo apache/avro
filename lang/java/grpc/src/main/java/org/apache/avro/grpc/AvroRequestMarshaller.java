@@ -21,6 +21,7 @@ package org.apache.avro.grpc;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.grpc.internal.IoUtils;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
@@ -34,7 +35,6 @@ import java.io.OutputStream;
 
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.grpc.internal.IoUtils;
 
 /** Marshaller for Avro RPC request. */
 public class AvroRequestMarshaller implements MethodDescriptor.Marshaller<Object[]> {
