@@ -151,6 +151,20 @@ class TestSchema < Test::Unit::TestCase
     }
   end
 
+  def test_to_avro_includes_aliases
+    hash = {
+      'type' => 'record',
+      'name' => 'test_record',
+      'aliases' => %w(alt_record),
+      'fields' => [
+        { 'name' => 'f', 'type' => { 'type' => 'fixed', 'size' => 2, 'name' => 'test_fixed', 'aliases' => %w(alt_fixed) } },
+        { 'name' => 'e', 'type' => { 'type' => 'enum', 'symbols' => %w(A B), 'name' => 'test_enum', 'aliases' => %w(alt_enum) } }
+      ]
+    }
+    schema = hash_to_schema(hash)
+    assert_equal(schema.to_avro, hash)
+  end
+
   def test_unknown_named_type
     error = assert_raise Avro::UnknownSchemaError do
       Avro::Schema.parse <<-SCHEMA
@@ -629,5 +643,85 @@ class TestSchema < Test::Unit::TestCase
     )
   ensure
     Avro.disable_enum_symbol_validation = nil
+  end
+  
+  def test_validate_field_aliases
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          { name: 'banana', type: 'string', aliases: 'banane' }
+        ]
+      )
+    end
+
+    assert_match(/Invalid aliases value "banane" for "string" banana/, exception.to_s)
+  end
+
+  def test_validate_same_alias_multiple_fields
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          { name: 'banana', type: 'string', aliases: %w(yellow) },
+          { name: 'lemo', type: 'string', aliases: %w(yellow) }
+        ]
+      )
+    end
+
+    assert_match('Alias ["yellow"] already in use', exception.to_s)
+  end
+
+  def test_validate_repeated_aliases
+    assert_nothing_raised do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        fields: [
+          { name: 'banana', type: 'string', aliases: %w(yellow yellow) },
+        ]
+      )
+    end
+  end
+
+  def test_validate_record_aliases
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'record',
+        name: 'fruits',
+        aliases: ["foods", 2],
+        fields: []
+      )
+    end
+
+    assert_match(/Invalid aliases value \["foods", 2\] for record fruits/, exception.to_s)
+  end
+
+  def test_validate_enum_aliases
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'enum',
+        name: 'vowels',
+        aliases: [1, 2],
+        symbols: %w(A E I O U)
+      )
+    end
+
+    assert_match(/Invalid aliases value \[1, 2\] for enum vowels/, exception.to_s)
+  end
+
+  def test_validate_fixed_aliases
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'fixed',
+        name: 'uuid',
+        size: 36,
+        aliases: "unique_id"
+      )
+    end
+
+    assert_match(/Invalid aliases value "unique_id" for fixed uuid/, exception.to_s)
   end
 end

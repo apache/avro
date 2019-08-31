@@ -473,6 +473,22 @@ EOS
     assert_equal(datum_read, datum_to_write)
   end
 
+  def test_aliased
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Rec1", "fields":[
+        {"name":"field1", "type":"int"}
+      ]}
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Rec2", "aliases":["Rec1"], "fields":[
+        {"name":"field2", "aliases":["field1"], "type":"int"}
+      ]}
+    SCHEMA
+    writer, * = write_datum({ 'field1' => 1 }, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, { 'field2' => 1 })
+  end
+
   def test_snappy_backward_compat
     # a snappy-compressed block payload without the checksum
     # this has no back-references, just one literal so the last 9
