@@ -60,7 +60,7 @@
     <easymock.version>4.0.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
     <joda.version>2.10.1</joda.version>
-    <grpc.version>1.19.0</grpc.version>
+    <grpc.version>1.23.0</grpc.version>
     <netty-codec-http2.version>4.1.45.Final</netty-codec-http2.version>
     <zstd-jni.version>1.4.3-1</zstd-jni.version>
     <!-- version properties for plugins -->
