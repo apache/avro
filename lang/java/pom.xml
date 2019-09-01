@@ -66,10 +66,10 @@
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.0.1</archetype-plugin.version>
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
-    <compiler-plugin.version>3.8.0</compiler-plugin.version>
+    <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <exec-plugin.version>1.6.0</exec-plugin.version>
     <file-management.version>1.2.1</file-management.version>
-    <jar-plugin.version>3.1.1</jar-plugin.version>
+    <jar-plugin.version>3.1.2</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
     <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
