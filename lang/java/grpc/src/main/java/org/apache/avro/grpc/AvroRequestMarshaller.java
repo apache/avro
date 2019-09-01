@@ -18,6 +18,7 @@
 
 package org.apache.avro.grpc;
 
+import com.google.common.io.ByteStreams;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -34,7 +35,6 @@ import java.io.OutputStream;
 
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.grpc.internal.IoUtils;
 
 /** Marshaller for Avro RPC request. */
 public class AvroRequestMarshaller implements MethodDescriptor.Marshaller<Object[]> {
@@ -84,7 +84,7 @@ public class AvroRequestMarshaller implements MethodDescriptor.Marshaller<Object
     public int drainTo(OutputStream target) throws IOException {
       int written;
       if (getPartial() != null) {
-        written = (int) IoUtils.copy(getPartial(), target);
+        written = (int) ByteStreams.copy(getPartial(), target);
       } else {
         Schema reqSchema = message.getRequest();
         CountingOutputStream outputStream = new CountingOutputStream(target);
