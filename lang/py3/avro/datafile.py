@@ -20,8 +20,10 @@
 
 """Read/Write Avro File Object Containers."""
 
+import bz2
 import io
 import logging
+import lzma
 import os
 import zlib
 
@@ -82,7 +84,7 @@ META_SCHEMA = schema.Parse("""
 })
 
 # Codecs supported by container files:
-VALID_CODECS = frozenset(['null', 'deflate'])
+VALID_CODECS = frozenset(['null', 'bzip2', 'deflate', 'xz'])
 if has_snappy:
   VALID_CODECS = frozenset.union(VALID_CODECS, ['snappy'])
 if has_zstandard:
@@ -271,6 +273,9 @@ class DataFileWriter(object):
     if codec == 'null':
       compressed_data = uncompressed_data
       compressed_data_length = len(compressed_data)
+    elif codec == 'bzip2':
+      compressed_data = bz2.compress(uncompressed_data)
+      compressed_data_length = len(compressed_data)
     elif codec == 'deflate':
       # The first two characters and last character are zlib
       # wrappers around deflate data.
@@ -279,6 +284,9 @@ class DataFileWriter(object):
     elif codec == 'snappy':
       compressed_data = snappy.compress(uncompressed_data)
       compressed_data_length = len(compressed_data) + 4 # crc32
+    elif codec == 'xz':
+      compressed_data = lzma.compress(uncompressed_data)
+      compressed_data_length = len(compressed_data)
     elif codec == 'zstandard':
       compressed_data = zstd.ZstdCompressor().compress(uncompressed_data)
       compressed_data_length = len(compressed_data)
@@ -490,6 +498,11 @@ class DataFileReader(object):
       # Skip a long; we don't need to use the length.
       self.raw_decoder.skip_long()
       self._datum_decoder = self._raw_decoder
+    elif self.codec == 'bzip2':
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length)
+      uncompressed = bz2.decompress(data)
+      self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
     elif self.codec == 'deflate':
       # Compressed data is stored as (length, data), which
       # corresponds to how the "bytes" type is encoded.
@@ -505,6 +518,11 @@ class DataFileReader(object):
       uncompressed = snappy.decompress(data)
       self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
       self.raw_decoder.check_crc32(uncompressed);
+    elif self.codec == 'xz':
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length)
+      uncompressed = lzma.decompress(data)
+      self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
     elif self.codec == 'zstandard':
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length)
