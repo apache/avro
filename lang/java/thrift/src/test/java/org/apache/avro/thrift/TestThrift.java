@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 
+import org.apache.avro.Schema;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -92,5 +93,26 @@ public class TestThrift {
 
     assertEquals(test, o);
 
+  }
+
+  @org.junit.Test
+  public void complexStructTest() {
+    Schema schema = ThriftData.get().getSchema(Test.class);
+
+    Schema intOptional = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT));
+    Schema stringSchema = Schema.create(Schema.Type.STRING);
+    stringSchema.addProp("avro.java.string", "String");
+    stringSchema = Schema.createUnion(Schema.create(Schema.Type.NULL), stringSchema);
+
+    Schema stringOptionalDefaultValue = Schema.create(Schema.Type.STRING);
+    stringOptionalDefaultValue.addProp("avro.java.string", "String");
+    stringOptionalDefaultValue = Schema.createUnion(stringOptionalDefaultValue, Schema.create(Schema.Type.NULL));
+
+    Schema longSchema = Schema.create(Schema.Type.LONG);
+
+    assertEquals(schema.getField("i32Field").schema(), intOptional);
+    assertEquals(schema.getField("stringField").schema(), stringSchema);
+    assertEquals(schema.getField("stringOptionalFieldWithDefault").schema(), stringOptionalDefaultValue);
+    assertEquals(schema.getField("i64Field").schema(), longSchema);
   }
 }

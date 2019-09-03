@@ -44,7 +44,8 @@ struct Test {
   4: optional i32 i32Field
   5: i64 i64Field
   6: double doubleField
-  7: string stringField
+  7: string stringField,
+  17: optional string stringOptionalFieldWithDefault = "default",
   8: optional binary binaryField
   9: map<string,i32> mapField
  10: list<i32> listField
