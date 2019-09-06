@@ -317,6 +317,8 @@
             <removeUnusedImports/>
             <excludes>
               <exclude>src/test/java/org/apache/avro/protobuf/Test.java</exclude>
+              <exclude>src/test/java/org/apache/avro/protobuf/multiplefiles/*</exclude>
+              <exclude>src/test/java/org/apache/avro/thrift/test/*</exclude>
             </excludes>
           </java>
         </configuration>
