@@ -106,7 +106,7 @@ namespace Avro.IO
         {
             long bits = BitConverter.DoubleToInt64Bits(value);
 
-            writeByte((byte)((bits) & 0xFF));
+            writeByte((byte)(bits & 0xFF));
             writeByte((byte)((bits >> 8) & 0xFF));
             writeByte((byte)((bits >> 16) & 0xFF));
             writeByte((byte)((bits >> 24) & 0xFF));

@@ -124,7 +124,7 @@ namespace Avro
         internal Field(Schema schema, string name, IList<string> aliases, int pos, string doc,
                         JToken defaultValue, SortOrder sortorder, PropertyMap props)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
             if (null == schema) throw new ArgumentNullException("type", "type cannot be null.");
             this.Schema = schema;
             this.Name = name;
@@ -213,7 +213,7 @@ namespace Avro
         {
             if (null == this.Props) return null;
             string v;
-            return (this.Props.TryGetValue(key, out v)) ? v : null;
+            return this.Props.TryGetValue(key, out v) ? v : null;
         }
 
         /// <summary>

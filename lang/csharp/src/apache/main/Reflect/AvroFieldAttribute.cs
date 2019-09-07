@@ -30,13 +30,11 @@ namespace Avro.Reflect
         /// <summary>
         /// Name of the field in the Avro Schema
         /// </summary>
-        /// <value></value>
         public string FieldName { get; set; }
 
         /// <summary>
         /// Convert the property into a standard Avro type - e.g. DateTimeOffset to long
         /// </summary>
-        /// <value></value>
         public IAvroFieldConverter Converter { get; set; }
 
         /// <summary>

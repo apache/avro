@@ -75,7 +75,7 @@ namespace Avro
         private UnionSchema(List<Schema> schemas, PropertyMap props) : base(Type.Union, props)
         {
             if (schemas == null)
-                throw new ArgumentNullException("schemas");
+                throw new ArgumentNullException(nameof(schemas));
             this.Schemas = schemas;
         }
 

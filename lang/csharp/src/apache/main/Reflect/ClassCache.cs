@@ -19,8 +19,6 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Reflection;
-using Avro;
 
 namespace Avro.Reflect
 {
@@ -65,11 +63,11 @@ namespace Avro.Reflect
         /// </summary>
         /// <param name="from"></param>
         /// <param name="to"></param>
-        /// <typeparam name="A"></typeparam>
-        /// <typeparam name="P"></typeparam>
-        public static void AddDefaultConverter<A, P>(Func<A, Schema, P> from, Func<P, Schema, A> to)
+        /// <typeparam name="TAvro"></typeparam>
+        /// <typeparam name="TProperty"></typeparam>
+        public static void AddDefaultConverter<TAvro, TProperty>(Func<TAvro, Schema, TProperty> from, Func<TProperty, Schema, TAvro> to)
         {
-            _defaultConverters.Add(new FuncFieldConverter<A, P>(from, to));
+            _defaultConverters.Add(new FuncFieldConverter<TAvro, TProperty>(from, to));
         }
 
         /// <summary>

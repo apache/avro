@@ -69,7 +69,7 @@ namespace Avro
                             : base(Type.Fixed, name, aliases, props, names, doc)
         {
             if (null == name.Name) throw new SchemaParseException("name cannot be null for fixed schema.");
-            if (size <= 0) throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
+            if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), "size must be greater than zero.");
             this.Size = size;
         }
 

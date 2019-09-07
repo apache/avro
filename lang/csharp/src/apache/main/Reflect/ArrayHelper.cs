@@ -34,7 +34,6 @@ namespace Avro.Reflect
         /// <summary>
         /// Collection type to apply by default to all array objects. If not set this defaults to a generic List.
         /// </summary>
-        /// <value></value>
         public static Type DefaultType
         {
             get => _defaultType;
@@ -44,7 +43,6 @@ namespace Avro.Reflect
         /// <summary>
         /// The array
         /// </summary>
-        /// <value></value>
         public IEnumerable Enumerable { get; set; }
 
         /// <summary>
@@ -60,7 +58,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Add an element to the array.
         /// </summary>
-        /// <value></value>
+        /// <param name="o">Element to add to the array.</param>
         public virtual void Add(object o)
         {
             IList e = (IList)Enumerable;
@@ -80,7 +78,6 @@ namespace Avro.Reflect
         /// <summary>
         /// Type of the array to create when deserializing
         /// </summary>
-        /// <value></value>
         public virtual Type ArrayType
         {
             get => _defaultType;
@@ -89,6 +86,7 @@ namespace Avro.Reflect
         /// <summary>
         /// Constructor
         /// </summary>
+        /// <param name="enumerable">Enumerable to initialize this helper with.</param>
         public ArrayHelper(IEnumerable enumerable)
         {
             Enumerable = enumerable;

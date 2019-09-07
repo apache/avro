@@ -117,14 +117,14 @@ namespace Avro.Generic
         /// <summary>
         /// A generic method to serialize primitive Avro types.
         /// </summary>
-        /// <typeparam name="S">Type of the C# type to be serialized</typeparam>
+        /// <typeparam name="TValue">Type of the C# type to be serialized</typeparam>
         /// <param name="value">The value to be serialized</param>
         /// <param name="tag">The schema type tag</param>
         /// <param name="writer">The writer which should be used to write the given type.</param>
-        protected void Write<S>(object value, Schema.Type tag, Writer<S> writer)
+        protected void Write<TValue>(object value, Schema.Type tag, Writer<TValue> writer)
         {
-            if (!(value is S)) throw TypeMismatch(value, tag.ToString(), typeof(S).ToString());
-            writer((S)value);
+            if (!(value is TValue)) throw TypeMismatch(value, tag.ToString(), typeof(TValue).ToString());
+            writer((TValue)value);
         }
 
 
@@ -445,7 +445,7 @@ namespace Avro.Generic
             /// <inheritdoc/>
             public void WriteMapValues(object map, WriteItem valueWriter, Encoder encoder)
             {
-                foreach (DictionaryEntry entry in ((IDictionary)map))
+                foreach (DictionaryEntry entry in (IDictionary)map)
                 {
                     encoder.StartItem();
                     encoder.WriteString(entry.Key.ToString());

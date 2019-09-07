@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace Avro.IO
@@ -50,7 +51,8 @@ namespace Avro.IO
                 int remainingCheck = buffer.Read(b, off, (int) remaining);
 
                 if(remainingCheck != remaining)
-                    throw new InvalidDataException(string.Format("remainingCheck [{0}] and remaining[{1}] are different.",
+                    throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                        "remainingCheck [{0}] and remaining[{1}] are different.",
                         remainingCheck, remaining));
                 return (int)remaining;
             }
@@ -58,8 +60,8 @@ namespace Avro.IO
             int lenCheck = buffer.Read(b, off, len);
 
             if (lenCheck != len)
-                throw new InvalidDataException(string.Format("lenCheck [{0}] and len[{1}] are different.",
-                                                             lenCheck, len));
+                throw new InvalidDataException(string.Format(CultureInfo.InvariantCulture,
+                    "lenCheck [{0}] and len[{1}] are different.", lenCheck, len));
 
             return len;
         }
