@@ -19,6 +19,7 @@ import os
 import sys
 
 from avro import datafile, io, schema
+from avro.datafile import NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, SNAPPY_CODEC, ZSTANDARD_CODEC
 
 DATUM = {
   'intField': 12,
@@ -37,15 +38,15 @@ DATUM = {
   'recordField': {'label': 'blah', 'children': [{'label': 'inner', 'children': []}]},
 }
 
-CODECS_TO_VALIDATE = ('null', 'deflate')
+CODECS_TO_VALIDATE = (NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC)
 try:
   import snappy
-  CODECS_TO_VALIDATE += ('snappy',)
+  CODECS_TO_VALIDATE += (SNAPPY_CODEC,)
 except ImportError:
   print 'Snappy not present, will skip generating it.'
 try:
   import zstandard
-  CODECS_TO_VALIDATE += ('zstandard',)
+  CODECS_TO_VALIDATE += (ZSTANDARD_CODEC,)
 except ImportError:
   print 'Zstandard not present, will skip generating it.'
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
   for codec in CODECS_TO_VALIDATE:
     interop_schema = schema.parse(open(sys.argv[1], 'r').read())
     filename = sys.argv[2]
-    if codec != 'null':
+    if codec != NULL_CODEC:
       base, ext = os.path.splitext(filename)
       filename = base + "_" + codec + ext
     writer = open(filename, 'wb')

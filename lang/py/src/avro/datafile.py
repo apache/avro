@@ -16,6 +16,7 @@
 """
 Read/Write Avro File Object Containers.
 """
+import bz2
 import zlib
 
 from avro import io, schema
@@ -50,11 +51,18 @@ META_SCHEMA = schema.parse("""\
    {"name": "meta", "type": {"type": "map", "values": "bytes"}},
    {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": %d}}]}
 """ % (MAGIC_SIZE, SYNC_SIZE))
-VALID_CODECS = ['null', 'deflate']
+
+NULL_CODEC = 'null'
+DEFLATE_CODEC = 'deflate'
+BZIP2_CODEC = 'bzip2'
+SNAPPY_CODEC = 'snappy'
+ZSTANDARD_CODEC = 'zstandard'
+
+VALID_CODECS = [NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC]
 if has_snappy:
-    VALID_CODECS.append('snappy')
+    VALID_CODECS.append(SNAPPY_CODEC)
 if has_zstandard:
-    VALID_CODECS.append('zstandard')
+    VALID_CODECS.append(ZSTANDARD_CODEC)
 VALID_ENCODINGS = ['binary'] # not used yet
 
 CODEC_KEY = "avro.codec"
@@ -81,7 +89,7 @@ class DataFileWriter(object):
     return generate_sixteen_random_bytes()
 
   # TODO(hammer): make 'encoder' a metadata property
-  def __init__(self, writer, datum_writer, writers_schema=None, codec='null'):
+  def __init__(self, writer, datum_writer, writers_schema=None, codec=NULL_CODEC):
     """
     If the schema is not present, presume we're appending.
 
@@ -100,8 +108,8 @@ class DataFileWriter(object):
       if codec not in VALID_CODECS:
         raise DataFileException("Unknown codec: %r" % codec)
       self._sync_marker = DataFileWriter.generate_sync_marker()
-      self.set_meta('avro.codec', codec)
-      self.set_meta('avro.schema', str(writers_schema))
+      self.set_meta(CODEC_KEY, codec)
+      self.set_meta(SCHEMA_KEY, str(writers_schema))
       self.datum_writer.writers_schema = writers_schema
     else:
       # open writer for reading to collect metadata
@@ -110,11 +118,11 @@ class DataFileWriter(object):
       # TODO(hammer): collect arbitrary metadata
       # collect metadata
       self._sync_marker = dfr.sync_marker
-      self.set_meta('avro.codec', dfr.get_meta('avro.codec'))
+      self.set_meta(CODEC_KEY, dfr.get_meta(CODEC_KEY))
 
       # get schema used to write existing file
-      schema_from_file = dfr.get_meta('avro.schema')
-      self.set_meta('avro.schema', schema_from_file)
+      schema_from_file = dfr.get_meta(SCHEMA_KEY)
+      self.set_meta(SCHEMA_KEY, schema_from_file)
       self.datum_writer.writers_schema = schema.parse(schema_from_file)
 
       # seek to the end of the file and prepare for writing
@@ -167,22 +175,26 @@ class DataFileWriter(object):
 
       # write block contents
       uncompressed_data = self.buffer_writer.getvalue()
-      if self.get_meta(CODEC_KEY) == 'null':
+      codec = self.get_meta(CODEC_KEY)
+      if codec == NULL_CODEC:
         compressed_data = uncompressed_data
         compressed_data_length = len(compressed_data)
-      elif self.get_meta(CODEC_KEY) == 'deflate':
+      elif codec == DEFLATE_CODEC:
         # The first two characters and last character are zlib
         # wrappers around deflate data.
         compressed_data = zlib.compress(uncompressed_data)[2:-1]
         compressed_data_length = len(compressed_data)
-      elif self.get_meta(CODEC_KEY) == 'snappy':
+      elif codec == BZIP2_CODEC:
+        compressed_data = bz2.compress(uncompressed_data)
+        compressed_data_length = len(compressed_data)
+      elif codec == SNAPPY_CODEC:
         compressed_data = snappy.compress(uncompressed_data)
         compressed_data_length = len(compressed_data) + 4 # crc32
-      elif self.get_meta(CODEC_KEY) == 'zstandard':
+      elif codec == ZSTANDARD_CODEC:
         compressed_data = zstd.ZstdCompressor().compress(uncompressed_data)
         compressed_data_length = len(compressed_data)
       else:
-        fail_msg = '"%s" codec is not supported.' % self.get_meta(CODEC_KEY)
+        fail_msg = '"%s" codec is not supported.' % codec
         raise DataFileException(fail_msg)
 
       # Write length of block
@@ -192,7 +204,7 @@ class DataFileWriter(object):
       self.writer.write(compressed_data)
       
       # Write CRC32 checksum for Snappy
-      if self.get_meta(CODEC_KEY) == 'snappy':
+      if codec == SNAPPY_CODEC:
         self.encoder.write_crc32(uncompressed_data)
 
       # write sync marker
@@ -244,9 +256,9 @@ class DataFileReader(object):
     self._read_header()
 
     # ensure codec is valid
-    self.codec = self.get_meta('avro.codec')
+    self.codec = self.get_meta(CODEC_KEY)
     if self.codec is None:
-      self.codec = "null"
+      self.codec = NULL_CODEC
     if self.codec not in VALID_CODECS:
       raise DataFileException('Unknown codec: %s.' % self.codec)
 
@@ -323,11 +335,11 @@ class DataFileReader(object):
 
   def _read_block_header(self):
     self.block_count = self.raw_decoder.read_long()
-    if self.codec == "null":
+    if self.codec == NULL_CODEC:
       # Skip a long; we don't need to use the length.
       self.raw_decoder.skip_long()
       self._datum_decoder = self._raw_decoder
-    elif self.codec == 'deflate':
+    elif self.codec == DEFLATE_CODEC:
       # Compressed data is stored as (length, data), which
       # corresponds to how the "bytes" type is encoded.
       data = self.raw_decoder.read_bytes()
@@ -335,14 +347,19 @@ class DataFileReader(object):
       # "raw" (no zlib headers) decompression.  See zlib.h.
       uncompressed = zlib.decompress(data, -15)
       self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
-    elif self.codec == 'snappy':
+    elif self.codec == BZIP2_CODEC:
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length)
+      uncompressed = bz2.decompress(data)
+      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+    elif self.codec == SNAPPY_CODEC:
       # Compressed data includes a 4-byte CRC32 checksum
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length - 4)
       uncompressed = snappy.decompress(data)
       self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
       self.raw_decoder.check_crc32(uncompressed);
-    elif self.codec == 'zstandard':
+    elif self.codec == ZSTANDARD_CODEC:
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length)
       uncompressed = bytearray()
