@@ -24,6 +24,7 @@ import tempfile
 import unittest
 
 from avro import datafile, io, schema
+from avro.datafile import NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, SNAPPY_CODEC, XZ_CODEC, ZSTANDARD_CODEC
 
 try:
   import snappy
@@ -86,15 +87,15 @@ SCHEMAS_TO_VALIDATE = (
 )
 
 def get_codecs_to_validate():
-  codecs = ('null', 'deflate')
+  codecs = (NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, XZ_CODEC)
 
   if HAS_SNAPPY:
-    codecs += ('snappy',)
+    codecs += (SNAPPY_CODEC,)
   else:
     logging.warning('Snappy not present, will skip testing it.')
 
   if HAS_ZSTANDARD:
-    codecs += ('zstandard',)
+    codecs += (ZSTANDARD_CODEC,)
   else:
     logging.warning('Zstandard not present, will skip testing it.')
 
