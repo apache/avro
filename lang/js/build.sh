@@ -35,6 +35,12 @@ case "$1" in
   clean)
     rm -rf coverage
     ;;
+  interop-data-generate)
+    npm run interop-data-generate
+    ;;
+  interop-data-test)
+    npm run interop-data-test
+    ;;
   *)
     echo "Usage: $0 {lint|test|dist|clean}" >&2
     exit 1
