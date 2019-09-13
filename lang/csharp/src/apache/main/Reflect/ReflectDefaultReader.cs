@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using Avro.IO;
 using Avro.Specific;
 using Newtonsoft.Json.Linq;
@@ -34,7 +35,6 @@ namespace Avro.Reflect
         /// C# type to create when deserializing a map. Must implement IDictionary&lt;,&gt; and the first
         /// type parameter must be a string. Default is System.Collections.Generic.Dictionary
         /// </summary>
-        /// <value></value>
         public Type MapType { get => _mapType; set => _mapType = value; }
 
         private ClassCache _classCache = new ClassCache();
@@ -42,7 +42,6 @@ namespace Avro.Reflect
         /// <summary>
         /// Class cache
         /// </summary>
-        /// <value></value>
         public ClassCache ClassCache { get => _classCache; }
 
         private Type _mapType = typeof(Dictionary<,>);
@@ -120,7 +119,8 @@ namespace Avro.Reflect
                     enumType = EnumCache.GetEnumeration(namedSchema);
                     if (enumType == null)
                     {
-                        throw new Exception(string.Format("Couldn't find type matching enum name {0}", namedSchema.Fullname));
+                        throw new Exception(string.Format(CultureInfo.InvariantCulture,
+                            "Couldn't find type matching enum name {0}", namedSchema.Fullname));
                     }
 
                     if (nullable)
@@ -144,7 +144,8 @@ namespace Avro.Reflect
                     recordtype = _classCache.GetClass(recordSchema).GetClassType();
                     if (recordtype == null)
                     {
-                        throw new Exception(string.Format("Couldn't find type matching schema name {0}", recordSchema.Fullname));
+                        throw new Exception(string.Format(CultureInfo.InvariantCulture,
+                            "Couldn't find type matching schema name {0}", recordSchema.Fullname));
                     }
 
                     return recordtype;

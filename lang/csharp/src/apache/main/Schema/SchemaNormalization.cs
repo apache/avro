@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Text;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace Avro
 {
@@ -99,7 +100,8 @@ namespace Avro
                     var sha256 = System.Security.Cryptography.SHA256.Create();
                     return sha256.ComputeHash(data);
                 default:
-                    throw new ArgumentException(string.Format("Unsupported fingerprint computation algorithm ({0})", fpName));
+                    throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
+                        "Unsupported fingerprint computation algorithm ({0})", fpName));
             }
         }
 
@@ -214,7 +216,8 @@ namespace Avro
                     else if (st == Schema.Type.Fixed)
                     {
                         FixedSchema fixedSchema = s as FixedSchema;
-                        o.Append(",\"size\":").Append(fixedSchema.Size.ToString());
+                        o.Append(",\"size\":")
+                            .Append(fixedSchema.Size.ToString(CultureInfo.InvariantCulture));
                     }
                     else  // st == Schema.Type.Record
                     {

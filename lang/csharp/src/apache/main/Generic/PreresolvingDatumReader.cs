@@ -507,6 +507,7 @@ namespace Avro.Generic
         /// the Specific and Generic implementations. Used to avoid retrieving the existing
         /// value if it's not reusable.
         /// </summary>
+        /// <param name="tag">Schema type to test for reusability.</param>
         protected virtual bool IsReusable(Schema.Type tag)
         {
             return true;

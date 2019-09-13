@@ -179,14 +179,14 @@ namespace Avro.Generic
         /// <summary>
         /// A generic method to serialize primitive Avro types.
         /// </summary>
-        /// <typeparam name="S">Type of the C# type to be serialized</typeparam>
+        /// <typeparam name="T">Type of the C# type to be serialized</typeparam>
         /// <param name="value">The value to be serialized</param>
         /// <param name="tag">The schema type tag</param>
         /// <param name="writer">The writer which should be used to write the given type.</param>
-        protected virtual void Write<S>(object value, Schema.Type tag, Writer<S> writer)
+        protected virtual void Write<T>(object value, Schema.Type tag, Writer<T> writer)
         {
-            if (!(value is S)) throw TypeMismatch(value, tag.ToString(), typeof(S).ToString());
-            writer((S)value);
+            if (!(value is T)) throw TypeMismatch(value, tag.ToString(), typeof(T).ToString());
+            writer((T)value);
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace Avro.Generic
         /// <param name="value">Ensure this object is a record</param>
         protected virtual void EnsureRecordObject(RecordSchema s, object value)
         {
-            if (value == null || !(value is GenericRecord) || !((value as GenericRecord).Schema.Equals(s)))
+            if (value == null || !(value is GenericRecord) || !(value as GenericRecord).Schema.Equals(s))
             {
                 throw TypeMismatch(value, "record", "GenericRecord");
             }
@@ -251,7 +251,7 @@ namespace Avro.Generic
         /// <param name="encoder">Encoder for serialization</param>
         protected virtual void WriteEnum(EnumSchema es, object value, Encoder encoder)
         {
-            if (value == null || !(value is GenericEnum) || !((value as GenericEnum).Schema.Equals(es)))
+            if (value == null || !(value is GenericEnum) || !(value as GenericEnum).Schema.Equals(es))
                 throw TypeMismatch(value, "enum", "GenericEnum");
             encoder.WriteEnum(es.Ordinal((value as GenericEnum).Value));
         }

@@ -17,27 +17,19 @@
 -->
 <RuleSet Name="New Rule Set" Description=" " ToolsVersion="16.0">
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <!-- CA1303: Do not pass literals as localized parameters -->
+    <Rule Id="CA1303" Action="None" />
+
     <!--
     AVRO-2454: We need to evaluate each of these rules to determine whether we should enforce them.
     We disabled these rules initially to get the code analyzers installed in the project.
     -->
-    <Rule Id="CA1034" Action="Info" />
-    <Rule Id="CA1052" Action="Info" />
     <Rule Id="CA1062" Action="Info" />
-    <Rule Id="CA1063" Action="Info" />
-    <Rule Id="CA1303" Action="Info" />
-    <Rule Id="CA1305" Action="Info" />
-    <Rule Id="CA1307" Action="Info" />
-    <Rule Id="CA1507" Action="Info" />
     <Rule Id="CA1707" Action="Info" />
     <Rule Id="CA1710" Action="Info" />
-    <Rule Id="CA1715" Action="Info" />
     <Rule Id="CA1716" Action="Info" />
     <Rule Id="CA1720" Action="Info" />
-    <Rule Id="CA1721" Action="Info" />
-    <Rule Id="CA1724" Action="Info" />
     <Rule Id="CA1801" Action="Info" />
-    <Rule Id="CA1816" Action="Info" />
     <Rule Id="CA1819" Action="Info" />
     <Rule Id="CA1820" Action="Info" />
     <Rule Id="CA1822" Action="Info" />
@@ -53,6 +45,12 @@
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
     <!-- PrefixLocalCallsWithThis -->
     <Rule Id="SA1101" Action="None" />
+
+    <!-- SplitParametersMustStartOnLineAfterDeclaration -->
+    <Rule Id="SA1116" Action="None" />
+
+    <!-- ParametersMustBeOnSameLineOrSeparateLines -->
+    <Rule Id="SA1117" Action="None" />
 
     <!--
     Element Ordering Rules
@@ -92,9 +90,6 @@
     <Rule Id="SA1106" Action="Info" />
     <Rule Id="SA1107" Action="Info" />
     <Rule Id="SA1108" Action="Info" />
-    <Rule Id="SA1116" Action="Info" />
-    <Rule Id="SA1117" Action="Info" />
-    <Rule Id="SA1119" Action="Info" />
     <Rule Id="SA1121" Action="Info" />
     <Rule Id="SA1122" Action="Info" />
     <Rule Id="SA1128" Action="Info" />
@@ -135,11 +130,6 @@
     <Rule Id="SA1516" Action="Info" />
     <Rule Id="SA1519" Action="Info" />
     <Rule Id="SA1520" Action="Info" />
-    <Rule Id="SA1600" Action="Info" />
-    <Rule Id="SA1604" Action="Info" />
-    <Rule Id="SA1606" Action="Info" />
-    <Rule Id="SA1610" Action="Info" />
-    <Rule Id="SA1611" Action="Info" />
     <Rule Id="SA1614" Action="Info" />
     <Rule Id="SA1615" Action="Info" />
     <Rule Id="SA1616" Action="Info" />

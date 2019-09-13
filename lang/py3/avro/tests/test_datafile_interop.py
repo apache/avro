@@ -32,12 +32,15 @@ class TestDataFileInterop(unittest.TestCase):
     for avro_file in glob.glob('../../build/interop/data/*.avro'):
       base_ext = os.path.splitext(os.path.basename(avro_file))[0].split('_', 1)
       if len(base_ext) < 2 or base_ext[1] in datafile.VALID_CODECS:
+        print('Reading {}'.format(avro_file))
         with open(avro_file, 'rb') as reader, \
           datafile.DataFileReader(reader, datum_reader) as dfr:
           i = 0
           for i, datum in enumerate(dfr, 1):
             self.assertIsNotNone(datum)
           self.assertGreater(i, 0)
+      else:
+        print('Skipping {} due to an unsupported codec'.format(avro_file))
 
 
 if __name__ == '__main__':

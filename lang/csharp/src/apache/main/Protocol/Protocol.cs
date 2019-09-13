@@ -86,9 +86,9 @@ namespace Avro
                         string doc, IEnumerable<Schema> types,
                         IDictionary<string,Message> messages)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
-            if (null == types) throw new ArgumentNullException("types", "types cannot be null.");
-            if (null == messages) throw new ArgumentNullException("messages", "messages cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            if (null == types) throw new ArgumentNullException(nameof(types), "types cannot be null.");
+            if (null == messages) throw new ArgumentNullException(nameof(messages), "messages cannot be null.");
 
             this.Name = name;
             this.Namespace = space;
@@ -165,9 +165,9 @@ namespace Avro
             {
                 using (Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw))
                 {
-                    #if(DEBUG)
+#if DEBUG
                     writer.Formatting = Newtonsoft.Json.Formatting.Indented;
-                    #endif
+#endif
 
                     WriteJson(writer, new SchemaNames());
                     writer.Flush();
@@ -222,8 +222,10 @@ namespace Avro
 
             Protocol that = obj as Protocol;
 
-            return this.Name.Equals(that.Name) && this.Namespace.Equals(that.Namespace) &&
-                    TypesEquals(that.Types) && MessagesEquals(that.Messages);
+            return this.Name.Equals(that.Name, StringComparison.Ordinal)
+                && this.Namespace.Equals(that.Namespace, StringComparison.Ordinal)
+                && TypesEquals(that.Types)
+                && MessagesEquals(that.Messages);
         }
 
         /// <summary>
@@ -291,7 +293,7 @@ namespace Avro
         {
             int hash = Messages.Count;
             foreach (KeyValuePair<string, Message> pair in Messages)
-                hash += (pair.Key.GetHashCode() + pair.Value.GetHashCode());
+                hash += pair.Key.GetHashCode() + pair.Value.GetHashCode();
             return hash;
         }
     }

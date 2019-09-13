@@ -74,6 +74,8 @@ namespace Avro.Specific
         }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CA1034 // Nested types should not be visible
+#pragma warning disable SA1600 // Elements should be documented
         /// <summary>
         /// Obsolete: This will be removed from the public API in a future version.
         /// </summary>
@@ -116,6 +118,8 @@ namespace Avro.Specific
                 return !left.Equals(right);
             }
         }
+#pragma warning restore SA1600 // Elements should be documented
+#pragma warning restore CA1034 // Nested types should not be visible
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
         /// <summary>

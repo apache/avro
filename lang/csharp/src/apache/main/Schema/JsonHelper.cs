@@ -34,8 +34,8 @@ namespace Avro
         /// <returns>property value if property exists, null if property doesn't exist in the JSON object</returns>
         public static string GetOptionalString(JToken jtok, string field)
         {
-            if (null == jtok) throw new ArgumentNullException("jtok", "jtok cannot be null.");
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field", $"field cannot be null at '{jtok.Path}'");
+            if (null == jtok) throw new ArgumentNullException(nameof(jtok), "jtok cannot be null.");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field), $"field cannot be null at '{jtok.Path}'");
 
             JToken child = jtok[field];
             if (null == child) return null;
@@ -85,8 +85,8 @@ namespace Avro
         /// <returns>null if property doesn't exist, otherise returns property boolean value</returns>
         public static bool? GetOptionalBoolean(JToken jtok, string field)
         {
-            if (null == jtok) throw new ArgumentNullException("jtok", "jtok cannot be null.");
-            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException("field", $"field cannot be null at '{jtok.Path}'");
+            if (null == jtok) throw new ArgumentNullException(nameof(jtok), "jtok cannot be null.");
+            if (string.IsNullOrEmpty(field)) throw new ArgumentNullException(nameof(field), $"field cannot be null at '{jtok.Path}'");
 
             JToken child = jtok[field];
             if (null == child) return null;

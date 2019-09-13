@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.CodeDom;
 using System.CodeDom.Compiler;
-using Microsoft.CSharp;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
+using System.Text;
+using Microsoft.CSharp;
 
 namespace Avro
 {
@@ -105,7 +105,7 @@ namespace Avro
         protected virtual CodeNamespace addNamespace(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "name cannot be null.");
+                throw new ArgumentNullException(nameof(name), "name cannot be null.");
 
             CodeNamespace ns = null;
 
@@ -836,7 +836,8 @@ namespace Avro
         /// <returns>CodeCommentStatement object</returns>
         protected virtual CodeCommentStatement createDocComment(string comment)
         {
-            string text = string.Format("<summary>\r\n {0}\r\n </summary>", comment);
+            string text = string.Format(CultureInfo.InvariantCulture,
+                "<summary>\r\n {0}\r\n </summary>", comment);
             return new CodeCommentStatement(text, true);
         }
 

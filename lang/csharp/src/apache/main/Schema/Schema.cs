@@ -183,9 +183,9 @@ namespace Avro
                 {
                     string type = (string)jtype;
 
-                    if (type.Equals("array"))
+                    if (type.Equals("array", StringComparison.Ordinal))
                         return ArraySchema.NewInstance(jtok, props, names, encspace);
-                    if (type.Equals("map"))
+                    if (type.Equals("map", StringComparison.Ordinal))
                         return MapSchema.NewInstance(jtok, props, names, encspace);
 
                     Schema schema = PrimitiveSchema.NewInstance((string)type, props);
@@ -206,7 +206,7 @@ namespace Avro
         /// <returns>new Schema object</returns>
         public static Schema Parse(string json)
         {
-            if (string.IsNullOrEmpty(json)) throw new ArgumentNullException("json", "json cannot be null.");
+            if (string.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json), "json cannot be null.");
             return Parse(json.Trim(), new SchemaNames(), null); // standalone schema, so no enclosing namespace
         }
 
@@ -224,7 +224,8 @@ namespace Avro
 
             try
             {
-                bool IsArray = json.StartsWith("[") && json.EndsWith("]");
+                bool IsArray = json.StartsWith("[", StringComparison.Ordinal)
+                    && json.EndsWith("]", StringComparison.Ordinal);
                 JContainer j = IsArray ? (JContainer)JArray.Parse(json) : (JContainer)JObject.Parse(json);
 
                 return ParseJson(j, names, encspace);
@@ -327,7 +328,7 @@ namespace Avro
         {
             if (null == this.Props) return null;
             string v;
-            return (this.Props.TryGetValue(key, out v)) ? v : null;
+            return this.Props.TryGetValue(key, out v) ? v : null;
         }
 
         /// <summary>

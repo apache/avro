@@ -35,7 +35,7 @@ use Avro::DataFile;
 use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
-use IO::String;
+use Compress::Zstd;
 use IO::Uncompress::RawInflate ;
 use Fcntl();
 
@@ -190,6 +190,7 @@ sub skip {
 sub read_block_header {
     my $datafile = shift;
     my $fh = $datafile->{fh};
+    my $codec = $datafile->codec;
 
     $datafile->header unless $datafile->{_header};
 
@@ -201,7 +202,8 @@ sub read_block_header {
     );
     $datafile->{block_start} = tell $fh;
 
-    return unless $datafile->codec eq 'deflate';
+    return if $codec eq 'null';
+
     ## we need to read the entire block into memory, to inflate it
     my $nread = read $fh, my $block, $datafile->{block_size} + MARKER_SIZE
         or croak "Error reading from file: $!";
@@ -211,7 +213,9 @@ sub read_block_header {
     $datafile->{block_marker} = $marker;
 
     ## this is our new reader
-    $datafile->{reader} = IO::Uncompress::RawInflate->new(\$block);
+    $datafile->{reader} = $codec eq 'deflate' ?
+        IO::Uncompress::RawInflate->new(\$block) :
+        do { open $fh, '<', \(decompress(\$block)); $fh };
 
     return;
 }

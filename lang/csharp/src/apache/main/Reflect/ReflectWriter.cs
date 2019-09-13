@@ -30,7 +30,6 @@ namespace Avro.Reflect
         /// <summary>
         /// Default writer
         /// </summary>
-        /// <value></value>
         public ReflectDefaultWriter Writer { get => _writer; }
 
         private readonly ReflectDefaultWriter _writer;
@@ -48,7 +47,6 @@ namespace Avro.Reflect
         /// <summary>
         /// The schema
         /// </summary>
-        /// <value></value>
         public Schema Schema { get => _writer.Schema; }
 
         /// <summary>
