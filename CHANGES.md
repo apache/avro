@@ -11,6 +11,7 @@
 * Upgrade Codenarc from 1.0 to 1.4 and adjust rules used
 * Change source compatibility to 8
 * Modernized for Java 8
+* Avro 1.9.0 -> 1.9.1
 
 ## 0.17.0
 * Built using Avro 1.9.0
