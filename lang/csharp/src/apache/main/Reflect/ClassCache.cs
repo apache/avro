@@ -273,7 +273,7 @@ namespace Avro.Reflect
                         {
                             if (o.Tag == Schema.Type.Record && GetClass(o as RecordSchema) == null)
                             {
-                                throw new AvroException($"Class for union record type {o.Fullname} is not registered. Create a ClassCache object and call RegisterUnionTypes");
+                                throw new AvroException($"Class for union record type {o.Fullname} is not registered. Create a ClassCache object and call LoadClassCache");
                             }
                         }
                     }

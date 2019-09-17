@@ -32,6 +32,24 @@ namespace Avro.Test
     [TestFixture]
     public class TestUnion
     {
+        public const string BaseClassSchema = @"
+        [
+            { ""type"" : ""record"", ""name"" : ""Dervied1"", ""fields"" :
+                [
+                    { ""name"" : ""A"", ""type"" : ""string""},
+                    { ""name"" : ""B"", ""type"" : ""int""}
+                ]
+            },
+            { ""type"" : ""record"", ""name"" : ""Dervied2"", ""fields"" :
+                [
+                    { ""name"" : ""A"", ""type"" : ""string""},
+                    { ""name"" : ""C"", ""type"" : ""double""}
+                ]
+            },
+
+        ]
+        ";
+
         public class BaseClass
         {
             public string A { get; set; }
@@ -50,25 +68,7 @@ namespace Avro.Test
         [TestCase]
         public void BaseClassTest()
         {
-            var baseClassSchema = @"
-            [
-                { ""type"" : ""record"", ""name"" : ""Dervied1"", ""fields"" :
-                    [
-                        { ""name"" : ""A"", ""type"" : ""string""},
-                        { ""name"" : ""B"", ""type"" : ""int""}
-                    ]
-                },
-                { ""type"" : ""record"", ""name"" : ""Dervied2"", ""fields"" :
-                    [
-                        { ""name"" : ""A"", ""type"" : ""string""},
-                        { ""name"" : ""C"", ""type"" : ""double""}
-                    ]
-                },
-
-            ]
-            ";
-
-            var schema = Schema.Parse(baseClassSchema);
+            var schema = Schema.Parse(BaseClassSchema);
             var derived1write = new Derived1() { A = "derived1", B = 7 };
             var derived2write = new Derived2() { A = "derived2", C = 3.14 };
 
@@ -99,6 +99,18 @@ namespace Avro.Test
             }
         }
 
+        /// <summary>
+        /// If you fail to manually register types within a union that has more than one non-null
+        /// schema, creating a <see cref="ReflectWriter{T}"/> throws an exception.
+        /// </summary>
+        [TestCase]
+        public void ThrowsIfClassesNotLoadedTest()
+        {
+            var schema = Schema.Parse(BaseClassSchema);
+            var cache = new ClassCache();
+            Assert.Throws<AvroException>(() => new ReflectWriter<BaseClass>(schema, cache));
+        }
+
         [TestCase]
         public void NullableTest()
         {
@@ -124,12 +136,15 @@ namespace Avro.Test
             {
                 var encoder = new BinaryEncoder(stream);
                 writer.Write(derived2write, encoder);
+                writer.Write(null, encoder);
                 stream.Seek(0, SeekOrigin.Begin);
 
                 var decoder = new BinaryDecoder(stream);
                 var derived2read = reader.Read(decoder);
+                var derived2null = reader.Read(decoder);
                 Assert.AreEqual(derived2read.A, derived2write.A);
                 Assert.AreEqual(derived2read.C, derived2write.C);
+                Assert.IsNull(derived2null);
             }
         }
 
@@ -165,20 +180,18 @@ namespace Avro.Test
                 var encoder = new BinaryEncoder(stream);
                 writer.Write(derived2write, encoder);
                 writer.Write("string value", encoder);
+                writer.Write(null, encoder);
                 stream.Seek(0, SeekOrigin.Begin);
 
                 var decoder = new BinaryDecoder(stream);
                 var derived2read = (Derived2)reader.Read(decoder);
                 var stringRead = (string)reader.Read(decoder);
+                var nullRead = reader.Read(decoder);
                 Assert.AreEqual(derived2read.A, derived2write.A);
                 Assert.AreEqual(derived2read.C, derived2write.C);
                 Assert.AreEqual(stringRead, "string value");
+                Assert.IsNull(nullRead);
             }
         }
-    }
-
-    public static class SchemaExtension
-    {
-
     }
 }

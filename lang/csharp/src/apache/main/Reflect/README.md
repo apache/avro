@@ -4,7 +4,7 @@ This namespace contains classes that implement Avro serialization and deserializ
 
 ## Serialization
 
-The approach starts with the schema and interates both the schema and the dotnet type together in a depth first manner per the specification. Serialization is the same as the Generic serializer except where the serializer encounters:
+The approach starts with the schema and iterates both the schema and the dotnet type together in a depth first manner per the specification. Serialization is the same as the Generic serializer except where the serializer encounters:
 - *A fixed type*: if the corresponding dotnet object type is a byte[] of the correct length then the object is serialized, otherwise an exception is thrown.
 - *A record type*: the serializer matches the schema property name to the dotnet object property name and then reursively serializes the schema property and the dotnet object property
 - *An array type*: See array serialization/deserialization.
@@ -202,7 +202,7 @@ All union constructs are supported however record types that are first defined i
 
 ### Automatic Type Registration
 
-Types associated with unions of the form can be automatically registered and no special handling is needed.
+Types associated with unions of this form can be automatically registered and no special handling is needed.
 
 ```json
     ["null", { "type": "record", "name": "X"}]
@@ -243,13 +243,13 @@ _Example_:
 ### Manual Registration
 
 Where a record type is defined inside a union and the union does not 
-follow the "nullable construct" above the CSharp type and schema need to be manually registered. Registration is done using the ClassCache method LoadClassCache.
+follow the "nullable construct" above, the CSharp type and schema need to be manually registered. Registration is done using the ClassCache method LoadClassCache.
 
 ```csharp
     cache.LoadClassCache(typeof(MyClass), recordSchema);
 ```
 
-Note that the schema used here is schema corresponding to the record schema which will contained within the overall schema. See the example below.
+Note that the `recordSchema` used here is the schema corresponding to the `MyClass` type within the overall union schema. See the example below.
 
 ```csharp
         public class BaseClass
