@@ -200,7 +200,7 @@
           <configuration>
             <links>
               <link>https://docs.oracle.com/javase/8/docs/api/</link>
-              <link>https://hadoop.apache.org/common/docs/current/api/</link>
+              <link>https://hadoop.apache.org/docs/current/api/</link>
             </links>
             <tagletArtifacts>
               <tagletArtifact>
