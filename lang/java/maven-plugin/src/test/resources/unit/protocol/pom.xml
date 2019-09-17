@@ -37,20 +37,15 @@
         <artifactId>avro-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>schema</id>
+            <id>protocol</id>
             <goals>
-              <goal>schema</goal>
+              <goal>protocol</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/schema-joda</outputDirectory>
-          <imports>
-            <import>${basedir}/src/test/avro/imports</import>
-            <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
-          </imports>
-          <dateTimeLogicalTypeImplementation>joda</dateTimeLogicalTypeImplementation>
+          <outputDirectory>${basedir}/target/test-harness/protocol</outputDirectory>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
         </configuration>
       </plugin>
@@ -68,5 +63,4 @@
       <version>${jackson.databind.version}</version>
     </dependency>
   </dependencies>
-
 </project>
