@@ -27,8 +27,6 @@ using System.Collections;
 
 namespace Avro.Test
 {
-
-
     [TestFixture]
     public class TestUnion
     {
@@ -65,6 +63,9 @@ namespace Avro.Test
             public double C { get; set; }
         }
 
+        /// <summary>
+        /// Test with a union that represents derived classes.
+        /// </summary>
         [TestCase]
         public void BaseClassTest()
         {
