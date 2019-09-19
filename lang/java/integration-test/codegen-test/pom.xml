@@ -59,6 +59,7 @@
               <enableDecimalLogicalType>true</enableDecimalLogicalType>
               <customConversions>
                 <conversion>org.apache.avro.codegentest.CustomDecimalConversion</conversion>
+                <conversion>org.apache.avro.Conversions$UUIDConversion</conversion>
               </customConversions>
             </configuration>
           </execution>
