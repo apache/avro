@@ -62,7 +62,7 @@ public class TetherJob extends Configured {
   /**
    * Set the URI for the application's executable (i.e the program to run in a
    * subprocess and provides the mapper/reducer).
-   * 
+   *
    * @param job        - Job
    * @param executable - The URI of the executable
    * @param args       - List of additional arguments; Null if no arguments
@@ -87,9 +87,9 @@ public class TetherJob extends Configured {
   /**
    * Extract from the job configuration file an instance of the TRANSPROTO
    * enumeration to represent the protocol to use for the communication
-   * 
+   *
    * @param job
-   * @return
+   * @return TetheredProcess.Protocol
    */
   public static TetheredProcess.Protocol getProtocol(JobConf job) {
 
