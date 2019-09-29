@@ -68,7 +68,7 @@ do
       (cd lang/php; ./build.sh interop-data-generate)
 
       # run interop data tests
-      (cd lang/java; mvn -B test -P interop-data-test)
+      (cd lang/java/ipc; mvn -B test -P interop-data-test)
       (cd lang/py; ant interop-data-test)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
@@ -77,7 +77,7 @@ do
       (cd lang/php; ./build.sh test-interop)
 
       # java needs to package the jars for the interop rpc tests
-      (cd lang/java; mvn -B package -DskipTests)
+      (cd lang/java/tools; mvn -B package -DskipTests)
 
       # run interop rpc test
       ./share/test/interop/bin/test_rpc_interop.sh
