@@ -77,7 +77,7 @@ do
       (cd lang/perl; ./build.sh interop-data-generate)
 
       # run interop data tests
-      (cd lang/java; mvn -B test -P interop-data-test)
+      (cd lang/java/ipc; mvn -B test -P interop-data-test)
       (cd lang/py; ant interop-data-test)
       (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
@@ -88,7 +88,7 @@ do
       (cd lang/perl; ./build.sh interop-data-test)
 
       # java needs to package the jars for the interop rpc tests
-      (cd lang/java; mvn -B package -DskipTests)
+      (cd lang/java/tools; mvn -B package -DskipTests)
 
       # run interop rpc test
       ./share/test/interop/bin/test_rpc_interop.sh
