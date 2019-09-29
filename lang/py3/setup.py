@@ -145,10 +145,17 @@ class LintCommand(setuptools.Command):
         pass
 
     def run(self):
+        errors = []
         try:
             subprocess.run(['pycodestyle', '.'], check=True)
         except subprocess.CalledProcessError:
-            raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
+            errors.append('pycodestyle')
+        try:
+            subprocess.run(['mypy', '.'], check=True)
+        except subprocess.CalledProcessError:
+            errors.append('mypy')
+        if errors:
+            raise distutils.errors.DistutilsError(" and ".join(errors) + " exited with a nonzero exit code.")
 
 
 def main():
