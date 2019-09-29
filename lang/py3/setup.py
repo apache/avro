@@ -32,6 +32,7 @@ import distutils.errors
 import distutils.file_util
 import distutils.log
 import fnmatch
+import glob
 import os
 import subprocess
 
@@ -144,8 +145,11 @@ class LintCommand(setuptools.Command):
         pass
 
     def run(self):
+        # setuptools does not seem to make pycodestyle available
+        # in the pythonpath, so we do it ourselves.
+        pth = next(glob.iglob('.eggs/pycodestyle-*.egg'))
         try:
-            subprocess.run(['pycodestyle', '.'], check=True)
+            subprocess.run(['python', '-m', 'pycodestyle', '.'], env={'PYTHONPATH': pth})
         except subprocess.CalledProcessError:
             raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
 
