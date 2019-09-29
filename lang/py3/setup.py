@@ -26,16 +26,15 @@ The avro-python3 software is designed for Python 3, but this file and the packag
 https://pypi.org/project/avro-python3/
 """
 
-import distutils
 import distutils.command.clean
 import distutils.dir_util
+import distutils.errors
 import distutils.file_util
 import distutils.log
 import fnmatch
 import os
 import subprocess
 
-import pycodestyle
 import setuptools
 
 _HERE = os.path.dirname(os.path.abspath(__file__))

@@ -75,7 +75,6 @@ RUN apt-get -qq update && \
     php${PHP5_VERSION}-gmp \
     php${PHP7_VERSION} \
     php${PHP7_VERSION}-gmp \
-    pycodestyle \
     python \
     python-isort \
     python-pip \
