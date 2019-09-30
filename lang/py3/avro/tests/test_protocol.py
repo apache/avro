@@ -406,7 +406,7 @@ class TestProtocol(unittest.TestCase):
           'Parsing protocol #%d:\n%s',
           iexample, example.protocol_string)
       try:
-        parsed = protocol.Parse(example.protocol_string)
+        parsed = protocol.parse(example.protocol_string)
         if example.valid:
           correct += 1
         else:
@@ -431,13 +431,13 @@ class TestProtocol(unittest.TestCase):
       % (correct, len(EXAMPLES)))
 
   def testInnerNamespaceSet(self):
-    proto = protocol.Parse(HELLO_WORLD.protocol_string)
+    proto = protocol.parse(HELLO_WORLD.protocol_string)
     self.assertEqual(proto.namespace, 'com.acme')
     greeting_type = proto.type_map['com.acme.Greeting']
     self.assertEqual(greeting_type.namespace, 'com.acme')
 
   def testInnerNamespaceNotRendered(self):
-    proto = protocol.Parse(HELLO_WORLD.protocol_string)
+    proto = protocol.parse(HELLO_WORLD.protocol_string)
     self.assertEqual('com.acme.Greeting', proto.types[0].fullname)
     self.assertEqual('Greeting', proto.types[0].name)
     # but there shouldn't be 'namespace' rendered to json on the inner type
@@ -450,9 +450,9 @@ class TestProtocol(unittest.TestCase):
     """
     num_correct = 0
     for example in VALID_EXAMPLES:
-      proto = protocol.Parse(example.protocol_string)
+      proto = protocol.parse(example.protocol_string)
       try:
-        protocol.Parse(str(proto))
+        protocol.parse(str(proto))
         logging.debug(
             'Successfully reparsed protocol:\n%s',
             example.protocol_string)
@@ -476,8 +476,8 @@ class TestProtocol(unittest.TestCase):
     """
     num_correct = 0
     for example in VALID_EXAMPLES:
-      original_protocol = protocol.Parse(example.protocol_string)
-      round_trip_protocol = protocol.Parse(str(original_protocol))
+      original_protocol = protocol.parse(example.protocol_string)
+      round_trip_protocol = protocol.parse(str(original_protocol))
 
       if original_protocol == round_trip_protocol:
         num_correct += 1

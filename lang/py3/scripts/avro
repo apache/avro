@@ -213,7 +213,7 @@ def write(opts, files):
   try:
     with open(opts.schema, 'rt') as f:
       json_schema = f.read()
-    writer_schema = schema.Parse(json_schema)
+    writer_schema = schema.parse(json_schema)
     out = _open(opts.output, 'wb')
   except (IOError, OSError) as e:
     raise AvroError('Cannot open file - %s' % e)
