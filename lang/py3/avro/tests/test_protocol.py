@@ -454,12 +454,11 @@ class TestProtocol(unittest.TestCase):
       try:
         protocol.Parse(str(proto))
       except ProtocolParseException:
-        logging.debug(
-            'Failed to reparse protocol:\n%s',
-            example.protocol_string)
-      logging.debug(
-          'Successfully reparsed protocol:\n%s',
-          example.protocol_string)
+        logging.debug('Failed to reparse protocol:\n%s',
+                      example.protocol_string)
+        continue
+      logging.debug('Successfully reparsed protocol:\n%s',
+                    example.protocol_string)
       num_correct += 1
 
     fail_msg = (
