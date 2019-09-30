@@ -1217,7 +1217,7 @@ def SchemaFromJSONData(json_data, names=None):
 # ------------------------------------------------------------------------------
 
 
-def Parse(json_string):
+def parse(json_string):
   """Constructs a Schema from its JSON descriptor in text form.
 
   Args:
@@ -1241,3 +1241,6 @@ def Parse(json_string):
 
   # construct the Avro Schema object
   return SchemaFromJSONData(json_data, names)
+
+# AVRO-2578
+Parse = parse

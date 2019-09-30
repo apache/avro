@@ -375,7 +375,7 @@ def ProtocolFromJSONData(json_data):
   )
 
 
-def Parse(json_string):
+def parse(json_string):
   """Constructs a Protocol from its JSON descriptor in text form.
 
   Args:
@@ -395,3 +395,6 @@ def Parse(json_string):
         % (json_string, exn))
 
   return ProtocolFromJSONData(json_data)
+
+# AVRO-2578
+Parse = parse
