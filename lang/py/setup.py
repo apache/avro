@@ -64,7 +64,10 @@ setuptools.setup(
   packages = ['avro'],
   package_dir = {'': 'src'},
   scripts = ["./scripts/avro"],
-  setup_requires = ['pycodestyle'],
+  setup_requires = [
+    'isort',
+    'pycodestyle',
+  ],
   cmdclass={
       "lint": LintCommand,
   },
