@@ -27,6 +27,7 @@ var protocols = require('./protocols'),
     fs = require('fs'),
     stream = require('stream'),
     util = require('util'),
+    path = require('path'),
     zlib = require('zlib');
 
 // Type of Avro header.
@@ -639,7 +640,7 @@ function loadSchema(schema) {
     try {
       obj = JSON.parse(schema);
     } catch (err) {
-      if (~schema.indexOf('/')) {
+      if (~schema.indexOf(path.sep)) {
         // This can't be a valid name, so we interpret is as a filepath. This
         // makes is always feasible to read a file, independent of its name
         // (i.e. even if its name is valid JSON), by prefixing it with `./`.
