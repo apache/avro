@@ -183,7 +183,8 @@
 	  </ul>
 	  <p>For example, playing card suits might be defined with:</p>
 	  <source>
-{ "type": "enum",
+{
+  "type": "enum",
   "name": "Suit",
   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
 }
@@ -199,7 +200,13 @@
 	  </ul>
 	  <p>For example, an array of strings is declared
 	  with:</p>
-	  <source>{"type": "array", "items": "string"}</source>
+    <source>
+{
+  "type": "array",
+  "items" : "string",
+  "default": []
+}
+    </source>
 	</section>
 
         <section>
@@ -212,7 +219,13 @@
 	  <p>Map keys are assumed to be strings.</p>
 	  <p>For example, a map from string to long is declared
 	  with:</p>
-	  <source>{"type": "map", "values": "long"}</source>
+    <source>
+{
+  "type": "map",
+  "items" : "long",
+  "default": {}
+}
+    </source>
 	</section>
 
         <section>
