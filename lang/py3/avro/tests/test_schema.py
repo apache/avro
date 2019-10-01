@@ -484,35 +484,38 @@ class TestSchema(unittest.TestCase):
       self.assertRaises(AttributeError, lambda: case.name)
       self.assertEqual(getattr(case, "name", "default"), "default")
 
-  def test_parse(self):
-    for parser in (schema.parse, schema.Parse):
-      correct = 0
-      for iexample, example in enumerate(EXAMPLES):
-        logging.debug('Testing example #%d\n%s', iexample, example.schema_string)
-        try:
-          parser(example.schema_string)
-          if example.valid:
-            correct += 1
-          else:
-            self.fail('Invalid schema was parsed:\n%s' % example.schema_string)
-        except Exception as exn:
-          if example.valid:
-            self.fail(
-                'Valid schema failed to parse: %r\n%s'
-                % (example.schema_string, traceback.format_exc()))
-          else:
-            if logging.getLogger().getEffectiveLevel() <= 5:
-              logging.debug('Expected error:\n%s', traceback.format_exc())
-            else:
-              logging.debug('Expected error: %r', exn)
-            correct += 1
+  def test_Parse_is_deprecated(self):
+    """Capital-P Parse is deprecated."""
+    self.assertRaises(DeprecationWarning, schema.parse(PRIMITIVE_EXAMPLES[0]))
 
-      self.assertEqual(
-          correct,
-          len(EXAMPLES),
-          'Parse behavior correct on %d out of %d schemas.'
-          % (correct, len(EXAMPLES)),
-      )
+  def test_parse(self):
+    correct = 0
+    for iexample, example in enumerate(EXAMPLES):
+      logging.debug('Testing example #%d\n%s', iexample, example.schema_string)
+      try:
+        schema.parse(example.schema_string)
+        if example.valid:
+          correct += 1
+        else:
+          self.fail('Invalid schema was parsed:\n%s' % example.schema_string)
+      except Exception as exn:
+        if example.valid:
+          self.fail(
+              'Valid schema failed to parse: %r\n%s'
+              % (example.schema_string, traceback.format_exc()))
+        else:
+          if logging.getLogger().getEffectiveLevel() <= 5:
+            logging.debug('Expected error:\n%s', traceback.format_exc())
+          else:
+            logging.debug('Expected error: %r', exn)
+          correct += 1
+
+    self.assertEqual(
+        correct,
+        len(EXAMPLES),
+        'Parse behavior correct on %d out of %d schemas.'
+        % (correct, len(EXAMPLES)),
+    )
 
   def testValidCastToStringAfterParse(self):
     """

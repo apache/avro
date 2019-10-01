@@ -24,6 +24,7 @@ Protocol implementation.
 import hashlib
 import json
 import logging
+import warnings
 from types import MappingProxyType
 
 from avro import schema
@@ -396,5 +397,9 @@ def parse(json_string):
 
   return ProtocolFromJSONData(json_data)
 
-# AVRO-2578
-Parse = parse
+def Parse(json_string):
+  """Deprecated implementation of parse."""
+  warnings.warn("`Parse` is deprecated in avro 1.10. "
+                "Please use `parse` (lowercase) instead.",
+                DeprecationWarning)
+  return parse(json_string)
