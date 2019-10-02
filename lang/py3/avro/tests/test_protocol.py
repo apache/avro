@@ -24,6 +24,7 @@ Test the protocol parsing logic.
 import logging
 import traceback
 import unittest
+import unittest.mock
 
 from avro import protocol
 
@@ -399,9 +400,11 @@ VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 
 class TestProtocol(unittest.TestCase):
 
-  def test_Parse_is_deprecated(self):
+  @unittest.mock.patch('avro.protocol.warnings.warn')
+  def test_Parse_is_deprecated(self, warn):
     """Capital-P Parse is deprecated."""
-    self.assertRaises(DeprecationWarning, protocol.Parse(HELLO_WORLD))
+    protocol.Parse(HELLO_WORLD.protocol_string)
+    self.assertEqual(warn.call_count, 1)
 
   def testParse(self):
     correct = 0

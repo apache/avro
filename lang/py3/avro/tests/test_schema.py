@@ -24,6 +24,7 @@ Test the schema parsing logic.
 import logging
 import traceback
 import unittest
+import unittest.mock
 
 from avro import schema
 
@@ -484,9 +485,11 @@ class TestSchema(unittest.TestCase):
       self.assertRaises(AttributeError, lambda: case.name)
       self.assertEqual(getattr(case, "name", "default"), "default")
 
-  def test_Parse_is_deprecated(self):
+  @unittest.mock.patch('avro.schema.warnings.warn')
+  def test_Parse_is_deprecated(self, warn):
     """Capital-P Parse is deprecated."""
-    self.assertRaises(DeprecationWarning, schema.parse(PRIMITIVE_EXAMPLES[0]))
+    schema.Parse(PRIMITIVE_EXAMPLES[0].schema_string)
+    self.assertEqual(warn.call_count, 1)
 
   def test_parse(self):
     correct = 0
