@@ -408,24 +408,37 @@ class TestSchema(unittest.TestCase):
     # If we've made it this far, the subschema was reasonably stringified; it ccould be reparsed.
     self.assertEqual("X", t.fields[0].type.name)
 
-  def test_parse(self):
+  def test_parse_valid(self):
+    """Schema.parse should successfully parse these examples."""
     correct = 0
-    for example in EXAMPLES:
+    valid_examples = [ex for ex in EXAMPLES if ex.valid]
+    num_valid = len(valid_examples)
+    fail_msg = "Parse behavior correct on {} out of {} valid schemas."
+    for example in valid_examples:
       try:
         schema.parse(example.schema_string)
-        if example.valid:
-          correct += 1
-        else:
-          self.fail("Invalid schema was parsed: " + example.schema_string)
-      except:
-        if not example.valid:
-          correct += 1
-        else:
-          self.fail("Valid schema failed to parse: " + example.schema_string)
+      except schema.SchemaParseException:
+        self.fail("Valid schema failed to parse: " + example.schema_string)
+      else:
+        correct += 1
+    self.assertEqual(correct, num_valid,
+                     fail_msg.format(correct, num_valid))
 
-    fail_msg = "Parse behavior correct on %d out of %d schemas." % \
-      (correct, len(EXAMPLES))
-    self.assertEqual(correct, len(EXAMPLES), fail_msg)
+  def test_parse_invalid(self):
+    """Schema.parse should error on these examples."""
+    correct = 0
+    invalid_examples = [ex for ex in EXAMPLES if not ex.valid]
+    num_invalid = len(invalid_examples)
+    fail_msg = "Parse behavior correct on {} out of {} invalid schemas."
+    for example in invalid_examples:
+      try:
+        schema.parse(example.schema_string)
+      except schema.SchemaParseException:
+        correct += 1
+      else:
+        self.fail("Invalid schema was parsed: " + example.schema_string)
+    self.assertEqual(correct, num_invalid,
+                     fail_msg.format(correct, len(invalid_examples)))
 
   def test_valid_cast_to_string_after_parse(self):
     """
