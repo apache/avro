@@ -394,6 +394,8 @@ EXAMPLES += TIMESTAMPMILLIS_LOGICAL_TYPE
 EXAMPLES += TIMESTAMPMICROS_LOGICAL_TYPE
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
+INVALID_EXAMPLES = [e for e in EXAMPLES if not e.valid]
+
 
 # TODO(hammer): refactor into harness for examples
 # TODO(hammer): pretty-print detailed output
@@ -405,40 +407,28 @@ class TestSchema(unittest.TestCase):
   def test_correct_recursive_extraction(self):
     s = schema.parse('{"type": "record", "name": "X", "fields": [{"name": "y", "type": {"type": "record", "name": "Y", "fields": [{"name": "Z", "type": "X"}]}}]}')
     t = schema.parse(str(s.fields[0].type))
-    # If we've made it this far, the subschema was reasonably stringified; it ccould be reparsed.
+    # If we've made it this far, the subschema was reasonably stringified; it could be reparsed.
     self.assertEqual("X", t.fields[0].type.name)
 
   def test_parse_valid(self):
-    """Schema.parse should successfully parse these examples."""
-    correct = 0
-    valid_examples = [ex for ex in EXAMPLES if ex.valid]
-    num_valid = len(valid_examples)
-    fail_msg = "Parse behavior correct on {} out of {} valid schemas."
-    for example in valid_examples:
+    """schema.parse should successfully parse valid schema."""
+    examples = [e.schema_string for e in VALID_EXAMPLES]
+    for example in examples:
       try:
-        schema.parse(example.schema_string)
+        schema.parse(example)
       except schema.SchemaParseException:
-        self.fail("Valid schema failed to parse: " + example.schema_string)
-      else:
-        correct += 1
-    self.assertEqual(correct, num_valid,
-                     fail_msg.format(correct, num_valid))
+        self.fail("Valid schema failed to parse: " + example)
 
   def test_parse_invalid(self):
-    """Schema.parse should error on these examples."""
-    correct = 0
-    invalid_examples = [ex for ex in EXAMPLES if not ex.valid]
-    num_invalid = len(invalid_examples)
-    fail_msg = "Parse behavior correct on {} out of {} invalid schemas."
-    for example in invalid_examples:
+    """schema.parse should raise schema.SchemaParseException on invalid schema."""
+    examples = [e.schema_string for e in INVALID_EXAMPLES]
+    for example in examples:
       try:
-        schema.parse(example.schema_string)
-      except schema.SchemaParseException:
-        correct += 1
+        schema.parse(example)
+      except (schema.AvroException, schema.SchemaParseException):
+        pass
       else:
-        self.fail("Invalid schema was parsed: " + example.schema_string)
-    self.assertEqual(correct, num_invalid,
-                     fail_msg.format(correct, len(invalid_examples)))
+        self.fail("Invalid schema should not have parsed: " + example)
 
   def test_valid_cast_to_string_after_parse(self):
     """
