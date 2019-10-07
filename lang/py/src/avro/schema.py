@@ -897,6 +897,7 @@ def make_logical_schema(logical_type, type_, other_props):
   """Map the logical types to the appropriate literal type and schema class."""
   logical_types = {
     constants.DATE: ('int', DateSchema),
+    # Fixed decimal schema is handled before we get here.
     constants.DECIMAL: ('bytes', make_bytes_decimal_schema),
     constants.TIMESTAMP_MICROS: ('long', TimestampMicrosSchema),
     constants.TIMESTAMP_MILLIS: ('long', TimestampMillisSchema),
