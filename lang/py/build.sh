@@ -28,8 +28,7 @@ main() {
   for target; do
     case "$target" in
       lint)
-        ./setup.py isort
-        pycodestyle .
+        ./setup.py isort lint
         ;;
       test)
         ant test
