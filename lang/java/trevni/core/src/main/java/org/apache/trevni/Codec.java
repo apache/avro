@@ -43,4 +43,10 @@ abstract class Codec {
   /** Decompress data */
   abstract ByteBuffer decompress(ByteBuffer compressedData) throws IOException;
 
+  // Codecs often reference the array inside a ByteBuffer. Compute the offset
+  // to the start of data correctly in the case that our ByteBuffer
+  // is a slice() of another.
+  protected static int computeOffset(ByteBuffer data) {
+    return data.arrayOffset() + data.position();
+  }
 }
