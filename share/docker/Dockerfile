@@ -59,7 +59,6 @@ RUN apt-get -qq update && \
     g++ \
     gcc \
     git \
-    isort \
     libboost-all-dev \
     libfontconfig1-dev \
     libfreetype6-dev \
@@ -75,14 +74,11 @@ RUN apt-get -qq update && \
     php${PHP5_VERSION}-gmp \
     php${PHP7_VERSION} \
     php${PHP7_VERSION}-gmp \
-    pycodestyle \
     python \
-    python-isort \
     python-pip \
     python-setuptools \
     python-snappy \
     python-wheel \
-    python3-isort \
     python3-pip \
     python3-setuptools \
     python3-snappy \
@@ -109,10 +105,12 @@ RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
 RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar && chmod +x /usr/local/bin/phpunit
 
 # Install Python2 packages
-RUN pip install zstandard
+RUN python2 -m pip install --upgrade pip setuptools \
+ && python2 -m pip install zstandard
 
 # Install Python3 packages
-RUN pip3 install zstandard
+RUN python3 -m pip install --upgrade pip setuptools \
+ && python3 -m pip install zstandard
 
 # Install Ruby modules
 COPY lang/ruby/Gemfile /tmp
