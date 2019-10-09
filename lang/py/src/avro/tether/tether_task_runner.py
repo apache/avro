@@ -96,7 +96,7 @@ class TaskRunnerResponder(ipc.Responder):
 def HTTPHandlerGen(runner):
   """
   This is a class factory for the HTTPHandler. We need
-  a factory b\c we need a reference to the runner
+  a factory because we need a reference to the runner
 
   Parameters
   -----------------------------------------------------------------

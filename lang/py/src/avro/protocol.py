@@ -24,6 +24,7 @@ except ImportError:
   from md5 import md5
 
 import json
+
 from avro import schema
 
 #

@@ -53,7 +53,6 @@ RUN apt-get -qq update && \
     g++ \
     gcc \
     git \
-    isort \
     libboost-all-dev \
     libfontconfig1-dev \
     libfreetype6-dev \
@@ -69,14 +68,14 @@ RUN apt-get -qq update && \
     php5.6-gmp \
     pycodestyle \
     python \
-    python-isort \
     python-pip \
     python-setuptools \
     python-snappy \
     python-wheel \
-    python3-isort \
     python3-pip \
     python3-setuptools \
+    python3-snappy \
+    python3-wheel \
     rake \
     ruby \
     ruby-dev \
@@ -97,6 +96,14 @@ RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
 
 # Install PHPUnit
 RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
+
+# Install Python2 packages
+RUN python2 -m pip install --upgrade pip setuptools \
+ && python2 -m pip install zstandard
+
+# Install Python3 packages
+RUN python3 -m pip install --upgrade pip setuptools \
+ && python3 -m pip install zstandard
 
 # Install Ruby modules
 RUN gem install echoe yajl-ruby multi_json snappy
