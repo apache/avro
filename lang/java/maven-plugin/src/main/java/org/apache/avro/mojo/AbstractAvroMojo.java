@@ -72,7 +72,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * string values of SpecificCompiler.FieldVisibility. The text is case
    * insensitive.
    *
-   * @parameter default-value="PUBLIC_DEPRECATED"
+   * @parameter default-value="PRIVATE"
    */
   private String fieldVisibility;
 
