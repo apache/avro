@@ -72,7 +72,8 @@ RUN curl -sSL https://deb.nodesource.com/setup_6.x \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists \
- && npm install -g grunt-cli
+ && npm install -g grunt-cli \
+ && npm cache clean
 
 # Install PHP
 # TODO: Remove php5-related packages when we drop PHP 5.6 support in the future
@@ -97,23 +98,25 @@ RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit 
 # Install Perl modules
 RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
- && cpanm  --mirror https://www.cpan.org/ install Compress::Zlib \
-                                                  Compress::Zstd \
-                                                  Encode \
-                                                  IO::String \
-                                                  JSON::XS \
-                                                  Math::BigInt \
-                                                  Module::Install \
-                                                  Module::Install::ReadmeFromPod \
-                                                  Module::Install::Repository \
-                                                  Object::Tiny \
-                                                  Perl::Critic \
-                                                  Regexp::Common \
-                                                  Test::Exception \
-                                                  Test::More \
-                                                  Test::Pod \
-                                                  Try::Tiny
+ && cpanm --mirror https://www.cpan.org/ install Compress::Zlib \
+                                                 Compress::Zstd \
+                                                 Encode \
+                                                 IO::String \
+                                                 JSON::XS \
+                                                 Math::BigInt \
+                                                 Module::Install \
+                                                 Module::Install::ReadmeFromPod \
+                                                 Module::Install::Repository \
+                                                 Object::Tiny \
+                                                 Perl::Critic \
+                                                 Regexp::Common \
+                                                 Test::Exception \
+                                                 Test::More \
+                                                 Test::Pod \
+                                                 Try::Tiny \
+ && rm -rf .cpanm
 
+# Install Python packages
 ENV PIP_NO_CACHE_DIR=off
 
 # Install Python2 packages
@@ -133,4 +136,6 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
  && dpkg -i packages-microsoft-prod.deb \
  && rm packages-microsoft-prod.deb \
  && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-2.2
+ && apt-get -qqy install --no-install-recommends dotnet-sdk-2.2 \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists
