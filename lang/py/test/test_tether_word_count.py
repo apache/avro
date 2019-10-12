@@ -20,21 +20,14 @@
 import collections
 import os
 import shutil
-import StringIO
 import subprocess
-import sys
 import tempfile
-import time
 import unittest
 
 import avro
-import avro.io as avio
-import set_avro_test_path
-from avro import schema
-from avro.datafile import DataFileReader, DataFileWriter
-from avro.io import DatumReader
-from avro.tether import tether_task_runner
-from word_count_task import WordCountTask
+import avro.datafile
+import avro.io
+import avro.schema
 
 
 class TestTetherWordCount(unittest.TestCase):
@@ -52,10 +45,10 @@ class TestTetherWordCount(unittest.TestCase):
     os.makedirs(os.path.dirname(fname))
 
     inschema = '{"type": "string"}'
-    datum_writer = avio.DatumWriter(inschema)
-    wschema = schema.parse(inschema)
+    datum_writer = avro.io.DatumWriter(inschema)
+    wschema = avro.schema.parse(inschema)
     with open(fname,'w') as hf, \
-        DataFileWriter(hf, datum_writer, writers_schema=wschema) as writer:
+        avro.datafile.DataFileWriter(hf, datum_writer, writers_schema=wschema) as writer:
       for datum in lines:
         writer.append(datum)
 
@@ -128,7 +121,7 @@ class TestTetherWordCount(unittest.TestCase):
 
       # read the output
       with open(os.path.join(outpath, "part-00000.avro")) as hf, \
-          DataFileReader(hf, DatumReader()) as reader:
+          avro.datafile.DataFileReader(hf, avro.io.DatumReader()) as reader:
         for record in reader:
           self.assertEqual(record["value"], true_counts[record["key"]])
     finally:
