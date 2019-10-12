@@ -99,6 +99,8 @@ def _write_lines(lines, fname):
 class TestTetherWordCount(unittest.TestCase):
   """unittest for a python tethered map-reduce job."""
 
+  _prev_wd = None
+
   def setUp(self):
     """Create the necessary tempfiles to run the tethered job."""
     self._prev_wd = os.getcwd()
@@ -110,10 +112,10 @@ class TestTetherWordCount(unittest.TestCase):
 
   def tearDown(self):
     """Clean up and remove temp files."""
-    tmpdir = os.getcwd()
-    os.chdir(self._prev_wd)
-    # self.assertFalse(os.path.commonpath(self._prev_wd, tmpdir))
-    # shutil.rmtree(tmpdir)
+    if self._prev_wd is not None:
+      tmpdir = os.getcwd()
+      os.chdir(self._prev_wd)
+      shutil.rmtree(tmpdir)
 
   def test_tethered_word_count(self):
     """A tethered map-reduce wordcount job should correctly count words."""
