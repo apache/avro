@@ -47,12 +47,26 @@ class TestTetherWordCount(unittest.TestCase):
     inschema = '{"type": "string"}'
     datum_writer = avro.io.DatumWriter(inschema)
     wschema = avro.schema.parse(inschema)
-    with open(fname,'w') as hf, \
+    with open(fname, 'w') as hf, \
         avro.datafile.DataFileWriter(hf, datum_writer, writers_schema=wschema) as writer:
       for datum in lines:
         writer.append(datum)
 
-  def test1(self):
+  def _tether_tool_command_line(self, inpath, outpath, outschema):
+    return (
+      "java",
+      "-jar",
+      os.path.abspath("@TOPDIR@/../java/tools/target/avro-tools-@AVRO_VERSION@.jar"),
+      "tether",
+      "-in", inpath,
+      "-out", outpath,
+      "-outschema", outschema,
+      "-protocol", "http",
+      "-program", "python",
+      "-exec_args", "-m avro.tether.tether_task_runner word_count_task.WordCountTask",
+    )
+
+  def test_tethered_word_count(self):
     """
     Run a tethered map-reduce job.
 
@@ -68,31 +82,17 @@ class TestTetherWordCount(unittest.TestCase):
         {"name": "value", "type": "long", "order": "ignore"}
       ]
     }"""
-    lines=["the quick brown fox jumps over the lazy dog",
-           "the cow jumps over the moon",
-           "the rain in spain falls mainly on the plains"]
+    lines = [
+      "the quick brown fox jumps over the lazy dog",
+      "the cow jumps over the moon",
+      "the rain in spain falls mainly on the plains",
+    ]
     # We use the tempfile module to generate random names for the files
     base_dir = "/tmp/test_tether_word_count"
     inpath = os.path.join(base_dir, "in")
     outpath = os.path.join(base_dir, "out")
     infile = os.path.join(inpath, "lines.avro")
     proc = None
-    args = [
-      "java",
-      "-jar",
-      os.path.abspath("@TOPDIR@/../java/tools/target/avro-tools-@AVRO_VERSION@.jar"),
-      "tether",
-      "-in",
-      inpath,
-      "-out",
-      outpath,
-      "-protocol",
-      "http",
-      "-program",
-      "python",
-      "-exec_args",
-      "-m avro.tether.tether_task_runner word_count_task.WordCountTask",
-    ]
     if os.path.exists(base_dir):
       shutil.rmtree(base_dir)
     true_counts = collections.Counter(" ".join(lines).split())
@@ -110,11 +110,11 @@ class TestTetherWordCount(unittest.TestCase):
       with tempfile.NamedTemporaryFile(mode='w', suffix=".avsc", prefix="wordcount", delete=False) as osfile:
         osfile.write(oschema)
       outschema = osfile.name
-      args += ["--outschema", outschema]
 
       if not(os.path.exists(outschema)):
         self.fail("Missing the schema file")
 
+      args = self._tether_tool_command_line(inpath, outpath, outschema)
       print("Command:\n\t{0}".format(" ".join(args)))
       proc = subprocess.Popen(args, env={"PYTHONPATH": python_path})
       self.assertEqual(0, proc.wait())
