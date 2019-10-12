@@ -29,6 +29,25 @@ import avro.datafile
 import avro.io
 import avro.schema
 
+# The schema for the output of the mapper and reducer
+_OUTPUT_SCHEMA_STRING = """{
+  "type": "record",
+  "name": "Pair",
+  "namespace": "org.apache.avro.mapred",
+  "fields": [
+    {"name": "key", "type": "string"},
+    {"name": "value", "type": "long", "order": "ignore"}
+  ]
+}"""
+
+_LINES = [
+  "the quick brown fox jumps over the lazy dog",
+  "the cow jumps over the moon",
+  "the rain in spain falls mainly on the plains",
+]
+
+# We use the tempfile module to generate random names for the files
+_BASE_DIR = "/tmp/test_tether_word_count"
 
 class TestTetherWordCount(unittest.TestCase):
   """unittest for a python tethered map-reduce job."""
@@ -67,48 +86,27 @@ class TestTetherWordCount(unittest.TestCase):
     )
 
   def test_tethered_word_count(self):
-    """
-    Run a tethered map-reduce job.
-
-    Assumptions: 1) bash is available in /bin/bash
-    """
-    # The schema for the output of the mapper and reducer
-    oschema = """{
-      "type": "record",
-      "name": "Pair",
-      "namespace": "org.apache.avro.mapred",
-      "fields": [
-        {"name": "key", "type": "string"},
-        {"name": "value", "type": "long", "order": "ignore"}
-      ]
-    }"""
-    lines = [
-      "the quick brown fox jumps over the lazy dog",
-      "the cow jumps over the moon",
-      "the rain in spain falls mainly on the plains",
-    ]
-    # We use the tempfile module to generate random names for the files
-    base_dir = "/tmp/test_tether_word_count"
-    inpath = os.path.join(base_dir, "in")
-    outpath = os.path.join(base_dir, "out")
+    """A tethered map-reduce wordcount job should correctly count words."""
+    inpath = os.path.join(_BASE_DIR, "in")
+    outpath = os.path.join(_BASE_DIR, "out")
     infile = os.path.join(inpath, "lines.avro")
     proc = None
-    if os.path.exists(base_dir):
-      shutil.rmtree(base_dir)
-    true_counts = collections.Counter(" ".join(lines).split())
+    if os.path.exists(_BASE_DIR):
+      shutil.rmtree(_BASE_DIR)
+    true_counts = collections.Counter(" ".join(_LINES).split())
     # We need to make sure avro is on the path
     # getsourcefile(avro) returns .../avro/__init__.py
     apath = os.path.dirname(os.path.dirname(avro.__file__))
     tpath = os.path.dirname(__file__)  # Path to the tests.
     python_path = os.pathsep.join([apath, tpath])
     try:
-      self._write_lines(lines, infile)
+      self._write_lines(_LINES, infile)
       if not(os.path.exists(infile)):
         self.fail("Missing the input file {0}".format(infile))
 
       # write the schema to a temporary file
       with tempfile.NamedTemporaryFile(mode='w', suffix=".avsc", prefix="wordcount", delete=False) as osfile:
-        osfile.write(oschema)
+        osfile.write(_OUTPUT_SCHEMA_STRING)
       outschema = osfile.name
 
       if not(os.path.exists(outschema)):
@@ -128,8 +126,8 @@ class TestTetherWordCount(unittest.TestCase):
       # close the process
       if proc is not None and proc.returncode is None:
         proc.kill()
-      if os.path.exists(base_dir):
-        shutil.rmtree(base_dir)
+      if os.path.exists(_BASE_DIR):
+        shutil.rmtree(_BASE_DIR)
 
 if __name__== "__main__":
   unittest.main()
