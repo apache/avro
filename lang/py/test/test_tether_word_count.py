@@ -46,13 +46,31 @@ _LINES = [
   "the rain in spain falls mainly on the plains",
 ]
 
-# We use the tempfile module to generate random names for the files
-_BASE_DIR = "/tmp/test_tether_word_count"
+_EXPECTED_COUNTS = collections.Counter(" ".join(_LINES).split())
+
+def _run(args, env):
+  p = None
+  try:
+    p = subprocess.Popen(args, env=env)
+    return p.wait()
+  finally:
+    if p is not None and p.returncode is None:
+      p.kill()
+
 
 class TestTetherWordCount(unittest.TestCase):
   """unittest for a python tethered map-reduce job."""
 
-  def _write_lines(self,lines,fname):
+  _base_dir = None
+
+  def setUp(self):
+    self._base_dir = tempfile.mkdtemp(prefix=__name__)
+
+  def tearDown(self):
+    if self._base_dir is not None:
+      shutil.rmtree(self._base_dir)
+
+  def _write_lines(self, lines, fname):
     """
     Write the lines to an avro file named fname
 
@@ -87,47 +105,37 @@ class TestTetherWordCount(unittest.TestCase):
 
   def test_tethered_word_count(self):
     """A tethered map-reduce wordcount job should correctly count words."""
-    inpath = os.path.join(_BASE_DIR, "in")
-    outpath = os.path.join(_BASE_DIR, "out")
+    base_dir = self._base_dir
+    inpath = os.path.join(base_dir, "in")
     infile = os.path.join(inpath, "lines.avro")
-    proc = None
-    if os.path.exists(_BASE_DIR):
-      shutil.rmtree(_BASE_DIR)
-    true_counts = collections.Counter(" ".join(_LINES).split())
+    outpath = os.path.join(base_dir, "out")
+    if os.path.exists(base_dir):
+      shutil.rmtree(base_dir)
     # We need to make sure avro is on the path
     # getsourcefile(avro) returns .../avro/__init__.py
     apath = os.path.dirname(os.path.dirname(avro.__file__))
     tpath = os.path.dirname(__file__)  # Path to the tests.
     python_path = os.pathsep.join([apath, tpath])
-    try:
-      self._write_lines(_LINES, infile)
-      if not(os.path.exists(infile)):
-        self.fail("Missing the input file {0}".format(infile))
+    self._write_lines(_LINES, infile)
+    if not(os.path.exists(infile)):
+      self.fail("Missing the input file {0}".format(infile))
+    # write the schema to a temporary file
+    with tempfile.NamedTemporaryFile(mode='w', suffix=".avsc", prefix="wordcount", delete=False) as osfile:
+      osfile.write(_OUTPUT_SCHEMA_STRING)
+    outschema = osfile.name
 
-      # write the schema to a temporary file
-      with tempfile.NamedTemporaryFile(mode='w', suffix=".avsc", prefix="wordcount", delete=False) as osfile:
-        osfile.write(_OUTPUT_SCHEMA_STRING)
-      outschema = osfile.name
+    if not(os.path.exists(outschema)):
+      self.fail("Missing the schema file")
 
-      if not(os.path.exists(outschema)):
-        self.fail("Missing the schema file")
+    args = self._tether_tool_command_line(inpath, outpath, outschema)
+    print("Command:\n\t{0}".format(" ".join(args)))
+    self.assertEqual(0, _run(args, {"PYTHONPATH": python_path}))
 
-      args = self._tether_tool_command_line(inpath, outpath, outschema)
-      print("Command:\n\t{0}".format(" ".join(args)))
-      proc = subprocess.Popen(args, env={"PYTHONPATH": python_path})
-      self.assertEqual(0, proc.wait())
-
-      # read the output
-      with open(os.path.join(outpath, "part-00000.avro")) as hf, \
-          avro.datafile.DataFileReader(hf, avro.io.DatumReader()) as reader:
-        for record in reader:
-          self.assertEqual(record["value"], true_counts[record["key"]])
-    finally:
-      # close the process
-      if proc is not None and proc.returncode is None:
-        proc.kill()
-      if os.path.exists(_BASE_DIR):
-        shutil.rmtree(_BASE_DIR)
+    # read the output
+    with open(os.path.join(outpath, "part-00000.avro")) as hf, \
+        avro.datafile.DataFileReader(hf, avro.io.DatumReader()) as reader:
+      for record in reader:
+        self.assertEqual(record["value"], _EXPECTED_COUNTS[record["key"]])
 
 if __name__== "__main__":
   unittest.main()
