@@ -28,11 +28,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Arrays;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 
 /**
  * A Tool for compiling avro protocols or schemas to Java classes using the Avro
@@ -44,11 +46,12 @@ public class SpecificCompilerTool implements Tool {
   public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.size() < 3) {
       System.err.println(
-          "Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
+          "Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-fieldVisibility <visibilityType>] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
       System.err.println(" input - input files or directories");
       System.err.println(" outputdir - directory to write generated java");
       System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
+      System.err.println(" -fieldVisibility [private|public|public_deprecated]- use either and default private");
       System.err
           .println(" -bigDecimal - use java.math.BigDecimal for " + "decimal type instead of java.nio.ByteBuffer");
       System.err.println(" -templateDir - directory with custom Velocity templates");
@@ -59,6 +62,7 @@ public class SpecificCompilerTool implements Tool {
     boolean useLogicalDecimal = false;
     Optional<String> encoding = Optional.empty();
     Optional<String> templateDir = Optional.empty();
+    Optional<FieldVisibility> fieldVisibility = Optional.empty();
 
     int arg = 0;
 
@@ -70,6 +74,17 @@ public class SpecificCompilerTool implements Tool {
 
     if ("-string".equals(args.get(arg))) {
       stringType = StringType.String;
+      arg++;
+    }
+
+    if ("-fieldVisibility".equals(args.get(arg))) {
+      arg++;
+      try {
+        fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase()));
+      } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+        System.err.println("Expected one of" + Arrays.toString(FieldVisibility.values()));
+        return 1;
+      }
       arg++;
     }
 
@@ -97,13 +112,13 @@ public class SpecificCompilerTool implements Tool {
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
         final SpecificCompiler compiler = new SpecificCompiler(schema);
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
+        executeCompiler(compiler, encoding, stringType, fieldVisibility, useLogicalDecimal, templateDir, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
         final SpecificCompiler compiler = new SpecificCompiler(protocol);
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
+        executeCompiler(compiler, encoding, stringType, fieldVisibility, useLogicalDecimal, templateDir, src, output);
       }
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
@@ -113,11 +128,13 @@ public class SpecificCompilerTool implements Tool {
   }
 
   private void executeCompiler(SpecificCompiler compiler, Optional<String> encoding, StringType stringType,
-      boolean enableDecimalLogicalType, Optional<String> templateDir, File src, File output) throws IOException {
+      Optional<FieldVisibility> fieldVisibility, boolean enableDecimalLogicalType, Optional<String> templateDir,
+      File src, File output) throws IOException {
     compiler.setStringType(stringType);
     templateDir.ifPresent(compiler::setTemplateDir);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     encoding.ifPresent(compiler::setOutputCharacterEncoding);
+    fieldVisibility.ifPresent(compiler::setFieldVisibility);
     compiler.compileToDestination(src, output);
   }
 
