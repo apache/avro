@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,12 +19,22 @@
 
 import inspect
 import os
+import shutil
+import StringIO
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 
+import avro
+import avro.io as avio
 import set_avro_test_path
+from avro import schema
+from avro.datafile import DataFileReader, DataFileWriter
+from avro.io import DatumReader
+from avro.tether import tether_task_runner
+from word_count_task import WordCountTask
 
 
 class TestTetherWordCount(unittest.TestCase):
@@ -37,10 +50,6 @@ class TestTetherWordCount(unittest.TestCase):
     lines - list of strings to write
     fname - the name of the file to write to.
     """
-    import avro.io as avio
-    from avro.datafile import DataFileReader,DataFileWriter
-    from avro import schema
-
     #recursively make all directories
     dparts=fname.split(os.sep)[:-1]
     for i in range(len(dparts)):
@@ -85,18 +94,6 @@ class TestTetherWordCount(unittest.TestCase):
 
     Assumptions: 1) bash is available in /bin/bash
     """
-    from word_count_task import WordCountTask
-    from avro.tether import tether_task_runner
-    from avro.datafile import DataFileReader
-    from avro.io import DatumReader
-    import avro
-
-    import subprocess
-    import StringIO
-    import shutil
-    import tempfile
-    import inspect
-
     proc=None
 
     try:
