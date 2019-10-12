@@ -65,117 +65,78 @@ class TestTetherWordCount(unittest.TestCase):
 
     Assumptions: 1) bash is available in /bin/bash
     """
-    proc=None
-
+    # The schema for the output of the mapper and reducer
+    oschema = """{
+      "type": "record",
+      "name": "Pair",
+      "namespace": "org.apache.avro.mapred",
+      "fields": [
+        {"name": "key", "type": "string"},
+        {"name": "value", "type": "long", "order": "ignore"}
+      ]
+    }"""
+    lines=["the quick brown fox jumps over the lazy dog",
+           "the cow jumps over the moon",
+           "the rain in spain falls mainly on the plains"]
+    # We use the tempfile module to generate random names for the files
+    base_dir = "/tmp/test_tether_word_count"
+    inpath = os.path.join(base_dir, "in")
+    outpath = os.path.join(base_dir, "out")
+    infile = os.path.join(inpath, "lines.avro")
+    proc = None
+    args = [
+      "java",
+      "-jar",
+      os.path.abspath("@TOPDIR@/../java/tools/target/avro-tools-@AVRO_VERSION@.jar"),
+      "tether",
+      "-in",
+      inpath,
+      "-out",
+      outpath,
+      "-protocol",
+      "http",
+      "-program",
+      "python",
+      "-exec_args",
+      "-m avro.tether.tether_task_runner word_count_task.WordCountTask",
+    ]
+    if os.path.exists(base_dir):
+      shutil.rmtree(base_dir)
+    true_counts = collections.Counter(" ".join(lines).split())
+    # We need to make sure avro is on the path
+    # getsourcefile(avro) returns .../avro/__init__.py
+    apath = os.path.dirname(os.path.dirname(avro.__file__))
+    tpath = os.path.dirname(__file__)  # Path to the tests.
+    python_path = os.pathsep.join([apath, tpath])
     try:
-
-
-      # TODO we use the tempfile module to generate random names
-      # for the files
-      base_dir = "/tmp/test_tether_word_count"
-      if os.path.exists(base_dir):
-        shutil.rmtree(base_dir)
-
-      inpath = os.path.join(base_dir, "in")
-      infile=os.path.join(inpath, "lines.avro")
-      lines=["the quick brown fox jumps over the lazy dog",
-             "the cow jumps over the moon",
-             "the rain in spain falls mainly on the plains"]
-
-      self._write_lines(lines,infile)
-      true_counts = collections.Counter(" ".join(lines).split())
-
+      self._write_lines(lines, infile)
       if not(os.path.exists(infile)):
         self.fail("Missing the input file {0}".format(infile))
 
-
-      # The schema for the output of the mapper and reducer
-      oschema="""
-{"type":"record",
- "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
-     {"name":"key","type":"string"},
-     {"name":"value","type":"long","order":"ignore"}
- ]
-}
-"""
-
       # write the schema to a temporary file
-      osfile=tempfile.NamedTemporaryFile(mode='w',suffix=".avsc",prefix="wordcount",delete=False)
-      outschema=osfile.name
-      osfile.write(oschema)
-      osfile.close()
+      with tempfile.NamedTemporaryFile(mode='w', suffix=".avsc", prefix="wordcount", delete=False) as osfile:
+        osfile.write(oschema)
+      outschema = osfile.name
+      args += ["--outschema", outschema]
 
       if not(os.path.exists(outschema)):
         self.fail("Missing the schema file")
 
-      outpath = os.path.join(base_dir, "out")
-
-      args=[]
-
-      args.append("java")
-      args.append("-jar")
-      args.append(os.path.abspath("@TOPDIR@/../java/tools/target/avro-tools-@AVRO_VERSION@.jar"))
-
-
-      args.append("tether")
-      args.extend(["--in",inpath])
-      args.extend(["--out",outpath])
-      args.extend(["--outschema",outschema])
-      args.extend(["--protocol","http"])
-
-      # form the arguments for the subprocess
-      subargs=[]
-
-      srcfile = tether_task_runner.__file__
-
-      # Create a shell script to act as the program we want to execute
-      # We do this so we can set the python path appropriately
-      script="""#!/bin/bash
-export PYTHONPATH={0}
-python -m avro.tether.tether_task_runner word_count_task.WordCountTask
-"""
-      # We need to make sure avro is on the path
-      # getsourcefile(avro) returns .../avro/__init__.py
-      asrc = avro.__file__
-      apath=asrc.rsplit(os.sep,2)[0]
-
-      # path to where the tests lie
-      tpath=os.path.split(__file__)[0]
-
-      exhf=tempfile.NamedTemporaryFile(mode='w',prefix="exec_word_count_",delete=False)
-      exfile=exhf.name
-      exhf.write(script.format((os.pathsep).join([apath,tpath]),srcfile))
-      exhf.close()
-
-      # make it world executable
-      os.chmod(exfile,0755)
-
-      args.extend(["--program",exfile])
-
-      print "Command:\n\t{0}".format(" ".join(args))
-      proc=subprocess.Popen(args)
-
-
-      proc.wait()
+      print("Command:\n\t{0}".format(" ".join(args)))
+      proc = subprocess.Popen(args, env={"PYTHONPATH": python_path})
+      self.assertEqual(0, proc.wait())
 
       # read the output
-      with file(os.path.join(outpath,"part-00000.avro")) as hf:
-        reader=DataFileReader(hf, DatumReader())
+      with open(os.path.join(outpath, "part-00000.avro")) as hf, \
+          DataFileReader(hf, DatumReader()) as reader:
         for record in reader:
-          self.assertEqual(record["value"],true_counts[record["key"]])
-
-        reader.close()
-
-    except Exception as e:
-      raise
+          self.assertEqual(record["value"], true_counts[record["key"]])
     finally:
       # close the process
       if proc is not None and proc.returncode is None:
         proc.kill()
       if os.path.exists(base_dir):
         shutil.rmtree(base_dir)
-      if os.path.exists(exfile):
-        os.remove(exfile)
 
 if __name__== "__main__":
   unittest.main()
