@@ -29,6 +29,8 @@ import avro.datafile
 import avro.io
 import avro.schema
 
+_INPUT_SCHEMA_STRING = '{"type": "string"}'
+
 # The schema for the output of the mapper and reducer
 _OUTPUT_SCHEMA_STRING = """{
   "type": "record",
@@ -48,6 +50,11 @@ _LINES = [
 
 _EXPECTED_COUNTS = collections.Counter(" ".join(_LINES).split())
 
+_INNER_PYTHON_PATH = os.pathsep.join([
+  os.path.dirname(os.path.dirname(avro.__file__)),
+  os.path.dirname(__file__)
+])
+
 def _run(args, env):
   p = None
   try:
@@ -64,7 +71,7 @@ class TestTetherWordCount(unittest.TestCase):
   _base_dir = None
 
   def setUp(self):
-    self._base_dir = tempfile.mkdtemp(prefix=__name__)
+    self._base_dir = tempfile.mkdtemp(prefix=__name__ + '_')
 
   def tearDown(self):
     if self._base_dir is not None:
@@ -80,10 +87,8 @@ class TestTetherWordCount(unittest.TestCase):
     fname - the name of the file to write to.
     """
     os.makedirs(os.path.dirname(fname))
-
-    inschema = '{"type": "string"}'
-    datum_writer = avro.io.DatumWriter(inschema)
-    wschema = avro.schema.parse(inschema)
+    datum_writer = avro.io.DatumWriter(_INPUT_SCHEMA_STRING)
+    wschema = avro.schema.parse(_INPUT_SCHEMA_STRING)
     with open(fname, 'w') as hf, \
         avro.datafile.DataFileWriter(hf, datum_writer, writers_schema=wschema) as writer:
       for datum in lines:
@@ -111,11 +116,6 @@ class TestTetherWordCount(unittest.TestCase):
     outpath = os.path.join(base_dir, "out")
     if os.path.exists(base_dir):
       shutil.rmtree(base_dir)
-    # We need to make sure avro is on the path
-    # getsourcefile(avro) returns .../avro/__init__.py
-    apath = os.path.dirname(os.path.dirname(avro.__file__))
-    tpath = os.path.dirname(__file__)  # Path to the tests.
-    python_path = os.pathsep.join([apath, tpath])
     self._write_lines(_LINES, infile)
     if not(os.path.exists(infile)):
       self.fail("Missing the input file {0}".format(infile))
@@ -129,7 +129,7 @@ class TestTetherWordCount(unittest.TestCase):
 
     args = self._tether_tool_command_line(inpath, outpath, outschema)
     print("Command:\n\t{0}".format(" ".join(args)))
-    self.assertEqual(0, _run(args, {"PYTHONPATH": python_path}))
+    self.assertEqual(0, _run(args, {"PYTHONPATH": _INNER_PYTHON_PATH}))
 
     # read the output
     with open(os.path.join(outpath, "part-00000.avro")) as hf, \
