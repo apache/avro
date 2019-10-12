@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import os
 import shutil
 import StringIO
@@ -37,8 +38,7 @@ from word_count_task import WordCountTask
 
 
 class TestTetherWordCount(unittest.TestCase):
-  """ unittest for a python tethered map-reduce job.
-  """
+  """unittest for a python tethered map-reduce job."""
 
   def _write_lines(self,lines,fname):
     """
@@ -58,22 +58,6 @@ class TestTetherWordCount(unittest.TestCase):
         DataFileWriter(hf, datum_writer, writers_schema=wschema) as writer:
       for datum in lines:
         writer.append(datum)
-
-  def _count_words(self,lines):
-    """Return a dictionary counting the words in lines
-    """
-    counts={}
-
-    for line in lines:
-      words=line.split()
-
-      for w in words:
-        if not(counts.has_key(w.strip())):
-          counts[w.strip()]=0
-
-        counts[w.strip()]=counts[w.strip()]+1
-
-    return counts
 
   def test1(self):
     """
@@ -99,8 +83,7 @@ class TestTetherWordCount(unittest.TestCase):
              "the rain in spain falls mainly on the plains"]
 
       self._write_lines(lines,infile)
-
-      true_counts=self._count_words(lines)
+      true_counts = collections.Counter(" ".join(lines).split())
 
       if not(os.path.exists(infile)):
         self.fail("Missing the input file {0}".format(infile))
