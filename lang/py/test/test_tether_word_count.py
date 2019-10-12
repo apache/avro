@@ -51,19 +51,13 @@ class TestTetherWordCount(unittest.TestCase):
     """
     os.makedirs(os.path.dirname(fname))
 
-    with file(fname,'w') as hf:
-      inschema="""{"type":"string"}"""
-      writer=DataFileWriter(hf,avio.DatumWriter(inschema),writers_schema=schema.parse(inschema))
-
-      #encoder = avio.BinaryEncoder(writer)
-      #datum_writer = avio.DatumWriter()
+    inschema = '{"type": "string"}'
+    datum_writer = avio.DatumWriter(inschema)
+    wschema = schema.parse(inschema)
+    with open(fname,'w') as hf, \
+        DataFileWriter(hf, datum_writer, writers_schema=wschema) as writer:
       for datum in lines:
         writer.append(datum)
-
-      writer.close()
-
-
-
 
   def _count_words(self,lines):
     """Return a dictionary counting the words in lines
