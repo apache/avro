@@ -18,6 +18,7 @@
 # limitations under the License.
 
 import collections
+import json
 import os
 import shutil
 import subprocess
@@ -45,10 +46,10 @@ _CMD = (
   "-outschema=out.avsc",
 )
 
-_INPUT_SCHEMA_STRING = '{"type": "string"}'
+_INPUT_SCHEMA_STRING = '"string"'
 
 # The schema for the output of the mapper and reducer
-_OUTPUT_SCHEMA_STRING = """{
+_OUTPUT_SCHEMA_DICT = {
   "type": "record",
   "name": "Pair",
   "namespace": "org.apache.avro.mapred",
@@ -56,7 +57,7 @@ _OUTPUT_SCHEMA_STRING = """{
     {"name": "key", "type": "string"},
     {"name": "value", "type": "long", "order": "ignore"}
   ]
-}"""
+}
 
 _LINES = [
   "the quick brown fox jumps over the lazy dog",
@@ -103,12 +104,19 @@ class TestTetherWordCount(unittest.TestCase):
 
   def setUp(self):
     """Create the necessary tempfiles to run the tethered job."""
+
+    # Run the whole test in a temp directory so it's easy to clean up after.
     self._prev_wd = os.getcwd()
     os.chdir(tempfile.mkdtemp(prefix=__name__ + '_'))
+
+    # The tether job needs input and output subdirs.
+    # We create the input directory.
+    # The java tether tool creates the output directory.
     os.mkdir('in')
-    _write_lines(_LINES, 'in/lines.avsc')
+
+    _write_lines(_LINES, 'in/lines.avro')
     with open('out.avsc', 'w') as out_schema:
-      out_schema.write(_OUTPUT_SCHEMA_STRING)
+      json.dump(_OUTPUT_SCHEMA_DICT, out_schema)
 
   def tearDown(self):
     """Clean up and remove temp files."""
@@ -123,10 +131,11 @@ class TestTetherWordCount(unittest.TestCase):
     print("\t" + " ".join(_CMD))
     self.assertEqual(0, _run(_CMD, {"PYTHONPATH": _INNER_PYTHON_PATH}))
 
-    # read the output
+    results = {}
     with avro.datafile.DataFileReader(open("out/part-00000.avro"), avro.io.DatumReader()) as reader:
       for record in reader:
-        self.assertEqual(record["value"], _EXPECTED_COUNTS[record["key"]])
+        results[record["key"]] = record["value"]
+    self.assertDictEqual(_EXPECTED_COUNTS, results)
 
 if __name__== "__main__":
   unittest.main()
