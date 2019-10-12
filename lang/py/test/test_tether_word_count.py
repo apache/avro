@@ -49,13 +49,7 @@ class TestTetherWordCount(unittest.TestCase):
     lines - list of strings to write
     fname - the name of the file to write to.
     """
-    #recursively make all directories
-    dparts=fname.split(os.sep)[:-1]
-    for i in range(len(dparts)):
-      pdir=os.sep+os.sep.join(dparts[:i+1])
-      if not(os.path.exists(pdir)):
-        os.mkdir(pdir)
-
+    os.makedirs(os.path.dirname(fname))
 
     with file(fname,'w') as hf:
       inschema="""{"type":"string"}"""
