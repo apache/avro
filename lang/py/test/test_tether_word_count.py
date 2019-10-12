@@ -17,7 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
 import os
 import shutil
 import StringIO
@@ -156,7 +155,7 @@ class TestTetherWordCount(unittest.TestCase):
       # form the arguments for the subprocess
       subargs=[]
 
-      srcfile=inspect.getsourcefile(tether_task_runner)
+      srcfile = tether_task_runner.__file__
 
       # Create a shell script to act as the program we want to execute
       # We do this so we can set the python path appropriately
@@ -166,7 +165,7 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
 """
       # We need to make sure avro is on the path
       # getsourcefile(avro) returns .../avro/__init__.py
-      asrc=inspect.getsourcefile(avro)
+      asrc = avro.__file__
       apath=asrc.rsplit(os.sep,2)[0]
 
       # path to where the tests lie
