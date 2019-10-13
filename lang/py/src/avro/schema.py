@@ -36,6 +36,7 @@ A schema may be one of:
 """
 
 import json
+import sys
 from math import floor, log10
 
 from avro import constants
@@ -973,9 +974,12 @@ def parse(json_string):
   try:
     json_data = json.loads(json_string)
   except Exception as e:
-    import sys
-    raise SchemaParseException('Error parsing JSON: %s, error = %s'
-                               % (json_string, e)), None, sys.exc_info()[2]
+    msg = 'Error parsing JSON: {}, error = {}'.format(json_string, e)
+    new_exception = SchemaParseException(msg)
+    traceback = sys.exc_info()[2]
+    if not hasattr(new_exception, 'with_traceback'):
+      raise (new_exception, None, traceback)  # Python 2 syntax
+    raise new_exception.with_traceback(traceback)
 
   # Initialize the names object
   names = Names()
