@@ -15,17 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 """
-from __future__ import print_function
 
-__all__=["TaskRunner"]
-
-if __name__ == "__main__":
-  # Relative imports don't work when being run directly
-  from avro import tether
-  from avro.tether import TetherTask, find_port, inputProtocol
-
-else:
-  from . import TetherTask, find_port, inputProtocol
+from __future__ import absolute_import, print_function
 
 import logging
 import sys
@@ -34,7 +25,11 @@ import traceback
 import weakref
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
+import avro.tether.tether_task
+import avro.tether.util
 from avro import ipc
+
+__all__ = ["TaskRunner"]
 
 
 class TaskRunnerResponder(ipc.Responder):
@@ -47,7 +42,7 @@ class TaskRunnerResponder(ipc.Responder):
     ----------------------------------------------------------
     runner - Instance of TaskRunner
     """
-    ipc.Responder.__init__(self, inputProtocol)
+    ipc.Responder.__init__(self, avro.tether.tether_task.inputProtocol)
 
     self.log=logging.getLogger("TaskRunnerResponder")
 
@@ -149,7 +144,7 @@ class TaskRunner(object):
 
     self.log=logging.getLogger("TaskRunner:")
 
-    if not(isinstance(task,TetherTask)):
+    if not(isinstance(task, avro.tether.tether_task.TetherTask)):
       raise ValueError("task must be an instance of tether task")
     self.task=task
 
@@ -173,7 +168,7 @@ class TaskRunner(object):
                 testing
     """
 
-    port=find_port()
+    port = avro.tether.util.find_port()
     address=("localhost",port)
 
 

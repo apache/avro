@@ -35,6 +35,8 @@ A schema may be one of:
   Null.
 """
 
+from __future__ import absolute_import
+
 import json
 import sys
 from math import floor, log10

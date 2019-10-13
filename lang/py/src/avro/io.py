@@ -38,6 +38,8 @@ uses the following mapping:
   * Schema booleans are implemented as bool.
 """
 
+from __future__ import absolute_import
+
 import datetime
 import json
 import struct

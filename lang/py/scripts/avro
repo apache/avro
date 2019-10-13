@@ -18,16 +18,19 @@
 
 """Command line utility for reading and writing Avro files."""
 
-from avro.io import DatumReader, DatumWriter
-from avro.datafile import DataFileReader, DataFileWriter
-import avro.schema
+from __future__ import absolute_import
 
-import json
 import csv
-from sys import stdout, stdin
-from itertools import ifilter, imap
+import json
 from functools import partial
+from itertools import ifilter, imap
 from os.path import splitext
+from sys import stdin, stdout
+
+import avro.schema
+from avro.datafile import DataFileReader, DataFileWriter
+from avro.io import DatumReader, DatumWriter
+
 
 class AvroError(Exception):
     pass
@@ -257,4 +260,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-

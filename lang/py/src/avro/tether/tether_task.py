@@ -16,7 +16,7 @@
  * limitations under the License.
 """
 
-__all__=["TetherTask","TaskType","inputProtocol","outputProtocol","HTTPRequestor"]
+from __future__ import absolute_import
 
 import collections
 import io as pyio
@@ -29,6 +29,8 @@ from StringIO import StringIO
 
 from avro import io as avio
 from avro import ipc, protocol, schema
+
+__all__ = ["TetherTask", "TaskType", "inputProtocol", "outputProtocol", "HTTPRequestor"]
 
 # create protocol objects for the input and output protocols
 # The build process should copy InputProtocol.avpr and OutputProtocol.avpr

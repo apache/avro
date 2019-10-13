@@ -18,14 +18,18 @@
 Protocol implementation.
 """
 
+from __future__ import absolute_import
+
+import json
+
+from avro import schema
+
 try:
   from hashlib import md5
 except ImportError:
   from md5 import md5
 
-import json
 
-from avro import schema
 
 #
 # Constants

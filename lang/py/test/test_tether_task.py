@@ -1,4 +1,3 @@
-from __future__ import print_function
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,15 +14,22 @@ from __future__ import print_function
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from __future__ import absolute_import, print_function
 
 import os
+import StringIO
 import subprocess
 import sys
 import time
 import unittest
 
+import avro.tether.tether_task
+import avro.tether.util
+import mock_tether_parent
 import set_avro_test_path
+from avro import io as avio
+from avro import schema, tether
+from word_count_task import WordCountTask
 
 
 class TestTetherTask(unittest.TestCase):
@@ -35,15 +41,6 @@ class TestTetherTask(unittest.TestCase):
     Test that the thether_task is working. We run the mock_tether_parent in a separate
     subprocess
     """
-    from avro import tether
-    from avro import io as avio
-    from avro import schema
-    from avro.tether import HTTPRequestor,inputProtocol, find_port
-
-    import StringIO
-    import mock_tether_parent
-    from word_count_task import WordCountTask
-
     task=WordCountTask()
 
     proc=None
@@ -52,11 +49,11 @@ class TestTetherTask(unittest.TestCase):
       # env["AVRO_TETHER_OUTPUT_PORT"]=output_port
       env=dict()
       env["PYTHONPATH"]=':'.join(sys.path)
-      server_port=find_port()
+      server_port = avro.tether.util.find_port()
 
       pyfile=mock_tether_parent.__file__
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(server_port)])
-      input_port=find_port()
+      input_port = avro.tether.util.find_port()
 
       print("Mock server started process pid={0}".format(proc.pid))
       # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
@@ -69,7 +66,11 @@ class TestTetherTask(unittest.TestCase):
 
       #***************************************************************
       # Test the mapper
-      task.configure(tether.TaskType.MAP,str(task.inschema),str(task.midschema))
+      task.configure(
+        avro.tether.tether_task.TaskType.MAP,
+        str(task.inschema),
+        str(task.midschema)
+      )
 
       # Serialize some data so we can send it to the input function
       datum="This is a line of text"
@@ -85,7 +86,11 @@ class TestTetherTask(unittest.TestCase):
       task.input(data,1)
 
       # Test the reducer
-      task.configure(tether.TaskType.REDUCE,str(task.midschema),str(task.outschema))
+      task.configure(
+        avro.tether.tether_task.TaskType.REDUCE,
+        str(task.midschema),
+        str(task.outschema)
+      )
 
       # Serialize some data so we can send it to the input function
       datum={"key":"word","value":2}

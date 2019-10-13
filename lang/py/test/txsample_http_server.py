@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import
+
 from avro import ipc, protocol, txipc
 from twisted.internet import reactor
 from twisted.web import server

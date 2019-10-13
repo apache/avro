@@ -17,6 +17,8 @@
 There are currently no IPC tests within python, in part because there are no
 servers yet available.
 """
+from __future__ import absolute_import
+
 import unittest
 
 import set_avro_test_path

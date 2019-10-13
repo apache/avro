@@ -1,4 +1,3 @@
-from __future__ import print_function
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,34 +14,25 @@ from __future__ import print_function
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import, print_function
+
 import socket
 import sys
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
+import avro.tether.tether_task
+import avro.tether.util
 import set_avro_test_path
-from avro import ipc, protocol, tether
+from avro import ipc, protocol
 
-
-def find_port():
-  """
-  Return an unbound port
-  """
-  s=socket.socket()
-  s.bind(("127.0.0.1",0))
-
-  port=s.getsockname()[1]
-  s.close()
-
-  return port
-
-SERVER_ADDRESS = ('localhost', find_port())
+SERVER_ADDRESS = ('localhost', avro.tether.util.find_port())
 
 class MockParentResponder(ipc.Responder):
   """
   The responder for the mocked parent
   """
   def __init__(self):
-    ipc.Responder.__init__(self, tether.outputProtocol)
+    ipc.Responder.__init__(self, avro.tether.tether_task.outputProtocol)
 
   def invoke(self, message, request):
     if message.name=='configure':

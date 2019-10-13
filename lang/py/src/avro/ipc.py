@@ -16,6 +16,8 @@
 """
 Support for inter-process calls.
 """
+from __future__ import absolute_import
+
 import httplib
 
 from avro import io, protocol, schema

@@ -16,18 +16,20 @@
  * limitations under the License.
 """
 
-__all__=["WordCountTask"]
+from __future__ import absolute_import
 
 import logging
 
-from avro.tether import TetherTask
+import avro.tether.tether_task
+
+__all__ = ["WordCountTask"]
 
 
 #TODO::Make the logging level a parameter we can set
 #logging.basicConfig(level=logging.INFO)
-class WordCountTask(TetherTask):
+class WordCountTask(avro.tether.tether_task.TetherTask):
   """
-  Implements the mappper and reducer for the word count example
+  Implements the mapper and reducer for the word count example
   """
 
   def __init__(self):
@@ -40,7 +42,7 @@ class WordCountTask(TetherTask):
               {"name":"value","type":"long","order":"ignore"}]
               }"""
     outschema=midschema
-    TetherTask.__init__(self,inschema,midschema,outschema)
+    avro.tether.tether_task.TetherTask.__init__(self, inschema, midschema, outschema)
 
 
     #keep track of the partial sums of the counts

@@ -16,6 +16,8 @@
 """
 Read/Write Avro File Object Containers.
 """
+from __future__ import absolute_import
+
 import zlib
 
 from avro import io, schema
