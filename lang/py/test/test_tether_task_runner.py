@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -50,7 +51,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
       input_port=find_port()
 
-      print "Mock server started process pid={0}".format(proc.pid)
+      print("Mock server started process pid={0}".format(proc.pid))
       # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
       # so we give the subprocess time to start up
       time.sleep(1)
@@ -171,7 +172,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
 
 
-      print "Mock server started process pid={0}".format(proc.pid)
+      print("Mock server started process pid={0}".format(proc.pid))
       #Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
       #so we give the subprocess time to start up
       time.sleep(1)

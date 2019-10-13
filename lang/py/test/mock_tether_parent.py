@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -45,14 +46,14 @@ class MockParentResponder(ipc.Responder):
 
   def invoke(self, message, request):
     if message.name=='configure':
-      print "MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"])
+      print("MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"]))
 
     elif message.name=='status':
-      print "MockParentResponder: Recieved 'status': message={0}".format(request["message"])
+      print("MockParentResponder: Recieved 'status': message={0}".format(request["message"]))
     elif message.name=='fail':
-      print "MockParentResponder: Recieved 'fail': message={0}".format(request["message"])
+      print("MockParentResponder: Recieved 'fail': message={0}".format(request["message"]))
     else:
-      print "MockParentResponder: Recieved {0}".format(message.name)
+      print("MockParentResponder: Recieved {0}".format(message.name))
 
     # flush the output so it shows up in the parent process
     sys.stdout.flush()
@@ -85,7 +86,7 @@ if __name__ == '__main__':
       raise ValueError("Usage: mock_tether_parent start_server port")
 
     SERVER_ADDRESS=(SERVER_ADDRESS[0],port)
-    print "mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1])
+    print("mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1]))
 
     # flush the output so it shows up in the parent process
     sys.stdout.flush()

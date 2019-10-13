@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 """
+from __future__ import print_function
 
 __all__=["TaskRunner"]
 
@@ -212,7 +213,7 @@ if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
 
   if (len(sys.argv)<=1):
-    print "Error: tether_task_runner.__main__: Usage: tether_task_runner task_package.task_module.TaskClass"
+    print("Error: tether_task_runner.__main__: Usage: tether_task_runner task_package.task_module.TaskClass")
     raise ValueError("Usage: tether_task_runner task_package.task_module.TaskClass")
 
   fullcls=sys.argv[1]

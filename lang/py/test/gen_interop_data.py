@@ -15,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import print_function
 import os
 import sys
 
@@ -22,7 +23,7 @@ from avro import datafile, io, schema
 
 DATUM = {
   'intField': 12,
-  'longField': 15234324L,
+  'longField': 15234324,
   'stringField': unicode('hey'),
   'boolField': True,
   'floatField': 1234.0,
@@ -42,12 +43,12 @@ try:
   import snappy
   CODECS_TO_VALIDATE += ('snappy',)
 except ImportError:
-  print 'Snappy not present, will skip generating it.'
+  print('Snappy not present, will skip generating it.')
 try:
   import zstandard
   CODECS_TO_VALIDATE += ('zstandard',)
 except ImportError:
-  print 'Zstandard not present, will skip generating it.'
+  print('Zstandard not present, will skip generating it.')
 
 if __name__ == "__main__":
   for codec in CODECS_TO_VALIDATE:
