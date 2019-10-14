@@ -12,8 +12,8 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * Java 11 support requires Gradle 4.8 or higher
     * If you need support for Java 7, version 0.16.0 was the last supported version
     * If you need support for Java 6, version 0.9.1 was the last supported version; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
-* Currently built against Gradle 5.6
-    * Currently tested against Gradle 4.4-4.10.3 and 5.0-5.6
+* Currently built against Gradle 5.6.2
+    * Currently tested against Gradle 4.4-4.10.3 and 5.0-5.6.2
     * If you need support for Gradle 3.0-3.5.1 or 4.0-4.3, version 0.17.0 was the last version tested for compatibility
     * If you need support for Gradle 2.0-2.14.1, version 0.9.1 was the last version tested for compatibility; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
 * Currently built against Avro 1.9.1
