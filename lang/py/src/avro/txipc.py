@@ -19,7 +19,7 @@ try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 from zope.interface import implements
 

@@ -18,7 +18,7 @@
 Protocol implementation.
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import json
 
