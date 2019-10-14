@@ -18,7 +18,7 @@
 
 """Command line utility for reading and writing Avro files."""
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import csv
 import json
@@ -105,7 +105,7 @@ def print_avro(avro, opts):
 def print_schema(avro):
     schema = avro.meta["avro.schema"]
     # Pretty print
-    print json.dumps(json.loads(schema), indent=4)
+    print(json.dumps(json.loads(schema), indent=4))
 
 def cat(opts, args):
     if not args:
