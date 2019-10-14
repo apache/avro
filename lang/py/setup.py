@@ -15,7 +15,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+import distutils.errors
+import glob
 import os
+import subprocess
+
 import setuptools
 
 
@@ -29,12 +35,42 @@ def _get_version():
     return verfile.read().rstrip().replace("-", "+")
 
 
+class LintCommand(setuptools.Command):
+    """Run pycodestyle on all your modules"""
+    description = __doc__
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # setuptools does not seem to make pycodestyle available
+        # in the pythonpath, so we do it ourselves.
+        try:
+            env = {'PYTHONPATH': next(glob.iglob('.eggs/pycodestyle-*.egg'))}
+        except StopIteration:
+            env = None  # pycodestyle is already installed
+        p = subprocess.Popen(['python', '-m', 'pycodestyle', '.'], close_fds=True, env=env)
+        if p.wait():
+            raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
+
+
 setuptools.setup(
   name = 'avro',
   version = _get_version(),
   packages = ['avro'],
   package_dir = {'': 'src'},
   scripts = ["./scripts/avro"],
+  setup_requires = [
+    'isort',
+    'pycodestyle',
+  ],
+  cmdclass={
+      "lint": LintCommand,
+  },
 
   #include_package_data=True,
   package_data={'avro': ['LICENSE', 'NOTICE']},
