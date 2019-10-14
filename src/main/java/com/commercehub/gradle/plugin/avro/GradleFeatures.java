@@ -36,6 +36,18 @@ enum GradleFeatures {
         boolean isSupported() {
             return GradleVersion.current().compareTo(GradleVersions.v5_0) >= 0;
         }
+    },
+    projectLayoutConfigurableFiles() {
+        @Override
+        boolean isSupported() {
+            return GradleVersion.current().compareTo(GradleVersions.v4_8) >= 0;
+        }
+    },
+    objectFactoryFileCollection() {
+        @Override
+        boolean isSupported() {
+            return GradleVersion.current().compareTo(GradleVersions.v5_3) >= 0;
+        }
     };
 
     abstract boolean isSupported();

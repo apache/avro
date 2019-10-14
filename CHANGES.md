@@ -12,6 +12,8 @@
 * Change source compatibility to 8
 * Modernized for Java 8
 * Built using Avro 1.9.1
+* GenerateAvroProtocolTask now has a `classpath` property; defaults to the runtime configuration when the Avro plugin is applied
+* GenerateAvroProtocolTask now properly declares the `classpath` as an input; fixes #86; thanks to [RichSteele](https://github.com/RichSteele) for the bug report
 
 ## 0.17.0
 * Built using Avro 1.9.0

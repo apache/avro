@@ -17,6 +17,7 @@
 package com.commercehub.gradle.plugin.avro;
 
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -36,6 +37,17 @@ class GradleCompatibility {
             return project.getObjects().directoryProperty();
         } else {
             return project.getLayout().directoryProperty();
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    static ConfigurableFileCollection createConfigurableFileCollection(Project project) {
+        if (GradleFeatures.objectFactoryFileCollection.isSupported()) {
+            return project.getObjects().fileCollection();
+        } else if (GradleFeatures.projectLayoutConfigurableFiles.isSupported()) {
+            return project.getLayout().configurableFiles();
+        } else {
+            return project.files();
         }
     }
 

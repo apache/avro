@@ -37,6 +37,7 @@ import static com.commercehub.gradle.plugin.avro.Constants.JAVA_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
+import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
 
 public class AvroPlugin implements Plugin<Project> {
     @Override
@@ -91,6 +92,7 @@ public class AvroPlugin implements Plugin<Project> {
         task.setGroup(GROUP_SOURCE_GENERATION);
         task.source(getAvroSourceDir(project, sourceSet));
         task.include("**/*." + IDL_EXTENSION);
+        task.setClasspath(project.getConfigurations().getByName(RUNTIME_CLASSPATH_CONFIGURATION_NAME));
         configurePropertyConvention(task.getOutputDir(), getGeneratedOutputDir(project, sourceSet, PROTOCOL_EXTENSION));
         return task;
     }

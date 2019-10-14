@@ -25,13 +25,10 @@ import java.util.List;
 import org.apache.avro.compiler.idl.Idl;
 import org.apache.avro.compiler.idl.ParseException;
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.UnknownConfigurationException;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
@@ -42,6 +39,26 @@ import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
  */
 @CacheableTask
 public class GenerateAvroProtocolTask extends OutputDirTask {
+    @InputFiles
+    private FileCollection classpath;
+
+    public GenerateAvroProtocolTask() {
+        super();
+        this.classpath = GradleCompatibility.createConfigurableFileCollection(getProject());
+    }
+
+    public void setClasspath(FileCollection classpath) {
+        this.classpath = classpath;
+    }
+
+    public void classpath(Object... paths) {
+        this.classpath.plus(getProject().files(paths));
+    }
+
+    public FileCollection getClasspath() {
+        return this.classpath;
+    }
+
     @TaskAction
     protected void process() {
         getLogger().info("Found {} files", getSource().getFiles().size());
@@ -59,7 +76,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
 
     private void processFiles() {
         int processedFileCount = 0;
-        ClassLoader loader = getRuntimeClassLoader(getProject());
+        ClassLoader loader = assembleClassLoader();
         for (File sourceFile : filterSources(new FileExtensionSpec(IDL_EXTENSION))) {
             processIDLFile(sourceFile, loader);
             processedFileCount++;
@@ -71,39 +88,26 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
         getLogger().info("Processing {}", idlFile);
         File protoFile = new File(getOutputDir().get().getAsFile(),
                 FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
-        Idl idl = null;
-        try {
-            idl = new Idl(idlFile, loader);
+        try (Idl idl = new Idl(idlFile, loader)) {
             String protoJson = idl.CompilationUnit().toString(true);
             FileUtils.writeJsonFile(protoFile, protoJson);
             getLogger().debug("Wrote {}", protoFile.getPath());
         } catch (IOException | ParseException ex) {
             throw new GradleException(String.format("Failed to compile IDL file %s", idlFile), ex);
-        } finally {
-            if (idl != null) {
-                try {
-                    idl.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
         }
     }
 
-    private ClassLoader getRuntimeClassLoader(Project project) {
+    private ClassLoader assembleClassLoader() {
         List<URL> urls = new LinkedList<>();
-        String configurationName = JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
-        try {
-            Configuration configuration = project.getConfigurations().getByName(configurationName);
-            for (File file : configuration) {
-                try {
-                    urls.add(file.toURI().toURL());
-                } catch (MalformedURLException e) {
-                    getLogger().debug(e.getMessage());
-                }
+        for (File file : classpath) {
+            try {
+                urls.add(file.toURI().toURL());
+            } catch (MalformedURLException e) {
+                getLogger().debug(e.getMessage());
             }
-        } catch (UnknownConfigurationException ex) {
-            getLogger().debug("No configuration found with name {}; defaulting to system classloader", configurationName);
+        }
+        if (urls.isEmpty()) {
+            getLogger().debug("No classpath configured; defaulting to system classloader");
         }
         return urls.isEmpty() ? ClassLoader.getSystemClassLoader()
                 : new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getSystemClassLoader());
