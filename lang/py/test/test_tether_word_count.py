@@ -94,7 +94,6 @@ class TestTetherWordCount(unittest.TestCase):
     import avro
 
     import subprocess
-    import StringIO
     import shutil
     import tempfile
     import inspect
