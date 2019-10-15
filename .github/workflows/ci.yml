@@ -1,8 +1,8 @@
-name: CI build
+name: CI Build
 on: [push, pull_request]
 jobs:
   build:
-    name: Baseline build (Java 8 on ubuntu-18.04)
+    name: Baseline build
     runs-on: ubuntu-18.04
     steps:
     - name: Check out repository
@@ -19,13 +19,13 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
   compatibility-tests:
-    name: Compatibility tests (Java ${{ matrix.java }} on ${{ matrix.os }})
+    name: Java ${{ matrix.java }}/${{ matrix.os }} compatibility
     needs: [build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04, windows-2016, windows-2019, macOS-10.14]
-        java: [8.0.222, 11.0.4] # TODO: 13.0.0
+        os: [ubuntu-16.04] #, ubuntu-18.04, windows-2016, windows-2019, macOS-10.14
+        java: [11.0.4, 13.0.0] # 8.0.222,
       fail-fast: true
       max-parallel: 5
     steps:
@@ -41,4 +41,9 @@ jobs:
     - name: Output Gradle version
       run: ./gradlew --version
     - name: Run version compatibility tests
+      id: tests
       run: ./gradlew testRecentVersionCompatibility
+      continue-on-error: true
+    - name: Check if failure allowed
+      run: exit 1
+      if: (job.steps.tests.outputs.status == 'failure' && job.matrix.java != '13.0.0')
