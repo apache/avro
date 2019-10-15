@@ -1,39 +1,44 @@
 name: CI build
-on: [push]
+on: [push, pull_request]
 jobs:
   build:
     name: Baseline build (Java 8 on ubuntu-18.04)
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v1
+    - name: Check out repository
+      uses: actions/checkout@v1
     - name: Set up Java 8
       uses: actions/setup-java@v1
       with:
         java-version: 8.0.222
         architecture: x64
-    - name: Java version
+    - name: Output Java version
       run: java -version
-    - name: Gradle version
+    - name: Output Gradle version
       run: ./gradlew --version
     - name: Build with Gradle
       run: ./gradlew build --info
-  # compatibility-tests:
-  #   name: Compatibility tests (Java ${{ matrix.java }} on ${{ matrix.os }})
+  #compatibility-tests:
+  #  name: Compatibility tests (Java ${{ matrix.java }} on ${{ matrix.os }})
+  #  needs: [build]
   #   runs-on: ${{ matrix.os }}
   #   strategy:
   #     matrix:
   #       os: [ubuntu-16.04, ubuntu-18.04, windows-2016, windows-2019, macOS-10.14]
   #       java: [8.0.222, 11.0.4, 13.0.0]
+  #       fail-fast: true
+  #       max-parallel: 5
   #   steps:
-  #   - uses: actions/checkout@v1
-  #   - name: Set up JDK
+  #  - name: Check out repository
+  #    uses: actions/checkout@v1
+  #   - name: Set up Java ${{ matrix.java }}
   #     uses: actions/setup-java@v1
   #     with:
   #       java-version: ${{ matrix.java }}
   #       architecture: x64
-  #   - name: Java version
+  #   - name: Output Java version
   #     run: java -version
-  #   - name: Gradle version
+  #   - name: Output Gradle version
   #     run: ./gradlew --version
   #   - name: Run version compatibility tests
   #     run: ./gradlew testRecentVersionCompatibility --info
