@@ -26,8 +26,8 @@ jobs:
       matrix:
         os: [ubuntu-16.04, ubuntu-18.04, windows-2016, windows-2019, macOS-10.14]
         java: [8.0.222, 11.0.4] # TODO: 13.0.0
-        # fail-fast: true
-        max-parallel: 5
+      fail-fast: true
+      max-parallel: 5
     steps:
     - name: Check out repository
       uses: actions/checkout@v1
