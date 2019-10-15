@@ -15,7 +15,7 @@ jobs:
     - name: Output Java version
       run: java -version
     - name: Output Gradle version
-      run: ./gradlew --quiet --version
+      run: ./gradlew --version
     - name: Build with Gradle
       run: ./gradlew build
   #compatibility-tests:
@@ -39,6 +39,6 @@ jobs:
   #   - name: Output Java version
   #     run: java -version
   #   - name: Output Gradle version
-  #     run: ./gradlew --quiet --version
+  #     run: ./gradlew --version
   #   - name: Run version compatibility tests
   #     run: ./gradlew testRecentVersionCompatibility
