@@ -17,7 +17,7 @@ jobs:
     - name: Output Gradle version
       run: ./gradlew --version
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew build --info
   compatibility-tests:
     name: Java ${{ matrix.java }}/${{ matrix.os }} compatibility
     needs: [build]
@@ -42,4 +42,4 @@ jobs:
       run: ./gradlew --version
     - name: Run version compatibility tests
       id: tests
-      run: ./gradlew testRecentVersionCompatibility
+      run: ./gradlew testRecentVersionCompatibility --info
