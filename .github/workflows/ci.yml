@@ -29,8 +29,8 @@ jobs:
         fail-fast: true
         max-parallel: 5
     steps:
-   - name: Check out repository
-     uses: actions/checkout@v1
+    - name: Check out repository
+      uses: actions/checkout@v1
     - name: Set up Java ${{ matrix.java }}
       uses: actions/setup-java@v1
       with:
