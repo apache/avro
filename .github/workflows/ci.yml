@@ -18,27 +18,27 @@ jobs:
       run: ./gradlew --version
     - name: Build with Gradle
       run: ./gradlew build
-  #compatibility-tests:
-  #  name: Compatibility tests (Java ${{ matrix.java }} on ${{ matrix.os }})
-  #  needs: [build]
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [ubuntu-16.04, ubuntu-18.04, windows-2016, windows-2019, macOS-10.14]
-  #       java: [8.0.222, 11.0.4, 13.0.0]
-  #       fail-fast: true
-  #       max-parallel: 5
-  #   steps:
-  #  - name: Check out repository
-  #    uses: actions/checkout@v1
-  #   - name: Set up Java ${{ matrix.java }}
-  #     uses: actions/setup-java@v1
-  #     with:
-  #       java-version: ${{ matrix.java }}
-  #       architecture: x64
-  #   - name: Output Java version
-  #     run: java -version
-  #   - name: Output Gradle version
-  #     run: ./gradlew --version
-  #   - name: Run version compatibility tests
-  #     run: ./gradlew testRecentVersionCompatibility
+  compatibility-tests:
+   name: Compatibility tests (Java ${{ matrix.java }} on ${{ matrix.os }})
+   needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-18.04, windows-2016, windows-2019, macOS-10.14]
+        java: [8.0.222, 11.0.4] # TODO: 13.0.0
+        fail-fast: true
+        max-parallel: 5
+    steps:
+   - name: Check out repository
+     uses: actions/checkout@v1
+    - name: Set up Java ${{ matrix.java }}
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java }}
+        architecture: x64
+    - name: Output Java version
+      run: java -version
+    - name: Output Gradle version
+      run: ./gradlew --version
+    - name: Run version compatibility tests
+      run: ./gradlew testRecentVersionCompatibility
