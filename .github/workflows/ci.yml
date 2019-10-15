@@ -19,8 +19,8 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
   compatibility-tests:
-   name: Compatibility tests (Java ${{ matrix.java }} on ${{ matrix.os }})
-   needs: [build]
+    name: Compatibility tests (Java ${{ matrix.java }} on ${{ matrix.os }})
+    needs: [build]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
