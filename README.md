@@ -128,7 +128,7 @@ avro {
 Valid values: any [Charset](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html) or equivalent `String` name
 
 Controls the character encoding of generated Java files.
-If the associated `JavaCompile` task has a configured encoding, it will be used automatically.
+If using the plugin's conventions (i.e., not just the base plugin), the associated `JavaCompile` task's encoding will be used automatically.
 Otherwise, it will use the value configured in the `avro` block, defaulting to `"UTF-8"`.
 
 Examples:

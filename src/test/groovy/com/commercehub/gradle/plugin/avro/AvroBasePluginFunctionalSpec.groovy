@@ -22,6 +22,26 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         applyAvroBasePlugin()
     }
 
+    def "can generate java files from json schema"() {
+        given:
+        buildFile << """
+            task("generateAvroJava", type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+                source file("src/main/avro")
+                include("**/*.avsc")
+                outputDir = file("build/generated-main-avro-java")
+            }
+        """
+
+        copyResource("user.avsc", avroDir)
+
+        when:
+        def result = run("generateAvroJava")
+
+        then:
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        projectFile("build/generated-main-avro-java/example/avro/User.java").file
+    }
+
     def "can generate json schema files from json protocol"() {
         given:
         buildFile << """
