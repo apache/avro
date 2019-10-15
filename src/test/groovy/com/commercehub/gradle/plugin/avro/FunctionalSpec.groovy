@@ -23,6 +23,8 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
+import java.nio.charset.Charset
+
 @SuppressWarnings(["Println"])
 abstract class FunctionalSpec extends Specification {
     @SuppressWarnings(["FieldName"])
@@ -90,10 +92,14 @@ abstract class FunctionalSpec extends Specification {
         addDependency("org.apache.avro:avro-ipc:${avroVersion}")
     }
 
-    protected void copyResource(String name, File targetFolder) {
+    protected void copyResource(String name, File targetFolder, Charset charset = null) {
         def file = new File(targetFolder, name)
         file.parentFile.mkdirs()
-        file << getClass().getResourceAsStream(name)
+        if (charset) {
+            file << getClass().getResourceAsStream(name).getText("UTF-8").getBytes(charset)
+        } else {
+            file << getClass().getResourceAsStream(name)
+        }
     }
 
     protected File projectFile(String path) {

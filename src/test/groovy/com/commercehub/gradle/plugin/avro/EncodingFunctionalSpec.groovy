@@ -34,7 +34,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
 
     def "default encoding matches default compilation behavior"() {
         given:
-        copyResource("idioma.avsc", avroDir)
+        copyResource("idioma.avsc", avroDir, Charset.defaultCharset())
 
         when:
         def result = run()

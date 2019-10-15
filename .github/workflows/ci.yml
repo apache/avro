@@ -3,7 +3,10 @@ on: [push, pull_request]
 jobs:
   build:
     name: Baseline build
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
     - name: Check out repository
       uses: actions/checkout@v1
