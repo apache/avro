@@ -23,6 +23,8 @@ public interface AvroExtension {
     Property<String> getFieldVisibility();
     Property<String> getTemplateDirectory();
     Property<Boolean> isCreateSetters();
+    Property<Boolean> isCreateOptionalGetters();
+    Property<Boolean> isGettersReturnOptional();
     Property<Boolean> isEnableDecimalLogicalType();
     Property<String> getDateTimeLogicalType();
 }

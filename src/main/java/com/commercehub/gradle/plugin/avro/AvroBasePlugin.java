@@ -36,6 +36,8 @@ public class AvroBasePlugin implements Plugin<Project> {
             configurePropertyConvention(task.getFieldVisibility(), avroExtension.getFieldVisibility());
             configurePropertyConvention(task.getTemplateDirectory(), avroExtension.getTemplateDirectory());
             configurePropertyConvention(task.isCreateSetters(), avroExtension.isCreateSetters());
+            configurePropertyConvention(task.isCreateOptionalGetters(), avroExtension.isCreateOptionalGetters());
+            configurePropertyConvention(task.isGettersReturnOptional(), avroExtension.isGettersReturnOptional());
             configurePropertyConvention(task.isEnableDecimalLogicalType(), avroExtension.isEnableDecimalLogicalType());
             configurePropertyConvention(task.getDateTimeLogicalType(), avroExtension.getDateTimeLogicalType());
         });

@@ -41,10 +41,12 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_OPTIONAL_GETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETURN_OPTIONAL;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILITY;
@@ -68,6 +70,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Property<String> stringType;
     private final Property<String> fieldVisibility;
     private final Property<String> templateDirectory;
+    private final Property<Boolean> createOptionalGetters;
+    private final Property<Boolean> gettersReturnOptional;
     private final Property<Boolean> createSetters;
     private final Property<Boolean> enableDecimalLogicalType;
     private final Property<String> dateTimeLogicalType;
@@ -83,6 +87,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.stringType = configurePropertyConvention(objects.property(String.class), DEFAULT_STRING_TYPE);
         this.fieldVisibility = configurePropertyConvention(objects.property(String.class), DEFAULT_FIELD_VISIBILITY);
         this.templateDirectory = objects.property(String.class);
+        this.createOptionalGetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_OPTIONAL_GETTERS);
+        this.gettersReturnOptional = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_GETTERS_RETURN_OPTIONAL);
         this.createSetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_SETTERS);
         this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
         this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
@@ -158,6 +164,32 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.createSetters.set(Boolean.parseBoolean(createSetters));
     }
 
+    public Property<Boolean> isCreateOptionalGetters() {
+        return createOptionalGetters;
+    }
+
+    @Input
+    public Property<Boolean> getCreateOptionalGetters() {
+        return createOptionalGetters;
+    }
+
+    public void setCreateOptionalGetters(String createOptionalGetters) {
+        this.createOptionalGetters.set(Boolean.parseBoolean(createOptionalGetters));
+    }
+
+    public Property<Boolean> isGettersReturnOptional() {
+        return gettersReturnOptional;
+    }
+
+    @Input
+    public Property<Boolean> getGettersReturnOptional() {
+        return gettersReturnOptional;
+    }
+
+    public void setGettersReturnOptional(String gettersReturnOptional) {
+        this.gettersReturnOptional.set(Boolean.parseBoolean(gettersReturnOptional));
+    }
+
     public Property<Boolean> isEnableDecimalLogicalType() {
         return enableDecimalLogicalType;
     }
@@ -192,6 +224,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using fieldVisibility {}", fieldVisibilityProvider.get().name());
         getLogger().debug("Using templateDirectory '{}'", getTemplateDirectory().getOrNull());
         getLogger().debug("Using createSetters {}", isCreateSetters().get());
+        getLogger().debug("Using createOptionalGetters {}", isCreateOptionalGetters().get());
+        getLogger().debug("Using gettersReturnOptional {}", isGettersReturnOptional().get());
         getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType().get());
         getLogger().debug("Using dateTimeLogicalType {}", dateTimeLogicalTypeImplementationProvider.get().name());
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
@@ -315,6 +349,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         if (getTemplateDirectory().isPresent()) {
             compiler.setTemplateDir(getTemplateDirectory().get());
         }
+        compiler.setCreateOptionalGetters(createOptionalGetters.get());
+        compiler.setGettersReturnOptional(gettersReturnOptional.get());
         compiler.setCreateSetters(isCreateSetters().get());
         compiler.setEnableDecimalLogicalType(isEnableDecimalLogicalType().get());
 

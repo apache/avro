@@ -31,6 +31,8 @@ class Constants {
     static final String DEFAULT_STRING_TYPE = StringType.String.name();
     static final String DEFAULT_FIELD_VISIBILITY = FieldVisibility.PUBLIC_DEPRECATED.name();
     static final boolean DEFAULT_CREATE_SETTERS = true;
+    static final boolean DEFAULT_CREATE_OPTIONAL_GETTERS = false;
+    static final boolean DEFAULT_GETTERS_RETURN_OPTIONAL = false;
     static final boolean DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE = true;
     static final String DEFAULT_DATE_TIME_LOGICAL_TYPE = SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT.name();
 

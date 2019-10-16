@@ -22,10 +22,12 @@ import org.apache.avro.generic.GenericData;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_OPTIONAL_GETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETURN_OPTIONAL;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 
@@ -35,6 +37,8 @@ public class DefaultAvroExtension implements AvroExtension {
     private final Property<String> fieldVisibility;
     private final Property<String> templateDirectory;
     private final Property<Boolean> createSetters;
+    private final Property<Boolean> createOptionalGetters;
+    private final Property<Boolean> gettersReturnOptional;
     private final Property<Boolean> enableDecimalLogicalType;
     private final Property<String> dateTimeLogicalType;
 
@@ -45,6 +49,8 @@ public class DefaultAvroExtension implements AvroExtension {
         this.fieldVisibility = configurePropertyConvention(objects.property(String.class), DEFAULT_FIELD_VISIBILITY);
         this.templateDirectory = objects.property(String.class);
         this.createSetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_SETTERS);
+        this.createOptionalGetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_OPTIONAL_GETTERS);
+        this.gettersReturnOptional = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_GETTERS_RETURN_OPTIONAL);
         this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
         this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
     }
@@ -108,6 +114,32 @@ public class DefaultAvroExtension implements AvroExtension {
 
     public void setCreateSetters(boolean createSetters) {
         this.createSetters.set(createSetters);
+    }
+
+    @Override
+    public Property<Boolean> isCreateOptionalGetters() {
+        return createOptionalGetters;
+    }
+
+    public void setCreateOptionalGetters(String createOptionalGetters) {
+        setCreateOptionalGetters(Boolean.parseBoolean(createOptionalGetters));
+    }
+
+    public void setCreateOptionalGetters(boolean createOptionalGetters) {
+        this.createOptionalGetters.set(createOptionalGetters);
+    }
+
+    @Override
+    public Property<Boolean> isGettersReturnOptional() {
+        return gettersReturnOptional;
+    }
+
+    public void setGettersReturnOptional(String gettersReturnOptional) {
+        setGettersReturnOptional(Boolean.parseBoolean(gettersReturnOptional));
+    }
+
+    public void setGettersReturnOptional(boolean gettersReturnOptional) {
+        this.gettersReturnOptional.set(gettersReturnOptional);
     }
 
     @Override
