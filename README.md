@@ -87,6 +87,8 @@ There are a number of configuration options supported in the `avro` block.
 | option                    | default               | description                                           |
 | --------------------------| --------------------- | -------------------------------------------------     |
 | createSetters             | `true`                | `createSetters` passed to Avro compiler               |
+| createOptionalGetters     | `false`               | `createOptionalGetters` passed to Avro compiler       |
+| gettersReturnOptional     | `false`               | `gettersReturnOptional` passed to Avro compiler
 | fieldVisibility           | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler             |
 | outputCharacterEncoding   | see below             | `outputCharacterEncoding` passed to Avro compiler     |
 | stringType                | `"String"`            | `stringType` passed to Avro compiler                  |
@@ -105,6 +107,40 @@ Example:
 ```groovy
 avro {
     createSetters = false
+}
+```
+
+## createOptionalGetters
+
+Valid values: `false` (default), `true`; supports equivalent `String` values
+
+Set to `true` to create additional getter methods that return their fields wrapped in an
+[Optional](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html). For a field with
+name `abc` and type `string`, this setting will create a method
+`Optional<java.lang.String> getOptionalAbc()`.
+
+Example:
+
+```groovy
+avro {
+    createOptionalGetters = false
+}
+```
+
+## gettersReturnOptional
+
+Valid values: `false` (default), `true`; supports equivalent `String` values
+
+Set to `true` to cause getter methods to return
+[Optional](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html) wrappers of the
+underlying type. Where [`createOptionalGetters`](#createoptionalgetters) generates an additional
+method, this one replaces the existing getter.
+
+Example:
+
+```groovy
+avro {
+    gettersReturnOptional = false
 }
 ```
 
