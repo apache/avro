@@ -2,7 +2,7 @@
 
 This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Java code generation for [Apache Avro](http://avro.apache.org/).  It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files.
 
-[![Build Status](https://travis-ci.org/commercehub-oss/gradle-avro-plugin.svg?branch=master)](https://travis-ci.org/commercehub-oss/gradle-avro-plugin)
+[![Build Status](https://github.com/davidmc24/gradle-avro-plugin/workflows/CI%20Build/badge.svg)](https://github.com/davidmc24/gradle-avro-plugin/actions)
 
 > See [our security policy](SECURITY.md) for handling of security-related matters.
 
@@ -128,7 +128,7 @@ avro {
 Valid values: any [Charset](http://docs.oracle.com/javase/7/docs/api/java/nio/charset/Charset.html) or equivalent `String` name
 
 Controls the character encoding of generated Java files.
-If the associated `JavaCompile` task has a configured encoding, it will be used automatically.
+If using the plugin's conventions (i.e., not just the base plugin), the associated `JavaCompile` task's encoding will be used automatically.
 Otherwise, it will use the value configured in the `avro` block, defaulting to `"UTF-8"`.
 
 Examples:

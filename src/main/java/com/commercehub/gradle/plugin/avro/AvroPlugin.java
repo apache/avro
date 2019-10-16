@@ -17,6 +17,8 @@ package com.commercehub.gradle.plugin.avro;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.nio.charset.Charset;
+import java.util.Optional;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
@@ -116,13 +118,9 @@ public class AvroPlugin implements Plugin<Project> {
         compileJavaTask.source(task.getOutputDir());
         compileJavaTask.source(task.getOutputs());
 
-        final AvroExtension avroExtension = project.getExtensions().findByType(AvroExtension.class);
+        configurePropertyConvention(task.getOutputCharacterEncoding(), project.provider(() ->
+            Optional.ofNullable(compileJavaTask.getOptions().getEncoding()).orElse(Charset.defaultCharset().name())));
 
-        configurePropertyConvention(task.getOutputCharacterEncoding(), project.provider(() -> {
-            String compilationEncoding = compileJavaTask.getOptions().getEncoding();
-            String extensionEncoding = avroExtension.getOutputCharacterEncoding().getOrNull();
-            return compilationEncoding != null ? compilationEncoding : extensionEncoding;
-        }));
         return task;
     }
 

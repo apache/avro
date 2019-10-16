@@ -26,14 +26,12 @@ class EncodingFunctionalSpec extends FunctionalSpec {
     /* Not all encodings have the characters needed for the test file, and not all encoding may be supported by any given JRE */
     private static final List<String> AVAILABLE_ENCODINGS =
         ["UTF-8", "UTF-16", "UTF-32", "windows-1252", "X-MacRoman"].findAll { Charset.isSupported(it) }
+    private static final String SYSTEM_ENCODING = Charset.defaultCharset().name()
 
-    def "setup"() {
+    def "with convention plugin, default encoding matches default compilation behavior"() {
+        given:
         applyAvroPlugin()
         addAvroDependency()
-    }
-
-    def "default encoding matches default compilation behavior"() {
-        given:
         copyResource("idioma.avsc", avroDir)
 
         when:
@@ -44,40 +42,15 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
 
         and: "the system default encoding is used"
-        def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").text
+        def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(SYSTEM_ENCODING)
         LANGUAGES.collect { content.contains(it) }.every { it }
     }
 
     @Unroll
-    def "supports configuring outputCharacterEncoding to #outputCharacterEncoding"() {
+    def "with convention plugin, configuring Java compilation task with encoding=#encoding will use it for outputCharacterEncoding"() {
         given:
-        copyResource("idioma.avsc", avroDir)
-        buildFile << """
-        |avro {
-        |    outputCharacterEncoding = ${outputCharacterEncoding}
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then: "compilation succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-
-        and: "the specified encoding is used"
-        def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(expectedEncoding)
-        LANGUAGES.collect { content.contains(it) }.every { it }
-
-        where:
-        outputCharacterEncoding                      | expectedEncoding
-        "'UTF-16'"                                   | "UTF-16"
-        "'utf-8'"                                    | "UTF-8"
-        "java.nio.charset.Charset.forName('UTF-16')" | "UTF-16"
-    }
-
-    @Unroll
-    def "uses configured encoding #encoding from java compilation task"() {
-        given:
+        applyAvroPlugin()
+        addAvroDependency()
         copyResource("idioma.avsc", avroDir)
         buildFile << """
         |compileJava {
@@ -98,5 +71,38 @@ class EncodingFunctionalSpec extends FunctionalSpec {
 
         where:
         encoding << AVAILABLE_ENCODINGS
+    }
+
+    @Unroll
+    def "with base plugin, configuring outputCharacterEncoding=#outputCharacterEncoding is supported"() {
+        given:
+        applyAvroBasePlugin()
+        copyResource("idioma.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    outputCharacterEncoding = ${outputCharacterEncoding}
+        |}
+        |task("generateAvroJava", type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+        |    source file("src/main/avro")
+        |    include("**/*.avsc")
+        |    outputDir = file("build/generated-main-avro-java")
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "compilation succeeds"
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+
+        and: "the specified encoding is used"
+        def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(expectedEncoding)
+        LANGUAGES.collect { content.contains(it) }.every { it }
+
+        where:
+        outputCharacterEncoding                      | expectedEncoding
+        "'UTF-16'"                                   | "UTF-16"
+        "'utf-8'"                                    | "UTF-8"
+        "java.nio.charset.Charset.forName('UTF-16')" | "UTF-16"
     }
 }
