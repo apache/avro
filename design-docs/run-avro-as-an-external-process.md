@@ -1,4 +1,4 @@
-Originally reported as [#27](https://github.com/commercehub-oss/gradle-avro-plugin/issues/27).
+Originally reported as [#27](https://github.com/davidmc24/gradle-avro-plugin/issues/27).
 Currently, Avro generation takes by running the avro-compiler library as part of the Gradle plugin process.
 This is simple and works, but has a few drawbacks:
 

@@ -55,7 +55,7 @@ further defined and clarified by project maintainers.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at oss-conduct@commercehub.com.
+reported by contacting the project team at david@carrclan.us.
 We will endeavor to review submitted complaints and respond in a manner that
 CommerceHub (in its sole discretion) deems necessary and appropriate to the
 circumstances. In enforcing this Code of Conduct, Project maintainers may

@@ -1,4 +1,4 @@
-Originally requested as [#4](https://github.com/commercehub-oss/gradle-avro-plugin/issues/4).
+Originally requested as [#4](https://github.com/davidmc24/gradle-avro-plugin/issues/4).
 Some users would like the ability to have JAR files that contain Avro schema/protocol files, and have a way to declare a dependency on these, such that the plugin's generation capability can use them without needing to manual extract the archives.
 
 Intended approach:

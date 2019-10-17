@@ -27,7 +27,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 # Usage
 
-Add the following to your `build.gradle` file.  Substitute the desired version based on [CHANGES.md](https://github.com/commercehub-oss/gradle-avro-plugin/blob/master/CHANGES.md).
+Add the following to your `build.gradle` file.  Substitute the desired version based on [CHANGES.md](https://github.com/davidmc24/gradle-avro-plugin/blob/master/CHANGES.md).
 
 ```groovy
 buildscript {
@@ -338,7 +338,7 @@ In `gradle.build.kts` add:
 
 ```kotlin
 plugins {
-	// Find latest release here: https://github.com/commercehub-oss/gradle-avro-plugin/releases
+	// Find latest release here: https://github.com/davidmc24/gradle-avro-plugin/releases
 	id("com.commercehub.gradle.plugin.avro") version "0.17.0"
 }
 ```

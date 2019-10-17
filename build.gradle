@@ -71,11 +71,11 @@ bintray {
         userOrg = "commercehub-oss"
         licenses = ["Apache-2.0"]
         desc = "A Gradle plugin to allow easily performing Java code generation for Apache Avro. It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files."
-        websiteUrl = "https://github.com/commercehub-oss/gradle-avro-plugin"
-        issueTrackerUrl = 'https://github.com/commercehub-oss/gradle-avro-plugin/issues'
-        vcsUrl = "https://github.com/commercehub-oss/gradle-avro-plugin"
+        websiteUrl = "https://github.com/davidmc24/gradle-avro-plugin"
+        issueTrackerUrl = 'https://github.com/davidmc24/gradle-avro-plugin/issues'
+        vcsUrl = "https://github.com/davidmc24/gradle-avro-plugin"
         labels = ["serialization", "avro"]
-        githubRepo = "commercehub-oss/gradle-avro-plugin"
+        githubRepo = "davidmc24/gradle-avro-plugin"
         version {
             name = project.version
             vcsTag = project.version
