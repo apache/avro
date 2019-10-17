@@ -4,7 +4,7 @@
 * Use reproducible file order for plugin archives
 * Eliminate usage of internal conventions API, using new Lazy Configuration approach instead; requires Gradle 4.4+
   * Technically, the APIs needed are available in Gradle 4.3, but there is a bug related to un-set `Property` instances in 4.3 and 4.3.1; see https://github.com/gradle/gradle/issues/3879
-* Cleaned up compatibility code for older versions of Gradle 
+* Cleaned up compatibility code for older versions of Gradle
 * Built using Gradle 5.6.2
 * Upgrade Spock from 1.2 to 1.3
 * Upgrade Checkstyle from 6.1.1 to 8.23 and adjust rules used
@@ -15,6 +15,7 @@
 * GenerateAvroProtocolTask now has a `classpath` property; defaults to the runtime configuration when the Avro plugin is applied
 * GenerateAvroProtocolTask now properly declares the `classpath` as an input; fixes #86; thanks to [RichSteele](https://github.com/RichSteele) for the bug report
 * Fix handling of default `outputCharacterEncoding` (use of system default character set to match Java compiler)
+* Add support for generating getters that return Optional (#90); contribution from [bspeakmon](https://github.com/bspeakmon)
 
 ## 0.17.0
 * Built using Avro 1.9.0
