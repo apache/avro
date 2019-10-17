@@ -19,8 +19,12 @@ jobs:
       run: java -version
     - name: Output Gradle version
       run: ./gradlew --version
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false
     - name: Build with Gradle
       run: ./gradlew build --info
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false
   compatibility-tests:
     name: Java ${{ matrix.java }}/${{ matrix.os }} compatibility
     needs: [build]
@@ -43,8 +47,12 @@ jobs:
       run: java -version
     - name: Output Gradle version
       run: ./gradlew --version
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false
     - name: Run version compatibility tests
       run: ./gradlew testVersionCompatibility --info
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false
   unsupported-java-versions:
     name: Java ${{ matrix.java }}/${{ matrix.os }} compatibility
     needs: [build]
@@ -67,6 +75,10 @@ jobs:
       run: java -version
     - name: Output Gradle version
       run: ./gradlew --version
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false
     - name: Run tests
       continue-on-error: true
       run: ./gradlew build testVersionCompatibility --info
+      env:
+        GRADLE_OPTS: -Dorg.gradle.daemon=false
