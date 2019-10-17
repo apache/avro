@@ -58,6 +58,12 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         and: "createSetters is enabled"
         content.contains("public void setName(java.lang.String value)")
 
+        and: "createOptionalGetters is disabled"
+        !content.contains("Optional")
+
+        and: "gettersReturnOptional is disabled"
+        !content.contains("Optional")
+
         and: "enableDecimalLogicalType is enabled"
         content.contains("public void setSalary(${BigDecimal.name} value)")
 
@@ -151,6 +157,66 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "false"         | false
         "'true'"        | true
         "'false'"       | false
+    }
+
+    @Unroll
+    def "supports configuring createOptionalGetters to #createOptionalGetters"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    createOptionalGetters = ${createOptionalGetters}
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the specified createOptionalGetters is used"
+        content.contains("public Optional<java.lang.String> getOptionalFavoriteColor()") == expectedPresent
+
+        where:
+        createOptionalGetters | expectedPresent
+        "Boolean.TRUE"        | true
+        "Boolean.FALSE"       | false
+        "true"                | true
+        "false"               | false
+        "'true'"              | true
+        "'false'"             | false
+    }
+
+    @Unroll
+    def "supports configuring gettersReturnOptional to #gettersReturnOptional"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        buildFile << """
+        |avro {
+        |    gettersReturnOptional = ${gettersReturnOptional}
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the specified createOptionalGetters is used"
+        content.contains("public Optional<java.lang.String> getFavoriteColor()") == expectedPresent
+
+        where:
+        gettersReturnOptional | expectedPresent
+        "Boolean.TRUE"        | true
+        "Boolean.FALSE"       | false
+        "true"                | true
+        "false"               | false
+        "'true'"              | true
+        "'false'"             | false
     }
 
     def "supports configuring templateDirectory"() {
