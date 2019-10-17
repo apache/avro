@@ -4,8 +4,6 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 [![Build Status](https://github.com/davidmc24/gradle-avro-plugin/workflows/CI%20Build/badge.svg)](https://github.com/davidmc24/gradle-avro-plugin/actions)
 
-> See [our security policy](SECURITY.md) for handling of security-related matters.
-
 # Compatibility
 
 * Currently tested against Java 8-12
