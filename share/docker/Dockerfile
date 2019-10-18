@@ -18,84 +18,116 @@
 # See BUILD.txt.
 
 FROM openjdk:8
-
 WORKDIR /root
+CMD ["/avro/share/docker/run-tests.sh"]
+ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
+    DEBIAN_FRONTEND=noninteractive
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Install dependencies from vanilla system packages
+RUN apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends ant \
+                                                 apt-transport-https \
+                                                 asciidoc \
+                                                 bison \
+                                                 bzip2 \
+                                                 bundler \
+                                                 cmake \
+                                                 curl \
+                                                 doxygen \
+                                                 flex \
+                                                 g++ \
+                                                 gcc \
+                                                 git \
+                                                 libboost-all-dev \
+                                                 libfontconfig1-dev \
+                                                 libfreetype6-dev \
+                                                 libglib2.0-dev \
+                                                 libjansson-dev \
+                                                 libsnappy-dev \
+                                                 libsnappy1v5 \
+                                                 make \
+                                                 maven \
+                                                 perl \
+                                                 python \
+                                                 python-pip \
+                                                 python-setuptools \
+                                                 python-snappy \
+                                                 python-wheel \
+                                                 python3-pip \
+                                                 python3-setuptools \
+                                                 python3-snappy \
+                                                 python3-wheel \
+                                                 rake \
+                                                 ruby \
+                                                 ruby-dev \
+                                                 source-highlight \
+                                                 subversion \
+                                                 valgrind \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists
 
-# Add the repository for node.js 6.x
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
-
-# Register Microsoft key and feed for .NET SDK
-# https://dotnet.microsoft.com/download/linux-package-manager/debian8/sdk-current
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg && \
-  mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/ && \
-  wget -q https://packages.microsoft.com/config/debian/9/prod.list && \
-  mv prod.list /etc/apt/sources.list.d/microsoft-prod.list && \
-  chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg && \
-  chown root:root /etc/apt/sources.list.d/microsoft-prod.list
-
-RUN curl https://packages.sury.org/php/apt.gpg | apt-key add --no-tty - && \
-      echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
-
-# Install dependencies from packages
-RUN apt-get -qq update && \
-  apt-get -qq install --no-install-recommends -y \
-    ant \
-    asciidoc \
-    bison \
-    bzip2 \
-    cmake \
-    curl \
-    dotnet-sdk-2.2 \
-    doxygen \
-    flex \
-    g++ \
-    gcc \
-    git \
-    libboost-all-dev \
-    libfontconfig1-dev \
-    libfreetype6-dev \
-    libglib2.0-dev \
-    libjansson-dev \
-    libsnappy-dev \
-    libsnappy1v5 \
-    make \
-    maven \
-    nodejs \
-    perl \
-    php5.6 \
-    php5.6-gmp \
-    pycodestyle \
-    python \
-    python-pip \
-    python-setuptools \
-    python-snappy \
-    python-wheel \
-    python3-pip \
-    python3-setuptools \
-    python3-snappy \
-    python3-wheel \
-    rake \
-    ruby \
-    ruby-dev \
-    source-highlight \
-    subversion \
-    valgrind && \
-  apt-get -qq clean && \
-  rm -rf /var/lib/apt/lists/*
+# Install nodejs 6
+RUN curl -sSL https://deb.nodesource.com/setup_6.x \
+  | bash - \
+ && apt-get -qqy install nodejs \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists \
+ && npm install -g grunt-cli \
+ && npm cache clean
 
 # Install Perl modules
 RUN curl -L https://cpanmin.us | perl - --self-upgrade && \
-  cpanm --mirror https://www.cpan.org/ install \
-  Module::Install Module::Install::ReadmeFromPod \
+  cpanm  --mirror https://www.cpan.org/ install Module::Install Module::Install::ReadmeFromPod \
   Module::Install::Repository \
   Math::BigInt JSON::XS Try::Tiny Regexp::Common Encode \
   IO::String Object::Tiny Compress::Zlib Test::More \
-  Test::Exception Test::Pod
+  Test::Exception Test::Pod Perl::Critic Compress::Zstd
 
-# Install PHPUnit
-RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.6.phar && chmod +x /usr/local/bin/phpunit
+# Install PHP
+# TODO: Remove php5-related packages when we drop PHP 5.6 support in the future
+# TODO: Consolidate the php versions into a single one (7.x) when we drop PHP 5.6 support in the future
+ENV PHP5_VERSION=5.6 \
+    PHP7_VERSION=7.1
+RUN curl -sSL https://packages.sury.org/php/apt.gpg \
+  | apt-key add --no-tty - \
+ && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
+ && apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends php${PHP5_VERSION} \
+                                                 php${PHP5_VERSION}-gmp \
+                                                 php${PHP7_VERSION} \
+                                                 php${PHP7_VERSION}-gmp \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists
+# Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
+# TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future
+RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar && chmod +x /usr/local/bin/phpunit
+
+RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit \
+ && chmod +x /usr/local/bin/phpunit
+
+# Install Perl modules
+RUN curl -sSL https://cpanmin.us \
+  | perl - --self-upgrade \
+ && cpanm --mirror https://www.cpan.org/ install Compress::Zlib \
+                                                 Compress::Zstd \
+                                                 Encode \
+                                                 IO::String \
+                                                 JSON::XS \
+                                                 Math::BigInt \
+                                                 Module::Install \
+                                                 Module::Install::ReadmeFromPod \
+                                                 Module::Install::Repository \
+                                                 Object::Tiny \
+                                                 Perl::Critic \
+                                                 Regexp::Common \
+                                                 Test::Exception \
+                                                 Test::More \
+                                                 Test::Pod \
+                                                 Try::Tiny \
+ && rm -rf .cpanm
+
+# Install Python packages
+ENV PIP_NO_CACHE_DIR=off
 
 # Install Python2 packages
 RUN python2 -m pip install --upgrade pip setuptools \
@@ -106,9 +138,14 @@ RUN python3 -m pip install --upgrade pip setuptools \
  && python3 -m pip install zstandard
 
 # Install Ruby modules
-RUN gem install echoe yajl-ruby multi_json snappy
+COPY lang/ruby/Gemfile /tmp
+RUN bundle install --gemfile=/tmp/Gemfile
 
-# Install global Node modules
-RUN npm install -g grunt-cli
-
-CMD ["/avro/share/docker/run-tests.sh"]
+# Install .NET SDK
+RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \
+ && dpkg -i packages-microsoft-prod.deb \
+ && rm packages-microsoft-prod.deb \
+ && apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends dotnet-sdk-2.2 \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists
