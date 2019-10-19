@@ -83,7 +83,7 @@ if __name__ == '__main__':
   # build the parameters for the request
   params = {}
   params['message'] = message
-   
+
   # send the requests and print the result
   for msg_count in range(num_messages):
     requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)

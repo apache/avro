@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -34,8 +37,7 @@ from word_count_task import WordCountTask
 
 
 class TestTetherTaskRunner(unittest.TestCase):
-  """ unit test for a tethered task runner.
-  """
+  """unit test for a tethered task runner."""
 
   def test1(self):
     # set the logging level to debug so that debug messages are printed
