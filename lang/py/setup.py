@@ -84,5 +84,6 @@ setuptools.setup(
   url = 'https://avro.apache.org/',
   extras_require = {
     'snappy': ['python-snappy'],
+    'zstandard': ['zstandard'],
   },
 )
