@@ -98,6 +98,7 @@ class TestTetherWordCount(unittest.TestCase):
     import inspect
 
     proc=None
+    exfile = None
 
     try:
 
@@ -207,7 +208,7 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
         proc.kill()
       if os.path.exists(base_dir):
         shutil.rmtree(base_dir)
-      if os.path.exists(exfile):
+      if exfile is not None and os.path.exists(exfile):
         os.remove(exfile)
 
 if __name__== "__main__":
