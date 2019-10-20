@@ -7,7 +7,7 @@ use digest::Digest;
 use failure::{Error, Fail};
 use serde::{
     ser::{SerializeMap, SerializeSeq},
-    Serialize, Serializer,
+    Deserialize, Serialize, Serializer,
 };
 use serde_json::{self, Map, Value};
 
@@ -52,7 +52,7 @@ impl fmt::Display for SchemaFingerprint {
 /// Represents any valid Avro schema
 /// More information about Avro schemas can be found in the
 /// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum Schema {
     /// A `null` Avro schema.
     Null,
@@ -100,6 +100,18 @@ pub enum Schema {
     /// A `fixed` Avro schema.
     Fixed { name: Name, size: usize },
 }
+
+impl PartialEq for Schema {
+    /// Assess equality of two `Schema` based on [Parsing Canonical Form].
+    ///
+    /// [Parsing Canonical Form]:
+    /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
+    fn eq(&self, other: &Self) -> bool {
+        self.canonical_form() == other.canonical_form()
+    }
+}
+
+impl Eq for Schema {}
 
 /// This type is used to simplify enum variant comparison between `Schema` and `types::Value`.
 /// It may have utility as part of the public API, but defining as `pub(crate)` for now.
@@ -182,7 +194,7 @@ impl<'a> From<&'a types::Value> for SchemaKind {
 ///
 /// More information about schema names can be found in the
 /// [Avro specification](https://avro.apache.org/docs/current/spec.html#names)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct Name {
     pub name: String,
     pub namespace: Option<String>,
@@ -380,6 +392,7 @@ impl PartialEq for UnionSchema {
 impl Schema {
     /// Create a `Schema` from a string representing a JSON Avro schema.
     pub fn parse_str(input: &str) -> Result<Self, Error> {
+        // TODO: (#82) this should be a ParseSchemaError wrapping the JSON error
         let value = serde_json::from_str(input)?;
         Self::parse(&value)
     }
@@ -981,5 +994,4 @@ mod tests {
             format!("{}", schema.fingerprint::<Md5>())
         );
     }
-
 }

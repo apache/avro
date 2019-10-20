@@ -1,4 +1,4 @@
-//! Port of https://github.com/apache/avro/blob/master/lang/py/test/test_io.py
+//! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_io.py
 use std::io::Cursor;
 
 use avro_rs::{
@@ -40,15 +40,19 @@ lazy_static! {
         (r#""null""#, "null", Value::Null),
         (r#""boolean""#, "true", Value::Boolean(true)),
         (r#""string""#, r#""foo""#, Value::String("foo".to_string())),
+        // TODO: (#96) investigate why this is failing
         //(r#""bytes""#, r#""\u00FF\u00FF""#, Value::Bytes(vec![0xff, 0xff])),
         (r#""int""#, "5", Value::Int(5)),
         (r#""long""#, "5", Value::Long(5)),
         (r#""float""#, "1.1", Value::Float(1.1)),
         (r#""double""#, "1.1", Value::Double(1.1)),
+        // TODO: (#96) investigate why this is failing
         //(r#"{"type": "fixed", "name": "F", "size": 2}"#, r#""\u00FF\u00FF""#, Value::Bytes(vec![0xff, 0xff])),
+        // TODO: (#96) investigate why this is failing
         //(r#"{"type": "enum", "name": "F", "symbols": ["FOO", "BAR"]}"#, r#""FOO""#, Value::Enum(0, "FOO".to_string())),
         (r#"{"type": "array", "items": "int"}"#, "[1, 2, 3]", Value::Array(vec![Value::Int(1), Value::Int(2), Value::Int(3)])),
         (r#"{"type": "map", "values": "int"}"#, r#"{"a": 1, "b": 2}"#, Value::Map([("a".to_string(), Value::Int(1)), ("b".to_string(), Value::Int(2))].iter().cloned().collect())),
+        // TODO: (#96) investigate why this is failing
         //(r#"["int", "null"]"#, "5", Value::Union(Box::new(Value::Int(5)))),
         (r#"{"type": "record", "name": "F", "fields": [{"name": "A", "type": "int"}]}"#, r#"{"A": 5}"#,Value::Record(vec![("A".to_string(), Value::Int(5))])),
     ];
