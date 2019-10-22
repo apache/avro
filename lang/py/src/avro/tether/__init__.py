@@ -1,4 +1,6 @@
-#
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,12 +17,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-from .util import *
-from .tether_task import *
-from .tether_task_runner import *
+from __future__ import absolute_import, division, print_function
 
-__all__=util.__all__
-__all__+=tether_task.__all__
-__all__+=tether_task_runner.__all__
+from avro.tether.tether_task import HTTPRequestor, TaskType, TetherTask, inputProtocol, outputProtocol
+from avro.tether.tether_task_runner import TaskRunner
+from avro.tether.util import find_port

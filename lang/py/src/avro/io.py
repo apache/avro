@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -37,6 +40,8 @@ uses the following mapping:
   * Schema doubles are implemented as float.
   * Schema booleans are implemented as bool.
 """
+
+from __future__ import absolute_import, division, print_function
 
 import datetime
 import json
@@ -183,7 +188,7 @@ class BinaryDecoder(object):
 
   def read_boolean(self):
     """
-    a boolean is written as a single byte 
+    a boolean is written as a single byte
     whose value is either 0 (false) or 1 (true).
     """
     return ord(self.read(1)) == 1
@@ -261,7 +266,7 @@ class BinaryDecoder(object):
 
   def read_bytes(self):
     """
-    Bytes are encoded as a long followed by that many bytes of data. 
+    Bytes are encoded as a long followed by that many bytes of data.
     """
     return self.read(self.read_long())
 
@@ -297,7 +302,7 @@ class BinaryDecoder(object):
 
   def read_time_millis_from_int(self):
     """
-    int is decoded as python time object which represents 
+    int is decoded as python time object which represents
     the number of milliseconds after midnight, 00:00:00.000.
     """
     milliseconds = self.read_int()
@@ -305,7 +310,7 @@ class BinaryDecoder(object):
 
   def read_time_micros_from_long(self):
     """
-    long is decoded as python time object which represents 
+    long is decoded as python time object which represents
     the number of microseconds after midnight, 00:00:00.000000.
     """
     microseconds = self.read_long()
@@ -313,17 +318,17 @@ class BinaryDecoder(object):
 
   def read_timestamp_millis_from_long(self):
     """
-    long is decoded as python datetime object which represents 
+    long is decoded as python datetime object which represents
     the number of milliseconds from the unix epoch, 1 January 1970.
     """
     timestamp_millis = self.read_long()
     timedelta = datetime.timedelta(microseconds=timestamp_millis * 1000)
-    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc) 
+    unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
     return unix_epoch_datetime + timedelta
 
   def read_timestamp_micros_from_long(self):
     """
-    long is decoded as python datetime object which represents 
+    long is decoded as python datetime object which represents
     the number of microseconds from the unix epoch, 1 January 1970.
     """
     timestamp_micros = self.read_long()
@@ -386,10 +391,10 @@ class BinaryEncoder(object):
     null is written as zero bytes
     """
     pass
-  
+
   def write_boolean(self, datum):
     """
-    a boolean is written as a single byte 
+    a boolean is written as a single byte
     whose value is either 0 (false) or 1 (true).
     """
     if datum:
@@ -399,7 +404,7 @@ class BinaryEncoder(object):
 
   def write_int(self, datum):
     """
-    int and long values are written using variable-length, zig-zag coding.    
+    int and long values are written using variable-length, zig-zag coding.
     """
     self.write_long(datum);
 
@@ -491,7 +496,7 @@ class BinaryEncoder(object):
         bits_to_write = unscaled_datum >> (8 * index)
         self.write(chr(bits_to_write & 0xff))
     else:
-      for i in range(offset_bits/8):
+      for i in range(offset_bits // 8):
         self.write(chr(0))
       for index in range(bytes_req-1, -1, -1):
         bits_to_write = unscaled_datum >> (8 * index)
@@ -499,7 +504,7 @@ class BinaryEncoder(object):
 
   def write_bytes(self, datum):
     """
-    Bytes are encoded as a long followed by that many bytes of data. 
+    Bytes are encoded as a long followed by that many bytes of data.
     """
     self.write_long(len(datum))
     self.write(struct.pack('%ds' % len(datum), datum))
@@ -591,32 +596,32 @@ class DatumReader(object):
           and w_type == r_type):
       return True
     elif (w_type == r_type == 'record' and
-          DatumReader.check_props(writers_schema, readers_schema, 
+          DatumReader.check_props(writers_schema, readers_schema,
                                   ['fullname'])):
       return True
     elif (w_type == r_type == 'error' and
-          DatumReader.check_props(writers_schema, readers_schema, 
+          DatumReader.check_props(writers_schema, readers_schema,
                                   ['fullname'])):
       return True
     elif (w_type == r_type == 'request'):
       return True
-    elif (w_type == r_type == 'fixed' and 
-          DatumReader.check_props(writers_schema, readers_schema, 
+    elif (w_type == r_type == 'fixed' and
+          DatumReader.check_props(writers_schema, readers_schema,
                                   ['fullname', 'size'])):
       return True
-    elif (w_type == r_type == 'enum' and 
-          DatumReader.check_props(writers_schema, readers_schema, 
+    elif (w_type == r_type == 'enum' and
+          DatumReader.check_props(writers_schema, readers_schema,
                                   ['fullname'])):
       return True
-    elif (w_type == r_type == 'map' and 
+    elif (w_type == r_type == 'map' and
           DatumReader.check_props(writers_schema.values,
                                   readers_schema.values, ['type'])):
       return True
-    elif (w_type == r_type == 'array' and 
+    elif (w_type == r_type == 'array' and
           DatumReader.check_props(writers_schema.items,
                                   readers_schema.items, ['type'])):
       return True
-    
+
     # Handle schema promotion
     if w_type == 'int' and r_type in ['long', 'float', 'double']:
       return True
@@ -633,7 +638,7 @@ class DatumReader(object):
     reader the "reader's schema".
     """
     self._writers_schema = writers_schema
-    self._readers_schema = readers_schema 
+    self._readers_schema = readers_schema
 
   # read/write properties
   def set_writers_schema(self, writers_schema):
@@ -644,7 +649,7 @@ class DatumReader(object):
     self._readers_schema = readers_schema
   readers_schema = property(lambda self: self._readers_schema,
                             set_readers_schema)
-  
+
   def read(self, decoder):
     if self.readers_schema is None:
       self.readers_schema = self.writers_schema
@@ -682,13 +687,13 @@ class DatumReader(object):
       else:
         return decoder.read_int()
     elif writers_schema.type == 'long':
-      if (hasattr(writers_schema, 'logical_type') and 
+      if (hasattr(writers_schema, 'logical_type') and
           writers_schema.logical_type == constants.TIME_MICROS):
         return decoder.read_time_micros_from_long()
-      elif (hasattr(writers_schema, 'logical_type') and 
+      elif (hasattr(writers_schema, 'logical_type') and
             writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
         return decoder.read_timestamp_millis_from_long()
-      elif (hasattr(writers_schema, 'logical_type') and 
+      elif (hasattr(writers_schema, 'logical_type') and
             writers_schema.logical_type == constants.TIMESTAMP_MICROS):
         return decoder.read_timestamp_micros_from_long()
       else:
@@ -886,7 +891,7 @@ class DatumReader(object):
                  % (index_of_schema, len(writers_schema.schemas))
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
     selected_writers_schema = writers_schema.schemas[index_of_schema]
-    
+
     # read data
     return self.read_data(selected_writers_schema, readers_schema, decoder)
 
@@ -914,7 +919,7 @@ class DatumReader(object):
      * if the reader's record schema has a field that contains a default value,
        and writer's schema does not have a field with the same name, then the
        reader should use the default value from its field.
-     * if the reader's record schema has a field with no default value, and 
+     * if the reader's record schema has a field with no default value, and
        writer's schema does not have a field with the same name, then the
        field's value is unset.
     """
@@ -933,7 +938,7 @@ class DatumReader(object):
     if len(readers_fields_dict) > len(read_record):
       writers_fields_dict = writers_schema.fields_dict
       for field_name, field in readers_fields_dict.items():
-        if not writers_fields_dict.has_key(field_name):
+        if field_name not in writers_fields_dict:
           if field.has_default:
             field_val = self._read_default_value(field.type, field.default)
             read_record[field.name] = field_val

@@ -401,4 +401,4 @@ def generate_sixteen_random_bytes():
   try:
     return os.urandom(16)
   except NotImplementedError:
-    return [chr(random.randrange(256)) for i in range(16)]
+    return bytes(random.randrange(256) for i in range(16))

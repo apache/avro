@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,10 +16,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-try:
-  from cStringIO import StringIO
-except ImportError:
-  from StringIO import StringIO
+
+from __future__ import absolute_import, division, print_function
+
 from zope.interface import implements
 
 from avro import io, ipc
@@ -28,6 +28,11 @@ from twisted.web import resource, server
 from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
 from twisted.web.iweb import IBodyProducer
+
+try:
+  from cStringIO import StringIO
+except ImportError:
+  from StringIO import StringIO
 
 
 class TwistedRequestor(ipc.BaseRequestor):

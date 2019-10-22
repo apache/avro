@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,45 +17,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import, division, print_function
+
 import socket
 import sys
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
+import avro.tether.tether_task
+import avro.tether.util
 import set_avro_test_path
-from avro import ipc, protocol, tether
+from avro import ipc, protocol
 
-
-def find_port():
-  """
-  Return an unbound port
-  """
-  s=socket.socket()
-  s.bind(("127.0.0.1",0))
-
-  port=s.getsockname()[1]
-  s.close()
-
-  return port
-
-SERVER_ADDRESS = ('localhost', find_port())
+SERVER_ADDRESS = ('localhost', avro.tether.util.find_port())
 
 class MockParentResponder(ipc.Responder):
   """
   The responder for the mocked parent
   """
   def __init__(self):
-    ipc.Responder.__init__(self, tether.outputProtocol)
+    ipc.Responder.__init__(self, avro.tether.tether_task.outputProtocol)
 
   def invoke(self, message, request):
     if message.name=='configure':
-      print "MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"])
+      print("MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"]))
 
     elif message.name=='status':
-      print "MockParentResponder: Recieved 'status': message={0}".format(request["message"])
+      print("MockParentResponder: Recieved 'status': message={0}".format(request["message"]))
     elif message.name=='fail':
-      print "MockParentResponder: Recieved 'fail': message={0}".format(request["message"])
+      print("MockParentResponder: Recieved 'fail': message={0}".format(request["message"]))
     else:
-      print "MockParentResponder: Recieved {0}".format(message.name)
+      print("MockParentResponder: Recieved {0}".format(message.name))
 
     # flush the output so it shows up in the parent process
     sys.stdout.flush()
@@ -85,7 +79,7 @@ if __name__ == '__main__':
       raise ValueError("Usage: mock_tether_parent start_server port")
 
     SERVER_ADDRESS=(SERVER_ADDRESS[0],port)
-    print "mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1])
+    print("mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1]))
 
     # flush the output so it shows up in the parent process
     sys.stdout.flush()
