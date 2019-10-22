@@ -1,30 +1,23 @@
-"""
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-"""
+#!/usr/bin/env python
 
-__all__=["TaskRunner"]
+##
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-if __name__ == "__main__":
-  # Relative imports don't work when being run directly
-  from avro import tether
-  from avro.tether import TetherTask, find_port, inputProtocol
-
-else:
-  from . import TetherTask, find_port, inputProtocol
+from __future__ import absolute_import, division, print_function
 
 import logging
 import sys
@@ -33,12 +26,16 @@ import traceback
 import weakref
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
+import avro.tether.tether_task
+import avro.tether.util
 from avro import ipc
+
+__all__ = ["TaskRunner"]
 
 
 class TaskRunnerResponder(ipc.Responder):
   """
-  The responder for the thethered process
+  The responder for the tethered process
   """
   def __init__(self,runner):
     """
@@ -46,7 +43,7 @@ class TaskRunnerResponder(ipc.Responder):
     ----------------------------------------------------------
     runner - Instance of TaskRunner
     """
-    ipc.Responder.__init__(self, inputProtocol)
+    ipc.Responder.__init__(self, avro.tether.tether_task.inputProtocol)
 
     self.log=logging.getLogger("TaskRunnerResponder")
 
@@ -148,7 +145,7 @@ class TaskRunner(object):
 
     self.log=logging.getLogger("TaskRunner:")
 
-    if not(isinstance(task,TetherTask)):
+    if not(isinstance(task, avro.tether.tether_task.TetherTask)):
       raise ValueError("task must be an instance of tether task")
     self.task=task
 
@@ -172,7 +169,7 @@ class TaskRunner(object):
                 testing
     """
 
-    port=find_port()
+    port = avro.tether.util.find_port()
     address=("localhost",port)
 
 
@@ -212,7 +209,7 @@ if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
 
   if (len(sys.argv)<=1):
-    print "Error: tether_task_runner.__main__: Usage: tether_task_runner task_package.task_module.TaskClass"
+    print("Error: tether_task_runner.__main__: Usage: tether_task_runner task_package.task_module.TaskClass")
     raise ValueError("Usage: tether_task_runner task_package.task_module.TaskClass")
 
   fullcls=sys.argv[1]

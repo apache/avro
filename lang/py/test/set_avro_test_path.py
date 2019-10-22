@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -13,6 +16,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Module adjusts the path PYTHONPATH so the unittests
 will work even if an egg for AVRO is already installed.
@@ -28,6 +32,9 @@ being built. To work around this the unittests import this module before
 importing AVRO. This module in turn adjusts the python path so that the test
 build of AVRO is higher on the path then any installed eggs.
 """
+
+from __future__ import absolute_import, division, print_function
+
 import os
 import sys
 

@@ -18,16 +18,19 @@
 
 """Command line utility for reading and writing Avro files."""
 
-from avro.io import DatumReader, DatumWriter
-from avro.datafile import DataFileReader, DataFileWriter
-import avro.schema
+from __future__ import absolute_import, division, print_function
 
-import json
 import csv
-from sys import stdout, stdin
-from itertools import ifilter, imap
+import json
 from functools import partial
+from itertools import ifilter, imap
 from os.path import splitext
+from sys import stdin, stdout
+
+import avro.schema
+from avro.datafile import DataFileReader, DataFileWriter
+from avro.io import DatumReader, DatumWriter
+
 
 class AvroError(Exception):
     pass
@@ -52,9 +55,9 @@ def print_csv(row):
 
 def select_printer(format):
     return {
-        "json" : print_json,
-        "json-pretty" : print_json_pretty,
-        "csv" : print_csv
+        "json": print_json,
+        "json-pretty": print_json_pretty,
+        "csv": print_csv
     }[format]
 
 def record_match(expr, record):
@@ -102,7 +105,7 @@ def print_avro(avro, opts):
 def print_schema(avro):
     schema = avro.meta["avro.schema"]
     # Pretty print
-    print json.dumps(json.loads(schema), indent=4)
+    print(json.dumps(json.loads(schema), indent=4))
 
 def cat(opts, args):
     if not args:
@@ -257,4 +260,3 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-

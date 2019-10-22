@@ -1,33 +1,36 @@
-"""
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-"""
+#!/usr/bin/env python
 
-__all__=["WordCountTask"]
+##
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import absolute_import, division, print_function
 
 import logging
 
-from avro.tether import TetherTask
+import avro.tether.tether_task
+
+__all__ = ["WordCountTask"]
 
 
 #TODO::Make the logging level a parameter we can set
 #logging.basicConfig(level=logging.INFO)
-class WordCountTask(TetherTask):
+class WordCountTask(avro.tether.tether_task.TetherTask):
   """
-  Implements the mappper and reducer for the word count example
+  Implements the mapper and reducer for the word count example
   """
 
   def __init__(self):
@@ -40,7 +43,7 @@ class WordCountTask(TetherTask):
               {"name":"value","type":"long","order":"ignore"}]
               }"""
     outschema=midschema
-    TetherTask.__init__(self,inschema,midschema,outschema)
+    avro.tether.tether_task.TetherTask.__init__(self, inschema, midschema, outschema)
 
 
     #keep track of the partial sums of the counts

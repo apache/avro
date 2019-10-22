@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -5,14 +8,17 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from __future__ import absolute_import, division, print_function
+
 import os
 import unittest
 
@@ -56,25 +62,30 @@ try:
   import snappy
   CODECS_TO_VALIDATE += ('snappy',)
 except ImportError:
-  print 'Snappy not present, will skip testing it.'
+  print('Snappy not present, will skip testing it.')
+try:
+  import zstandard
+  CODECS_TO_VALIDATE += ('zstandard',)
+except ImportError:
+  print('Zstandard not present, will skip testing it.')
 
 # TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):
   def test_round_trip(self):
-    print ''
-    print 'TEST ROUND TRIP'
-    print '==============='
-    print ''
+    print('')
+    print('TEST ROUND TRIP')
+    print('===============')
+    print('')
     correct = 0
     for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
       for codec in CODECS_TO_VALIDATE:
-        print ''
-        print 'SCHEMA NUMBER %d' % (i + 1)
-        print '================'
-        print ''
-        print 'Schema: %s' % example_schema
-        print 'Datum: %s' % datum
-        print 'Codec: %s' % codec
+        print('')
+        print('SCHEMA NUMBER %d' % (i + 1))
+        print('================')
+        print('')
+        print('Schema: %s' % example_schema)
+        print('Datum: %s' % datum)
+        print('Codec: %s' % codec)
 
         # write data in binary to file 10 times
         writer = open(FILENAME, 'wb')
@@ -93,30 +104,30 @@ class TestDataFile(unittest.TestCase):
         for datum in dfr:
           round_trip_data.append(datum)
 
-        print 'Round Trip Data: %s' % round_trip_data
-        print 'Round Trip Data Length: %d' % len(round_trip_data)
+        print('Round Trip Data: %s' % round_trip_data)
+        print('Round Trip Data Length: %d' % len(round_trip_data))
         is_correct = [datum] * 10 == round_trip_data
         if is_correct: correct += 1
-        print 'Correct Round Trip: %s' % is_correct
-        print ''
+        print('Correct Round Trip: %s' % is_correct)
+        print('')
     os.remove(FILENAME)
     self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
 
   def test_append(self):
-    print ''
-    print 'TEST APPEND'
-    print '==========='
-    print ''
+    print('')
+    print('TEST APPEND')
+    print('===========')
+    print('')
     correct = 0
     for i, (example_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
       for codec in CODECS_TO_VALIDATE:
-        print ''
-        print 'SCHEMA NUMBER %d' % (i + 1)
-        print '================'
-        print ''
-        print 'Schema: %s' % example_schema
-        print 'Datum: %s' % datum
-        print 'Codec: %s' % codec
+        print('')
+        print('SCHEMA NUMBER %d' % (i + 1))
+        print('================')
+        print('')
+        print('Schema: %s' % example_schema)
+        print('Datum: %s' % datum)
+        print('Codec: %s' % codec)
 
         # write data in binary to file once
         writer = open(FILENAME, 'wb')
@@ -141,12 +152,12 @@ class TestDataFile(unittest.TestCase):
         for datum in dfr:
           appended_data.append(datum)
 
-        print 'Appended Data: %s' % appended_data
-        print 'Appended Data Length: %d' % len(appended_data)
+        print('Appended Data: %s' % appended_data)
+        print('Appended Data Length: %d' % len(appended_data))
         is_correct = [datum] * 10 == appended_data
         if is_correct: correct += 1
-        print 'Correct Appended: %s' % is_correct
-        print ''
+        print('Correct Appended: %s' % is_correct)
+        print('')
     os.remove(FILENAME)
     self.assertEquals(correct, len(CODECS_TO_VALIDATE)*len(SCHEMAS_TO_VALIDATE))
 
