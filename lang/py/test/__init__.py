@@ -16,23 +16,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""Contains Constants for Python Avro"""
-
-from __future__ import absolute_import, division, print_function
-
-DATE = "date"
-DECIMAL = "decimal"
-TIMESTAMP_MICROS = "timestamp-micros"
-TIMESTAMP_MILLIS = "timestamp-millis"
-TIME_MICROS = "time-micros"
-TIME_MILLIS = "time-millis"
-
-SUPPORTED_LOGICAL_TYPE = [
-    DATE,
-    DECIMAL,
-    TIMESTAMP_MICROS,
-    TIMESTAMP_MILLIS,
-    TIME_MICROS,
-    TIME_MILLIS
-]

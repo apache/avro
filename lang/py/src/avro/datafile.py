@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -13,9 +16,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Read/Write Avro File Object Containers.
-"""
+
+"""Read/Write Avro File Object Containers."""
+
+from __future__ import absolute_import, division, print_function
+
 import zlib
 
 from avro import io, schema
@@ -106,7 +111,7 @@ class DataFileWriter(object):
     else:
       # open writer for reading to collect metadata
       dfr = DataFileReader(writer, io.DatumReader())
-      
+
       # TODO(hammer): collect arbitrary metadata
       # collect metadata
       self._sync_marker = dfr.sync_marker
@@ -190,7 +195,7 @@ class DataFileWriter(object):
 
       # Write block
       self.writer.write(compressed_data)
-      
+
       # Write CRC32 checksum for Snappy
       if self.get_meta(CODEC_KEY) == 'snappy':
         self.encoder.write_crc32(uncompressed_data)
@@ -199,7 +204,7 @@ class DataFileWriter(object):
       self.writer.write(self.sync_marker)
 
       # reset buffer
-      self.buffer_writer.truncate(0) 
+      self.buffer_writer.truncate(0)
       self.block_count = 0
 
   def append(self, datum):
@@ -239,7 +244,7 @@ class DataFileReader(object):
     self._raw_decoder = io.BinaryDecoder(reader)
     self._datum_decoder = None # Maybe reset at every block.
     self._datum_reader = datum_reader
-    
+
     # read the header: magic, meta, sync
     self._read_header()
 
@@ -303,7 +308,7 @@ class DataFileReader(object):
 
   def _read_header(self):
     # seek to the beginning of the file to get magic block
-    self.reader.seek(0, 0) 
+    self.reader.seek(0, 0)
 
     # read header into a dict
     header = self.datum_reader.read_data(
@@ -382,7 +387,7 @@ class DataFileReader(object):
       else:
         self._read_block_header()
 
-    datum = self.datum_reader.read(self.datum_decoder) 
+    datum = self.datum_reader.read(self.datum_decoder)
     self.block_count -= 1
     return datum
 

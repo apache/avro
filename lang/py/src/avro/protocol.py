@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,18 +17,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Protocol implementation.
-"""
+"""Protocol implementation."""
+
+from __future__ import absolute_import, division, print_function
+
+import json
+
+from avro import schema
 
 try:
   from hashlib import md5
 except ImportError:
   from md5 import md5
 
-import json
-
-from avro import schema
 
 #
 # Constants
@@ -60,7 +64,7 @@ class Protocol(object):
   def _parse_messages(self, messages, names):
     message_objects = {}
     for name, body in messages.iteritems():
-      if message_objects.has_key(name):
+      if name in message_objects:
         fail_msg = 'Message name "%s" repeated.' % name
         raise ProtocolParseException(fail_msg)
       try:

@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -5,17 +8,19 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Test the schema parsing logic.
-"""
+
+"""Test the schema parsing logic."""
+
+from __future__ import absolute_import, division, print_function
+
 import unittest
 
 import set_avro_test_path
@@ -24,10 +29,10 @@ from avro.schema import AvroException, SchemaParseException
 
 
 def print_test_name(test_name):
-  print ''
-  print test_name
-  print '=' * len(test_name)
-  print ''
+  print()
+  print(test_name)
+  print('=' * len(test_name))
+  print()
 
 class ExampleSchema(object):
   def __init__(self, schema_string, valid, name='', comment=''):
@@ -171,7 +176,7 @@ RECORD_EXAMPLES = [
                  "type": {"type": "fixed", "name": "MD5", "size": 16}},
                 {"name": "clientProtocol", "type": ["null", "string"]},
                 {"name": "serverHash", "type": "MD5"},
-                {"name": "meta", 
+                {"name": "meta",
                  "type": ["null", {"type": "map", "values": "bytes"}]}]}
     """, True),
   ExampleSchema("""\
@@ -230,7 +235,7 @@ RECORD_EXAMPLES = [
   ExampleSchema("""\
     {"type": "record",
      "name": "ipAddr",
-     "fields": [{"name": "addr", 
+     "fields": [{"name": "addr",
                  "type": [{"name": "IPv6", "type": "fixed", "size": 16},
                           {"name": "IPv4", "type": "fixed", "size": 4}]}]}
     """, True),
@@ -263,7 +268,7 @@ DOC_EXAMPLES = [
     {"type": "record",
      "name": "TestDoc",
      "doc":  "Doc string",
-     "fields": [{"name": "name", "type": "string", 
+     "fields": [{"name": "name", "type": "string",
                  "doc" : "Doc String"}]}
     """, True),
   ExampleSchema("""\
@@ -413,7 +418,7 @@ class TestSchema(unittest.TestCase):
         else:
           self.fail("Invalid schema was parsed: " + example.schema_string)
       except:
-        if not example.valid: 
+        if not example.valid:
           correct += 1
         else:
           self.fail("Valid schema failed to parse: " + example.schema_string)
@@ -453,7 +458,7 @@ class TestSchema(unittest.TestCase):
       if original_schema == round_trip_schema:
         correct += 1
         debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
-      else:       
+      else:
         debug_msg = "%s: ROUND TRIP FAILURE" % example.name
         self.fail("Round trip failure: %s, %s, %s" % (example.name, original_schema, str(original_schema)))
 
@@ -492,14 +497,14 @@ class TestSchema(unittest.TestCase):
     """
     print_test_name('TEST FULLNAME')
 
-    # name and namespace specified    
+    # name and namespace specified
     fullname = schema.Name('a', 'o.a.h', None).fullname
     self.assertEqual(fullname, 'o.a.h.a')
 
     # fullname and namespace specified
     fullname = schema.Name('a.b.c.d', 'o.a.h', None).fullname
     self.assertEqual(fullname, 'a.b.c.d')
-    
+
     # name and default namespace specified
     fullname = schema.Name('a', None, 'b.c.d').fullname
     self.assertEqual(fullname, 'b.c.d.a')
@@ -567,7 +572,7 @@ class TestSchema(unittest.TestCase):
     try:
         schema.parse('/not/a/real/file')
         caught_exception = False
-    except schema.SchemaParseException, e:
+    except schema.SchemaParseException as e:
         expected_message = 'Error parsing JSON: /not/a/real/file, error = ' \
                            'No JSON object could be decoded'
         self.assertEqual(expected_message, e.args[0])

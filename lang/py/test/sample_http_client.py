@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -13,8 +14,12 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from __future__ import absolute_import, division, print_function
+
 import sys
 
 from avro import ipc, protocol
@@ -78,7 +83,7 @@ if __name__ == '__main__':
   # build the parameters for the request
   params = {}
   params['message'] = message
-   
+
   # send the requests and print the result
   for msg_count in range(num_messages):
     requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
