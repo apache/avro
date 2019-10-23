@@ -28,7 +28,9 @@ export PATH="$PATH:.gem/bin"
 gem install --no-document -v 1.17.3 bundler
 bundle install
 
-case "$1" in
+for target in "$@"
+do
+  case "$target" in
     lint)
       rubocop --lint
       ;;
@@ -49,4 +51,5 @@ case "$1" in
     *)
       echo "Usage: $0 {lint|test|dist|clean}"
       exit 1
-esac
+  esac
+done

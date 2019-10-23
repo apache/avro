@@ -19,23 +19,26 @@ set -e
 
 cd `dirname "$0"`
 
-case "$1" in
-  lint)
-    npm run lint
-    ;;
-  test)
-    npm install
-    npm run cover
-    ;;
-  dist)
-    npm pack
-    mkdir -p ../../dist/js
-    mv avro-js-*.tgz ../../dist/js
-    ;;
-  clean)
-    rm -rf coverage
-    ;;
-  *)
-    echo "Usage: $0 {lint|test|dist|clean}" >&2
-    exit 1
-esac
+for target in "$@"
+do
+  case "$target" in
+    lint)
+      npm run lint
+      ;;
+    test)
+      npm install
+      npm run cover
+      ;;
+    dist)
+      npm pack
+      mkdir -p ../../dist/js
+      mv avro-js-*.tgz ../../dist/js
+      ;;
+    clean)
+      rm -rf coverage
+      ;;
+    *)
+      echo "Usage: $0 {lint|test|dist|clean}" >&2
+      exit 1
+  esac
+done
