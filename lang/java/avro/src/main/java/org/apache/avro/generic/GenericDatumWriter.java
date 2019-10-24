@@ -86,7 +86,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer).
-   * 
+   *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
    *                                  Please be noticed that the exception type
@@ -174,13 +174,22 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
         error(schema, datum);
       }
     } catch (NullPointerException e) {
-      throw npe(e, " of " + schema.getFullName());
+      throw npeCceAte(e, " of " + schema.getFullName());
     }
   }
 
-  /** Helper method for adding a message to an NPE. */
-  protected NullPointerException npe(NullPointerException e, String s) {
-    NullPointerException result = new NullPointerException(e.getMessage() + s);
+  /** Helper method for adding a message to an NPE CCE ATE. */
+  protected <T extends Exception> T npeCceAte(T e, String s) {
+    T result = null;
+    if (e instanceof NullPointerException) {
+      result = (T) new NullPointerException(e.getMessage() + s);
+    } else if (e instanceof ClassCastException) {
+      result = (T) new ClassCastException(e.getMessage() + s);
+    } else if (e instanceof AvroTypeException) {
+      result = (T) new AvroTypeException(e.getMessage() + s);
+    } else {
+      result = (T) new Exception(e.getMessage() + s);
+    }
     result.initCause(e.getCause() == null ? e : e.getCause());
     return result;
   }
@@ -205,7 +214,11 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     try {
       write(f.schema(), value, out);
     } catch (NullPointerException e) {
-      throw npe(e, " in field " + f.name());
+      throw npeCceAte(e, " in field " + f.name());
+    } catch (ClassCastException cce) {
+      throw npeCceAte(cce, " in field " + f.name());
+    } catch (AvroTypeException ate) {
+      throw npeCceAte(ate, " in field " + f.name());
     }
   }
 
