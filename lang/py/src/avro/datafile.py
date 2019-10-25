@@ -21,6 +21,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import os
+import random
 import zlib
 
 from avro import io, schema
@@ -397,8 +399,6 @@ class DataFileReader(object):
 
 def generate_sixteen_random_bytes():
   try:
-    import os
     return os.urandom(16)
-  except:
-    import random
-    return [ chr(random.randrange(256)) for i in range(16) ]
+  except NotImplementedError:
+    return [chr(random.randrange(256)) for i in range(16)]
