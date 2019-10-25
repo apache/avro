@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,18 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Protocol implementation.
-"""
+"""Protocol implementation."""
 
-try:
-  from hashlib import md5
-except ImportError:
-  from md5 import md5
+from __future__ import absolute_import, division, print_function
 
+import hashlib
 import json
 
-from avro import schema
+import avro.schema
 
 #
 # Constants
@@ -38,7 +37,7 @@ VALID_TYPE_SCHEMA_TYPES = ('enum', 'record', 'error', 'fixed')
 # Exceptions
 #
 
-class ProtocolParseException(schema.AvroException):
+class ProtocolParseException(avro.schema.AvroException):
   pass
 
 #
@@ -50,7 +49,7 @@ class Protocol(object):
   def _parse_types(self, types, type_names):
     type_objects = []
     for type in types:
-      type_object = schema.make_avsc_object(type, type_names)
+      type_object = avro.schema.make_avsc_object(type, type_names)
       if type_object.type not in VALID_TYPE_SCHEMA_TYPES:
         fail_msg = 'Type %s not an enum, fixed, record, or error.' % type
         raise ProtocolParseException(fail_msg)
@@ -60,7 +59,7 @@ class Protocol(object):
   def _parse_messages(self, messages, names):
     message_objects = {}
     for name, body in messages.iteritems():
-      if message_objects.has_key(name):
+      if name in message_objects:
         fail_msg = 'Message name "%s" repeated.' % name
         raise ProtocolParseException(fail_msg)
       try:
@@ -93,7 +92,7 @@ class Protocol(object):
 
     self._props = {}
     self.set_prop('name', name)
-    type_names = schema.Names()
+    type_names = avro.schema.Names()
     if namespace is not None:
       self.set_prop('namespace', namespace)
       type_names.default_namespace = namespace
@@ -101,13 +100,13 @@ class Protocol(object):
       self.set_prop('types', self._parse_types(types, type_names))
     if messages is not None:
       self.set_prop('messages', self._parse_messages(messages, type_names))
-    self._md5 = md5(str(self)).digest()
+    self._md5 = hashlib.md5(str(self)).digest()
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
   namespace = property(lambda self: self.get_prop('namespace'))
   fullname = property(lambda self:
-                      schema.Name(self.name, self.namespace).fullname)
+                      avro.schema.Name(self.name, self.namespace).fullname)
   types = property(lambda self: self.get_prop('types'))
   types_dict = property(lambda self: dict([(type.name, type)
                                            for type in self.types]))
@@ -124,7 +123,7 @@ class Protocol(object):
   def to_json(self):
     to_dump = {}
     to_dump['protocol'] = self.name
-    names = schema.Names(default_namespace=self.namespace)
+    names = avro.schema.Names(default_namespace=self.namespace)
     if self.namespace:
       to_dump['namespace'] = self.namespace
     if self.types:
@@ -149,20 +148,20 @@ class Message(object):
     if not isinstance(request, list):
       fail_msg = 'Request property not a list: %s' % request
       raise ProtocolParseException(fail_msg)
-    return schema.RecordSchema(None, None, request, names, 'request')
+    return avro.schema.RecordSchema(None, None, request, names, 'request')
 
   def _parse_response(self, response, names):
     if isinstance(response, basestring) and names.has_name(response, None):
       return names.get_name(response, None)
     else:
-      return schema.make_avsc_object(response, names)
+      return avro.schema.make_avsc_object(response, names)
 
   def _parse_errors(self, errors, names):
     if not isinstance(errors, list):
       fail_msg = 'Errors property not a list: %s' % errors
       raise ProtocolParseException(fail_msg)
     errors_for_parsing = {'type': 'error_union', 'declared_errors': errors}
-    return schema.make_avsc_object(errors_for_parsing, names)
+    return avro.schema.make_avsc_object(errors_for_parsing, names)
 
   def __init__(self,  name, request, response, errors=None, names=None):
     self._name = name
@@ -191,7 +190,7 @@ class Message(object):
 
   def to_json(self, names=None):
     if names is None:
-      names = schema.Names()
+      names = avro.schema.Names()
     to_dump = {}
     to_dump['request'] = self.request.to_json(names)
     to_dump['response'] = self.response.to_json(names)
@@ -217,7 +216,7 @@ def parse(json_string):
   """Constructs the Protocol from the JSON text."""
   try:
     json_data = json.loads(json_string)
-  except:
+  except ValueError:
     raise ProtocolParseException('Error parsing JSON: %s' % json_string)
 
   # construct the Avro Protocol object

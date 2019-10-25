@@ -610,9 +610,10 @@ class MapSchema(Schema):
     else:
       try:
         values_schema = make_avsc_object(values, names)
-      except:
-        fail_msg = 'Values schema not a valid Avro schema.'
-        raise SchemaParseException(fail_msg)
+      except SchemaParseException:
+        raise
+      except Exception:
+        raise SchemaParseException('Values schema is not a valid Avro schema.')
 
     self.set_prop('values', values_schema)
 
