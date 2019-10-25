@@ -876,15 +876,36 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
 #
 # Module Methods
 #
-def get_other_props(all_props,reserved_props):
+def get_other_props(all_props, reserved_props):
   """
   Retrieve the non-reserved properties from a dictionary of properties
   @args reserved_props: The set of reserved properties to exclude
   """
   if callable(getattr(all_props, 'items', None)):
-    return dict([(k,v) for (k,v) in all_props.items() if k not in
-                 reserved_props ])
+    return {k: v for k, v in all_props.items() if k not in reserved_props}
 
+def make_bytes_decimal_schema(other_props):
+  """Make a BytesDecimalSchema from just other_props."""
+  return BytesDecimalSchema(other_props.get('precision'), other_props.get('scale', 0))
+
+def make_logical_schema(logical_type, type_, other_props):
+  """Map the logical types to the appropriate literal type and schema class."""
+  logical_types = {
+    constants.DATE: ('int', DateSchema),
+    # Fixed decimal schema is handled before we get here.
+    constants.DECIMAL: ('bytes', make_bytes_decimal_schema),
+    constants.TIMESTAMP_MICROS: ('long', TimestampMicrosSchema),
+    constants.TIMESTAMP_MILLIS: ('long', TimestampMillisSchema),
+    constants.TIME_MICROS: ('long', TimeMicrosSchema),
+    constants.TIME_MILLIS: ('int', TimeMillisSchema),
+  }
+  try:
+    literal_type, schema_type = logical_types[logical_type]
+  except KeyError:
+    raise SchemaParseException("Currently does not support {} logical type".format(logical_type))
+  if literal_type != type_:
+    raise SchemaParseException("Logical type {} requires literal type {}, not {}".format(logical_type, literal_type, type_))
+  return schema_type(other_props)
 
 def make_avsc_object(json_data, names=None):
   """
@@ -892,35 +913,15 @@ def make_avsc_object(json_data, names=None):
 
   @arg names: A Name object (tracks seen names and default space)
   """
-  if names == None:
+  if names is None:
     names = Names()
 
   # JSON object (non-union)
   if callable(getattr(json_data, 'get', None)):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
-    logical_type = None
-    if 'logicalType' in json_data:
-      logical_type = json_data.get('logicalType')
-      if logical_type not in constants.SUPPORTED_LOGICAL_TYPE:
-        raise SchemaParseException("Currently does not support %s logical type" % logical_type)
-    if type in PRIMITIVE_TYPES:
-      if type == 'int' and logical_type == constants.DATE:
-        return DateSchema(other_props)
-      if type == 'int' and logical_type == constants.TIME_MILLIS:
-        return TimeMillisSchema(other_props=other_props)
-      if type == 'long' and logical_type == constants.TIME_MICROS:
-        return TimeMicrosSchema(other_props=other_props)
-      if type == 'long' and logical_type == constants.TIMESTAMP_MILLIS:
-        return TimestampMillisSchema(other_props=other_props)
-      if type == 'long' and logical_type == constants.TIMESTAMP_MICROS:
-        return TimestampMicrosSchema(other_props=other_props)
-      if type == 'bytes' and logical_type == constants.DECIMAL:
-          precision = json_data.get('precision')
-          scale = 0 if json_data.get('scale') is None else json_data.get('scale')
-          return BytesDecimalSchema(precision, scale, other_props)
-      return PrimitiveSchema(type, other_props)
-    elif type in NAMED_TYPES:
+    logical_type = json_data.get('logicalType')
+    if type in NAMED_TYPES:
       name = json_data.get('name')
       namespace = json_data.get('namespace', names.default_namespace)
       if type == 'fixed':
@@ -940,7 +941,11 @@ def make_avsc_object(json_data, names=None):
         return RecordSchema(name, namespace, fields, names, type, doc, other_props)
       else:
         raise SchemaParseException('Unknown Named Type: %s' % type)
-    elif type in VALID_TYPES:
+    if logical_type:
+      return make_logical_schema(logical_type, type, other_props or {})
+    if type in PRIMITIVE_TYPES:
+      return PrimitiveSchema(type, other_props)
+    if type in VALID_TYPES:
       if type == 'array':
         items = json_data.get('items')
         return ArraySchema(items, names, other_props)
