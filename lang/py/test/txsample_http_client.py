@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
   try:
     num_messages = int(sys.argv[4])
-  except:
+  except IndexError:
     num_messages = 1
 
   # build the parameters for the request

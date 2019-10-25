@@ -453,14 +453,13 @@ class TestProtocol(unittest.TestCase):
       proto = protocol.Parse(example.protocol_string)
       try:
         protocol.Parse(str(proto))
-        logging.debug(
-            'Successfully reparsed protocol:\n%s',
-            example.protocol_string)
-        num_correct += 1
-      except:
-        logging.debug(
-            'Failed to reparse protocol:\n%s',
-            example.protocol_string)
+      except ProtocolParseException:
+        logging.debug('Failed to reparse protocol:\n%s',
+                      example.protocol_string)
+        continue
+      logging.debug('Successfully reparsed protocol:\n%s',
+                    example.protocol_string)
+      num_correct += 1
 
     fail_msg = (
       'Cast to string success on %d out of %d protocols'
