@@ -35,13 +35,10 @@ build of AVRO is higher on the path then any installed eggs.
 
 from __future__ import absolute_import, division, print_function
 
-import os
+import os.path
 import sys
 
-# determine the build directory and then make sure all paths that start with the
+# Make sure all paths that start with the
 # build directory are at the top of the path
-builddir=os.path.split(os.path.split(__file__)[0])[0]
-bpaths=filter(lambda s:s.startswith(builddir), sys.path)
-
-for p in bpaths:
-  sys.path.insert(0,p)
+builddir = os.path.dirname(os.path.dirname(__file__))
+sys.path[:0] = [p for p in sys.path if p.startswith(builddir)]

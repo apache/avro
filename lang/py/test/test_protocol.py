@@ -402,14 +402,13 @@ class TestProtocol(unittest.TestCase):
     for example in VALID_EXAMPLES:
       protocol_data = protocol.parse(example.protocol_string)
       try:
-        try:
-          protocol.parse(str(protocol_data))
-          debug_msg = "%s: STRING CAST SUCCESS" % example.name
-          num_correct += 1
-        except:
-          debug_msg = "%s: STRING CAST FAILURE" % example.name
-      finally:
-        print(debug_msg)
+        protocol.parse(str(protocol_data))
+      except (ValueError, ProtocolParseException):
+        debug_msg = "%s: STRING CAST FAILURE" % example.name
+      else:
+        debug_msg = "%s: STRING CAST SUCCESS" % example.name
+        num_correct += 1
+      print(debug_msg)
 
     fail_msg = "Cast to string success on %d out of %d protocols" % \
       (num_correct, len(VALID_EXAMPLES))
