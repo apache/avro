@@ -185,6 +185,20 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     return result;
   }
 
+  /** Helper method for adding a message to an Class Cast Exception . */
+  protected ClassCastException addClassCastMsg(ClassCastException e, String s) {
+    ClassCastException result = new ClassCastException(e.getMessage() + s);
+    result.initCause(e.getCause() == null ? e : e.getCause());
+    return result;
+  }
+
+  /** Helper method for adding a message to an Avro Type Exception . */
+  protected AvroTypeException addAvroTypeMsg(AvroTypeException e, String s) {
+    AvroTypeException result = new AvroTypeException(e.getMessage() + s);
+    result.initCause(e.getCause() == null ? e : e.getCause());
+    return result;
+  }
+
   /**
    * Called to write a record. May be overridden for alternate record
    * representations.
@@ -204,10 +218,12 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     Object value = data.getField(datum, f.name(), f.pos(), state);
     try {
       write(f.schema(), value, out);
-    } catch (RuntimeException e) {
-      RuntimeException result = new RuntimeException(e.getMessage() + " in field " + f.name());
-      result.initCause(e.getCause() == null ? e : e.getCause());
-      throw result;
+    } catch (NullPointerException e) {
+      throw npe(e, " in field " + f.name());
+    } catch (ClassCastException cce) {
+      throw addClassCastMsg(cce, " in field " + f.name());
+    } catch (AvroTypeException ate) {
+      throw addAvroTypeMsg(ate, " in field " + f.name());
     }
   }
 
