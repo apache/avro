@@ -152,7 +152,7 @@ class TestDataFile(unittest.TestCase):
         logging.debug('Creating data file %r', file_path)
         with open(file_path, 'wb') as writer:
           datum_writer = io.DatumWriter()
-          schema_object = schema.Parse(writer_schema)
+          schema_object = schema.parse(writer_schema)
           with datafile.DataFileWriter(
               writer=writer,
               datum_writer=datum_writer,
@@ -202,7 +202,7 @@ class TestDataFile(unittest.TestCase):
         logging.debug('Creating data file %r', file_path)
         with open(file_path, 'wb') as writer:
           datum_writer = io.DatumWriter()
-          schema_object = schema.Parse(writer_schema)
+          schema_object = schema.parse(writer_schema)
           with datafile.DataFileWriter(
               writer=writer,
               datum_writer=datum_writer,
@@ -248,7 +248,7 @@ class TestDataFile(unittest.TestCase):
     with open(file_path, 'wb') as writer:
       datum_writer = io.DatumWriter()
       sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
-      schema_object = schema.Parse(sample_schema)
+      schema_object = schema.parse(sample_schema)
       with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
         dfw.append(sample_datum)
       self.assertTrue(writer.closed)
@@ -269,7 +269,7 @@ class TestDataFile(unittest.TestCase):
     with open(file_path, 'wb') as writer:
       datum_writer = io.DatumWriter()
       sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
-      schema_object = schema.Parse(sample_schema)
+      schema_object = schema.parse(sample_schema)
       with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
         dfw.SetMeta('test.string', 'foo')
         dfw.SetMeta('test.number', '1')

@@ -47,7 +47,7 @@ MAIL_PROTOCOL_JSON = """\
  }
 }
 """
-MAIL_PROTOCOL = protocol.Parse(MAIL_PROTOCOL_JSON)
+MAIL_PROTOCOL = protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_HOST = 'localhost'
 SERVER_PORT = 9090
 
