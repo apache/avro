@@ -62,7 +62,7 @@ def Write(nrecords):
     ]
   }
   """
-  schema = avro.schema.Parse(schema_s)
+  schema = avro.schema.parse(schema_s)
   writer = avro.io.DatumWriter(schema)
 
   with open(FILENAME, 'wb') as out:
