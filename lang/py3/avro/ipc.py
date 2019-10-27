@@ -47,19 +47,19 @@ def LoadResource(name):
 HANDSHAKE_REQUEST_SCHEMA_JSON = LoadResource('HandshakeRequest.avsc')
 HANDSHAKE_RESPONSE_SCHEMA_JSON = LoadResource('HandshakeResponse.avsc')
 
-HANDSHAKE_REQUEST_SCHEMA = schema.Parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
-HANDSHAKE_RESPONSE_SCHEMA = schema.Parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
+HANDSHAKE_REQUEST_SCHEMA = schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
+HANDSHAKE_RESPONSE_SCHEMA = schema.parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
 
 HANDSHAKE_REQUESTOR_WRITER = avro_io.DatumWriter(HANDSHAKE_REQUEST_SCHEMA)
 HANDSHAKE_REQUESTOR_READER = avro_io.DatumReader(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_WRITER = avro_io.DatumWriter(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_READER = avro_io.DatumReader(HANDSHAKE_REQUEST_SCHEMA)
 
-META_SCHEMA = schema.Parse('{"type": "map", "values": "bytes"}')
+META_SCHEMA = schema.parse('{"type": "map", "values": "bytes"}')
 META_WRITER = avro_io.DatumWriter(META_SCHEMA)
 META_READER = avro_io.DatumReader(META_SCHEMA)
 
-SYSTEM_ERROR_SCHEMA = schema.Parse('["string"]')
+SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
 
 AVRO_RPC_MIME = 'avro/binary'
 
@@ -225,7 +225,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     elif match == 'CLIENT':
       # Client's side hash mismatch:
       self._remote_protocol = \
-          protocol.Parse(handshake_response['serverProtocol'])
+          protocol.parse(handshake_response['serverProtocol'])
       self._remote_hash = handshake_response['serverHash']
       self._send_protocol = False
       return True
@@ -233,7 +233,7 @@ class BaseRequestor(object, metaclass=abc.ABCMeta):
     elif match == 'NONE':
       # Neither client nor server match:
       self._remote_protocol = \
-          protocol.Parse(handshake_response['serverProtocol'])
+          protocol.parse(handshake_response['serverProtocol'])
       self._remote_hash = handshake_response['serverHash']
       self._send_protocol = True
       return False
@@ -415,7 +415,7 @@ class Responder(object, metaclass=abc.ABCMeta):
     client_protocol = handshake_request.get('clientProtocol')
     remote_protocol = self.get_protocol_cache(client_hash)
     if remote_protocol is None and client_protocol is not None:
-      remote_protocol = protocol.Parse(client_protocol)
+      remote_protocol = protocol.parse(client_protocol)
       self.set_protocol_cache(client_hash, remote_protocol)
 
     # evaluate remote's guess of the local protocol
