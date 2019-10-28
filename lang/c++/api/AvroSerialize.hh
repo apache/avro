@@ -27,7 +27,7 @@
 /// Standalone serialize functions for Avro types.
 
 namespace avro {
-    
+
 /// The main serializer entry point function.  Takes a serializer (either validating or
 /// plain) and the object that should be serialized.
 

@@ -31,7 +31,7 @@
 namespace avro {
 
 /**
- * Define an is_serializable trait for types we can serialize natively. 
+ * Define an is_serializable trait for types we can serialize natively.
  * New types will need to define the trait as well.
  */
 template <typename T>
