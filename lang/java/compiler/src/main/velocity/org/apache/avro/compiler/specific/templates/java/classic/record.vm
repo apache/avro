@@ -758,7 +758,15 @@ $I    $var = ${this.javaType($s)}.values()[in.readEnum()];
 #macro( decodeString $II $var $s )
 #set ($st = ${this.getStringType($s)})
 #if ($this.isStringable($s))
+#if ($st.equals("java.net.URI"))
+$II    try {
+$II      ${var} = new ${st}(in.readString());
+$II    } catch (java.net.URISyntaxException e) {
+$II      throw new java.io.IOException(e.getMessage());
+$II    }
+#else
 $II    ${var} = new ${st}(in.readString());
+#end
 #elseif ($st.equals("java.lang.String"))
 $II    $var = in.readString();
 #elseif ($st.equals("org.apache.avro.util.Utf8"))
