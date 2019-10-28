@@ -403,10 +403,6 @@ class DataFileReader(object):
   def __iter__(self):
     return self
 
-  def __next__(self):
-    """Implements the iterator interface."""
-    return next(self)
-
   # read-only properties
   @property
   def reader(self):
@@ -555,21 +551,14 @@ class DataFileReader(object):
     if proposed_sync_marker != self.sync_marker:
       self.reader.seek(-SYNC_SIZE, 1)
       return False
-    else:
-      return True
+    return True
 
-  # TODO: handle block of length zero
-  # TODO: clean this up with recursion
   def __next__(self):
     """Return the next datum in the file."""
-    if self.block_count == 0:
-      if self.is_EOF():
+    while self.block_count == 0:
+      if self.is_EOF() or (self._skip_sync() and self.is_EOF()):
         raise StopIteration
-      elif self._skip_sync():
-        if self.is_EOF(): raise StopIteration
-        self._read_block_header()
-      else:
-        self._read_block_header()
+      self._read_block_header()
 
     datum = self.datum_reader.read(self.datum_decoder)
     self._block_count -= 1

@@ -203,5 +203,19 @@ class TestDataFile(unittest.TestCase):
         datums.append(datum)
     self.assertTrue(reader.closed)
 
+  def test_empty_datafile(self):
+    """A reader should not fail to read a file consisting of a single empty block."""
+    sample_schema = schema.parse(SCHEMAS_TO_VALIDATE[1][0])
+    with datafile.DataFileWriter(open(FILENAME, 'wb'), io.DatumWriter(),
+        sample_schema) as dfw:
+      dfw.flush()
+      # Write an empty block
+      dfw.encoder.write_long(0)
+      dfw.encoder.write_long(0)
+      dfw.writer.write(dfw.sync_marker)
+
+    with datafile.DataFileReader(open(FILENAME, 'rb'), io.DatumReader()) as dfr:
+      self.assertEqual([], list(dfr))
+
 if __name__ == '__main__':
   unittest.main()
