@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -53,7 +53,7 @@ namespace Avro.Util
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var date = ((DateTime)logicalValue).ToUniversalTime();
-            return (long)((date - UnixEpocDateTime).TotalMilliseconds);
+            return (long)(date - UnixEpocDateTime).TotalMilliseconds;
         }
 
         /// <summary>

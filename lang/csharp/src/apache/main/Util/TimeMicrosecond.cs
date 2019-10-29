@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
 namespace Avro.Util
@@ -57,7 +58,7 @@ namespace Avro.Util
             var time = (TimeSpan)logicalValue;
 
             if (time > _maxTime)
-                throw new ArgumentOutOfRangeException("logicalValue", "A 'time-micros' value can only have the range '00:00:00' to '23:59:59'.");
+                throw new ArgumentOutOfRangeException(nameof(logicalValue), "A 'time-micros' value can only have the range '00:00:00' to '23:59:59'.");
 
             return (long)(time - UnixEpocDateTime.TimeOfDay).TotalMilliseconds * 1000;
         }
