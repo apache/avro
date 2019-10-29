@@ -26,6 +26,7 @@ namespace Avro.Test
     [TestFixture]
     class LogicalTypeTests
     {
+        private static readonly TimeZoneInfo Gmt = TimeZoneInfo.CreateCustomTimeZone("(GMT)", new TimeSpan(0, 0, 0), "GMT", "GMT");
         private static readonly TimeZoneInfo GmtPlusOneHour = TimeZoneInfo.CreateCustomTimeZone("(GMT+01:00)", new TimeSpan(1, 0, 0), "GMT +1 Hour", "GMT+1");
 
         [TestCase("1234.56")]
@@ -85,7 +86,7 @@ namespace Avro.Test
 
             if (date.Kind == DateTimeKind.Local)
             {
-                date = TimeZoneInfo.ConvertTime(date, GmtPlusOneHour);
+                date = TimeZoneInfo.ConvertTime(date, Gmt, GmtPlusOneHour);
             }
 
             var avroDate = new Date();
@@ -110,7 +111,7 @@ namespace Avro.Test
 
             if (date.Kind == DateTimeKind.Local)
             {
-                date = TimeZoneInfo.ConvertTime(date, GmtPlusOneHour);
+                date = TimeZoneInfo.ConvertTime(date, Gmt, GmtPlusOneHour);
             }
 
             var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
