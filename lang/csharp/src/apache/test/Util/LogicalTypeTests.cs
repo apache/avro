@@ -74,7 +74,7 @@ namespace Avro.Test
         [TestCase("05/05/2019")]
         [TestCase("05/05/2019 00:00:00Z")]
         [TestCase("05/05/2019 01:00:00Z")]
-        [TestCase("05/05/2019 01:00:00")]
+        [TestCase("05/05/2019 01:00:00+01:00")]
         public void TestDate(string s)
         {
             var schema = (LogicalSchema)Schema.Parse("{\"type\": \"int\", \"logicalType\": \"date\"}");
@@ -97,9 +97,9 @@ namespace Avro.Test
         [TestCase("01/01/2019 14:20:00Z", "01/01/2019 14:20:00Z")]
         [TestCase("01/01/2019 14:20:00", "01/01/2019 14:20:00Z")]
         [TestCase("05/05/2019 14:20:00Z", "05/05/2019 14:20:00Z")]
-        [TestCase("05/05/2019 14:20:00", "05/05/2019 13:20:00Z")]
+        [TestCase("05/05/2019 14:20:00+01:00", "05/05/2019 13:20:00Z")]
         [TestCase("05/05/2019 00:00:00Z", "05/05/2019 00:00:00Z")]
-        [TestCase("05/05/2019 00:00:00", "05/04/2019 23:00:00Z")] // adjusted to UTC
+        [TestCase("05/05/2019 00:00:00+01:00", "05/04/2019 23:00:00Z")] // adjusted to UTC
         public void TestTimestamp(string s, string e)
         {
             var schema = (LogicalSchema)Schema.Parse("{\"type\": \"int\", \"logicalType\": \"date\"}");
