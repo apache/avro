@@ -26,9 +26,6 @@ namespace Avro.Test
     [TestFixture]
     class LogicalTypeTests
     {
-        private static readonly TimeZoneInfo Gmt = TimeZoneInfo.CreateCustomTimeZone("(GMT)", new TimeSpan(0, 0, 0), "GMT", "GMT");
-        private static readonly TimeZoneInfo GmtPlusOneHour = TimeZoneInfo.CreateCustomTimeZone("(GMT+01:00)", new TimeSpan(1, 0, 0), "GMT +1 Hour", "GMT+1");
-
         [TestCase("1234.56")]
         [TestCase("-1234.56")]
         [TestCase("123456789123456789.56")]
@@ -84,9 +81,9 @@ namespace Avro.Test
 
             var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
 
-            if (date.Kind == DateTimeKind.Local)
+            if (date.Kind != DateTimeKind.Utc)
             {
-                date = TimeZoneInfo.ConvertTime(date, Gmt, GmtPlusOneHour);
+                date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
             }
 
             var avroDate = new Date();
@@ -109,9 +106,9 @@ namespace Avro.Test
 
             var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
 
-            if (date.Kind == DateTimeKind.Local)
+            if (date.Kind != DateTimeKind.Utc)
             {
-                date = TimeZoneInfo.ConvertTime(date, Gmt, GmtPlusOneHour);
+                date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
             }
 
             var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
