@@ -127,10 +127,6 @@ RUN python2 -m pip install --upgrade pip setuptools \
 RUN python3 -m pip install --upgrade pip setuptools \
  && python3 -m pip install zstandard
 
-# Install Ruby modules
-COPY lang/ruby/Gemfile /tmp
-RUN bundle install --gemfile=/tmp/Gemfile
-
 # Install .NET SDK
 RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \
  && dpkg -i packages-microsoft-prod.deb \
@@ -139,3 +135,7 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
  && apt-get -qqy install --no-install-recommends dotnet-sdk-2.2 \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
+
+# Install Ruby modules
+COPY lang/ruby/Gemfile /tmp
+RUN bundle install --gemfile=/tmp/Gemfile
