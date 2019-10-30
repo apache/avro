@@ -82,6 +82,9 @@ SCHEMAS_TO_VALIDATE = (
     '{"type": "long", "logicalType": "timestamp-micros"}',
     datetime.datetime(2000, 1, 18, 2, 2, 1, 123499, tzinfo=timezones.tst)
   ),
+  ('{"type": "string", "logicalType": "uuid"}', unicode('12345abcd')),
+  ('{"type": "string", "logicalType": "unknown-logical-type"}', unicode('12345abcd')),
+  ('{"type": "string", "logicalType": "timestamp-millis"}', unicode('12345abcd')),
   ("""\
    {"type": "record",
     "name": "Test",
