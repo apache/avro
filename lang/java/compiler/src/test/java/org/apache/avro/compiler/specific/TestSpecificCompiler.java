@@ -424,6 +424,10 @@ public class TestSpecificCompiler {
     Assert.assertEquals("Should use double for Type.DOUBLE", "double", compiler.javaUnbox(doubleSchema, false));
     Assert.assertEquals("Should use boolean for Type.BOOLEAN", "boolean", compiler.javaUnbox(boolSchema, false));
 
+    // see AVRO-2569
+    Schema nullSchema = Schema.create(Schema.Type.NULL);
+    Assert.assertEquals("Should use void for Type.NULL", "void", compiler.javaUnbox(nullSchema, true));
+
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
@@ -435,14 +439,6 @@ public class TestSpecificCompiler {
         compiler.javaUnbox(timeSchema, false));
     Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
         compiler.javaUnbox(timestampSchema, false));
-  }
-
-  @Test
-  public void testJavaUnboxNullToVoid() throws Exception {
-    // see AVRO-2569
-    SpecificCompiler compiler = createCompiler();
-    Schema nullSchema = Schema.create(Schema.Type.NULL);
-    Assert.assertEquals("Should use void for Type.NULL", "void", compiler.javaUnbox(nullSchema, true));
   }
 
   @Test
