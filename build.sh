@@ -15,24 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e                # exit on error
+set -xe
+cd "${0%/*}"
 
-cd `dirname "$0"`     # connect to root
-
-VERSION=`cat share/VERSION.txt`
+VERSION=$(<share/VERSION.txt)
 DOCKER_XTRA_ARGS=""
 
-function usage {
+usage() {
   echo "Usage: $0 {lint|test|dist|sign|clean|veryclean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
   exit 1
 }
 
-if [ $# -eq 0 ]
-then
-  usage
-fi
-
-set -x                # echo commands
+(( $# == 0 )) && usage
 
 while (( "$#" ))
 do
@@ -260,9 +254,7 @@ do
         DOCKER_XTRA_ARGS=$2
         shift 2
       fi
-      docker build -t avro-build-ci -f share/docker/Dockerfile .
-      docker build -t avro-build -f share/docker/DockerfileLocal .
-      if [ "$(uname -s)" == "Linux" ]; then
+      if [[ "$(uname -s)" = Linux ]]; then
         USER_NAME=${SUDO_USER:=$USER}
         USER_ID=$(id -u $USER_NAME)
         GROUP_ID=$(id -g $USER_NAME)
@@ -271,12 +263,15 @@ do
         USER_ID=1000
         GROUP_ID=50
       fi
-      docker build -t avro-build-${USER_NAME} - <<UserSpecificDocker
-FROM avro-build
-RUN groupadd -g ${GROUP_ID} ${USER_NAME} || true
-RUN useradd -g ${GROUP_ID} -u ${USER_ID} -k /root -m ${USER_NAME} || true
-ENV HOME /home/${USER_NAME}
-UserSpecificDocker
+      {
+        cat share/docker/Dockerfile
+        grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
+        echo "ENV HOME /home/$USER_NAME"
+        echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
+        echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
+      } > Dockerfile
+      tar -cf- lang/ruby/Gemfile Dockerfile | docker build -t "avro-build-$USER_NAME" -
+      rm Dockerfile
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal
       # system.  And this also is a significant speedup in subsequent
@@ -308,7 +303,9 @@ UserSpecificDocker
       ;;
 
     docker-test)
-      docker build -t avro-test -f share/docker/Dockerfile .
+      tar -cf- share/docker/Dockerfile \
+               lang/ruby/Gemfile |
+        docker build -t avro-test -f share/docker/Dockerfile -
       docker run --rm -v ${PWD}:/avro/ avro-test
       ;;
 
@@ -316,7 +313,4 @@ UserSpecificDocker
       usage
       ;;
   esac
-
 done
-
-exit 0
