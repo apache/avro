@@ -1404,10 +1404,11 @@ void initFPTable() {
 }
         </source>
 
-        <p> Readers interested in the mathematics behind this
-        algorithm may want to read <a
-        href="https://www.scribd.com/fb-6001967/d/84795-Crc">this book
-        chapter.</a> (Unlike RFC-1952 and the book chapter, we prepend
+        <p>Readers interested in the mathematics behind this
+          algorithm may want to read
+        <a href="https://books.google.com/books?id=XD9iAwAAQBAJ&amp;pg=PA319"
+          >Chapter 14 of the Second Edition of <em>Hacker's Delight</em></a>.
+        (Unlike RFC-1952 and the book chapter, we prepend
         a single one bit to messages.  We do this because CRCs ignore
         leading zero bits, which can be problematic.  Our code
         prepends a one-bit by initializing fingerprints using
