@@ -23,21 +23,22 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import unittest
+import warnings
 
 import set_avro_test_path
 from avro import schema
-from avro.schema import AvroException, SchemaParseException
 
 
 class TestSchema(object):
   """A proxy for a schema string that provides useful test metadata."""
 
-  def __init__(self, data, name='', comment=''):
+  def __init__(self, data, name='', comment='', warnings=None):
     if not isinstance(data, basestring):
       data = json.dumps(data)
     self.data = data
     self.name = name or data  # default to data for name
     self.comment = comment
+    self.warnings = warnings
 
   def parse(self):
     return schema.parse(str(self))
@@ -217,23 +218,72 @@ TIMESTAMPMICROS_LOGICAL_TYPE = [
 ]
 
 IGNORED_LOGICAL_TYPE = [
-  ValidTestSchema({"type": "string", "logicalType": "uuid"}),
-  ValidTestSchema({"type": "string", "logicalType": "unknown-logical-type"}),
-  ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2}),
-  ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": -2, "scale": 2}),
-  ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 3}),
-  ValidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": -10, "scale": 2, "size": 5}),
-  ValidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestIgnored2", "precision": 2, "scale": 3, "size": 2}),
-  ValidTestSchema({"type": "int", "logicalType": "date1"}),
-  ValidTestSchema({"type": "long", "logicalType": "date"}),
-  ValidTestSchema({"type": "int", "logicalType": "time-milis"}),
-  ValidTestSchema({"type": "long", "logicalType": "time-millis"}),
-  ValidTestSchema({"type": "long", "logicalType": "time-micro"}),
-  ValidTestSchema({"type": "int", "logicalType": "time-micros"}),
-  ValidTestSchema({"type": "long", "logicalType": "timestamp-milis"}),
-  ValidTestSchema({"type": "int", "logicalType": "timestamp-millis"}),
-  ValidTestSchema({"type": "long", "logicalType": "timestamp-micro"}),
-  ValidTestSchema({"type": "int", "logicalType": "timestamp-micros"})
+  ValidTestSchema(
+    {"type": "string", "logicalType": "uuid"},
+    warnings=[schema.IgnoredLogicalType('Unknown uuid, using string.')]),
+  ValidTestSchema(
+    {"type": "string", "logicalType": "unknown-logical-type"},
+    warnings=[schema.IgnoredLogicalType('Unknown unknown-logical-type, using string.')]),
+  ValidTestSchema(
+    {"type": "bytes", "logicalType": "decimal", "scale": 0},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal precision None. Must be a positive integer.')]),
+  ValidTestSchema(
+    {"type": "bytes", "logicalType": "decimal", "precision": 2.0, "scale": 0},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal precision 2.0. Must be a positive integer.')]),
+  ValidTestSchema(
+    {"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal scale -2. Must be a positive integer.')]),
+  ValidTestSchema(
+    {"type": "bytes", "logicalType": "decimal", "precision": -2, "scale": 2},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal precision -2. Must be a positive integer.')]),
+  ValidTestSchema(
+    {"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 3},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal scale 3. Cannot be greater than precision 2.')]),
+  ValidTestSchema(
+    {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": -10, "scale": 2, "size": 5},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal precision -10. Must be a positive integer.')]),
+  ValidTestSchema(
+    {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "scale": 2, "size": 5},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal precision None. Must be a positive integer.')]),
+  ValidTestSchema(
+    {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": 2, "scale": 3, "size": 2},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal scale 3. Cannot be greater than precision 2.')]),
+  ValidTestSchema(
+    {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": 311, "size": 129},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal precision 311. Max is 310.')]),
+  ValidTestSchema(
+    {"type": "float", "logicalType": "decimal", "precision": 2, "scale": 0},
+    warnings=[schema.IgnoredLogicalType('Logical type decimal requires literal type bytes/fixed, not float.')]),
+  ValidTestSchema(
+    {"type": "int", "logicalType": "date1"},
+    warnings=[schema.IgnoredLogicalType('Unknown date1, using int.')]),
+  ValidTestSchema(
+    {"type": "long", "logicalType": "date"},
+    warnings=[schema.IgnoredLogicalType('Logical type date requires literal type int, not long.')]),
+  ValidTestSchema(
+    {"type": "int", "logicalType": "time-milis"},
+    warnings=[schema.IgnoredLogicalType('Unknown time-milis, using int.')]),
+  ValidTestSchema(
+    {"type": "long", "logicalType": "time-millis"},
+    warnings=[schema.IgnoredLogicalType('Logical type time-millis requires literal type int, not long.')]),
+  ValidTestSchema(
+    {"type": "long", "logicalType": "time-micro"},
+    warnings=[schema.IgnoredLogicalType('Unknown time-micro, using long.')]),
+  ValidTestSchema(
+    {"type": "int", "logicalType": "time-micros"},
+    warnings=[schema.IgnoredLogicalType('Logical type time-micros requires literal type long, not int.')]),
+  ValidTestSchema(
+    {"type": "long", "logicalType": "timestamp-milis"},
+    warnings=[schema.IgnoredLogicalType('Unknown timestamp-milis, using long.')]),
+  ValidTestSchema(
+    {"type": "int", "logicalType": "timestamp-millis"},
+    warnings=[schema.IgnoredLogicalType('Logical type timestamp-millis requires literal type long, not int.')]),
+  ValidTestSchema(
+    {"type": "long", "logicalType": "timestamp-micro"},
+    warnings=[schema.IgnoredLogicalType('Unknown timestamp-micro, using long.')]),
+  ValidTestSchema(
+    {"type": "int", "logicalType": "timestamp-micros"},
+    warnings=[schema.IgnoredLogicalType('Logical type timestamp-micros requires literal type long, not int.')])
 ]
 
 EXAMPLES = PRIMITIVE_EXAMPLES
@@ -397,13 +447,22 @@ class SchemaParseTestCase(unittest.TestCase):
     super(SchemaParseTestCase, self).__init__(
         'parse_valid' if test_schema.valid else 'parse_invalid')
     self.test_schema = test_schema
+    # Never hide repeated warnings when running this test case.
+    warnings.simplefilter("always")
 
   def parse_valid(self):
-    """Parsing a valid schema should not error."""
-    try:
-      self.test_schema.parse()
-    except (schema.AvroException, schema.SchemaParseException):
-      self.fail("Valid schema failed to parse: {!s}".format(self.test_schema))
+    """Parsing a valid schema should not error, but may contain warnings."""
+    with warnings.catch_warnings(record=True) as actual_warnings:
+      try:
+        self.test_schema.parse()
+        actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
+        if self.test_schema.warnings:
+          expected_messages = [str(w) for w in self.test_schema.warnings]
+          self.assertItemsEqual(actual_messages, expected_messages)
+        else:
+          self.assertEqual(actual_messages, [])
+      except (schema.AvroException, schema.SchemaParseException):
+        self.fail("Valid schema failed to parse: {!s}".format(self.test_schema))
 
   def parse_invalid(self):
     """Parsing an invalid schema should error."""
