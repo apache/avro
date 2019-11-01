@@ -48,6 +48,13 @@ var schema = fs.readFileSync("../../share/test/schemas/interop.avsc", "utf-8");
 
 for (var codec in files.streams.BlockEncoder.getDefaultCodecs()) {
   var path = "../../build/interop/data/js";
+  path.split("/").reduce(function (fullPath, curDir) {
+    fullPath += (fullPath === "" ? "" : "/") + curDir;
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath);
+    }
+    return fullPath;
+  }, "");
   if (codec !== "null") {
     path += "_" + codec;
   }

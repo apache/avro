@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -5,17 +8,19 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 # https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Test the protocol parsing logic.
-"""
+
+"""Test the protocol parsing logic."""
+
+from __future__ import absolute_import, division, print_function
+
 import unittest
 
 from avro import protocol
@@ -154,7 +159,7 @@ ExampleProtocol("""\
 
  "types": [
      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
+     {"name": "ReferencedRecord", "type": "record",
        "fields": [ {"name": "foo", "type": "string"} ] },
      {"name": "TestRecord", "type": "record",
       "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
@@ -167,7 +172,7 @@ ExampleProtocol("""\
 
  "messages": {
      "echo": {
-         "request": [{"name": "qualified", 
+         "request": [{"name": "qualified",
              "type": "org.apache.avro.test.namespace.TestRecord"}],
          "response": "TestRecord"
      },
@@ -188,13 +193,13 @@ ExampleProtocol("""\
 
  "types": [
      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
-       "namespace": "org.apache.avro.other.namespace", 
+     {"name": "ReferencedRecord", "type": "record",
+       "namespace": "org.apache.avro.other.namespace",
        "fields": [ {"name": "foo", "type": "string"} ] },
      {"name": "TestRecord", "type": "record",
       "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
-                  {"name": "qualified", 
-                    "type": "org.apache.avro.other.namespace.ReferencedRecord"} 
+                  {"name": "qualified",
+                    "type": "org.apache.avro.other.namespace.ReferencedRecord"}
                 ]
      },
      {"name": "TestError",
@@ -204,7 +209,7 @@ ExampleProtocol("""\
 
  "messages": {
      "echo": {
-         "request": [{"name": "qualified", 
+         "request": [{"name": "qualified",
              "type": "org.apache.avro.test.namespace.TestRecord"}],
          "response": "TestRecord"
      },
@@ -225,10 +230,10 @@ ExampleProtocol("""\
 
  "types": [
      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
-       "namespace": "org.apache.avro.other.namespace", 
+     {"name": "ReferencedRecord", "type": "record",
+       "namespace": "org.apache.avro.other.namespace",
        "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "ReferencedRecord", "type": "record", 
+     {"name": "ReferencedRecord", "type": "record",
        "fields": [ {"name": "bar", "type": "double"} ] },
      {"name": "TestError",
       "type": "error", "fields": [ {"name": "message", "type": "string"} ]
@@ -237,7 +242,7 @@ ExampleProtocol("""\
 
  "messages": {
      "echo": {
-         "request": [{"name": "qualified", 
+         "request": [{"name": "qualified",
              "type": "ReferencedRecord"}],
          "response": "org.apache.avro.other.namespace.ReferencedRecord"
      },
@@ -258,9 +263,9 @@ ExampleProtocol("""\
 
  "types": [
      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record", 
+     {"name": "ReferencedRecord", "type": "record",
        "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "ReferencedRecord", "type": "record", 
+     {"name": "ReferencedRecord", "type": "record",
        "fields": [ {"name": "bar", "type": "double"} ] },
      {"name": "TestError",
       "type": "error", "fields": [ {"name": "message", "type": "string"} ]
@@ -269,7 +274,7 @@ ExampleProtocol("""\
 
  "messages": {
      "echo": {
-         "request": [{"name": "qualified", 
+         "request": [{"name": "qualified",
              "type": "ReferencedRecord"}],
          "response": "org.apache.avro.other.namespace.ReferencedRecord"
      },
@@ -352,12 +357,12 @@ class TestProtocol(unittest.TestCase):
     for example in EXAMPLES:
       try:
         protocol.parse(example.protocol_string)
-        if example.valid: 
+        if example.valid:
           num_correct += 1
         else:
           self.fail("Parsed invalid protocol: %s" % (example.name,))
-      except Exception, e:
-        if not example.valid: 
+      except Exception as e:
+        if not example.valid:
           num_correct += 1
         else:
           self.fail("Coudl not parse valid protocol: %s" % (example.name,))
@@ -367,10 +372,10 @@ class TestProtocol(unittest.TestCase):
     self.assertEqual(num_correct, len(EXAMPLES), fail_msg)
 
   def test_inner_namespace_set(self):
-    print ''
-    print 'TEST INNER NAMESPACE'
-    print '==================='
-    print ''
+    print('')
+    print('TEST INNER NAMESPACE')
+    print('===================')
+    print('')
     proto = protocol.parse(HELLO_WORLD.protocol_string)
     self.assertEqual(proto.namespace, "com.acme")
     greeting_type = proto.types_dict['Greeting']
@@ -388,23 +393,22 @@ class TestProtocol(unittest.TestCase):
     Test that the string generated by an Avro Protocol object
     is, in fact, a valid Avro protocol.
     """
-    print ''
-    print 'TEST CAST TO STRING'
-    print '==================='
-    print ''
+    print('')
+    print('TEST CAST TO STRING')
+    print('===================')
+    print('')
 
     num_correct = 0
     for example in VALID_EXAMPLES:
       protocol_data = protocol.parse(example.protocol_string)
       try:
-        try:
-          protocol.parse(str(protocol_data))
-          debug_msg = "%s: STRING CAST SUCCESS" % example.name
-          num_correct += 1
-        except:
-          debug_msg = "%s: STRING CAST FAILURE" % example.name
-      finally:
-        print debug_msg
+        protocol.parse(str(protocol_data))
+      except (ValueError, ProtocolParseException):
+        debug_msg = "%s: STRING CAST FAILURE" % example.name
+      else:
+        debug_msg = "%s: STRING CAST SUCCESS" % example.name
+        num_correct += 1
+      print(debug_msg)
 
     fail_msg = "Cast to string success on %d out of %d protocols" % \
       (num_correct, len(VALID_EXAMPLES))
@@ -417,10 +421,10 @@ class TestProtocol(unittest.TestCase):
          to generate Avro protocol "round trip".
     3. Ensure "original" and "round trip" protocols are equivalent.
     """
-    print ''
-    print 'TEST ROUND TRIP'
-    print '==============='
-    print ''
+    print('')
+    print('TEST ROUND TRIP')
+    print('===============')
+    print('')
 
     num_correct = 0
     for example in VALID_EXAMPLES:
@@ -430,7 +434,7 @@ class TestProtocol(unittest.TestCase):
       if original_protocol == round_trip_protocol:
         num_correct += 1
         debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
-      else:       
+      else:
         self.fail("Round trip failure: %s %s %s", (example.name, example.protocol_string, str(original_protocol)))
 
     fail_msg = "Round trip success on %d out of %d protocols" % \

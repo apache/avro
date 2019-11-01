@@ -45,7 +45,7 @@
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/protocol</outputDirectory>
+          <outputDirectory>${basedir}/target/test-harness/protocol-inject</outputDirectory>
           <project implementation="org.apache.maven.plugin.testing.stubs.MavenProjectStub"/>
           <templateDirectory>
             ${basedir}/src/test/resources/templates/
@@ -70,5 +70,4 @@
       <version>${jackson.databind.version}</version>
     </dependency>
   </dependencies>
-
 </project>

@@ -77,7 +77,7 @@ public:
 
 typedef std::unique_ptr<InputStream> InputStreamPtr;
 
-/** 
+/**
  * An InputStream which also supports seeking to a specific offset.
  */
 class AVRO_DECL SeekableInputStream : public InputStream {
@@ -370,7 +370,7 @@ struct StreamWriter {
      * The next location to write to.
      */
     uint8_t* next_;
-    
+
     /**
      * One past the last location one can write to.
      */

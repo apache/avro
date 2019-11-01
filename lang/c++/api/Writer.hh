@@ -41,7 +41,7 @@ class WriterImpl : private boost::noncopyable
     WriterImpl() {}
 
     explicit WriterImpl(const ValidSchema &schema) :
-        validator_(schema) 
+        validator_(schema)
     {}
 
     void writeValue(const Null &) {
@@ -72,7 +72,7 @@ class WriterImpl : private boost::noncopyable
             float f;
             int32_t i;
         } v;
-    
+
         v.f = val;
         buffer_.writeTo(v.i);
     }
@@ -83,7 +83,7 @@ class WriterImpl : private boost::noncopyable
             double d;
             int64_t i;
         } v;
-        
+
         v.d = val;
         buffer_.writeTo(v.i);
     }

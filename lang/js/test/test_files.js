@@ -564,7 +564,7 @@ suite('files', function () {
     encoder.write({name: 'Ann', age: 32});
     encoder.end({name: 'Bob', age: 33});
     var n = 0;
-    encoder.on('finish', function () {
+    encoder.getDownstream().on('finish', function () {
       files.createFileDecoder(path)
         .on('data', function (obj) {
           n++;

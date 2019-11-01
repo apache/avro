@@ -33,7 +33,7 @@ namespace avro {
 
 class ValidSchema;
 class Layout;
-    
+
 class AVRO_DECL Resolver : private boost::noncopyable
 {
 

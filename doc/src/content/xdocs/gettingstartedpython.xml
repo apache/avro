@@ -187,8 +187,7 @@ writer = DataFileWriter(open("users.avro", "wb"), DatumWriter(), schema)
           <li>A <code>DatumWriter</code>, which is responsible for actually
           serializing the items to Avro's binary format
           (<code>DatumWriter</code>s can be used separately from
-          <code>DataFileWriter</code>s, e.g., to perform IPC with Avro
-          <strong>TODO: is this true??</strong>).</li>
+          <code>DataFileWriter</code>s, e.g., to perform IPC with Avro).</li>
           <li>The schema we're using.  The <code>DataFileWriter</code> needs the
           schema both to write the schema to the data file, and to verify that
           the items we write are valid items and write the appropriate

@@ -138,9 +138,8 @@ namespace Avro.Specific
 
                 // Modify provided type to ensure it can be discovered.
                 // This is mainly for Generics, and Nullables.
-                name = name.Replace("Nullable", "Nullable`1");
-                name = name.Replace("IList", "System.Collections.Generic.IList`1");
-                name = name.Replace("<", "[");
+                name = name.Replace("Nullable<", "Nullable`1[");
+                name = name.Replace("IList<", "System.Collections.Generic.IList`1[");
                 name = name.Replace(">", "]");
 
                 // if entry assembly different from current assembly, try entry assembly first

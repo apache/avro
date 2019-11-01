@@ -47,9 +47,9 @@ enum Type {
     AVRO_FIXED,     /*!< Fixed number of bytes */
 
     AVRO_NUM_TYPES, /*!< Marker */
-    
+
     // The following is a pseudo-type used in implementation
-    
+
     AVRO_SYMBOLIC = AVRO_NUM_TYPES, /*!< User internally to avoid circular references. */
     AVRO_UNKNOWN  = -1 /*!< Used internally. */
 

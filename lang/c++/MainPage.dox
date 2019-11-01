@@ -81,7 +81,7 @@ For Windows native builds, you need to install the following:
 <h3>Installing Avro C++</h3>
 <ol>
     <li>Download the latest Avro distribution. Avro distribution is a compressed tarball.
-Please see the main documentation if you want to build anything more than Avro C++. 
+Please see the main documentation if you want to build anything more than Avro C++.
 </ol>
 
 <h4>On Unix systems and on Cygwin</h4>
@@ -213,7 +213,7 @@ stored in a JSON file:</p>
 This reads the file, and parses the JSON schema into an in-memory schema
 object of type avro::ValidSchema. If, for some reason, the schema is not valid,
 the <tt>cpxSchema</tt> object will not be set, and an exception will be
-thrown. 
+thrown.
 </p>
 If you always use code Avro generator you don't really need the in-memory
 schema objects. But if you use custom objects and routines to encode or decode
@@ -275,7 +275,7 @@ fronting them with a validating encoder or validating decoder is wasteful.
 A third way to encode and decode data is to use Avro's generic datum.
 Avro's generic datum allows you to read any arbitrary data corresponding to
 an arbitrary schema into a generic object. One need not know anything
-about the schema or data at compile time. 
+about the schema or data at compile time.
 
 Here is an example how one can use the generic datum.
 
@@ -290,7 +290,7 @@ them. Please see \ref avro::GenericDatum for more details on how to use it.
 <h2>Reading data with a schema different from that of the writer</h2>
 It is possible to read the data written according to one schema
 using a different schema, provided the reader's schema and the writer's
-schema are compatible according to the Avro's Schema resolution rules. 
+schema are compatible according to the Avro's Schema resolution rules.
 <p>
 For example, you have a reader which is interested only in the imaginary part
 of a complex number while the writer writes both the real and imaginary parts.

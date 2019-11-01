@@ -93,7 +93,7 @@ final class SchemaResolver {
     Protocol result = new Protocol(protocol.getName(), protocol.getDoc(), protocol.getNamespace());
     final Collection<Schema> types = protocol.getTypes();
     // replace unresolved schemas.
-    List<Schema> newSchemas = new ArrayList(types.size());
+    List<Schema> newSchemas = new ArrayList<>(types.size());
     IdentityHashMap<Schema, Schema> replacements = new IdentityHashMap<>();
     for (Schema schema : types) {
       newSchemas.add(Schemas.visit(schema, new ResolvingVisitor(schema, replacements, new SymbolTable(protocol))));

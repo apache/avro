@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,19 +17,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
+from __future__ import absolute_import, division, print_function
+
 import os
+import shutil
 import subprocess
 import sys
-import time
+import tempfile
 import unittest
 
+import avro
+import avro.datafile
+import avro.io
+import avro.schema
+import avro.tether.tether_task_runner
 import set_avro_test_path
+
+_IN_SCHEMA = '"string"'
+
+# The schema for the output of the mapper and reducer
+_OUT_SCHEMA = """{
+  "type": "record",
+  "name": "Pair",
+  "namespace": "org.apache.avro.mapred",
+  "fields": [{"name": "key", "type": "string"},
+             {"name": "value", "type": "long", "order": "ignore"}]
+}"""
 
 
 class TestTetherWordCount(unittest.TestCase):
-  """ unittest for a python tethered map-reduce job.
-  """
+  """unittest for a python tethered map-reduce job."""
 
   def _write_lines(self,lines,fname):
     """
@@ -37,10 +57,6 @@ class TestTetherWordCount(unittest.TestCase):
     lines - list of strings to write
     fname - the name of the file to write to.
     """
-    import avro.io as avio
-    from avro.datafile import DataFileReader,DataFileWriter
-    from avro import schema
-
     #recursively make all directories
     dparts=fname.split(os.sep)[:-1]
     for i in range(len(dparts)):
@@ -48,20 +64,11 @@ class TestTetherWordCount(unittest.TestCase):
       if not(os.path.exists(pdir)):
         os.mkdir(pdir)
 
-
-    with file(fname,'w') as hf:
-      inschema="""{"type":"string"}"""
-      writer=DataFileWriter(hf,avio.DatumWriter(inschema),writers_schema=schema.parse(inschema))
-
-      #encoder = avio.BinaryEncoder(writer)
-      #datum_writer = avio.DatumWriter()
+    datum_writer = avro.io.DatumWriter(_IN_SCHEMA)
+    writers_schema = avro.schema.parse(_IN_SCHEMA)
+    with avro.datafile.DataFileWriter(open(fname, 'wb'), datum_writer, writers_schema) as writer:
       for datum in lines:
         writer.append(datum)
-
-      writer.close()
-
-
-
 
   def _count_words(self,lines):
     """Return a dictionary counting the words in lines
@@ -72,7 +79,7 @@ class TestTetherWordCount(unittest.TestCase):
       words=line.split()
 
       for w in words:
-        if not(counts.has_key(w.strip())):
+        if not(w.strip() in counts):
           counts[w.strip()]=0
 
         counts[w.strip()]=counts[w.strip()]+1
@@ -85,23 +92,8 @@ class TestTetherWordCount(unittest.TestCase):
 
     Assumptions: 1) bash is available in /bin/bash
     """
-    from word_count_task import WordCountTask
-    from avro.tether import tether_task_runner
-    from avro.datafile import DataFileReader
-    from avro.io import DatumReader
-    import avro
-
-    import subprocess
-    import StringIO
-    import shutil
-    import tempfile
-    import inspect
-
-    proc=None
-
+    exfile = None
     try:
-
-
       # TODO we use the tempfile module to generate random names
       # for the files
       base_dir = "/tmp/test_tether_word_count"
@@ -121,22 +113,13 @@ class TestTetherWordCount(unittest.TestCase):
       if not(os.path.exists(infile)):
         self.fail("Missing the input file {0}".format(infile))
 
-
-      # The schema for the output of the mapper and reducer
-      oschema="""
-{"type":"record",
- "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
-     {"name":"key","type":"string"},
-     {"name":"value","type":"long","order":"ignore"}
- ]
-}
-"""
-
       # write the schema to a temporary file
-      osfile=tempfile.NamedTemporaryFile(mode='w',suffix=".avsc",prefix="wordcount",delete=False)
-      outschema=osfile.name
-      osfile.write(oschema)
-      osfile.close()
+      with tempfile.NamedTemporaryFile(mode='wb',
+                                       suffix=".avsc",
+                                       prefix="wordcount",
+                                       delete=False) as osfile:
+        osfile.write(_OUT_SCHEMA)
+      outschema = osfile.name
 
       if not(os.path.exists(outschema)):
         self.fail("Missing the schema file")
@@ -156,10 +139,7 @@ class TestTetherWordCount(unittest.TestCase):
       args.extend(["--outschema",outschema])
       args.extend(["--protocol","http"])
 
-      # form the arguments for the subprocess
-      subargs=[]
-
-      srcfile=inspect.getsourcefile(tether_task_runner)
+      srcfile = avro.tether.tether_task_runner.__file__
 
       # Create a shell script to act as the program we want to execute
       # We do this so we can set the python path appropriately
@@ -169,45 +149,36 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
 """
       # We need to make sure avro is on the path
       # getsourcefile(avro) returns .../avro/__init__.py
-      asrc=inspect.getsourcefile(avro)
+      asrc = avro.__file__
       apath=asrc.rsplit(os.sep,2)[0]
 
       # path to where the tests lie
       tpath=os.path.split(__file__)[0]
 
-      exhf=tempfile.NamedTemporaryFile(mode='w',prefix="exec_word_count_",delete=False)
+      with tempfile.NamedTemporaryFile(mode='wb',
+                                       prefix="exec_word_count_",
+                                       delete=False) as exhf:
+        exhf.write(script.format((os.pathsep).join([apath,tpath]),srcfile))
       exfile=exhf.name
-      exhf.write(script.format((os.pathsep).join([apath,tpath]),srcfile))
-      exhf.close()
 
       # make it world executable
-      os.chmod(exfile,0755)
+      os.chmod(exfile,0o755)
 
       args.extend(["--program",exfile])
 
-      print "Command:\n\t{0}".format(" ".join(args))
-      proc=subprocess.Popen(args)
-
-
-      proc.wait()
+      print("Command:\n\t{0}".format(" ".join(args)))
+      subprocess.check_call(args)
 
       # read the output
-      with file(os.path.join(outpath,"part-00000.avro")) as hf:
-        reader=DataFileReader(hf, DatumReader())
+      datum_reader = avro.io.DatumReader()
+      outfile = os.path.join(outpath, "part-00000.avro")
+      with avro.datafile.DataFileReader(open(outfile, 'rb'), datum_reader) as reader:
         for record in reader:
           self.assertEqual(record["value"],true_counts[record["key"]])
-
-        reader.close()
-
-    except Exception as e:
-      raise
     finally:
-      # close the process
-      if proc is not None and proc.returncode is None:
-        proc.kill()
       if os.path.exists(base_dir):
         shutil.rmtree(base_dir)
-      if os.path.exists(exfile):
+      if exfile is not None and os.path.exists(exfile):
         os.remove(exfile)
 
 if __name__== "__main__":

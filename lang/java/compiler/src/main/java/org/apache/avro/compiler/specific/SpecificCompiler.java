@@ -39,7 +39,6 @@ import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.TimeConversions;
-import org.apache.avro.data.JodaTimeConversions;
 import org.apache.avro.specific.SpecificData;
 
 import org.apache.avro.Protocol;
@@ -96,29 +95,12 @@ public class SpecificCompiler {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
   }
 
-  public enum DateTimeLogicalTypeImplementation {
-    JODA {
-      @Override
-      void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
-      }
-    },
-    JSR310 {
-      @Override
-      void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
-      }
-    };
-
-    public static final DateTimeLogicalTypeImplementation DEFAULT = JSR310;
-
-    abstract void addLogicalTypeConversions(SpecificData specificData);
+  void addLogicalTypeConversions(SpecificData specificData) {
+    specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
   }
 
   private final SpecificData specificData = new SpecificData();
@@ -134,7 +116,6 @@ public class SpecificCompiler {
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
-  private final DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation;
   private String suffix = ".java";
   private List<Object> additionalVelocityTools = new ArrayList<>();
 
@@ -164,11 +145,7 @@ public class SpecificCompiler {
       + " * DO NOT EDIT DIRECTLY\n" + " */\n";
 
   public SpecificCompiler(Protocol protocol) {
-    this(protocol, DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  public SpecificCompiler(Protocol protocol, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this(dateTimeLogicalTypeImplementation);
+    this();
     // enqueue all types
     for (Schema s : protocol.getTypes()) {
       enqueue(s);
@@ -177,36 +154,16 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
-    this(schema, DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  public SpecificCompiler(Schema schema, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this(dateTimeLogicalTypeImplementation);
+    this();
     enqueue(schema);
     this.protocol = null;
   }
 
   /**
-   * Creates a specific compiler with the default (JSR310) type for date/time
-   * related logical types.
-   *
-   * @see #SpecificCompiler(DateTimeLogicalTypeImplementation)
+   * Creates a specific compiler with the given type to use for date/time related
+   * logical types.
    */
   SpecificCompiler() {
-    this(DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  /**
-   * Creates a specific compiler with the given type to use for date/time related
-   * logical types. Use {@link DateTimeLogicalTypeImplementation#JODA} to generate
-   * Joda Time classes, use {@link DateTimeLogicalTypeImplementation#JSR310} to
-   * generate {@code java.time.*} classes for the date/time local types.
-   *
-   * @param dateTimeLogicalTypeImplementation the types used for date/time related
-   *                                          logical types
-   */
-  SpecificCompiler(DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this.dateTimeLogicalTypeImplementation = dateTimeLogicalTypeImplementation;
     this.templateDir = System.getProperty("org.apache.avro.specific.templates",
         "/org/apache/avro/compiler/specific/templates/java/classic/");
     initializeVelocity();
@@ -305,10 +262,6 @@ public class SpecificCompiler {
     this.enableDecimalLogicalType = enableDecimalLogicalType;
   }
 
-  public DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
-    return dateTimeLogicalTypeImplementation;
-  }
-
   public void addCustomConversion(Class<?> conversionClass) {
     try {
       final Conversion<?> conversion = (Conversion<?>) conversionClass.getDeclaredConstructor().newInstance();
@@ -398,7 +351,7 @@ public class SpecificCompiler {
   }
 
   private void initializeSpecificData() {
-    dateTimeLogicalTypeImplementation.addLogicalTypeConversions(specificData);
+    addLogicalTypeConversions(specificData);
     specificData.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
@@ -475,7 +428,7 @@ public class SpecificCompiler {
 
     for (File src : srcFiles) {
       Schema schema = parser.parse(src);
-      SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeImplementation.DEFAULT);
+      SpecificCompiler compiler = new SpecificCompiler(schema);
       compiler.compileToDestination(src, dest);
     }
   }
@@ -976,16 +929,17 @@ public class SpecificCompiler {
 
   /** Utility for template use. Returns the java annotations for a schema. */
   public String[] javaAnnotations(JsonProperties props) {
-    Object value = props.getObjectProp("javaAnnotation");
+    final Object value = props.getObjectProp("javaAnnotation");
     if (value == null)
       return new String[0];
     if (value instanceof String)
       return new String[] { value.toString() };
     if (value instanceof List) {
-      List<?> list = (List<?>) value;
-      List<String> annots = new ArrayList<>();
-      for (Object o : list)
+      final List<?> list = (List<?>) value;
+      final List<String> annots = new ArrayList<>();
+      for (Object o : list) {
         annots.add(o.toString());
+      }
       return annots.toArray(new String[0]);
     }
     return new String[0];
