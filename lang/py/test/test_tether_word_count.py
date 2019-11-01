@@ -92,9 +92,7 @@ class TestTetherWordCount(unittest.TestCase):
 
     Assumptions: 1) bash is available in /bin/bash
     """
-    proc=None
     exfile = None
-
     try:
       # TODO we use the tempfile module to generate random names
       # for the files
@@ -141,9 +139,6 @@ class TestTetherWordCount(unittest.TestCase):
       args.extend(["--outschema",outschema])
       args.extend(["--protocol","http"])
 
-      # form the arguments for the subprocess
-      subargs=[]
-
       srcfile = avro.tether.tether_task_runner.__file__
 
       # Create a shell script to act as the program we want to execute
@@ -172,10 +167,7 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
       args.extend(["--program",exfile])
 
       print("Command:\n\t{0}".format(" ".join(args)))
-      proc=subprocess.Popen(args)
-
-
-      proc.wait()
+      subprocess.check_call(args)
 
       # read the output
       datum_reader = avro.io.DatumReader()
@@ -184,9 +176,6 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
         for record in reader:
           self.assertEqual(record["value"],true_counts[record["key"]])
     finally:
-      # close the process
-      if proc is not None and proc.returncode is None:
-        proc.kill()
       if os.path.exists(base_dir):
         shutil.rmtree(base_dir)
       if exfile is not None and os.path.exists(exfile):
