@@ -66,8 +66,8 @@ def looney_records():
 SCRIPT = join(dirname(__file__), "..", "scripts", "avro")
 
 _JSON_PRETTY = '''{
-    "type": "duck", 
-    "last": "duck", 
+    "type": "duck",
+    "last": "duck",
     "first": "daffy"
 }'''
 
