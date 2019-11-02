@@ -39,7 +39,11 @@ def print_json(row):
     print(json.dumps(row))
 
 def print_json_pretty(row):
-    print(json.dumps(row, indent=4))
+    """Pretty print JSON"""
+    # Need to work around https://bugs.python.org/issue16333
+    # where json.dumps leaves trailing spaces.
+    result = json.dumps(row, indent=4).replace(' \n', '\n')
+    print(result)
 
 _write_row = csv.writer(stdout).writerow
 _encoding = stdout.encoding or "UTF-8"
