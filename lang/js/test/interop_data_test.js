@@ -1,4 +1,4 @@
-/* jshint node: true */
+/* jshint node: true, mocha: true */
 
 /**
  *  Licensed to the Apache Software Foundation (ASF) under one

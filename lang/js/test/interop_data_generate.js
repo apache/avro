@@ -46,19 +46,21 @@ var datum = {
 
 var schema = fs.readFileSync("../../share/test/schemas/interop.avsc", "utf-8");
 
-for (var codec in files.streams.BlockEncoder.getDefaultCodecs()) {
-  var path = "../../build/interop/data/js";
-  path.split("/").reduce(function (fullPath, curDir) {
-    fullPath += (fullPath === "" ? "" : "/") + curDir;
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath);
-    }
-    return fullPath;
-  }, "");
-  if (codec !== "null") {
-    path += "_" + codec;
+var outDir = "../../build/interop/data";
+outDir.split("/").reduce(function (fullPath, curDir) {
+  fullPath += (fullPath === "" ? "" : "/") + curDir;
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath);
   }
-  path += ".avro";
-  var encoder = files.createFileEncoder(path, schema, {codec: codec});
+  return fullPath;
+}, "");
+
+for (var codec in files.streams.BlockEncoder.getDefaultCodecs()) {
+  var filePath = "../../build/interop/data/js";
+  if (codec !== "null") {
+    filePath += "_" + codec;
+  }
+  filePath += ".avro";
+  var encoder = files.createFileEncoder(filePath, schema, {codec: codec});
   encoder.end(datum);
 }
