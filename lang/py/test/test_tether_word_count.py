@@ -19,6 +19,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import collections
 import os
 import shutil
 import subprocess
@@ -57,36 +58,13 @@ class TestTetherWordCount(unittest.TestCase):
     lines - list of strings to write
     fname - the name of the file to write to.
     """
-    #recursively make all directories
-    dparts=fname.split(os.sep)[:-1]
-    for i in range(len(dparts)):
-      pdir=os.sep+os.sep.join(dparts[:i+1])
-      if not(os.path.exists(pdir)):
-        os.mkdir(pdir)
-
     datum_writer = avro.io.DatumWriter(_IN_SCHEMA)
     writers_schema = avro.schema.parse(_IN_SCHEMA)
     with avro.datafile.DataFileWriter(open(fname, 'wb'), datum_writer, writers_schema) as writer:
       for datum in lines:
         writer.append(datum)
 
-  def _count_words(self,lines):
-    """Return a dictionary counting the words in lines
-    """
-    counts={}
-
-    for line in lines:
-      words=line.split()
-
-      for w in words:
-        if not(w.strip() in counts):
-          counts[w.strip()]=0
-
-        counts[w.strip()]=counts[w.strip()]+1
-
-    return counts
-
-  def test1(self):
+  def test_tether_word_count(self):
     """
     Run a tethered map-reduce job.
 
@@ -106,12 +84,11 @@ class TestTetherWordCount(unittest.TestCase):
              "the cow jumps over the moon",
              "the rain in spain falls mainly on the plains"]
 
+      if not os.path.exists(inpath):
+        os.makedirs(inpath)
       self._write_lines(lines,infile)
 
-      true_counts=self._count_words(lines)
-
-      if not(os.path.exists(infile)):
-        self.fail("Missing the input file {0}".format(infile))
+      self.assertTrue(os.path.exists(infile), "Missing the input file {}".format(infile))
 
       # write the schema to a temporary file
       with tempfile.NamedTemporaryFile(mode='wb',
@@ -121,23 +98,9 @@ class TestTetherWordCount(unittest.TestCase):
         osfile.write(_OUT_SCHEMA)
       outschema = osfile.name
 
-      if not(os.path.exists(outschema)):
-        self.fail("Missing the schema file")
+      self.assertTrue(os.path.exists(outschema), "Missing the schema file")
 
       outpath = os.path.join(base_dir, "out")
-
-      args=[]
-
-      args.append("java")
-      args.append("-jar")
-      args.append(os.path.abspath("@TOPDIR@/../java/tools/target/avro-tools-@AVRO_VERSION@.jar"))
-
-
-      args.append("tether")
-      args.extend(["--in",inpath])
-      args.extend(["--out",outpath])
-      args.extend(["--outschema",outschema])
-      args.extend(["--protocol","http"])
 
       srcfile = avro.tether.tether_task_runner.__file__
 
@@ -164,7 +127,13 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
       # make it world executable
       os.chmod(exfile,0o755)
 
-      args.extend(["--program",exfile])
+      jar_path = os.path.abspath("@TOPDIR@/../java/tools/target/avro-tools-@AVRO_VERSION@.jar")
+      args = ("java", "-jar", jar_path, "tether",
+              "--in", inpath,
+              "--out", outpath,
+              "--outschema", outschema,
+              "--protocol", "http",
+              "--program", exfile)
 
       print("Command:\n\t{0}".format(" ".join(args)))
       subprocess.check_call(args)
@@ -172,9 +141,10 @@ python -m avro.tether.tether_task_runner word_count_task.WordCountTask
       # read the output
       datum_reader = avro.io.DatumReader()
       outfile = os.path.join(outpath, "part-00000.avro")
+      expected_counts = collections.Counter(' '.join(lines).split())
       with avro.datafile.DataFileReader(open(outfile, 'rb'), datum_reader) as reader:
-        for record in reader:
-          self.assertEqual(record["value"],true_counts[record["key"]])
+        actual_counts = {r["key"]: r["value"] for r in reader}
+      self.assertDictEqual(actual_counts, expected_counts)
     finally:
       if os.path.exists(base_dir):
         shutil.rmtree(base_dir)
