@@ -104,17 +104,16 @@ UNION_EXAMPLES = [
 ]
 
 NAMED_IN_UNION_EXAMPLES = [
-  ExampleSchema("""{"namespace": "org.apache.avro.test",
-                    "type": "record",
-                    "name": "Test",
-                    "fields": [{"type": {"symbols": ["one", "two"],
-                                         "type": "enum",
-                                         "name": "NamedEnum"},
-                                         "name": "thenamedenum"},
-                               {"type": ["null", "NamedEnum"],
-                                "name": "unionwithreftoenum"}
-                              ]
-                    }""", True)
+  ValidTestSchema({"namespace": "org.apache.avro.test",
+                   "type": "record",
+                   "name": "Test",
+                   "fields": [{"type": {"symbols": ["one", "two"],
+                                        "type": "enum",
+                                        "name": "NamedEnum"},
+                                        "name": "thenamedenum"},
+                              {"type": ["null", "NamedEnum"],
+                               "name": "unionwithreftoenum"}]
+                    })
 ]
 
 RECORD_EXAMPLES = [
