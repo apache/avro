@@ -42,7 +42,7 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import sys
-from math import floor, log10
+import math
 
 from avro import constants
 
@@ -506,7 +506,7 @@ class FixedSchema(NamedSchema):
 
 class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
   def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
-    max_precision = round(floor(log10(pow(2, (8 * max(1, size) - 1)) - 1)))
+    max_precision = math.floor(math.log10(2) * (8 * size - 1)) - 1
     DecimalLogicalSchema.__init__(self, precision, scale, max_precision)
     FixedSchema.__init__(self, name, namespace, size, names, other_props)
     self.set_prop('precision', precision)
