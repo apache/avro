@@ -133,21 +133,17 @@ VALID_FIELD_SORT_ORDERS = frozenset([
 
 # ------------------------------------------------------------------------------
 # Exceptions
-
-
 class Error(Exception):
   """Base class for errors in this module."""
-  pass
 
 
 class AvroException(Error):
   """Generic Avro schema error."""
-  pass
 
 
 class SchemaParseException(AvroException):
   """Error while parsing a JSON schema descriptor."""
-  pass
+
 
 # ------------------------------------------------------------------------------
 # Utilities
