@@ -42,8 +42,8 @@ import abc
 import json
 import logging
 import re
+import types
 import warnings
-from types import MappingProxyType
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ class SchemaParseException(AvroException):
 # Utilities
 class MappingProxyEncoder(json.JSONEncoder):
   def default(self, obj):
-    if isinstance(obj, MappingProxyType):
+    if isinstance(obj, types.MappingProxyType):
       return obj.copy()
     return json.JSONEncoder.default(self, obj)
 
@@ -207,7 +207,7 @@ class Schema(object, metaclass=abc.ABCMeta):
     Returns:
       A read-only dictionary of properties associated to this schema.
     """
-    return MappingProxyType(self._props)
+    return types.MappingProxyType(self._props)
 
   @property
   def other_props(self):
@@ -963,7 +963,7 @@ class RecordSchema(NamedSchema):
         raise SchemaParseException(
             'Duplicate record field name %r.' % field.name)
       field_map[field.name] = field
-    return MappingProxyType(field_map)
+    return types.MappingProxyType(field_map)
 
   def __init__(
       self,
