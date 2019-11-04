@@ -38,12 +38,11 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-
-    <hadoop.version>2.7.3</hadoop.version>
-    <jackson.version>2.9.9</jackson.version>
-    <jackson.databind.version>2.9.9.3</jackson.databind.version>
-    <servlet-api.version>3.1.0</servlet-api.version>
-    <jetty.version>9.4.18.v20190429</jetty.version>
+    <hadoop.version>2.7.7</hadoop.version>
+    <jackson.version>2.10.0</jackson.version>
+    <jackson.databind.version>2.10.0</jackson.databind.version>
+    <servlet-api.version>4.0.1</servlet-api.version>
+    <jetty.version>9.4.21.v20190926</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.12</junit.version>
     <netty.version>3.10.6.Final</netty.version>
