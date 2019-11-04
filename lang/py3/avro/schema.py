@@ -174,9 +174,7 @@ class Schema(object, metaclass=abc.ABCMeta):
       raise SchemaParseException('%r is not a valid Avro type.' % type)
 
     # All properties of this schema, as a map: property name -> property value
-    self._props = {}
-
-    self._props['type'] = type
+    self._props = {'type': type}
     self._type = type
 
     if other_props:
@@ -212,7 +210,7 @@ class Schema(object, metaclass=abc.ABCMeta):
   @property
   def other_props(self):
     """Returns: the dictionary of non-reserved properties."""
-    return dict(FilterKeysOut(items=self._props, keys=SCHEMA_RESERVED_PROPS))
+    return {k: v for k, v in self.props if k not in SCHEMA_RESERVED_PROPS}
 
   def __str__(self):
     """Returns: the JSON representation of this schema."""
@@ -571,7 +569,7 @@ class Field(object):
 
   @property
   def other_props(self):
-    return FilterKeysOut(items=self._props, keys=FIELD_RESERVED_PROPS)
+    return {k: v for k, v in self.props.items() if k not in FIELD_RESERVED_PROPS}
 
   def __str__(self):
     return json.dumps(self.to_json(), cls=MappingProxyEncoder)
@@ -917,8 +915,7 @@ class RecordSchema(NamedSchema):
         json_data=field_desc['type'],
         names=names,
     )
-    other_props = (
-        dict(FilterKeysOut(items=field_desc, keys=FIELD_RESERVED_PROPS)))
+    other_props = {k: v for k, v in field_desc.items() if k not in FIELD_RESERVED_PROPS}
     return Field(
         type=field_schema,
         name=field_desc['name'],
@@ -1062,26 +1059,6 @@ class RecordSchema(NamedSchema):
 
 
 # ------------------------------------------------------------------------------
-# Module functions
-
-
-def FilterKeysOut(items, keys):
-  """Filters a collection of (key, value) items.
-
-  Exclude any item whose key belongs to keys.
-
-  Args:
-    items: Dictionary of items to filter the keys out of.
-    keys: Keys to filter out.
-  Yields:
-    Filtered items.
-  """
-  for key, value in items.items():
-    if key in keys: continue
-    yield (key, value)
-
-
-# ------------------------------------------------------------------------------
 
 
 def _SchemaFromJSONString(json_string, names):
@@ -1109,8 +1086,7 @@ def _SchemaFromJSONObject(json_object, names):
     raise SchemaParseException(
         'Avro schema JSON descriptor has no "type" property: %r' % json_object)
 
-  other_props = dict(
-      FilterKeysOut(items=json_object, keys=SCHEMA_RESERVED_PROPS))
+  other_props = {k: v for k, v in json_object.items() if k not in SCHEMA_RESERVED_PROPS}
 
   if type in PRIMITIVE_TYPES:
     # FIXME should not ignore other properties
