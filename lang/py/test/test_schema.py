@@ -356,6 +356,35 @@ class TestSchema(unittest.TestCase):
     self.assertEqual(4, bytes_decimal.get_prop('precision'))
     self.assertEqual(0, bytes_decimal.get_prop('scale'))
 
+  def test_fixed_decimal_valid_max_precision(self):
+    # An 8 byte number can represent any 18 digit number.
+    fixed_decimal_schema = ValidTestSchema({
+      "type": "fixed",
+      "logicalType": "decimal",
+      "name": "TestDecimal",
+      "precision": 18,
+      "scale": 0,
+      "size": 8})
+
+    fixed_decimal = fixed_decimal_schema.parse()
+    self.assertIsInstance(fixed_decimal, schema.FixedSchema)
+    self.assertIsInstance(fixed_decimal, schema.DecimalLogicalSchema)
+
+  def test_fixed_decimal_invalid_max_precision(self):
+    # An 8 byte number can't represent every 19 digit number, so the logical
+    # type is not applied.
+    fixed_decimal_schema = ValidTestSchema({
+      "type": "fixed",
+      "logicalType": "decimal",
+      "name": "TestDecimal",
+      "precision": 19,
+      "scale": 0,
+      "size": 8})
+
+    fixed_decimal = fixed_decimal_schema.parse()
+    self.assertIsInstance(fixed_decimal, schema.FixedSchema)
+    self.assertNotIsInstance(fixed_decimal, schema.DecimalLogicalSchema)
+
 class SchemaParseTestCase(unittest.TestCase):
   """Enable generating parse test cases over all the valid and invalid example schema."""
 
