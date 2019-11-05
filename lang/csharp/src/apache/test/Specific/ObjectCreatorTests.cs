@@ -62,22 +62,34 @@ namespace Avro.Test.Specific
                 objectCreator.GetType("ThisTypeDoesNotExist", Schema.Type.Record));
         }
 
-        [Test]
-        public void TestGetType()
+        [TestCase("Foo", Schema.Type.Record, typeof(Foo))]
+        public void TestGetTypeEquals(string name, Schema.Type schemaType, Type expected)
         {
             var objectCreator = new ObjectCreator();
+            var actual = objectCreator.GetType(name, Schema.Type.Record);
 
-            // Single Foo
-            Assert.AreEqual(typeof(Foo),
-                objectCreator.GetType("Foo", Schema.Type.Record));
+            Assert.AreEqual(expected, actual);
+        }
 
-            // Array of Foo
-            Assert.True(typeof(IList<Foo>).IsAssignableFrom(
-                objectCreator.GetType("Foo", Schema.Type.Array)));
+        [TestCase("Foo", Schema.Type.Array, typeof(IList<Foo>))]
+        [TestCase("IList<Foo>", Schema.Type.Array, typeof(IList<IList<Foo>>))]
+        [TestCase("IList<IList<IList<Foo>>>", Schema.Type.Array, typeof(IList<IList<IList<IList<Foo>>>>))]
+        [TestCase("System.Collections.Generic.IList<System.Collections.Generic.IList<System.Collections.Generic.IList<Foo>>>", Schema.Type.Array, typeof(IList<IList<IList<IList<Foo>>>>))]
+        [TestCase("Foo", Schema.Type.Map, typeof(IDictionary<string, Foo>))]
+        [TestCase("Nullable<Int32>", Schema.Type.Array, typeof(IList<Nullable<int>>))]
+        [TestCase("System.Nullable<Int32>", Schema.Type.Array, typeof(IList<int?>))]
+        [TestCase("IList<Nullable<Int32>>", Schema.Type.Array, typeof(IList<IList<int?>>))]
+        [TestCase("IList<System.Nullable<Int32>>", Schema.Type.Array, typeof(IList<IList<int?>>))]
+        public void TestGetTypeAssignable(string name, Schema.Type schemaType, Type expected)
+        {
+            var objectCreator = new ObjectCreator();
+            var actual = objectCreator.GetType(name, schemaType);
 
-            // Map of Foo
-            Assert.True(typeof(IDictionary<string, Foo>).IsAssignableFrom(
-                objectCreator.GetType("Foo", Schema.Type.Map)));
+            Assert.True(
+                expected.IsAssignableFrom(actual),
+                "  Expected: assignable from {0}\n    But was: {1}",
+                expected,
+                actual);
         }
 
         [TestCase(typeof(MyNullableFoo), "MyNullableFoo",
