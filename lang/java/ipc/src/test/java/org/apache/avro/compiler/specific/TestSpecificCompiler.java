@@ -581,7 +581,7 @@ public class TestSpecificCompiler {
     assertNotNull(Kind.class.getAnnotation(TestAnnotation.class));
 
     // a field
-    assertNotNull(TestRecord.class.getField("name").getAnnotation(TestAnnotation.class));
+    assertNotNull(TestRecord.class.getDeclaredField("name").getAnnotation(TestAnnotation.class));
     // a method
     assertNotNull(Simple.class.getMethod("ack").getAnnotation(TestAnnotation.class));
   }

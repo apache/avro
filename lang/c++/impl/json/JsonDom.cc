@@ -90,7 +90,7 @@ Entity readEntity(JsonParser& p)
     default:
         throw std::domain_error(JsonParser::toString(p.peek()));
     }
-    
+
 }
 
 Entity loadEntity(const char* text)
@@ -162,7 +162,7 @@ void Entity::ensureType(EntityType type) const
         throw Exception(msg);
     }
 }
-    
+
 String Entity::stringValue() const {
     ensureType(etString);
     return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String> >(&value_));

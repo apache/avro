@@ -94,17 +94,17 @@ class AVRO_DECL Validator : private boost::noncopyable
     void checkTypeExpected(Type type) {
         if(! typeIsExpected(type)) {
             throw Exception(
-                boost::format("Type %1% does not match schema %2%") 
+                boost::format("Type %1% does not match schema %2%")
                     % type % nextType_
             );
         }
         advance();
     }
 
-    void checkFixedSizeExpected(int size) { 
+    void checkFixedSizeExpected(int size) {
         if( nextSizeExpected() != size) {
             throw Exception(
-                boost::format("Wrong size for fixed, got %1%, expected %2%") 
+                boost::format("Wrong size for fixed, got %1%, expected %2%")
                     % size % nextSizeExpected()
             );
         }
@@ -137,7 +137,7 @@ class AVRO_DECL Validator : private boost::noncopyable
 
     const ValidSchema schema_;
 
-    Type nextType_; 
+    Type nextType_;
     flag_t expectedTypesFlag_;
     bool compoundStarted_;
     bool waitingForCount_;

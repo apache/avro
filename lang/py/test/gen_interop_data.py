@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+##
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -13,17 +14,33 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+from __future__ import absolute_import, division, print_function
+
 import os
 import sys
 
 from avro import datafile, io, schema
 from avro.datafile import NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, SNAPPY_CODEC, ZSTANDARD_CODEC
 
+CODECS_TO_VALIDATE = (NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC)
+try:
+  import snappy
+  CODECS_TO_VALIDATE += (SNAPPY_CODEC,)
+except ImportError:
+  print('Snappy not present, will skip generating it.')
+try:
+  import zstandard
+  CODECS_TO_VALIDATE += (ZSTANDARD_CODEC,)
+except ImportError:
+  print('Zstandard not present, will skip generating it.')
+
 DATUM = {
   'intField': 12,
-  'longField': 15234324L,
+  'longField': 15234324,
   'stringField': unicode('hey'),
   'boolField': True,
   'floatField': 1234.0,
@@ -37,18 +54,6 @@ DATUM = {
   'fixedField': '1019181716151413',
   'recordField': {'label': 'blah', 'children': [{'label': 'inner', 'children': []}]},
 }
-
-CODECS_TO_VALIDATE = (NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC)
-try:
-  import snappy
-  CODECS_TO_VALIDATE += (SNAPPY_CODEC,)
-except ImportError:
-  print 'Snappy not present, will skip generating it.'
-try:
-  import zstandard
-  CODECS_TO_VALIDATE += (ZSTANDARD_CODEC,)
-except ImportError:
-  print 'Zstandard not present, will skip generating it.'
 
 if __name__ == "__main__":
   for codec in CODECS_TO_VALIDATE:

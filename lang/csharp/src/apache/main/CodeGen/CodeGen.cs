@@ -703,21 +703,21 @@ namespace Avro
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
-                    return "System.Object";
+                    return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    if (nullible) return "System.Nullable<bool>";
+                    if (nullible) return $"System.Nullable<{typeof(bool)}>";
                     else return typeof(bool).ToString();
                 case Schema.Type.Int:
-                    if (nullible) return "System.Nullable<int>";
+                    if (nullible) return $"System.Nullable<{typeof(int)}>";
                     else return typeof(int).ToString();
                 case Schema.Type.Long:
-                    if (nullible) return "System.Nullable<long>";
+                    if (nullible) return $"System.Nullable<{typeof(long)}>";
                     else return typeof(long).ToString();
                 case Schema.Type.Float:
-                    if (nullible) return "System.Nullable<float>";
+                    if (nullible) return $"System.Nullable<{typeof(float)}>";
                     else return typeof(float).ToString();
                 case Schema.Type.Double:
-                    if (nullible) return "System.Nullable<double>";
+                    if (nullible) return $"System.Nullable<{typeof(double)}>";
                     else return typeof(double).ToString();
 
                 case Schema.Type.Bytes:

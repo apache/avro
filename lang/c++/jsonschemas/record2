@@ -1,8 +1,8 @@
 {
-  "type": "record", 
+  "type": "record",
   "name": "LongList",
   "fields" : [
-    {"name": "value", "type": "long"},           
+    {"name": "value", "type": "long"},
     {"name": "next", "type": ["int", "float"] },
     {"name": "hello", "type": {"type" : "array" , "items" :"float"}}
   ]

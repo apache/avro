@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.util.BufferRecyclers;
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -2711,11 +2711,11 @@ public class SchemaBuilder {
         bytes.get(data);
         bytes.reset(); // put the buffer back the way we got it
         s = new String(data, StandardCharsets.ISO_8859_1);
-        char[] quoted = BufferRecyclers.getJsonStringEncoder().quoteAsString(s);
+        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
         s = "\"" + new String(quoted) + "\"";
       } else if (o instanceof byte[]) {
         s = new String((byte[]) o, StandardCharsets.ISO_8859_1);
-        char[] quoted = BufferRecyclers.getJsonStringEncoder().quoteAsString(s);
+        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
         s = '\"' + new String(quoted) + '\"';
       } else {
         s = GenericData.get().toString(o);

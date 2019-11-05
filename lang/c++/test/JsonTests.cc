@@ -81,7 +81,7 @@ void testBool(const TestData<bool>& d)
     BOOST_CHECK_EQUAL(n.toString(), d.output);
 }
 
-    
+
 void testLong(const TestData<int64_t>& d)
 {
     Entity n = loadEntity(d.input);
@@ -193,7 +193,7 @@ static void testObject2()
 #define COUNTOF(x)  (sizeof(x) / sizeof(x[0]))
 
 boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite( int argc, char* argv[] )
 {
     using namespace boost::unit_test;
 

@@ -38,7 +38,7 @@
         </executions>
         <configuration>
           <sourceDirectory>${basedir}/src/test/avro</sourceDirectory>
-          <outputDirectory>${basedir}/target/test-harness/schema</outputDirectory>
+          <outputDirectory>${basedir}/target/test-harness/schema-inject</outputDirectory>
           <imports>
             <import>${basedir}/src/test/avro/imports</import>
             <import>${basedir}/src/test/avro/directImport/PrivacyDirectImport.avsc</import>
@@ -67,5 +67,4 @@
       <version>${jackson.databind.version}</version>
     </dependency>
   </dependencies>
-
 </project>

@@ -298,7 +298,7 @@ public class TestProtocolSpecific {
       }
 
       // check that a given client protocol is only sent once
-      String clientProtocol = context.getHandshakeRequest().clientProtocol;
+      String clientProtocol = context.getHandshakeRequest().getClientProtocol();
       if (clientProtocol != null) {
         assertFalse(seenProtocols.contains(clientProtocol));
         seenProtocols.add(clientProtocol);
