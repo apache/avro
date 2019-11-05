@@ -26,7 +26,12 @@ import sys
 from avro import datafile, io, schema
 from avro.datafile import NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, SNAPPY_CODEC, ZSTANDARD_CODEC
 
-CODECS_TO_VALIDATE = (NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC)
+CODECS_TO_VALIDATE = (NULL_CODEC, DEFLATE_CODEC)
+try:
+  import bz2
+  CODECS_TO_VALIDATE += (BZIP2_CODEC,)
+except ImportError:
+  print('BZip2 not present, will skip generating it.')
 try:
   import snappy
   CODECS_TO_VALIDATE += (SNAPPY_CODEC,)

@@ -21,7 +21,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import bz2
 import os
 import random
 import zlib
@@ -32,6 +31,11 @@ try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
+try:
+  import bz2
+  has_bzip2 = True
+except ImportError:
+  has_bzip2 = False
 try:
   import snappy
   has_snappy = True
@@ -65,7 +69,9 @@ BZIP2_CODEC = 'bzip2'
 SNAPPY_CODEC = 'snappy'
 ZSTANDARD_CODEC = 'zstandard'
 
-VALID_CODECS = [NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC]
+VALID_CODECS = [NULL_CODEC, DEFLATE_CODEC]
+if has_bzip2:
+    VALID_CODECS.append(BZIP2_CODEC)
 if has_snappy:
     VALID_CODECS.append(SNAPPY_CODEC)
 if has_zstandard:
