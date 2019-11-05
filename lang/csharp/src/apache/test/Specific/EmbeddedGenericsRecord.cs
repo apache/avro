@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -32,11 +32,14 @@ namespace Avro.Test.Specific
 	
 	public partial class EmbeddedGenericsRecord : ISpecificRecord
 	{
-		public static Schema _SCHEMA = Avro.Schema.Parse(@"{""type"":""record"",""name"":""EmbeddedGenericsRecord"",""namespace"":""Avro.Test.Specific"",""fields"":[{""name"":""OptionalInt"",""type"":[""null"",""int""]},{""name"":""OptionalIntList"",""type"":{""type"":""array"",""items"":[""null"",""int""]}},{""name"":""OptionalIntMatrix"",""type"":{""type"":""array"",""items"":{""type"":""array"",""items"":{""type"":""array"",""items"":[""null"",""int""]}}}},{""name"":""IntMatrix"",""type"":{""type"":""array"",""items"":{""type"":""array"",""items"":{""type"":""array"",""items"":""int""}}}}]}");
+		public static Schema _SCHEMA = Avro.Schema.Parse(@"{""type"":""record"",""name"":""EmbeddedGenericsRecord"",""namespace"":""Avro.Test.Specific"",""fields"":[{""name"":""OptionalInt"",""type"":[""null"",""int""]},{""name"":""OptionalIntList"",""type"":{""type"":""array"",""items"":[""null"",""int""]}},{""name"":""OptionalUserList"",""type"":{""type"":""array"",""items"":[""null"",{""type"":""record"",""name"":""EmbeddedGenericRecordUser"",""namespace"":""Avro.Test.Specific"",""fields"":[{""name"":""name"",""type"":""string""}]}]}},{""name"":""OptionalIntMatrix"",""type"":{""type"":""array"",""items"":{""type"":""array"",""items"":{""type"":""array"",""items"":[""null"",""int""]}}}},{""name"":""OptionalUserMatrix"",""type"":{""type"":""array"",""items"":{""type"":""array"",""items"":{""type"":""array"",""items"":[""null"",""EmbeddedGenericRecordUser""]}}}},{""name"":""IntMatrix"",""type"":{""type"":""array"",""items"":{""type"":""array"",""items"":{""type"":""array"",""items"":""int""}}}},{""name"":""UserMatrix"",""type"":{""type"":""array"",""items"":{""type"":""array"",""items"":{""type"":""array"",""items"":""EmbeddedGenericRecordUser""}}}}]}");
 		private System.Nullable<System.Int32> _OptionalInt;
 		private IList<System.Nullable<System.Int32>> _OptionalIntList;
+		private IList<Avro.Test.Specific.EmbeddedGenericRecordUser> _OptionalUserList;
 		private IList<IList<IList<System.Nullable<System.Int32>>>> _OptionalIntMatrix;
+		private IList<IList<IList<Avro.Test.Specific.EmbeddedGenericRecordUser>>> _OptionalUserMatrix;
 		private IList<IList<IList<System.Int32>>> _IntMatrix;
+		private IList<IList<IList<Avro.Test.Specific.EmbeddedGenericRecordUser>>> _UserMatrix;
 		public virtual Schema Schema
 		{
 			get
@@ -66,6 +69,17 @@ namespace Avro.Test.Specific
 				this._OptionalIntList = value;
 			}
 		}
+		public IList<Avro.Test.Specific.EmbeddedGenericRecordUser> OptionalUserList
+		{
+			get
+			{
+				return this._OptionalUserList;
+			}
+			set
+			{
+				this._OptionalUserList = value;
+			}
+		}
 		public IList<IList<IList<System.Nullable<System.Int32>>>> OptionalIntMatrix
 		{
 			get
@@ -75,6 +89,17 @@ namespace Avro.Test.Specific
 			set
 			{
 				this._OptionalIntMatrix = value;
+			}
+		}
+		public IList<IList<IList<Avro.Test.Specific.EmbeddedGenericRecordUser>>> OptionalUserMatrix
+		{
+			get
+			{
+				return this._OptionalUserMatrix;
+			}
+			set
+			{
+				this._OptionalUserMatrix = value;
 			}
 		}
 		public IList<IList<IList<System.Int32>>> IntMatrix
@@ -88,14 +113,28 @@ namespace Avro.Test.Specific
 				this._IntMatrix = value;
 			}
 		}
+		public IList<IList<IList<Avro.Test.Specific.EmbeddedGenericRecordUser>>> UserMatrix
+		{
+			get
+			{
+				return this._UserMatrix;
+			}
+			set
+			{
+				this._UserMatrix = value;
+			}
+		}
 		public virtual object Get(int fieldPos)
 		{
 			switch (fieldPos)
 			{
 			case 0: return this.OptionalInt;
 			case 1: return this.OptionalIntList;
-			case 2: return this.OptionalIntMatrix;
-			case 3: return this.IntMatrix;
+			case 2: return this.OptionalUserList;
+			case 3: return this.OptionalIntMatrix;
+			case 4: return this.OptionalUserMatrix;
+			case 5: return this.IntMatrix;
+			case 6: return this.UserMatrix;
 			default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Get()");
 			};
 		}
@@ -105,8 +144,11 @@ namespace Avro.Test.Specific
 			{
 			case 0: this.OptionalInt = (System.Nullable<System.Int32>)fieldValue; break;
 			case 1: this.OptionalIntList = (IList<System.Nullable<System.Int32>>)fieldValue; break;
-			case 2: this.OptionalIntMatrix = (IList<IList<IList<System.Nullable<System.Int32>>>>)fieldValue; break;
-			case 3: this.IntMatrix = (IList<IList<IList<System.Int32>>>)fieldValue; break;
+			case 2: this.OptionalUserList = (IList<Avro.Test.Specific.EmbeddedGenericRecordUser>)fieldValue; break;
+			case 3: this.OptionalIntMatrix = (IList<IList<IList<System.Nullable<System.Int32>>>>)fieldValue; break;
+			case 4: this.OptionalUserMatrix = (IList<IList<IList<Avro.Test.Specific.EmbeddedGenericRecordUser>>>)fieldValue; break;
+			case 5: this.IntMatrix = (IList<IList<IList<System.Int32>>>)fieldValue; break;
+			case 6: this.UserMatrix = (IList<IList<IList<Avro.Test.Specific.EmbeddedGenericRecordUser>>>)fieldValue; break;
 			default: throw new AvroRuntimeException("Bad index " + fieldPos + " in Put()");
 			};
 		}
