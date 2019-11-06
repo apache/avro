@@ -512,7 +512,7 @@ public class SpecificData extends GenericData {
 
   @Override
   public Object createString(Object value) {
-    //Many times the use is String.Priority processing
+    // Many times the use is String.Priority processing
     if (value instanceof String) {
       return value;
     } else if (isStringable(value.getClass())) {
