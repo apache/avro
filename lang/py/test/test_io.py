@@ -36,7 +36,7 @@ except ImportError:
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
   ('"boolean"', True),
-  ('"string"', unicode('adsfasdf09809dsf-=adsf')),
+  ('"string"', u'adsfasdf09809dsf-=adsf'),
   ('"bytes"', '12345abcd'),
   ('"int"', 1234),
   ('"long"', 1234),
@@ -82,6 +82,9 @@ SCHEMAS_TO_VALIDATE = (
     '{"type": "long", "logicalType": "timestamp-micros"}',
     datetime.datetime(2000, 1, 18, 2, 2, 1, 123499, tzinfo=timezones.tst)
   ),
+  ('{"type": "string", "logicalType": "uuid"}', u'12345abcd'),
+  ('{"type": "string", "logicalType": "unknown-logical-type"}', u'12345abcd'),
+  ('{"type": "string", "logicalType": "timestamp-millis"}', u'12345abcd'),
   ("""\
    {"type": "record",
     "name": "Test",
