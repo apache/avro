@@ -193,42 +193,47 @@ OTHER_PROP_EXAMPLES = [
 DECIMAL_LOGICAL_TYPE = [
   ValidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestDecimal", "precision": 4, "size": 10, "scale": 2}),
   ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 4, "scale": 2}),
-  InvalidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2}),
-  InvalidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": -2, "scale": 2}),
-  InvalidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 3}),
-  InvalidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestDecimal", "precision": -10, "scale": 2, "size": 5}),
-  InvalidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestDecimal", "precision": 2, "scale": 3, "size": 2}),
-  InvalidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestDecimal", "precision": 2, "scale": 2, "size": -2}),
+  InvalidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestDecimal2", "precision": 2, "scale": 2, "size": -2}),
 ]
 
 DATE_LOGICAL_TYPE = [
-  ValidTestSchema({"type": "int", "logicalType": "date"}),
-  InvalidTestSchema({"type": "int", "logicalType": "date1"}),
-  InvalidTestSchema({"type": "long", "logicalType": "date"}),
+  ValidTestSchema({"type": "int", "logicalType": "date"})
 ]
 
 TIMEMILLIS_LOGICAL_TYPE = [
-  ValidTestSchema({"type": "int", "logicalType": "time-millis"}),
-  InvalidTestSchema({"type": "int", "logicalType": "time-milis"}),
-  InvalidTestSchema({"type": "long", "logicalType": "time-millis"}),
+  ValidTestSchema({"type": "int", "logicalType": "time-millis"})
 ]
 
 TIMEMICROS_LOGICAL_TYPE = [
-  ValidTestSchema({"type": "long", "logicalType": "time-micros"}),
-  InvalidTestSchema({"type": "long", "logicalType": "time-micro"}),
-  InvalidTestSchema({"type": "int", "logicalType": "time-micros"}),
+  ValidTestSchema({"type": "long", "logicalType": "time-micros"})
 ]
 
 TIMESTAMPMILLIS_LOGICAL_TYPE = [
-  ValidTestSchema({"type": "long", "logicalType": "timestamp-millis"}),
-  InvalidTestSchema({"type": "long", "logicalType": "timestamp-milis"}),
-  InvalidTestSchema({"type": "int", "logicalType": "timestamp-millis"}),
+  ValidTestSchema({"type": "long", "logicalType": "timestamp-millis"})
 ]
 
 TIMESTAMPMICROS_LOGICAL_TYPE = [
-  ValidTestSchema({"type": "long", "logicalType": "timestamp-micros"}),
-  InvalidTestSchema({"type": "long", "logicalType": "timestamp-micro"}),
-  InvalidTestSchema({"type": "int", "logicalType": "timestamp-micros"}),
+  ValidTestSchema({"type": "long", "logicalType": "timestamp-micros"})
+]
+
+IGNORED_LOGICAL_TYPE = [
+  ValidTestSchema({"type": "string", "logicalType": "uuid"}),
+  ValidTestSchema({"type": "string", "logicalType": "unknown-logical-type"}),
+  ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2}),
+  ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": -2, "scale": 2}),
+  ValidTestSchema({"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 3}),
+  ValidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": -10, "scale": 2, "size": 5}),
+  ValidTestSchema({"type": "fixed", "logicalType": "decimal", "name": "TestIgnored2", "precision": 2, "scale": 3, "size": 2}),
+  ValidTestSchema({"type": "int", "logicalType": "date1"}),
+  ValidTestSchema({"type": "long", "logicalType": "date"}),
+  ValidTestSchema({"type": "int", "logicalType": "time-milis"}),
+  ValidTestSchema({"type": "long", "logicalType": "time-millis"}),
+  ValidTestSchema({"type": "long", "logicalType": "time-micro"}),
+  ValidTestSchema({"type": "int", "logicalType": "time-micros"}),
+  ValidTestSchema({"type": "long", "logicalType": "timestamp-milis"}),
+  ValidTestSchema({"type": "int", "logicalType": "timestamp-millis"}),
+  ValidTestSchema({"type": "long", "logicalType": "timestamp-micro"}),
+  ValidTestSchema({"type": "int", "logicalType": "timestamp-micros"})
 ]
 
 EXAMPLES = PRIMITIVE_EXAMPLES
@@ -245,6 +250,7 @@ EXAMPLES += TIMEMILLIS_LOGICAL_TYPE
 EXAMPLES += TIMEMICROS_LOGICAL_TYPE
 EXAMPLES += TIMESTAMPMILLIS_LOGICAL_TYPE
 EXAMPLES += TIMESTAMPMICROS_LOGICAL_TYPE
+EXAMPLES += IGNORED_LOGICAL_TYPE
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 INVALID_EXAMPLES = [e for e in EXAMPLES if not e.valid]
@@ -349,6 +355,35 @@ class TestSchema(unittest.TestCase):
     bytes_decimal = bytes_decimal_schema.parse()
     self.assertEqual(4, bytes_decimal.get_prop('precision'))
     self.assertEqual(0, bytes_decimal.get_prop('scale'))
+
+  def test_fixed_decimal_valid_max_precision(self):
+    # An 8 byte number can represent any 18 digit number.
+    fixed_decimal_schema = ValidTestSchema({
+      "type": "fixed",
+      "logicalType": "decimal",
+      "name": "TestDecimal",
+      "precision": 18,
+      "scale": 0,
+      "size": 8})
+
+    fixed_decimal = fixed_decimal_schema.parse()
+    self.assertIsInstance(fixed_decimal, schema.FixedSchema)
+    self.assertIsInstance(fixed_decimal, schema.DecimalLogicalSchema)
+
+  def test_fixed_decimal_invalid_max_precision(self):
+    # An 8 byte number can't represent every 19 digit number, so the logical
+    # type is not applied.
+    fixed_decimal_schema = ValidTestSchema({
+      "type": "fixed",
+      "logicalType": "decimal",
+      "name": "TestDecimal",
+      "precision": 19,
+      "scale": 0,
+      "size": 8})
+
+    fixed_decimal = fixed_decimal_schema.parse()
+    self.assertIsInstance(fixed_decimal, schema.FixedSchema)
+    self.assertNotIsInstance(fixed_decimal, schema.DecimalLogicalSchema)
 
 class SchemaParseTestCase(unittest.TestCase):
   """Enable generating parse test cases over all the valid and invalid example schema."""
