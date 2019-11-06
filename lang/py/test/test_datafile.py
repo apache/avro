@@ -24,7 +24,7 @@ import unittest
 
 import set_avro_test_path
 from avro import datafile, io, schema
-from avro.datafile import NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, SNAPPY_CODEC, ZSTANDARD_CODEC
+from avro.codecs import Codecs
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
@@ -58,17 +58,7 @@ SCHEMAS_TO_VALIDATE = (
 )
 
 FILENAME = 'test_datafile.out'
-CODECS_TO_VALIDATE = (NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC)
-try:
-  import snappy
-  CODECS_TO_VALIDATE += (SNAPPY_CODEC,)
-except ImportError:
-  print('Snappy not present, will skip testing it.')
-try:
-  import zstandard
-  CODECS_TO_VALIDATE += (ZSTANDARD_CODEC,)
-except ImportError:
-  print('Zstandard not present, will skip testing it.')
+CODECS_TO_VALIDATE = Codecs.supported_codec_names()
 
 # TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):

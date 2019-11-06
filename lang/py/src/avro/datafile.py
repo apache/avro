@@ -26,26 +26,13 @@ import random
 import zlib
 
 from avro import io, schema
+from avro.codecs import Codecs
 
 try:
   from cStringIO import StringIO
 except ImportError:
   from StringIO import StringIO
-try:
-  import bz2
-  has_bzip2 = True
-except ImportError:
-  has_bzip2 = False
-try:
-  import snappy
-  has_snappy = True
-except ImportError:
-  has_snappy = False
-try:
-  import zstandard as zstd
-  has_zstandard = True
-except ImportError:
-  has_zstandard = False
+
 #
 # Constants
 #
@@ -64,18 +51,7 @@ META_SCHEMA = schema.parse("""\
 """ % (MAGIC_SIZE, SYNC_SIZE))
 
 NULL_CODEC = 'null'
-DEFLATE_CODEC = 'deflate'
-BZIP2_CODEC = 'bzip2'
-SNAPPY_CODEC = 'snappy'
-ZSTANDARD_CODEC = 'zstandard'
-
-VALID_CODECS = [NULL_CODEC, DEFLATE_CODEC]
-if has_bzip2:
-    VALID_CODECS.append(BZIP2_CODEC)
-if has_snappy:
-    VALID_CODECS.append(SNAPPY_CODEC)
-if has_zstandard:
-    VALID_CODECS.append(ZSTANDARD_CODEC)
+VALID_CODECS = Codecs.supported_codec_names()
 VALID_ENCODINGS = ['binary'] # not used yet
 
 CODEC_KEY = "avro.codec"
@@ -188,37 +164,14 @@ class DataFileWriter(object):
 
       # write block contents
       uncompressed_data = self.buffer_writer.getvalue()
-      codec = self.get_meta(CODEC_KEY)
-      if codec == NULL_CODEC:
-        compressed_data = uncompressed_data
-        compressed_data_length = len(compressed_data)
-      elif codec == DEFLATE_CODEC:
-        # The first two characters and last character are zlib
-        # wrappers around deflate data.
-        compressed_data = zlib.compress(uncompressed_data)[2:-1]
-        compressed_data_length = len(compressed_data)
-      elif codec == BZIP2_CODEC:
-        compressed_data = bz2.compress(uncompressed_data)
-        compressed_data_length = len(compressed_data)
-      elif codec == SNAPPY_CODEC:
-        compressed_data = snappy.compress(uncompressed_data)
-        compressed_data_length = len(compressed_data) + 4 # crc32
-      elif codec == ZSTANDARD_CODEC:
-        compressed_data = zstd.ZstdCompressor().compress(uncompressed_data)
-        compressed_data_length = len(compressed_data)
-      else:
-        fail_msg = '"%s" codec is not supported.' % codec
-        raise DataFileException(fail_msg)
+      codec = Codecs.get_codec(self.get_meta(CODEC_KEY))
+      compressed_data, compressed_data_length = codec.compress(uncompressed_data)
 
       # Write length of block
       self.encoder.write_long(compressed_data_length)
 
       # Write block
       self.writer.write(compressed_data)
-
-      # Write CRC32 checksum for Snappy
-      if codec == SNAPPY_CODEC:
-        self.encoder.write_crc32(uncompressed_data)
 
       # write sync marker
       self.writer.write(self.sync_marker)
@@ -348,44 +301,8 @@ class DataFileReader(object):
 
   def _read_block_header(self):
     self.block_count = self.raw_decoder.read_long()
-    if self.codec == NULL_CODEC:
-      # Skip a long; we don't need to use the length.
-      self.raw_decoder.skip_long()
-      self._datum_decoder = self._raw_decoder
-    elif self.codec == DEFLATE_CODEC:
-      # Compressed data is stored as (length, data), which
-      # corresponds to how the "bytes" type is encoded.
-      data = self.raw_decoder.read_bytes()
-      # -15 is the log of the window size; negative indicates
-      # "raw" (no zlib headers) decompression.  See zlib.h.
-      uncompressed = zlib.decompress(data, -15)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
-    elif self.codec == BZIP2_CODEC:
-      length = self.raw_decoder.read_long()
-      data = self.raw_decoder.read(length)
-      uncompressed = bz2.decompress(data)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
-    elif self.codec == SNAPPY_CODEC:
-      # Compressed data includes a 4-byte CRC32 checksum
-      length = self.raw_decoder.read_long()
-      data = self.raw_decoder.read(length - 4)
-      uncompressed = snappy.decompress(data)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
-      self.raw_decoder.check_crc32(uncompressed);
-    elif self.codec == ZSTANDARD_CODEC:
-      length = self.raw_decoder.read_long()
-      data = self.raw_decoder.read(length)
-      uncompressed = bytearray()
-      dctx = zstd.ZstdDecompressor()
-      with dctx.stream_reader(StringIO(data)) as reader:
-        while True:
-          chunk = reader.read(16384)
-          if not chunk:
-            break
-          uncompressed.extend(chunk)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
-    else:
-      raise DataFileException("Unknown codec: %r" % self.codec)
+    codec = Codecs.get_codec(self.codec)
+    self._datum_decoder = codec.decompress(self.raw_decoder)
 
   def _skip_sync(self):
     """

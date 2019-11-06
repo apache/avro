@@ -24,24 +24,10 @@ import os
 import sys
 
 from avro import datafile, io, schema
-from avro.datafile import NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, SNAPPY_CODEC, ZSTANDARD_CODEC
+from avro.codecs import Codecs
 
-CODECS_TO_VALIDATE = (NULL_CODEC, DEFLATE_CODEC)
-try:
-  import bz2
-  CODECS_TO_VALIDATE += (BZIP2_CODEC,)
-except ImportError:
-  print('BZip2 not present, will skip generating it.')
-try:
-  import snappy
-  CODECS_TO_VALIDATE += (SNAPPY_CODEC,)
-except ImportError:
-  print('Snappy not present, will skip generating it.')
-try:
-  import zstandard
-  CODECS_TO_VALIDATE += (ZSTANDARD_CODEC,)
-except ImportError:
-  print('Zstandard not present, will skip generating it.')
+NULL_CODEC = 'null'
+CODECS_TO_VALIDATE = Codecs.supported_codec_names()
 
 DATUM = {
   'intField': 12,

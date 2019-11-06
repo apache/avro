@@ -47,7 +47,6 @@ import datetime
 import json
 import struct
 import sys
-from binascii import crc32
 from decimal import Decimal, getcontext
 
 from avro import constants, schema, timezones
@@ -76,7 +75,6 @@ else:
 
 STRUCT_FLOAT = struct_class('<f')           # big-endian float
 STRUCT_DOUBLE = struct_class('<d')          # big-endian double
-STRUCT_CRC32 = struct_class('>I')           # big-endian unsigned int
 STRUCT_SIGNED_SHORT = struct_class('>h')    # big-endian signed short
 STRUCT_SIGNED_INT = struct_class('>i')      # big-endian signed int
 STRUCT_SIGNED_LONG = struct_class('>q')     # big-endian signed long
@@ -336,12 +334,6 @@ class BinaryDecoder(object):
     unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
     return unix_epoch_datetime + timedelta
 
-
-  def check_crc32(self, bytes):
-    checksum = STRUCT_CRC32.unpack(self.read(4))[0];
-    if crc32(bytes) & 0xffffffff != checksum:
-      raise schema.AvroException("Checksum failure")
-
   def skip_null(self):
     pass
 
@@ -516,12 +508,6 @@ class BinaryEncoder(object):
     """
     datum = datum.encode("utf-8")
     self.write_bytes(datum)
-
-  def write_crc32(self, bytes):
-    """
-    A 4-byte, big-endian CRC32 checksum
-    """
-    self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff));
 
   def write_date_int(self, datum):
     """
