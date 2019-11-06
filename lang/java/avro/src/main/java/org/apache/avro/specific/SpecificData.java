@@ -494,7 +494,7 @@ public class SpecificData extends GenericData {
   /**
    * Tag interface that indicates that a class has a one-argument constructor that
    * accepts a Schema.
-   * 
+   *
    * @see #newInstance
    */
   public interface SchemaConstructable {
@@ -508,6 +508,17 @@ public class SpecificData extends GenericData {
   /** Runtime utility used by generated classes. */
   public static BinaryEncoder getEncoder(ObjectOutput out) {
     return EncoderFactory.get().directBinaryEncoder(new ExternalizableOutput(out), null);
+  }
+
+  @Override
+  public Object createString(Object value) {
+    //Many times the use is String.Priority processing
+    if (value instanceof String) {
+      return value;
+    } else if (isStringable(value.getClass())) {
+      return value;
+    }
+    return super.createString(value);
   }
 
 }

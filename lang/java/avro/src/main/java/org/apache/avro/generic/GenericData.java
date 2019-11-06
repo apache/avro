@@ -1263,19 +1263,7 @@ public class GenericData {
       }
       return newRecord;
     case STRING:
-      // Strings are immutable
-      if (value instanceof String) {
-        return value;
-      }
-
-      // Some CharSequence subclasses are mutable, so we still need to make
-      // a copy
-      else if (value instanceof Utf8) {
-        // Utf8 copy constructor is more efficient than converting
-        // to string and then back to Utf8
-        return new Utf8((Utf8) value);
-      }
-      return new Utf8(value.toString());
+      return createString(value);
     case UNION:
       return deepCopy(schema.getTypes().get(resolveUnion(schema, value)), value);
     default:
@@ -1326,6 +1314,27 @@ public class GenericData {
         return record;
     }
     return new GenericData.Record(schema);
+  }
+
+  /**
+   * Called to create an string value. May be overridden for alternate string
+   * representations.
+   */
+  public Object createString(Object value) {
+    // Strings are immutable
+    if (value instanceof String) {
+      return value;
+    }
+
+    // Some CharSequence subclasses are mutable, so we still need to make
+    // a copy
+    else if (value instanceof Utf8) {
+      // Utf8 copy constructor is more efficient than converting
+      // to string and then back to Utf8
+      return new Utf8((Utf8) value);
+    }
+    return new Utf8(value.toString());
+
   }
 
 }

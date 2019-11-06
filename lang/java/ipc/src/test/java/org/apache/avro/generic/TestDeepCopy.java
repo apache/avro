@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +70,10 @@ public class TestDeepCopy {
     interopBuilder.setStringField("Hello");
     interopBuilder.setUnionField(Collections.singletonList(ByteBuffer.wrap(new byte[] { 1, 2 })));
 
+    // Test java-class deep copy
+    BigInteger big = new BigInteger("123456789");
+    interopBuilder.setClassField(big);
+
     Interop interop = interopBuilder.build();
 
     // Verify that deepCopy works for all fields:
@@ -86,6 +91,10 @@ public class TestDeepCopy {
           && (field.schema().getType() != Type.BOOLEAN) && (field.schema().getType() != Type.INT)
           && (field.schema().getType() != Type.LONG) && (field.schema().getType() != Type.FLOAT)
           && (field.schema().getType() != Type.DOUBLE) && (field.schema().getType() != Type.STRING)) {
+
+        if (field.schema().getType() == Type.UNION && field.schema().getTypes().get(1).getProp("java-class") != null) {
+          continue;
+        }
         assertFalse("Field " + field.name() + " is same instance in deep copy",
             interop.get(field.pos()) == GenericData.get().deepCopy(field.schema(), interop.get(field.pos())));
       }
