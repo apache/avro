@@ -75,7 +75,7 @@ ECHO_PROTOCOL_JSON = """
 """
 
 
-ECHO_PROTOCOL = protocol.Parse(ECHO_PROTOCOL_JSON)
+ECHO_PROTOCOL = protocol.parse(ECHO_PROTOCOL_JSON)
 
 
 class EchoResponder(ipc.Responder):

@@ -57,7 +57,7 @@
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
     <source-plugin.version>3.0.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.24.1</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>1.25.1</spotless-maven-plugin.version>
   </properties>
 
   <modules>
@@ -301,7 +301,6 @@
                 <exclude>lang/csharp/build/**</exclude>
                 <exclude>lang/perl/pm_to_blib</exclude>
                 <exclude>lang/perl/blib/**/.exists</exclude>
-                <exclude>lang/py/build/**</exclude>
                 <exclude>lang/ruby/Gemfile.lock</exclude>
                 <exclude>lang/ruby/avro.gemspec</exclude>
                 <exclude>lang/ruby/.gem/**</exclude>
@@ -350,27 +349,33 @@
                 <exclude>lang/csharp/Avro.sln</exclude> <!-- visual studio -->
                 <!-- build-related files -->
                 <exclude>**/README.md</exclude>
-                <exclude>BUILD.md</exclude>
-                <exclude>.travis.yml</exclude>
                 <exclude>**/VERSION.txt</exclude>
                 <exclude>**/dependency-reduced-pom.xml</exclude>
-                <exclude>lang/perl/.shipit</exclude>
-                <exclude>lang/perl/inc/Module/Install/*.pm</exclude>
-                <exclude>lang/perl/inc/Module/Install.pm</exclude>
-                <exclude>lang/perl/Makefile*</exclude>
-                <exclude>lang/perl/META.yml</exclude>
-                <exclude>lang/perl/MYMETA.yml</exclude>
-                <exclude>lang/py/userlogs/**</exclude>
+                <exclude>.travis.yml</exclude>
+                <exclude>BUILD.md</exclude>
                 <exclude>lang/c/src/avro-c.pc.in</exclude>
-                <exclude>lang/ruby/Manifest</exclude>
-                <exclude>lang/java/tools/userlogs/**</exclude>
-                <exclude>lang/java/mapred/userlogs/**</exclude>
-                <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
-                <exclude>lang/js/test/mocha.opts</exclude>
+                <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
-                <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
+                <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
+                <exclude>lang/java/mapred/userlogs/**</exclude>
+                <exclude>lang/java/tools/userlogs/**</exclude>
                 <exclude>lang/js/coverage/**</exclude>
+                <exclude>lang/js/test/mocha.opts</exclude>
+                <exclude>lang/perl/.shipit</exclude>
+                <exclude>lang/perl/META.yml</exclude>
+                <exclude>lang/perl/MYMETA.yml</exclude>
+                <exclude>lang/perl/Makefile*</exclude>
+                <exclude>lang/perl/inc/Module/Install.pm</exclude>
+                <exclude>lang/perl/inc/Module/Install/*.pm</exclude>
+                <exclude>lang/py/.eggs/**</exclude>
+                <exclude>lang/py/build/**</exclude>
+                <exclude>lang/py/dist/**</exclude>
+                <exclude>lang/py/userlogs/**</exclude>
+                <exclude>lang/py3/.eggs/**</exclude>
+                <exclude>lang/py3/build/**</exclude>
+                <exclude>lang/py3/dist/**</exclude>
+                <exclude>lang/ruby/Manifest</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>
                 <exclude>DIST_README.txt</exclude>
@@ -380,7 +385,6 @@
                 <exclude>.github/PULL_REQUEST_TEMPLATE.md</exclude>
                 <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/archetype.properties</exclude> <!-- used to generate user projects -->
                 <!-- files and directories covered by LICENSE.txt -->
-                <exclude>lang/py/lib/simplejson/**</exclude>
                 <exclude>lang/c/jansson/**</exclude>
                 <exclude>lang/c/src/avro/msinttypes.h</exclude>
                 <exclude>lang/c/src/avro/msstdint.h</exclude>

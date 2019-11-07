@@ -337,17 +337,17 @@ public class SpecificCompiler {
 
     // These properties tell Velocity to use its own classpath-based
     // loader, then drop down to check the root and the current folder
-    velocityEngine.addProperty("resource.loader", "class, file");
-    velocityEngine.addProperty("class.resource.loader.class",
+    velocityEngine.addProperty("resource.loaders", "class, file");
+    velocityEngine.addProperty("resource.loader.class.class",
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-    velocityEngine.addProperty("file.resource.loader.class",
+    velocityEngine.addProperty("resource.loader.file.class",
         "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-    velocityEngine.addProperty("file.resource.loader.path", "/, .");
-    velocityEngine.setProperty("runtime.references.strict", true);
+    velocityEngine.addProperty("resource.loader.file.path", "/, .");
+    velocityEngine.setProperty("runtime.strict_mode.enable", true);
 
     // Set whitespace gobbling to Backward Compatible (BC)
     // https://velocity.apache.org/engine/2.0/developer-guide.html#space-gobbling
-    velocityEngine.setProperty("space.gobbling", "bc");
+    velocityEngine.setProperty("parser.space_gobbling", "bc");
   }
 
   private void initializeSpecificData() {

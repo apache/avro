@@ -28,7 +28,7 @@
 /// Standalone parse functions for Avro types.
 
 namespace avro {
-    
+
 /// The main parse entry point function.  Takes a parser (either validating or
 /// plain) and the object that should receive the parsed data.
 

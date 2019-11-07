@@ -5,10 +5,10 @@
             "name" : "id",
             "type" : "string",
             "ctor" : "true"
-          }, 
+          },
 		  {
             "name" : "entities",
-            "type" : 
+            "type" :
              [ "null", {
                 "type" : "record",
                 "name" : "Information",
@@ -23,7 +23,7 @@
                   "type" : ["int", "double"]
                 }
 			]
-               
+
             }
 		]
 		

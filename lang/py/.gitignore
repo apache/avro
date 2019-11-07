@@ -1,4 +1,5 @@
+*.egg-info/
+.eggs/
 build/
 lib/
 userlogs/
-*.egg-info/
