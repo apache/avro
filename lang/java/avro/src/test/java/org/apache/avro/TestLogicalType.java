@@ -98,6 +98,16 @@ public class TestLogicalType {
           return null;
         });
     Assert.assertNull("Invalid logical type should not be set on schema", LogicalTypes.fromSchemaIgnoreInvalid(schema));
+
+    // 129 bytes can hold up to 310 digits of precision
+    final Schema schema129 = Schema.createFixed("aDecimal", null, null, 129);
+    assertThrows("Should reject precision", IllegalArgumentException.class,
+        "fixed(129) cannot store 311 digits (max 310)", () -> {
+          LogicalTypes.decimal(311).addToSchema(schema129);
+          return null;
+        });
+    Assert.assertNull("Invalid logical type should not be set on schema",
+        LogicalTypes.fromSchemaIgnoreInvalid(schema129));
   }
 
   @Test
@@ -228,7 +238,7 @@ public class TestLogicalType {
 
   /**
    * A convenience method to avoid a large number of @Test(expected=...) tests
-   * 
+   *
    * @param message            A String message to describe this assertion
    * @param expected           An Exception class that the Runnable should throw
    * @param containedInMessage A String that should be contained by the thrown
