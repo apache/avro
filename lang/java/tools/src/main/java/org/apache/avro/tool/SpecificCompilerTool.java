@@ -80,7 +80,7 @@ public class SpecificCompilerTool implements Tool {
     if ("-fieldVisibility".equals(args.get(arg))) {
       arg++;
       try {
-        fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase()));
+        fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase(Locale.ENGLISH)));
       } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
         System.err.println("Expected one of" + Arrays.toString(FieldVisibility.values()));
         return 1;
