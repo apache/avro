@@ -22,13 +22,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -80,7 +74,7 @@ public class SpecificCompilerTool implements Tool {
     if ("-fieldVisibility".equals(args.get(arg))) {
       arg++;
       try {
-        fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase()));
+        fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase(Locale.ENGLISH)));
       } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
         System.err.println("Expected one of" + Arrays.toString(FieldVisibility.values()));
         return 1;
