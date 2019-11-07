@@ -41,8 +41,8 @@ A schema may be one of:
 from __future__ import absolute_import, division, print_function
 
 import json
+import math
 import sys
-from math import floor, log10
 
 from avro import constants
 
@@ -335,8 +335,7 @@ class LogicalSchema(object):
 #
 
 class DecimalLogicalSchema(LogicalSchema):
-  def __init__(self, precision, scale=0):
-    max_precision = self._max_precision()
+  def __init__(self, precision, scale=0, max_precision=0):
     if not isinstance(precision, int) or precision <= 0:
       raise SchemaParseException("""Precision is required for logical type
                                 DECIMAL and must be a positive integer but
@@ -353,9 +352,6 @@ class DecimalLogicalSchema(LogicalSchema):
                                  %(scale, precision))
 
     super(DecimalLogicalSchema, self).__init__('decimal')
-
-  def _max_precision(self):
-    raise NotImplementedError()
 
 
 class Field(object):
@@ -456,7 +452,7 @@ class PrimitiveSchema(Schema):
 
 class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
   def __init__(self, precision, scale=0, other_props=None):
-    DecimalLogicalSchema.__init__(self, precision, scale)
+    DecimalLogicalSchema.__init__(self, precision, scale, max_precision=((1 << 31) - 1))
     PrimitiveSchema.__init__(self, 'bytes', other_props)
     self.set_prop('precision', precision)
     self.set_prop('scale', scale)
@@ -464,10 +460,6 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
   # read-only properties
   precision = property(lambda self: self.get_prop('precision'))
   scale = property(lambda self: self.get_prop('scale'))
-
-  def _max_precision(self):
-    # Considering the max 32 bit integer value
-    return (1 << 31) - 1
 
   def to_json(self, names=None):
     return self.props
@@ -514,17 +506,15 @@ class FixedSchema(NamedSchema):
 
 class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
   def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
+    max_precision = math.floor(math.log10(2) * (8 * size - 1))
+    DecimalLogicalSchema.__init__(self, precision, scale, max_precision)
     FixedSchema.__init__(self, name, namespace, size, names, other_props)
-    DecimalLogicalSchema.__init__(self, precision, scale)
     self.set_prop('precision', precision)
     self.set_prop('scale', scale)
 
   # read-only properties
   precision = property(lambda self: self.get_prop('precision'))
   scale = property(lambda self: self.get_prop('scale'))
-
-  def _max_precision(self):
-    return round(floor(log10(pow(2, (8 * self.size - 1)) - 1)))
 
   def to_json(self, names=None):
     return self.props
@@ -905,19 +895,19 @@ def make_logical_schema(logical_type, type_, other_props):
     constants.TIME_MICROS: ('long', TimeMicrosSchema),
     constants.TIME_MILLIS: ('int', TimeMillisSchema),
   }
+  literal_type, schema_type = logical_types.get(logical_type, (None, None))
   try:
-    literal_type, schema_type = logical_types[logical_type]
-  except KeyError:
-    raise SchemaParseException("Currently does not support {} logical type".format(logical_type))
-  if literal_type != type_:
-    raise SchemaParseException("Logical type {} requires literal type {}, not {}".format(logical_type, literal_type, type_))
-  return schema_type(other_props)
+    if literal_type == type_:
+      return schema_type(other_props)
+  except SchemaParseException:
+    pass
+  return None
 
 def make_avsc_object(json_data, names=None):
   """
   Build Avro Schema from data parsed out of JSON string.
 
-  @arg names: A Name object (tracks seen names and default space)
+  @arg names: A Names object (tracks seen names and default space)
   """
   if names is None:
     names = Names()
@@ -927,6 +917,10 @@ def make_avsc_object(json_data, names=None):
     type = json_data.get('type')
     other_props = get_other_props(json_data, SCHEMA_RESERVED_PROPS)
     logical_type = json_data.get('logicalType')
+    if logical_type:
+      logical_schema = make_logical_schema(logical_type, type, other_props or {})
+      if logical_schema is not None:
+        return logical_schema
     if type in NAMED_TYPES:
       name = json_data.get('name')
       namespace = json_data.get('namespace', names.default_namespace)
@@ -935,7 +929,10 @@ def make_avsc_object(json_data, names=None):
         if logical_type == 'decimal':
           precision = json_data.get('precision')
           scale = 0 if json_data.get('scale') is None else json_data.get('scale')
-          return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
+          try:
+            return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
+          except (AvroException, SchemaParseException):
+            pass
         return FixedSchema(name, namespace, size, names, other_props)
       elif type == 'enum':
         symbols = json_data.get('symbols')
@@ -947,8 +944,6 @@ def make_avsc_object(json_data, names=None):
         return RecordSchema(name, namespace, fields, names, type, doc, other_props)
       else:
         raise SchemaParseException('Unknown Named Type: %s' % type)
-    if logical_type:
-      return make_logical_schema(logical_type, type, other_props or {})
     if type in PRIMITIVE_TYPES:
       return PrimitiveSchema(type, other_props)
     if type in VALID_TYPES:
