@@ -100,9 +100,9 @@ namespace Avro.Test
         [TestCase("05/05/2019 14:20:00+01:00", "05/05/2019 13:20:00Z")]
         [TestCase("05/05/2019 00:00:00Z", "05/05/2019 00:00:00Z")]
         [TestCase("05/05/2019 00:00:00+01:00", "05/04/2019 23:00:00Z")] // adjusted to UTC
-        public void TestTimestamp(string s, string e)
+        public void TestTimestampMillisecond(string s, string e)
         {
-            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"int\", \"logicalType\": \"date\"}");
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}");
 
             var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
 
@@ -116,9 +116,29 @@ namespace Avro.Test
             var avroTimestampMilli = new TimestampMillisecond();
             var convertedDate = (DateTime)avroTimestampMilli.ConvertToLogicalValue(avroTimestampMilli.ConvertToBaseValue(date, schema), schema);
             Assert.AreEqual(expectedDate, convertedDate);
+        }
 
-            var avroTimestampMicro = new TimestampMillisecond();
-            convertedDate = (DateTime)avroTimestampMicro.ConvertToLogicalValue(avroTimestampMicro.ConvertToBaseValue(date, schema), schema);
+        [TestCase("01/01/2019 14:20:00Z", "01/01/2019 14:20:00Z")]
+        [TestCase("01/01/2019 14:20:00", "01/01/2019 14:20:00Z")]
+        [TestCase("05/05/2019 14:20:00Z", "05/05/2019 14:20:00Z")]
+        [TestCase("05/05/2019 14:20:00+01:00", "05/05/2019 13:20:00Z")]
+        [TestCase("05/05/2019 00:00:00Z", "05/05/2019 00:00:00Z")]
+        [TestCase("05/05/2019 00:00:00+01:00", "05/04/2019 23:00:00Z")] // adjusted to UTC
+        public void TestTimestampMicrosecond(string s, string e)
+        {
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}");
+
+            var date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            if (date.Kind != DateTimeKind.Utc)
+            {
+                date = DateTime.Parse(s, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.AssumeLocal);
+            }
+
+            var expectedDate = DateTime.Parse(e, CultureInfo.GetCultureInfo("en-US").DateTimeFormat, DateTimeStyles.RoundtripKind);
+
+            var avroTimestampMicro = new TimestampMicrosecond();
+            var convertedDate = (DateTime)avroTimestampMicro.ConvertToLogicalValue(avroTimestampMicro.ConvertToBaseValue(date, schema), schema);
             Assert.AreEqual(expectedDate, convertedDate);
         }
 
@@ -127,7 +147,8 @@ namespace Avro.Test
         [TestCase("01:00:00:00", null, true)]
         public void TestTime(string s, string e, bool expectRangeError)
         {
-            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"int\", \"logicalType\": \"time-millis\"}");
+            var timeMilliSchema = (LogicalSchema)Schema.Parse("{\"type\": \"int\", \"logicalType\": \"time-millis\"}");
+            var timeMicroSchema = (LogicalSchema)Schema.Parse("{\"type\": \"long\", \"logicalType\": \"time-micros\"}");
 
             var time = TimeSpan.Parse(s);
             
@@ -138,21 +159,21 @@ namespace Avro.Test
             {
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
                 {
-                    avroTimeMilli.ConvertToLogicalValue(avroTimeMilli.ConvertToBaseValue(time, schema), schema);
+                    avroTimeMilli.ConvertToLogicalValue(avroTimeMilli.ConvertToBaseValue(time, timeMilliSchema), timeMilliSchema);
                 });
                 Assert.Throws<ArgumentOutOfRangeException>(() =>
                 {
-                    avroTimeMicro.ConvertToLogicalValue(avroTimeMilli.ConvertToBaseValue(time, schema), schema);
+                    avroTimeMicro.ConvertToLogicalValue(avroTimeMilli.ConvertToBaseValue(time, timeMicroSchema), timeMicroSchema);
                 });
             }
             else
             {
                 var expectedTime = TimeSpan.Parse(e);
 
-                var convertedTime = (TimeSpan)avroTimeMilli.ConvertToLogicalValue(avroTimeMilli.ConvertToBaseValue(time, schema), schema);
+                var convertedTime = (TimeSpan)avroTimeMilli.ConvertToLogicalValue(avroTimeMilli.ConvertToBaseValue(time, timeMilliSchema), timeMilliSchema);
                 Assert.AreEqual(expectedTime, convertedTime);
 
-                convertedTime = (TimeSpan)avroTimeMicro.ConvertToLogicalValue(avroTimeMicro.ConvertToBaseValue(time, schema), schema);
+                convertedTime = (TimeSpan)avroTimeMicro.ConvertToLogicalValue(avroTimeMicro.ConvertToBaseValue(time, timeMicroSchema), timeMicroSchema);
                 Assert.AreEqual(expectedTime, convertedTime);
 
             }
