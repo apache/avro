@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,12 +28,7 @@ namespace Avro.Util
         /// <summary>
         /// The date and time of the Unix Epoch.
         /// </summary>
-        protected static readonly DateTime UnixEpocDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-        /// <summary>
-        /// The date of the Unix Epoch
-        /// </summary>
-        protected static readonly DateTime UnixEpocDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Date;
+        protected static readonly DateTime UnixEpochDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         /// <summary>
         /// Initializes the base logical type.

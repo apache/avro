@@ -54,7 +54,7 @@ namespace Avro.Util
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var date = ((DateTime)logicalValue).Date;
-            return (date - UnixEpocDate).Days;
+            return (date - UnixEpochDateTime).Days;
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Avro.Util
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
             var noDays = (int)baseValue;
-            return UnixEpocDate.AddDays(noDays);
+            return UnixEpochDateTime.AddDays(noDays);
         }
     }
 }

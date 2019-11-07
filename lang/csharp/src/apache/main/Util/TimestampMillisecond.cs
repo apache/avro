@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ namespace Avro.Util
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var date = ((DateTime)logicalValue).ToUniversalTime();
-            return (long)(date - UnixEpocDateTime).TotalMilliseconds;
+            return (long)(date - UnixEpochDateTime).TotalMilliseconds;
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Avro.Util
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
             var noMs = (long)baseValue;
-            return UnixEpocDateTime.AddMilliseconds(noMs);
+            return UnixEpochDateTime.AddMilliseconds(noMs);
         }
     }
 }

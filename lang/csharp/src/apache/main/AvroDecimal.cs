@@ -29,21 +29,6 @@ namespace Avro
     public struct AvroDecimal : IConvertible, IFormattable, IComparable, IComparable<AvroDecimal>, IEquatable<AvroDecimal>
     {
         /// <summary>
-        /// The number '-1'.
-        /// </summary>
-        public static readonly AvroDecimal MinusOne = new AvroDecimal(BigInteger.MinusOne, 0);
-
-        /// <summary>
-        /// The number '0'.
-        /// </summary>
-        public static readonly AvroDecimal Zero = new AvroDecimal(BigInteger.Zero, 0);
-
-        /// <summary>
-        /// The number '1'.
-        /// </summary>
-        public static readonly AvroDecimal One = new AvroDecimal(BigInteger.One, 0);
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="AvroDecimal"/> class from a given double.
         /// </summary>
         /// <param name="value">The double value.</param>
@@ -69,8 +54,8 @@ namespace Avro
         {
             var bytes = GetBytesFromDecimal(value);
 
-            var unscaledValueBytes = new byte[12];
-            Array.Copy(bytes, unscaledValueBytes, unscaledValueBytes.Length);
+            var unscaledValueBytes = new byte[13];
+            Array.Copy(bytes, unscaledValueBytes, unscaledValueBytes.Length - 1);
 
             var unscaledValue = new BigInteger(unscaledValueBytes);
             var scale = bytes[14];
@@ -144,38 +129,6 @@ namespace Avro
         public BigInteger UnscaledValue { get; }
 
         /// <summary>
-        /// Gets a value indicating whether the current <see cref="AvroDecimal"/> represents an even number.
-        /// </summary>
-        public bool IsEven
-        {
-            get { return UnscaledValue.IsEven; }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the current <see cref="AvroDecimal"/> represents the number '1'.
-        /// </summary>
-        public bool IsOne
-        {
-            get { return UnscaledValue.IsOne; }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the current <see cref="AvroDecimal"/> represents a number that is a power of two.
-        /// </summary>
-        public bool IsPowerOfTwo
-        {
-            get { return UnscaledValue.IsPowerOfTwo; }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the current <see cref="AvroDecimal"/> represents the number '0'.
-        /// </summary>
-        public bool IsZero
-        {
-            get { return UnscaledValue.IsZero; }
-        }
-
-        /// <summary>
         /// Gets the sign of the current <see cref="AvroDecimal"/>.
         /// </summary>
         public int Sign
@@ -208,14 +161,7 @@ namespace Avro
         /// <returns>The current <see cref="AvroDecimal"/> converted to an array of bytes.</returns>
         public byte[] ToByteArray()
         {
-            var unscaledValue = UnscaledValue.ToByteArray();
-            var scale = BitConverter.GetBytes(Scale);
-
-            var bytes = new byte[unscaledValue.Length + scale.Length];
-            Array.Copy(unscaledValue, 0, bytes, 0, unscaledValue.Length);
-            Array.Copy(scale, 0, bytes, unscaledValue.Length, scale.Length);
-
-            return bytes;
+            return GetBytesFromDecimal(ToDecimal(this));
         }
 
         public static bool operator ==(AvroDecimal left, AvroDecimal right)

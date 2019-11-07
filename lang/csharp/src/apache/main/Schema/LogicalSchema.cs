@@ -28,24 +28,19 @@ namespace Avro
     public class LogicalSchema : UnnamedSchema
     {
         /// <summary>
-        /// The name of the logical type JSON property.
-        /// </summary>
-        public static readonly string LogicalTypeProperty = "logicalType";
-
-        /// <summary>
         /// Schema for the underlying type that the logical type is based on.
         /// </summary>
-        public Schema BaseSchema { get; set; }
+        public Schema BaseSchema { get; private set; }
 
         /// <summary>
         /// The logical type name.
         /// </summary>
-        public string LogicalTypeName { get; set; }
+        public string LogicalTypeName { get; private set; }
 
         /// <summary>
         /// The logical type implementation that supports this logical type.
         /// </summary>
-        public LogicalType LogicalType { get; set; }
+        public LogicalType LogicalType { get; private set; }
 
         internal static LogicalSchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
@@ -103,9 +98,8 @@ namespace Avro
         {
             if (this == obj) return true;
 
-            if (obj != null && obj is LogicalSchema)
+            if (obj != null && obj is LogicalSchema that)
             {
-                LogicalSchema that = obj as LogicalSchema;
                 if (BaseSchema.Equals(that.BaseSchema))
                     return areEqual(that.Props, Props);
             }

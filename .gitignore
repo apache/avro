@@ -20,4 +20,4 @@ test-output
 **/.vscode/**/*
 .DS_Store
 .factorypath
-/.vs
+.vs/
