@@ -70,7 +70,7 @@ public class TestDeepCopy {
     interopBuilder.setStringField("Hello");
     interopBuilder.setUnionField(Collections.singletonList(ByteBuffer.wrap(new byte[] { 1, 2 })));
 
-    // Test java-class deep copy
+    // Test java-class deep copy. See AVRO-2438
     BigInteger big = new BigInteger("123456789");
     interopBuilder.setClassField(big);
 
