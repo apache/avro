@@ -764,6 +764,12 @@ $II      ${var} = new ${st}(in.readString());
 $II    } catch (java.net.URISyntaxException e) {
 $II      throw new java.io.IOException(e.getMessage());
 $II    }
+#elseif ($st.equals("java.net.URL"))
+$II    try {
+$II      ${var} = new ${st}(in.readString());
+$II    } catch (java.net.MalformedURLException e) {
+$II      throw new java.io.IOException(e.getMessage());
+$II    }
 #else
 $II    ${var} = new ${st}(in.readString());
 #end
