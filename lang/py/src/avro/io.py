@@ -48,6 +48,7 @@ import json
 import struct
 import sys
 from decimal import Decimal, getcontext
+from struct import Struct
 
 from avro import constants, schema, timezones
 
@@ -61,23 +62,11 @@ LONG_MIN_VALUE = -(1 << 63)
 LONG_MAX_VALUE = (1 << 63) - 1
 
 # TODO(hammer): shouldn't ! be < for little-endian (according to spec?)
-if sys.version_info >= (2, 5, 0):
-  struct_class = struct.Struct
-else:
-  class SimpleStruct(object):
-    def __init__(self, format):
-      self.format = format
-    def pack(self, *args):
-      return struct.pack(self.format, *args)
-    def unpack(self, *args):
-      return struct.unpack(self.format, *args)
-  struct_class = SimpleStruct
-
-STRUCT_FLOAT = struct_class('<f')           # big-endian float
-STRUCT_DOUBLE = struct_class('<d')          # big-endian double
-STRUCT_SIGNED_SHORT = struct_class('>h')    # big-endian signed short
-STRUCT_SIGNED_INT = struct_class('>i')      # big-endian signed int
-STRUCT_SIGNED_LONG = struct_class('>q')     # big-endian signed long
+STRUCT_FLOAT = Struct('<f')           # big-endian float
+STRUCT_DOUBLE = Struct('<d')          # big-endian double
+STRUCT_SIGNED_SHORT = Struct('>h')    # big-endian signed short
+STRUCT_SIGNED_INT = Struct('>i')      # big-endian signed int
+STRUCT_SIGNED_LONG = Struct('>q')     # big-endian signed long
 
 
 #
