@@ -24,7 +24,7 @@ use_ok 'Avro::Schema';
 
 sub parse {
     next unless /\.avsc$/;
-    open(my $fh, $_);
+    open(my $fh, '<', $_);
     local $/ = undef;
     my $schema = <$fh>;
     close $fh;

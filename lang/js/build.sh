@@ -23,6 +23,7 @@ for target in "$@"
 do
   case "$target" in
     lint)
+      npm install
       npm run lint
       ;;
     test)
