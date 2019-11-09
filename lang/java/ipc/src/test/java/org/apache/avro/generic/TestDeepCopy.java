@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificData;
 import org.junit.Test;
+import test.StringablesRecord;
 
 /** Unit test for performing a deep copy of an object with a schema */
 public class TestDeepCopy {
@@ -70,10 +72,6 @@ public class TestDeepCopy {
     interopBuilder.setStringField("Hello");
     interopBuilder.setUnionField(Collections.singletonList(ByteBuffer.wrap(new byte[] { 1, 2 })));
 
-    // Test java-class deep copy. See AVRO-2438
-    BigInteger big = new BigInteger("123456789");
-    interopBuilder.setClassField(big);
-
     Interop interop = interopBuilder.build();
 
     // Verify that deepCopy works for all fields:
@@ -92,12 +90,32 @@ public class TestDeepCopy {
           && (field.schema().getType() != Type.LONG) && (field.schema().getType() != Type.FLOAT)
           && (field.schema().getType() != Type.DOUBLE) && (field.schema().getType() != Type.STRING)) {
 
-        if (field.schema().getType() == Type.UNION && field.schema().getTypes().get(1).getProp("java-class") != null) {
-          continue;
-        }
         assertFalse("Field " + field.name() + " is same instance in deep copy",
             interop.get(field.pos()) == GenericData.get().deepCopy(field.schema(), interop.get(field.pos())));
       }
     }
+  }
+
+  @Test
+  public void testJavaClassDeepCopy() {
+    // Test java-class deep copy. See AVRO-2438
+    StringablesRecord.Builder builder = StringablesRecord.newBuilder();
+    builder.setValue(new BigDecimal("1314.11"));
+
+    HashMap<String, BigDecimal> mapWithBigDecimalElements = new HashMap<>();
+    mapWithBigDecimalElements.put("testElement", new BigDecimal("220.11"));
+    builder.setMapWithBigDecimalElements(mapWithBigDecimalElements);
+
+    HashMap<BigInteger, String> mapWithBigIntKeys = new HashMap<>();
+    mapWithBigIntKeys.put(BigInteger.ONE, "testKey");
+    builder.setMapWithBigIntKeys(mapWithBigIntKeys);
+
+    StringablesRecord javaClassString = builder.build();
+
+    for (Field field : StringablesRecord.SCHEMA$.getFields()) {
+      assertEquals(javaClassString.get(field.pos()),
+          SpecificData.get().deepCopy(field.schema(), javaClassString.get(field.pos())));
+    }
+
   }
 }

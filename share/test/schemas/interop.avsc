@@ -23,9 +23,6 @@
        {"type": "record", "name": "Node",
         "fields": [
             {"name": "label", "type": "string"},
-            {"name": "children", "type": {"type": "array", "items": "Node"}}]}},
-       {"name": "classField",
-        "type": ["null", {"type": "string", "java-class": "java.math.BigInteger"}],
-        "default": null}
+            {"name": "children", "type": {"type": "array", "items": "Node"}}]}}
   ]
 }

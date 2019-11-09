@@ -1243,9 +1243,9 @@ public class GenericData {
     case LONG:
       return value; // immutable
     case MAP:
-      Map<CharSequence, Object> mapValue = (Map) value;
-      Map<CharSequence, Object> mapCopy = new HashMap<>(mapValue.size());
-      for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
+      Map<Object, Object> mapValue = (Map) value;
+      Map<Object, Object> mapCopy = new HashMap<>(mapValue.size());
+      for (Map.Entry<Object, Object> entry : mapValue.entrySet()) {
         mapCopy.put(deepCopy(STRINGS, entry.getKey()), deepCopy(schema.getValueType(), entry.getValue()));
       }
       return mapCopy;
