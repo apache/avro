@@ -259,10 +259,7 @@ public class LogicalTypes {
         return Integer.MAX_VALUE;
       } else if (schema.getType() == Schema.Type.FIXED) {
         int size = schema.getFixedSize();
-        return Math.round( // convert double to long
-            Math.floor(Math.log10( // number of base-10 digits
-                Math.pow(2, 8 * size - 1) - 1) // max value stored
-            ));
+        return Math.round(Math.floor(Math.log10(2) * (8 * size - 1)));
       } else {
         // not valid for any other type
         return 0;

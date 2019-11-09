@@ -97,8 +97,7 @@ void Node::setLogicalType(LogicalType logicalType) {
         if (type_ == AVRO_FIXED) {
             // Max precision that can be supported by the current size of
             // the FIXED type.
-            long maxPrecision =
-                floor(log10(pow(2.0, 8.0 * fixedSize() - 1) - 1));
+            long maxPrecision = floor(log10(2.0) * (8.0 * fixedSize() - 1));
             if (logicalType.precision() > maxPrecision) {
                 throw Exception(
                     boost::format(
