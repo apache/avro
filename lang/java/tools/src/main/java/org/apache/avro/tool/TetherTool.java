@@ -84,7 +84,7 @@ public class TetherTool implements Tool {
 
     Option cacheopt = OptionBuilder.withType(Boolean.class).hasArg()
         .withDescription(
-            "(optional) boolean indicating whether or not the exectuable should be distributed via distributed cache")
+            "(optional) boolean indicating whether or not the executable should be distributed via distributed cache")
         .create("exec_cached");
 
     Option protoopt = OptionBuilder.hasArg()
