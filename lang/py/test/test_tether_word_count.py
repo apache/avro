@@ -56,9 +56,6 @@ _OUT_SCHEMA = """{
 # We do this so we can set the python path appropriately
 _PYTHON_PATH = os.pathsep.join([os.path.dirname(os.path.dirname(avro.__file__)),
                                 os.path.dirname(__file__)])
-_SCRIPT = """#!/bin/sh
-PYTHONPATH={} python -m avro.tether.tether_task_runner word_count_task.WordCountTask
-""".format(_PYTHON_PATH)
 
 
 class TestTetherWordCount(unittest.TestCase):
@@ -88,12 +85,6 @@ class TestTetherWordCount(unittest.TestCase):
     with open(self._output_schema_path, 'wb') as output_schema_handle:
       output_schema_handle.write(_OUT_SCHEMA)
     self.assertTrue(os.path.exists(self._output_schema_path), "Missing the schema file")
-
-    # ...and the script...
-    self._script_path = os.path.join(self._base_dir, "exec_word_count.sh")
-    with open(self._script_path, 'wb') as script_handle:
-      script_handle.write(_SCRIPT)
-    os.chmod(self._script_path, 0o755)
 
     # ...but we just name the output path. The tether tool creates it.
     self._output_path = os.path.join(self._base_dir, "out")
@@ -128,9 +119,10 @@ class TestTetherWordCount(unittest.TestCase):
             "--in", self._input_path,
             "--out", self._output_path,
             "--outschema", self._output_schema_path,
-            "--program", self._script_path)
+            "--program", sys.executable,
+            "--exec_args", "-m avro.tether.tether_task_runner word_count_task.WordCountTask")
     print("Command:\n\t{0}".format(" ".join(args)))
-    subprocess.check_call(args)
+    subprocess.check_call(args, env={"PYTHONPATH": _PYTHON_PATH})
 
     # ...and test the results.
     datum_reader = avro.io.DatumReader()
