@@ -999,7 +999,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     public EnumSchema(Name name, String doc, LockableArrayList<String> symbols, String enumDefault) {
       super(Type.ENUM, name, doc);
       this.symbols = symbols.lock();
-      this.ordinals = new HashMap<>();
+      this.ordinals = new HashMap<>((int) Math.ceil(symbols.size() / 0.75));
       this.enumDefault = enumDefault;
       int i = 0;
       for (String symbol : symbols)
