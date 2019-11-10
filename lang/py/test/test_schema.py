@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -582,6 +583,8 @@ class CanonicalFormTestCase(unittest.TestCase):
         [STRINGS] For all JSON string literals in the schema text, replace any escaped characters (e.g., \uXXXX escapes) with their UTF-8 equivalents.
         [INTEGERS] Eliminate quotes around and any leading zeros in front of JSON integer literals (which appear in the size attributes of fixed schemas).
         [WHITESPACE] Eliminate all whitespace in JSON outside of string literals.
+
+    We depend on the Python json parser to properly handle the STRINGS and INTEGERS rules, so we don't test them here.
   """
 
   def test_primitive(self):
@@ -589,14 +592,14 @@ class CanonicalFormTestCase(unittest.TestCase):
     Convert primitive schemas to their simple form (e.g., int instead of {"type":"int"}).
     """
     s = schema.parse('{"type":"int"}')
-    self.assertEqual(s.canonical_form(), '"int"')
+    self.assertEqual(s.canonical_form, '"int"')
 
   def test_fullname(self):
     """
     Replace short names with fullnames, using applicable namespaces to do so. Then eliminate namespace attributes, which are now redundant.
     """
     s = schema.parse('{"namespace":"avro","name":"example","type":"enum","symbols":["a","b"]}')
-    self.assertEqual(s.canonical_form(),
+    self.assertEqual(s.canonical_form,
                      '{"name":"avro.example","type":"enum","symbols":["a","b"]}')
 
   def test_strip(self):
@@ -604,44 +607,14 @@ class CanonicalFormTestCase(unittest.TestCase):
     Keep only attributes that are relevant to parsing data, which are: type, name, fields, symbols, items, values, size. Strip all others (e.g., doc and aliases).
     """
     s = schema.parse('{"name":"example","type":"enum","doc":"test","symbols":["a","b"]}')
-    self.assertEqual(s.canonical_form(), '{"name":"example","type":"enum","symbols":["a","b"]}')
-
-  def test_keep_default(self):
-    """
-    Test a specific regression case where defaults were stripped from record fields.
-    """
-    s = schema.parse('{"name":"example","type":"record","fields":['
-                     '{"name":"def","type":"bytes","default":"abc"}]}')
-    self.assertEqual(s.canonical_form(),
-                    '{"name":"example","type":"record","fields":['
-                    '{"name":"def","type":"bytes","default":"abc"}]}')
+    self.assertEqual(s.canonical_form, '{"name":"example","type":"enum","symbols":["a","b"]}')
 
   def test_order(self):
     """
     Order the appearance of fields of JSON objects as follows: name, type, fields, symbols, items, values, size. For example, if an object has type, name, and size fields, then the name field should appear first, followed by the type and then the size fields.
     """
     s = schema.parse('{"symbols": ["a", "b"], "type": "enum", "name": "example"}')
-    self.assertEqual(s.canonical_form(), '{"name":"example","type":"enum","symbols":["a","b"]}')
-
-  @unittest.skip('unicode not implemented')
-  def test_strings(self):
-    r"""
-    For all JSON string literals in the schema text, replace any escaped characters (e.g., \uXXXX escapes) with their UTF-8 equivalents.
-    """
-    s = schema.parse('{"name":"example","type":"record","fields":['
-                     '{"name":"def","type":"bytes","default":"\u1F602"}]}')
-    self.assertEqual(s.canonical_form(),
-                     '{"name":"example","type":"record","fields":['
-                     r'{"name":"def","type":"bytes","default":"\u00FF"}]}')
-
-  def test_integers(self):
-    """
-    Eliminate quotes around and any leading zeros in front of JSON integer literals (which appear in the size attributes of fixed schemas).
-    """
-    # Not able to write an actual test here because we can't actually parse
-    # a schema with a quoted size or with leading zeros.
-    s = schema.parse('{"type": "fixed", "size": 16, "name": "md5"}')
-    self.assertEqual(s.canonical_form(), '{"name":"md5","type":"fixed","size":16}')
+    self.assertEqual(s.canonical_form, '{"name":"example","type":"enum","symbols":["a","b"]}')
 
   def test_whitespace(self):
     """
@@ -651,7 +624,7 @@ class CanonicalFormTestCase(unittest.TestCase):
                          "size": 16,
                          "name": "md5"}
                      ''')
-    self.assertEqual(s.canonical_form(), '{"name":"md5","type":"fixed","size":16}')
+    self.assertEqual(s.canonical_form, '{"name":"md5","type":"fixed","size":16}')
 
 
 def load_tests(loader, default_tests, pattern):
