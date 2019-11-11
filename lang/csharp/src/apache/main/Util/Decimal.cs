@@ -132,10 +132,9 @@ namespace Avro.Util
         /// Retrieve the .NET type that is represented by the logical type implementation.
         /// </summary>
         /// <param name="nullible">A flag indicating whether it should be nullible.</param>
-        public override string GetCSharpTypeName(bool nullible)
+        public override Type GetCSharpType(bool nullible)
         {
-            var typeName = typeof(AvroDecimal).ToString();
-            return nullible ? "System.Nullable<" + typeName + ">" : typeName;
+            return nullible ? typeof(AvroDecimal?) : typeof(AvroDecimal);
         }
 
         /// <summary>

@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
+using System;
+
 namespace Avro.Util
 {
     /// <summary>
@@ -64,7 +66,7 @@ namespace Avro.Util
         /// Retrieve the .NET type that is represented by the logical type implementation.
         /// </summary>
         /// <param name="nullible">A flag indicating whether it should be nullible.</param>
-        public abstract string GetCSharpTypeName(bool nullible);
+        public abstract Type GetCSharpType(bool nullible);
 
         /// <summary>
         /// Determines if a given object is an instance of the logical type.

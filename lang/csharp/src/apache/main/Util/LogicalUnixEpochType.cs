@@ -24,6 +24,7 @@ namespace Avro.Util
     /// Base for all logical type implementations that are based on the Unix Epoch date/time.
     /// </summary>
     public abstract class LogicalUnixEpochType<T> : LogicalType
+        where T : struct
     {
         /// <summary>
         /// The date and time of the Unix Epoch.
@@ -42,10 +43,9 @@ namespace Avro.Util
         /// Retrieve the .NET type that is represented by the logical type implementation.
         /// </summary>
         /// <param name="nullible">A flag indicating whether it should be nullible.</param>
-        public override string GetCSharpTypeName(bool nullible)
+        public override Type GetCSharpType(bool nullible)
         {
-            var typeName = typeof(T).ToString();
-            return nullible ? "System.Nullable<" + typeName + ">" : typeName;
+            return nullible ? typeof(T?) : typeof(T);
         }
 
         /// <summary>
