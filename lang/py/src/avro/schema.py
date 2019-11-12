@@ -358,7 +358,7 @@ class DecimalLogicalSchema(LogicalSchema):
       raise IgnoredLogicalType("Invalid decimal precision %d. Max is %d." % (precision, max_precision))
 
     if not isinstance(scale, int) or scale < 0:
-      raise IgnoredLogicalType("Invalid decimal scale %d. Must be a positive integer." % scale)
+      raise IgnoredLogicalType("Invalid decimal scale %s. Must be a positive integer." % scale)
 
     if scale > precision:
       raise IgnoredLogicalType("Invalid decimal scale %d. Cannot be greater than precision %d."
