@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Dockerfile for installing the necessary dependencies for building Avro.
-# See BUILD.txt.
+# Dockerfile for installing the Apache Forrest tools for building the
+# Avro site.
+
 FROM avro-build-ci
 
 # Install Forrest in /usr/local/apache-forrest

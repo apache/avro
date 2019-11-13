@@ -264,8 +264,8 @@ do
         GROUP_ID=50
       fi
       {
-        cat share/docker/Dockerfile
-        grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
+        sed -r "s/openjdk:8/openjdk:${JAVA:-8}/g" share/docker/Dockerfile
+        [ ${JAVA:-8} -le 8 ] && grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
         echo "ENV HOME /home/$USER_NAME"
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
