@@ -206,7 +206,7 @@ class Schema(object, metaclass=abc.ABCMeta):
   @property
   def other_props(self):
     """Returns: the dictionary of non-reserved properties."""
-    return {k: v for k, v in self.props if k not in SCHEMA_RESERVED_PROPS}
+    return {k: v for k, v in self.props.items() if k not in SCHEMA_RESERVED_PROPS}
 
   def __str__(self):
     """Returns: the JSON representation of this schema."""
