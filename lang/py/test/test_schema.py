@@ -455,14 +455,14 @@ class SchemaParseTestCase(unittest.TestCase):
     with warnings.catch_warnings(record=True) as actual_warnings:
       try:
         self.test_schema.parse()
-        actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
-        if self.test_schema.warnings:
-          expected_messages = [str(w) for w in self.test_schema.warnings]
-          self.assertItemsEqual(actual_messages, expected_messages)
-        else:
-          self.assertEqual(actual_messages, [])
       except (schema.AvroException, schema.SchemaParseException):
         self.fail("Valid schema failed to parse: {!s}".format(self.test_schema))
+      actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
+      if self.test_schema.warnings:
+        expected_messages = [str(w) for w in self.test_schema.warnings]
+        self.assertItemsEqual(actual_messages, expected_messages)
+      else:
+        self.assertEqual(actual_messages, [])
 
   def parse_invalid(self):
     """Parsing an invalid schema should error."""
