@@ -142,12 +142,10 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
     if (data.isFastReaderEnabled()) {
-      DatumReader<D> localFastReader = this.fastDatumReader;
-      if (localFastReader == null) {
-        localFastReader = data.getFastReaderBuilder().createDatumReader(actual, expected);
-        this.fastDatumReader = localFastReader;
+      if (this.fastDatumReader == null) {
+        this.fastDatumReader = data.getFastReaderBuilder().createDatumReader(actual, expected);
       }
-      return localFastReader.read(reuse, in);
+      return fastDatumReader.read(reuse, in);
     }
 
     ResolvingDecoder resolver = getResolver(actual, expected);

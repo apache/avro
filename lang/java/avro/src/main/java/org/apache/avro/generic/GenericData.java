@@ -194,12 +194,9 @@ public class GenericData {
 
   public FastReaderBuilder getFastReaderBuilder() {
     if (fastReaderBuilder == null) {
-      FastReaderBuilder localFastReader = new FastReaderBuilder(this);
-      this.fastReaderBuilder = localFastReader;
-      return localFastReader;
-    } else {
-      return this.fastReaderBuilder;
+      fastReaderBuilder = new FastReaderBuilder(this);
     }
+    return this.fastReaderBuilder;
   }
 
   /**
