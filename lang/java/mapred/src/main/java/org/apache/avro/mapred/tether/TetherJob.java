@@ -20,8 +20,8 @@ package org.apache.avro.mapred.tether;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -56,7 +56,7 @@ public class TetherJob extends Configured {
 
   /** Set the URI for the application's executable. Normally this in HDFS. */
   public static void setExecutable(JobConf job, File executable) {
-    setExecutable(job, executable, new ArrayList<>(), false);
+    setExecutable(job, executable, Collections.emptyList(), false);
   }
 
   /**
