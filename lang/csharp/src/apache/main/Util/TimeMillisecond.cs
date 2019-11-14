@@ -38,21 +38,14 @@ namespace Avro.Util
         public TimeMillisecond() : base(LogicalTypeName)
         { }
 
-        /// <summary>
-        /// Applies 'time-millis' logical type validation for a given logical schema.
-        /// </summary>
-        /// <param name="schema">The schema to be validated.</param>
+        /// <inheritdoc/>
         public override void ValidateSchema(LogicalSchema schema)
         {
             if (Schema.Type.Int != schema.BaseSchema.Tag)
                 throw new AvroTypeException("'time-millis' can only be used with an underlying int type");
         }
 
-        /// <summary>
-        /// Converts a logical TimeMillisecond to an integer representing the number of milliseconds after midnight.
-        /// </summary>
-        /// <param name="logicalValue">The logical time to convert.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
+        /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var time = (TimeSpan)logicalValue;
@@ -63,11 +56,7 @@ namespace Avro.Util
             return (int)(time - UnixEpochDateTime.TimeOfDay).TotalMilliseconds;
         }
 
-        /// <summary>
-        /// Convers an integer representing the number of milliseconds after midnight to a logical TimeMillisecond.
-        /// </summary>
-        /// <param name="baseValue">The number of milliseconds after midnight.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
+        /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
             var noMs = (int)baseValue;

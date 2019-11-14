@@ -39,19 +39,13 @@ namespace Avro.Util
             : base(name)
         { }
 
-        /// <summary>
-        /// Retrieve the .NET type that is represented by the logical type implementation.
-        /// </summary>
-        /// <param name="nullible">A flag indicating whether it should be nullible.</param>
+        /// <inheritdoc/>
         public override Type GetCSharpType(bool nullible)
         {
             return nullible ? typeof(T?) : typeof(T);
         }
 
-        /// <summary>
-        /// Determines if a given object is an instance of the logical Unix Epoch based date/time.
-        /// </summary>
-        /// <param name="logicalValue">The logical value to test.</param>
+        /// <inheritdoc/>
         public override bool IsInstanceOfLogicalType(object logicalValue)
         {
             return logicalValue is T;

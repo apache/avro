@@ -36,32 +36,22 @@ namespace Avro.Util
         public Date() : base(LogicalTypeName)
         { }
 
-        /// <summary>
-        /// Applies 'date' logical type validation for a given logical schema.
-        /// </summary>
-        /// <param name="schema">The schema to be validated.</param>
+
+        /// <inheritdoc/>
         public override void ValidateSchema(LogicalSchema schema)
         {
             if (Schema.Type.Int != schema.BaseSchema.Tag)
                 throw new AvroTypeException("'date' can only be used with an underlying int type");
         }
 
-        /// <summary>
-        /// Converts a logical Date to an integer representing the number of days since the Unix Epoch.
-        /// </summary>
-        /// <param name="logicalValue">The logical date to convert.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
+        /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var date = ((DateTime)logicalValue).Date;
             return (date - UnixEpochDateTime).Days;
         }
 
-        /// <summary>
-        /// Convers an integer representing the number of days since the Unix Epoch to a logical Date.
-        /// </summary>
-        /// <param name="baseValue">The number of days since the Unix Epoch.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
+        /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
             var noDays = (int)baseValue;

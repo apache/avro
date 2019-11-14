@@ -47,6 +47,15 @@ namespace Avro.Util
         }
 
         /// <summary>
+        /// Registers or replaces a logical type implementation.
+        /// </summary>
+        /// <param name="logicalType">The <see cref="LogicalType"/> implementation that should be registered.</param>
+        public void Register(LogicalType logicalType)
+        {
+            _logicalTypes[logicalType.Name] = logicalType;
+        }
+
+        /// <summary>
         /// Retrieves a logical type implementation for a given logical schema.
         /// </summary>
         /// <param name="schema">The schema.</param>

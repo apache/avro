@@ -35,32 +35,21 @@ namespace Avro.Util
         public TimestampMillisecond() : base(LogicalTypeName)
         { }
 
-        /// <summary>
-        /// Applies 'timestamp-millis' logical type validation for a given logical schema.
-        /// </summary>
-        /// <param name="schema">The schema to be validated.</param>
+        /// <inheritdoc/>
         public override void ValidateSchema(LogicalSchema schema)
         {
             if (Schema.Type.Long != schema.BaseSchema.Tag)
                 throw new AvroTypeException("'timestamp-millis' can only be used with an underlying long type");
         }
 
-        /// <summary>
-        /// Converts a logical TimestampMillisecond to a long representing the number of milliseconds since the Unix Epoch.
-        /// </summary>
-        /// <param name="logicalValue">The logical date to convert.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
+        /// <inheritdoc/>
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var date = ((DateTime)logicalValue).ToUniversalTime();
             return (long)(date - UnixEpochDateTime).TotalMilliseconds;
         }
 
-        /// <summary>
-        /// Convers a long representing the number of milliseconds since the Unix Epoch to a logical TimestampMillisecond.
-        /// </summary>
-        /// <param name="baseValue">The number of milliseconds since the Unix Epoch.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
+        /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
             var noMs = (long)baseValue;

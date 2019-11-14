@@ -39,10 +39,7 @@ namespace Avro.Util
         public Decimal() : base(LogicalTypeName)
         { }
 
-        /// <summary>
-        /// Applies 'decimal' logical type validation for a given logical schema.
-        /// </summary>
-        /// <param name="schema">The schema to be validated.</param>
+        /// <inheritdoc/>
         public override void ValidateSchema(LogicalSchema schema)
         {
             if (Schema.Type.Bytes != schema.BaseSchema.Tag && Schema.Type.Fixed != schema.BaseSchema.Tag)
@@ -64,12 +61,7 @@ namespace Avro.Util
                 throw new AvroTypeException("'decimal' requires a 'scale' property that is zero or less than or equal to 'precision'");
         }
 
-        /// <summary>
-        /// Converts a logical value to an instance of its base type.
-        /// </summary>
-        /// <param name="logicalValue">The logical value to convert.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
-        /// <returns>An object representing the encoded value of the base type.</returns>        
+        /// <inheritdoc/>      
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var decimalValue = (AvroDecimal)logicalValue;
@@ -94,26 +86,7 @@ namespace Avro.Util
                     decimalValue.Sign < 0 ? (byte)0xFF : (byte)0x00));
         }
 
-        private static byte[] GetDecimalFixedByteArray(byte[] sourceBuffer, int size, byte fillValue)
-        {
-            var paddedBuffer = new byte[size];
-
-            var offset = size - sourceBuffer.Length;
-
-            for (var idx = 0; idx < size; idx++)
-            {
-                paddedBuffer[idx] = idx < offset ? fillValue : sourceBuffer[idx - offset];
-            }
-
-            return paddedBuffer;
-        }
-
-        /// <summary>
-        /// Converts a base value to an instance of the logical type.
-        /// </summary>
-        /// <param name="baseValue">The base value to convert.</param>
-        /// <param name="schema">The schema that represents the target of the conversion.</param>
-        /// <returns>An object representing the encoded value of the logical type.</returns>
+        /// <inheritdoc/>
         public override object ConvertToLogicalValue(object baseValue, LogicalSchema schema)
         {
             var buffer = Schema.Type.Bytes == schema.BaseSchema.Tag
@@ -128,19 +101,13 @@ namespace Avro.Util
             return new AvroDecimal(new BigInteger(buffer), GetIntPropertyValueFromSchema(schema, "scale"));
         }
 
-        /// <summary>
-        /// Retrieve the .NET type that is represented by the logical type implementation.
-        /// </summary>
-        /// <param name="nullible">A flag indicating whether it should be nullible.</param>
+        /// <inheritdoc/>
         public override Type GetCSharpType(bool nullible)
         {
             return nullible ? typeof(AvroDecimal?) : typeof(AvroDecimal);
         }
 
-        /// <summary>
-        /// Determines if a given object is an instance of the logical Decimal.
-        /// </summary>
-        /// <param name="logicalValue">The logical value to test.</param>
+        /// <inheritdoc/>
         public override bool IsInstanceOfLogicalType(object logicalValue)
         {
             return logicalValue is AvroDecimal;
@@ -151,6 +118,20 @@ namespace Avro.Util
             var scaleVal = schema.GetProperty(propertyName);
 
             return string.IsNullOrEmpty(scaleVal) ? defaultVal : int.Parse(scaleVal, CultureInfo.CurrentCulture);
+        }
+
+        private static byte[] GetDecimalFixedByteArray(byte[] sourceBuffer, int size, byte fillValue)
+        {
+            var paddedBuffer = new byte[size];
+
+            var offset = size - sourceBuffer.Length;
+
+            for (var idx = 0; idx < size; idx++)
+            {
+                paddedBuffer[idx] = idx < offset ? fillValue : sourceBuffer[idx - offset];
+            }
+
+            return paddedBuffer;
         }
     }
 }
