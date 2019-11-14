@@ -19,7 +19,7 @@
 
 FROM openjdk:8
 WORKDIR /root
-CMD ["/avro/share/docker/run-tests.sh"]
+
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
     DEBIAN_FRONTEND=noninteractive
 

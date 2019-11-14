@@ -303,10 +303,10 @@ do
       ;;
 
     docker-test)
-      tar -cf- share/docker/Dockerfile \
-               lang/ruby/Gemfile |
-        docker build -t avro-test -f share/docker/Dockerfile -
-      docker run --rm -v ${PWD}:/avro/ avro-test
+      sed -r "s/openjdk:8/openjdk:${JAVA:-8}/g" share/docker/Dockerfile > Dockerfile
+      tar -cf- lang/ruby/Gemfile Dockerfile | docker build -t avro-test -
+      rm Dockerfile
+      docker run --rm -v ${PWD}:/avro/ avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)
