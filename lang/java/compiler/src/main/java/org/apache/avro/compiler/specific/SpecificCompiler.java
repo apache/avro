@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -117,7 +118,7 @@ public class SpecificCompiler {
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
   private String suffix = ".java";
-  private List<Object> additionalVelocityTools = new ArrayList<>();
+  private List<Object> additionalVelocityTools = Collections.emptyList();
 
   /*
    * Used in the record.vm template.

@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1313,7 +1314,7 @@ public class SchemaBuilder {
   /** A special builder for unions. Unions cannot nest unions directly **/
   private static final class UnionBuilder<R> extends BaseTypeBuilder<UnionAccumulator<R>> {
     private UnionBuilder(Completion<R> context, NameContext names) {
-      this(context, names, new ArrayList<>());
+      this(context, names, Collections.emptyList());
     }
 
     private static <R> UnionBuilder<R> create(Completion<R> context, NameContext names) {
@@ -1783,7 +1784,7 @@ public class SchemaBuilder {
     }
 
     private <C> UnionCompletion<C> completion(Completion<C> context) {
-      return new UnionCompletion<>(context, names, new ArrayList<>());
+      return new UnionCompletion<>(context, names, Collections.emptyList());
     }
   }
 
