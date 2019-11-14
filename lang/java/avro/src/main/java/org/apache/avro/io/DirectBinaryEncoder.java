@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 
 /**
  * An {@link Encoder} for Avro's binary encoding that does not buffer output.
@@ -52,8 +53,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
   }
 
   DirectBinaryEncoder configure(OutputStream out) {
-    if (null == out)
-      throw new NullPointerException("OutputStream cannot be null!");
+    Objects.requireNonNull(out, "OutputStream cannot be null");
     this.out = out;
     return this;
   }

@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
@@ -412,9 +413,8 @@ public class SchemaBuilder {
     private String[] aliases;
 
     protected NamedBuilder(NameContext names, String name) {
-      checkRequired(name, "Type must have a name");
+      this.name = Objects.requireNonNull(name, "Type must have a name");
       this.names = names;
-      this.name = name;
     }
 
     /** configure this type's optional documentation string **/
@@ -2689,12 +2689,6 @@ public class SchemaBuilder {
     public R endUnion() {
       Schema schema = Schema.createUnion(schemas);
       return context.complete(schema);
-    }
-  }
-
-  private static void checkRequired(Object reference, String errorMessage) {
-    if (reference == null) {
-      throw new NullPointerException(errorMessage);
     }
   }
 

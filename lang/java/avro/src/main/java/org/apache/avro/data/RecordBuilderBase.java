@@ -85,13 +85,11 @@ public abstract class RecordBuilderBase<T extends IndexedRecord> implements Reco
    * 
    * @param field the field to validate.
    * @param value the value to validate.
-   * @throws NullPointerException if value is null and the given field does not
+   * @throws AvroRuntimeException if value is null and the given field does not
    *                              accept null values.
    */
   protected void validate(Field field, Object value) {
-    if (isValidValue(field, value)) {
-    } else if (field.defaultVal() != null) {
-    } else {
+    if (!isValidValue(field, value) && field.defaultVal() == null) {
       throw new AvroRuntimeException("Field " + field + " does not accept null values");
     }
   }
