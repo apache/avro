@@ -909,9 +909,8 @@ def make_logical_schema(logical_type, type_, other_props):
     if schema_type is not None:
       return schema_type(other_props)
 
-    expected_types = [literal_type for lt, literal_type in logical_types if lt == logical_type]
+    expected_types = sorted(literal_type for lt, literal_type in logical_types if lt == logical_type)
     if expected_types:
-      expected_types.sort()
       warnings.warn(
           IgnoredLogicalType("Logical type {} requires literal type {}, not {}.".format(
               logical_type, "/".join(expected_types), type_)))
