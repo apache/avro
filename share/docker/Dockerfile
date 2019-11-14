@@ -139,3 +139,5 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
 # Install Ruby modules
 COPY lang/ruby/Gemfile /tmp
 RUN bundle install --gemfile=/tmp/Gemfile
+
+CMD ["/bin/bash", "-i"]
