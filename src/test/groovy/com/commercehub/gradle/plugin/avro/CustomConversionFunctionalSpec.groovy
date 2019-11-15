@@ -41,8 +41,8 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
             import com.commercehub.gradle.plugin.avro.test.custom.*
             avro {
                 stringType = "CharSequence"
-                logicalTypeFactories.put("timezone", TimeZoneLogicalTypeFactory)
-                customConversions.add(TimeZoneConversion)
+                logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
+                customConversion(TimeZoneConversion)
             }
         """
         testProjectDir.newFolder("buildSrc")
@@ -78,8 +78,8 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
             import com.commercehub.gradle.plugin.avro.test.custom.*
             avro {
                 stringType = "CharSequence"
-                logicalTypeFactories.put("timezone", TimeZoneLogicalTypeFactory)
-                customConversions.add(TimeZoneConversion)
+                logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
+                customConversion(TimeZoneConversion)
             }
         """
         testProjectDir.newFolder("buildSrc")

@@ -16,13 +16,15 @@
 package com.commercehub.gradle.plugin.avro;
 
 import java.nio.charset.Charset;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.inject.Inject;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
@@ -36,7 +38,6 @@ import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETUR
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_LOGICAL_TYPE_FACTORIES;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configureListPropertyConvention;
-import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configureMapPropertyConvention;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 
 public class DefaultAvroExtension implements AvroExtension {
@@ -49,8 +50,9 @@ public class DefaultAvroExtension implements AvroExtension {
     private final Property<Boolean> gettersReturnOptional;
     private final Property<Boolean> enableDecimalLogicalType;
     private final Property<String> dateTimeLogicalType;
+    // When we require Gradle 5.1+, we could use MapProperty here.
     @SuppressWarnings("rawtypes")
-    private final MapProperty<String, Class> logicalTypeFactories;
+    private final Property<Map> logicalTypeFactories;
     @SuppressWarnings("rawtypes")
     private final ListProperty<Class> customConversions;
 
@@ -65,8 +67,7 @@ public class DefaultAvroExtension implements AvroExtension {
         this.gettersReturnOptional = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_GETTERS_RETURN_OPTIONAL);
         this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
         this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
-        this.logicalTypeFactories = configureMapPropertyConvention(
-            objects.mapProperty(String.class, Class.class), DEFAULT_LOGICAL_TYPE_FACTORIES);
+        this.logicalTypeFactories = configurePropertyConvention(objects.property(Map.class), DEFAULT_LOGICAL_TYPE_FACTORIES);
         this.customConversions = configureListPropertyConvention(objects.listProperty(Class.class), DEFAULT_CUSTOM_CONVERSIONS);
     }
 
@@ -185,7 +186,7 @@ public class DefaultAvroExtension implements AvroExtension {
 
     @Override
     @SuppressWarnings("rawtypes")
-    public MapProperty<String, Class> getLogicalTypeFactories() {
+    public Property<Map> getLogicalTypeFactories() {
         return logicalTypeFactories;
     }
 
@@ -213,5 +214,20 @@ public class DefaultAvroExtension implements AvroExtension {
     @SuppressWarnings("rawtypes")
     public void setCustomConversions(Iterable<Class> customConversions) {
         this.customConversions.set(customConversions);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public AvroExtension logicalTypeFactory(String typeName, Class<? extends LogicalTypes.LogicalTypeFactory> typeFactoryClass) {
+        Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> newValue = new LinkedHashMap<>(logicalTypeFactories.get());
+        newValue.put(typeName, typeFactoryClass);
+        logicalTypeFactories.set(newValue);
+        return this;
+    }
+
+    @Override
+    public AvroExtension customConversion(Class<? extends Conversion<?>> conversionClass) {
+        customConversions.add(conversionClass);
+        return this;
     }
 }

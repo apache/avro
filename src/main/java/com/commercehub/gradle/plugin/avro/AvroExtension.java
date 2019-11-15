@@ -15,8 +15,10 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.util.Map;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalTypes;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 
 public interface AvroExtension {
@@ -29,8 +31,11 @@ public interface AvroExtension {
     Property<Boolean> isGettersReturnOptional();
     Property<Boolean> isEnableDecimalLogicalType();
     Property<String> getDateTimeLogicalType();
+    // When we require Gradle 5.1+, we could use MapProperty here.
     @SuppressWarnings("rawtypes")
-    MapProperty<String, Class> getLogicalTypeFactories();
+    Property<Map> getLogicalTypeFactories();
     @SuppressWarnings("rawtypes")
     ListProperty<Class> getCustomConversions();
+    AvroExtension logicalTypeFactory(String typeName, Class<? extends LogicalTypes.LogicalTypeFactory> typeFactoryClass);
+    AvroExtension customConversion(Class<? extends Conversion<?>> conversionClass);
 }

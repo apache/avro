@@ -16,12 +16,10 @@
 
 package com.commercehub.gradle.plugin.avro;
 
-import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
@@ -87,25 +85,6 @@ class GradleCompatibility {
             property.convention(elements);
         } else {
             property.set(elements);
-        }
-        return property;
-    }
-
-    static <K, V> MapProperty<K, V> configureMapPropertyConvention(MapProperty<K, V> property,
-                                                                   Provider<? extends Map<? extends K, ? extends V>>  valueProvider) {
-        if (GradleFeatures.propertyConventions.isSupported()) {
-            property.convention(valueProvider);
-        } else {
-            property.set(valueProvider);
-        }
-        return property;
-    }
-
-    static <K, V> MapProperty<K, V> configureMapPropertyConvention(MapProperty<K, V> property, Map<? extends K, ? extends V> value) {
-        if (GradleFeatures.propertyConventions.isSupported()) {
-            property.convention(value);
-        } else {
-            property.set(value);
         }
         return property;
     }
