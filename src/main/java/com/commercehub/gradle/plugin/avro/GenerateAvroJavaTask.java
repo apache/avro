@@ -423,7 +423,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
      * This must be called before the Schemas are parsed, or they will not be applied correctly.
      * Since {@link LogicalTypes} is a static registry, this may result in side-effects.
      */
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     private void registerLogicalTypes() {
         Map<?, ?> logicalTypeFactoryMap = logicalTypeFactories.get();
         Set<? extends Map.Entry<?, ?>> logicalTypeFactoryEntries = logicalTypeFactoryMap.entrySet();
@@ -432,9 +432,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             Class logicalTypeFactoryClass = (Class) entry.getValue();
             try {
                 LogicalTypes.LogicalTypeFactory logicalTypeFactory =
-                    (LogicalTypes.LogicalTypeFactory) logicalTypeFactoryClass.newInstance();
+                    (LogicalTypes.LogicalTypeFactory) logicalTypeFactoryClass.getDeclaredConstructor().newInstance();
                 LogicalTypes.register(logicalTypeName, logicalTypeFactory);
-            } catch (InstantiationException | IllegalAccessException ex) {
+            } catch (ReflectiveOperationException ex) {
                 getLogger().error("Could not instantiate logicalTypeFactory class \"" + logicalTypeFactoryClass.getName() + "\"");
             }
         }
