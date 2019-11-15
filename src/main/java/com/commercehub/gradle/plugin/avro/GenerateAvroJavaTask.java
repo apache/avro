@@ -18,12 +18,14 @@ package com.commercehub.gradle.plugin.avro;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -35,7 +37,6 @@ import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.NotSpec;
@@ -58,7 +59,6 @@ import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILI
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
-import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configureListPropertyConvention;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 
@@ -85,7 +85,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     @SuppressWarnings("rawtypes")
     private final Property<Map> logicalTypeFactories;
     @SuppressWarnings("rawtypes")
-    private final ListProperty<Class> customConversions;
+    private final Property<List> customConversions;
 
     private final Provider<StringType> stringTypeProvider;
     private final Provider<FieldVisibility> fieldVisibilityProvider;
@@ -112,7 +112,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                 SpecificCompiler.DateTimeLogicalTypeImplementation.values(), input));
         this.logicalTypeFactories =
             configurePropertyConvention(objects.property(Map.class), DEFAULT_LOGICAL_TYPE_FACTORIES);
-        this.customConversions = configureListPropertyConvention(objects.listProperty(Class.class), DEFAULT_CUSTOM_CONVERSIONS);
+        this.customConversions = configurePropertyConvention(objects.property(List.class), DEFAULT_CUSTOM_CONVERSIONS);
     }
 
     @Optional
@@ -239,29 +239,31 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     @SuppressWarnings("rawtypes")
-    public void setLogicalTypeFactories(Provider<? extends Map<? extends String, ? extends Class>> provider) {
+    public void setLogicalTypeFactories(Provider<? extends Map<? extends String,
+        ? extends Class<? extends LogicalTypes.LogicalTypeFactory>>> provider) {
         this.logicalTypeFactories.set(provider);
     }
 
     @SuppressWarnings("rawtypes")
-    public void setLogicalTypeFactories(Map<? extends String, ? extends Class> logicalTypeFactories) {
+    public void setLogicalTypeFactories(Map<? extends String,
+        ? extends Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories) {
         this.logicalTypeFactories.set(logicalTypeFactories);
     }
 
     @Optional
     @Input
     @SuppressWarnings("rawtypes")
-    public ListProperty<Class> getCustomConversions() {
+    public Property<List> getCustomConversions() {
         return customConversions;
     }
 
-    @SuppressWarnings("rawtypes")
-    public void setCustomConversions(Provider<Iterable<Class>> provider) {
+    public void setCustomConversions(Provider<List<Class<? extends Conversion<?>>>> provider) {
+        // If we were using ListProperty, this method could take Iterables rather than Lists
         this.customConversions.set(provider);
     }
 
-    @SuppressWarnings("rawtypes")
-    public void setCustomConversions(Iterable<Class> customConversions) {
+    public void setCustomConversions(List<Class<? extends Conversion<?>>> customConversions) {
+        // If we were using ListProperty, this method could take Iterables rather than Lists
         this.customConversions.set(customConversions);
     }
 
@@ -282,7 +284,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
                 (Map.Entry e) -> (String) e.getKey(),
                 (Map.Entry e) -> ((Class) e.getValue()).getName()
             )));
-        getLogger().debug("Using customConversions {}", customConversions.get().stream().map(Class::getName).collect(Collectors.toList()));
+        getLogger().debug("Using customConversions {}",
+            customConversions.get().stream().map(v -> ((Class) v).getName()).collect(Collectors.toList()));
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         processFiles();
@@ -437,7 +440,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void registerCustomConversions(SpecificCompiler compiler) {
-        customConversions.get().forEach(compiler::addCustomConversion);
+        customConversions.get().forEach(v -> compiler.addCustomConversion((Class) v));
     }
 }

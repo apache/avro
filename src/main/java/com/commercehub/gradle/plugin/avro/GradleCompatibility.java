@@ -19,7 +19,6 @@ package com.commercehub.gradle.plugin.avro;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
@@ -66,25 +65,6 @@ class GradleCompatibility {
             property.convention(value);
         } else {
             property.set(value);
-        }
-        return property;
-    }
-
-    static <T> ListProperty<T> configureListPropertyConvention(ListProperty<T> property,
-                                                               Provider<? extends Iterable<? extends T>> provider) {
-        if (GradleFeatures.propertyConventions.isSupported()) {
-            property.convention(provider);
-        } else {
-            property.set(provider);
-        }
-        return property;
-    }
-
-    static <T> ListProperty<T> configureListPropertyConvention(ListProperty<T> property, Iterable<T> elements) {
-        if (GradleFeatures.propertyConventions.isSupported()) {
-            property.convention(elements);
-        } else {
-            property.set(elements);
         }
         return property;
     }
