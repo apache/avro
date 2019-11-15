@@ -93,8 +93,15 @@ abstract class FunctionalSpec extends Specification {
     protected void copyResource(String name, File targetFolder) {
         def file = new File(targetFolder, name)
         file.parentFile.mkdirs()
-            file << getClass().getResourceAsStream(name)
-        }
+        file << getClass().getResourceAsStream(name)
+    }
+
+    protected void copyFile(String srcDir, String destDir, String path) {
+        def destFile = new File(projectFile(destDir), path)
+        def srcFile = new File(srcDir, path)
+        destFile.parentFile.mkdirs()
+        destFile << srcFile.bytes
+    }
 
     protected File projectFile(String path) {
         return new File(testProjectDir.root, path)

@@ -16,9 +16,12 @@
 
 package com.commercehub.gradle.plugin.avro;
 
+import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
@@ -61,6 +64,44 @@ class GradleCompatibility {
     }
 
     static <T> Property<T> configurePropertyConvention(Property<T> property, T value) {
+        if (GradleFeatures.propertyConventions.isSupported()) {
+            property.convention(value);
+        } else {
+            property.set(value);
+        }
+        return property;
+    }
+
+    static <T> ListProperty<T> configureListPropertyConvention(ListProperty<T> property,
+                                                               Provider<? extends Iterable<? extends T>> provider) {
+        if (GradleFeatures.propertyConventions.isSupported()) {
+            property.convention(provider);
+        } else {
+            property.set(provider);
+        }
+        return property;
+    }
+
+    static <T> ListProperty<T> configureListPropertyConvention(ListProperty<T> property, Iterable<T> elements) {
+        if (GradleFeatures.propertyConventions.isSupported()) {
+            property.convention(elements);
+        } else {
+            property.set(elements);
+        }
+        return property;
+    }
+
+    static <K, V> MapProperty<K, V> configureMapPropertyConvention(MapProperty<K, V> property,
+                                                                   Provider<? extends Map<? extends K, ? extends V>>  valueProvider) {
+        if (GradleFeatures.propertyConventions.isSupported()) {
+            property.convention(valueProvider);
+        } else {
+            property.set(valueProvider);
+        }
+        return property;
+    }
+
+    static <K, V> MapProperty<K, V> configureMapPropertyConvention(MapProperty<K, V> property, Map<? extends K, ? extends V> value) {
         if (GradleFeatures.propertyConventions.isSupported()) {
             property.convention(value);
         } else {

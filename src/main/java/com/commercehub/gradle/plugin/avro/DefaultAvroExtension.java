@@ -16,19 +16,27 @@
 package com.commercehub.gradle.plugin.avro;
 
 import java.nio.charset.Charset;
+import java.util.Map;
 import javax.inject.Inject;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_OPTIONAL_GETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CUSTOM_CONVERSIONS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETURN_OPTIONAL;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_LOGICAL_TYPE_FACTORIES;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configureListPropertyConvention;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configureMapPropertyConvention;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 
 public class DefaultAvroExtension implements AvroExtension {
@@ -41,6 +49,10 @@ public class DefaultAvroExtension implements AvroExtension {
     private final Property<Boolean> gettersReturnOptional;
     private final Property<Boolean> enableDecimalLogicalType;
     private final Property<String> dateTimeLogicalType;
+    @SuppressWarnings("rawtypes")
+    private final MapProperty<String, Class> logicalTypeFactories;
+    @SuppressWarnings("rawtypes")
+    private final ListProperty<Class> customConversions;
 
     @Inject
     public DefaultAvroExtension(ObjectFactory objects) {
@@ -53,6 +65,9 @@ public class DefaultAvroExtension implements AvroExtension {
         this.gettersReturnOptional = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_GETTERS_RETURN_OPTIONAL);
         this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
         this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
+        this.logicalTypeFactories = configureMapPropertyConvention(
+            objects.mapProperty(String.class, Class.class), DEFAULT_LOGICAL_TYPE_FACTORIES);
+        this.customConversions = configureListPropertyConvention(objects.listProperty(Class.class), DEFAULT_CUSTOM_CONVERSIONS);
     }
 
     @Override
@@ -166,5 +181,37 @@ public class DefaultAvroExtension implements AvroExtension {
 
     public void setDateTimeLogicalType(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalType) {
         setDateTimeLogicalType(dateTimeLogicalType.name());
+    }
+
+    @Override
+    @SuppressWarnings("rawtypes")
+    public MapProperty<String, Class> getLogicalTypeFactories() {
+        return logicalTypeFactories;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void setLogicalTypeFactories(Provider<? extends Map<? extends String, ? extends Class>> provider) {
+        this.logicalTypeFactories.set(provider);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void setLogicalTypeFactories(Map<? extends String, ? extends Class> logicalTypeFactories) {
+        this.logicalTypeFactories.set(logicalTypeFactories);
+    }
+
+    @Override
+    @SuppressWarnings("rawtypes")
+    public ListProperty<Class> getCustomConversions() {
+        return customConversions;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void setCustomConversions(Provider<Iterable<Class>> provider) {
+        this.customConversions.set(provider);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void setCustomConversions(Iterable<Class> customConversions) {
+        this.customConversions.set(customConversions);
     }
 }

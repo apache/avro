@@ -15,6 +15,8 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 
 public interface AvroExtension {
@@ -27,4 +29,8 @@ public interface AvroExtension {
     Property<Boolean> isGettersReturnOptional();
     Property<Boolean> isEnableDecimalLogicalType();
     Property<String> getDateTimeLogicalType();
+    @SuppressWarnings("rawtypes")
+    MapProperty<String, Class> getLogicalTypeFactories();
+    @SuppressWarnings("rawtypes")
+    ListProperty<Class> getCustomConversions();
 }

@@ -19,6 +19,8 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 import static com.commercehub.gradle.plugin.avro.Constants.AVRO_EXTENSION_NAME;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configureListPropertyConvention;
+import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configureMapPropertyConvention;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.createExtensionWithObjectFactory;
 
@@ -40,6 +42,8 @@ public class AvroBasePlugin implements Plugin<Project> {
             configurePropertyConvention(task.isGettersReturnOptional(), avroExtension.isGettersReturnOptional());
             configurePropertyConvention(task.isEnableDecimalLogicalType(), avroExtension.isEnableDecimalLogicalType());
             configurePropertyConvention(task.getDateTimeLogicalType(), avroExtension.getDateTimeLogicalType());
+            configureMapPropertyConvention(task.getLogicalTypeFactories(), avroExtension.getLogicalTypeFactories());
+            configureListPropertyConvention(task.getCustomConversions(), avroExtension.getCustomConversions());
         });
     }
 }
