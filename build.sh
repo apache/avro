@@ -53,12 +53,12 @@ do
       (cd lang/py && ./build.sh lint test)
       (cd lang/py3 && ./build.sh lint test)
       (cd lang/c; ./build.sh test)
-      (cd lang/c++; ./build.sh test)
+      [[ $(which java) == *"openjdk-8"* ]] && (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh test)
       (cd lang/ruby; ./build.sh test)
       (cd lang/php; ./build.sh test)
-      (cd lang/perl; ./build.sh test)
+      [[ $(which java) == *"openjdk-11"* ]] && (cd lang/perl; ./build.sh test)
 
       (cd lang/py; ant interop-data-generate)
       (cd lang/py3; python3 setup.py generate_interop_data \
@@ -68,7 +68,7 @@ do
       (cd lang/csharp; ./build.sh interop-data-generate)
       (cd lang/ruby; rake generate_interop)
       (cd lang/php; ./build.sh interop-data-generate)
-      (cd lang/perl; ./build.sh interop-data-generate)
+      [[ $(which java) == *"openjdk-11"* ]] && (cd lang/perl; ./build.sh interop-data-generate)
 
       # run interop data tests
       (cd lang/java/ipc; mvn -B test -P interop-data-test)
@@ -79,7 +79,7 @@ do
       (cd lang/csharp; ./build.sh interop-data-test)
       (cd lang/ruby; rake interop)
       (cd lang/php; ./build.sh test-interop)
-      (cd lang/perl; ./build.sh interop-data-test)
+      [[ $(which java) == *"openjdk-11"* ]] && (cd lang/perl; ./build.sh interop-data-test)
 
       # java needs to package the jars for the interop rpc tests
       (cd lang/java/tools; mvn -B package -DskipTests)
@@ -237,7 +237,7 @@ do
 
       (cd lang/php; ./build.sh clean)
 
-      (cd lang/perl; ./build.sh clean)
+      [[ $(which java) == *"openjdk-11"* ]] && (cd lang/perl; ./build.sh clean)
 
       rm -rf lang/c++/build
       rm -rf lang/js/node_modules

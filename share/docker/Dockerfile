@@ -96,7 +96,7 @@ RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit 
  && chmod +x /usr/local/bin/phpunit
 
 # Install Perl modules
-RUN curl -sSL https://cpanmin.us \
+RUN if [[ $(which java) == *"openjdk-11"* ]]; then curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
  && cpanm --mirror https://www.cpan.org/ install Compress::Zlib \
                                                  Compress::Zstd \
@@ -114,7 +114,7 @@ RUN curl -sSL https://cpanmin.us \
                                                  Test::More \
                                                  Test::Pod \
                                                  Try::Tiny \
- && rm -rf .cpanm
+ && rm -rf .cpanm; fi
 
 # Install Python packages
 ENV PIP_NO_CACHE_DIR=off
