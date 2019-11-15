@@ -93,7 +93,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * @return this JsonDecoder
    */
   public JsonDecoder configure(InputStream in) throws IOException {
-    Objects.requireNonNull(in, "InputStream to read from cannot be null");
+    Objects.requireNonNull(in, "InputStream cannot be null");
     parser.reset();
     reorderBuffers.clear();
     currentReorderBuffer = null;
