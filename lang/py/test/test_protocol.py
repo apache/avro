@@ -21,42 +21,49 @@
 
 from __future__ import absolute_import, division, print_function
 
+import json
 import unittest
 
-from avro import protocol
+import avro.protocol
+import avro.schema
 
 
-class ExampleProtocol(object):
-  def __init__(self, protocol_string, valid, name='', comment=''):
-    self._protocol_string = protocol_string
-    self._valid = valid
-    self._name = name or protocol_string # default to schema_string for name
-    self._comment = comment
+class TestProtocol(object):
+  """A proxy for a protocol string that provides useful test metadata."""
 
-  # read-only properties
-  protocol_string = property(lambda self: self._protocol_string)
-  valid = property(lambda self: self._valid)
-  name = property(lambda self: self._name)
+  def __init__(self, data, name='', comment=''):
+    if not isinstance(data, basestring):
+      data = json.dumps(data)
+    self.data = data
+    self.name = name or data
+    self.comment = comment
 
-  # read/write properties
-  def set_comment(self, new_comment): self._comment = new_comment
-  comment = property(lambda self: self._comment, set_comment)
+  def parse(self):
+    return avro.protocol.parse(str(self))
 
-#
-# Example Protocols
-#
-HELLO_WORLD = ExampleProtocol("""\
-{
+  def __str__(self):
+    return str(self.data)
+
+
+class ValidTestProtocol(TestProtocol):
+  """A proxy for a valid protocol string that provides useful test metadata."""
+  valid = True
+
+
+class InvalidTestProtocol(TestProtocol):
+  """A proxy for an invalid protocol string that provides useful test metadata."""
+  valid = False
+
+
+HELLO_WORLD = ValidTestProtocol({
   "namespace": "com.acme",
   "protocol": "HelloWorld",
-
   "types": [
     {"name": "Greeting", "type": "record", "fields": [
       {"name": "message", "type": "string"}]},
     {"name": "Curse", "type": "error", "fields": [
       {"name": "message", "type": "string"}]}
   ],
-
   "messages": {
     "hello": {
       "request": [{"name": "greeting", "type": "Greeting" }],
@@ -64,392 +71,284 @@ HELLO_WORLD = ExampleProtocol("""\
       "errors": ["Curse"]
     }
   }
-}
-    """, True)
-EXAMPLES = [
-  HELLO_WORLD,
-  ExampleProtocol("""\
-{"namespace": "org.apache.avro.test",
- "protocol": "Simple",
-
- "types": [
-     {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
-
-     {"name": "MD5", "type": "fixed", "size": 16},
-
-     {"name": "TestRecord", "type": "record",
-      "fields": [
-          {"name": "name", "type": "string", "order": "ignore"},
-          {"name": "kind", "type": "Kind", "order": "descending"},
-          {"name": "hash", "type": "MD5"}
-      ]
-     },
-
-     {"name": "TestError", "type": "error", "fields": [
-         {"name": "message", "type": "string"}
-      ]
-     }
-
- ],
-
- "messages": {
-
-     "hello": {
-         "request": [{"name": "greeting", "type": "string"}],
-         "response": "string"
-     },
-
-     "echo": {
-         "request": [{"name": "record", "type": "TestRecord"}],
-         "response": "TestRecord"
-     },
-
-     "add": {
-         "request": [{"name": "arg1", "type": "int"}, {"name": "arg2", "type": "int"}],
-         "response": "int"
-     },
-
-     "echoBytes": {
-         "request": [{"name": "data", "type": "bytes"}],
-         "response": "bytes"
-     },
-
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["TestError"]
-     }
- }
-
-}
-    """, True),
-  ExampleProtocol("""\
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestNamespace",
-
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "TestRecord", "type": "record",
-      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"} ]
-     },
-     {"name": "TestError", "namespace": "org.apache.avro.test.errors",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
-
- "messages": {
-     "echo": {
-         "request": [{"name": "record", "type": "TestRecord"}],
-         "response": "TestRecord"
-     },
-
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.errors.TestError"]
-     }
-
- }
-
-}
-    """, True),
-ExampleProtocol("""\
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestImplicitNamespace",
-
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record",
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "TestRecord", "type": "record",
-      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
-                  {"name": "unqalified", "type": "ReferencedRecord"} ]
-     },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
-
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified",
-             "type": "org.apache.avro.test.namespace.TestRecord"}],
-         "response": "TestRecord"
-     },
-
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
-
- }
-
-}
-    """, True),
-ExampleProtocol("""\
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestNamespaceTwo",
-
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record",
-       "namespace": "org.apache.avro.other.namespace",
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "TestRecord", "type": "record",
-      "fields": [ {"name": "hash", "type": "org.apache.avro.test.util.MD5"},
-                  {"name": "qualified",
-                    "type": "org.apache.avro.other.namespace.ReferencedRecord"}
-                ]
-     },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
-
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified",
-             "type": "org.apache.avro.test.namespace.TestRecord"}],
-         "response": "TestRecord"
-     },
-
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
-
- }
-
-}
-    """, True),
-ExampleProtocol("""\
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestValidRepeatedName",
-
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record",
-       "namespace": "org.apache.avro.other.namespace",
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "ReferencedRecord", "type": "record",
-       "fields": [ {"name": "bar", "type": "double"} ] },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
-
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified",
-             "type": "ReferencedRecord"}],
-         "response": "org.apache.avro.other.namespace.ReferencedRecord"
-     },
-
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
-
- }
-
-}
-    """, True),
-ExampleProtocol("""\
-{"namespace": "org.apache.avro.test.namespace",
- "protocol": "TestInvalidRepeatedName",
-
- "types": [
-     {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
-     {"name": "ReferencedRecord", "type": "record",
-       "fields": [ {"name": "foo", "type": "string"} ] },
-     {"name": "ReferencedRecord", "type": "record",
-       "fields": [ {"name": "bar", "type": "double"} ] },
-     {"name": "TestError",
-      "type": "error", "fields": [ {"name": "message", "type": "string"} ]
-     }
- ],
-
- "messages": {
-     "echo": {
-         "request": [{"name": "qualified",
-             "type": "ReferencedRecord"}],
-         "response": "org.apache.avro.other.namespace.ReferencedRecord"
-     },
-
-     "error": {
-         "request": [],
-         "response": "null",
-         "errors": ["org.apache.avro.test.namespace.TestError"]
-     }
-
- }
-
-}
-    """, False),
-  ExampleProtocol("""\
-{"namespace": "org.apache.avro.test",
- "protocol": "BulkData",
-
- "types": [],
-
- "messages": {
-
-     "read": {
-         "request": [],
-         "response": "bytes"
-     },
-
-     "write": {
-         "request": [ {"name": "data", "type": "bytes"} ],
-         "response": "null"
-     }
-
- }
-
-}
-    """, True),
-  ExampleProtocol("""\
-{
-  "protocol" : "API",
-  "namespace" : "xyz.api",
-  "types" : [ {
-    "type" : "enum",
-    "name" : "Symbology",
-    "namespace" : "xyz.api.product",
-    "symbols" : [ "OPRA", "CUSIP", "ISIN", "SEDOL" ]
-  }, {
-    "type" : "record",
-    "name" : "Symbol",
-    "namespace" : "xyz.api.product",
-    "fields" : [ {
-      "name" : "symbology",
-      "type" : "xyz.api.product.Symbology"
-    }, {
-      "name" : "symbol",
-      "type" : "string"
-    } ]
-  }, {
-    "type" : "record",
-    "name" : "MultiSymbol",
-    "namespace" : "xyz.api.product",
-    "fields" : [ {
-      "name" : "symbols",
-      "type" : {
-        "type" : "map",
-        "values" : "xyz.api.product.Symbol"
+})
+EXAMPLES = [HELLO_WORLD, ValidTestProtocol({
+    "namespace": "org.apache.avro.test",
+    "protocol": "Simple",
+    "types": [
+      {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
+      {"name": "MD5", "type": "fixed", "size": 16},
+      {"name": "TestRecord", "type": "record", "fields": [
+        {"name": "name", "type": "string", "order": "ignore"},
+        {"name": "kind", "type": "Kind", "order": "descending"},
+        {"name": "hash", "type": "MD5"}
+      ]},
+      {"name": "TestError", "type": "error", "fields": [{"name": "message", "type": "string"}]}
+    ],
+    "messages": {
+      "hello": {
+        "request": [{"name": "greeting", "type": "string"}],
+        "response": "string"
+      }, "echo": {
+        "request": [{"name": "record", "type": "TestRecord"}],
+        "response": "TestRecord"
+      }, "add": {
+       "request": [{"name": "arg1", "type": "int"}, {"name": "arg2", "type": "int"}],
+       "response": "int"
+      }, "echoBytes": {
+        "request": [{"name": "data", "type": "bytes"}],
+        "response": "bytes"
+      }, "error": {
+        "request": [],
+        "response": "null",
+        "errors": ["TestError"]
       }
-    } ]
-  } ],
-  "messages" : {
-  }
-}
-    """, True),
+    }
+  }), ValidTestProtocol({
+    "namespace": "org.apache.avro.test.namespace",
+    "protocol": "TestNamespace",
+    "types": [
+      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+      {"name": "TestRecord", "type": "record", "fields": [
+        {"name": "hash", "type": "org.apache.avro.test.util.MD5"}
+      ]},
+      {"name": "TestError", "namespace": "org.apache.avro.test.errors", "type": "error",
+       "fields": [ {"name": "message", "type": "string"}]}
+    ],
+    "messages": {
+      "echo": {
+        "request": [{"name": "record", "type": "TestRecord"}],
+        "response": "TestRecord"
+      }, "error": {
+        "request": [],
+        "response": "null",
+        "errors": ["org.apache.avro.test.errors.TestError"]
+      }
+    }
+  }), ValidTestProtocol({
+    "namespace": "org.apache.avro.test.namespace",
+    "protocol": "TestImplicitNamespace",
+    "types": [
+      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+      {"name": "ReferencedRecord", "type": "record",
+       "fields": [ {"name": "foo", "type": "string"}]},
+      {"name": "TestRecord", "type": "record",
+       "fields": [{"name": "hash", "type": "org.apache.avro.test.util.MD5"},
+                  {"name": "unqualified", "type": "ReferencedRecord"}]
+      },
+      {"name": "TestError", "type": "error", "fields": [{"name": "message", "type": "string"}]}
+    ],
+    "messages": {
+      "echo": {
+        "request": [{"name": "qualified", "type": "org.apache.avro.test.namespace.TestRecord"}],
+        "response": "TestRecord"
+      }, "error": {
+        "request": [],
+        "response": "null",
+        "errors": ["org.apache.avro.test.namespace.TestError"]
+      }
+    }
+  }), ValidTestProtocol({
+    "namespace": "org.apache.avro.test.namespace",
+    "protocol": "TestNamespaceTwo",
+    "types": [
+      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+      {"name": "ReferencedRecord", "type": "record",
+       "namespace": "org.apache.avro.other.namespace",
+       "fields": [{"name": "foo", "type": "string"}]},
+      {"name": "TestRecord", "type": "record",
+       "fields": [{"name": "hash", "type": "org.apache.avro.test.util.MD5"},
+                  {"name": "qualified",
+                   "type": "org.apache.avro.other.namespace.ReferencedRecord"}]
+      },
+      {"name": "TestError",
+       "type": "error", "fields": [{"name": "message", "type": "string"}]}],
+    "messages": {
+      "echo": {
+        "request": [{"name": "qualified", "type": "org.apache.avro.test.namespace.TestRecord"}],
+        "response": "TestRecord"
+      }, "error": {
+        "request": [],
+        "response": "null",
+        "errors": ["org.apache.avro.test.namespace.TestError"]
+      }
+    }
+  }), ValidTestProtocol({
+    "namespace": "org.apache.avro.test.namespace",
+    "protocol": "TestValidRepeatedName",
+    "types": [
+      {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+      {"name": "ReferencedRecord", "type": "record",
+        "namespace": "org.apache.avro.other.namespace",
+        "fields": [{"name": "foo", "type": "string"}]},
+      {"name": "ReferencedRecord", "type": "record",
+        "fields": [{"name": "bar", "type": "double"}]},
+      {"name": "TestError",
+        "type": "error", "fields": [{"name": "message", "type": "string"}]}],
+    "messages": {
+      "echo": {
+        "request": [{"name": "qualified", "type": "ReferencedRecord"}],
+        "response": "org.apache.avro.other.namespace.ReferencedRecord"},
+      "error": {
+        "request": [],
+        "response": "null",
+        "errors": ["org.apache.avro.test.namespace.TestError"]}
+    }
+  }), InvalidTestProtocol({
+    "namespace": "org.apache.avro.test.namespace",
+    "protocol": "TestInvalidRepeatedName",
+    "types": [
+       {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
+       {"name": "ReferencedRecord", "type": "record",
+        "fields": [ {"name": "foo", "type": "string"}]},
+       {"name": "ReferencedRecord", "type": "record",
+        "fields": [ {"name": "bar", "type": "double"}]},
+       {"name": "TestError",
+        "type": "error", "fields": [{"name": "message", "type": "string"}]}],
+    "messages": {
+      "echo": {
+        "request": [{"name": "qualified", "type": "ReferencedRecord"}],
+        "response": "org.apache.avro.other.namespace.ReferencedRecord"
+      }, "error": {
+        "request": [],
+        "response": "null",
+        "errors": ["org.apache.avro.test.namespace.TestError"]
+      }
+    }
+  }),
+  ValidTestProtocol({
+    "namespace": "org.apache.avro.test",
+    "protocol": "BulkData",
+    "types": [],
+    "messages": {
+      "read": {
+        "request": [],
+        "response": "bytes"
+      }, "write": {
+        "request": [ {"name": "data", "type": "bytes"} ],
+        "response": "null"
+      }
+    }
+  }), ValidTestProtocol({
+    "protocol": "API",
+    "namespace": "xyz.api",
+    "types": [{
+      "type": "enum",
+      "name": "Symbology",
+      "namespace": "xyz.api.product",
+      "symbols": ["OPRA", "CUSIP", "ISIN", "SEDOL"]
+    }, {
+      "type": "record",
+      "name": "Symbol",
+      "namespace": "xyz.api.product",
+      "fields": [{"name": "symbology", "type": "xyz.api.product.Symbology"},
+                 {"name": "symbol", "type": "string"}]
+    }, {
+      "type": "record",
+      "name": "MultiSymbol",
+      "namespace": "xyz.api.product",
+      "fields": [{"name": "symbols",
+                  "type": {"type": "map", "values": "xyz.api.product.Symbol"}}]
+    }],
+    "messages": {}
+  }),
 ]
 
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 
-class TestProtocol(unittest.TestCase):
-  def test_parse(self):
-    num_correct = 0
-    for example in EXAMPLES:
-      try:
-        protocol.parse(example.protocol_string)
-        if example.valid:
-          num_correct += 1
-        else:
-          self.fail("Parsed invalid protocol: %s" % (example.name,))
-      except Exception as e:
-        if not example.valid:
-          num_correct += 1
-        else:
-          self.fail("Could not parse valid protocol: %s" % (example.name,))
-
-    fail_msg = "Parse behavior correct on %d out of %d protocols." % \
-      (num_correct, len(EXAMPLES))
-    self.assertEqual(num_correct, len(EXAMPLES), fail_msg)
-
-  def test_error_schema(self):
-    """Protocol messages should always have at least a string error schema."""
-    for example in EXAMPLES:
-      if not example.valid:
-        continue
-      p = protocol.parse(example.protocol_string)
-      for k, m in p.messages.items():
-        self.assertIsNotNone(m.errors, "Message {} did not have the expected implicit "
-                                       "string error schema.".format(k))
-
+class TestMisc(unittest.TestCase):
   def test_inner_namespace_set(self):
     print('')
     print('TEST INNER NAMESPACE')
     print('===================')
     print('')
-    proto = protocol.parse(HELLO_WORLD.protocol_string)
+    proto = HELLO_WORLD.parse()
     self.assertEqual(proto.namespace, "com.acme")
     greeting_type = proto.types_dict['Greeting']
     self.assertEqual(greeting_type.namespace, 'com.acme')
 
   def test_inner_namespace_not_rendered(self):
-    proto = protocol.parse(HELLO_WORLD.protocol_string)
+    proto = HELLO_WORLD.parse()
     self.assertEqual('com.acme.Greeting', proto.types[0].fullname)
     self.assertEqual('Greeting', proto.types[0].name)
     # but there shouldn't be 'namespace' rendered to json on the inner type
     self.assertFalse('namespace' in proto.to_json()['types'][0])
 
-  def test_valid_cast_to_string_after_parse(self):
+
+class ProtocolParseTestCase(unittest.TestCase):
+  """Enable generating parse test cases over all the valid and invalid example protocols."""
+
+  def __init__(self, test_proto):
+    """Ignore the normal signature for unittest.TestCase because we are generating
+    many test cases from this one class. This is safe as long as the autoloader
+    ignores this class. The autoloader will ignore this class as long as it has
+    no methods starting with `test_`.
     """
-    Test that the string generated by an Avro Protocol object
-    is, in fact, a valid Avro protocol.
+    super(ProtocolParseTestCase, self).__init__(
+        'parse_valid' if test_proto.valid else 'parse_invalid')
+    self.test_proto = test_proto
+
+  def parse_valid(self):
+    """Parsing a valid protocol should not error."""
+    try:
+      self.test_proto.parse()
+    except avro.protocol.ProtocolParseException:
+      self.fail("Valid protocol failed to parse: {!s}".format(self.test_proto))
+
+  def parse_invalid(self):
+    """Parsing an invalid schema should error."""
+    try:
+      self.test_proto.parse()
+    except (avro.protocol.ProtocolParseException, avro.schema.SchemaParseException):
+      pass
+    else:
+      self.fail("Invalid protocol should not have parsed: {!s}".format(self.test_proto))
+
+class ErrorSchemaTestCase(unittest.TestCase):
+  """Enable generating error schema test cases across all the valid test protocols."""
+
+  def __init__(self, test_proto):
+    """Ignore the normal signature for unittest.TestCase because we are generating
+    many test cases from this one class. This is safe as long as the autoloader
+    ignores this class. The autoloader will ignore this class as long as it has
+    no methods starting with `test_`.
     """
-    print('')
-    print('TEST CAST TO STRING')
-    print('===================')
-    print('')
+    super(ErrorSchemaTestCase, self).__init__('check_error_schema_exists')
+    self.test_proto = test_proto
 
-    num_correct = 0
-    for example in VALID_EXAMPLES:
-      protocol_data = protocol.parse(example.protocol_string)
-      try:
-        protocol.parse(str(protocol_data))
-      except (ValueError, ProtocolParseException):
-        debug_msg = "%s: STRING CAST FAILURE" % example.name
-      else:
-        debug_msg = "%s: STRING CAST SUCCESS" % example.name
-        num_correct += 1
-      print(debug_msg)
+  def check_error_schema_exists(self):
+    """Protocol messages should always have at least a string error schema."""
+    p = self.test_proto.parse()
+    for k, m in p.messages.items():
+      self.assertIsNotNone(m.errors, "Message {} did not have the expected implicit "
+                                     "string error schema.".format(k))
 
-    fail_msg = "Cast to string success on %d out of %d protocols" % \
-      (num_correct, len(VALID_EXAMPLES))
-    self.assertEqual(num_correct, len(VALID_EXAMPLES), fail_msg)
+class RoundTripParseTestCase(unittest.TestCase):
+  """Enable generating round-trip parse test cases over all the valid test protocols."""
 
-  def test_equivalence_after_round_trip(self):
+  def __init__(self, test_proto):
+    """Ignore the normal signature for unittest.TestCase because we are generating
+    many test cases from this one class. This is safe as long as the autoloader
+    ignores this class. The autoloader will ignore this class as long as it has
+    no methods starting with `test_`.
     """
-    1. Given a string, parse it to get Avro protocol "original".
-    2. Serialize "original" to a string and parse that string
-         to generate Avro protocol "round trip".
-    3. Ensure "original" and "round trip" protocols are equivalent.
-    """
-    print('')
-    print('TEST ROUND TRIP')
-    print('===============')
-    print('')
+    super(RoundTripParseTestCase, self).__init__('parse_round_trip')
+    self.test_proto = test_proto
 
-    num_correct = 0
-    for example in VALID_EXAMPLES:
-      original_protocol = protocol.parse(example.protocol_string)
-      round_trip_protocol = protocol.parse(str(original_protocol))
+  def parse_round_trip(self):
+    """The string of a Schema should be parseable to the same Schema."""
+    parsed = self.test_proto.parse()
+    round_trip = avro.protocol.parse(str(parsed))
+    self.assertEqual(parsed, round_trip)
 
-      if original_protocol == round_trip_protocol:
-        num_correct += 1
-        debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
-      else:
-        self.fail("Round trip failure: %s %s %s", (example.name, example.protocol_string, str(original_protocol)))
 
-    fail_msg = "Round trip success on %d out of %d protocols" % \
-      (num_correct, len(VALID_EXAMPLES))
-    self.assertEqual(num_correct, len(VALID_EXAMPLES), fail_msg)
+def load_tests(loader, default_tests, pattern):
+  """Generate test cases across many test schema."""
+  suite = unittest.TestSuite()
+  suite.addTests(loader.loadTestsFromTestCase(TestMisc))
+  suite.addTests(ProtocolParseTestCase(ex) for ex in EXAMPLES)
+  suite.addTests(RoundTripParseTestCase(ex) for ex in VALID_EXAMPLES)
+  return suite
 
 if __name__ == '__main__':
   unittest.main()
