@@ -42,6 +42,7 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import math
+import re
 import sys
 import warnings
 
@@ -113,6 +114,9 @@ class AvroException(Exception):
 class SchemaParseException(AvroException):
   pass
 
+class InvalidName(SchemaParseException):
+  """User attempted to parse a schema with an invalid name."""
+
 class AvroWarning(UserWarning):
   """Base class for warnings."""
 
@@ -173,68 +177,62 @@ class Schema(object):
 class Name(object):
   """Class to describe Avro name."""
 
+  _base_name_pattern = re.compile(r'(?:^|\.)[A-Za-z_][A-Za-z0-9_]*$')
+
   def __init__(self, name_attr, space_attr, default_space):
     """
     Formulate full name according to the specification.
 
     @arg name_attr: name value read in schema or None.
     @arg space_attr: namespace value read in schema or None.
-    @ard default_space: the current default space or None.
+    @arg default_space: the current default space or None.
     """
     # Ensure valid ctor args
-    if not (isinstance(name_attr, basestring) or (name_attr is None)):
-      fail_msg = 'Name must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-    elif name_attr == "":
-      fail_msg = 'Name must be non-empty string or None.'
+    fail_msg = 'Name must be non-empty string or None.'
+    if name_attr == "" or not (isinstance(name_attr, basestring) or (name_attr is None)):
       raise SchemaParseException(fail_msg)
 
-    if not (isinstance(space_attr, basestring) or (space_attr is None)):
-      fail_msg = 'Space must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-    elif name_attr == "":
-      fail_msg = 'Space must be non-empty string or None.'
+    self._full = None
+
+    if not name_attr:
+      return
+
+    if not self._base_name_pattern.search(name_attr):
+      raise InvalidName("{!s} is not a valid Avro name because it "
+                        "does not match the pattern {!s}".format(
+                          name_attr, self._base_name_pattern.pattern))
+
+
+    fail_msg = 'Namespace must be non-empty string or None.'
+    if space_attr == "" or not (isinstance(space_attr, basestring) or (space_attr is None)):
       raise SchemaParseException(fail_msg)
 
-    if not (isinstance(default_space, basestring) or (default_space is None)):
-      fail_msg = 'Default space must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-    elif name_attr == "":
-      fail_msg = 'Default must be non-empty string or None.'
+    fail_msg = 'Default namespace must be non-empty string or None.'
+    if default_space == "" or not (isinstance(default_space, basestring)
+        or (default_space is None)):
       raise SchemaParseException(fail_msg)
 
-    self._full = None;
-
-    if name_attr is None or name_attr == "":
-        return;
-
-    if (name_attr.find('.') < 0):
-      if (space_attr is not None) and (space_attr != ""):
-        self._full = "%s.%s" % (space_attr, name_attr)
-      else:
-        if (default_space is not None) and (default_space != ""):
-           self._full = "%s.%s" % (default_space, name_attr)
-        else:
-          self._full = name_attr
+    if '.' in name_attr:
+      self._full = name_attr
+    elif space_attr:
+      self._full = "{!s}.{!s}".format(space_attr, name_attr)
+    elif default_space:
+      self._full = "{!s}.{!s}".format(default_space, name_attr)
     else:
-        self._full = name_attr
+      self._full = name_attr
 
   def __eq__(self, other):
-    if not isinstance(other, Name):
-        return False
-    return (self.fullname == other.fullname)
+    return isinstance(other, Name) and (self.fullname == other.fullname)
 
-  fullname = property(lambda self: self._full)
+  @property
+  def fullname(self):
+    return self._full
 
   def get_space(self):
     """Back out a namespace from full name."""
     if self._full is None:
-        return None
-
-    if (self._full.find('.') > 0):
-      return self._full.rsplit(".", 1)[0]
-    else:
-      return ""
+      return None
+    return self._full.rsplit(".", 1)[0] if "." in self._full else None
 
 class Names(object):
   """Track name set and default namespace during parsing."""
@@ -319,10 +317,7 @@ class NamedSchema(Schema):
     self._fullname = new_name.fullname
 
   def name_ref(self, names):
-    if self.namespace == names.default_namespace:
-      return self.name
-    else:
-      return self.fullname
+    return self.name if self.namespace == names.default_namespace else self.fullname
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
