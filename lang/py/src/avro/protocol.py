@@ -169,8 +169,7 @@ class Message(object):
     self._props = {}
     self.set_prop('request', self._parse_request(request, names))
     self.set_prop('response', self._parse_response(response, names))
-    if errors is not None:
-      self.set_prop('errors', self._parse_errors(errors, names))
+    self.set_prop('errors', self._parse_errors(errors or [], names))
 
   # read-only properties
   name = property(lambda self: self._name)

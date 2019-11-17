@@ -365,11 +365,21 @@ class TestProtocol(unittest.TestCase):
         if not example.valid:
           num_correct += 1
         else:
-          self.fail("Coudl not parse valid protocol: %s" % (example.name,))
+          self.fail("Could not parse valid protocol: %s" % (example.name,))
 
     fail_msg = "Parse behavior correct on %d out of %d protocols." % \
       (num_correct, len(EXAMPLES))
     self.assertEqual(num_correct, len(EXAMPLES), fail_msg)
+
+  def test_error_schema(self):
+    """Protocol messages should always have at least a string error schema."""
+    for example in EXAMPLES:
+      if not example.valid:
+        continue
+      p = protocol.parse(example.protocol_string)
+      for k, m in p.messages.items():
+        self.assertIsNotNone(m.errors, "Message {} did not have the expected implicit "
+                                       "string error schema.".format(k))
 
   def test_inner_namespace_set(self):
     print('')
