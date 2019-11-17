@@ -152,7 +152,7 @@ class LintCommand(setuptools.Command):
         except StopIteration:
             env = None  # pycodestyle is already installed
         try:
-            subprocess.run(['python3', '-m', 'pycodestyle', '.'], env=env)
+            subprocess.run(['python3', '-m', 'pycodestyle', '.'], env=env, check=True)
         except subprocess.CalledProcessError:
             raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
 
