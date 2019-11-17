@@ -71,6 +71,7 @@ FIXED_EXAMPLES = [
                    "namespace": "org.apache.hadoop.avro"}),
   InvalidTestSchema({"type": "fixed", "name": "Missing size"}),
   InvalidTestSchema({"type": "fixed", "size": 314}),
+  InvalidTestSchema({"type": "fixed", "size": 314, "name": "dr. spaceman"}, comment='AVRO-621'),
 ]
 
 ENUM_EXAMPLES = [
