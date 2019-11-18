@@ -26,7 +26,7 @@ import os
 import sys
 import threading
 import traceback
-import StringIO
+
 from avro import io as avio
 from avro import ipc, protocol, schema
 
@@ -87,10 +87,6 @@ class Collector(object):
       raise ValueError("output client can't be none.")
 
     self.scheme=scheme
-    # Some magic bytes-to-unicode switching makes this
-    # hard to replace with io.BytesIO. Help wanted.
-    self.buff=StringIO.StringIO()
-    self.encoder=avio.BinaryEncoder(self.buff)
 
     self.datum_writer = avio.DatumWriter(writers_schema=self.scheme)
     self.outputClient=outputClient
@@ -104,25 +100,16 @@ class Collector(object):
     partition - Indicates the partition for a pre-partitioned map output
               - currently not supported
     """
+    # Replace the encoder and buffer every time we collect.
+    with io.BytesIO() as buff:
+      self.encoder = avio.BinaryEncoder(buff)
+      self.datum_writer.write(record, self.encoder)
+      value = buff.getvalue()
 
-    self.buff.truncate(0)
-    self.datum_writer.write(record, self.encoder);
-    self.buff.flush();
-    self.buff.seek(0)
-
-    # delete all the data in the buffer
-    if (partition is None):
-
-      # TODO: Is there a more efficient way to read the data in self.buff?
-      # we could use self.buff.read() but that returns the byte array as a string
-      # will that work?  We can also use self.buff.readinto to read it into
-      # a bytearray but the byte array must be pre-allocated
-      # self.outputClient.output(self.buff.buffer.read())
-
-      #its not a StringIO
-      self.outputClient.request("output",{"datum":self.buff.read()})
-    else:
-      self.outputClient.request("outputPartitioned",{"datum":self.buff.read(),"partition":partition})
+    datum = {"datum": value}
+    if partition is not None:
+      datum["partition"] = partition
+    self.outputClient.request("output", datum)
 
 
 
