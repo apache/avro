@@ -228,8 +228,8 @@ IGNORED_LOGICAL_TYPE = [
     {"type": "bytes", "logicalType": "decimal", "scale": 0},
     warnings=[schema.IgnoredLogicalType('Invalid decimal precision None. Must be a positive integer.')]),
   ValidTestSchema(
-    {"type": "bytes", "logicalType": "decimal", "precision": 2.0, "scale": 0},
-    warnings=[schema.IgnoredLogicalType('Invalid decimal precision 2.0. Must be a positive integer.')]),
+    {"type": "bytes", "logicalType": "decimal", "precision": 2.4, "scale": 0},
+    warnings=[schema.IgnoredLogicalType('Invalid decimal precision 2.4. Must be a positive integer.')]),
   ValidTestSchema(
     {"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2},
     warnings=[schema.IgnoredLogicalType('Invalid decimal scale -2. Must be a positive integer.')]),
