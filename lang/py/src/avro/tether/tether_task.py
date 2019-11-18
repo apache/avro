@@ -20,14 +20,13 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
-import io as pyio
+import io
 import logging
 import os
 import sys
 import threading
 import traceback
-from StringIO import StringIO
-
+import StringIO
 from avro import io as avio
 from avro import ipc, protocol, schema
 
@@ -88,7 +87,9 @@ class Collector(object):
       raise ValueError("output client can't be none.")
 
     self.scheme=scheme
-    self.buff=StringIO()
+    # Some magic bytes-to-unicode switching makes this
+    # hard to replace with io.BytesIO. Help wanted.
+    self.buff=StringIO.StringIO()
     self.encoder=avio.BinaryEncoder(self.buff)
 
     self.datum_writer = avio.DatumWriter(writers_schema=self.scheme)
@@ -374,7 +375,7 @@ class TetherTask(object):
     """
     try:
       # to avio.BinaryDecoder
-      bdata=StringIO(data)
+      bdata=io.BytesIO(data)
       decoder = avio.BinaryDecoder(bdata)
 
       for i in range(count):

@@ -22,13 +22,10 @@
 from __future__ import absolute_import, division, print_function
 
 import httplib
+import io
 
-from avro import io, protocol, schema
-
-try:
-  from cStringIO import StringIO
-except ImportError:
-  from StringIO import StringIO
+import avro.io
+from avro import protocol, schema
 
 #
 # Constants
@@ -43,14 +40,14 @@ HANDSHAKE_RESPONSE_SCHEMA = schema.parse("""
 @HANDSHAKE_RESPONSE_SCHEMA@
 """)
 
-HANDSHAKE_REQUESTOR_WRITER = io.DatumWriter(HANDSHAKE_REQUEST_SCHEMA)
-HANDSHAKE_REQUESTOR_READER = io.DatumReader(HANDSHAKE_RESPONSE_SCHEMA)
-HANDSHAKE_RESPONDER_WRITER = io.DatumWriter(HANDSHAKE_RESPONSE_SCHEMA)
-HANDSHAKE_RESPONDER_READER = io.DatumReader(HANDSHAKE_REQUEST_SCHEMA)
+HANDSHAKE_REQUESTOR_WRITER = avro.io.DatumWriter(HANDSHAKE_REQUEST_SCHEMA)
+HANDSHAKE_REQUESTOR_READER = avro.io.DatumReader(HANDSHAKE_RESPONSE_SCHEMA)
+HANDSHAKE_RESPONDER_WRITER = avro.io.DatumWriter(HANDSHAKE_RESPONSE_SCHEMA)
+HANDSHAKE_RESPONDER_READER = avro.io.DatumReader(HANDSHAKE_REQUEST_SCHEMA)
 
 META_SCHEMA = schema.parse('{"type": "map", "values": "bytes"}')
-META_WRITER = io.DatumWriter(META_SCHEMA)
-META_READER = io.DatumReader(META_SCHEMA)
+META_WRITER = avro.io.DatumWriter(META_SCHEMA)
+META_READER = avro.io.DatumReader(META_SCHEMA)
 
 SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
 
@@ -58,7 +55,7 @@ SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
 REMOTE_HASHES = {}
 REMOTE_PROTOCOLS = {}
 
-BIG_ENDIAN_INT_STRUCT = io.struct_class('!I')
+BIG_ENDIAN_INT_STRUCT = avro.io.struct_class('!I')
 BUFFER_HEADER_LENGTH = 4
 BUFFER_SIZE = 8192
 
@@ -114,8 +111,8 @@ class BaseRequestor(object):
     Writes a request message and reads a response or error message.
     """
     # build handshake and call request
-    buffer_writer = StringIO()
-    buffer_encoder = io.BinaryEncoder(buffer_writer)
+    buffer_writer = io.BytesIO()
+    buffer_encoder = avro.io.BinaryEncoder(buffer_writer)
     self.write_handshake_request(buffer_encoder)
     self.write_call_request(message_name, request_datum, buffer_encoder)
 
@@ -159,7 +156,7 @@ class BaseRequestor(object):
     self.write_request(message.request, request_datum, encoder)
 
   def write_request(self, request_schema, request_datum, encoder):
-    datum_writer = io.DatumWriter(request_schema)
+    datum_writer = avro.io.DatumWriter(request_schema)
     datum_writer.write(request_datum, encoder)
 
   def read_handshake_response(self, decoder):
@@ -221,12 +218,12 @@ class BaseRequestor(object):
       raise self.read_error(writers_schema, readers_schema, decoder)
 
   def read_response(self, writers_schema, readers_schema, decoder):
-    datum_reader = io.DatumReader(writers_schema, readers_schema)
+    datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
     result = datum_reader.read(decoder)
     return result
 
   def read_error(self, writers_schema, readers_schema, decoder):
-    datum_reader = io.DatumReader(writers_schema, readers_schema)
+    datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
     return AvroRemoteException(datum_reader.read(decoder))
 
 class Requestor(BaseRequestor):
@@ -235,7 +232,7 @@ class Requestor(BaseRequestor):
     call_response = self.transceiver.transceive(call_request)
 
     # process the handshake and call response
-    buffer_decoder = io.BinaryDecoder(StringIO(call_response))
+    buffer_decoder = avro.io.BinaryDecoder(io.BytesIO(call_response))
     call_response_exists = self.read_handshake_response(buffer_decoder)
     if call_response_exists:
       return self.read_call_response(message_name, buffer_decoder)
@@ -266,10 +263,10 @@ class Responder(object):
     Called by a server to deserialize a request, compute and serialize
     a response or error. Compare to 'handle()' in Thrift.
     """
-    buffer_reader = StringIO(call_request)
-    buffer_decoder = io.BinaryDecoder(buffer_reader)
-    buffer_writer = StringIO()
-    buffer_encoder = io.BinaryEncoder(buffer_writer)
+    buffer_reader = io.BytesIO(call_request)
+    buffer_decoder = avro.io.BinaryDecoder(buffer_reader)
+    buffer_writer = io.BytesIO()
+    buffer_encoder = avro.io.BinaryEncoder(buffer_writer)
     error = None
     response_metadata = {}
 
@@ -317,7 +314,7 @@ class Responder(object):
         self.write_error(writers_schema, error, buffer_encoder)
     except schema.AvroException as e:
       error = AvroRemoteException(str(e))
-      buffer_encoder = io.BinaryEncoder(StringIO())
+      buffer_encoder = avro.io.BinaryEncoder(io.BytesIO())
       META_WRITER.write(response_metadata, buffer_encoder)
       buffer_encoder.write_boolean(True)
       self.write_error(SYSTEM_ERROR_SCHEMA, error, buffer_encoder)
@@ -362,15 +359,15 @@ class Responder(object):
     pass
 
   def read_request(self, writers_schema, readers_schema, decoder):
-    datum_reader = io.DatumReader(writers_schema, readers_schema)
+    datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
     return datum_reader.read(decoder)
 
   def write_response(self, writers_schema, response_datum, encoder):
-    datum_writer = io.DatumWriter(writers_schema)
+    datum_writer = avro.io.DatumWriter(writers_schema)
     datum_writer.write(response_datum, encoder)
 
   def write_error(self, writers_schema, error_exception, encoder):
-    datum_writer = io.DatumWriter(writers_schema)
+    datum_writer = avro.io.DatumWriter(writers_schema)
     datum_writer.write(str(error_exception), encoder)
 
 #
@@ -388,7 +385,7 @@ class FramedReader(object):
   def read_framed_message(self):
     message = []
     while True:
-      buffer = StringIO()
+      buffer = io.BytesIO()
       buffer_length = self._read_buffer_length()
       if buffer_length == 0:
         return ''.join(message)
@@ -466,7 +463,7 @@ class HTTPTransceiver(object):
     req_method = 'POST'
     req_headers = {'Content-Type': 'avro/binary'}
 
-    req_body_buffer = FramedWriter(StringIO())
+    req_body_buffer = FramedWriter(io.BytesIO())
     req_body_buffer.write_framed_message(message)
     req_body = req_body_buffer.writer.getvalue()
 

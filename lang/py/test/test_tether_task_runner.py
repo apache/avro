@@ -19,9 +19,9 @@
 
 from __future__ import absolute_import, division, print_function
 
+import io
 import logging
 import os
-import StringIO
 import subprocess
 import sys
 import time
@@ -79,7 +79,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
       # Serialize some data so we can send it to the input function
       datum="This is a line of text"
-      writer = StringIO.StringIO()
+      writer = io.BytesIO()
       encoder = avio.BinaryEncoder(writer)
       datum_writer = avio.DatumWriter(runner.task.inschema)
       datum_writer.write(datum, encoder)
@@ -100,7 +100,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
       #Serialize some data so we can send it to the input function
       datum={"key":"word","value":2}
-      writer = StringIO.StringIO()
+      writer = io.BytesIO()
       encoder = avio.BinaryEncoder(writer)
       datum_writer = avio.DatumWriter(runner.task.midschema)
       datum_writer.write(datum, encoder)
