@@ -27,7 +27,7 @@ import sys
 import threading
 import traceback
 
-from avro import io as avio
+import avro.io
 from avro import ipc, protocol, schema
 
 __all__ = ["TetherTask", "TaskType", "inputProtocol", "outputProtocol", "HTTPRequestor"]
@@ -88,7 +88,7 @@ class Collector(object):
 
     self.scheme=scheme
 
-    self.datum_writer = avio.DatumWriter(writers_schema=self.scheme)
+    self.datum_writer = avro.io.DatumWriter(writers_schema=self.scheme)
     self.outputClient=outputClient
 
   def collect(self,record,partition=None):
@@ -102,7 +102,7 @@ class Collector(object):
     """
     # Replace the encoder and buffer every time we collect.
     with io.BytesIO() as buff:
-      self.encoder = avio.BinaryEncoder(buff)
+      self.encoder = avro.io.BinaryEncoder(buff)
       self.datum_writer.write(record, self.encoder)
       value = buff.getvalue()
 
@@ -323,11 +323,11 @@ class TetherTask(object):
       outSchema = schema.parse(outSchemaText)
 
       if (taskType==TaskType.MAP):
-        self.inReader=avio.DatumReader(writers_schema=inSchema,readers_schema=self.inschema)
+        self.inReader=avro.io.DatumReader(writers_schema=inSchema,readers_schema=self.inschema)
         self.midCollector=Collector(outSchemaText,self.outputClient)
 
       elif(taskType==TaskType.REDUCE):
-        self.midReader=avio.DatumReader(writers_schema=inSchema,readers_schema=self.midschema)
+        self.midReader=avro.io.DatumReader(writers_schema=inSchema,readers_schema=self.midschema)
         # this.outCollector = new Collector<OUT>(outSchema);
         self.outCollector=Collector(outSchemaText,self.outputClient)
 
@@ -361,9 +361,9 @@ class TetherTask(object):
     count - how many input records are provided in the binary stream
     """
     try:
-      # to avio.BinaryDecoder
+      # to avro.io.BinaryDecoder
       bdata=io.BytesIO(data)
-      decoder = avio.BinaryDecoder(bdata)
+      decoder = avro.io.BinaryDecoder(bdata)
 
       for i in range(count):
         if (self.taskType==TaskType.MAP):
