@@ -25,6 +25,7 @@ using Avro.Specific;
 using System.Reflection;
 using Avro.File;
 using System.Linq;
+using System.IO.Compression;
 
 namespace Avro.Test.File
 {
@@ -191,6 +192,53 @@ namespace Avro.Test.File
                     {
                         readFoos.Add(foo);
                     }
+                }
+
+                Assert.IsTrue((readFoos != null && readFoos.Count > 0),
+                               string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+            }
+        }
+
+        /// <summary>
+        /// This test is a single test case of
+        /// <see cref="TestGenericData(string, object[], Codec.Type)"/> but introduces a
+        /// DeflateStream as it is a standard non-seekable Stream that has the same behavior as the
+        /// NetworkStream, which we should handle.
+        /// </summary>
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
+            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
+            new object[] { "f1", 100L }, Codec.Type.Null)]
+        public void TestNonSeekableStream(string schemaStr, object[] value, Codec.Type codecType)
+        {
+            foreach (var rwFactory in GenericOptions<GenericRecord>())
+            {
+                // Create and write out
+                MemoryStream compressedStream = new MemoryStream();
+                // using here a DeflateStream as it is a standard non-seekable stream, so if it works for this one,
+                // it should also works with any standard non-seekable stream (ie: NetworkStreams)
+                DeflateStream dataFileOutputStream = new DeflateStream(compressedStream, CompressionMode.Compress);
+                using (var writer = rwFactory.CreateWriter(dataFileOutputStream, Schema.Parse(schemaStr), Codec.CreateCodec(codecType)))
+                {
+                    writer.Append(mkRecord(value, Schema.Parse(schemaStr) as RecordSchema));
+
+                    // The Sync method is not supported for non-seekable streams.
+                    Assert.Throws<NotSupportedException>(() => writer.Sync());
+                }
+
+                DeflateStream dataFileInputStream = new DeflateStream(new MemoryStream(compressedStream.ToArray()), CompressionMode.Decompress);
+
+                // Read back
+                IList<GenericRecord> readFoos = new List<GenericRecord>();
+                using (IFileReader<GenericRecord> reader = rwFactory.CreateReader(dataFileInputStream, null))
+                {
+                    foreach (GenericRecord foo in reader.NextEntries)
+                    {
+                        readFoos.Add(foo);
+                    }
+
+                    // These methods are not supported for non-seekable streams.
+                    Assert.Throws<AvroRuntimeException>(() => reader.Seek(0));
+                    Assert.Throws<AvroRuntimeException>(() => reader.PreviousSync());
                 }
 
                 Assert.IsTrue((readFoos != null && readFoos.Count > 0),
