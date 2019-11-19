@@ -42,9 +42,10 @@
     "underscore": "*"
   },
   "devDependencies": {
-    "coveralls": "^2.11.4",
+    "coveralls": "^3.0.7",
     "istanbul": "^0.3.19",
-    "mocha": "^2.3.2",
+    "jshint": "^2.10.2",
+    "mocha": "^6.2.2",
     "tmp": "^0.0.28"
   },
   "noAnalyze": true,
