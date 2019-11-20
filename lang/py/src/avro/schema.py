@@ -43,6 +43,7 @@ from __future__ import absolute_import, division, print_function
 import json
 import math
 import sys
+import warnings
 
 from avro import constants
 
@@ -111,6 +112,12 @@ class AvroException(Exception):
 
 class SchemaParseException(AvroException):
   pass
+
+class AvroWarning(UserWarning):
+  """Base class for warnings."""
+
+class IgnoredLogicalType(AvroWarning):
+  """Warnings for unknown or invalid logical types."""
 
 #
 # Base Classes
@@ -337,19 +344,20 @@ class LogicalSchema(object):
 class DecimalLogicalSchema(LogicalSchema):
   def __init__(self, precision, scale=0, max_precision=0):
     if not isinstance(precision, int) or precision <= 0:
-      raise SchemaParseException("""Precision is required for logical type
-                                DECIMAL and must be a positive integer but
-                                is %s.""" % precision)
-    elif precision > max_precision:
-      raise SchemaParseException("Cannot store precision digits. Max is %s"
-                                 %(max_precision))
+      raise IgnoredLogicalType(
+          "Invalid decimal precision {}. Must be a positive integer.".format(precision))
+
+    if precision > max_precision:
+      raise IgnoredLogicalType(
+          "Invalid decimal precision {}. Max is {}.".format(precision, max_precision))
 
     if not isinstance(scale, int) or scale < 0:
-      raise SchemaParseException("Scale %s must be a positive Integer." % scale)
+      raise IgnoredLogicalType(
+          "Invalid decimal scale {}. Must be a positive integer.".format(scale))
 
-    elif scale > precision:
-      raise SchemaParseException("Invalid DECIMAL scale %s. Cannot be greater than precision %s"
-                                 %(scale, precision))
+    if scale > precision:
+      raise IgnoredLogicalType("Invalid decimal scale {}. Cannot be greater than precision {}."
+                                 .format(scale, precision))
 
     super(DecimalLogicalSchema, self).__init__('decimal')
 
@@ -506,7 +514,7 @@ class FixedSchema(NamedSchema):
 
 class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
   def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
-    max_precision = math.floor(math.log10(2) * (8 * size - 1))
+    max_precision = int(math.floor(math.log10(2) * (8 * size - 1)))
     DecimalLogicalSchema.__init__(self, precision, scale, max_precision)
     FixedSchema.__init__(self, name, namespace, size, names, other_props)
     self.set_prop('precision', precision)
@@ -887,20 +895,29 @@ def make_bytes_decimal_schema(other_props):
 def make_logical_schema(logical_type, type_, other_props):
   """Map the logical types to the appropriate literal type and schema class."""
   logical_types = {
-    constants.DATE: ('int', DateSchema),
-    # Fixed decimal schema is handled before we get here.
-    constants.DECIMAL: ('bytes', make_bytes_decimal_schema),
-    constants.TIMESTAMP_MICROS: ('long', TimestampMicrosSchema),
-    constants.TIMESTAMP_MILLIS: ('long', TimestampMillisSchema),
-    constants.TIME_MICROS: ('long', TimeMicrosSchema),
-    constants.TIME_MILLIS: ('int', TimeMillisSchema),
+    (constants.DATE, 'int'): DateSchema,
+    (constants.DECIMAL, 'bytes'): make_bytes_decimal_schema,
+    # The fixed decimal schema is handled later by returning None now.
+    (constants.DECIMAL, 'fixed'): lambda x: None,
+    (constants.TIMESTAMP_MICROS, 'long'): TimestampMicrosSchema,
+    (constants.TIMESTAMP_MILLIS, 'long'): TimestampMillisSchema,
+    (constants.TIME_MICROS, 'long'): TimeMicrosSchema,
+    (constants.TIME_MILLIS, 'int'): TimeMillisSchema,
   }
-  literal_type, schema_type = logical_types.get(logical_type, (None, None))
   try:
-    if literal_type == type_:
+    schema_type = logical_types.get((logical_type, type_), None)
+    if schema_type is not None:
       return schema_type(other_props)
-  except SchemaParseException:
-    pass
+
+    expected_types = sorted(literal_type for lt, literal_type in logical_types if lt == logical_type)
+    if expected_types:
+      warnings.warn(
+          IgnoredLogicalType("Logical type {} requires literal type {}, not {}.".format(
+              logical_type, "/".join(expected_types), type_)))
+    else:
+      warnings.warn(IgnoredLogicalType("Unknown {}, using {}.".format(logical_type, type_)))
+  except IgnoredLogicalType as warning:
+    warnings.warn(warning)
   return None
 
 def make_avsc_object(json_data, names=None):
@@ -931,8 +948,8 @@ def make_avsc_object(json_data, names=None):
           scale = 0 if json_data.get('scale') is None else json_data.get('scale')
           try:
             return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
-          except (AvroException, SchemaParseException):
-            pass
+          except IgnoredLogicalType as warning:
+            warnings.warn(warning)
         return FixedSchema(name, namespace, size, names, other_props)
       elif type == 'enum':
         symbols = json_data.get('symbols')
