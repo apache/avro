@@ -71,6 +71,7 @@ FIXED_EXAMPLES = [
                    "namespace": "org.apache.hadoop.avro"}),
   InvalidTestSchema({"type": "fixed", "name": "Missing size"}),
   InvalidTestSchema({"type": "fixed", "size": 314}),
+  InvalidTestSchema({"type": "fixed", "size": 314, "name": "dr. spaceman"}, comment='AVRO-621'),
 ]
 
 ENUM_EXAMPLES = [
@@ -315,60 +316,62 @@ class TestSchema(unittest.TestCase):
     # If we've made it this far, the subschema was reasonably stringified; it ccould be reparsed.
     self.assertEqual("X", t.fields[0].type.name)
 
-  # TODO(hammer): more tests
-  def test_fullname(self):
-    """Test schema full names
+  def test_name_is_none(self):
+    """When a name is None its namespace is None."""
+    self.assertIsNone(schema.Name(None, None, None).fullname)
+    self.assertIsNone(schema.Name(None, None, None).space)
 
-    The fullname is determined in one of the following ways:
-     * A name and namespace are both specified.  For example,
-       one might use "name": "X", "namespace": "org.foo"
-       to indicate the fullname "org.foo.X".
-     * A fullname is specified.  If the name specified contains
-       a dot, then it is assumed to be a fullname, and any
-       namespace also specified is ignored.  For example,
-       use "name": "org.foo.X" to indicate the
-       fullname "org.foo.X".
-     * A name only is specified, i.e., a name that contains no
-       dots.  In this case the namespace is taken from the most
-       tightly encosing schema or protocol.  For example,
-       if "name": "X" is specified, and this occurs
-       within a field of the record definition
-       of "org.foo.Y", then the fullname is "org.foo.X".
+  def test_name_not_empty_string(self):
+    """A name cannot be the empty string."""
+    self.assertRaises(schema.SchemaParseException, schema.Name, "", None, None)
 
-    References to previously defined names are as in the latter
-    two cases above: if they contain a dot they are a fullname, if
-    they do not contain a dot, the namespace is the namespace of
-    the enclosing definition.
-
-    Primitive type names have no namespace and their names may
-    not be defined in any namespace.  A schema may only contain
-    multiple definitions of a fullname if the definitions are
-    equivalent.
-    """
-
+  def test_name_space_specified(self):
+    """Space combines with a name to become the fullname."""
     # name and namespace specified
     fullname = schema.Name('a', 'o.a.h', None).fullname
     self.assertEqual(fullname, 'o.a.h.a')
 
-    # fullname and namespace specified
+  def test_fullname_space_specified(self):
+    """When name contains dots, namespace should be ignored."""
     fullname = schema.Name('a.b.c.d', 'o.a.h', None).fullname
     self.assertEqual(fullname, 'a.b.c.d')
 
-    # name and default namespace specified
+  def test_name_default_specified(self):
+    """Default space becomes the namespace when the namespace is None."""
     fullname = schema.Name('a', None, 'b.c.d').fullname
     self.assertEqual(fullname, 'b.c.d.a')
 
-    # fullname and default namespace specified
+  def test_fullname_default_specified(self):
+    """When a name contains dots, default space should be ignored."""
     fullname = schema.Name('a.b.c.d', None, 'o.a.h').fullname
     self.assertEqual(fullname, 'a.b.c.d')
 
-    # fullname, namespace, default namespace specified
+  def test_fullname_space_default_specified(self):
+    """When a name contains dots, namespace and default space should be ignored."""
     fullname = schema.Name('a.b.c.d', 'o.a.a', 'o.a.h').fullname
     self.assertEqual(fullname, 'a.b.c.d')
 
-    # name, namespace, default namespace specified
+  def test_name_space_default_specified(self):
+    """When name and space are specified, default space should be ignored."""
     fullname = schema.Name('a', 'o.a.a', 'o.a.h').fullname
     self.assertEqual(fullname, 'o.a.a.a')
+
+  def test_equal_names(self):
+    """Equality of names is defined on the fullname and is case-sensitive."""
+    self.assertEqual(schema.Name('a.b.c.d', None, None), schema.Name('d', 'a.b.c', None))
+    self.assertNotEqual(schema.Name('C.d', None, None), schema.Name('c.d', None, None))
+
+  def test_invalid_name(self):
+    """The name portion of a fullname, record field names, and enum symbols must:
+       start with [A-Za-z_] and subsequently contain only [A-Za-z0-9_]"""
+    self.assertRaises(schema.InvalidName, schema.Name, 'an especially spacey cowboy', None, None)
+    self.assertRaises(schema.InvalidName, schema.Name, '99 problems but a name aint one', None, None)
+
+  def test_null_namespace(self):
+    """The empty string may be used as a namespace to indicate the null namespace."""
+    name = schema.Name('name', "", None)
+    self.assertEqual(name.fullname, "name")
+    self.assertIsNone(name.space)
 
   def test_exception_is_not_swallowed_on_parse_error(self):
     """A specific exception message should appear on a json parse error."""
