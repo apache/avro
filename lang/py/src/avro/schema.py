@@ -210,11 +210,6 @@ class Name(object):
 
     self._validate_fullname(self._full)
 
-    fail_msg = 'Default namespace must be non-empty string or None.'
-    if default_space == "" or not (isinstance(default_space, basestring)
-        or (default_space is None)):
-      raise SchemaParseException(fail_msg)
-
   def _validate_fullname(self, fullname):
     for name in fullname.split('.'):
       if not self._base_name_pattern.search(name):
@@ -238,7 +233,9 @@ class Name(object):
     return self._full.rsplit(".", 1)[0] if "." in self._full else None
 
   def get_space(self):
+    warnings.warn('Name.get_space() is deprecated in favor of Name.space')
     return self.space
+
 
 class Names(object):
   """Track name set and default namespace during parsing."""
