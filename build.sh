@@ -28,6 +28,14 @@ usage() {
 
 (( $# == 0 )) && usage
 
+# The two JDKs installed in the uber tool jar.  Ignore if JAVA is not set or
+# the directory doesn't exist.
+((JAVA)) && [[ -d /usr/local/openjdk-${JAVA} ]] && (
+  export JAVA_HOME=/usr/local/openjdk-${JAVA}
+  export PATH=$JAVA_HOME/bin:$PATH
+  java -version
+)
+
 while (( "$#" ))
 do
   target="$1"
@@ -264,8 +272,8 @@ do
         GROUP_ID=50
       fi
       {
-        sed -r "s/openjdk:8/openjdk:${JAVA:-8}/g" share/docker/Dockerfile
-        [ ${JAVA:-8} -le 8 ] && grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
+        cat share/docker/Dockerfile
+        grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
         echo "ENV HOME /home/$USER_NAME"
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
@@ -283,6 +291,7 @@ do
       # down to under 10.  However, editing files from OSX may take a few
       # extra second before the changes are available within the docker container.
       docker run --rm -t -i \
+        --env JAVA=${JAVA:-8} \
         -v ${PWD}:/home/${USER_NAME}/avro${DOCKER_MOUNT_FLAG} \
         -w /home/${USER_NAME}/avro \
         -v ${HOME}/.m2:/home/${USER_NAME}/.m2${DOCKER_MOUNT_FLAG} \
@@ -303,10 +312,10 @@ do
       ;;
 
     docker-test)
-      sed -r "s/openjdk:8/openjdk:${JAVA:-8}/g" share/docker/Dockerfile > Dockerfile
-      tar -cf- lang/ruby/Gemfile Dockerfile | docker build -t avro-test -
-      rm Dockerfile
-      docker run --rm -v ${PWD}:/avro/ avro-test /avro/share/docker/run-tests.sh
+      tar -cf- share/docker/Dockerfile \
+               lang/ruby/Gemfile |
+        docker build -t avro-test -f share/docker/Dockerfile -
+      docker run --rm -v ${PWD}:/avro/ --env JAVA=${JAVA:-8} avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)

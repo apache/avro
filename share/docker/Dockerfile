@@ -17,7 +17,8 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM openjdk:8
+# Despite this base, JDK8 is used by default.  See below.
+FROM openjdk:11
 WORKDIR /root
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
@@ -47,6 +48,7 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  make \
                                                  maven \
+                                                 openjdk-8-jdk \
                                                  perl \
                                                  python \
                                                  python-pip \
@@ -139,5 +141,10 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
 # Install Ruby modules
 COPY lang/ruby/Gemfile /tmp
 RUN bundle install --gemfile=/tmp/Gemfile
+
+# Use JDK8 by default.
+RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/local/openjdk-8
+ENV JAVA_HOME /usr/local/openjdk-8
+ENV PATH $JAVA_HOME/bin:$PATH
 
 CMD ["/bin/bash", "-i"]
