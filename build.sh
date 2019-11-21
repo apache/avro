@@ -30,11 +30,10 @@ usage() {
 
 # The two JDKs installed in the uber tool jar.  Ignore if JAVA is not set or
 # the directory doesn't exist.
-((JAVA)) && [[ -d /usr/local/openjdk-${JAVA} ]] && (
-  export JAVA_HOME=/usr/local/openjdk-${JAVA}
-  export PATH=$JAVA_HOME/bin:$PATH
+((JAVA)) && [[ -d /usr/local/openjdk-${JAVA} ]] &&
+  export JAVA_HOME=/usr/local/openjdk-${JAVA} &&
+  export PATH=$JAVA_HOME/bin:$PATH &&
   java -version
-)
 
 while (( "$#" ))
 do

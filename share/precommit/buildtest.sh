@@ -60,3 +60,7 @@ function buildtest_postcompile {
     add_vote_table +1 buildtest "The build has passed"
   done
 }
+
+function buildtest_docker_support {
+  DOCKER_EXTRAARGS+=("--env" "JAVA=$JAVA")
+}
