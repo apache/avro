@@ -22,7 +22,7 @@ VERBOSE=false
 BUILD_FILES=( build.sh )
 
 
-function buildtest_usage {
+buildtest_usage() {
   yetus_add_option "--verbose=<true|false>" "print output to console (default: false)"
 }
 
@@ -37,7 +37,7 @@ function buildtest_usage {
 #   fi
 # }
 
-function buildtest_postcompile {
+buildtest_postcompile() {
   for file in "${BUILD_FILES[@]}"; do
 
     big_console_header "Running ${file}"
@@ -61,6 +61,6 @@ function buildtest_postcompile {
   done
 }
 
-function buildtest_docker_support {
+buildtest_docker_support() {
   DOCKER_EXTRAARGS+=("--env" "JAVA=$JAVA")
 }
