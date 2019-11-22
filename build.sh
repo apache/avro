@@ -28,8 +28,8 @@ usage() {
 
 (( $# == 0 )) && usage
 
-# The two JDKs installed in the uber tool jar.  Ignore if JAVA is not set or
-# the directory doesn't exist.
+# Change the JDK from the default if the JAVA environment was set.
+# Only taken into account if the path to JAVA_HOME is in the expected location.
 ((JAVA)) && [[ -d /usr/local/openjdk-${JAVA} ]] &&
   export JAVA_HOME=/usr/local/openjdk-${JAVA} &&
   export PATH=$JAVA_HOME/bin:$PATH &&
