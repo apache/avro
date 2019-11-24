@@ -1611,9 +1611,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         if (space == null)
           space = names.space();
         name = new Name(getRequiredText(schema, "name", "No name in schema"), space);
-        if (name.space != null) { // set default namespace
-          names.space(name.space);
-        }
+        names.space(name.space); // set default namespace
       }
       if (PRIMITIVES.containsKey(type)) { // primitive
         result = create(PRIMITIVES.get(type));
