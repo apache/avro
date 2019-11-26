@@ -113,6 +113,7 @@ public class SpecificCompiler {
   private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
+  private boolean gettersReturnOptionalOnlyForNullable = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
@@ -238,7 +239,8 @@ public class SpecificCompiler {
   }
 
   /**
-   * Set to false to not create the getters that return an Optional.
+   * Set to true to create getters of the form
+   * {@code getOptionalFoo<Optional<T>>()}.=
    */
   public void setCreateOptionalGetters(boolean createOptionalGetters) {
     this.createOptionalGetters = createOptionalGetters;
@@ -249,10 +251,25 @@ public class SpecificCompiler {
   }
 
   /**
-   * Set to false to not create the getters that return an Optional.
+   * Set to to true to make the regular getters return Optional. Generated code
+   * will be {@code getFoo<Optional<T>>()}
    */
   public void setGettersReturnOptional(boolean gettersReturnOptional) {
     this.gettersReturnOptional = gettersReturnOptional;
+  }
+
+  public boolean isGettersReturnOptionalOnlyForNullable() {
+    return this.gettersReturnOptionalOnlyForNullable;
+  }
+
+  /**
+   * Set to true to make getters return Optional only if the underlying field in
+   * nullable. Generated code will be either {@code getFoo<T>()} or
+   * {@code getFoo<Optional<T>>()}. This setting only takes effect if
+   * {@link #gettersReturnOptional} is true.
+   */
+  public void setGettersReturnOptionalOnlyForNullable(boolean gettersReturnOptionalOnlyForNullable) {
+    this.gettersReturnOptionalOnlyForNullable = gettersReturnOptionalOnlyForNullable;
   }
 
   /**

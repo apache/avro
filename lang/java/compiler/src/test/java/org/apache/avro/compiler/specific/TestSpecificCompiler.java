@@ -699,6 +699,45 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testPojoWithOptionalOnlyWhenNullableCreatedTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setGettersReturnOptional(true);
+    compiler.setGettersReturnOptionalOnlyForNullable(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    }
+    // only the nullable field (four uses of optional) and the import should be
+    // found
+    assertEquals(5, optionalFound);
+  }
+
+  @Test
+  public void testPojoWithOptionalOnlyWhenNullableCreatedTurnedOnAndGettersReturnOptionalTurnedOff()
+      throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setGettersReturnOptionalOnlyForNullable(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        // no optionals since gettersReturnOptionalOnlyForNullable is false
+        assertFalse(line.contains("Optional"));
+      }
+    }
+  }
+
+  @Test
   public void testPojoWithOptionalCreatedWhenOptionalForEverythingTurnedOn() throws IOException {
     SpecificCompiler compiler = createCompiler();
     // compiler.setGettersReturnOptional(true);

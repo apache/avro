@@ -209,7 +209,7 @@ static {
   }
 
 #foreach ($field in $schema.getFields())
-#if (${this.gettersReturnOptional})
+#if (${this.gettersReturnOptional} && ((${this.gettersReturnOptionalOnlyForNullable} && ${field.schema().isNullable()}) || !${this.gettersReturnOptionalOnlyForNullable}))
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
 #if ($field.doc())      * $field.doc()
