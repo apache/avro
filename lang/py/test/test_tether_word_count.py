@@ -52,8 +52,6 @@ _OUT_SCHEMA = """{
              {"name": "value", "type": "long", "order": "ignore"}]
 }"""
 
-# Create a shell script to act as the program we want to execute
-# We do this so we can set the python path appropriately
 _PYTHON_PATH = os.pathsep.join([os.path.dirname(os.path.dirname(avro.__file__)),
                                 os.path.dirname(__file__)])
 
