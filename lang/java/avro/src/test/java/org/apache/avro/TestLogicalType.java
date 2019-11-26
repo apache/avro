@@ -18,9 +18,16 @@
 
 package org.apache.avro;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 
+import org.apache.avro.generic.*;
+import org.apache.avro.io.*;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -216,6 +223,40 @@ public class TestLogicalType {
     assertEqualsFalse("Different logical type", schema1, schema3);
   }
 
+  @Test
+  public void testFixedSizeDecimalToFillBytes() throws IOException {
+    Schema fixedSchema = Schema.createFixed("fixed", null, null, 4);
+    LogicalTypes.Decimal logicalType = LogicalTypes.decimal(8, 2);
+    logicalType.addToSchema(fixedSchema);
+
+    byte[] defaultBytes = new byte[] { 1, 2, 3 };
+
+    Schema.Field field1 = new Schema.Field("fixed", fixedSchema, null, defaultBytes);
+    Schema recordSchema = Schema.createRecord("record", null, null, false, Arrays.asList(field1));
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    BinaryEncoder binaryEncoder = EncoderFactory.get().binaryEncoder(baos, null);
+    DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(recordSchema);
+    GenericRecordBuilder builder = new GenericRecordBuilder(recordSchema);
+    GenericData.Record record = builder.build();
+
+    datumWriter.write(record, binaryEncoder);
+    binaryEncoder.flush();
+
+    Assert.assertArrayEquals(new byte[] { 0, 1, 2, 3 }, baos.toByteArray());
+
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(bais, null);
+    DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(recordSchema);
+    GenericRecord result = datumReader.read(null, binaryDecoder);
+    GenericData.Fixed fixed = (GenericData.Fixed) result.get(field1.name());
+    BigDecimal resultDecimal = new Conversions.DecimalConversion().fromFixed(fixed, fixedSchema, logicalType);
+
+    BigDecimal srcDecimal = new Conversions.DecimalConversion().fromBytes(ByteBuffer.wrap(defaultBytes), fixedSchema,
+        logicalType);
+    Assert.assertEquals(srcDecimal, resultDecimal);
+  }
+
   public static void assertEqualsTrue(String message, Object o1, Object o2) {
     Assert.assertTrue("Should be equal (forward): " + message, o1.equals(o2));
     Assert.assertTrue("Should be equal (reverse): " + message, o2.equals(o1));
@@ -228,7 +269,7 @@ public class TestLogicalType {
 
   /**
    * A convenience method to avoid a large number of @Test(expected=...) tests
-   * 
+   *
    * @param message            A String message to describe this assertion
    * @param expected           An Exception class that the Runnable should throw
    * @param containedInMessage A String that should be contained by the thrown
