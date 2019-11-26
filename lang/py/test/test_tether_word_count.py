@@ -122,7 +122,7 @@ class TestTetherWordCount(unittest.TestCase):
             "--program", sys.executable,
             "--exec_args", "-m avro.tether.tether_task_runner word_count_task.WordCountTask")
     print("Command:\n\t{0}".format(" ".join(args)))
-    subprocess.check_call(args, env={"PYTHONPATH": _PYTHON_PATH})
+    subprocess.check_call(args, env={"PYTHONPATH": _PYTHON_PATH, "PATH": os.environ["PATH"]})
 
     # ...and test the results.
     datum_reader = avro.io.DatumReader()
