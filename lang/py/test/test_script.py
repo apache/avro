@@ -20,9 +20,9 @@
 from __future__ import absolute_import, division, print_function
 
 import csv
+import io
 import json
 import unittest
-from cStringIO import StringIO
 from operator import itemgetter
 from os import remove
 from os.path import dirname, isfile, join
@@ -110,12 +110,12 @@ class TestCat(unittest.TestCase):
         return len(self._run("--skip", str(skip))) == NUM_RECORDS - skip
 
     def test_csv(self):
-        reader = csv.reader(StringIO(self._run("-f", "csv", raw=True)))
+        reader = csv.reader(io.BytesIO(self._run("-f", "csv", raw=True)))
         assert len(list(reader)) == NUM_RECORDS
 
     def test_csv_header(self):
-        io = StringIO(self._run("-f", "csv", "--header", raw=True))
-        reader = csv.DictReader(io)
+        io_ = io.BytesIO(self._run("-f", "csv", "--header", raw=True))
+        reader = csv.DictReader(io_)
         r = {"type": "duck", "last": "duck", "first": "daffy"}
         assert next(reader) == r
 

@@ -20,18 +20,14 @@
 from __future__ import absolute_import, division, print_function
 
 import datetime
+import io
 import unittest
 from binascii import hexlify
 from decimal import Decimal
 
+import avro.io
 import set_avro_test_path
-from avro import io, schema, timezones
-
-try:
-  from cStringIO import StringIO
-except ImportError:
-  from StringIO import StringIO
-
+from avro import schema, timezones
 
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
@@ -162,16 +158,16 @@ def print_test_name(test_name):
   print('')
 
 def write_datum(datum, writers_schema):
-  writer = StringIO()
-  encoder = io.BinaryEncoder(writer)
-  datum_writer = io.DatumWriter(writers_schema)
+  writer = io.BytesIO()
+  encoder = avro.io.BinaryEncoder(writer)
+  datum_writer = avro.io.DatumWriter(writers_schema)
   datum_writer.write(datum, encoder)
   return writer, encoder, datum_writer
 
 def read_datum(buffer, writers_schema, readers_schema=None):
-  reader = StringIO(buffer.getvalue())
-  decoder = io.BinaryDecoder(reader)
-  datum_reader = io.DatumReader(writers_schema, readers_schema)
+  reader = io.BytesIO(buffer.getvalue())
+  decoder = avro.io.BinaryDecoder(reader)
+  datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
   return datum_reader.read(decoder)
 
 def check_binary_encoding(number_type):
@@ -204,12 +200,12 @@ def check_skip_number(number_type):
     datum_writer.write(VALUE_TO_READ, encoder)
 
     # skip the value
-    reader = StringIO(writer.getvalue())
-    decoder = io.BinaryDecoder(reader)
+    reader = io.BytesIO(writer.getvalue())
+    decoder = avro.io.BinaryDecoder(reader)
     decoder.skip_long()
 
     # read data from string buffer
-    datum_reader = io.DatumReader(writers_schema)
+    datum_reader = avro.io.DatumReader(writers_schema)
     read_value = datum_reader.read(decoder)
 
     print('Read Value: %d' % read_value)
@@ -228,7 +224,7 @@ class TestIO(unittest.TestCase):
     for example_schema, datum in SCHEMAS_TO_VALIDATE:
       print('Schema: %s' % example_schema)
       print('Datum: %s' % datum)
-      validated = io.validate(schema.parse(example_schema), datum)
+      validated = avro.io.validate(schema.parse(example_schema), datum)
       print('Valid: %s' % validated)
       if validated: passed += 1
     self.assertEquals(passed, len(SCHEMAS_TO_VALIDATE))
@@ -308,10 +304,10 @@ class TestIO(unittest.TestCase):
        "symbols": ["BAR", "BAZ"]}""")
 
     writer, encoder, datum_writer = write_datum(datum_to_write, writers_schema)
-    reader = StringIO(writer.getvalue())
-    decoder = io.BinaryDecoder(reader)
-    datum_reader = io.DatumReader(writers_schema, readers_schema)
-    self.assertRaises(io.SchemaResolutionException, datum_reader.read, decoder)
+    reader = io.BytesIO(writer.getvalue())
+    decoder = avro.io.BinaryDecoder(reader)
+    datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
+    self.assertRaises(avro.io.SchemaResolutionException, datum_reader.read, decoder)
 
   def test_default_value(self):
     print_test_name('TEST DEFAULT VALUE')
@@ -342,10 +338,10 @@ class TestIO(unittest.TestCase):
        "fields": [{"name": "H", "type": "int"}]}""")
 
     writer, encoder, datum_writer = write_datum(datum_to_write, writers_schema)
-    reader = StringIO(writer.getvalue())
-    decoder = io.BinaryDecoder(reader)
-    datum_reader = io.DatumReader(writers_schema, readers_schema)
-    self.assertRaises(io.SchemaResolutionException, datum_reader.read, decoder)
+    reader = io.BytesIO(writer.getvalue())
+    decoder = avro.io.BinaryDecoder(reader)
+    datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
+    self.assertRaises(avro.io.SchemaResolutionException, datum_reader.read, decoder)
 
   def test_projection(self):
     print_test_name('TEST PROJECTION')
@@ -386,7 +382,7 @@ class TestIO(unittest.TestCase):
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")
     datum_to_write = {'E': 5, 'F': 'Bad'}
-    self.assertRaises(io.AvroTypeException, write_datum, datum_to_write, writers_schema)
+    self.assertRaises(avro.io.AvroTypeException, write_datum, datum_to_write, writers_schema)
 
 if __name__ == '__main__':
   unittest.main()

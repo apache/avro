@@ -19,20 +19,20 @@
 
 from __future__ import absolute_import, division, print_function
 
+import io
 import logging
 import os
-import StringIO
 import subprocess
 import sys
 import time
 import unittest
 
+import avro.io
 import avro.tether.tether_task
 import avro.tether.tether_task_runner
 import avro.tether.util
 import mock_tether_parent
 import set_avro_test_path
-from avro import io as avio
 from word_count_task import WordCountTask
 
 
@@ -79,9 +79,9 @@ class TestTetherTaskRunner(unittest.TestCase):
 
       # Serialize some data so we can send it to the input function
       datum="This is a line of text"
-      writer = StringIO.StringIO()
-      encoder = avio.BinaryEncoder(writer)
-      datum_writer = avio.DatumWriter(runner.task.inschema)
+      writer = io.BytesIO()
+      encoder = avro.io.BinaryEncoder(writer)
+      datum_writer = avro.io.DatumWriter(runner.task.inschema)
       datum_writer.write(datum, encoder)
 
       writer.seek(0)
@@ -100,9 +100,9 @@ class TestTetherTaskRunner(unittest.TestCase):
 
       #Serialize some data so we can send it to the input function
       datum={"key":"word","value":2}
-      writer = StringIO.StringIO()
-      encoder = avio.BinaryEncoder(writer)
-      datum_writer = avio.DatumWriter(runner.task.midschema)
+      writer = io.BytesIO()
+      encoder = avro.io.BinaryEncoder(writer)
+      datum_writer = avro.io.DatumWriter(runner.task.midschema)
       datum_writer.write(datum, encoder)
 
       writer.seek(0)
