@@ -306,7 +306,7 @@ EXAMPLES += IGNORED_LOGICAL_TYPE
 VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 INVALID_EXAMPLES = [e for e in EXAMPLES if not e.valid]
 
-class TestSchema(unittest.TestCase):
+class TestMisc(unittest.TestCase):
   """Miscellaneous tests for schema"""
 
   def test_correct_recursive_extraction(self):
@@ -557,7 +557,7 @@ class OtherAttributesTestCase(unittest.TestCase):
 def load_tests(loader, default_tests, pattern):
   """Generate test cases across many test schema."""
   suite = unittest.TestSuite()
-  suite.addTests(loader.loadTestsFromTestCase(TestSchema))
+  suite.addTests(loader.loadTestsFromTestCase(TestMisc))
   suite.addTests(SchemaParseTestCase(ex) for ex in EXAMPLES)
   suite.addTests(RoundTripParseTestCase(ex) for ex in VALID_EXAMPLES)
   suite.addTests(DocAttributesTestCase(ex) for ex in DOC_EXAMPLES)
