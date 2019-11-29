@@ -142,7 +142,16 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
 COPY lang/ruby/Gemfile /tmp
 RUN bundle install --gemfile=/tmp/Gemfile
 
-# Use JDK8 by default.
+# Note: This "ubertool" container has two JDK versions:
+# - OpenJDK 8 (installed as a package and available at /usr/bin/java)
+# - OpenJDK 11 (installed from the base image, and prioritized in the PATH)
+# - The root build.sh script switches between the versions according to 
+#   the JAVA environment variable.
+
+# Since want the JDK8 as a default, we have to re-prepend it to the PATH.
+# The /usr/local/openjdk-8 link is created to be consistent with the
+# openjdk:8 image.
+
 RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/local/openjdk-8
 ENV JAVA_HOME /usr/local/openjdk-8
 ENV PATH $JAVA_HOME/bin:$PATH
