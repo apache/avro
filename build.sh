@@ -15,6 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ===========================================================================
+# Bash functions that can be used in this script or exported by using
+# source build.sh
+
+change_java_version() {
+  local jdk=$1
+  if ((jdk)) && [[ -d /usr/local/openjdk-${jdk} ]]; then
+    export JAVA_HOME=/usr/local/openjdk-${jdk}
+    export PATH=$JAVA_HOME/bin:$PATH
+    echo "----------------------"
+    echo "Java version switched:"
+  else
+    echo "Using the current Java version:"
+  fi
+  echo "  JAVA_HOME=$JAVA_HOME"
+  echo "  PATH=$PATH"
+  java -version
+}
+
+# Stop here if sourcing for functions
+[[ "${0%/*}" == "bash" ]] && return 0
+
+# ===========================================================================
+
 set -xe
 cd "${0%/*}"
 
@@ -28,12 +52,11 @@ usage() {
 
 (( $# == 0 )) && usage
 
-# Change the JDK from the default if the JAVA environment was set.
-# Only taken into account if the path to JAVA_HOME is in the expected location.
-((JAVA)) && [[ -d /usr/local/openjdk-${JAVA} ]] &&
-  export JAVA_HOME=/usr/local/openjdk-${JAVA} &&
-  export PATH=$JAVA_HOME/bin:$PATH &&
-  java -version
+# Change the JDK from the default.
+# This only occurs when the JAVA environment variable is set and a Java environment exists in
+# the "standard" location (defined by the openjdk docker images).  This will typically occur in CI
+# builds.  In all other cases, the Java version is taken from the current installation for the user.
+change_java_version $JAVA
 
 while (( "$#" ))
 do
