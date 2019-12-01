@@ -647,7 +647,9 @@ public class SpecificCompiler {
     switch (s.getType()) {
     case STRING:
       result = Schema.create(Schema.Type.STRING);
-      GenericData.setStringType(result, stringType);
+      if (s.getLogicalType() == null) {
+        GenericData.setStringType(result, stringType);
+      }
       break;
     case RECORD:
       result = Schema.createRecord(s.getFullName(), s.getDoc(), null, s.isError());
@@ -679,6 +681,9 @@ public class SpecificCompiler {
       break;
     }
     result.addAllProps(s);
+    if (s.getLogicalType() != null) {
+      s.getLogicalType().addToSchema(result);
+    }
     seen.put(s, result);
     return result;
   }
