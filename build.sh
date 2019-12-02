@@ -35,7 +35,7 @@ change_java_version() {
 }
 
 # Stop here if sourcing for functions
-[[ "${0%/*}" == "bash" ]] && return 0
+[[ "$0" == *"bash" ]] && return 0
 
 # ===========================================================================
 
@@ -56,7 +56,7 @@ usage() {
 # This only occurs when the JAVA environment variable is set and a Java environment exists in
 # the "standard" location (defined by the openjdk docker images).  This will typically occur in CI
 # builds.  In all other cases, the Java version is taken from the current installation for the user.
-change_java_version $JAVA
+change_java_version "$JAVA"
 
 while (( "$#" ))
 do
