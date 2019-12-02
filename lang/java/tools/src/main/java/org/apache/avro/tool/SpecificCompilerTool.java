@@ -25,6 +25,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.LinkedHashSet;
@@ -151,8 +153,23 @@ public class SpecificCompilerTool implements Tool {
   }
 
   /**
+   * For an Array of files, sort using {@link String#compareTo(String)} for each
+   * filename.
+   *
+   * @param files Array of File objects to sort
+   * @return the sorted File array
+   */
+  private static File[] sortFiles(File[] files) {
+    Objects.requireNonNull(files, "files cannot be null");
+    Arrays.sort(files, Comparator.comparing(File::getName));
+    return files;
+  }
+
+  /**
    * For a List of files or directories, returns a File[] containing each file
    * passed as well as each file with a matching extension found in the directory.
+   * Each directory is sorted using {@link String#compareTo(String)} for each
+   * filename.
    *
    * @param inputs List of File objects that are files or directories
    * @param filter File extension filter to match on when fetching files from a
@@ -166,7 +183,9 @@ public class SpecificCompilerTool implements Tool {
       // if directory, look at contents to see what files match extension
       if (file.isDirectory()) {
         File[] files = file.listFiles(filter);
-        Collections.addAll(fileSet, files != null ? files : new File[0]);
+        // sort files in directory to compile deterministically
+        // independent of system/ locale
+        Collections.addAll(fileSet, files != null ? sortFiles(files) : new File[0]);
       }
       // otherwise, just add the file.
       else {
