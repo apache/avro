@@ -626,6 +626,37 @@ class CanonicalFormTestCase(unittest.TestCase):
                      ''')
     self.assertEqual(s.canonical_form, '{"name":"md5","type":"fixed","size":16}')
 
+  def test_record_field(self):
+    """
+    Ensure that record fields produce the correct parsing canonical form.
+    """
+    s = schema.parse("""{
+        "type": "record",
+        "name": "Test",
+        "fields": [{"type": {"symbols": ["one", "two"],
+                             "type": "enum",
+                             "name": "NamedEnum"},
+                    "name": "thenamedenum"},
+                   {"type": ["null", "NamedEnum"],
+                    "name": "unionwithreftoenum"}]}""")
+    expected = '{"name":"Test","type":"record","fields":[{"name":"thenamedenum","type":{"name":"NamedEnum","type":"enum","symbols":["one","two"]}},{"name":"unionwithreftoenum","type":["null","NamedEnum"]}]}'
+    self.assertEqual(s.canonical_form, expected)
+
+  def test_array(self):
+    """
+    Ensure that array schema produce the correct parsing canonical form.
+    """
+    s = schema.parse('{"type": "array", "items": "long"}')
+    expected = '{"type":"array","items":"long"}'
+    self.assertEqual(s.canonical_form, expected)
+
+  def test_map(self):
+    """
+    Ensure that map schema produce the correct parsing canonical form.
+    """
+    s = schema.parse('{"type": "map", "values": "long"}')
+    expected = '{"type":"map","values":"long"}'
+    self.assertEqual(s.canonical_form, expected)
 
 def load_tests(loader, default_tests, pattern):
   """Generate test cases across many test schema."""
