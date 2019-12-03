@@ -55,23 +55,30 @@ def _generate_package_data():
 
     # Avro top-level source directory:
     root_dir = os.path.dirname(os.path.dirname(_HERE))
+    share_dir = os.path.join(root_dir, 'share')
 
     # Create a PEP440 compliant version file.
-    version_file_path = os.path.join(root_dir, 'share', _VERSION_FILE_NAME)
-    with open(version_file_path) as vin:
+    version_file_path = os.path.join(share_dir, _VERSION_FILE_NAME)
+    with open(version_file_path, 'rb') as vin:
         version = vin.read().replace('-', '+')
-    with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), 'w') as vout:
+    with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), 'wb') as vout:
         vout.write(version)
+
+    avro_schemas_dir = os.path.join(share_dir, 'schemas', 'org', 'apache', 'avro')
+    ipc_dir = os.path.join(avro_schemas_dir, 'ipc')
+    tether_dir = os.path.join(avro_schemas_dir, 'mapred', 'tether')
 
     # Copy necessary avsc files:
     avsc_files = (
-        (('schemas', 'org', 'apache', 'avro', 'ipc', 'HandshakeRequest.avsc'), ''),
-        (('schemas', 'org', 'apache', 'avro', 'ipc', 'HandshakeResponse.avsc'), ''),
-        (('test', 'schemas', 'interop.avsc'), ('tests',)),
+        ((share_dir, 'test', 'schemas', 'interop.avsc'), ('',)),
+        ((ipc_dir, 'HandshakeRequest.avsc'), ('',)),
+        ((ipc_dir, 'HandshakeResponse.avsc'), ('',)),
+        ((tether_dir, 'InputProtocol.avpr'), ('tether',)),
+        ((tether_dir, 'OutputProtocol.avpr'), ('tether',)),
     )
 
     for src, dst in avsc_files:
-        src = os.path.join(root_dir, 'share', *src)
+        src = os.path.join(*src)
         dst = os.path.join(_AVRO_DIR, *dst)
         distutils.file_util.copy_file(src, dst)
 

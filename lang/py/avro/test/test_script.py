@@ -63,7 +63,7 @@ def looney_records():
     for f, l, t in LOONIES:
         yield {"first": f, "last" : l, "type" : t}
 
-SCRIPT = join(dirname(__file__), "..", "scripts", "avro")
+SCRIPT = join(dirname(dirname(dirname(__file__))), "scripts", "avro")
 
 _JSON_PRETTY = '''{
     "type": "duck",

@@ -32,11 +32,18 @@ import avro.datafile
 import avro.io
 import avro.schema
 import avro.tether.tether_task_runner
-import set_avro_test_path
 
-_TOP_DIR = """@TOPDIR@"""
-_AVRO_VERSION = """@AVRO_VERSION@"""
-_JAR_PATH = os.path.abspath(os.path.join(_TOP_DIR, "..", "java", "tools", "target", "avro-tools-{}.jar".format(_AVRO_VERSION)))
+
+_AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
+
+def _version():
+  with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
+    # Convert it back to the java version
+    return v.read().strip().replace('+', '-')
+
+_AVRO_VERSION = _version()
+_JAR_PATH = os.path.join(os.path.dirname(os.path.dirname(_AVRO_DIR)),
+    "java", "tools", "target", "avro-tools-{}.jar".format(_AVRO_VERSION))
 
 _LINES = ("the quick brown fox jumps over the lazy dog",
           "the cow jumps over the moon",

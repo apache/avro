@@ -31,9 +31,8 @@ import avro.io
 import avro.tether.tether_task
 import avro.tether.tether_task_runner
 import avro.tether.util
-import mock_tether_parent
-import set_avro_test_path
-from word_count_task import WordCountTask
+import avro.test.mock_tether_parent
+import avro.test.word_count_task
 
 
 class TestTetherTaskRunner(unittest.TestCase):
@@ -50,7 +49,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       env["PYTHONPATH"]=':'.join(sys.path)
       parent_port = avro.tether.util.find_port()
 
-      pyfile=mock_tether_parent.__file__
+      pyfile=avro.test.mock_tether_parent.__file__
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
       input_port = avro.tether.util.find_port()
 
@@ -59,7 +58,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       # so we give the subprocess time to start up
       time.sleep(1)
 
-      runner = avro.tether.tether_task_runner.TaskRunner(WordCountTask())
+      runner = avro.tether.tether_task_runner.TaskRunner(avro.test.word_count_task.WordCountTask())
 
       runner.start(outputport=parent_port,join=False)
 
@@ -154,7 +153,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       env["PYTHONPATH"]=':'.join(sys.path)
       parent_port = avro.tether.util.find_port()
 
-      pyfile=mock_tether_parent.__file__
+      pyfile=avro.test.mock_tether_parent.__file__
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
 
       #Possible race condition? when we start tether_task_runner it will call

@@ -31,13 +31,13 @@ main() {
         ./setup.py isort lint
         ;;
       test)
-        ant test
+        ./setup.py test
         ;;
       dist)
-        ant dist
+        ./setup.py dist
         ;;
       clean)
-        ant clean
+        ./setup.py clean
         rm -rf userlogs/
         ;;
       *)

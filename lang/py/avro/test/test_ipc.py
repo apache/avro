@@ -17,38 +17,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+There are currently no IPC tests within python, in part because there are no
+servers yet available.
+"""
+
 from __future__ import absolute_import, division, print_function
 
-import os
 import unittest
 
-import set_avro_test_path
-from avro import datafile, io
+# This test does import this code, to make sure it at least passes
+# compilation.
+from avro import ipc
 
 
-class TestDataFileInterop(unittest.TestCase):
-  def test_interop(self):
-    print()
-    print('TEST INTEROP')
-    print('============')
-    print()
-    for f in os.listdir('@INTEROP_DATA_DIR@'):
-      base_ext = os.path.splitext(os.path.basename(f))[0].split('_', 1)
-      if len(base_ext) < 2 or base_ext[1] in datafile.VALID_CODECS:
-        print('READING %s' % f)
-        print('')
+class TestIPC(unittest.TestCase):
+  def test_placeholder(self):
+    pass
 
-        # read data in binary from file
-        reader = open(os.path.join('@INTEROP_DATA_DIR@', f), 'rb')
-        datum_reader = io.DatumReader()
-        dfr = datafile.DataFileReader(reader, datum_reader)
-        i = 0
-        for i, datum in enumerate(dfr, 1):
-          assert datum is not None
-        assert i > 0
-      else:
-        print('SKIPPING %s due to an unsupported codec' % f)
-        print('')
+  def test_server_with_path(self):
+    client_with_custom_path = ipc.HTTPTransceiver('apache.org', 80, '/service/article')
+    self.assertEqual('/service/article', client_with_custom_path.req_resource)
+
+    client_with_default_path = ipc.HTTPTransceiver('apache.org', 80)
+    self.assertEqual('/', client_with_default_path.req_resource)
 
 if __name__ == '__main__':
   unittest.main()

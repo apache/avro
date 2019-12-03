@@ -25,7 +25,6 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import avro.tether.tether_task
 import avro.tether.util
-import set_avro_test_path
 from avro import ipc, protocol
 
 SERVER_ADDRESS = ('localhost', avro.tether.util.find_port())
