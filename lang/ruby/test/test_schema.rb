@@ -163,6 +163,18 @@ class TestSchema < Test::Unit::TestCase
     assert_equal '"MissingType" is not a schema we know about.', error.message
   end
 
+  def test_invalid_name
+    error = assert_raise Avro::SchemaParseError do
+      Avro::Schema.parse <<-SCHEMA
+        {"type": "record", "name": "my-invalid-name", "fields": [
+          {"name": "id", "type": "int"}
+        ]}
+      SCHEMA
+    end
+
+    assert_equal "Name my-invalid-name is invalid for type record!", error.message
+  end
+
   def test_to_avro_handles_falsey_defaults
     schema = Avro::Schema.parse <<-SCHEMA
       {"type": "record", "name": "Record", "namespace": "my.name.space",
