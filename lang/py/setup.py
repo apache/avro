@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import distutils.command.clean
 import distutils.errors
 import glob
 import os
@@ -27,11 +28,112 @@ import subprocess
 
 import setuptools
 
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_AVRO_DIR = os.path.join(_HERE, 'avro')
+_VERSION_FILE_NAME = 'VERSION.txt'
+
+
+def _is_distribution():
+    """Tests whether setup.py is invoked from a distribution.
+
+    Returns:
+        True if setup.py runs from a distribution.
+        False otherwise, ie. if setup.py runs from a version control work tree.
+    """
+    # If a file PKG-INFO exists as a sibling of setup.py,
+    # assume we are running as source distribution:
+    return os.path.exists(os.path.join(_HERE, 'PKG-INFO'))
+
+
+def _generate_package_data():
+    """Generate package data.
+
+    This data will already exist in a distribution package,
+    so this function only runs for local version control work tree.
+    """
+    distutils.log.info('Generating package data')
+
+    # Avro top-level source directory:
+    root_dir = os.path.dirname(os.path.dirname(_HERE))
+
+    # Create a PEP440 compliant version file.
+    version_file_path = os.path.join(root_dir, 'share', _VERSION_FILE_NAME)
+    with open(version_file_path) as vin:
+        version = vin.read().replace('-', '+')
+    with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), 'w') as vout:
+        vout.write(version)
+
+    # Copy necessary avsc files:
+    avsc_files = (
+        (('schemas', 'org', 'apache', 'avro', 'ipc', 'HandshakeRequest.avsc'), ''),
+        (('schemas', 'org', 'apache', 'avro', 'ipc', 'HandshakeResponse.avsc'), ''),
+        (('test', 'schemas', 'interop.avsc'), ('tests',)),
+    )
+
+    for src, dst in avsc_files:
+        src = os.path.join(root_dir, 'share', *src)
+        dst = os.path.join(_AVRO_DIR, *dst)
+        distutils.file_util.copy_file(src, dst)
+
+
+class CleanCommand(distutils.command.clean.clean):
+    """A command to clean up install artifacts and replaceable, generated files."""
+
+    def _replaceable(self):
+        """Get the list of files to delete."""
+        for name in ('dist', 'avro.egg-info', os.path.join(_AVRO_DIR, _VERSION_FILE_NAME)):
+            if os.path.exists(name):
+                yield name
+        for root, dirnames, filenames in os.walk(_AVRO_DIR):
+            if '__pycache__' in dirnames:
+                dirnames.remove('__pycache__')
+                yield os.path.join(root, '__pycache__')
+            for name in fnmatch.filter(filenames, '*.avsc'):
+                yield os.path.join(root, name)
+            for name in fnmatch.filter(filenames, '*.py[co]'):
+                yield os.path.join(root, name)
+
+    def run(self):
+        super().run()
+        for name in self._replaceable():
+            if self.dry_run:
+                distutils.log.info('Would remove %s', name)
+            elif os.path.isdir(name):
+                # distutils logs this for us
+                distutils.dir_util.remove_tree(name)
+            else:
+                distutils.log.info('Removing %s', name)
+                os.remove(name)
+
+
+class GenerateInteropDataCommand(setuptools.Command):
+    """A command to generate Avro files for data interop test."""
+
+    user_options = [
+      ('schema-file=', None, 'path to input Avro schema file'),
+      ('output-path=', None, 'path to output Avro data files'),
+    ]
+
+    def initialize_options(self):
+        self.schema_file = os.path.join(os.getcwd(), 'interop.avsc')
+        self.output_path = os.getcwd()
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from avro.tests import gen_interop_data
+        gen_interop_data.generate(self.schema_file, self.output_path)
+
 
 def _get_version():
   curdir = os.getcwd()
-  version_file = ("VERSION.txt" if os.path.isfile("VERSION.txt")
-    else os.path.join(curdir[:curdir.index("lang/py")], "share/VERSION.txt"))
+  if os.path.isfile("share/VERSION.txt"):
+    version_file = "share/VERSION.txt"
+  else:
+    index = curdir.index("lang/py")
+    path = curdir[:index]
+    version_file = os.path.join(path, "share/VERSION.txt")
   with open(version_file) as verfile:
     # To follow the naming convention defined by PEP 440
     # in the case that the version is like "x.y.z-SNAPSHOT"
@@ -41,7 +143,7 @@ def _get_version():
 class LintCommand(setuptools.Command):
     """Run pycodestyle on all your modules"""
     description = __doc__
-    user_options = []
+    user_options = []  # type: ignore
 
     def initialize_options(self):
         pass
@@ -60,33 +162,16 @@ class LintCommand(setuptools.Command):
         if p.wait():
             raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
 
+def main():
+    if not _is_distribution():
+        _generate_package_data()
 
-setuptools.setup(
-  name = 'avro',
-  version = _get_version(),
-  packages = ['avro'],
-  package_dir = {'': 'src'},
-  scripts = ["./scripts/avro"],
-  setup_requires = [
-    'isort',
-    'pycodestyle',
-  ],
-  cmdclass={
-      "lint": LintCommand,
-  },
+    setuptools.setup(cmdclass={
+        "clean": CleanCommand,
+        "generate_interop_data": GenerateInteropDataCommand,
+        "lint": LintCommand,
+    })
 
-  #include_package_data=True,
-  package_data={'avro': ['LICENSE', 'NOTICE']},
 
-  # metadata for upload to PyPI
-  author = 'Apache Avro',
-  author_email = 'dev@avro.apache.org',
-  description = 'Avro is a serialization and RPC framework.',
-  license = 'Apache License 2.0',
-  keywords = 'avro serialization rpc',
-  url = 'https://avro.apache.org/',
-  extras_require = {
-    'snappy': ['python-snappy'],
-    'zstandard': ['zstandard'],
-  },
-)
+if __name__ == '__main__':
+    main()

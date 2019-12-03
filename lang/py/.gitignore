@@ -3,3 +3,6 @@
 build/
 lib/
 userlogs/
+avro/HandshakeRequest.avsc
+avro/HandshakeResponse.avsc
+avro/VERSION.txt
