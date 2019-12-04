@@ -20,7 +20,9 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import distutils.spawn
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -32,7 +34,6 @@ import avro.datafile
 import avro.io
 import avro.schema
 import avro.tether.tether_task_runner
-
 
 _AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
 
@@ -63,6 +64,23 @@ _PYTHON_PATH = os.pathsep.join([os.path.dirname(os.path.dirname(avro.__file__)),
                                 os.path.dirname(__file__)])
 
 
+def _has_java():
+  """Detect if this system has a usable java installed.
+
+  On most systems, this is just checking if `java` is in the PATH.
+
+  But macos always has a /usr/bin/java, which does not mean java is installed. If you invoke java on macos and java is not installed, macos will spawn a popup telling you how to install java. This code does additional work around that to be completely automatic.
+  """
+  if platform.system() == "Darwin":
+    try:
+      output = subprocess.check_output("/usr/libexec/java_home", stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+      output = e.output
+    return ("No Java runtime present" not in output)
+  return bool(distutils.spawn.find_executable("java"))
+
+
+@unittest.skipUnless(_has_java(), "No Java runtime present")
 class TestTetherWordCount(unittest.TestCase):
   """unittest for a python tethered map-reduce job."""
 
