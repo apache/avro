@@ -128,7 +128,7 @@ def cat(opts, args):
     for filename in args:
         try:
             fo = open(filename, "rb")
-        except (OSError, IOError), e:
+        except (OSError, IOError) as e:
             raise AvroError("Can't open %s - %s" % (filename, e))
 
         avro = DataFileReader(fo, DatumReader())
@@ -204,7 +204,7 @@ def write(opts, files):
     try:
         schema = avro.schema.parse(open(opts.schema, "rb").read())
         out = _open(opts.output, "wb")
-    except (IOError, OSError), e:
+    except (IOError, OSError) as e:
         raise AvroError("Can't open file - %s" % e)
 
     writer = DataFileWriter(out, DatumWriter(), schema)
@@ -267,9 +267,9 @@ def main(argv=None):
             write(opts, args)
         else:
             raise AvroError("Unknown command - %s" % command)
-    except AvroError, e:
+    except AvroError as e:
         parser.error("%s" % e) # Will exit
-    except Exception, e:
+    except Exception as e:
         raise SystemExit("panic: %s" % e)
 
 if __name__ == "__main__":
