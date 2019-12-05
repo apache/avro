@@ -50,6 +50,8 @@ import org.apache.avro.SchemaNormalization;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -647,7 +649,9 @@ public class SpecificCompiler {
     switch (s.getType()) {
     case STRING:
       result = Schema.create(Schema.Type.STRING);
-      GenericData.setStringType(result, stringType);
+      if (s.getLogicalType() == null) {
+        GenericData.setStringType(result, stringType);
+      }
       break;
     case RECORD:
       result = Schema.createRecord(s.getFullName(), s.getDoc(), null, s.isError());
@@ -679,6 +683,9 @@ public class SpecificCompiler {
       break;
     }
     result.addAllProps(s);
+    if (s.getLogicalType() != null) {
+      s.getLogicalType().addToSchema(result);
+    }
     seen.put(s, result);
     return result;
   }
@@ -1148,16 +1155,10 @@ public class SpecificCompiler {
     String fieldName = mangle(field.name(), schema.isError() ? ERROR_RESERVED_WORDS : ACCESSOR_MUTATOR_RESERVED_WORDS,
         true);
 
-    boolean nextCharToUpper = true;
-    for (int ii = 0; ii < fieldName.length(); ii++) {
-      if (fieldName.charAt(ii) == '_') {
-        nextCharToUpper = true;
-      } else if (nextCharToUpper) {
-        methodBuilder.append(Character.toUpperCase(fieldName.charAt(ii)));
-        nextCharToUpper = false;
-      } else {
-        methodBuilder.append(fieldName.charAt(ii));
-      }
+    if (prefix.isEmpty()) {
+      methodBuilder.append(camelize(fieldName, false));
+    } else {
+      methodBuilder.append(camelize(fieldName, true));
     }
     methodBuilder.append(postfix);
 
@@ -1170,6 +1171,54 @@ public class SpecificCompiler {
     }
 
     return methodBuilder.toString();
+  }
+
+  /**
+   * CamelCase the incoming string, using underscores as the word hints
+   *
+   * @param s     string to camel-case. Must contain only [a-zA-Z0-9_]
+   * @param upper should the first letter be capitalized
+   */
+  static String camelize(String s, boolean upper) {
+    if (StringUtils.contains(s, '_')) {
+      // use underscores as hints where the capitals go
+      StringBuilder builder = new StringBuilder();
+      for (String part : StringUtils.split(StringUtils.lowerCase(s), '_')) {
+        builder.append(StringUtils.capitalize(part));
+      }
+      s = builder.toString();
+
+      // fixup first character
+      if (upper) {
+        return StringUtils.capitalize(s);
+      } else {
+        return StringUtils.uncapitalize(s);
+      }
+    }
+
+    // probably camelcase, split by camel to reassemble
+    StringBuilder builder = new StringBuilder();
+    String[] parts = StringUtils.splitByCharacterTypeCamelCase(s);
+
+    // subsections should retain their casing if all upper
+    // unless they're in the first section, then their casing should be modified to
+    // match the starting case
+    if (StringUtils.isAllUpperCase(parts[0]) && upper) {
+      builder.append(parts[0]);
+    } else if (upper) {
+      builder.append(StringUtils.capitalize(StringUtils.lowerCase(parts[0])));
+    } else {
+      builder.append(StringUtils.lowerCase(parts[0]));
+    }
+
+    for (String part : ArrayUtils.subarray(parts, 1, parts.length)) {
+      if (StringUtils.isAllUpperCase(part)) {
+        builder.append(part);
+      } else {
+        builder.append(StringUtils.capitalize(StringUtils.lowerCase(part)));
+      }
+    }
+    return builder.toString();
   }
 
   /** Tests whether an unboxed Java type can be set to null */

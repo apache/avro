@@ -339,6 +339,13 @@ public class TestSpecificCompiler {
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("getSchema$1",
         SpecificCompiler.generateGetMethod(createRecord("test", false, schema, Schema$), Schema$));
+
+    Field ALL_UPPER_CASE = new Field("ALL_UPPER_CASE", Schema.create(Type.STRING), null, null);
+    assertEquals("getAllUpperCase",
+        SpecificCompiler.generateGetMethod(createRecord("test", false, ALL_UPPER_CASE), ALL_UPPER_CASE));
+
+    Field someUUID = new Field("someUUID", Schema.create(Type.STRING), null, null);
+    assertEquals("getSomeUUID", SpecificCompiler.generateGetMethod(createRecord("test", false, someUUID), someUUID));
   }
 
   @Test
@@ -415,6 +422,13 @@ public class TestSpecificCompiler {
     Schema$ = new Field("Schema", Schema.create(Type.STRING), null, null);
     assertEquals("setSchema$1",
         SpecificCompiler.generateSetMethod(createRecord("test", false, schema, Schema$), Schema$));
+
+    Field ALL_UPPER_CASE = new Field("ALL_UPPER_CASE", Schema.create(Type.STRING), null, null);
+    assertEquals("setAllUpperCase",
+        SpecificCompiler.generateSetMethod(createRecord("test", false, ALL_UPPER_CASE), ALL_UPPER_CASE));
+
+    Field someUUID = new Field("someUUID", Schema.create(Type.STRING), null, null);
+    assertEquals("setSomeUUID", SpecificCompiler.generateSetMethod(createRecord("test", false, someUUID), someUUID));
   }
 
   @Test
