@@ -60,7 +60,7 @@ do
       (cd lang/php; ./build.sh test)
       (cd lang/perl; ./build.sh test)
 
-      (cd lang/py; ant interop-data-generate)
+      (cd lang/py; ./build.sh interop-data-generate)
       (cd lang/py3; python3 setup.py generate_interop_data \
         --schema-file=../../share/test/schemas/interop.avsc --output-path=../../build/interop/data)
       (cd lang/c; ./build.sh interop-data-generate)
@@ -72,7 +72,7 @@ do
 
       # run interop data tests
       (cd lang/java/ipc; mvn -B test -P interop-data-test)
-      (cd lang/py; ant interop-data-test)
+      (cd lang/py; ./build.sh interop-data-test)
       (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
@@ -122,17 +122,11 @@ do
 
       (cd lang/py; ./build.sh dist)
       (cd lang/py3; ./build.sh dist)
-
       (cd lang/c; ./build.sh dist)
-
       (cd lang/c++; ./build.sh dist)
-
       (cd lang/csharp; ./build.sh dist)
-
       (cd lang/js; ./build.sh dist)
-
       (cd lang/ruby; ./build.sh dist)
-
       (cd lang/php; ./build.sh dist)
 
       mkdir -p dist/perl
@@ -178,7 +172,7 @@ do
       rm -rf lang/java/*/userlogs/
       rm -rf lang/java/*/dependency-reduced-pom.xml
 
-      (cd lang/py; ant clean)
+      (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
 
       (cd lang/py3; python3 setup.py clean)
@@ -213,7 +207,7 @@ do
       rm -rf lang/java/*/userlogs/
       rm -rf lang/java/*/dependency-reduced-pom.xml
 
-      (cd lang/py; ant clean)
+      (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
 
       (cd lang/py3; python3 setup.py clean)

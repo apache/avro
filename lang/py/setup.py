@@ -122,15 +122,21 @@ class GenerateInteropDataCommand(setuptools.Command):
     ]
 
     def initialize_options(self):
-        self.schema_file = os.path.join(os.getcwd(), 'interop.avsc')
-        self.output_path = os.getcwd()
+      self.schema_file = os.path.join(_AVRO_DIR, 'interop.avsc')
+      self.output_path = os.path.join(_AVRO_DIR, 'test', 'interop', 'data')
 
     def finalize_options(self):
         pass
 
     def run(self):
-        from avro.tests import gen_interop_data
-        gen_interop_data.generate(self.schema_file, self.output_path)
+      # Late import -- this can only be run when avro is on the pythonpath,
+      # more or less after install.
+      import avro.test.gen_interop_data
+      if not os.path.exists(self.output_path):
+        os.makedirs(self.output_path)
+      import pdb; pdb.set_trace()
+      avro.test.gen_interop_data.generate(self.schema_file,
+                                          os.path.join(self.output_path, 'py.avro'))
 
 
 def _get_version():

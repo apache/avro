@@ -40,6 +40,12 @@ main() {
         ./setup.py clean
         rm -rf userlogs/
         ;;
+      generate-interop-data)
+        ./setup.py generate_interop_data
+        ;;
+      interop-data-test)
+        python -m unittest avro.test.test_datafile_interop
+        ;;
       *)
         usage
         ;;
