@@ -96,24 +96,24 @@ RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit 
  && chmod +x /usr/local/bin/phpunit
 
 # Install Perl modules
+RUN apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+                                                 libencode-perl \
+                                                 libio-string-perl \
+                                                 libjson-xs-perl \
+                                                 libmodule-install-perl \
+                                                 libmodule-install-readmefrompod-perl \
+                                                 libobject-tiny-perl \
+                                                 libperl-critic-perl \
+                                                 libregexp-common-perl \
+                                                 libtest-exception-perl \
+                                                 libtry-tiny-perl \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists
 RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
- && cpanm --mirror https://www.cpan.org/ install Compress::Zlib \
-                                                 Compress::Zstd \
-                                                 Encode \
-                                                 IO::String \
-                                                 JSON::XS \
-                                                 Math::BigInt \
-                                                 Module::Install \
-                                                 Module::Install::ReadmeFromPod \
+ && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                  Module::Install::Repository \
-                                                 Object::Tiny \
-                                                 Perl::Critic \
-                                                 Regexp::Common \
-                                                 Test::Exception \
-                                                 Test::More \
-                                                 Test::Pod \
-                                                 Try::Tiny \
  && rm -rf .cpanm
 
 # Install Python packages
