@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericData;
 import org.junit.Test;
 
 public class TestSchema {
@@ -200,4 +201,144 @@ public class TestSchema {
     }
   }
 
+  @Test
+  public void testIntDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1, field.defaultVal());
+    assertEquals(1, GenericData.get().getDefaultValue(field));
+
+    field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", Integer.MIN_VALUE);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(Integer.MIN_VALUE, field.defaultVal());
+    assertEquals(Integer.MIN_VALUE, GenericData.get().getDefaultValue(field));
+
+    field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", Integer.MAX_VALUE);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(Integer.MAX_VALUE, field.defaultVal());
+    assertEquals(Integer.MAX_VALUE, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testValidLongAsIntDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1L);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1, field.defaultVal());
+    assertEquals(1, GenericData.get().getDefaultValue(field));
+
+    field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", Long.valueOf(Integer.MIN_VALUE));
+    assertTrue(field.hasDefaultValue());
+    assertEquals(Integer.MIN_VALUE, field.defaultVal());
+    assertEquals(Integer.MIN_VALUE, GenericData.get().getDefaultValue(field));
+
+    field = new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", Long.valueOf(Integer.MAX_VALUE));
+    assertTrue(field.hasDefaultValue());
+    assertEquals(Integer.MAX_VALUE, field.defaultVal());
+    assertEquals(Integer.MAX_VALUE, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test(expected = AvroTypeException.class)
+  public void testInvalidLongAsIntDefaultValue() {
+    new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", Integer.MAX_VALUE + 1L);
+  }
+
+  @Test(expected = AvroTypeException.class)
+  public void testDoubleAsIntDefaultValue() {
+    new Schema.Field("myField", Schema.create(Schema.Type.INT), "doc", 1.0);
+  }
+
+  @Test
+  public void testLongDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1L, field.defaultVal());
+    assertEquals(1L, GenericData.get().getDefaultValue(field));
+
+    field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", Long.MIN_VALUE);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(Long.MIN_VALUE, field.defaultVal());
+    assertEquals(Long.MIN_VALUE, GenericData.get().getDefaultValue(field));
+
+    field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", Long.MAX_VALUE);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(Long.MAX_VALUE, field.defaultVal());
+    assertEquals(Long.MAX_VALUE, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testIntAsLongDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1L, field.defaultVal());
+    assertEquals(1L, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test(expected = AvroTypeException.class)
+  public void testDoubleAsLongDefaultValue() {
+    new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1.0);
+  }
+
+  @Test
+  public void testDoubleDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1.0);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0d, field.defaultVal());
+    assertEquals(1.0d, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testIntAsDoubleDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0d, field.defaultVal());
+    assertEquals(1.0d, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testLongAsDoubleDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1L);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0d, field.defaultVal());
+    assertEquals(1.0d, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testFloatAsDoubleDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.DOUBLE), "doc", 1.0f);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0d, field.defaultVal());
+    assertEquals(1.0d, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testFloatDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1.0f);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0f, field.defaultVal());
+    assertEquals(1.0f, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testIntAsFloatDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0f, field.defaultVal());
+    assertEquals(1.0f, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testLongAsFloatDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1L);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0f, field.defaultVal());
+    assertEquals(1.0f, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  public void testDoubleAsFloatDefaultValue() {
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.FLOAT), "doc", 1.0d);
+    assertTrue(field.hasDefaultValue());
+    assertEquals(1.0f, field.defaultVal());
+    assertEquals(1.0f, GenericData.get().getDefaultValue(field));
+  }
 }

@@ -1552,7 +1552,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
     case FIXED:
       return defaultValue.isTextual();
     case INT:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToInt();
     case LONG:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToLong();
     case FLOAT:
     case DOUBLE:
       return defaultValue.isNumber();
