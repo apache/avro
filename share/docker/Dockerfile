@@ -107,6 +107,7 @@ RUN apt-get -qqy update \
                                                  libperl-critic-perl \
                                                  libregexp-common-perl \
                                                  libtest-exception-perl \
+                                                 libtest-pod-perl \
                                                  libtry-tiny-perl \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
@@ -114,6 +115,7 @@ RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
  && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                  Module::Install::Repository \
+                                                 Test::Pod \
  && rm -rf .cpanm
 
 # Install Python packages
