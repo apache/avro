@@ -134,7 +134,6 @@ class GenerateInteropDataCommand(setuptools.Command):
       import avro.test.gen_interop_data
       if not os.path.exists(self.output_path):
         os.makedirs(self.output_path)
-      import pdb; pdb.set_trace()
       avro.test.gen_interop_data.generate(self.schema_file,
                                           os.path.join(self.output_path, 'py.avro'))
 
