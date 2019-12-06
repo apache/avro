@@ -116,9 +116,25 @@ public class JacksonUtils {
         return jsonNode.asInt();
       } else if (schema.getType().equals(Schema.Type.LONG)) {
         return jsonNode.asLong();
+      } else if (schema.getType().equals(Schema.Type.FLOAT)) {
+        return (float) jsonNode.asDouble();
+      } else if (schema.getType().equals(Schema.Type.DOUBLE)) {
+        return jsonNode.asDouble();
       }
     } else if (jsonNode.isLong()) {
-      return jsonNode.asLong();
+      if (schema == null || schema.getType().equals(Schema.Type.LONG)) {
+        return jsonNode.asLong();
+      } else if (schema.getType().equals(Schema.Type.INT)) {
+        if (jsonNode.canConvertToInt()) {
+          return jsonNode.asInt();
+        } else {
+          return jsonNode.asLong();
+        }
+      } else if (schema.getType().equals(Schema.Type.FLOAT)) {
+        return (float) jsonNode.asDouble();
+      } else if (schema.getType().equals(Schema.Type.DOUBLE)) {
+        return jsonNode.asDouble();
+      }
     } else if (jsonNode.isDouble() || jsonNode.isFloat()) {
       if (schema == null || schema.getType().equals(Schema.Type.DOUBLE)) {
         return jsonNode.asDouble();
