@@ -86,7 +86,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer).
-   * 
+   *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
    *                                  Please be noticed that the exception type
@@ -156,13 +156,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
         out.writeInt(((Number) datum).intValue());
         break;
       case LONG:
-        out.writeLong((Long) datum);
+        out.writeLong(((Number) datum).longValue());
         break;
       case FLOAT:
-        out.writeFloat((Float) datum);
+        out.writeFloat(((Number) datum).floatValue());
         break;
       case DOUBLE:
-        out.writeDouble((Double) datum);
+        out.writeDouble(((Number) datum).doubleValue());
         break;
       case BOOLEAN:
         out.writeBoolean((Boolean) datum);
