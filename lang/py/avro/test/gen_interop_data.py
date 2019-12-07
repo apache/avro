@@ -23,7 +23,9 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 
-import avro.datafile, avro.io, avro.schema
+import avro.datafile
+import avro.io
+import avro.schema
 
 CODECS_TO_VALIDATE = ('null', 'deflate')
 
