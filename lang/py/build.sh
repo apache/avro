@@ -40,7 +40,7 @@ main() {
         ./setup.py clean
         rm -rf userlogs/
         ;;
-      generate-interop-data)
+      interop-data-generate)
         ./setup.py generate_interop_data
         ;;
       interop-data-test)
