@@ -37,8 +37,7 @@ Global install:
 you should have message as:
 
 `
-You can invoke the tool using the following command: avrogenms
-
+You can invoke the tool using the following command: avrogenms.
 Tool 'apache.avro.tools' (version '1.10.1-ms') was successfully installed.
 `
 
