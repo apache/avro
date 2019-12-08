@@ -26,12 +26,12 @@ To install the tool:
 
 Local install (on folder "Avro.sampleMultiSchema\tool"):
 
-`> dotnet tool install --tool-path .\tool --add-source C:\workspace\apache.avro\lang\csharp\src\apache\codegen\bin\Debug\ Apache.Avro.Tools --version 1.10.1-ms
+`> dotnet tool install --tool-path .\tool --add-source ..\..\..\..\lang\csharp\src\apache\codegen\bin\Debug\ Apache.Avro.Tools --version 1.10.1-ms
 `
 
 Global install:
 
-`> dotnet tool install --global --add-source C:\workspace\apache.avro\lang\csharp\src\apache\codegen\bin\Debug\ Apache.Avro.Tools --version 1.10.1-ms
+`> dotnet tool install --global --add-source ..\..\..\..\lang\csharp\src\apache\codegen\bin\Debug\ Apache.Avro.Tools --version 1.10.1-ms
 `
 
 you should have message as:
