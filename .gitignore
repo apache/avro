@@ -23,3 +23,5 @@ test-output
 .mypy_cache
 .python-version
 .coverage
+lang/csharp/src/Avro.sampleMultiSchema/tool/
+lang/csharp/src/Avro.sampleMultiSchema/generated/

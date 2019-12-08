@@ -13,6 +13,9 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+   
+   
+  
 -->
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -24,7 +27,7 @@
     <AssemblyName>avrogen</AssemblyName>
     <RootNamespace>Avro.codegen</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
@@ -32,7 +35,7 @@
     <!-- NuGet Package Settings -->
     <PackageId>Apache.Avro.Tools</PackageId>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>avrogen</ToolCommandName>
+    <ToolCommandName>avrogenms</ToolCommandName>
     <Description>
       Avro provides:
 
@@ -42,10 +45,11 @@
       Remote procedure call (RPC).
       Simple integration with dynamic languages. Code generation is not required to read or write data files nor to use or implement RPC protocols. Code generation as an optional optimization, only worth implementing for statically typed languages.
     </Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors />
   </PropertyGroup>
 

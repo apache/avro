@@ -1,0 +1,16 @@
+[{
+"type" : "record",
+"name" : "Car",
+"namespace" : "org.vehicule",
+"fields" :
+	[ 	
+		{ 
+			"name" : "model",
+			 "type" : "com.cars.CarModel" 
+		},
+		{ 
+			"name" : "owner", 
+			"type" : "string"
+		}
+]
+}]

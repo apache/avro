@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -17,6 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Avro
@@ -36,6 +37,7 @@ namespace Avro
             bool? isProtocol = null;
             string inputFile = null;
             string outputDir = null;
+            List<string> inputFiles = new List<string>();
             var namespaceMapping = new Dictionary<string, string>();
             for (int i = 0; i < args.Length; ++i)
             {
@@ -63,6 +65,15 @@ namespace Avro
                     isProtocol = false;
                     inputFile = args[++i];
                 }
+                else if (args[i] == "-ms")
+                {
+                    inputFiles.AddRange(args[++i].Split(new string[] { ",", ";" }, StringSplitOptions.RemoveEmptyEntries));
+                    Console.WriteLine("Schema files to parse:");
+                    foreach (var item in inputFiles)
+                    {
+                        Console.WriteLine(item);
+                    }
+                }
                 else if (args[i] == "--namespace")
                 {
                     if (i + 1 >= args.Length)
@@ -85,6 +96,7 @@ namespace Avro
                 else if (outputDir == null)
                 {
                     outputDir = args[i];
+                    Console.WriteLine($"Files will generated at: {outputDir}");
                 }
                 else
                 {
@@ -95,7 +107,7 @@ namespace Avro
 
             // Ensure we got all the command line arguments we need
             bool isValid = true;
-            if (!isProtocol.HasValue || inputFile == null)
+            if ((!isProtocol.HasValue || inputFile == null) && !inputFiles.Any())
             {
                 Console.WriteLine("Must provide either '-p <protocolfile>' or '-s <schemafile>'");
                 isValid = false;
@@ -106,7 +118,9 @@ namespace Avro
                 isValid = false;
             }
 
-            if (!isValid)
+            if (inputFiles.Any())
+                GenSchema(inputFiles, outputDir, namespaceMapping);
+            else if (!isValid)
                 Usage();
             else if (isProtocol.Value)
                 GenProtocol(inputFile, outputDir, namespaceMapping);
@@ -120,6 +134,7 @@ namespace Avro
                 "Usage:\n" +
                 "  avrogen -p <protocolfile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n" +
                 "  avrogen -s <schemafile> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
+                "  avrogen -ms <schemafiles> <outputdir> [--namespace <my.avro.ns:my.csharp.ns>]\n\n" +
                 "Options:\n" +
                 "  -h --help   Show this screen.\n" +
                 "  --namespace Map an Avro schema/protocol namespace to a C# namespace.\n" +
@@ -160,6 +175,32 @@ namespace Avro
 
                 CodeGen codegen = new CodeGen();
                 codegen.AddSchema(schema);
+
+                foreach (var entry in namespaceMapping)
+                    codegen.NamespaceMapping[entry.Key] = entry.Value;
+
+                codegen.GenerateCode();
+                codegen.WriteTypes(outdir);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception occurred. " + ex.Message);
+            }
+        }
+
+        static void GenSchema(List<string> infiles, string outdir,
+            IEnumerable<KeyValuePair<string, string>> namespaceMapping)
+        {
+            try
+            {
+                var sn = new SchemaNames();
+                CodeGen codegen = new CodeGen();
+                foreach (var infile in infiles)
+                {
+                    string text = System.IO.File.ReadAllText(infile);
+                    Schema schema = Schema.Parse(text, sn);
+                    codegen.AddSchema(schema);
+                }
 
                 foreach (var entry in namespaceMapping)
                     codegen.NamespaceMapping[entry.Key] = entry.Value;

@@ -1,0 +1,16 @@
+[{
+"type" : "record",
+"name" : "CarModel",
+"namespace" : "com.cars",
+"fields" :
+	[ 	
+		{ 
+			"name" : "brand",
+			 "type" : "string" 
+		},
+		{ 
+			"name" : "model", 
+			"type" : "string"
+		}
+	]
+}]

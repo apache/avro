@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="$(ProjectDir)tool\avrogenms -ms $(ProjectDir)avroFiles\schema01.avsc;$(ProjectDir)avroFiles\schema02.avsc $(ProjectDir)generated" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="apache.avro" Version="1.9.1" />
+  </ItemGroup>
+
+</Project>

@@ -211,6 +211,19 @@ namespace Avro
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="schemaNames">schemas already read</param>
+        /// <returns></returns>
+        public static Schema Parse(string json, SchemaNames schemaNames)
+        {
+            if (string.IsNullOrEmpty(json)) throw new ArgumentNullException(nameof(json), "json cannot be null.");
+            return Parse(json.Trim(), schemaNames, null);
+        }
+
+
+        /// <summary>
         /// Parses a JSON string to create a new schema object
         /// </summary>
         /// <param name="json">JSON string</param>
