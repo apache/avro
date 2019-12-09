@@ -62,23 +62,23 @@ public class SpecificCompilerTool implements Tool {
 
     int arg = 0;
 
-    if ("-encoding".equals(args.get(arg))) {
+    if (args.contains("-encoding")) {
       arg++;
       encoding = Optional.of(args.get(arg));
       arg++;
     }
 
-    if ("-string".equals(args.get(arg))) {
+    if (args.contains("-string")) {
       stringType = StringType.String;
       arg++;
     }
 
-    if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
+    if (args.contains("-bigDecimal")) {
       useLogicalDecimal = true;
       arg++;
     }
 
-    if ("-templateDir".equals(args.get(arg))) {
+    if (args.contains("-templateDir")) {
       arg++;
       templateDir = Optional.of(args.get(arg));
       arg++;
