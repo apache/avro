@@ -31,7 +31,7 @@ change_java_version() {
   fi
   echo "  JAVA_HOME=$JAVA_HOME"
   echo "  PATH=$PATH"
-  java -version
+  java -version || true
 }
 
 # Stop here if sourcing for functions
