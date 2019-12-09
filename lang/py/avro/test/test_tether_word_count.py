@@ -81,6 +81,7 @@ def _has_java():
 
 
 @unittest.skipUnless(_has_java(), "No Java runtime present")
+@unittest.skipUnless(os.path.exists(_JAR_PATH), "{} not found".format(_JAR_PATH))
 class TestTetherWordCount(unittest.TestCase):
   """unittest for a python tethered map-reduce job."""
 
