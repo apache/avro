@@ -59,7 +59,7 @@ module Avro
 
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
-          unless name =~ NAME_REGEX
+          if name !~ NAME_REGEX || name =~ /\.\./ # do not allow multiple periods
             raise SchemaParseError, "Name #{name} is invalid for type #{type}!"
           end
           namespace = json_obj.include?('namespace') ? json_obj['namespace'] : default_namespace
