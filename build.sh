@@ -31,7 +31,7 @@ change_java_version() {
   fi
   echo "  JAVA_HOME=$JAVA_HOME"
   echo "  PATH=$PATH"
-  java -version || true
+  java -version
 }
 
 # Stop here if sourcing for functions
@@ -52,16 +52,21 @@ usage() {
 
 (( $# == 0 )) && usage
 
-# Change the JDK from the default.
-# This only occurs when the JAVA environment variable is set and a Java environment exists in
-# the "standard" location (defined by the openjdk docker images).  This will typically occur in CI
-# builds.  In all other cases, the Java version is taken from the current installation for the user.
-change_java_version "$JAVA"
-
 while (( "$#" ))
 do
   target="$1"
   shift
+
+  # Change the JDK from the default for all targets that will eventually require Java (or maven).
+  # This only occurs when the JAVA environment variable is set and a Java environment exists in
+  # the "standard" location (defined by the openjdk docker images).  This will typically occur in CI
+  # builds.  In all other cases, the Java version is taken from the current installation for the user.
+  case "$target" in
+    lint|test|dist|clean|veryclean|rat)
+    change_java_version "$JAVA"
+    ;;
+  esac
+
   case "$target" in
 
     lint)
