@@ -18,37 +18,53 @@
 set -e
 
 usage() {
-  echo "Usage: $0 {lint|test|dist|clean}"
+  echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
   exit 1
 }
 
+clean() {
+  git clean -xdf '*.avpr' \
+                 '*.avsc' \
+                 '*.egg-info' \
+                 '*.py[co]' \
+                 'VERSION.txt' \
+                 '__pycache__' \
+                 'avro/test/interop' \
+                 'dist' \
+                 'userlogs'
+}
+
+dist() {
+  ./setup.py dist
+}
+
+interop-data-generate() {
+  ./setup.py generate_interop_data
+}
+
+interop-data-test() {
+  python -m unittest avro.test.test_datafile_interop
+}
+
+lint() {
+  ./setup.py isort lint
+}
+
+test_() {
+  ./setup.py test
+}
+
 main() {
-  local target
   (( $# )) || usage
   for target; do
     case "$target" in
-      lint)
-        ./setup.py isort lint
-        ;;
-      test)
-        ./setup.py test
-        ;;
-      dist)
-        ./setup.py dist
-        ;;
-      clean)
-        ./setup.py clean
-        rm -rf userlogs/
-        ;;
-      interop-data-generate)
-        ./setup.py generate_interop_data
-        ;;
-      interop-data-test)
-        python -m unittest avro.test.test_datafile_interop
-        ;;
-      *)
-        usage
-        ;;
+      clean) clean;;
+      dist) dist;;
+      interop-data-generate) interop-data-generate;;
+      interop-data-test) interop-data-test;;
+      lint) lint;;
+      test) test_;;
+      *) usage;;
     esac
   done
 }

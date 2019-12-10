@@ -20,7 +20,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import distutils.command.clean
 import distutils.errors
 import glob
 import os
@@ -81,36 +80,6 @@ def _generate_package_data():
         src = os.path.join(*src)
         dst = os.path.join(_AVRO_DIR, *dst)
         distutils.file_util.copy_file(src, dst)
-
-
-class CleanCommand(distutils.command.clean.clean):
-    """A command to clean up install artifacts and replaceable, generated files."""
-
-    def _replaceable(self):
-        """Get the list of files to delete."""
-        for name in ('dist', 'avro.egg-info', os.path.join(_AVRO_DIR, _VERSION_FILE_NAME)):
-            if os.path.exists(name):
-                yield name
-        for root, dirnames, filenames in os.walk(_AVRO_DIR):
-            if '__pycache__' in dirnames:
-                dirnames.remove('__pycache__')
-                yield os.path.join(root, '__pycache__')
-            for name in fnmatch.filter(filenames, '*.avsc'):
-                yield os.path.join(root, name)
-            for name in fnmatch.filter(filenames, '*.py[co]'):
-                yield os.path.join(root, name)
-
-    def run(self):
-        super().run()
-        for name in self._replaceable():
-            if self.dry_run:
-                distutils.log.info('Would remove %s', name)
-            elif os.path.isdir(name):
-                # distutils logs this for us
-                distutils.dir_util.remove_tree(name)
-            else:
-                distutils.log.info('Removing %s', name)
-                os.remove(name)
 
 
 class GenerateInteropDataCommand(setuptools.Command):
@@ -179,7 +148,6 @@ def main():
         _generate_package_data()
 
     setuptools.setup(cmdclass={
-        "clean": CleanCommand,
         "generate_interop_data": GenerateInteropDataCommand,
         "lint": LintCommand,
     })
