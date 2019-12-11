@@ -52,7 +52,7 @@ def print_json_pretty(row):
     """Pretty print JSON"""
     # Need to work around https://bugs.python.org/issue16333
     # where json.dumps leaves trailing spaces.
-    result = json.dumps(row, indent=4).replace(' \n', '\n')
+    result = json.dumps(row, sort_keys=True, indent=4).replace(' \n', '\n')
     print(result)
 
 _write_row = csv.writer(stdout).writerow
