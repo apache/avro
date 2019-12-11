@@ -59,7 +59,7 @@ def _generate_package_data():
     # Create a PEP440 compliant version file.
     version_file_path = os.path.join(share_dir, _VERSION_FILE_NAME)
     with open(version_file_path, 'rb') as vin:
-        version = vin.read().replace('-', '+')
+        version = vin.read().replace(b'-', b'+')
     with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), 'wb') as vout:
         vout.write(version)
 

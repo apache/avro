@@ -51,7 +51,7 @@ lint() {
 }
 
 test_() {
-  ./setup.py test
+  tox
 }
 
 main() {

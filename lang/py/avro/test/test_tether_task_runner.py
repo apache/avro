@@ -28,11 +28,11 @@ import time
 import unittest
 
 import avro.io
+import avro.test.mock_tether_parent
+import avro.test.word_count_task
 import avro.tether.tether_task
 import avro.tether.tether_task_runner
 import avro.tether.util
-import avro.test.mock_tether_parent
-import avro.test.word_count_task
 
 
 class TestTetherTaskRunner(unittest.TestCase):

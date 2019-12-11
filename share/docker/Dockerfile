@@ -64,6 +64,7 @@ RUN apt-get -qqy update \
                                                  ruby-dev \
                                                  source-highlight \
                                                  subversion \
+                                                 tox \
                                                  valgrind \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
