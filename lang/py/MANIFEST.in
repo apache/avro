@@ -1,0 +1,2 @@
+include avro/*.avsc avro/tether/*.avpr 
+include avro/VERSION.txt avro/LICENSE avro/NOTICE

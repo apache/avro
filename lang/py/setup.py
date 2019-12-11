@@ -109,8 +109,8 @@ class GenerateInteropDataCommand(setuptools.Command):
 
 def _get_version():
   curdir = os.getcwd()
-  if os.path.isfile("share/VERSION.txt"):
-    version_file = "share/VERSION.txt"
+  if os.path.isfile("avro/VERSION.txt"):
+    version_file = "avro/VERSION.txt"
   else:
     index = curdir.index("lang/py")
     path = curdir[:index]
