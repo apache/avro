@@ -249,7 +249,7 @@ public class TestSchema {
 
   @Test
   public void testLongDefaultValue() {
-    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1);
+    Schema.Field field = new Schema.Field("myField", Schema.create(Schema.Type.LONG), "doc", 1L);
     assertTrue(field.hasDefaultValue());
     assertEquals(1L, field.defaultVal());
     assertEquals(1L, GenericData.get().getDefaultValue(field));
