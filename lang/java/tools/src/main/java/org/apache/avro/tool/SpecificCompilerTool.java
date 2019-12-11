@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Arrays;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -59,35 +60,32 @@ public class SpecificCompilerTool implements Tool {
     boolean useLogicalDecimal = false;
     Optional<String> encoding = Optional.empty();
     Optional<String> templateDir = Optional.empty();
-
     int arg = 0;
+    int[] positionIndex = new int[4];
 
     if (args.contains("-encoding")) {
       arg = args.indexOf("-encoding") + 1;
       encoding = Optional.of(args.get(arg));
+      positionIndex[0] = arg;
     }
 
     if (args.contains("-string")) {
       stringType = StringType.String;
+      positionIndex[1] = args.indexOf("-string");
     }
 
     if (args.contains("-bigDecimal")) {
       useLogicalDecimal = true;
+      positionIndex[2] = args.indexOf("-bigDecimal");
     }
 
     if (args.contains("-templateDir")) {
       arg = args.indexOf("-templateDir") + 1;
       templateDir = Optional.of(args.get(arg));
+      positionIndex[3] = arg;
     }
 
-    if (args.contains("schema")) {
-      arg = args.indexOf("schema");
-    }
-
-    if (args.contains("protocol")) {
-      arg = args.indexOf("protocol");
-    }
-
+    arg = Arrays.stream(positionIndex).max().getAsInt() + 1;
     String method = args.get(arg);
     List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
