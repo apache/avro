@@ -17,9 +17,10 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM openjdk:8
+# Despite this base, JDK8 is used by default.  See below.
+FROM openjdk:11
 WORKDIR /root
-CMD ["/avro/share/docker/run-tests.sh"]
+
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
     DEBIAN_FRONTEND=noninteractive
 
@@ -47,6 +48,7 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  make \
                                                  maven \
+                                                 openjdk-8-jdk \
                                                  perl \
                                                  python \
                                                  python-pip \
@@ -141,3 +143,19 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
 # Install Ruby modules
 COPY lang/ruby/Gemfile /tmp
 RUN bundle install --gemfile=/tmp/Gemfile
+
+# Note: This "ubertool" container has two JDK versions:
+# - OpenJDK 8 (installed as a package and available at /usr/bin/java)
+# - OpenJDK 11 (installed from the base image, and prioritized in the PATH)
+# - The root build.sh script switches between the versions according to 
+#   the JAVA environment variable.
+
+# Since want the JDK8 as a default, we have to re-prepend it to the PATH.
+# The /usr/local/openjdk-8 link is created to be consistent with the
+# openjdk:8 image.
+
+RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/local/openjdk-8
+ENV JAVA_HOME /usr/local/openjdk-8
+ENV PATH $JAVA_HOME/bin:$PATH
+
+CMD ["/bin/bash", "-i"]
