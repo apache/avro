@@ -23,22 +23,22 @@ from __future__ import absolute_import, division, print_function
 
 import httplib
 import io
+import os
 
 import avro.io
 from avro import protocol, schema
 
-#
-# Constants
-#
 
-# Handshake schema is pulled in during build
-HANDSHAKE_REQUEST_SCHEMA = schema.parse("""
-@HANDSHAKE_REQUEST_SCHEMA@
-""")
+def _load(name):
+  dir_path = os.path.dirname(__file__)
+  rsrc_path = os.path.join(dir_path, name)
+  with open(rsrc_path, 'rb') as f:
+    return f.read()
 
-HANDSHAKE_RESPONSE_SCHEMA = schema.parse("""
-@HANDSHAKE_RESPONSE_SCHEMA@
-""")
+HANDSHAKE_REQUEST_SCHEMA_JSON = _load('HandshakeRequest.avsc')
+HANDSHAKE_RESPONSE_SCHEMA_JSON = _load('HandshakeResponse.avsc')
+HANDSHAKE_REQUEST_SCHEMA = schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
+HANDSHAKE_RESPONSE_SCHEMA = schema.parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
 
 HANDSHAKE_REQUESTOR_WRITER = avro.io.DatumWriter(HANDSHAKE_REQUEST_SCHEMA)
 HANDSHAKE_REQUESTOR_READER = avro.io.DatumReader(HANDSHAKE_RESPONSE_SCHEMA)

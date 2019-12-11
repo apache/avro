@@ -27,12 +27,11 @@ import time
 import unittest
 
 import avro.io
+import avro.test.mock_tether_parent
+import avro.test.word_count_task
 import avro.tether.tether_task
 import avro.tether.util
-import mock_tether_parent
-import set_avro_test_path
 from avro import schema, tether
-from word_count_task import WordCountTask
 
 
 class TestTetherTask(unittest.TestCase):
@@ -44,7 +43,7 @@ class TestTetherTask(unittest.TestCase):
     Test that the thether_task is working. We run the mock_tether_parent in a separate
     subprocess
     """
-    task=WordCountTask()
+    task=avro.test.word_count_task.WordCountTask()
 
     proc=None
     try:
@@ -54,7 +53,7 @@ class TestTetherTask(unittest.TestCase):
       env["PYTHONPATH"]=':'.join(sys.path)
       server_port = avro.tether.util.find_port()
 
-      pyfile=mock_tether_parent.__file__
+      pyfile=avro.test.mock_tether_parent.__file__
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(server_port)])
       input_port = avro.tether.util.find_port()
 

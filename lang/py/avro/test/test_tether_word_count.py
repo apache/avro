@@ -20,7 +20,9 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+import distutils.spawn
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -32,11 +34,17 @@ import avro.datafile
 import avro.io
 import avro.schema
 import avro.tether.tether_task_runner
-import set_avro_test_path
 
-_TOP_DIR = """@TOPDIR@"""
-_AVRO_VERSION = """@AVRO_VERSION@"""
-_JAR_PATH = os.path.abspath(os.path.join(_TOP_DIR, "..", "java", "tools", "target", "avro-tools-{}.jar".format(_AVRO_VERSION)))
+_AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
+
+def _version():
+  with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
+    # Convert it back to the java version
+    return v.read().strip().replace('+', '-')
+
+_AVRO_VERSION = _version()
+_JAR_PATH = os.path.join(os.path.dirname(os.path.dirname(_AVRO_DIR)),
+    "java", "tools", "target", "avro-tools-{}.jar".format(_AVRO_VERSION))
 
 _LINES = ("the quick brown fox jumps over the lazy dog",
           "the cow jumps over the moon",
@@ -56,6 +64,24 @@ _PYTHON_PATH = os.pathsep.join([os.path.dirname(os.path.dirname(avro.__file__)),
                                 os.path.dirname(__file__)])
 
 
+def _has_java():
+  """Detect if this system has a usable java installed.
+
+  On most systems, this is just checking if `java` is in the PATH.
+
+  But macos always has a /usr/bin/java, which does not mean java is installed. If you invoke java on macos and java is not installed, macos will spawn a popup telling you how to install java. This code does additional work around that to be completely automatic.
+  """
+  if platform.system() == "Darwin":
+    try:
+      output = subprocess.check_output("/usr/libexec/java_home", stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+      output = e.output
+    return ("No Java runtime present" not in output)
+  return bool(distutils.spawn.find_executable("java"))
+
+
+@unittest.skipUnless(_has_java(), "No Java runtime present")
+@unittest.skipUnless(os.path.exists(_JAR_PATH), "{} not found".format(_JAR_PATH))
 class TestTetherWordCount(unittest.TestCase):
   """unittest for a python tethered map-reduce job."""
 

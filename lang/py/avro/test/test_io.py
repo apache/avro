@@ -26,7 +26,6 @@ from binascii import hexlify
 from decimal import Decimal
 
 import avro.io
-import set_avro_test_path
 from avro import schema, timezones
 
 SCHEMAS_TO_VALIDATE = (

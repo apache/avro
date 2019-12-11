@@ -27,11 +27,94 @@ import subprocess
 
 import setuptools
 
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_AVRO_DIR = os.path.join(_HERE, 'avro')
+_VERSION_FILE_NAME = 'VERSION.txt'
+
+
+def _is_distribution():
+    """Tests whether setup.py is invoked from a distribution.
+
+    Returns:
+        True if setup.py runs from a distribution.
+        False otherwise, ie. if setup.py runs from a version control work tree.
+    """
+    # If a file PKG-INFO exists as a sibling of setup.py,
+    # assume we are running as source distribution:
+    return os.path.exists(os.path.join(_HERE, 'PKG-INFO'))
+
+
+def _generate_package_data():
+    """Generate package data.
+
+    This data will already exist in a distribution package,
+    so this function only runs for local version control work tree.
+    """
+    distutils.log.info('Generating package data')
+
+    # Avro top-level source directory:
+    root_dir = os.path.dirname(os.path.dirname(_HERE))
+    share_dir = os.path.join(root_dir, 'share')
+
+    # Create a PEP440 compliant version file.
+    version_file_path = os.path.join(share_dir, _VERSION_FILE_NAME)
+    with open(version_file_path, 'rb') as vin:
+        version = vin.read().replace('-', '+')
+    with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), 'wb') as vout:
+        vout.write(version)
+
+    avro_schemas_dir = os.path.join(share_dir, 'schemas', 'org', 'apache', 'avro')
+    ipc_dir = os.path.join(avro_schemas_dir, 'ipc')
+    tether_dir = os.path.join(avro_schemas_dir, 'mapred', 'tether')
+
+    # Copy necessary avsc files:
+    avsc_files = (
+        ((share_dir, 'test', 'schemas', 'interop.avsc'), ('',)),
+        ((ipc_dir, 'HandshakeRequest.avsc'), ('',)),
+        ((ipc_dir, 'HandshakeResponse.avsc'), ('',)),
+        ((tether_dir, 'InputProtocol.avpr'), ('tether',)),
+        ((tether_dir, 'OutputProtocol.avpr'), ('tether',)),
+    )
+
+    for src, dst in avsc_files:
+        src = os.path.join(*src)
+        dst = os.path.join(_AVRO_DIR, *dst)
+        distutils.file_util.copy_file(src, dst)
+
+
+class GenerateInteropDataCommand(setuptools.Command):
+    """A command to generate Avro files for data interop test."""
+
+    user_options = [
+      ('schema-file=', None, 'path to input Avro schema file'),
+      ('output-path=', None, 'path to output Avro data files'),
+    ]
+
+    def initialize_options(self):
+      self.schema_file = os.path.join(_AVRO_DIR, 'interop.avsc')
+      self.output_path = os.path.join(_AVRO_DIR, 'test', 'interop', 'data')
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+      # Late import -- this can only be run when avro is on the pythonpath,
+      # more or less after install.
+      import avro.test.gen_interop_data
+      if not os.path.exists(self.output_path):
+        os.makedirs(self.output_path)
+      avro.test.gen_interop_data.generate(self.schema_file,
+                                          os.path.join(self.output_path, 'py.avro'))
+
 
 def _get_version():
   curdir = os.getcwd()
-  version_file = ("VERSION.txt" if os.path.isfile("VERSION.txt")
-    else os.path.join(curdir[:curdir.index("lang/py")], "share/VERSION.txt"))
+  if os.path.isfile("share/VERSION.txt"):
+    version_file = "share/VERSION.txt"
+  else:
+    index = curdir.index("lang/py")
+    path = curdir[:index]
+    version_file = os.path.join(path, "share/VERSION.txt")
   with open(version_file) as verfile:
     # To follow the naming convention defined by PEP 440
     # in the case that the version is like "x.y.z-SNAPSHOT"
@@ -41,7 +124,7 @@ def _get_version():
 class LintCommand(setuptools.Command):
     """Run pycodestyle on all your modules"""
     description = __doc__
-    user_options = []
+    user_options = []  # type: ignore
 
     def initialize_options(self):
         pass
@@ -60,33 +143,15 @@ class LintCommand(setuptools.Command):
         if p.wait():
             raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
 
+def main():
+    if not _is_distribution():
+        _generate_package_data()
 
-setuptools.setup(
-  name = 'avro',
-  version = _get_version(),
-  packages = ['avro'],
-  package_dir = {'': 'src'},
-  scripts = ["./scripts/avro"],
-  setup_requires = [
-    'isort',
-    'pycodestyle',
-  ],
-  cmdclass={
-      "lint": LintCommand,
-  },
+    setuptools.setup(cmdclass={
+        "generate_interop_data": GenerateInteropDataCommand,
+        "lint": LintCommand,
+    })
 
-  #include_package_data=True,
-  package_data={'avro': ['LICENSE', 'NOTICE']},
 
-  # metadata for upload to PyPI
-  author = 'Apache Avro',
-  author_email = 'dev@avro.apache.org',
-  description = 'Avro is a serialization and RPC framework.',
-  license = 'Apache License 2.0',
-  keywords = 'avro serialization rpc',
-  url = 'https://avro.apache.org/',
-  extras_require = {
-    'snappy': ['python-snappy'],
-    'zstandard': ['zstandard'],
-  },
-)
+if __name__ == '__main__':
+    main()

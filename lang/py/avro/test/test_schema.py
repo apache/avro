@@ -25,7 +25,6 @@ import json
 import unittest
 import warnings
 
-import set_avro_test_path
 from avro import schema
 
 

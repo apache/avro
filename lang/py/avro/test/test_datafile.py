@@ -22,7 +22,6 @@ from __future__ import absolute_import, division, print_function
 import os
 import unittest
 
-import set_avro_test_path
 from avro import datafile, io, schema
 
 SCHEMAS_TO_VALIDATE = (
