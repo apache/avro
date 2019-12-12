@@ -18,6 +18,7 @@
 package org.apache.avro.util;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.io.BinaryData;
@@ -61,8 +62,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
 
   public Utf8(Utf8 other) {
     this.length = other.length;
-    this.bytes = new byte[other.length];
-    System.arraycopy(other.bytes, 0, this.bytes, 0, this.length);
+    this.bytes = Arrays.copyOf(other.bytes, other.length);
     this.string = other.string;
   }
 
@@ -113,9 +113,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
       throw new AvroRuntimeException("String length " + newLength + " exceeds maximum allowed");
     }
     if (this.bytes.length < newLength) {
-      byte[] newBytes = new byte[newLength];
-      System.arraycopy(bytes, 0, newBytes, 0, this.length);
-      this.bytes = newBytes;
+      this.bytes = Arrays.copyOf(this.bytes, newLength);
     }
     this.length = newLength;
     this.string = null;
