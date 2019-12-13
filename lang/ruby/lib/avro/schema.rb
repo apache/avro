@@ -29,7 +29,7 @@ module Avro
     NAMED_TYPES_SYM     = Set.new(NAMED_TYPES.map(&:to_sym))
     VALID_TYPES_SYM     = Set.new(VALID_TYPES.map(&:to_sym))
 
-    NAME_REGEX = /^[A-Za-z_][A-Za-z0-9_.]*$/
+    NAME_REGEX = /^([A-Za-z_][A-Za-z0-9_]*)(\.([A-Za-z_][A-Za-z0-9_]*))*$/
 
     INT_MIN_VALUE = -(1 << 31)
     INT_MAX_VALUE = (1 << 31) - 1
@@ -59,7 +59,7 @@ module Avro
 
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
-          if name !~ NAME_REGEX || name =~ /\.\./ # do not allow multiple periods
+          if name !~ NAME_REGEX
             raise SchemaParseError, "Name #{name} is invalid for type #{type}!"
           end
           namespace = json_obj.include?('namespace') ? json_obj['namespace'] : default_namespace
