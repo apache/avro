@@ -48,6 +48,16 @@ import warnings
 
 from avro import constants
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
+try:
+  basestring  # type: ignore
+except NameError:
+  basestring = (bytes, unicode)
+
 #
 # Constants
 #

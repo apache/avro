@@ -45,7 +45,7 @@ if (inputProtocol is None):
   if not(os.path.exists(pfile)):
     raise Exception("Could not locate the InputProtocol: {0} does not exist".format(pfile))
 
-  with file(pfile,'r') as hf:
+  with open(pfile,'r') as hf:
     prototxt=hf.read()
 
   inputProtocol=protocol.parse(prototxt)
@@ -61,7 +61,7 @@ if (outputProtocol is None):
   if not(os.path.exists(pfile)):
     raise Exception("Could not locate the OutputProtocol: {0} does not exist".format(pfile))
 
-  with file(pfile,'r') as hf:
+  with open(pfile,'r') as hf:
     prototxt=hf.read()
 
   outputProtocol=protocol.parse(prototxt)
@@ -466,10 +466,14 @@ class TetherTask(object):
     """
     self.log.error("TetherTask.fail: failure occured message follows:\n{0}".format(message))
     try:
-      self.outputClient.request("fail",{"message":message})
+      message = message.decode()
+    except AttributeError:
+      pass
+
+    try:
+      self.outputClient.request("fail", {"message": message})
     except Exception as e:
-      estr=traceback.format_exc()
-      self.log.error("TetherTask.fail: an exception occured while trying to send the fail message to the output server:\n{0}".format(estr))
+      self.log.exception("TetherTask.fail: an exception occured while trying to send the fail message to the output server.")
 
     self.close()
 

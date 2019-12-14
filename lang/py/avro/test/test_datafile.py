@@ -24,19 +24,27 @@ import unittest
 
 from avro import datafile, io, schema
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
+
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
   ('"boolean"', True),
   ('"string"', unicode('adsfasdf09809dsf-=adsf')),
-  ('"bytes"', '12345abcd'),
+  ('"bytes"', b'12345abcd'),
   ('"int"', 1234),
   ('"long"', 1234),
   ('"float"', 1234.0),
   ('"double"', 1234.0),
-  ('{"type": "fixed", "name": "Test", "size": 1}', 'B'),
+  ('{"type": "fixed", "name": "Test", "size": 1}', b'B'),
   ('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', 'B'),
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
-  ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),
+  ('{"type": "map", "values": "long"}', {unicode('a'): 1,
+                                         unicode('b'): 3,
+                                         unicode('c'): 2}),
   ('["string", "null", "long"]', None),
   ("""\
    {"type": "record",
@@ -52,7 +60,7 @@ SCHEMAS_TO_VALIDATE = (
                           "name": "Cons",
                           "fields": [{"name": "car", "type": "Lisp"},
                                      {"name": "cdr", "type": "Lisp"}]}]}]}
-   """, {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
+   """, {'value': {'car': {'value': unicode('head')}, 'cdr': {'value': None}}}),
 )
 
 FILENAME = 'test_datafile.out'
@@ -68,7 +76,6 @@ try:
 except ImportError:
   print('Zstandard not present, will skip testing it.')
 
-# TODO(hammer): clean up written files with ant, not os.remove
 class TestDataFile(unittest.TestCase):
   def test_round_trip(self):
     print('')
@@ -186,8 +193,8 @@ class TestDataFile(unittest.TestCase):
     sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
     schema_object = schema.parse(sample_schema)
     with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
-      dfw.set_meta('test.string', 'foo')
-      dfw.set_meta('test.number', '1')
+      dfw.set_meta('test.string', b'foo')
+      dfw.set_meta('test.number', b'1')
       dfw.append(sample_datum)
     self.assertTrue(writer.closed)
 
@@ -196,8 +203,8 @@ class TestDataFile(unittest.TestCase):
     reader = open(FILENAME, 'rb')
     datum_reader = io.DatumReader()
     with datafile.DataFileReader(reader, datum_reader) as dfr:
-      self.assertEquals('foo', dfr.get_meta('test.string'))
-      self.assertEquals('1', dfr.get_meta('test.number'))
+      self.assertEquals(b'foo', dfr.get_meta('test.string'))
+      self.assertEquals(b'1', dfr.get_meta('test.number'))
       for datum in dfr:
         datums.append(datum)
     self.assertTrue(reader.closed)

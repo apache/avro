@@ -27,6 +27,16 @@ import warnings
 
 from avro import schema
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
+try:
+  basestring  # type: ignore
+except NameError:
+  basestring = (bytes, unicode)
+
 
 class TestSchema(object):
   """A proxy for a schema string that provides useful test metadata."""
@@ -374,16 +384,10 @@ class TestMisc(unittest.TestCase):
 
   def test_exception_is_not_swallowed_on_parse_error(self):
     """A specific exception message should appear on a json parse error."""
-    try:
-        schema.parse('/not/a/real/file')
-        caught_exception = False
-    except schema.SchemaParseException as e:
-        expected_message = 'Error parsing JSON: /not/a/real/file, error = ' \
-                           'No JSON object could be decoded'
-        self.assertEqual(expected_message, e.args[0])
-        caught_exception = True
-
-    self.assertTrue(caught_exception, 'Exception was not caught')
+    self.assertRaisesRegexp(schema.SchemaParseException,
+                            r'Error parsing JSON: /not/a/real/file',
+                            schema.parse,
+                            '/not/a/real/file')
 
   def test_decimal_valid_type(self):
     fixed_decimal_schema = ValidTestSchema({
@@ -462,7 +466,7 @@ class SchemaParseTestCase(unittest.TestCase):
       actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
       if self.test_schema.warnings:
         expected_messages = [str(w) for w in self.test_schema.warnings]
-        self.assertItemsEqual(actual_messages, expected_messages)
+        self.assertEqual(actual_messages, expected_messages)
       else:
         self.assertEqual(actual_messages, [])
 

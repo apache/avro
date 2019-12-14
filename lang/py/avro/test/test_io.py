@@ -28,16 +28,21 @@ from decimal import Decimal
 import avro.io
 from avro import schema, timezones
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
 SCHEMAS_TO_VALIDATE = (
   ('"null"', None),
   ('"boolean"', True),
-  ('"string"', u'adsfasdf09809dsf-=adsf'),
-  ('"bytes"', '12345abcd'),
+  ('"string"', unicode('adsfasdf09809dsf-=adsf')),
+  ('"bytes"', b'12345abcd'),
   ('"int"', 1234),
   ('"long"', 1234),
   ('"float"', 1234.0),
   ('"double"', 1234.0),
-  ('{"type": "fixed", "name": "Test", "size": 1}', 'B'),
+  ('{"type": "fixed", "name": "Test", "size": 1}', b'B'),
   ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 4}',
    Decimal('3.1415')),
   ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 4}',
@@ -46,7 +51,9 @@ SCHEMAS_TO_VALIDATE = (
   ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', Decimal('-3.1415')),
   ('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', 'B'),
   ('{"type": "array", "items": "long"}', [1, 3, 2]),
-  ('{"type": "map", "values": "long"}', {'a': 1, 'b': 3, 'c': 2}),
+  ('{"type": "map", "values": "long"}', {unicode('a'): 1,
+                                         unicode('b'): 3,
+                                         unicode('c'): 2}),
   ('["string", "null", "long"]', None),
   ('{"type": "int", "logicalType": "date"}', datetime.date(2000, 1, 1)),
   ('{"type": "int", "logicalType": "time-millis"}', datetime.time(23, 59, 59, 999000)),
@@ -94,19 +101,19 @@ SCHEMAS_TO_VALIDATE = (
                           "name": "Cons",
                           "fields": [{"name": "car", "type": "Lisp"},
                                      {"name": "cdr", "type": "Lisp"}]}]}]}
-   """, {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
+   """, {'value': {'car': {'value': unicode('head')}, 'cdr': {'value': None}}}),
 )
 
 BINARY_ENCODINGS = (
-  (0, '00'),
-  (-1, '01'),
-  (1, '02'),
-  (-2, '03'),
-  (2, '04'),
-  (-64, '7f'),
-  (64, '80 01'),
-  (8192, '80 80 01'),
-  (-8193, '81 80 01'),
+  (0, b'00'),
+  (-1, b'01'),
+  (1, b'02'),
+  (-2, b'03'),
+  (2, b'04'),
+  (-64, b'7f'),
+  (64, b'80 01'),
+  (8192, b'80 80 01'),
+  (-8193, b'81 80 01'),
 )
 
 DEFAULT_VALUE_EXAMPLES = (
@@ -121,7 +128,8 @@ DEFAULT_VALUE_EXAMPLES = (
   ('{"type": "fixed", "name": "F", "size": 2}', '"\u00FF\u00FF"', u'\xff\xff'),
   ('{"type": "enum", "name": "F", "symbols": ["FOO", "BAR"]}', '"FOO"', 'FOO'),
   ('{"type": "array", "items": "int"}', '[1, 2, 3]', [1, 2, 3]),
-  ('{"type": "map", "values": "int"}', '{"a": 1, "b": 2}', {'a': 1, 'b': 2}),
+  ('{"type": "map", "values": "int"}', '{"a": 1, "b": 2}', {unicode('a'): 1,
+                                                            unicode('b'): 2}),
   ('["int", "null"]', '5', 5),
   ('{"type": "record", "name": "F", "fields": [{"name": "A", "type": "int"}]}',
    '{"A": 5}', {'A': 5}),
@@ -142,13 +150,13 @@ LONG_RECORD_DATUM = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7}
 
 def avro_hexlify(reader):
   """Return the hex value, as a string, of a binary-encoded int or long."""
-  bytes = []
+  b = []
   current_byte = reader.read(1)
-  bytes.append(hexlify(current_byte))
+  b.append(hexlify(current_byte))
   while (ord(current_byte) & 0x80) != 0:
     current_byte = reader.read(1)
-    bytes.append(hexlify(current_byte))
-  return ' '.join(bytes)
+    b.append(hexlify(current_byte))
+  return b' '.join(b)
 
 def print_test_name(test_name):
   print('')

@@ -21,18 +21,27 @@
 
 from __future__ import absolute_import, division, print_function
 
-import httplib
 import io
 import os
 
 import avro.io
 from avro import protocol, schema
 
+try:
+  import httplib  # type: ignore
+except ImportError:
+  import http.client as httplib  # type: ignore
+
+try:
+  unicode
+except NameError:
+  unicode = str
+
 
 def _load(name):
   dir_path = os.path.dirname(__file__)
   rsrc_path = os.path.join(dir_path, name)
-  with open(rsrc_path, 'rb') as f:
+  with open(rsrc_path, 'r') as f:
     return f.read()
 
 HANDSHAKE_REQUEST_SCHEMA_JSON = _load('HandshakeRequest.avsc')
@@ -368,7 +377,7 @@ class Responder(object):
 
   def write_error(self, writers_schema, error_exception, encoder):
     datum_writer = avro.io.DatumWriter(writers_schema)
-    datum_writer.write(str(error_exception), encoder)
+    datum_writer.write(unicode(error_exception), encoder)
 
 #
 # Utility classes
@@ -388,7 +397,7 @@ class FramedReader(object):
       buffer = io.BytesIO()
       buffer_length = self._read_buffer_length()
       if buffer_length == 0:
-        return ''.join(message)
+        return b''.join(message)
       while buffer.tell() < buffer_length:
         chunk = self.reader.read(buffer_length - buffer.tell())
         if chunk == '':
