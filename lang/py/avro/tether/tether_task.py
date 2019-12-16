@@ -294,9 +294,9 @@ class TetherTask(object):
       raise NotImplementedError("Only http protocol is currently supported")
 
     try:
-      self.outputClient.request('configure',{"port":inputport})
-    except Exception as e:
-      estr= traceback.format_exc()
+      self.outputClient.request('configure', {"port": inputport})
+    except Exception:
+      estr = traceback.format_exc()
       self.fail(estr)
 
 

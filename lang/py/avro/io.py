@@ -72,6 +72,9 @@ except NameError:
 # Constants
 #
 
+_DEBUG_VALIDATE_INDENT = 0
+_DEBUG_VALIDATE = False
+
 INT_MIN_VALUE = -(1 << 31)
 INT_MAX_VALUE = (1 << 31) - 1
 LONG_MIN_VALUE = -(1 << 63)
@@ -148,6 +151,7 @@ _valid = {
                          (isinstance(d, Decimal) and
                           getattr(s, 'logical_type', None) == constants.DECIMAL)),
   'enum': lambda s, d: d in s.symbols,
+
   'array': lambda s, d: isinstance(d, list) and all(validate(s.items, item) for item in d),
   'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, unicode) for key in d)
                        and all(validate(s.values, value) for value in d.values())),
@@ -160,7 +164,6 @@ _valid['double'] = _valid['float']
 _valid['error_union'] = _valid['union']
 _valid['error'] = _valid['request'] = _valid['record']
 
-
 def validate(expected_schema, datum):
   """Determines if a python datum is an instance of a schema.
 
@@ -170,11 +173,28 @@ def validate(expected_schema, datum):
   Returns:
     True if the datum is an instance of the schema.
   """
+  global _DEBUG_VALIDATE_INDENT
+  global _DEBUG_VALIDATE
   expected_type = expected_schema.type
-  try:
-    return _valid[expected_type](expected_schema, datum)
-  except KeyError:
-    raise AvroTypeException('Unknown Avro schema type: {!r}'.format(expected_type))
+  name = getattr(expected_schema, 'name', '')
+  if name:
+    name = ' ' + name
+  if expected_type in ('array', 'map', 'union', 'record'):
+    if _DEBUG_VALIDATE:
+      print('{!s}{!s}{!s}: {!s} {{'.format(' ' * _DEBUG_VALIDATE_INDENT, expected_schema.type, name, type(datum).__name__), file=sys.stderr)
+      _DEBUG_VALIDATE_INDENT += 2
+      if datum is not None and not datum:
+        print('{!s}<Empty>'.format(' ' * _DEBUG_VALIDATE_INDENT), file=sys.stderr)
+    result = _valid[expected_type](expected_schema, datum)
+    if _DEBUG_VALIDATE:
+      _DEBUG_VALIDATE_INDENT -= 2
+      print('{!s}}} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT, result), file=sys.stderr)
+  else:
+    result = _valid[expected_type](expected_schema, datum)
+    if _DEBUG_VALIDATE:
+      print('{!s}{!s}{!s}: {!s} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT, expected_schema.type, name, type(datum).__name__, result), file=sys.stderr)
+  return result
+
 
 #
 # Decoder/Encoder
