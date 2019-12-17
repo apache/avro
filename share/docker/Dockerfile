@@ -74,7 +74,7 @@ RUN curl -sSL https://deb.nodesource.com/setup_6.x \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists \
- && npm install -g grunt-cli \
+ && npm install -g grunt-cli jshint \
  && npm cache clean
 
 # Install PHP
