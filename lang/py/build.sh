@@ -40,10 +40,12 @@ dist() {
 
 interop-data-generate() {
   ./setup.py generate_interop_data
-  cp avro/test/interop/data/* ../../build/interop/data/
+  cp -r avro/test/interop/data ../../build/interop
 }
 
 interop-data-test() {
+  mkdir -p avro/test/interop ../../build/interop/data
+  cp -r ../../build/interop/data avro/test/interop
   python -m unittest avro.test.test_datafile_interop
 }
 
