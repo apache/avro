@@ -411,7 +411,7 @@ BlockEncoder.getDefaultCodecs = function () {
 
 BlockEncoder.prototype.getDownstream = function () {
   return this._downstream;
-}
+};
 
 BlockEncoder.prototype._write = function (val, encoding, cb) {
   var codec = this._codec;

@@ -19,6 +19,7 @@
 package org.apache.avro;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -34,13 +35,18 @@ public class LogicalTypes {
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES = new ConcurrentHashMap<>();
 
+  /**
+   * Register a logical type.
+   *
+   * @param logicalTypeName The logical type name
+   * @param factory         The logical type factory
+   *
+   * @throws NullPointerException if {@code logicalTypeName} or {@code factory} is
+   *                              {@code null}
+   */
   public static void register(String logicalTypeName, LogicalTypeFactory factory) {
-    if (logicalTypeName == null) {
-      throw new NullPointerException("Invalid logical type name: null");
-    }
-    if (factory == null) {
-      throw new NullPointerException("Invalid logical type factory: null");
-    }
+    Objects.requireNonNull(logicalTypeName, "Logical type name cannot be null");
+    Objects.requireNonNull(factory, "Logical type factory cannot be null");
     REGISTERED_TYPES.put(logicalTypeName, factory);
   }
 
@@ -259,10 +265,7 @@ public class LogicalTypes {
         return Integer.MAX_VALUE;
       } else if (schema.getType() == Schema.Type.FIXED) {
         int size = schema.getFixedSize();
-        return Math.round( // convert double to long
-            Math.floor(Math.log10( // number of base-10 digits
-                Math.pow(2, 8 * size - 1) - 1) // max value stored
-            ));
+        return Math.round(Math.floor(Math.log10(2) * (8 * size - 1)));
       } else {
         // not valid for any other type
         return 0;

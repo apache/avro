@@ -19,21 +19,20 @@
 
 from __future__ import absolute_import, division, print_function
 
+import io
 import logging
 import os
-import StringIO
 import subprocess
 import sys
 import time
 import unittest
 
+import avro.io
 import avro.tether.tether_task
 import avro.tether.tether_task_runner
 import avro.tether.util
-import mock_tether_parent
-import set_avro_test_path
-from avro import io as avio
-from word_count_task import WordCountTask
+import avro.test.mock_tether_parent
+import avro.test.word_count_task
 
 
 class TestTetherTaskRunner(unittest.TestCase):
@@ -50,7 +49,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       env["PYTHONPATH"]=':'.join(sys.path)
       parent_port = avro.tether.util.find_port()
 
-      pyfile=mock_tether_parent.__file__
+      pyfile=avro.test.mock_tether_parent.__file__
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
       input_port = avro.tether.util.find_port()
 
@@ -59,7 +58,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       # so we give the subprocess time to start up
       time.sleep(1)
 
-      runner = avro.tether.tether_task_runner.TaskRunner(WordCountTask())
+      runner = avro.tether.tether_task_runner.TaskRunner(avro.test.word_count_task.WordCountTask())
 
       runner.start(outputport=parent_port,join=False)
 
@@ -79,9 +78,9 @@ class TestTetherTaskRunner(unittest.TestCase):
 
       # Serialize some data so we can send it to the input function
       datum="This is a line of text"
-      writer = StringIO.StringIO()
-      encoder = avio.BinaryEncoder(writer)
-      datum_writer = avio.DatumWriter(runner.task.inschema)
+      writer = io.BytesIO()
+      encoder = avro.io.BinaryEncoder(writer)
+      datum_writer = avro.io.DatumWriter(runner.task.inschema)
       datum_writer.write(datum, encoder)
 
       writer.seek(0)
@@ -100,9 +99,9 @@ class TestTetherTaskRunner(unittest.TestCase):
 
       #Serialize some data so we can send it to the input function
       datum={"key":"word","value":2}
-      writer = StringIO.StringIO()
-      encoder = avio.BinaryEncoder(writer)
-      datum_writer = avio.DatumWriter(runner.task.midschema)
+      writer = io.BytesIO()
+      encoder = avro.io.BinaryEncoder(writer)
+      datum_writer = avro.io.DatumWriter(runner.task.midschema)
       datum_writer.write(datum, encoder)
 
       writer.seek(0)
@@ -154,7 +153,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       env["PYTHONPATH"]=':'.join(sys.path)
       parent_port = avro.tether.util.find_port()
 
-      pyfile=mock_tether_parent.__file__
+      pyfile=avro.test.mock_tether_parent.__file__
       proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
 
       #Possible race condition? when we start tether_task_runner it will call
@@ -167,7 +166,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       env={"AVRO_TETHER_OUTPUT_PORT":"{0}".format(parent_port)}
       env["PYTHONPATH"]=':'.join(sys.path)
 
-      runnerproc = subprocess.Popen(["python", avro.tether.tether_task_runner.__file__, "word_count_task.WordCountTask"],env=env)
+      runnerproc = subprocess.Popen(["python", avro.tether.tether_task_runner.__file__, "avro.test.word_count_task.WordCountTask"], env=env)
 
       #possible race condition wait for the process to start
       time.sleep(1)

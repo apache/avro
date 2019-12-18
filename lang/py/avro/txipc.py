@@ -19,9 +19,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import io
+
 from zope.interface import implements
 
-from avro import io, ipc
+import avro.io
+from avro import ipc
 from twisted.internet.defer import Deferred, maybeDeferred
 from twisted.internet.protocol import Protocol
 from twisted.web import resource, server
@@ -29,18 +32,13 @@ from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
 from twisted.web.iweb import IBodyProducer
 
-try:
-  from cStringIO import StringIO
-except ImportError:
-  from StringIO import StringIO
-
 
 class TwistedRequestor(ipc.BaseRequestor):
   """A Twisted-compatible requestor. Returns a Deferred that will fire with the
      returning value, instead of blocking until the request completes."""
   def _process_handshake(self, call_response, message_name, request_datum):
     # process the handshake and call response
-    buffer_decoder = io.BinaryDecoder(StringIO(call_response))
+    buffer_decoder = avro.io.BinaryDecoder(io.BytesIO(call_response))
     call_response_exists = self.read_handshake_response(buffer_decoder)
     if call_response_exists:
       return self.read_call_response(message_name, buffer_decoder)

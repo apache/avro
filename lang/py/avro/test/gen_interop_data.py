@@ -23,7 +23,9 @@ from __future__ import absolute_import, division, print_function
 import os
 import sys
 
-from avro import datafile, io, schema
+import avro.datafile
+import avro.io
+import avro.schema
 
 CODECS_TO_VALIDATE = ('null', 'deflate')
 
@@ -41,7 +43,7 @@ except ImportError:
 DATUM = {
   'intField': 12,
   'longField': 15234324,
-  'stringField': unicode('hey'),
+  'stringField': 'hey',
   'boolField': True,
   'floatField': 1234.0,
   'doubleField': -1234.0,
@@ -55,16 +57,18 @@ DATUM = {
   'recordField': {'label': 'blah', 'children': [{'label': 'inner', 'children': []}]},
 }
 
-if __name__ == "__main__":
+def generate(schema_path, output_path):
   for codec in CODECS_TO_VALIDATE:
-    interop_schema = schema.parse(open(sys.argv[1], 'r').read())
-    filename = sys.argv[2]
+    with open(schema_path, 'rb') as schema_file:
+      interop_schema = avro.schema.parse(schema_file.read())
+    filename = output_path
     if codec != 'null':
-      base, ext = os.path.splitext(filename)
+      base, ext = os.path.splitext(output_path)
       filename = base + "_" + codec + ext
-    writer = open(filename, 'wb')
-    datum_writer = io.DatumWriter()
-    # NB: not using compression
-    dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema, codec=codec)
-    dfw.append(DATUM)
-    dfw.close()
+    with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),
+                                      interop_schema, codec=codec) as dfw:
+      # NB: not using compression
+      dfw.append(DATUM)
+
+if __name__ == "__main__":
+  generate(sys.argv[1], sys.argv[2])

@@ -20,6 +20,7 @@ package org.apache.avro.io;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -74,14 +75,12 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * @param reader The reader's schema. Cannot be null.
    * @return The opaque resolver.
    * @throws IOException
+   * @throws NullPointerException if {@code writer} or {@code reader} is
+   *                              {@code null}
    */
   public static Object resolve(Schema writer, Schema reader) throws IOException {
-    if (null == writer) {
-      throw new NullPointerException("writer cannot be null!");
-    }
-    if (null == reader) {
-      throw new NullPointerException("reader cannot be null!");
-    }
+    Objects.requireNonNull(writer, "Writer schema cannot be null");
+    Objects.requireNonNull(reader, "Reader schema cannot be null");
     return new ResolvingGrammarGenerator().generate(writer, reader);
   }
 

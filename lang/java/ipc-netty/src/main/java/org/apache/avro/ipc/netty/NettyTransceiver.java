@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -170,13 +171,13 @@ public class NettyTransceiver extends Transceiver {
    *                                    Channel.
    * @param nettyClientBootstrapOptions map of Netty ClientBootstrap options to
    *                                    use.
-   * @throws IOException if an error occurs connecting to the given address.
+   * @throws IOException          if an error occurs connecting to the given
+   *                              address.
+   * @throws NullPointerException if {@code channelFactory} is {@code null}
    */
   public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory,
       Map<String, Object> nettyClientBootstrapOptions) throws IOException {
-    if (channelFactory == null) {
-      throw new NullPointerException("channelFactory is null");
-    }
+    Objects.requireNonNull(channelFactory, "channelFactory cannot be null");
 
     // Set up.
     this.channelFactory = channelFactory;

@@ -22,10 +22,12 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
@@ -412,9 +414,8 @@ public class SchemaBuilder {
     private String[] aliases;
 
     protected NamedBuilder(NameContext names, String name) {
-      checkRequired(name, "Type must have a name");
+      this.name = Objects.requireNonNull(name, "Type must have a name");
       this.names = names;
-      this.name = name;
     }
 
     /** configure this type's optional documentation string **/
@@ -1313,7 +1314,7 @@ public class SchemaBuilder {
   /** A special builder for unions. Unions cannot nest unions directly **/
   private static final class UnionBuilder<R> extends BaseTypeBuilder<UnionAccumulator<R>> {
     private UnionBuilder(Completion<R> context, NameContext names) {
-      this(context, names, new ArrayList<>());
+      this(context, names, Collections.emptyList());
     }
 
     private static <R> UnionBuilder<R> create(Completion<R> context, NameContext names) {
@@ -1783,7 +1784,7 @@ public class SchemaBuilder {
     }
 
     private <C> UnionCompletion<C> completion(Completion<C> context) {
-      return new UnionCompletion<>(context, names, new ArrayList<>());
+      return new UnionCompletion<>(context, names, Collections.emptyList());
     }
   }
 
@@ -2689,12 +2690,6 @@ public class SchemaBuilder {
     public R endUnion() {
       Schema schema = Schema.createUnion(schemas);
       return context.complete(schema);
-    }
-  }
-
-  private static void checkRequired(Object reference, String errorMessage) {
-    if (reference == null) {
-      throw new NullPointerException(errorMessage);
     }
   }
 

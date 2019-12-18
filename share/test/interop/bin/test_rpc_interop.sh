@@ -24,11 +24,11 @@ VERSION=`cat share/VERSION.txt`
 java_client="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcsend"
 java_server="java -jar lang/java/tools/target/avro-tools-$VERSION.jar rpcreceive"
 
-py_client="env PYTHONPATH=lang/py/build/src python lang/py/build/src/avro/tool.py rpcsend"
-py_server="env PYTHONPATH=lang/py/build/src python lang/py/build/src/avro/tool.py rpcreceive"
+py_client="env PYTHONPATH=lang/py python -m avro.tool rpcsend"
+py_server="env PYTHONPATH=lang/py python -m avro.tool rpcreceive"
 
-py3_client="env PYTHONPATH=lang/py3 python3 lang/py3/avro/tool.py rpcsend"
-py3_server="env PYTHONPATH=lang/py3 python3 lang/py3/avro/tool.py rpcreceive"
+py3_client="env PYTHONPATH=lang/py3 python3 -m avro.tool rpcsend"
+py3_server="env PYTHONPATH=lang/py3 python3 -m avro.tool rpcreceive"
 
 ruby_client="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcsend"
 ruby_server="ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb rpcreceive"
@@ -40,7 +40,7 @@ proto=share/test/schemas/simple.avpr
 
 portfile=/tmp/interop_$$
 
-function cleanup() {
+cleanup() {
   rm -rf "$portfile"
   for job in `jobs -p` ; do
     kill $(jobs -p) 2>/dev/null || true;

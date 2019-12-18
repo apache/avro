@@ -25,12 +25,15 @@ NOTE: The API for the command-line tool is experimental.
 
 from __future__ import absolute_import, division, print_function
 
+import os.path
 import sys
 import threading
 import urlparse
+import warnings
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
-from avro import datafile, io, ipc, protocol
+import avro.io
+from avro import datafile, ipc, protocol
 
 
 class GenericResponder(ipc.Responder):
@@ -101,7 +104,7 @@ def main(args=sys.argv):
     if len(args) != 3:
       print("Usage: %s dump input_file" % args[0])
       return 1
-    for d in datafile.DataFileReader(file_or_stdin(args[2]), io.DatumReader()):
+    for d in datafile.DataFileReader(file_or_stdin(args[2]), avro.io.DatumReader()):
       print(repr(d))
   elif args[1] == "rpcreceive":
     usage_str = "Usage: %s rpcreceive uri protocol_file " % args[0]
@@ -114,7 +117,7 @@ def main(args=sys.argv):
     if len(args) > 5:
       if args[5] == "-file":
         reader = open(args[6], 'rb')
-        datum_reader = io.DatumReader()
+        datum_reader = avro.io.DatumReader()
         dfr = datafile.DataFileReader(reader, datum_reader)
         datum = next(dfr)
       elif args[5] == "-data":
@@ -135,7 +138,7 @@ def main(args=sys.argv):
     if len(args) > 5:
       if args[5] == "-file":
         reader = open(args[6], 'rb')
-        datum_reader = io.DatumReader()
+        datum_reader = avro.io.DatumReader()
         dfr = datafile.DataFileReader(reader, datum_reader)
         datum = next(dfr)
       elif args[5] == "-data":
@@ -148,4 +151,7 @@ def main(args=sys.argv):
   return 0
 
 if __name__ == "__main__":
+  if os.path.dirname(avro.io.__file__) in sys.path:
+    warnings.warn("Invoking avro/tool.py directly is likely to lead to a name collision with the python io module. Try doing `python -m avro.tool` instead.")
+
   sys.exit(main(sys.argv))

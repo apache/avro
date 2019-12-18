@@ -20,15 +20,14 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
-import io as pyio
+import io
 import logging
 import os
 import sys
 import threading
 import traceback
-from StringIO import StringIO
 
-from avro import io as avio
+import avro.io
 from avro import ipc, protocol, schema
 
 __all__ = ["TetherTask", "TaskType", "inputProtocol", "outputProtocol", "HTTPRequestor"]
@@ -88,10 +87,8 @@ class Collector(object):
       raise ValueError("output client can't be none.")
 
     self.scheme=scheme
-    self.buff=StringIO()
-    self.encoder=avio.BinaryEncoder(self.buff)
 
-    self.datum_writer = avio.DatumWriter(writers_schema=self.scheme)
+    self.datum_writer = avro.io.DatumWriter(writers_schema=self.scheme)
     self.outputClient=outputClient
 
   def collect(self,record,partition=None):
@@ -103,25 +100,16 @@ class Collector(object):
     partition - Indicates the partition for a pre-partitioned map output
               - currently not supported
     """
+    # Replace the encoder and buffer every time we collect.
+    with io.BytesIO() as buff:
+      self.encoder = avro.io.BinaryEncoder(buff)
+      self.datum_writer.write(record, self.encoder)
+      value = buff.getvalue()
 
-    self.buff.truncate(0)
-    self.datum_writer.write(record, self.encoder);
-    self.buff.flush();
-    self.buff.seek(0)
-
-    # delete all the data in the buffer
-    if (partition is None):
-
-      # TODO: Is there a more efficient way to read the data in self.buff?
-      # we could use self.buff.read() but that returns the byte array as a string
-      # will that work?  We can also use self.buff.readinto to read it into
-      # a bytearray but the byte array must be pre-allocated
-      # self.outputClient.output(self.buff.buffer.read())
-
-      #its not a StringIO
-      self.outputClient.request("output",{"datum":self.buff.read()})
-    else:
-      self.outputClient.request("outputPartitioned",{"datum":self.buff.read(),"partition":partition})
+    datum = {"datum": value}
+    if partition is not None:
+      datum["partition"] = partition
+    self.outputClient.request("output", datum)
 
 
 
@@ -335,11 +323,11 @@ class TetherTask(object):
       outSchema = schema.parse(outSchemaText)
 
       if (taskType==TaskType.MAP):
-        self.inReader=avio.DatumReader(writers_schema=inSchema,readers_schema=self.inschema)
+        self.inReader=avro.io.DatumReader(writers_schema=inSchema,readers_schema=self.inschema)
         self.midCollector=Collector(outSchemaText,self.outputClient)
 
       elif(taskType==TaskType.REDUCE):
-        self.midReader=avio.DatumReader(writers_schema=inSchema,readers_schema=self.midschema)
+        self.midReader=avro.io.DatumReader(writers_schema=inSchema,readers_schema=self.midschema)
         # this.outCollector = new Collector<OUT>(outSchema);
         self.outCollector=Collector(outSchemaText,self.outputClient)
 
@@ -373,9 +361,9 @@ class TetherTask(object):
     count - how many input records are provided in the binary stream
     """
     try:
-      # to avio.BinaryDecoder
-      bdata=StringIO(data)
-      decoder = avio.BinaryDecoder(bdata)
+      # to avro.io.BinaryDecoder
+      bdata=io.BytesIO(data)
+      decoder = avro.io.BinaryDecoder(bdata)
 
       for i in range(count):
         if (self.taskType==TaskType.MAP):

@@ -205,6 +205,7 @@ const char* roundTripSchemas[] = {
     // Logical types
     "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":12,\"scale\":6}",
     "{\"type\":\"fixed\",\"name\":\"test\",\"size\":16,\"logicalType\":\"decimal\",\"precision\":38,\"scale\":9}",
+    "{\"type\":\"fixed\",\"name\":\"test\",\"size\":129,\"logicalType\":\"decimal\",\"precision\":310,\"scale\":155}",
     "{\"type\":\"int\",\"logicalType\":\"date\"}",
     "{\"type\":\"int\",\"logicalType\":\"time-millis\"}",
     "{\"type\":\"long\",\"logicalType\":\"time-micros\"}",
@@ -229,7 +230,8 @@ const char* malformedLogicalTypes[] = {
     // Missing the required field 'precision'.
     "{\"type\":\"bytes\",\"logicalType\":\"decimal\"}",
     // The claimed precision is not supported by the size of the fixed type.
-    "{\"type\":\"fixed\",\"size\":4,\"name\":\"a\",\"precision\":20}",
+    "{\"type\":\"fixed\",\"logicalType\":\"decimal\",\"size\":4,\"name\":\"a\",\"precision\":20}",
+    "{\"type\":\"fixed\",\"logicalType\":\"decimal\",\"size\":129,\"name\":\"a\",\"precision\":311}",
     // Scale is larger than precision.
     "{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":5,\"scale\":10}"
 };

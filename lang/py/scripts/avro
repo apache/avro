@@ -23,13 +23,23 @@ from __future__ import absolute_import, division, print_function
 import csv
 import json
 from functools import partial
+import os.path
 from itertools import ifilter, imap
-from os.path import splitext
 from sys import stdin, stdout
 
+import avro
 import avro.schema
 from avro.datafile import DataFileReader, DataFileWriter
 from avro.io import DatumReader, DatumWriter
+
+
+_AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
+
+def _version():
+  with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
+    return v.read()
+
+_AVRO_VERSION = _version()
 
 
 class AvroError(Exception):
@@ -118,7 +128,7 @@ def cat(opts, args):
     for filename in args:
         try:
             fo = open(filename, "rb")
-        except (OSError, IOError), e:
+        except (OSError, IOError) as e:
             raise AvroError("Can't open %s - %s" % (filename, e))
 
         avro = DataFileReader(fo, DatumReader())
@@ -175,7 +185,7 @@ def guess_input_type(files):
     if not files:
         return None
 
-    ext = splitext(files[0])[1].lower()
+    ext = os.path.splitext(files[0])[1].lower()
     if ext in (".json", ".js"):
         return "json"
     elif ext in (".csv",):
@@ -194,7 +204,7 @@ def write(opts, files):
     try:
         schema = avro.schema.parse(open(opts.schema, "rb").read())
         out = _open(opts.output, "wb")
-    except (IOError, OSError), e:
+    except (IOError, OSError) as e:
         raise AvroError("Can't open file - %s" % e)
 
     writer = DataFileWriter(out, DatumWriter(), schema)
@@ -214,7 +224,7 @@ def main(argv=None):
     argv = argv or sys.argv
 
     parser = OptionParser(description="Display/write for Avro files",
-                      version="@AVRO_VERSION@",
+                      version=_AVRO_VERSION,
                       usage="usage: %prog cat|write [options] FILE [FILE...]")
     # cat options
 
@@ -257,9 +267,9 @@ def main(argv=None):
             write(opts, args)
         else:
             raise AvroError("Unknown command - %s" % command)
-    except AvroError, e:
+    except AvroError as e:
         parser.error("%s" % e) # Will exit
-    except Exception, e:
+    except Exception as e:
         raise SystemExit("panic: %s" % e)
 
 if __name__ == "__main__":

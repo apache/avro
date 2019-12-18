@@ -21,16 +21,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+import io
 import os
 import random
 import zlib
 
-from avro import io, schema
+import avro.io
+import avro.schema
 
-try:
-  from cStringIO import StringIO
-except ImportError:
-  from StringIO import StringIO
 try:
   import snappy
   has_snappy = True
@@ -50,7 +48,7 @@ MAGIC = 'Obj' + chr(VERSION)
 MAGIC_SIZE = len(MAGIC)
 SYNC_SIZE = 16
 SYNC_INTERVAL = 4000 * SYNC_SIZE # TODO(hammer): make configurable
-META_SCHEMA = schema.parse("""\
+META_SCHEMA = avro.schema.parse("""\
 {"type": "record", "name": "org.apache.avro.file.Header",
  "fields" : [
    {"name": "magic", "type": {"type": "fixed", "name": "magic", "size": %d}},
@@ -71,12 +69,12 @@ SCHEMA_KEY = "avro.schema"
 # Exceptions
 #
 
-class DataFileException(schema.AvroException):
+class DataFileException(avro.schema.AvroException):
   """
   Raised when there's a problem reading or writing file object containers.
   """
   def __init__(self, fail_msg):
-    schema.AvroException.__init__(self, fail_msg)
+    avro.schema.AvroException.__init__(self, fail_msg)
 
 #
 # Write Path
@@ -95,10 +93,10 @@ class DataFileWriter(object):
     @param writer: File-like object to write into.
     """
     self._writer = writer
-    self._encoder = io.BinaryEncoder(writer)
+    self._encoder = avro.io.BinaryEncoder(writer)
     self._datum_writer = datum_writer
-    self._buffer_writer = StringIO()
-    self._buffer_encoder = io.BinaryEncoder(self._buffer_writer)
+    self._buffer_writer = io.BytesIO()
+    self._buffer_encoder = avro.io.BinaryEncoder(self._buffer_writer)
     self._block_count = 0
     self._meta = {}
     self._header_written = False
@@ -112,7 +110,7 @@ class DataFileWriter(object):
       self.datum_writer.writers_schema = writers_schema
     else:
       # open writer for reading to collect metadata
-      dfr = DataFileReader(writer, io.DatumReader())
+      dfr = DataFileReader(writer, avro.io.DatumReader())
 
       # TODO(hammer): collect arbitrary metadata
       # collect metadata
@@ -122,7 +120,7 @@ class DataFileWriter(object):
       # get schema used to write existing file
       schema_from_file = dfr.get_meta('avro.schema')
       self.set_meta('avro.schema', schema_from_file)
-      self.datum_writer.writers_schema = schema.parse(schema_from_file)
+      self.datum_writer.writers_schema = avro.schema.parse(schema_from_file)
 
       # seek to the end of the file and prepare for writing
       writer.seek(0, 2)
@@ -243,7 +241,7 @@ class DataFileReader(object):
   # TODO(hammer): allow user to specify the encoder
   def __init__(self, reader, datum_reader):
     self._reader = reader
-    self._raw_decoder = io.BinaryDecoder(reader)
+    self._raw_decoder = avro.io.BinaryDecoder(reader)
     self._datum_decoder = None # Maybe reset at every block.
     self._datum_reader = datum_reader
 
@@ -262,7 +260,7 @@ class DataFileReader(object):
 
     # get ready to read
     self._block_count = 0
-    self.datum_reader.writers_schema = schema.parse(self.get_meta(SCHEMA_KEY))
+    self.datum_reader.writers_schema = avro.schema.parse(self.get_meta(SCHEMA_KEY))
 
   def __enter__(self):
     return self
@@ -320,7 +318,7 @@ class DataFileReader(object):
     if header.get('magic') != MAGIC:
       fail_msg = "Not an Avro data file: %s doesn't match %s."\
                  % (header.get('magic'), MAGIC)
-      raise schema.AvroException(fail_msg)
+      raise avro.schema.AvroException(fail_msg)
 
     # set metadata
     self._meta = header['meta']
@@ -341,26 +339,26 @@ class DataFileReader(object):
       # -15 is the log of the window size; negative indicates
       # "raw" (no zlib headers) decompression.  See zlib.h.
       uncompressed = zlib.decompress(data, -15)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+      self._datum_decoder = avro.io.BinaryDecoder(io.BytesIO(uncompressed))
     elif self.codec == 'snappy':
       # Compressed data includes a 4-byte CRC32 checksum
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length - 4)
       uncompressed = snappy.decompress(data)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+      self._datum_decoder = avro.io.BinaryDecoder(io.BytesIO(uncompressed))
       self.raw_decoder.check_crc32(uncompressed);
     elif self.codec == 'zstandard':
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length)
       uncompressed = bytearray()
       dctx = zstd.ZstdDecompressor()
-      with dctx.stream_reader(StringIO(data)) as reader:
+      with dctx.stream_reader(io.BytesIO(data)) as reader:
         while True:
           chunk = reader.read(16384)
           if not chunk:
             break
           uncompressed.extend(chunk)
-      self._datum_decoder = io.BinaryDecoder(StringIO(uncompressed))
+      self._datum_decoder = avro.io.BinaryDecoder(io.BytesIO(uncompressed))
     else:
       raise DataFileException("Unknown codec: %r" % self.codec)
 

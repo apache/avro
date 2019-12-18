@@ -42,7 +42,9 @@ from __future__ import absolute_import, division, print_function
 
 import json
 import math
+import re
 import sys
+import warnings
 
 from avro import constants
 
@@ -112,6 +114,15 @@ class AvroException(Exception):
 class SchemaParseException(AvroException):
   pass
 
+class InvalidName(SchemaParseException):
+  """User attempted to parse a schema with an invalid name."""
+
+class AvroWarning(UserWarning):
+  """Base class for warnings."""
+
+class IgnoredLogicalType(AvroWarning):
+  """Warnings for unknown or invalid logical types."""
+
 #
 # Base Classes
 #
@@ -166,68 +177,65 @@ class Schema(object):
 class Name(object):
   """Class to describe Avro name."""
 
+  # The name portion of a fullname, record field names, and enum symbols must:
+  # start with [A-Za-z_]
+  # subsequently contain only [A-Za-z0-9_]
+  _base_name_pattern = re.compile(r'(?:^|\.)[A-Za-z_][A-Za-z0-9_]*$')
+
+  _full = None
+
   def __init__(self, name_attr, space_attr, default_space):
-    """
-    Formulate full name according to the specification.
+    """The fullname is determined in one of the following ways:
+
+    - A name and namespace are both specified. For example, one might use "name": "X", "namespace": "org.foo" to indicate the fullname org.foo.X.
+    - A fullname is specified. If the name specified contains a dot, then it is assumed to be a fullname, and any namespace also specified is ignored. For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
+    - A name only is specified, i.e., a name that contains no dots. In this case the namespace is taken from the most tightly enclosing schema or protocol. For example, if "name": "X" is specified, and this occurs within a field of the record definition of org.foo.Y, then the fullname is org.foo.X. If there is no enclosing namespace then the null namespace is used.
+
+    References to previously defined names are as in the latter two cases above: if they contain a dot they are a fullname, if they do not contain a dot, the namespace is the namespace of the enclosing definition.
 
     @arg name_attr: name value read in schema or None.
-    @arg space_attr: namespace value read in schema or None.
-    @ard default_space: the current default space or None.
+    @arg space_attr: namespace value read in schema or None. The empty string may be used as a namespace to indicate the null namespace.
+    @arg default_space: the current default space or None.
     """
-    # Ensure valid ctor args
-    if not (isinstance(name_attr, basestring) or (name_attr is None)):
-      fail_msg = 'Name must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-    elif name_attr == "":
-      fail_msg = 'Name must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
+    if name_attr is None:
+      return
+    if name_attr == "":
+      raise SchemaParseException('Name must not be the empty string.')
 
-    if not (isinstance(space_attr, basestring) or (space_attr is None)):
-      fail_msg = 'Space must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-    elif name_attr == "":
-      fail_msg = 'Space must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-
-    if not (isinstance(default_space, basestring) or (default_space is None)):
-      fail_msg = 'Default space must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-    elif name_attr == "":
-      fail_msg = 'Default must be non-empty string or None.'
-      raise SchemaParseException(fail_msg)
-
-    self._full = None;
-
-    if name_attr is None or name_attr == "":
-        return;
-
-    if (name_attr.find('.') < 0):
-      if (space_attr is not None) and (space_attr != ""):
-        self._full = "%s.%s" % (space_attr, name_attr)
-      else:
-        if (default_space is not None) and (default_space != ""):
-           self._full = "%s.%s" % (default_space, name_attr)
-        else:
-          self._full = name_attr
+    if '.' in name_attr or space_attr == "" or not (space_attr or default_space):
+      # The empty string may be used as a namespace to indicate the null namespace.
+      self._full = name_attr
     else:
-        self._full = name_attr
+      self._full = "{!s}.{!s}".format(space_attr or default_space, name_attr)
+
+    self._validate_fullname(self._full)
+
+  def _validate_fullname(self, fullname):
+    for name in fullname.split('.'):
+      if not self._base_name_pattern.search(name):
+        raise InvalidName("{!s} is not a valid Avro name because it "
+                          "does not match the pattern {!s}".format(
+                          name, self._base_name_pattern.pattern))
 
   def __eq__(self, other):
-    if not isinstance(other, Name):
-        return False
-    return (self.fullname == other.fullname)
+    """Equality of names is defined on the fullname and is case-sensitive."""
+    return isinstance(other, Name) and self.fullname == other.fullname
 
-  fullname = property(lambda self: self._full)
+  @property
+  def fullname(self):
+    return self._full
 
-  def get_space(self):
+  @property
+  def space(self):
     """Back out a namespace from full name."""
     if self._full is None:
-        return None
+      return None
+    return self._full.rsplit(".", 1)[0] if "." in self._full else None
 
-    if (self._full.find('.') > 0):
-      return self._full.rsplit(".", 1)[0]
-    else:
-      return ""
+  def get_space(self):
+    warnings.warn('Name.get_space() is deprecated in favor of Name.space')
+    return self.space
+
 
 class Names(object):
   """Track name set and default namespace during parsing."""
@@ -306,16 +314,13 @@ class NamedSchema(Schema):
     # Store name and namespace as they were read in origin schema
     self.set_prop('name', name)
     if namespace is not None:
-      self.set_prop('namespace', new_name.get_space())
+      self.set_prop('namespace', new_name.space)
 
     # Store full name as calculated from name, namespace
     self._fullname = new_name.fullname
 
   def name_ref(self, names):
-    if self.namespace == names.default_namespace:
-      return self.name
-    else:
-      return self.fullname
+    return self.name if self.namespace == names.default_namespace else self.fullname
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
@@ -337,19 +342,20 @@ class LogicalSchema(object):
 class DecimalLogicalSchema(LogicalSchema):
   def __init__(self, precision, scale=0, max_precision=0):
     if not isinstance(precision, int) or precision <= 0:
-      raise SchemaParseException("""Precision is required for logical type
-                                DECIMAL and must be a positive integer but
-                                is %s.""" % precision)
-    elif precision > max_precision:
-      raise SchemaParseException("Cannot store precision digits. Max is %s"
-                                 %(max_precision))
+      raise IgnoredLogicalType(
+          "Invalid decimal precision {}. Must be a positive integer.".format(precision))
+
+    if precision > max_precision:
+      raise IgnoredLogicalType(
+          "Invalid decimal precision {}. Max is {}.".format(precision, max_precision))
 
     if not isinstance(scale, int) or scale < 0:
-      raise SchemaParseException("Scale %s must be a positive Integer." % scale)
+      raise IgnoredLogicalType(
+          "Invalid decimal scale {}. Must be a positive integer.".format(scale))
 
-    elif scale > precision:
-      raise SchemaParseException("Invalid DECIMAL scale %s. Cannot be greater than precision %s"
-                                 %(scale, precision))
+    if scale > precision:
+      raise IgnoredLogicalType("Invalid decimal scale {}. Cannot be greater than precision {}."
+                                 .format(scale, precision))
 
     super(DecimalLogicalSchema, self).__init__('decimal')
 
@@ -506,7 +512,7 @@ class FixedSchema(NamedSchema):
 
 class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
   def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
-    max_precision = math.floor(math.log10(2) * (8 * size - 1))
+    max_precision = int(math.floor(math.log10(2) * (8 * size - 1)))
     DecimalLogicalSchema.__init__(self, precision, scale, max_precision)
     FixedSchema.__init__(self, name, namespace, size, names, other_props)
     self.set_prop('precision', precision)
@@ -743,7 +749,7 @@ class RecordSchema(NamedSchema):
     if schema_type == 'record':
       old_default = names.default_namespace
       names.default_namespace = Name(name, namespace,
-                                     names.default_namespace).get_space()
+                                     names.default_namespace).space
 
     # Add class members
     field_objects = RecordSchema.make_field_objects(fields, names)
@@ -887,20 +893,29 @@ def make_bytes_decimal_schema(other_props):
 def make_logical_schema(logical_type, type_, other_props):
   """Map the logical types to the appropriate literal type and schema class."""
   logical_types = {
-    constants.DATE: ('int', DateSchema),
-    # Fixed decimal schema is handled before we get here.
-    constants.DECIMAL: ('bytes', make_bytes_decimal_schema),
-    constants.TIMESTAMP_MICROS: ('long', TimestampMicrosSchema),
-    constants.TIMESTAMP_MILLIS: ('long', TimestampMillisSchema),
-    constants.TIME_MICROS: ('long', TimeMicrosSchema),
-    constants.TIME_MILLIS: ('int', TimeMillisSchema),
+    (constants.DATE, 'int'): DateSchema,
+    (constants.DECIMAL, 'bytes'): make_bytes_decimal_schema,
+    # The fixed decimal schema is handled later by returning None now.
+    (constants.DECIMAL, 'fixed'): lambda x: None,
+    (constants.TIMESTAMP_MICROS, 'long'): TimestampMicrosSchema,
+    (constants.TIMESTAMP_MILLIS, 'long'): TimestampMillisSchema,
+    (constants.TIME_MICROS, 'long'): TimeMicrosSchema,
+    (constants.TIME_MILLIS, 'int'): TimeMillisSchema,
   }
-  literal_type, schema_type = logical_types.get(logical_type, (None, None))
   try:
-    if literal_type == type_:
+    schema_type = logical_types.get((logical_type, type_), None)
+    if schema_type is not None:
       return schema_type(other_props)
-  except SchemaParseException:
-    pass
+
+    expected_types = sorted(literal_type for lt, literal_type in logical_types if lt == logical_type)
+    if expected_types:
+      warnings.warn(
+          IgnoredLogicalType("Logical type {} requires literal type {}, not {}.".format(
+              logical_type, "/".join(expected_types), type_)))
+    else:
+      warnings.warn(IgnoredLogicalType("Unknown {}, using {}.".format(logical_type, type_)))
+  except IgnoredLogicalType as warning:
+    warnings.warn(warning)
   return None
 
 def make_avsc_object(json_data, names=None):
@@ -931,8 +946,8 @@ def make_avsc_object(json_data, names=None):
           scale = 0 if json_data.get('scale') is None else json_data.get('scale')
           try:
             return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
-          except (AvroException, SchemaParseException):
-            pass
+          except IgnoredLogicalType as warning:
+            warnings.warn(warning)
         return FixedSchema(name, namespace, size, names, other_props)
       elif type == 'enum':
         symbols = json_data.get('symbols')
