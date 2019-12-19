@@ -40,9 +40,12 @@ dist() {
 
 interop-data-generate() {
   ./setup.py generate_interop_data
+  cp -r avro/test/interop/data ../../build/interop
 }
 
 interop-data-test() {
+  mkdir -p avro/test/interop ../../build/interop/data
+  cp -r ../../build/interop/data avro/test/interop
   python -m unittest avro.test.test_datafile_interop
 }
 
@@ -51,7 +54,7 @@ lint() {
 }
 
 test_() {
-  ./setup.py test
+  tox
 }
 
 main() {

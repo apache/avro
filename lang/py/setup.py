@@ -59,7 +59,7 @@ def _generate_package_data():
     # Create a PEP440 compliant version file.
     version_file_path = os.path.join(share_dir, _VERSION_FILE_NAME)
     with open(version_file_path, 'rb') as vin:
-        version = vin.read().replace('-', '+')
+        version = vin.read().replace(b'-', b'+')
     with open(os.path.join(_AVRO_DIR, _VERSION_FILE_NAME), 'wb') as vout:
         vout.write(version)
 
@@ -109,8 +109,8 @@ class GenerateInteropDataCommand(setuptools.Command):
 
 def _get_version():
   curdir = os.getcwd()
-  if os.path.isfile("share/VERSION.txt"):
-    version_file = "share/VERSION.txt"
+  if os.path.isfile("avro/VERSION.txt"):
+    version_file = "avro/VERSION.txt"
   else:
     index = curdir.index("lang/py")
     path = curdir[:index]

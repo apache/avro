@@ -66,9 +66,9 @@ def looney_records():
 SCRIPT = join(dirname(dirname(dirname(__file__))), "scripts", "avro")
 
 _JSON_PRETTY = '''{
-    "type": "duck",
+    "first": "daffy",
     "last": "duck",
-    "first": "daffy"
+    "type": "duck"
 }'''
 
 def gen_avro(filename):
