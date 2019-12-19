@@ -90,10 +90,10 @@ do
       (cd lang/c; ./build.sh test)
       (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
-      (cd lang/js; ./build.sh test)
-      (cd lang/ruby; ./build.sh test)
+      (cd lang/js; ./build.sh lint test)
+      (cd lang/ruby; ./build.sh lint test)
       (cd lang/php; ./build.sh test)
-      (cd lang/perl; ./build.sh test)
+      (cd lang/perl; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
       (cd lang/py3; python3 setup.py generate_interop_data \

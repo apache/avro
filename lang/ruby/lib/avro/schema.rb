@@ -140,7 +140,7 @@ module Avro
       @@fp_table = Array.new(256)
       256.times do |i|
         fp = i
-        8.times do |j|
+        8.times do
           fp = (fp >> 1) ^ ( CRC_EMPTY & -( fp & 1 ) )
         end
         @@fp_table[i] = fp
