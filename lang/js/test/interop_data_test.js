@@ -48,7 +48,7 @@ suite('interop', function() {
           .on("data", function () {
             n++;
           })
-          .on("finish", function () {
+          .on("end", function () {
             assert(n > 0);
           });
       }
