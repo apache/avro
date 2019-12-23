@@ -134,18 +134,18 @@ public class ReflectData extends SpecificData {
   }
 
   @Override
-  public void setField(Object record, String name, int position, Object o) {
-    setField(record, name, position, o, null);
+  public void setField(Object record, String name, int position, Object value) {
+    setField(record, name, position, value, null);
   }
 
   @Override
-  protected void setField(Object record, String name, int pos, Object o, Object state) {
+  protected void setField(Object record, String name, int position, Object value, Object state) {
     if (record instanceof IndexedRecord) {
-      super.setField(record, name, pos, o);
+      super.setField(record, name, position, value);
       return;
     }
     try {
-      getAccessorForField(record, name, pos, state).set(record, o);
+      getAccessorForField(record, name, position, state).set(record, value);
     } catch (IllegalAccessException | IOException e) {
       throw new AvroRuntimeException(e);
     }

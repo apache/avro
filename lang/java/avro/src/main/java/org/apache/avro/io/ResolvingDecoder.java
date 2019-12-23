@@ -54,7 +54,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * Constructs a <tt>ResolvingDecoder</tt> using the given resolver. The resolver
    * must have been returned by a previous call to
    * {@link #resolve(Schema, Schema)}.
-   * 
+   *
    * @param resolver The resolver to use.
    * @param in       The underlying decoder.
    * @throws IOException
@@ -95,7 +95,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * reader is expecting a three-field record, the first field is a long, the
    * second a string, and the third an array. In this case, a typical usage might
    * be as follows:
-   * 
+   *
    * <pre>
    *   Schema.Fields[] fieldOrder = in.readFieldOrder();
    *   for (int i = 0; i &lt; 3; i++) {
@@ -111,7 +111,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    *       break;
    *     }
    * </pre>
-   * 
+   *
    * Note that {@link ResolvingDecoder} will return only the fields expected by
    * the reader, not other fields that may have been written by the writer. Thus,
    * the iteration-count of "3" in the above loop will always be correct.
@@ -151,7 +151,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
    * for the next object as well, calling this method is optional; the state of
    * this resolving decoder ensures that any leftover portions are consumed before
    * the next object is decoded.
-   * 
+   *
    * @throws IOException
    */
   public final void drain() throws IOException {
@@ -260,8 +260,9 @@ public class ResolvingDecoder extends ValidatingDecoder {
     parser.advance(Symbol.ENUM);
     Symbol.EnumAdjustAction top = (Symbol.EnumAdjustAction) parser.popSymbol();
     int n = in.readEnum();
-    if (top.noAdjustments)
+    if (top.noAdjustments) {
       return n;
+    }
     Object o = top.adjustments[n];
     if (o instanceof Integer) {
       return (Integer) o;
@@ -274,7 +275,7 @@ public class ResolvingDecoder extends ValidatingDecoder {
   public int readIndex() throws IOException {
     parser.advance(Symbol.UNION);
     Symbol top = parser.popSymbol();
-    int result;
+    final int result;
     if (top instanceof Symbol.UnionAdjustAction) {
       result = ((Symbol.UnionAdjustAction) top).rindex;
       top = ((Symbol.UnionAdjustAction) top).symToParse;
