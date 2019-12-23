@@ -123,22 +123,22 @@ public class JacksonUtils {
         return jsonNode.textValue().getBytes(StandardCharsets.ISO_8859_1);
       }
     } else if (jsonNode.isArray()) {
-      List l = new ArrayList();
+      List<Object> l = new ArrayList<>();
       for (JsonNode node : jsonNode) {
         l.add(toObject(node, schema == null ? null : schema.getElementType()));
       }
       return l;
     } else if (jsonNode.isObject()) {
-      Map m = new LinkedHashMap();
+      Map<Object, Object> m = new LinkedHashMap<>();
       for (Iterator<String> it = jsonNode.fieldNames(); it.hasNext();) {
         String key = it.next();
-        Schema s = null;
-        if (schema == null) {
-          s = null;
-        } else if (schema.getType().equals(Schema.Type.MAP)) {
+        final Schema s;
+        if (schema != null && schema.getType().equals(Schema.Type.MAP)) {
           s = schema.getValueType();
-        } else if (schema.getType().equals(Schema.Type.RECORD)) {
+        } else if (schema != null && schema.getType().equals(Schema.Type.RECORD)) {
           s = schema.getField(key).schema();
+        } else {
+          s = null;
         }
         Object value = toObject(jsonNode.get(key), s);
         m.put(key, value);
