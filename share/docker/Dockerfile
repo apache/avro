@@ -64,7 +64,6 @@ RUN apt-get -qqy update \
                                                  ruby-dev \
                                                  source-highlight \
                                                  subversion \
-                                                 tox \
                                                  valgrind \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
@@ -130,7 +129,7 @@ RUN python2 -m pip install --upgrade pip setuptools \
 
 # Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools \
- && python3 -m pip install zstandard
+ && python3 -m pip install tox zstandard
 
 # Install .NET SDK
 RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \
