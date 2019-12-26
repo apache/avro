@@ -73,8 +73,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord> implements Reco
     this.schema = other.schema;
     this.data = data;
     fields = schema.getFields().toArray(EMPTY_FIELDS);
-    fieldSetFlags = new boolean[other.fieldSetFlags.length];
-    System.arraycopy(other.fieldSetFlags, 0, fieldSetFlags, 0, fieldSetFlags.length);
+    fieldSetFlags = Arrays.copyOf(other.fieldSetFlags, other.fieldSetFlags.length);
   }
 
   /**
