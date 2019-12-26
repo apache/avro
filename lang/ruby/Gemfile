@@ -21,3 +21,6 @@ gem 'snappy'
 gem 'zstd-ruby'
 gem 'test-unit'
 gem 'rubocop'
+
+# rdoc 6.2.1 requires Ruby 2.4+
+gem 'rdoc', '<= 6.2.0'
