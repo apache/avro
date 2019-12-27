@@ -19,3 +19,6 @@ gem 'echoe'
 gem 'multi_json'
 gem 'snappy'
 gem 'test-unit'
+
+# rdoc 6.2.1 requires Ruby 2.4+
+gem 'rdoc', '<= 6.2.0'
