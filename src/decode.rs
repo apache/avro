@@ -166,7 +166,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Value::{Array, Bytes, Int, Map};
+    use crate::types::Value::{Array, Int, Map};
 
     #[test]
     fn test_decode_array_without_size() {
