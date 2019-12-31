@@ -372,7 +372,7 @@ impl UnionSchema {
     }
 
     /// Optionally returns a reference to the schema matched by this value, as well as its position
-    /// within this enum.
+    /// within this union.
     pub fn find_schema(&self, value: &crate::types::Value) -> Option<(usize, &Schema)> {
         let kind = SchemaKind::from(value);
         self.variant_index

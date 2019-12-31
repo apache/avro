@@ -538,7 +538,7 @@ impl Value {
                             }
                             _ => value.clone().avro(),
                         },
-                        _ => {
+                        None => {
                             return Err(SchemaResolutionError::new(format!(
                                 "missing field {} in record",
                                 field.name
