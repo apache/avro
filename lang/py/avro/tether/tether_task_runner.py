@@ -24,11 +24,15 @@ import sys
 import threading
 import traceback
 import weakref
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import avro.tether.tether_task
 import avro.tether.util
 from avro import ipc
+
+try:
+  import BaseHTTPServer as http_server  # type: ignore
+except ImportError:
+  import http.server as http_server  # type: ignore
 
 __all__ = ["TaskRunner"]
 
@@ -105,7 +109,7 @@ def HTTPHandlerGen(runner):
   else:
     runnerref=runner
 
-  class TaskRunnerHTTPHandler(BaseHTTPRequestHandler):
+  class TaskRunnerHTTPHandler(http_server.BaseHTTPRequestHandler):
     """Create a handler for the parent.
     """
 
@@ -113,7 +117,7 @@ def HTTPHandlerGen(runner):
     def __init__(self,*args,**param):
       """
       """
-      BaseHTTPRequestHandler.__init__(self,*args,**param)
+      http_server.BaseHTTPRequestHandler.__init__(self,*args,**param)
 
     def do_POST(self):
       self.responder =TaskRunnerResponder(self.runner)
@@ -174,7 +178,7 @@ class TaskRunner(object):
 
 
     def thread_run(task_runner=None):
-      task_runner.server = HTTPServer(address, HTTPHandlerGen(task_runner))
+      task_runner.server = http_server.HTTPServer(address, HTTPHandlerGen(task_runner))
       task_runner.server.allow_reuse_address = True
       task_runner.server.serve_forever()
 

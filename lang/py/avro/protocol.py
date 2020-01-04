@@ -26,6 +26,16 @@ import json
 
 import avro.schema
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
+try:
+  basestring  # type: ignore
+except NameError:
+  basestring = (bytes, unicode)
+
 #
 # Constants
 #
@@ -58,7 +68,7 @@ class Protocol(object):
 
   def _parse_messages(self, messages, names):
     message_objects = {}
-    for name, body in messages.iteritems():
+    for name, body in messages.items():
       if name in message_objects:
         fail_msg = 'Message name "%s" repeated.' % name
         raise ProtocolParseException(fail_msg)
@@ -100,7 +110,7 @@ class Protocol(object):
       self.set_prop('types', self._parse_types(types, type_names))
     if messages is not None:
       self.set_prop('messages', self._parse_messages(messages, type_names))
-    self._md5 = hashlib.md5(str(self)).digest()
+    self._md5 = hashlib.md5(str(self).encode()).digest()
 
   # read-only properties
   name = property(lambda self: self.get_prop('name'))
@@ -130,7 +140,7 @@ class Protocol(object):
       to_dump['types'] = [ t.to_json(names) for t in self.types ]
     if self.messages:
       messages_dict = {}
-      for name, body in self.messages.iteritems():
+      for name, body in self.messages.items():
         messages_dict[name] = body.to_json(names)
       to_dump['messages'] = messages_dict
     return to_dump

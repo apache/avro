@@ -35,6 +35,11 @@ import avro.io
 import avro.schema
 import avro.tether.tether_task_runner
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
 _AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
 
 def _version():
@@ -46,9 +51,9 @@ _AVRO_VERSION = _version()
 _JAR_PATH = os.path.join(os.path.dirname(os.path.dirname(_AVRO_DIR)),
     "java", "tools", "target", "avro-tools-{}.jar".format(_AVRO_VERSION))
 
-_LINES = ("the quick brown fox jumps over the lazy dog",
-          "the cow jumps over the moon",
-          "the rain in spain falls mainly on the plains")
+_LINES = (unicode("the quick brown fox jumps over the lazy dog"),
+          unicode("the cow jumps over the moon"),
+          unicode("the rain in spain falls mainly on the plains"))
 _IN_SCHEMA = '"string"'
 
 # The schema for the output of the mapper and reducer
@@ -76,7 +81,7 @@ def _has_java():
       output = subprocess.check_output("/usr/libexec/java_home", stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
       output = e.output
-    return ("No Java runtime present" not in output)
+    return (b"No Java runtime present" not in output)
   return bool(distutils.spawn.find_executable("java"))
 
 
@@ -106,7 +111,7 @@ class TestTetherWordCount(unittest.TestCase):
 
     # ...and the output schema...
     self._output_schema_path = os.path.join(self._base_dir, "output.avsc")
-    with open(self._output_schema_path, 'wb') as output_schema_handle:
+    with open(self._output_schema_path, 'w') as output_schema_handle:
       output_schema_handle.write(_OUT_SCHEMA)
     self.assertTrue(os.path.exists(self._output_schema_path), "Missing the schema file")
 

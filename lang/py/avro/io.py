@@ -52,9 +52,28 @@ from decimal import Decimal, getcontext
 
 from avro import constants, schema, timezones
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
+try:
+  basestring  # type: ignore
+except NameError:
+  basestring = (bytes, unicode)
+
+try:
+  long
+except NameError:
+  long = int
+
+
 #
 # Constants
 #
+
+_DEBUG_VALIDATE_INDENT = 0
+_DEBUG_VALIDATE = False
 
 INT_MIN_VALUE = -(1 << 31)
 INT_MAX_VALUE = (1 << 31) - 1
@@ -111,8 +130,8 @@ def _is_timezone_aware_datetime(dt):
 _valid = {
   'null': lambda s, d: d is None,
   'boolean': lambda s, d: isinstance(d, bool),
-  'string': lambda s, d: isinstance(d, basestring),
-  'bytes': lambda s, d: ((isinstance(d, str)) or
+  'string': lambda s, d: isinstance(d, unicode),
+  'bytes': lambda s, d: ((isinstance(d, bytes)) or
                          (isinstance(d, Decimal) and
                           getattr(s, 'logical_type', None) == constants.DECIMAL)),
   'int': lambda s, d: ((isinstance(d, (int, long))) and (INT_MIN_VALUE <= d <= INT_MAX_VALUE) or
@@ -128,12 +147,13 @@ _valid = {
                         getattr(s, 'logical_type', None) in (constants.TIMESTAMP_MILLIS,
                                                              constants.TIMESTAMP_MICROS))),
   'float': lambda s, d: isinstance(d, (int, long, float)),
-  'fixed': lambda s, d: ((isinstance(d, str) and len(d) == s.size) or
+  'fixed': lambda s, d: ((isinstance(d, bytes) and len(d) == s.size) or
                          (isinstance(d, Decimal) and
                           getattr(s, 'logical_type', None) == constants.DECIMAL)),
   'enum': lambda s, d: d in s.symbols,
+
   'array': lambda s, d: isinstance(d, list) and all(validate(s.items, item) for item in d),
-  'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, basestring) for key in d)
+  'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, unicode) for key in d)
                        and all(validate(s.values, value) for value in d.values())),
   'union': lambda s, d: any(validate(branch, d) for branch in s.schemas),
   'record': lambda s, d: (isinstance(d, dict)
@@ -144,7 +164,6 @@ _valid['double'] = _valid['float']
 _valid['error_union'] = _valid['union']
 _valid['error'] = _valid['request'] = _valid['record']
 
-
 def validate(expected_schema, datum):
   """Determines if a python datum is an instance of a schema.
 
@@ -154,10 +173,28 @@ def validate(expected_schema, datum):
   Returns:
     True if the datum is an instance of the schema.
   """
-  try:
-    return _valid[expected_schema.type](expected_schema, datum)
-  except KeyError:
-    raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
+  global _DEBUG_VALIDATE_INDENT
+  global _DEBUG_VALIDATE
+  expected_type = expected_schema.type
+  name = getattr(expected_schema, 'name', '')
+  if name:
+    name = ' ' + name
+  if expected_type in ('array', 'map', 'union', 'record'):
+    if _DEBUG_VALIDATE:
+      print('{!s}{!s}{!s}: {!s} {{'.format(' ' * _DEBUG_VALIDATE_INDENT, expected_schema.type, name, type(datum).__name__), file=sys.stderr)
+      _DEBUG_VALIDATE_INDENT += 2
+      if datum is not None and not datum:
+        print('{!s}<Empty>'.format(' ' * _DEBUG_VALIDATE_INDENT), file=sys.stderr)
+    result = _valid[expected_type](expected_schema, datum)
+    if _DEBUG_VALIDATE:
+      _DEBUG_VALIDATE_INDENT -= 2
+      print('{!s}}} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT, result), file=sys.stderr)
+  else:
+    result = _valid[expected_type](expected_schema, datum)
+    if _DEBUG_VALIDATE:
+      print('{!s}{!s}{!s}: {!s} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT, expected_schema.type, name, type(datum).__name__, result), file=sys.stderr)
+  return result
+
 
 #
 # Decoder/Encoder
@@ -244,19 +281,19 @@ class BinaryDecoder(object):
     """
     datum = self.read(size)
     unscaled_datum = 0
-    msb = struct.unpack('!b', datum[0])[0]
+    msb = struct.unpack('!b', datum[0:1])[0]
     leftmost_bit = (msb >> 7) & 1
     if leftmost_bit == 1:
-      modified_first_byte = ord(datum[0]) ^ (1 << 7)
-      datum = chr(modified_first_byte) + datum[1:]
+      modified_first_byte = ord(datum[0:1]) ^ (1 << 7)
+      datum = bytearray([modified_first_byte]) + datum[1:]
       for offset in range(size):
         unscaled_datum <<= 8
-        unscaled_datum += ord(datum[offset])
+        unscaled_datum += ord(datum[offset:1+offset])
       unscaled_datum += pow(-2, (size*8) - 1)
     else:
       for offset in range(size):
         unscaled_datum <<= 8
-        unscaled_datum += ord(datum[offset])
+        unscaled_datum += ord(datum[offset:1+offset])
 
     original_prec = getcontext().prec
     getcontext().prec = precision
@@ -383,7 +420,7 @@ class BinaryEncoder(object):
   writer = property(lambda self: self._writer)
 
   def write(self, datum):
-    """Write an abritrary datum."""
+    """Write an arbitrary datum."""
     self.writer.write(datum)
 
   def write_null(self, datum):
@@ -397,10 +434,7 @@ class BinaryEncoder(object):
     a boolean is written as a single byte
     whose value is either 0 (false) or 1 (true).
     """
-    if datum:
-      self.write(chr(1))
-    else:
-      self.write(chr(0))
+    self.write(bytearray([bool(datum)]))
 
   def write_int(self, datum):
     """
@@ -414,9 +448,9 @@ class BinaryEncoder(object):
     """
     datum = (datum << 1) ^ (datum >> 63)
     while (datum & ~0x7F) != 0:
-      self.write(chr((datum & 0x7f) | 0x80))
+      self.write(bytearray([(datum & 0x7f) | 0x80]))
       datum >>= 7
-    self.write(chr(datum))
+    self.write(bytearray([datum]))
 
   def write_float(self, datum):
     """
@@ -459,7 +493,7 @@ class BinaryEncoder(object):
     self.write_long(bytes_req)
     for index in range(bytes_req-1, -1, -1):
       bits_to_write = packed_bits >> (8 * index)
-      self.write(chr(bits_to_write & 0xff))
+      self.write(bytearray([bits_to_write & 0xff]))
 
   def write_decimal_fixed(self, datum, scale, size):
     """
@@ -494,13 +528,13 @@ class BinaryEncoder(object):
       unscaled_datum = mask | unscaled_datum
       for index in range(size-1, -1, -1):
         bits_to_write = unscaled_datum >> (8 * index)
-        self.write(chr(bits_to_write & 0xff))
+        self.write(bytearray([bits_to_write & 0xff]))
     else:
       for i in range(offset_bits // 8):
-        self.write(chr(0))
+        self.write(b'\x00')
       for index in range(bytes_req-1, -1, -1):
         bits_to_write = unscaled_datum >> (8 * index)
-        self.write(chr(bits_to_write & 0xff))
+        self.write(bytearray([bits_to_write & 0xff]))
 
   def write_bytes(self, datum):
     """
@@ -661,6 +695,7 @@ class DatumReader(object):
       fail_msg = 'Schemas do not match.'
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
+    logical_type = getattr(writers_schema, 'logical_type', None)
     # schema resolution: reader's schema is a union, writer's schema is not
     if (writers_schema.type not in ['union', 'error_union']
         and readers_schema.type in ['union', 'error_union']):
@@ -678,23 +713,17 @@ class DatumReader(object):
     elif writers_schema.type == 'string':
       return decoder.read_utf8()
     elif writers_schema.type == 'int':
-      if (hasattr(writers_schema, 'logical_type') and
-          writers_schema.logical_type == constants.DATE):
+      if logical_type == constants.DATE:
         return decoder.read_date_from_int()
-      elif (hasattr(writers_schema, 'logical_type') and
-        writers_schema.logical_type == constants.TIME_MILLIS):
+      if logical_type == constants.TIME_MILLIS:
         return decoder.read_time_millis_from_int()
-      else:
-        return decoder.read_int()
+      return decoder.read_int()
     elif writers_schema.type == 'long':
-      if (hasattr(writers_schema, 'logical_type') and
-          writers_schema.logical_type == constants.TIME_MICROS):
+      if logical_type == constants.TIME_MICROS:
         return decoder.read_time_micros_from_long()
-      elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
+      elif logical_type == constants.TIMESTAMP_MILLIS:
         return decoder.read_timestamp_millis_from_long()
-      elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIMESTAMP_MICROS):
+      elif logical_type == constants.TIMESTAMP_MICROS:
         return decoder.read_timestamp_micros_from_long()
       else:
         return decoder.read_long()
@@ -703,8 +732,7 @@ class DatumReader(object):
     elif writers_schema.type == 'double':
       return decoder.read_double()
     elif writers_schema.type == 'bytes':
-      if (hasattr(writers_schema, 'logical_type') and
-                      writers_schema.logical_type == 'decimal'):
+      if logical_type == 'decimal':
         return decoder.read_decimal_from_bytes(
           writers_schema.get_prop('precision'),
           writers_schema.get_prop('scale')
@@ -712,8 +740,7 @@ class DatumReader(object):
       else:
         return decoder.read_bytes()
     elif writers_schema.type == 'fixed':
-      if (hasattr(writers_schema, 'logical_type') and
-                      writers_schema.logical_type == 'decimal'):
+      if logical_type == 'decimal':
         return decoder.read_decimal_from_fixed(
           writers_schema.get_prop('precision'),
           writers_schema.get_prop('scale'),
@@ -1006,14 +1033,13 @@ class DatumWriter(object):
                             set_writers_schema)
 
   def write(self, datum, encoder):
-    # validate datum
     if not validate(self.writers_schema, datum):
       raise AvroTypeException(self.writers_schema, datum)
-
     self.write_data(self.writers_schema, datum, encoder)
 
   def write_data(self, writers_schema, datum, encoder):
     # function dispatch to write datum
+    logical_type = getattr(writers_schema, 'logical_type', None)
     if writers_schema.type == 'null':
       encoder.write_null(datum)
     elif writers_schema.type == 'boolean':
@@ -1021,23 +1047,18 @@ class DatumWriter(object):
     elif writers_schema.type == 'string':
       encoder.write_utf8(datum)
     elif writers_schema.type == 'int':
-      if (hasattr(writers_schema, 'logical_type') and
-          writers_schema.logical_type == constants.DATE):
+      if logical_type == constants.DATE:
         encoder.write_date_int(datum)
-      elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIME_MILLIS):
+      elif logical_type == constants.TIME_MILLIS:
         encoder.write_time_millis_int(datum)
       else:
         encoder.write_int(datum)
     elif writers_schema.type == 'long':
-      if (hasattr(writers_schema, 'logical_type') and
-          writers_schema.logical_type == constants.TIME_MICROS):
+      if logical_type == constants.TIME_MICROS:
         encoder.write_time_micros_long(datum)
-      elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIMESTAMP_MILLIS):
+      elif logical_type == constants.TIMESTAMP_MILLIS:
         encoder.write_timestamp_millis_long(datum)
-      elif (hasattr(writers_schema, 'logical_type') and
-            writers_schema.logical_type == constants.TIMESTAMP_MICROS):
+      elif logical_type == constants.TIMESTAMP_MICROS:
         encoder.write_timestamp_micros_long(datum)
       else:
         encoder.write_long(datum)
@@ -1046,14 +1067,12 @@ class DatumWriter(object):
     elif writers_schema.type == 'double':
       encoder.write_double(datum)
     elif writers_schema.type == 'bytes':
-      if (hasattr(writers_schema, 'logical_type') and
-                      writers_schema.logical_type == 'decimal'):
+      if logical_type == 'decimal':
         encoder.write_decimal_bytes(datum, writers_schema.get_prop('scale'))
       else:
         encoder.write_bytes(datum)
     elif writers_schema.type == 'fixed':
-      if (hasattr(writers_schema, 'logical_type') and
-                      writers_schema.logical_type == 'decimal'):
+      if logical_type == 'decimal':
         encoder.write_decimal_fixed(
           datum,
           writers_schema.get_prop('scale'),

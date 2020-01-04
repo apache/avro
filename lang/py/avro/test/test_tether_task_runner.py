@@ -34,6 +34,11 @@ import avro.tether.tether_task
 import avro.tether.tether_task_runner
 import avro.tether.util
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
 
 class TestTetherTaskRunner(unittest.TestCase):
   """unit test for a tethered task runner."""
@@ -50,7 +55,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       parent_port = avro.tether.util.find_port()
 
       pyfile=avro.test.mock_tether_parent.__file__
-      proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
+      proc=subprocess.Popen([sys.executable, pyfile,"start_server","{0}".format(parent_port)])
       input_port = avro.tether.util.find_port()
 
       print("Mock server started process pid={0}".format(proc.pid))
@@ -72,12 +77,12 @@ class TestTetherTaskRunner(unittest.TestCase):
       # Test the mapper
       requestor.request("configure", {
         "taskType": avro.tether.tether_task.TaskType.MAP,
-        "inSchema": str(runner.task.inschema),
-        "outSchema": str(runner.task.midschema)
+        "inSchema": unicode(str(runner.task.inschema)),
+        "outSchema": unicode(str(runner.task.midschema))
       })
 
       # Serialize some data so we can send it to the input function
-      datum="This is a line of text"
+      datum = unicode("This is a line of text")
       writer = io.BytesIO()
       encoder = avro.io.BinaryEncoder(writer)
       datum_writer = avro.io.DatumWriter(runner.task.inschema)
@@ -93,12 +98,12 @@ class TestTetherTaskRunner(unittest.TestCase):
       # Test the reducer
       requestor.request("configure", {
         "taskType": avro.tether.tether_task.TaskType.REDUCE,
-        "inSchema": str(runner.task.midschema),
-        "outSchema": str(runner.task.outschema)}
+        "inSchema": unicode(str(runner.task.midschema)),
+        "outSchema": unicode(str(runner.task.outschema))}
       )
 
       #Serialize some data so we can send it to the input function
-      datum={"key":"word","value":2}
+      datum = {"key": unicode("word"), "value": 2}
       writer = io.BytesIO()
       encoder = avro.io.BinaryEncoder(writer)
       datum_writer = avro.io.DatumWriter(runner.task.midschema)
@@ -154,7 +159,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       parent_port = avro.tether.util.find_port()
 
       pyfile=avro.test.mock_tether_parent.__file__
-      proc=subprocess.Popen(["python", pyfile,"start_server","{0}".format(parent_port)])
+      proc=subprocess.Popen([sys.executable, pyfile,"start_server","{0}".format(parent_port)])
 
       #Possible race condition? when we start tether_task_runner it will call
       # open tries to connect to the subprocess before the subprocess is fully started
@@ -166,7 +171,7 @@ class TestTetherTaskRunner(unittest.TestCase):
       env={"AVRO_TETHER_OUTPUT_PORT":"{0}".format(parent_port)}
       env["PYTHONPATH"]=':'.join(sys.path)
 
-      runnerproc = subprocess.Popen(["python", avro.tether.tether_task_runner.__file__, "avro.test.word_count_task.WordCountTask"], env=env)
+      runnerproc = subprocess.Popen([sys.executable, avro.tether.tether_task_runner.__file__, "avro.test.word_count_task.WordCountTask"], env=env)
 
       #possible race condition wait for the process to start
       time.sleep(1)

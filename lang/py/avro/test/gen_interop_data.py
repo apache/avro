@@ -27,6 +27,11 @@ import avro.datafile
 import avro.io
 import avro.schema
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
 CODECS_TO_VALIDATE = ('null', 'deflate')
 
 try:
@@ -43,31 +48,32 @@ except ImportError:
 DATUM = {
   'intField': 12,
   'longField': 15234324,
-  'stringField': 'hey',
+  'stringField': unicode('hey'),
   'boolField': True,
   'floatField': 1234.0,
   'doubleField': -1234.0,
-  'bytesField': '12312adf',
+  'bytesField': b'12312adf',
   'nullField': None,
   'arrayField': [5.0, 0.0, 12.0],
-  'mapField': {'a': {'label': 'a'}, 'bee': {'label': 'cee'}},
+  'mapField': {unicode('a'): {'label': unicode('a')},
+               unicode('bee'): {'label': unicode('cee')}},
   'unionField': 12.0,
   'enumField': 'C',
-  'fixedField': '1019181716151413',
-  'recordField': {'label': 'blah', 'children': [{'label': 'inner', 'children': []}]},
+  'fixedField': b'1019181716151413',
+  'recordField': {'label': unicode('blah'),
+                  'children': [{'label': unicode('inner'), 'children': []}]},
 }
 
 def generate(schema_path, output_path):
+  with open(schema_path, 'r') as schema_file:
+    interop_schema = avro.schema.parse(schema_file.read())
   for codec in CODECS_TO_VALIDATE:
-    with open(schema_path, 'rb') as schema_file:
-      interop_schema = avro.schema.parse(schema_file.read())
     filename = output_path
     if codec != 'null':
       base, ext = os.path.splitext(output_path)
       filename = base + "_" + codec + ext
     with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),
                                       interop_schema, codec=codec) as dfw:
-      # NB: not using compression
       dfw.append(DATUM)
 
 if __name__ == "__main__":

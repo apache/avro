@@ -27,6 +27,16 @@ import unittest
 import avro.protocol
 import avro.schema
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
+try:
+  basestring  # type: ignore
+except NameError:
+  basestring = (bytes, unicode)
+
 
 class TestProtocol(object):
   """A proxy for a protocol string that provides useful test metadata."""
