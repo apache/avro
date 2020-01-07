@@ -48,7 +48,7 @@
       <source>
 $ tar xvf avro-&AvroVersion;.tar.gz
 $ cd avro-&AvroVersion;
-$ sudo python setup.py install
+$ python setup.py install
 $ python
 >>> import avro # should not raise ImportError
       </source>
@@ -58,8 +58,7 @@ $ python
       </p>
       <source>
 $ cd lang/py/
-$ ant
-$ sudo python setup.py install
+$ python setup.py install
 $ python
 >>> import avro # should not raise ImportError
       </source>

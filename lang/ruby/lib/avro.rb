@@ -35,11 +35,18 @@ module Avro
 
   class << self
     attr_writer :disable_field_default_validation
+    attr_writer :disable_schema_name_validation
 
     def disable_field_default_validation
       @disable_field_default_validation ||=
         ENV.fetch('AVRO_DISABLE_FIELD_DEFAULT_VALIDATION', '') != ''
     end
+
+    def disable_schema_name_validation
+      @disable_schema_name_validation ||=
+        ENV.fetch('AVRO_DISABLE_SCHEMA_NAME_VALIDATION', '') != ''
+    end
+
   end
 end
 

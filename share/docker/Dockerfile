@@ -17,9 +17,10 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM openjdk:8
+# Despite this base, JDK8 is used by default.  See below.
+FROM openjdk:11
 WORKDIR /root
-CMD ["/avro/share/docker/run-tests.sh"]
+
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
     DEBIAN_FRONTEND=noninteractive
 
@@ -47,6 +48,7 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  make \
                                                  maven \
+                                                 openjdk-8-jdk \
                                                  perl \
                                                  python \
                                                  python-pip \
@@ -96,24 +98,26 @@ RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit 
  && chmod +x /usr/local/bin/phpunit
 
 # Install Perl modules
+RUN apt-get -qqy update \
+ && apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+                                                 libencode-perl \
+                                                 libio-string-perl \
+                                                 libjson-xs-perl \
+                                                 libmodule-install-perl \
+                                                 libmodule-install-readmefrompod-perl \
+                                                 libobject-tiny-perl \
+                                                 libperl-critic-perl \
+                                                 libregexp-common-perl \
+                                                 libtest-exception-perl \
+                                                 libtest-pod-perl \
+                                                 libtry-tiny-perl \
+ && apt-get -qqy clean \
+ && rm -rf /var/lib/apt/lists
 RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
- && cpanm --mirror https://www.cpan.org/ install Compress::Zlib \
-                                                 Compress::Zstd \
-                                                 Encode \
-                                                 IO::String \
-                                                 JSON::XS \
-                                                 Math::BigInt \
-                                                 Module::Install \
-                                                 Module::Install::ReadmeFromPod \
+ && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                  Module::Install::Repository \
-                                                 Object::Tiny \
-                                                 Perl::Critic \
-                                                 Regexp::Common \
-                                                 Test::Exception \
-                                                 Test::More \
                                                  Test::Pod \
-                                                 Try::Tiny \
  && rm -rf .cpanm
 
 # Install Python packages
@@ -125,7 +129,7 @@ RUN python2 -m pip install --upgrade pip setuptools \
 
 # Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools \
- && python3 -m pip install zstandard
+ && python3 -m pip install tox zstandard
 
 # Install .NET SDK
 RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \
@@ -139,3 +143,19 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
 # Install Ruby modules
 COPY lang/ruby/Gemfile /tmp
 RUN bundle install --gemfile=/tmp/Gemfile
+
+# Note: This "ubertool" container has two JDK versions:
+# - OpenJDK 8 (installed as a package and available at /usr/bin/java)
+# - OpenJDK 11 (installed from the base image, and prioritized in the PATH)
+# - The root build.sh script switches between the versions according to 
+#   the JAVA environment variable.
+
+# Since want the JDK8 as a default, we have to re-prepend it to the PATH.
+# The /usr/local/openjdk-8 link is created to be consistent with the
+# openjdk:8 image.
+
+RUN ln -s /usr/lib/jvm/java-8-openjdk-amd64 /usr/local/openjdk-8
+ENV JAVA_HOME /usr/local/openjdk-8
+ENV PATH $JAVA_HOME/bin:$PATH
+
+CMD ["/bin/bash", "-i"]

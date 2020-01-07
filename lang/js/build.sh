@@ -23,6 +23,7 @@ for target in "$@"
 do
   case "$target" in
     lint)
+      npm install
       npm run lint
       ;;
     test)
@@ -36,6 +37,12 @@ do
       ;;
     clean)
       rm -rf coverage
+      ;;
+    interop-data-generate)
+      npm run interop-data-generate
+      ;;
+    interop-data-test)
+      npm run interop-data-test
       ;;
     *)
       echo "Usage: $0 {lint|test|dist|clean}" >&2
