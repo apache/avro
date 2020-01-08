@@ -55,7 +55,13 @@ module Avro
 
         type_sym = type.to_sym
         if PRIMITIVE_TYPES_SYM.include?(type_sym)
-          return PrimitiveSchema.new(type_sym, logical_type)
+          if type_sym == :bytes && logical_type == 'decimal'
+            precision = json_obj['precision']
+            scale = json_obj['scale']
+            return BytesDecimalSchema.new(type_sym, logical_type, precision, scale)
+          else
+            return PrimitiveSchema.new(type_sym, logical_type)
+          end
 
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
@@ -395,6 +401,24 @@ module Avro
         hsh.size == 1 ? type : hsh
       end
     end
+
+    class BytesDecimalSchema < Schema
+      attr_reader :precision, :scale
+      def initialize(type, logical_type, precision, scale)
+        # Ensure valid cto args
+        super(type.to_sym, logical_type)
+        # super(:bytes, name, space, names, nil, logical_type)
+
+        @precision = precision
+        @scale = scale
+      end
+
+      def to_avro(names=Set.new)
+        avro = super
+        avro.is_a?(Hash) ? avro.merge('precision' => precision, 'scale' => scale) : avro
+      end
+    end
+
 
     class FixedSchema < NamedSchema
       attr_reader :size
