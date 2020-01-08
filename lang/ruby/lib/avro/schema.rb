@@ -412,7 +412,10 @@ module Avro
 
       def to_avro(names=Set.new)
         avro = super
-        avro.is_a?(Hash) ? avro.merge('precision' => precision, 'scale' => scale) : avro
+        props = {}
+        props.merge!('precision' => @precision) if @precision
+        props.merge!('scale' => @scale) if @scale
+        avro.is_a?(Hash) ? avro.merge(props) : avro
       end
     end
 

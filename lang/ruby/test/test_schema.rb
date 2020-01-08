@@ -513,4 +513,21 @@ class TestSchema < Test::Unit::TestCase
 
     assert_equal schema_hash, schema.to_avro
   end
+
+  def test_bytes_decimal_to_without_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal"
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'bytes',
+        'logicalType' => 'decimal'
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
 end
