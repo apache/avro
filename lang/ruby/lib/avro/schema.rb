@@ -407,7 +407,6 @@ module Avro
       def initialize(type, logical_type, precision, scale)
         # Ensure valid cto args
         super(type.to_sym, logical_type)
-        # super(:bytes, name, space, names, nil, logical_type)
 
         @precision = precision
         @scale = scale
