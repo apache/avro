@@ -29,6 +29,7 @@ clean() {
                  '*.py[co]' \
                  'VERSION.txt' \
                  '__pycache__' \
+                 '.tox' \
                  'avro/test/interop' \
                  'dist' \
                  'userlogs'
