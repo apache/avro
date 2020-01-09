@@ -530,4 +530,15 @@ class TestSchema < Test::Unit::TestCase
 
     assert_equal schema_hash, schema.to_avro
   end
+
+  def test_bytes_schema
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes"
+      }
+    SCHEMA
+
+    schema_str = 'bytes'
+    assert_equal schema_str, schema.to_avro
+  end
 end

@@ -55,14 +55,14 @@ module Avro
 
         type_sym = type.to_sym
         if PRIMITIVE_TYPES_SYM.include?(type_sym)
-          if type_sym == :bytes && logical_type == 'decimal'
+          case type_sym
+          when :bytes
             precision = json_obj['precision']
             scale = json_obj['scale']
-            return BytesDecimalSchema.new(type_sym, logical_type, precision, scale)
+            return BytesSchema.new(type_sym, logical_type, precision, scale)
           else
             return PrimitiveSchema.new(type_sym, logical_type)
           end
-
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
           if !Avro.disable_schema_name_validation && name !~ NAME_REGEX
@@ -402,23 +402,23 @@ module Avro
       end
     end
 
-    class BytesDecimalSchema < Schema
+    class BytesSchema < PrimitiveSchema
       attr_reader :precision, :scale
-      def initialize(type, logical_type, precision, scale)
+      def initialize(type, logical_type=nil, precision=nil, scale=nil)
         super(type.to_sym, logical_type)
         @precision = precision
         @scale = scale
       end
 
-      def to_avro(names=Set.new)
+      def to_avro(names=nil)
         avro = super
-        props = {}
-        props.merge!('precision' => @precision) if @precision
-        props.merge!('scale' => @scale) if @scale
-        avro.is_a?(Hash) ? avro.merge(props) : avro
+        return avro if avro.is_a?(String)
+
+        avro['precision'] = precision if precision
+        avro['scale'] = scale if scale
+        avro
       end
     end
-
 
     class FixedSchema < NamedSchema
       attr_reader :size
