@@ -40,8 +40,8 @@ public class Resolver {
    *
    * This method walks the reader's and writer's schemas together, generating an
    * appropriate subclass of {@link Action} to encapsulate the information needed
-   * to resolve the corresponding parts of each schema tree. For convenience, every
-   * {@link Action} object has a pointer to the corresponding parts of the
+   * to resolve the corresponding parts of each schema tree. For convenience,
+   * every {@link Action} object has a pointer to the corresponding parts of the
    * reader's and writer's trees being resolved by the action. Each subclass of
    * {@link Action} has additional information needed for different types of
    * schema, e.g., the {@link EnumAdjust} subclass has information about
