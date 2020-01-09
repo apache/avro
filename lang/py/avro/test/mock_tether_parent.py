@@ -21,11 +21,16 @@ from __future__ import absolute_import, division, print_function
 
 import socket
 import sys
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import avro.tether.tether_task
 import avro.tether.util
 from avro import ipc, protocol
+
+try:
+  import BaseHTTPServer as http_server  # type: ignore
+except ImportError:
+  import http.server as http_server  # type: ignore
+
 
 SERVER_ADDRESS = ('localhost', avro.tether.util.find_port())
 
@@ -52,11 +57,11 @@ class MockParentResponder(ipc.Responder):
 
     return None
 
-class MockParentHandler(BaseHTTPRequestHandler):
+class MockParentHandler(http_server.BaseHTTPRequestHandler):
   """Create a handler for the parent.
   """
   def do_POST(self):
-    self.responder =MockParentResponder()
+    self.responder = MockParentResponder()
     call_request_reader = ipc.FramedReader(self.rfile)
     call_request = call_request_reader.read_framed_message()
     resp_body = self.responder.respond(call_request)
@@ -82,6 +87,6 @@ if __name__ == '__main__':
 
     # flush the output so it shows up in the parent process
     sys.stdout.flush()
-    parent_server = HTTPServer(SERVER_ADDRESS, MockParentHandler)
+    parent_server = http_server.HTTPServer(SERVER_ADDRESS, MockParentHandler)
     parent_server.allow_reuse_address = True
     parent_server.serve_forever()

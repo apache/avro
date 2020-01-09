@@ -21,18 +21,27 @@
 
 from __future__ import absolute_import, division, print_function
 
-import httplib
 import io
 import os
 
 import avro.io
 from avro import protocol, schema
 
+try:
+  import httplib  # type: ignore
+except ImportError:
+  import http.client as httplib  # type: ignore
+
+try:
+  unicode
+except NameError:
+  unicode = str
+
 
 def _load(name):
   dir_path = os.path.dirname(__file__)
   rsrc_path = os.path.join(dir_path, name)
-  with open(rsrc_path, 'rb') as f:
+  with open(rsrc_path, 'r') as f:
     return f.read()
 
 HANDSHAKE_REQUEST_SCHEMA_JSON = _load('HandshakeRequest.avsc')
@@ -131,7 +140,7 @@ class BaseRequestor(object):
     request_datum['clientHash'] = local_hash
     request_datum['serverHash'] = remote_hash
     if self.send_protocol:
-      request_datum['clientProtocol'] = str(self.local_protocol)
+      request_datum['clientProtocol'] = unicode(self.local_protocol)
     HANDSHAKE_REQUESTOR_WRITER.write(request_datum, encoder)
 
   def write_call_request(self, message_name, request_datum, encoder):
@@ -236,8 +245,7 @@ class Requestor(BaseRequestor):
     call_response_exists = self.read_handshake_response(buffer_decoder)
     if call_response_exists:
       return self.read_call_response(message_name, buffer_decoder)
-    else:
-      return self.request(message_name, request_datum)
+    return self.request(message_name, request_datum)
 
 class Responder(object):
   """Base class for the server side of a protocol interaction."""
@@ -301,7 +309,7 @@ class Responder(object):
       except AvroRemoteException as e:
         error = e
       except Exception as e:
-        error = AvroRemoteException(str(e))
+        error = AvroRemoteException(unicode(e))
 
       # write response using local protocol
       META_WRITER.write(response_metadata, buffer_encoder)
@@ -313,7 +321,7 @@ class Responder(object):
         writers_schema = local_message.errors
         self.write_error(writers_schema, error, buffer_encoder)
     except schema.AvroException as e:
-      error = AvroRemoteException(str(e))
+      error = AvroRemoteException(unicode(e))
       buffer_encoder = avro.io.BinaryEncoder(io.BytesIO())
       META_WRITER.write(response_metadata, buffer_encoder)
       buffer_encoder.write_boolean(True)
@@ -346,7 +354,7 @@ class Responder(object):
         handshake_response['match'] = 'CLIENT'
 
     if handshake_response['match'] != 'BOTH':
-      handshake_response['serverProtocol'] = str(self.local_protocol)
+      handshake_response['serverProtocol'] = unicode(self.local_protocol)
       handshake_response['serverHash'] = self.local_hash
 
     HANDSHAKE_RESPONDER_WRITER.write(handshake_response, encoder)
@@ -368,7 +376,7 @@ class Responder(object):
 
   def write_error(self, writers_schema, error_exception, encoder):
     datum_writer = avro.io.DatumWriter(writers_schema)
-    datum_writer.write(str(error_exception), encoder)
+    datum_writer.write(unicode(error_exception), encoder)
 
 #
 # Utility classes
@@ -388,7 +396,7 @@ class FramedReader(object):
       buffer = io.BytesIO()
       buffer_length = self._read_buffer_length()
       if buffer_length == 0:
-        return ''.join(message)
+        return b''.join(message)
       while buffer.tell() < buffer_length:
         chunk = self.reader.read(buffer_length - buffer.tell())
         if chunk == '':

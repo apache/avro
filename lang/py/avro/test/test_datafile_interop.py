@@ -31,31 +31,26 @@ _INTEROP_DATA_DIR = os.path.join(os.path.dirname(avro.__file__), 'test', 'intero
                      "{} does not exist".format(_INTEROP_DATA_DIR))
 class TestDataFileInterop(unittest.TestCase):
   def test_interop(self):
-    ran = False
-    print()
-    print('TEST INTEROP')
-    print('============')
-    print()
+    """Test Interop"""
     for f in os.listdir(_INTEROP_DATA_DIR):
-      ran = True
-
+      filename = os.path.join(_INTEROP_DATA_DIR, f)
+      assert os.stat(filename).st_size > 0
       base_ext = os.path.splitext(os.path.basename(f))[0].split('_', 1)
       if len(base_ext) < 2 or base_ext[1] in datafile.VALID_CODECS:
         print('READING %s' % f)
-        print('')
+        print()
 
         # read data in binary from file
-        reader = open(os.path.join(_INTEROP_DATA_DIR, f), 'rb')
         datum_reader = io.DatumReader()
-        dfr = datafile.DataFileReader(reader, datum_reader)
-        i = 0
-        for i, datum in enumerate(dfr, 1):
-          assert datum is not None
-        assert i > 0
+        with open(filename, 'rb') as reader:
+          dfr = datafile.DataFileReader(reader, datum_reader)
+          i = 0
+          for i, datum in enumerate(dfr, 1):
+            assert datum is not None
+          assert i > 0
       else:
         print('SKIPPING %s due to an unsupported codec' % f)
-        print('')
-    self.assertTrue(ran, "Didn't find any interop data files to test")
+        print()
 
 if __name__ == '__main__':
   unittest.main()

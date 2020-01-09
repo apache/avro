@@ -277,7 +277,7 @@ class TestSchema < Test::Unit::TestCase
 
   def test_validate_union_of_nil_and_record_inside_array
     schema = hash_to_schema(
-      name: 'this does not matter',
+      name: 'this_does_not_matter',
       type: 'record',
       fields: [
         {
