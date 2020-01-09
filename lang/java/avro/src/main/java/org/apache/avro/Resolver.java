@@ -752,8 +752,8 @@ public class Resolver {
       if (ws.size() != rs.size()) {
         return false;
       }
-      int i;
-      for (i = 0; i < ws.size(); i++) {
+      int i = 0;
+      for (; i < ws.size(); i++) {
         if (!ws.get(i).equals(rs.get(i))) {
           break;
         }
@@ -767,8 +767,8 @@ public class Resolver {
       if (wb.size() != rb.size()) {
         return false;
       }
-      int i;
-      for (i = 0; i < wb.size(); i++) {
+      int i = 0;
+      for (; i < wb.size(); i++) {
         if (!unionEquiv(wb.get(i), rb.get(i), seen)) {
           break;
         }
@@ -785,10 +785,11 @@ public class Resolver {
         if (wb.size() != rb.size()) {
           seen.put(wsc, false);
         } else {
-          int i;
-          for (i = 0; i < wb.size(); i++) {
+          int i = 0;
+          for (; i < wb.size(); i++) {
             // Loop through each of the elements, and check if they are equal
-            if (!wb.get(i).name().equals(rb.get(i).name()) || !unionEquiv(wb.get(i).schema(), rb.get(i).schema(), seen)) {
+            if (!wb.get(i).name().equals(rb.get(i).name())
+                || !unionEquiv(wb.get(i).schema(), rb.get(i).schema(), seen)) {
               break;
             }
           }
