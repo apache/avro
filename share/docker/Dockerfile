@@ -69,13 +69,13 @@ RUN apt-get -qqy update \
  && rm -rf /var/lib/apt/lists
 
 # Install nodejs 6
-RUN curl -sSL https://deb.nodesource.com/setup_6.x \
+RUN curl -sSL https://deb.nodesource.com/setup_10.x \
   | bash - \
  && apt-get -qqy install nodejs \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists \
  && npm install -g grunt-cli \
- && npm cache clean
+ && npm cache clean --force
 
 # Install PHP
 # TODO: Remove php5-related packages when we drop PHP 5.6 support in the future
@@ -147,7 +147,7 @@ RUN bundle install --gemfile=/tmp/Gemfile
 # Note: This "ubertool" container has two JDK versions:
 # - OpenJDK 8 (installed as a package and available at /usr/bin/java)
 # - OpenJDK 11 (installed from the base image, and prioritized in the PATH)
-# - The root build.sh script switches between the versions according to 
+# - The root build.sh script switches between the versions according to
 #   the JAVA environment variable.
 
 # Since want the JDK8 as a default, we have to re-prepend it to the PATH.
