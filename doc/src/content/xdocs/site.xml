@@ -42,8 +42,7 @@ See https://forrest.apache.org/docs/linking.html for more info
   <docs label="Documentation">
     <overview   label="Overview"          href="index.html" />
     <gettingstartedjava label="Getting started (Java)" href="gettingstartedjava.html" />
-    <gettingstartedpython label="Getting started (Python2)" href="gettingstartedpython.html" />
-    <gettingstartedpython label="Getting started (Python3)" href="gettingstartedpython3.html" />
+    <gettingstartedpython label="Getting started (Python)" href="gettingstartedpython.html" />
     <spec       label="Specification"     href="spec.html" />
     <trevni     label="Trevni"            href="ext:trevni/spec" />
     <java-api   label="Java API"          href="ext:api/java/index" />

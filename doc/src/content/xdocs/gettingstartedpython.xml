@@ -33,6 +33,19 @@
       RPC Quick Start</a> for a good introduction to using Avro for RPC.
     </p>
 
+    <section id="notice_python3">
+      <title>Notice for Python 3 users</title>
+      <p>
+        A package called "avro-python3" had been provided to support
+        Python 3 previously, but the codebase was consolidated into
+        the "avro" package and that supports both Python 2 and 3 now.
+
+        The avro-python3 package will be removed in the near future,
+        so users should use the "avro" package instead,
+        which is supposed to be API-compatible with avro-python3.
+      </p>
+    </section>
+
     <section id="download_install">
       <title>Download</title>
       <p>
