@@ -41,8 +41,10 @@
         the "avro" package and that supports both Python 2 and 3 now.
 
         The avro-python3 package will be removed in the near future,
-        so users should use the "avro" package instead,
-        which is supposed to be API-compatible with avro-python3.
+        so users should use the "avro" package instead.
+        They are mostly API compatible, but there's a few minor difference
+        (e.g., function name capitalization,
+        such as avro.schema.Parse vs avro.schema.parse).
       </p>
     </section>
 
