@@ -40,7 +40,7 @@ public class Resolver {
    *
    * This method walks the reader's and writer's schemas together, generating an
    * appropriate subclass of {@link Action} to encapsulate the information needed
-   * to resolve the corresponding parts of each schema tree. For convience, every
+   * to resolve the corresponding parts of each schema tree. For convenience, every
    * {@link Action} object has a pointer to the corresponding parts of the
    * reader's and writer's trees being resolved by the action. Each subclass of
    * {@link Action} has additional information needed for different types of
@@ -183,7 +183,7 @@ public class Resolver {
    * found in the data being read), then it's safe to ignore it.
    */
   public static class ErrorAction extends Action {
-    public static enum ErrorType {
+    public enum ErrorType {
       /**
        * Use when Schema types don't match and can't be converted. For example,
        * resolving "int" and "enum".
@@ -230,8 +230,8 @@ public class Resolver {
         return "Found " + writer.getFullName() + ", expecting " + reader.getFullName();
 
       case MISSING_REQUIRED_FIELD: {
-        List<Field> wfields = writer.getFields();
-        List<Field> rfields = reader.getFields();
+        final List<Field> wfields = writer.getFields();
+        final List<Field> rfields = reader.getFields();
         String fname = "<oops>";
         for (Field rf : rfields) {
           if (writer.getField(rf.name()) == null && rf.defaultValue() == null) {
@@ -624,22 +624,22 @@ public class Resolver {
     // the
     // interest of "bug-for-bug" compatibility, we imported the old algorithm.
     private static int firstMatchingBranch(Schema w, Schema r, GenericData d, Map<SeenPair, Action> seen) {
-      Schema.Type vt = w.getType();
+      final Schema.Type vt = w.getType();
       // first scan for exact match
       int j = 0;
       int structureMatch = -1;
       for (Schema b : r.getTypes()) {
         if (vt == b.getType()) {
           if (vt == Schema.Type.RECORD || vt == Schema.Type.ENUM || vt == Schema.Type.FIXED) {
-            String vname = w.getFullName();
-            String bname = b.getFullName();
+            final String vname = w.getFullName();
+            final String bname = b.getFullName();
             // return immediately if the name matches exactly according to spec
             if (vname != null && vname.equals(bname))
               return j;
 
             if (vt == Schema.Type.RECORD && !hasMatchError(RecordAdjust.resolve(w, b, d, seen))) {
-              String vShortName = w.getName();
-              String bShortName = b.getName();
+              final String vShortName = w.getName();
+              final String bShortName = b.getName();
               // use the first structure match or one where the name matches
               if ((structureMatch < 0) || (vShortName != null && vShortName.equals(bShortName))) {
                 structureMatch = j;

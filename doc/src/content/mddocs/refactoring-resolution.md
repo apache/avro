@@ -96,7 +96,7 @@ writer's schema into the corresponding subtree of the reader's.
 
    * `RecordAdjust` -- resolution involves recursively resolving the
      schemas for each field, and dealing with reordering and removal
-     of fields.  An `EnumAdjust` object contains the information
+     of fields.  A `RecordAdjust` object contains the information
      needed to do so.
 
    * `SkipAction` -- only generated as a sub-action of a
