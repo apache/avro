@@ -565,15 +565,15 @@ public class Resolver {
     }
 
     public static Action resolve(Schema writeSchema, Schema readSchema, GenericData data, Map<SeenPair, Action> seen) {
-      boolean ueqv = unionEquiv(writeSchema, readSchema, new HashMap<>());
-      final List<Schema> wb = writeSchema.getTypes();
-      final List<Schema> rb = (ueqv ? readSchema.getTypes() : null);
-      int sz = wb.size();
-      final Action[] actions = new Action[sz];
-      for (int i = 0; i < sz; i++) {
-        actions[i] = Resolver.resolve(wb.get(i), (ueqv ? rb.get(i) : readSchema), data, seen);
+      boolean unionEquivalent = unionEquiv(writeSchema, readSchema, new HashMap<>());
+      final List<Schema> writeTypes = writeSchema.getTypes();
+      final List<Schema> readTypes = (unionEquivalent ? readSchema.getTypes() : null);
+      int writeTypeLength = writeTypes.size();
+      final Action[] actions = new Action[writeTypeLength];
+      for (int i = 0; i < writeTypeLength; i++) {
+        actions[i] = Resolver.resolve(writeTypes.get(i), (unionEquivalent ? readTypes.get(i) : readSchema), data, seen);
       }
-      return new WriterUnion(writeSchema, readSchema, data, ueqv, actions);
+      return new WriterUnion(writeSchema, readSchema, data, unionEquivalent, actions);
     }
   }
 
@@ -713,20 +713,21 @@ public class Resolver {
     }
   }
 
-  private static boolean unionEquiv(Schema w, Schema r, Map<SeenPair, Boolean> seen) {
-    Schema.Type wt = w.getType();
-    if (wt != r.getType())
+  private static boolean unionEquiv(Schema write, Schema read, Map<SeenPair, Boolean> seen) {
+    final Schema.Type wt = write.getType();
+    if (wt != read.getType()) {
       return false;
+    }
 
     // Previously, the spec was somewhat ambiguous as to whether getFullName or
     // getName should be used here. Using name rather than fully qualified name
     // maintains backwards compatibility.
     if ((wt == Schema.Type.RECORD || wt == Schema.Type.FIXED || wt == Schema.Type.ENUM)
-        && !(w.getName() == null || w.getName().equals(r.getName()))) {
+        && !(write.getName() == null || write.getName().equals(read.getName()))) {
       return false;
     }
 
-    switch (w.getType()) {
+    switch (wt) {
     case NULL:
     case BOOLEAN:
     case INT:
@@ -738,18 +739,19 @@ public class Resolver {
       return true;
 
     case ARRAY:
-      return unionEquiv(w.getElementType(), r.getElementType(), seen);
+      return unionEquiv(write.getElementType(), read.getElementType(), seen);
     case MAP:
-      return unionEquiv(w.getValueType(), r.getValueType(), seen);
+      return unionEquiv(write.getValueType(), read.getValueType(), seen);
 
     case FIXED:
-      return w.getFixedSize() == r.getFixedSize();
+      return write.getFixedSize() == read.getFixedSize();
 
     case ENUM: {
-      List<String> ws = w.getEnumSymbols();
-      List<String> rs = r.getEnumSymbols();
-      if (ws.size() != rs.size())
+      final List<String> ws = write.getEnumSymbols();
+      final List<String> rs = read.getEnumSymbols();
+      if (ws.size() != rs.size()) {
         return false;
+      }
       int i;
       for (i = 0; i < ws.size(); i++) {
         if (!ws.get(i).equals(rs.get(i))) {
@@ -760,10 +762,11 @@ public class Resolver {
     }
 
     case UNION: {
-      List<Schema> wb = w.getTypes();
-      List<Schema> rb = r.getTypes();
-      if (wb.size() != rb.size())
+      final List<Schema> wb = write.getTypes();
+      final List<Schema> rb = read.getTypes();
+      if (wb.size() != rb.size()) {
         return false;
+      }
       int i;
       for (i = 0; i < wb.size(); i++) {
         if (!unionEquiv(wb.get(i), rb.get(i), seen)) {
@@ -774,17 +777,18 @@ public class Resolver {
     }
 
     case RECORD: {
-      SeenPair wsc = new SeenPair(w, r);
+      final SeenPair wsc = new SeenPair(write, read);
       if (!seen.containsKey(wsc)) {
         seen.put(wsc, true); // Be optimistic, but we may change our minds
-        List<Field> wb = w.getFields();
-        List<Field> rb = r.getFields();
+        final List<Field> wb = write.getFields();
+        final List<Field> rb = read.getFields();
         if (wb.size() != rb.size()) {
           seen.put(wsc, false);
         } else {
           int i;
           for (i = 0; i < wb.size(); i++) {
-            if (!unionEquiv(wb.get(i).schema(), rb.get(i).schema(), seen)) {
+            // Loop through each of the elements, and check if they are equal
+            if (!wb.get(i).name().equals(rb.get(i).name()) || !unionEquiv(wb.get(i).schema(), rb.get(i).schema(), seen)) {
               break;
             }
           }
@@ -794,7 +798,7 @@ public class Resolver {
       return seen.get(wsc);
     }
     default:
-      throw new IllegalArgumentException("Unknown schema type: " + w.getType());
+      throw new IllegalArgumentException("Unknown schema type: " + write.getType());
     }
   }
 }

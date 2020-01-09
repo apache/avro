@@ -238,11 +238,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       }
 
       readField(record, field, oldDatum, in, state);
-
-      // In case the expected field isn't in the read field
-      if (!expectedFields.get(pos).equals(field)) {
-        data.setField(record, field.name(), field.pos(), data.getDefaultValue(expectedFields.get(pos)));
-      }
     }
 
     return record;
