@@ -15,6 +15,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ===========================================================================
+# Bash functions that can be used in this script or exported by using
+# source build.sh
+
+change_java_version() {
+  local jdk=$1
+  if ((jdk)) && [[ -d /usr/local/openjdk-${jdk} ]]; then
+    export JAVA_HOME=/usr/local/openjdk-${jdk}
+    export PATH=$JAVA_HOME/bin:$PATH
+    echo "----------------------"
+    echo "Java version switched:"
+  else
+    echo "Using the current Java version:"
+  fi
+  echo "  JAVA_HOME=$JAVA_HOME"
+  echo "  PATH=$PATH"
+  java -version
+}
+
+# Stop here if sourcing for functions
+[[ "$0" == *"bash" ]] && return 0
+
+# ===========================================================================
+
 set -xe
 cd "${0%/*}"
 
@@ -32,6 +56,17 @@ while (( "$#" ))
 do
   target="$1"
   shift
+
+  # Change the JDK from the default for all targets that will eventually require Java (or maven).
+  # This only occurs when the JAVA environment variable is set and a Java environment exists in
+  # the "standard" location (defined by the openjdk docker images).  This will typically occur in CI
+  # builds.  In all other cases, the Java version is taken from the current installation for the user.
+  case "$target" in
+    lint|test|dist|clean|veryclean|rat)
+    change_java_version "$JAVA"
+    ;;
+  esac
+
   case "$target" in
 
     lint)
@@ -55,28 +90,30 @@ do
       (cd lang/c; ./build.sh test)
       (cd lang/c++; ./build.sh test)
       (cd lang/csharp; ./build.sh test)
-      (cd lang/js; ./build.sh test)
-      (cd lang/ruby; ./build.sh test)
+      (cd lang/js; ./build.sh lint test)
+      (cd lang/ruby; ./build.sh lint test)
       (cd lang/php; ./build.sh test)
-      (cd lang/perl; ./build.sh test)
+      (cd lang/perl; ./build.sh lint test)
 
-      (cd lang/py; ant interop-data-generate)
+      (cd lang/py; ./build.sh interop-data-generate)
       (cd lang/py3; python3 setup.py generate_interop_data \
         --schema-file=../../share/test/schemas/interop.avsc --output-path=../../build/interop/data)
       (cd lang/c; ./build.sh interop-data-generate)
       #(cd lang/c++; make interop-data-generate)
       (cd lang/csharp; ./build.sh interop-data-generate)
+      (cd lang/js; ./build.sh interop-data-generate)
       (cd lang/ruby; rake generate_interop)
       (cd lang/php; ./build.sh interop-data-generate)
       (cd lang/perl; ./build.sh interop-data-generate)
 
       # run interop data tests
       (cd lang/java/ipc; mvn -B test -P interop-data-test)
-      (cd lang/py; ant interop-data-test)
+      (cd lang/py; ./build.sh interop-data-test)
       (cd lang/py3; python3 setup.py test --test-suite avro.tests.test_datafile_interop.TestDataFileInterop)
       (cd lang/c; ./build.sh interop-data-test)
       #(cd lang/c++; make interop-data-test)
       (cd lang/csharp; ./build.sh interop-data-test)
+      (cd lang/js; ./build.sh interop-data-test)
       (cd lang/ruby; rake interop)
       (cd lang/php; ./build.sh test-interop)
       (cd lang/perl; ./build.sh interop-data-test)
@@ -122,17 +159,11 @@ do
 
       (cd lang/py; ./build.sh dist)
       (cd lang/py3; ./build.sh dist)
-
       (cd lang/c; ./build.sh dist)
-
       (cd lang/c++; ./build.sh dist)
-
       (cd lang/csharp; ./build.sh dist)
-
       (cd lang/js; ./build.sh dist)
-
       (cd lang/ruby; ./build.sh dist)
-
       (cd lang/php; ./build.sh dist)
 
       mkdir -p dist/perl
@@ -178,7 +209,7 @@ do
       rm -rf lang/java/*/userlogs/
       rm -rf lang/java/*/dependency-reduced-pom.xml
 
-      (cd lang/py; ant clean)
+      (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
 
       (cd lang/py3; python3 setup.py clean)
@@ -213,7 +244,7 @@ do
       rm -rf lang/java/*/userlogs/
       rm -rf lang/java/*/dependency-reduced-pom.xml
 
-      (cd lang/py; ant clean)
+      (cd lang/py; ./build.sh clean)
       rm -rf lang/py/userlogs/
 
       (cd lang/py3; python3 setup.py clean)
@@ -283,6 +314,7 @@ do
       # down to under 10.  However, editing files from OSX may take a few
       # extra second before the changes are available within the docker container.
       docker run --rm -t -i \
+        --env JAVA=${JAVA:-8} \
         -v ${PWD}:/home/${USER_NAME}/avro${DOCKER_MOUNT_FLAG} \
         -w /home/${USER_NAME}/avro \
         -v ${HOME}/.m2:/home/${USER_NAME}/.m2${DOCKER_MOUNT_FLAG} \
@@ -306,7 +338,7 @@ do
       tar -cf- share/docker/Dockerfile \
                lang/ruby/Gemfile |
         docker build -t avro-test -f share/docker/Dockerfile -
-      docker run --rm -v ${PWD}:/avro/ avro-test
+      docker run --rm -v ${PWD}:/avro/ --env JAVA=${JAVA:-8} avro-test /avro/share/docker/run-tests.sh
       ;;
 
     *)

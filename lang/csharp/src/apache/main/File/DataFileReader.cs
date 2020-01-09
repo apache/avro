@@ -106,22 +106,7 @@ namespace Avro.File
         /// <returns>A new file reader</returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory)
         {
-            if (!inStream.CanSeek)
-                throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
-
-            if (inStream.Length < DataFileConstants.Magic.Length)
-                throw new AvroRuntimeException("Not an Avro data file");
-
-            // verify magic header
-            byte[] magic = new byte[DataFileConstants.Magic.Length];
-            inStream.Seek(0, SeekOrigin.Begin);
-            for (int c = 0; c < magic.Length; c = inStream.Read(magic, c, magic.Length - c)) { }
-            inStream.Seek(0, SeekOrigin.Begin);
-
-            if (magic.SequenceEqual(DataFileConstants.Magic))   // current format
-                return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory);         // (not supporting 1.2 or below, format)
-
-            throw new AvroRuntimeException("Not an Avro data file");
+            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory);         // (not supporting 1.2 or below, format)
         }
 
         DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory)
@@ -191,6 +176,9 @@ namespace Avro.File
         /// <inheritdoc/>
         public void Seek(long position)
         {
+            if (!_stream.CanSeek)
+                throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
+
             _stream.Position = position;
             _decoder = new BinaryDecoder(_stream);
             _datumDecoder = null;
@@ -245,6 +233,8 @@ namespace Avro.File
         /// <inheritdoc/>
         public long PreviousSync()
         {
+            if (!_stream.CanSeek)
+                throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
             return _blockStart;
         }
 
@@ -412,7 +402,8 @@ namespace Avro.File
 
         private void BlockFinished()
         {
-            _blockStart = _stream.Position;
+            if (_stream.CanSeek)
+                _blockStart = _stream.Position;
         }
 
         private DataBlock NextRawBlock(DataBlock reuse)
@@ -460,10 +451,27 @@ namespace Avro.File
                     return true;
 
                 // check to ensure still data to read
-                if (!DataLeft())
-                    return false;
+                if (_stream.CanSeek)
+                {
+                    if (!DataLeft())
+                        return false;
 
-                _blockRemaining = _decoder.ReadLong();      // read block count
+                    _blockRemaining = _decoder.ReadLong();      // read block count
+                }
+                else
+                {
+                    // when the stream is not seekable, the only way to know if there is still
+                    // some data to read is to reach the end and raise an AvroException here.
+                    try
+                    {
+                        _blockRemaining = _decoder.ReadLong();      // read block count
+                    }
+                    catch(AvroException)
+                    {
+                        return false;
+                    }
+                }
+
                 _blockSize = _decoder.ReadLong();           // read block size
                 if (_blockSize > System.Int32.MaxValue || _blockSize < 0)
                 {

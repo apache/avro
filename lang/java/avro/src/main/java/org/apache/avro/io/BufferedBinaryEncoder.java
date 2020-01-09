@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
+import java.util.Objects;
 
 import org.apache.avro.AvroRuntimeException;
 
@@ -57,8 +58,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   }
 
   BufferedBinaryEncoder configure(OutputStream out, int bufferSize) {
-    if (null == out)
-      throw new NullPointerException("OutputStream cannot be null!");
+    Objects.requireNonNull(out, "OutputStream cannot be null");
     if (null != this.sink) {
       if (pos > 0) {
         try {

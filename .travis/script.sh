@@ -19,7 +19,6 @@ set -e
 
 case "$TRAVIS_OS_NAME" in
 "linux")
-    sed -i.bak "s/openjdk:8/openjdk:${JAVA}/" share/docker/Dockerfile
     # Workaround for Yetus. For now, Yetus assumes the directory in which Dockerfile is placed is the docker context.
     # So the Dockerfile should be here to refer to other subdirectories than share/docker from inside the Dockerfile.
     cp share/docker/Dockerfile .

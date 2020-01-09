@@ -119,7 +119,7 @@ public class Protocol extends JsonProperties {
 
     /** Errors that might be thrown. */
     public Schema getErrors() {
-      return Schema.createUnion(new ArrayList<>());
+      return Schema.createUnion(Collections.emptyList());
     }
 
     /** Returns true if this is a one-way message, with no response or errors. */
@@ -256,9 +256,7 @@ public class Protocol extends JsonProperties {
   /** Union type for generating system errors. */
   public static final Schema SYSTEM_ERRORS;
   static {
-    List<Schema> errors = new ArrayList<>();
-    errors.add(SYSTEM_ERROR);
-    SYSTEM_ERRORS = Schema.createUnion(errors);
+    SYSTEM_ERRORS = Schema.createUnion(Collections.singletonList(SYSTEM_ERROR));
   }
 
   private static final Set<String> PROTOCOL_RESERVED = Collections

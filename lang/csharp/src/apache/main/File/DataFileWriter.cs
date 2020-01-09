@@ -190,15 +190,20 @@ namespace Avro.File
         public void Flush()
         {
             EnsureHeader();
-            Sync();
+            SyncInternal();
         }
 
         /// <inheritdoc/>
         public long Sync()
         {
+            SyncInternal();
+            return _stream.Position;
+        }
+
+        private void SyncInternal()
+        {
             AssertOpen();
             WriteBlock();
-            return _stream.Position;
         }
 
         /// <inheritdoc/>
