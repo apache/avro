@@ -329,7 +329,8 @@ do
     githooks)
       echo "Installing AVRO git hooks."
       cp share/githooks/* .git/hooks
-      find .git/hooks/ -type f ! -name '*sample*' -exec chmod +x {} +
+      chmod +x .git/hooks/*
+      chmod -x .git/hooks/*sample*
       ;;
 
     docker-test)
