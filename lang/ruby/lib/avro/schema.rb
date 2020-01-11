@@ -55,8 +55,14 @@ module Avro
 
         type_sym = type.to_sym
         if PRIMITIVE_TYPES_SYM.include?(type_sym)
-          return PrimitiveSchema.new(type_sym, logical_type)
-
+          case type_sym
+          when :bytes
+            precision = json_obj['precision']
+            scale = json_obj['scale']
+            return BytesSchema.new(type_sym, logical_type, precision, scale)
+          else
+            return PrimitiveSchema.new(type_sym, logical_type)
+          end
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
           if !Avro.disable_schema_name_validation && name !~ NAME_REGEX
@@ -393,6 +399,24 @@ module Avro
       def to_avro(names=nil)
         hsh = super
         hsh.size == 1 ? type : hsh
+      end
+    end
+
+    class BytesSchema < PrimitiveSchema
+      attr_reader :precision, :scale
+      def initialize(type, logical_type=nil, precision=nil, scale=nil)
+        super(type.to_sym, logical_type)
+        @precision = precision
+        @scale = scale
+      end
+
+      def to_avro(names=nil)
+        avro = super
+        return avro if avro.is_a?(String)
+
+        avro['precision'] = precision if precision
+        avro['scale'] = scale if scale
+        avro
       end
     end
 

@@ -492,4 +492,53 @@ class TestSchema < Test::Unit::TestCase
     assert_equal('Error validating default for veggies: at . expected type null, got string with value "apple"',
                  exception.to_s)
   end
+
+  def test_bytes_decimal_to_include_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 9,
+        "scale": 2
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'bytes',
+        'logicalType' => 'decimal',
+        'precision' => 9,
+        'scale' => 2
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_bytes_decimal_to_without_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal"
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'bytes',
+        'logicalType' => 'decimal'
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_bytes_schema
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes"
+      }
+    SCHEMA
+
+    schema_str = 'bytes'
+    assert_equal schema_str, schema.to_avro
+  end
 end
