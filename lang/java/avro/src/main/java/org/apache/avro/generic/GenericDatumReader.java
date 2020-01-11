@@ -227,7 +227,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object readRecord(Object old, Schema expected, ResolvingDecoder in) throws IOException {
     final Object record = data.newRecord(old, expected);
     final Object state = data.getRecordState(record, expected);
-    final List<Field> expectedFields = expected.getFields();
 
     for (Field field : in.readFieldOrder()) {
       int pos = field.pos();
