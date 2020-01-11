@@ -22,12 +22,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+import setuptools  # type: ignore
 import distutils.errors
 import glob
 import os
 import subprocess
-
-import setuptools  # type: ignore
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')

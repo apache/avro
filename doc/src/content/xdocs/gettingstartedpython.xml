@@ -49,33 +49,43 @@
     </section>
 
     <section id="download_install">
-      <title>Download</title>
+      <title>Download and Install</title>
       <p>
-        For Python, the easiest way to get started is to install it from PyPI.
-        Python's Avro API is available over <a href="https://pypi.org/project/avro/">PyPi</a>.
+        The easiest way to get started in Python is to install <a href="https://pypi.org/project/avro/">avro from PyPI</a>
+        using <a href="https://pip.pypa.io/en/stable/">pip</a>, the Python Package Installer.
       </p>
       <source>
 $ python3 -m pip install avro
+      </source>
+      <p>Consider doing a local install or using a virtualenv to avoid permissions problems and interfering with system packages:</p>
+      <source>
+$ python3 -m pip install --user install avro
+      </source>
+      <p>or</p>
+      <source>
+        $ python3 -m venv avro-venv
+        $ avro-venv/bin/pip install avro
       </source>
       <p>
         The official releases of the Avro implementations for C, C++, C#, Java,
         PHP, Python, and Ruby can be downloaded from the <a
         href="https://avro.apache.org/releases.html">Apache Avro&#153;
-        Releases</a> page.  This guide uses Avro &AvroVersion;, the latest
-        version at the time of writing.  Download and unzip
-        <em>avro-&AvroVersion;.tar.gz</em>, and install via <code>python
-        setup.py</code> (this will probably require root privileges).  Ensure
-        that you can <code>import avro</code> from a Python prompt.
+        Releases</a> page. This guide uses Avro &AvroVersion;, the latest
+        version at the time of writing. Download and install
+        <em>avro-&AvroVersion;-py2.py3-none-any.whl</em> or
+        <em>avro-&AvroVersion;.tar.gz</em> via
+        <code>python -m pip avro-&AvroVersion;-py2.py3-none-any.whl</code>
+        or
+        <code>python -m pip avro-&AvroVersion;.tar.gz</code>.
+        (As above, consider using a virtualenv or user-local install.)
       </p>
+      <p>Check that you can import avro from a Python prompt.</p>
       <source>
-$ tar xvf avro-&AvroVersion;.tar.gz
-$ cd avro-&AvroVersion;
-$ python3 setup.py install
-$ python3
->>> import avro # should not raise ImportError
+$ python3 -c 'import avro; print(avro.__version__)'
       </source>
+      <p>The above should print &AvroVersion;. It should not raise an <code>ImportError</code>.</p>
       <p>
-        Alternatively, you may build the Avro Python library from source.  From
+        Alternatively, you may build the Avro Python library from source. From
         your the root Avro directory, run the commands
       </p>
       <source>
