@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
@@ -236,7 +235,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   protected Object readRecord(Object old, Schema expected, ResolvingDecoder in) throws IOException {
     final Object record = data.newRecord(old, expected);
     final Object state = data.getRecordState(record, expected);
-    final List<Field> expectedFields = expected.getFields();
 
     for (Field field : in.readFieldOrder()) {
       int pos = field.pos();
@@ -247,11 +245,6 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       }
 
       readField(record, field, oldDatum, in, state);
-
-      // In case the expected field isn't in the read field
-      if (!expectedFields.get(pos).equals(field)) {
-        data.setField(record, field.name(), field.pos(), data.getDefaultValue(expectedFields.get(pos)));
-      }
     }
 
     return record;
