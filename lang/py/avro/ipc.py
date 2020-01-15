@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 
 import io
 import os
+from struct import Struct
 
 import avro.io
 from avro import protocol, schema
@@ -64,7 +65,7 @@ SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
 REMOTE_HASHES = {}
 REMOTE_PROTOCOLS = {}
 
-BIG_ENDIAN_INT_STRUCT = avro.io.struct_class('!I')
+BIG_ENDIAN_INT_STRUCT = Struct('!I')
 BUFFER_HEADER_LENGTH = 4
 BUFFER_SIZE = 8192
 

@@ -28,18 +28,7 @@ import zlib
 
 import avro.io
 import avro.schema
-
-try:
-  import snappy
-  has_snappy = True
-except ImportError:
-  has_snappy = False
-try:
-  import zstandard as zstd
-  has_zstandard = True
-except ImportError:
-  has_zstandard = False
-
+from avro.codecs import Codecs
 
 #
 # Constants
@@ -56,11 +45,9 @@ META_SCHEMA = avro.schema.parse("""\
    {"name": "meta", "type": {"type": "map", "values": "bytes"}},
    {"name": "sync", "type": {"type": "fixed", "name": "sync", "size": %d}}]}
 """ % (MAGIC_SIZE, SYNC_SIZE))
-VALID_CODECS = ['null', 'deflate']
-if has_snappy:
-    VALID_CODECS.append('snappy')
-if has_zstandard:
-    VALID_CODECS.append('zstandard')
+
+NULL_CODEC = 'null'
+VALID_CODECS = Codecs.supported_codec_names()
 VALID_ENCODINGS = ['binary'] # not used yet
 
 CODEC_KEY = "avro.codec"
@@ -142,7 +129,7 @@ class _DataFile(object):
 class DataFileWriter(_DataFile):
 
   # TODO(hammer): make 'encoder' a metadata property
-  def __init__(self, writer, datum_writer, writers_schema=None, codec='null'):
+  def __init__(self, writer, datum_writer, writers_schema=None, codec=NULL_CODEC):
     """
     If the schema is not present, presume we're appending.
 
@@ -215,34 +202,14 @@ class DataFileWriter(_DataFile):
 
       # write block contents
       uncompressed_data = self.buffer_writer.getvalue()
-      codec = self.codec
-      if codec == 'null':
-        compressed_data = uncompressed_data
-        compressed_data_length = len(compressed_data)
-      elif codec == 'deflate':
-        # The first two characters and last character are zlib
-        # wrappers around deflate data.
-        compressed_data = zlib.compress(uncompressed_data)[2:-1]
-        compressed_data_length = len(compressed_data)
-      elif codec == 'snappy':
-        compressed_data = snappy.compress(uncompressed_data)
-        compressed_data_length = len(compressed_data) + 4 # crc32
-      elif codec == 'zstandard':
-        compressed_data = zstd.ZstdCompressor().compress(uncompressed_data)
-        compressed_data_length = len(compressed_data)
-      else:
-        fail_msg = '"%s" codec is not supported.' % self.codec
-        raise DataFileException(fail_msg)
+      codec = Codecs.get_codec(self.codec)
+      compressed_data, compressed_data_length = codec.compress(uncompressed_data)
 
       # Write length of block
       self.encoder.write_long(compressed_data_length)
 
       # Write block
       self.writer.write(compressed_data)
-
-      # Write CRC32 checksum for Snappy
-      if codec == 'snappy':
-        self.encoder.write_crc32(uncompressed_data)
 
       # write sync marker
       self.writer.write(self.sync_marker)
@@ -345,40 +312,8 @@ class DataFileReader(_DataFile):
 
   def _read_block_header(self):
     self.block_count = self.raw_decoder.read_long()
-    codec = self.codec
-    if codec == "null":
-      # Skip a long; we don't need to use the length.
-      self.raw_decoder.skip_long()
-      self._datum_decoder = self._raw_decoder
-    elif codec == 'deflate':
-      # Compressed data is stored as (length, data), which
-      # corresponds to how the "bytes" type is encoded.
-      data = self.raw_decoder.read_bytes()
-      # -15 is the log of the window size; negative indicates
-      # "raw" (no zlib headers) decompression.  See zlib.h.
-      uncompressed = zlib.decompress(data, -15)
-      self._datum_decoder = avro.io.BinaryDecoder(io.BytesIO(uncompressed))
-    elif codec == 'snappy':
-      # Compressed data includes a 4-byte CRC32 checksum
-      length = self.raw_decoder.read_long()
-      data = self.raw_decoder.read(length - 4)
-      uncompressed = snappy.decompress(data)
-      self._datum_decoder = avro.io.BinaryDecoder(io.BytesIO(uncompressed))
-      self.raw_decoder.check_crc32(uncompressed);
-    elif codec == 'zstandard':
-      length = self.raw_decoder.read_long()
-      data = self.raw_decoder.read(length)
-      uncompressed = bytearray()
-      dctx = zstd.ZstdDecompressor()
-      with dctx.stream_reader(io.BytesIO(data)) as reader:
-        while True:
-          chunk = reader.read(16384)
-          if not chunk:
-            break
-          uncompressed.extend(chunk)
-      self._datum_decoder = avro.io.BinaryDecoder(io.BytesIO(uncompressed))
-    else:
-      raise DataFileException("Unknown codec: %r" % self.codec)
+    codec = Codecs.get_codec(self.codec)
+    self._datum_decoder = codec.decompress(self.raw_decoder)
 
   def _skip_sync(self):
     """
