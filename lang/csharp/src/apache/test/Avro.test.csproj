@@ -17,12 +17,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">netcoreapp2.2</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Avro.test</RootNamespace>
     <AssemblyName>Avro.test</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateProgramFile>false</GenerateProgramFile>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -42,7 +43,7 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'!='netcoreapp2.2'">
+  <ItemGroup Condition="'$(TargetFramework)'!='netcoreapp3.1'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.1" />
   </ItemGroup>
 

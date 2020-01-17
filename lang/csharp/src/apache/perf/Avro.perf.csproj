@@ -18,8 +18,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">netcoreapp2.2</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)'!='Windows_NT'">netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;netcoreapp3.1</TargetFrameworks>
     <AssemblyName>Avro.perf</AssemblyName>
     <RootNamespace>Avro.perf</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
