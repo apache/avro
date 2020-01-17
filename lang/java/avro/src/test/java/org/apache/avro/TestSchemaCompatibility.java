@@ -20,11 +20,13 @@ package org.apache.avro;
 import static java.util.Arrays.asList;
 import static org.apache.avro.SchemaCompatibility.*;
 import static org.apache.avro.TestSchemas.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
@@ -34,7 +36,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Unit-tests for SchemaCompatibility. */
+/**
+ * Unit-tests for SchemaCompatibility.
+ */
 public class TestSchemaCompatibility {
   private static final Logger LOG = LoggerFactory.getLogger(TestSchemaCompatibility.class);
   // -----------------------------------------------------------------------------------------------
@@ -43,7 +47,7 @@ public class TestSchemaCompatibility {
       new Schema.Field("oldfield1", INT_SCHEMA, null, null), new Schema.Field("oldfield2", STRING_SCHEMA, null, null)));
 
   @Test
-  public void testValidateSchemaPairMissingField() throws Exception {
+  public void testValidateSchemaPairMissingField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
@@ -55,7 +59,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaPairMissingSecondField() throws Exception {
+  public void testValidateSchemaPairMissingSecondField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
     final SchemaCompatibility.SchemaPairCompatibility expectedResult = new SchemaCompatibility.SchemaPairCompatibility(
@@ -67,7 +71,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaPairAllFields() throws Exception {
+  public void testValidateSchemaPairAllFields() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("oldfield2", STRING_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
@@ -80,7 +84,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaNewFieldWithDefault() throws Exception {
+  public void testValidateSchemaNewFieldWithDefault() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, 42));
     final Schema reader = Schema.createRecord(readerFields);
@@ -93,7 +97,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateSchemaNewField() throws Exception {
+  public void testValidateSchemaNewField() {
     final List<Schema.Field> readerFields = list(new Schema.Field("oldfield1", INT_SCHEMA, null, null),
         new Schema.Field("newfield1", INT_SCHEMA, null, null));
     final Schema reader = Schema.createRecord(readerFields);
@@ -112,7 +116,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidateArrayWriterSchema() throws Exception {
+  public void testValidateArrayWriterSchema() {
     final Schema validReader = Schema.createArray(STRING_SCHEMA);
     final Schema invalidReader = Schema.createMap(STRING_SCHEMA);
     final SchemaCompatibility.SchemaPairCompatibility validResult = new SchemaCompatibility.SchemaPairCompatibility(
@@ -132,7 +136,7 @@ public class TestSchemaCompatibility {
   }
 
   @Test
-  public void testValidatePrimitiveWriterSchema() throws Exception {
+  public void testValidatePrimitiveWriterSchema() {
     final Schema validReader = Schema.create(Schema.Type.STRING);
     final SchemaCompatibility.SchemaPairCompatibility validResult = new SchemaCompatibility.SchemaPairCompatibility(
         SchemaCompatibility.SchemaCompatibilityResult.compatible(), validReader, STRING_SCHEMA,
@@ -149,7 +153,9 @@ public class TestSchemaCompatibility {
     assertEquals(invalidResult, checkReaderWriterCompatibility(INT_SCHEMA, STRING_SCHEMA));
   }
 
-  /** Reader union schema must contain all writer union branches. */
+  /**
+   * Reader union schema must contain all writer union branches.
+   */
   @Test
   public void testUnionReaderWriterSubsetIncompatibility() {
     final Schema unionWriter = Schema.createUnion(list(INT_SCHEMA, STRING_SCHEMA, LONG_SCHEMA));
@@ -160,7 +166,9 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
-  /** Collection of reader/writer schema pair that are compatible. */
+  /**
+   * Collection of reader/writer schema pair that are compatible.
+   */
   public static final List<ReaderWriter> COMPATIBLE_READER_WRITER_TEST_CASES = list(
       new ReaderWriter(BOOLEAN_SCHEMA, BOOLEAN_SCHEMA),
 
@@ -282,7 +290,9 @@ public class TestSchemaCompatibility {
 
   // -----------------------------------------------------------------------------------------------
 
-  /** Tests reader/writer compatibility validation. */
+  /**
+   * Tests reader/writer compatibility validation.
+   */
   @Test
   public void testReaderWriterCompatibility() {
     for (ReaderWriter readerWriter : COMPATIBLE_READER_WRITER_TEST_CASES) {
@@ -303,13 +313,19 @@ public class TestSchemaCompatibility {
    * value.
    */
   private static final class DecodingTestCase {
-    /** Writer schema used to encode the datum. */
+    /**
+     * Writer schema used to encode the datum.
+     */
     private final Schema mWriterSchema;
 
-    /** Datum to encode according to the specified writer schema. */
+    /**
+     * Datum to encode according to the specified writer schema.
+     */
     private final Object mDatum;
 
-    /** Reader schema used to decode the datum encoded using the writer schema. */
+    /**
+     * Reader schema used to decode the datum encoded using the writer schema.
+     */
     private final Schema mReaderSchema;
 
     /**
@@ -372,7 +388,9 @@ public class TestSchemaCompatibility {
 
       new DecodingTestCase(INT_STRING_UNION_SCHEMA, "the string", STRING_UNION_SCHEMA, new Utf8("the string")));
 
-  /** Tests the reader/writer compatibility at decoding time. */
+  /**
+   * Tests the reader/writer compatibility at decoding time.
+   */
   @Test
   public void testReaderWriterDecodingCompatibility() throws Exception {
     for (DecodingTestCase testCase : DECODING_COMPATIBILITY_TEST_CASES) {
@@ -404,10 +422,61 @@ public class TestSchemaCompatibility {
     }
   }
 
-  Deque<String> asDeqeue(String... args) {
-    List<String> x = Arrays.asList(args);
-    Collections.reverse(x);
-    Deque<String> dq = new ArrayDeque<>(x);
-    return dq;
+  private Schema readSchemaFromResources(String name) throws IOException {
+    try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(name)) {
+      final String result = new BufferedReader(new InputStreamReader(inputStream)).lines()
+          .collect(Collectors.joining("\n"));
+
+      return new Schema.Parser().parse(result);
+    }
+  }
+
+  @Test
+  public void checkResolvingDecoder() throws IOException {
+    final Schema locationSchema = readSchemaFromResources("schema-location.json");
+    final Schema writeSchema = readSchemaFromResources("schema-location-write.json");
+
+    // For the read schema the long field has been removed
+    // And a new field has been added, called long_r2
+    // This one should be null.
+    final Schema readSchema = readSchemaFromResources("schema-location-read.json");
+
+    // Create some testdata
+    GenericData.Record record = new GenericData.Record(writeSchema);
+    GenericData.Record location = new GenericData.Record(locationSchema);
+
+    location.put("lat", 52.995143f);
+    location.put("long", -1.539054f);
+
+    HashMap<String, GenericData.Record> locations = new HashMap<>();
+    locations.put("l1", location);
+    record.put("location", locations);
+
+    // Write the record to bytes
+    byte[] payload;
+    try (ByteArrayOutputStream bbos = new ByteArrayOutputStream()) {
+      DatumWriter<GenericData.Record> datumWriter = new GenericDatumWriter<>(writeSchema);
+      Encoder enc = EncoderFactory.get().binaryEncoder(bbos, null);
+      datumWriter.write(record, enc);
+      enc.flush();
+
+      payload = bbos.toByteArray();
+    }
+
+    // Read the record, and decode it using the read with the long
+    // And project it using the other schema with the long_r2
+    BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(payload, null);
+    GenericDatumReader<GenericData.Record> reader = new GenericDatumReader<>();
+    reader.setSchema(writeSchema);
+    reader.setExpected(readSchema);
+
+    // Get the object we're looking for
+    GenericData.Record r = reader.read(null, decoder);
+    HashMap<Utf8, GenericData.Record> locs = (HashMap<Utf8, GenericData.Record>) r.get("location");
+    GenericData.Record loc = locs.get(new Utf8("l1"));
+
+    assertNotNull(loc.get("lat"));
+    // This is a new field, and should be null
+    assertNull(loc.get("long_r2"));
   }
 }

@@ -9,5 +9,6 @@ avro/VERSION.txt
 avro/interop.avsc
 avro/tether/InputProtocol.avpr
 avro/tether/OutputProtocol.avpr
+avro/test/interop/
 .tox
 dist

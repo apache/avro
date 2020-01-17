@@ -78,8 +78,8 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  public void setField(Object r, String n, int pos, Object o) {
-    setField(r, n, pos, o, getRecordState(r, getSchema(r.getClass())));
+  public void setField(Object r, String n, int pos, Object value) {
+    setField(r, n, pos, value, getRecordState(r, getSchema(r.getClass())));
   }
 
   @Override
@@ -88,17 +88,17 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  protected void setField(Object r, String n, int pos, Object o, Object state) {
-    Builder b = (Builder) r;
-    FieldDescriptor f = ((FieldDescriptor[]) state)[pos];
+  protected void setField(Object record, String name, int position, Object value, Object state) {
+    Builder b = (Builder) record;
+    FieldDescriptor f = ((FieldDescriptor[]) state)[position];
     switch (f.getType()) {
     case MESSAGE:
-      if (o == null) {
+      if (value == null) {
         b.clearField(f);
         break;
       }
     default:
-      b.setField(f, o);
+      b.setField(f, value);
     }
   }
 

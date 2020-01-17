@@ -26,24 +26,15 @@ import sys
 import avro.datafile
 import avro.io
 import avro.schema
+from avro.codecs import Codecs
 
 try:
   unicode
 except NameError:
   unicode = str
 
-CODECS_TO_VALIDATE = ('null', 'deflate')
-
-try:
-  import snappy
-  CODECS_TO_VALIDATE += ('snappy',)
-except ImportError:
-  print('Snappy not present, will skip generating it.')
-try:
-  import zstandard
-  CODECS_TO_VALIDATE += ('zstandard',)
-except ImportError:
-  print('Zstandard not present, will skip generating it.')
+NULL_CODEC = 'null'
+CODECS_TO_VALIDATE = Codecs.supported_codec_names()
 
 DATUM = {
   'intField': 12,
@@ -69,7 +60,7 @@ def generate(schema_path, output_path):
     interop_schema = avro.schema.parse(schema_file.read())
   for codec in CODECS_TO_VALIDATE:
     filename = output_path
-    if codec != 'null':
+    if codec != NULL_CODEC:
       base, ext = os.path.splitext(output_path)
       filename = base + "_" + codec + ext
     with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),

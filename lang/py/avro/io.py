@@ -47,8 +47,8 @@ import datetime
 import json
 import struct
 import sys
-from binascii import crc32
 from decimal import Decimal, getcontext
+from struct import Struct
 
 from avro import constants, schema, timezones
 
@@ -81,24 +81,11 @@ LONG_MIN_VALUE = -(1 << 63)
 LONG_MAX_VALUE = (1 << 63) - 1
 
 # TODO(hammer): shouldn't ! be < for little-endian (according to spec?)
-if sys.version_info >= (2, 5, 0):
-  struct_class = struct.Struct
-else:
-  class SimpleStruct(object):
-    def __init__(self, format):
-      self.format = format
-    def pack(self, *args):
-      return struct.pack(self.format, *args)
-    def unpack(self, *args):
-      return struct.unpack(self.format, *args)
-  struct_class = SimpleStruct
-
-STRUCT_FLOAT = struct_class('<f')           # big-endian float
-STRUCT_DOUBLE = struct_class('<d')          # big-endian double
-STRUCT_CRC32 = struct_class('>I')           # big-endian unsigned int
-STRUCT_SIGNED_SHORT = struct_class('>h')    # big-endian signed short
-STRUCT_SIGNED_INT = struct_class('>i')      # big-endian signed int
-STRUCT_SIGNED_LONG = struct_class('>q')     # big-endian signed long
+STRUCT_FLOAT = Struct('<f')           # big-endian float
+STRUCT_DOUBLE = Struct('<d')          # big-endian double
+STRUCT_SIGNED_SHORT = Struct('>h')    # big-endian signed short
+STRUCT_SIGNED_INT = Struct('>i')      # big-endian signed int
+STRUCT_SIGNED_LONG = Struct('>q')     # big-endian signed long
 
 
 #
@@ -373,12 +360,6 @@ class BinaryDecoder(object):
     unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
     return unix_epoch_datetime + timedelta
 
-
-  def check_crc32(self, bytes):
-    checksum = STRUCT_CRC32.unpack(self.read(4))[0];
-    if crc32(bytes) & 0xffffffff != checksum:
-      raise schema.AvroException("Checksum failure")
-
   def skip_null(self):
     pass
 
@@ -550,12 +531,6 @@ class BinaryEncoder(object):
     """
     datum = datum.encode("utf-8")
     self.write_bytes(datum)
-
-  def write_crc32(self, bytes):
-    """
-    A 4-byte, big-endian CRC32 checksum
-    """
-    self.write(STRUCT_CRC32.pack(crc32(bytes) & 0xffffffff));
 
   def write_date_int(self, datum):
     """

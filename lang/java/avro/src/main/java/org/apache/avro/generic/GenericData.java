@@ -791,8 +791,8 @@ public class GenericData {
    * to a record instance. The default implementation is for
    * {@link IndexedRecord}.
    */
-  public void setField(Object record, String name, int position, Object o) {
-    ((IndexedRecord) record).put(position, o);
+  public void setField(Object record, String name, int position, Object value) {
+    ((IndexedRecord) record).put(position, value);
   }
 
   /**
@@ -814,8 +814,8 @@ public class GenericData {
   }
 
   /** Version of {@link #setField} that has state. */
-  protected void setField(Object r, String n, int p, Object o, Object state) {
-    setField(r, n, p, o);
+  protected void setField(Object record, String name, int position, Object value, Object state) {
+    setField(record, name, position, value);
   }
 
   /** Version of {@link #getField} that has state. */
@@ -848,8 +848,9 @@ public class GenericData {
     }
 
     Integer i = union.getIndexNamed(getSchemaName(datum));
-    if (i != null)
+    if (i != null) {
       return i;
+    }
     throw new UnresolvedUnionException(union, datum);
   }
 

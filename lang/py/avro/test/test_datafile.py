@@ -23,6 +23,7 @@ import os
 import unittest
 
 from avro import datafile, io, schema
+from avro.codecs import Codecs
 
 try:
   unicode
@@ -64,17 +65,7 @@ SCHEMAS_TO_VALIDATE = (
 )
 
 FILENAME = 'test_datafile.out'
-CODECS_TO_VALIDATE = ('null', 'deflate')
-try:
-  import snappy
-  CODECS_TO_VALIDATE += ('snappy',)
-except ImportError:
-  print('Snappy not present, will skip testing it.')
-try:
-  import zstandard
-  CODECS_TO_VALIDATE += ('zstandard',)
-except ImportError:
-  print('Zstandard not present, will skip testing it.')
+CODECS_TO_VALIDATE = Codecs.supported_codec_names()
 
 class TestDataFile(unittest.TestCase):
   def test_round_trip(self):

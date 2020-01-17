@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>21</version>
+    <version>22</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -354,6 +354,7 @@
                 <exclude>.travis.yml</exclude>
                 <exclude>BUILD.md</exclude>
                 <exclude>lang/c/src/avro-c.pc.in</exclude>
+                <exclude>lang/csharp/**/bin/Debug/**/Avro.xml</exclude>
                 <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
@@ -369,6 +370,7 @@
                 <exclude>lang/perl/inc/Module/Install.pm</exclude>
                 <exclude>lang/perl/inc/Module/Install/*.pm</exclude>
                 <exclude>lang/py/.eggs/**</exclude>
+                <exclude>lang/py/.tox/**</exclude>
                 <exclude>lang/py/build/**</exclude>
                 <exclude>lang/py/dist/**</exclude>
                 <exclude>lang/py/userlogs/**</exclude>

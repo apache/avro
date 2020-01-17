@@ -306,7 +306,7 @@ public class BinaryDecoder extends Decoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = readInt();
-    ByteBuffer result;
+    final ByteBuffer result;
     if (old != null && length <= old.capacity()) {
       result = old;
       result.clear();

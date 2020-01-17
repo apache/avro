@@ -43,7 +43,7 @@
     <jackson.version>2.10.0</jackson.version>
     <jackson.databind.version>2.10.0</jackson.databind.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.24.v20191120</jetty.version>
+    <jetty.version>9.4.25.v20191220</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.12</junit.version>
     <netty.version>3.10.6.Final</netty.version>
@@ -61,7 +61,7 @@
     <easymock.version>4.0.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
     <grpc.version>1.26.0</grpc.version>
-    <netty-codec-http2.version>4.1.44.Final</netty-codec-http2.version>
+    <netty-codec-http2.version>4.1.45.Final</netty-codec-http2.version>
     <zstd-jni.version>1.4.3-1</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.0.1</archetype-plugin.version>
