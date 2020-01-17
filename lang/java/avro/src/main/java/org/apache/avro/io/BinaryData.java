@@ -396,13 +396,11 @@ public class BinaryData {
    * @return Returns the number of bytes written to the buffer, 4.
    */
   public static int encodeFloat(float f, byte[] buf, int pos) {
-    int len = 1;
-    int bits = Float.floatToRawIntBits(f);
-    // hotspot compiler works well with this variant
-    buf[pos] = (byte) ((bits) & 0xFF);
-    buf[pos + len++] = (byte) ((bits >>> 8) & 0xFF);
-    buf[pos + len++] = (byte) ((bits >>> 16) & 0xFF);
-    buf[pos + len++] = (byte) ((bits >>> 24) & 0xFF);
+    final int bits = Float.floatToRawIntBits(f);
+    buf[pos + 3] = (byte) (bits >>> 24);
+    buf[pos + 2] = (byte) (bits >>> 16);
+    buf[pos + 1] = (byte) (bits >>> 8);
+    buf[pos] = (byte) (bits);
     return 4;
   }
 
@@ -414,19 +412,19 @@ public class BinaryData {
    * @return Returns the number of bytes written to the buffer, 8.
    */
   public static int encodeDouble(double d, byte[] buf, int pos) {
-    long bits = Double.doubleToRawLongBits(d);
+    final long bits = Double.doubleToRawLongBits(d);
     int first = (int) (bits & 0xFFFFFFFF);
     int second = (int) ((bits >>> 32) & 0xFFFFFFFF);
     // the compiler seems to execute this order the best, likely due to
     // register allocation -- the lifetime of constants is minimized.
-    buf[pos] = (byte) ((first) & 0xFF);
-    buf[pos + 4] = (byte) ((second) & 0xFF);
-    buf[pos + 5] = (byte) ((second >>> 8) & 0xFF);
-    buf[pos + 1] = (byte) ((first >>> 8) & 0xFF);
-    buf[pos + 2] = (byte) ((first >>> 16) & 0xFF);
-    buf[pos + 6] = (byte) ((second >>> 16) & 0xFF);
-    buf[pos + 7] = (byte) ((second >>> 24) & 0xFF);
-    buf[pos + 3] = (byte) ((first >>> 24) & 0xFF);
+    buf[pos] = (byte) (first);
+    buf[pos + 4] = (byte) (second);
+    buf[pos + 5] = (byte) (second >>> 8);
+    buf[pos + 1] = (byte) (first >>> 8);
+    buf[pos + 2] = (byte) (first >>> 16);
+    buf[pos + 6] = (byte) (second >>> 16);
+    buf[pos + 7] = (byte) (second >>> 24);
+    buf[pos + 3] = (byte) (first >>> 24);
     return 8;
   }
 
