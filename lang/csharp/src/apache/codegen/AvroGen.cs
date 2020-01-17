@@ -23,13 +23,13 @@ namespace Avro
 {
     class AvroGen
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             // Print usage if no arguments provided or help requested
             if (args.Length == 0 || args[0] == "-h" || args[0] == "--help")
             {
                 Usage();
-                return;
+                return 0;
             }
 
             // Parse command line arguments
@@ -43,9 +43,9 @@ namespace Avro
                 {
                     if (i + 1 >= args.Length)
                     {
-                        Console.WriteLine("Missing path to protocol file");
+                        Console.Error.WriteLine("Missing path to protocol file");
                         Usage();
-                        return;
+                        return -1;
                     }
 
                     isProtocol = true;
@@ -55,9 +55,9 @@ namespace Avro
                 {
                     if (i + 1 >= args.Length)
                     {
-                        Console.WriteLine("Missing path to schema file");
+                        Console.Error.WriteLine("Missing path to schema file");
                         Usage();
-                        return;
+                        return -1;
                     }
 
                     isProtocol = false;
@@ -67,17 +67,17 @@ namespace Avro
                 {
                     if (i + 1 >= args.Length)
                     {
-                        Console.WriteLine("Missing namespace mapping");
+                        Console.Error.WriteLine("Missing namespace mapping");
                         Usage();
-                        return;
+                        return -1;
                     }
 
                     var parts = args[++i].Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length != 2)
                     {
-                        Console.WriteLine("Malformed namespace mapping. Required format is \"avro.namespace:csharp.namespace\"");
+                        Console.Error.WriteLine("Malformed namespace mapping. Required format is \"avro.namespace:csharp.namespace\"");
                         Usage();
-                        return;
+                        return -1;
                     }
 
                     namespaceMapping[parts[0]] = parts[1];
@@ -88,30 +88,37 @@ namespace Avro
                 }
                 else
                 {
-                    Console.WriteLine("Unexpected command line argument: {0}", args[i]);
+                    Console.Error.WriteLine("Unexpected command line argument: {0}", args[i]);
                     Usage();
                 }
             }
 
             // Ensure we got all the command line arguments we need
             bool isValid = true;
+            int rc = 0;
             if (!isProtocol.HasValue || inputFile == null)
             {
-                Console.WriteLine("Must provide either '-p <protocolfile>' or '-s <schemafile>'");
+                Console.Error.WriteLine("Must provide either '-p <protocolfile>' or '-s <schemafile>'");
                 isValid = false;
             }
             else if (outputDir == null)
             {
-                Console.WriteLine("Must provide 'outputdir'");
+                Console.Error.WriteLine("Must provide 'outputdir'");
                 isValid = false;
             }
 
+
             if (!isValid)
+            {
                 Usage();
+                rc = -1;
+            }
             else if (isProtocol.Value)
-                GenProtocol(inputFile, outputDir, namespaceMapping);
+                rc = GenProtocol(inputFile, outputDir, namespaceMapping);
             else
-                GenSchema(inputFile, outputDir, namespaceMapping);
+                rc = GenSchema(inputFile, outputDir, namespaceMapping);
+
+            return rc;
         }
 
         static void Usage()
@@ -128,7 +135,7 @@ namespace Avro
                 AppDomain.CurrentDomain.FriendlyName);
             return;
         }
-        static void GenProtocol(string infile, string outdir,
+        static int GenProtocol(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
@@ -147,10 +154,13 @@ namespace Avro
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception occurred. " + ex.Message);
+                Console.Error.WriteLine("Exception occurred. " + ex.Message);
+                return -1;
             }
+
+            return 0;
         }
-        static void GenSchema(string infile, string outdir,
+        static int GenSchema(string infile, string outdir,
             IEnumerable<KeyValuePair<string, string>> namespaceMapping)
         {
             try
@@ -169,8 +179,11 @@ namespace Avro
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Exception occurred. " + ex.Message);
+                Console.Error.WriteLine("Exception occurred. " + ex.Message);
+                return -1;
             }
+
+            return 0;
         }
     }
 }
