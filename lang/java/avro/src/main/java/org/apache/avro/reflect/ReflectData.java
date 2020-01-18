@@ -713,12 +713,7 @@ public class ReflectData extends SpecificData {
 
   // Return of this class and its superclasses to serialize.
   private static Field[] getCachedFields(Class<?> recordClass) {
-    Field[] fieldsList = FIELDS_CACHE.get(recordClass);
-    if (fieldsList != null)
-      return fieldsList;
-    fieldsList = getFields(recordClass, true);
-    FIELDS_CACHE.put(recordClass, fieldsList);
-    return fieldsList;
+    return FIELDS_CACHE.computeIfAbsent(recordClass, rc -> getFields(rc, true));
   }
 
   private static Field[] getFields(Class<?> recordClass, boolean excludeJava) {
@@ -830,7 +825,7 @@ public class ReflectData extends SpecificData {
     for (Type err : method.getGenericExceptionTypes())
       errs.add(getSchema(err, names));
     Schema errors = Schema.createUnion(errs);
-    return protocol.createMessage(method.getName(), null /* doc */, new LinkedHashMap<String, String>() /* propMap */,
+    return protocol.createMessage(method.getName(), null /* doc */, Collections.emptyMap() /* propMap */,
         request, response, errors);
   }
 
