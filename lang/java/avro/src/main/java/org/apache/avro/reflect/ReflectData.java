@@ -825,8 +825,8 @@ public class ReflectData extends SpecificData {
     for (Type err : method.getGenericExceptionTypes())
       errs.add(getSchema(err, names));
     Schema errors = Schema.createUnion(errs);
-    return protocol.createMessage(method.getName(), null /* doc */, Collections.emptyMap() /* propMap */,
-        request, response, errors);
+    return protocol.createMessage(method.getName(), null /* doc */, Collections.emptyMap() /* propMap */, request,
+        response, errors);
   }
 
   private Schema getSchema(Type type, Map<String, Schema> names) {
