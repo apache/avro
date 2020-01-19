@@ -100,7 +100,7 @@ public class LogicalTypes {
         break;
       default:
         final LogicalTypeFactory typeFactory = REGISTERED_TYPES.get(typeName);
-        logicalType = (typeFactory == null) ? null : typeFactory.fromSchema(schema); 
+        logicalType = (typeFactory == null) ? null : typeFactory.fromSchema(schema);
         break;
       }
 
