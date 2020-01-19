@@ -48,4 +48,16 @@ public class TestUtf8 {
     assertEquals(4, u.getByteLength());
     assertSame(content, u.getBytes());
   }
+
+  @Test
+  public void testHashCodeReused() {
+    Utf8 u = new Utf8("a");
+    assertEquals(97, u.hashCode());
+
+    u.setByteLength(2);
+    u.set("zz");
+
+    assertEquals(97121, u.hashCode());
+    assertEquals(97121, u.hashCode());
+  }
 }
