@@ -55,8 +55,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 /** Utilities for serializing Protobuf data in Avro format. */
 public class ProtobufData extends GenericData {
-  private static final String PROTOBUF_TYPE = "protobuf";
-
   private static final ProtobufData INSTANCE = new ProtobufData();
 
   protected ProtobufData() {

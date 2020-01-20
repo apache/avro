@@ -359,10 +359,6 @@ public class SaslSocketTransceiver extends Transceiver {
         return server.unwrap(buf, 0, buf.length);
     }
 
-    public byte[] wrap(byte[] buf) throws SaslException {
-      return wrap(buf, 0, buf.length);
-    }
-
     public byte[] wrap(byte[] buf, int start, int len) throws SaslException {
       if (client != null)
         return client.wrap(buf, start, len);

@@ -84,7 +84,6 @@ public class NettyServer implements Server {
       final ChannelPipelineFactory pipelineFactory, final ExecutionHandler executionHandler) {
     this.responder = responder;
     this.channelFactory = channelFactory;
-    ExecutionHandler executionHandler1 = executionHandler;
     ServerBootstrap bootstrap = new ServerBootstrap(channelFactory);
     bootstrap.setPipelineFactory(() -> {
       ChannelPipeline p = pipelineFactory.getPipeline();

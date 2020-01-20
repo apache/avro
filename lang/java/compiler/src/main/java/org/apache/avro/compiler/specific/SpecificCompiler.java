@@ -331,8 +331,6 @@ public class SpecificCompiler {
     }
   }
 
-  private static String logChuteName = null;
-
   private void initializeVelocity() {
     this.velocityEngine = new VelocityEngine();
 

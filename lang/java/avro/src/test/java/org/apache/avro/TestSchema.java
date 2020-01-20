@@ -99,7 +99,7 @@ public class TestSchema {
 
   @Test(expected = SchemaParseException.class)
   public void testParseEmptySchema() {
-    Schema schema = new Schema.Parser().parse("");
+    new Schema.Parser().parse("");
   }
 
   @Test

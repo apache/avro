@@ -68,7 +68,7 @@ public class TestGenericData {
   @Test(expected = AvroRuntimeException.class)
   public void testRecordCreateEmptySchema() throws Exception {
     Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
-    Record r = new GenericData.Record(s);
+    new GenericData.Record(s);
   }
 
   @Test(expected = AvroRuntimeException.class)
