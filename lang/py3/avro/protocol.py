@@ -399,7 +399,7 @@ def parse(json_string):
 
 def Parse(json_string):
   """Deprecated implementation of parse."""
-  warnings.warn("`Parse` is deprecated in avro 1.10. "
+  warnings.warn("`Parse` is deprecated in avro 1.9.2. "
                 "Please use `parse` (lowercase) instead.",
                 DeprecationWarning)
   return parse(json_string)
