@@ -183,20 +183,23 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
    *
    * @param pattern The pattern being searched
    * @return the pre-computed partial match table
+   *
+   * @see <a href= "https://github.com/williamfiset/Algorithms">William Fiset
+   *      Algorithms</a>
    */
   private int[] computePartialMatchTable(final byte[] pattern) {
     final int[] pm = new int[pattern.length];
-
-    for (int i = 1, j = 0; i < pattern.length; i++) {
-      while (j > 0 && pattern[j] != pattern[i]) {
-        j = pm[j - 1];
+    for (int i = 1, len = 0; i < pattern.length;) {
+      if (pattern[i] == pattern[len]) {
+        pm[i++] = ++len;
+      } else {
+        if (len > 0) {
+          len = pm[len - 1];
+        } else {
+          i++;
+        }
       }
-      if (pattern[j] == pattern[i]) {
-        j++;
-      }
-      pm[i] = j;
     }
-
     return pm;
   }
 
