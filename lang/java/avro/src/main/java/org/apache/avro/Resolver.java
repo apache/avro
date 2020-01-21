@@ -768,11 +768,9 @@ public class Resolver {
     case RECORD: {
       final SeenPair wsc = new SeenPair(write, read);
       if (!seen.containsKey(wsc)) {
+        seen.put(wsc, true); // Be optimistic, but we may change our minds
         final List<Field> wb = write.getFields();
         final List<Field> rb = read.getFields();
-
-        seen.put(wsc, true); // Be optimistic, but we may change our minds
-
         if (wb.size() != rb.size()) {
           seen.put(wsc, false);
         } else {
