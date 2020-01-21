@@ -60,7 +60,7 @@
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.0.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
-    <grpc.version>1.24.1</grpc.version>
+    <grpc.version>1.26.0</grpc.version>
     <netty-codec-http2.version>4.1.45.Final</netty-codec-http2.version>
     <zstd-jni.version>1.4.3-1</zstd-jni.version>
     <!-- version properties for plugins -->
