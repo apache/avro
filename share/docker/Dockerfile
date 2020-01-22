@@ -30,7 +30,6 @@ RUN apt-get -qqy update \
                                                  asciidoc \
                                                  bison \
                                                  bzip2 \
-                                                 bundler \
                                                  cmake \
                                                  curl \
                                                  doxygen \
@@ -48,6 +47,7 @@ RUN apt-get -qqy update \
                                                  make \
                                                  maven \
                                                  perl \
+                                                 pycodestyle \
                                                  python \
                                                  python-pip \
                                                  python-setuptools \
@@ -94,15 +94,11 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends php${PHP5_VERSION} \
                                                  php${PHP5_VERSION}-gmp \
-                                                 php${PHP7_VERSION} \
-                                                 php${PHP7_VERSION}-gmp \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
-# Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
+# TODO: Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
 # TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future
-RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-5.7.phar && chmod +x /usr/local/bin/phpunit
-
-RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit \
+RUN curl -sSL https://phar.phpunit.de/phpunit-5.6.phar > /usr/local/bin/phpunit \
  && chmod +x /usr/local/bin/phpunit
 
 # Install Perl modules
@@ -138,8 +134,7 @@ RUN python3 -m pip install --upgrade pip setuptools \
  && python3 -m pip install zstandard
 
 # Install Ruby modules
-COPY lang/ruby/Gemfile /tmp
-RUN bundle install --gemfile=/tmp/Gemfile
+RUN gem install echoe yajl-ruby multi_json snappy
 
 # Install .NET SDK
 RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \
