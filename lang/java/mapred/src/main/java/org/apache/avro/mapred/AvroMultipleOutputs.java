@@ -292,7 +292,6 @@ public class AvroMultipleOutputs {
       Class<? extends OutputFormat> outputFormatClass, Schema schema) {
     checkNamedOutputName(namedOutput);
     checkNamedOutput(conf, namedOutput, true);
-    boolean isMapOnly = conf.getNumReduceTasks() == 0;
     if (schema != null)
       conf.set(MO_PREFIX + namedOutput + ".schema", schema.toString());
     conf.set(NAMED_OUTPUTS, conf.get(NAMED_OUTPUTS, "") + " " + namedOutput);
@@ -499,13 +498,6 @@ public class AvroMultipleOutputs {
     return getCollector(namedOutput, multiName, reporter, namedOutput, null);
   }
 
-  @SuppressWarnings("rawtypes")
-  private AvroCollector getCollector(String namedOutput, Schema schema, Reporter reporter, String baseFileName)
-      throws IOException {
-    // namedOutputs.add(baseFileName);
-    return getCollector(namedOutput, null, reporter, baseFileName, schema);
-  }
-
   /**
    * Gets the output collector for a multi named output.
    * <p/>
@@ -544,10 +536,6 @@ public class AvroMultipleOutputs {
       public void collect(Object key) throws IOException {
         AvroWrapper wrapper = new AvroWrapper(key);
         writer.write(wrapper, NullWritable.get());
-      }
-
-      public void collect(Object key, Object value) throws IOException {
-        writer.write(key, value);
       }
 
     };

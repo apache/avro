@@ -305,13 +305,6 @@ public class NettyTransceiver extends Transceiver {
 
   /**
    * Closes the connection to the remote peer if connected.
-   */
-  private void disconnect() {
-    disconnect(false, false, null);
-  }
-
-  /**
-   * Closes the connection to the remote peer if connected.
    * 
    * @param awaitCompletion       if true, will block until the close has
    *                              completed.

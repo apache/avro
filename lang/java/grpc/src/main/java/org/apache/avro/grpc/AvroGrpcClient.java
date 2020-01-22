@@ -74,14 +74,12 @@ public abstract class AvroGrpcClient {
   private static class ServiceInvocationHandler implements InvocationHandler {
     private final Channel channel;
     private final CallOptions callOptions;
-    private final Protocol protocol;
     private final ServiceDescriptor serviceDescriptor;
 
     ServiceInvocationHandler(Channel channel, CallOptions callOptions, Protocol protocol,
         ServiceDescriptor serviceDescriptor) {
       this.channel = channel;
       this.callOptions = callOptions;
-      this.protocol = protocol;
       this.serviceDescriptor = serviceDescriptor;
     }
 
