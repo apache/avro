@@ -195,7 +195,7 @@ public class NettyTransceiver extends Transceiver {
     });
 
     if (nettyClientBootstrapOptions != null) {
-      LOG.debug("Using Netty bootstrap options: " + nettyClientBootstrapOptions);
+      LOG.debug("Using Netty bootstrap options: {}", nettyClientBootstrapOptions);
       bootstrap.setOptions(nettyClientBootstrapOptions);
     }
 
@@ -273,7 +273,7 @@ public class NettyTransceiver extends Transceiver {
         if (!isChannelReady(channel)) {
           synchronized (channelFutureLock) {
             if (!stopping) {
-              LOG.debug("Connecting to " + remoteAddr);
+              LOG.debug("Connecting to {}", remoteAddr);
               channelFuture = bootstrap.connect(remoteAddr);
             }
           }
@@ -343,9 +343,9 @@ public class NettyTransceiver extends Transceiver {
     try {
       if (channel != null) {
         if (cause != null) {
-          LOG.debug("Disconnecting from " + remoteAddr, cause);
+          LOG.debug("Disconnecting from {}", remoteAddr, cause);
         } else {
-          LOG.debug("Disconnecting from " + remoteAddr);
+          LOG.debug("Disconnecting from {}", remoteAddr);
         }
         channelToClose = channel;
         channel = null;
@@ -366,7 +366,7 @@ public class NettyTransceiver extends Transceiver {
 
     // Cancel any pending requests by sending errors to the callbacks:
     if ((requestsToCancel != null) && !requestsToCancel.isEmpty()) {
-      LOG.debug("Removing " + requestsToCancel.size() + " pending request(s).");
+      LOG.debug("Removing {} pending request(s)", requestsToCancel.size());
       for (Callback<List<ByteBuffer>> request : requestsToCancel.values()) {
         request.handleError(cause != null ? cause : new IOException(getClass().getSimpleName() + " closed"));
       }
@@ -572,11 +572,11 @@ public class NettyTransceiver extends Transceiver {
     @Override
     public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
       if (e instanceof ChannelStateEvent) {
-        LOG.debug(e.toString());
+        LOG.debug("{}", e);
         ChannelStateEvent cse = (ChannelStateEvent) e;
         if ((cse.getState() == ChannelState.OPEN) && (Boolean.FALSE.equals(cse.getValue()))) {
           // Server closed connection; disconnect client side
-          LOG.debug("Remote peer " + remoteAddr + " closed connection.");
+          LOG.debug("Remote peer {} closed connection", remoteAddr);
           disconnect(false, true, null);
         }
       }

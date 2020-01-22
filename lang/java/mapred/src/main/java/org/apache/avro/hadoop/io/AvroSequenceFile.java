@@ -693,7 +693,7 @@ public class AvroSequenceFile {
         // Set the key schema if present in the metadata.
         Text keySchemaText = metadata.get(METADATA_FIELD_KEY_SCHEMA);
         if (null != keySchemaText) {
-          LOG.debug("Using key writer schema from SequenceFile metadata: " + keySchemaText.toString());
+          LOG.debug("Using key writer schema from SequenceFile metadata: {}", keySchemaText);
           AvroSerialization.setKeyWriterSchema(confWithAvro, new Schema.Parser().parse(keySchemaText.toString()));
           if (null != mKeyReaderSchema) {
             AvroSerialization.setKeyReaderSchema(confWithAvro, mKeyReaderSchema);
@@ -703,7 +703,7 @@ public class AvroSequenceFile {
         // Set the value schema if present in the metadata.
         Text valueSchemaText = metadata.get(METADATA_FIELD_VALUE_SCHEMA);
         if (null != valueSchemaText) {
-          LOG.debug("Using value writer schema from SequenceFile metadata: " + valueSchemaText.toString());
+          LOG.debug("Using value writer schema from SequenceFile metadata: {}", valueSchemaText);
           AvroSerialization.setValueWriterSchema(confWithAvro, new Schema.Parser().parse(valueSchemaText.toString()));
           if (null != mValueReaderSchema) {
             AvroSerialization.setValueReaderSchema(confWithAvro, mValueReaderSchema);
