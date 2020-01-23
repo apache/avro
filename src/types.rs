@@ -481,7 +481,7 @@ impl Value {
         let (_, inner) = schema
             .find_schema(&v)
             .ok_or_else(|| SchemaResolutionError::new("Could not find matching type in union"))?;
-        v.resolve(inner)
+        Ok(Value::Union(Box::new(v.resolve(inner)?)))
     }
 
     fn resolve_array(self, schema: &Schema) -> Result<Self, Error> {
@@ -535,6 +535,17 @@ impl Value {
                         Some(ref value) => match field.schema {
                             Schema::Enum { ref symbols, .. } => {
                                 value.clone().avro().resolve_enum(symbols)?
+                            }
+                            Schema::Union(ref union_schema) => {
+                                let first = &union_schema.variants()[0];
+                                // NOTE: this match exists only to optimize null defaults for large
+                                // backward-compatible schemas with many nullable fields
+                                match first {
+                                    Schema::Null => Value::Union(Box::new(Value::Null)),
+                                    _ => {
+                                        Value::Union(Box::new(value.clone().avro().resolve(first)?))
+                                    }
+                                }
                             }
                             _ => value.clone().avro(),
                         },
