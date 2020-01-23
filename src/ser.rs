@@ -27,6 +27,7 @@ pub struct StructSerializer {
     fields: Vec<(String, Value)>,
 }
 
+/// Represents errors that could be encountered while serializing data
 #[derive(Clone, Debug, PartialEq)]
 pub struct Error {
     message: String,

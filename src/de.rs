@@ -14,6 +14,7 @@ use serde::{
 
 use crate::types::Value;
 
+/// Represents errors that could be encountered while deserializing data
 #[derive(Clone, Debug, PartialEq)]
 pub struct Error {
     message: String,
