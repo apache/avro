@@ -108,6 +108,7 @@ set_property (TARGET avrocpp
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_DYN_LINK)
 
 add_library (avrocpp_s STATIC ${AVRO_SOURCE_FILES})
+target_include_directories(avrocpp_s PRIVATE ${SNAPPY_INCLUDE_DIR})
 
 set_property (TARGET avrocpp avrocpp_s
     APPEND PROPERTY COMPILE_DEFINITIONS AVRO_SOURCE)
@@ -119,6 +120,7 @@ set_target_properties (avrocpp_s PROPERTIES
     VERSION ${AVRO_VERSION_MAJOR}.${AVRO_VERSION_MINOR})
 
 target_link_libraries (avrocpp ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
+target_include_directories(avrocpp PRIVATE ${SNAPPY_INCLUDE_DIR})
 
 add_executable (precompile test/precompile.cc)
 
