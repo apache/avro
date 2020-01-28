@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileReader;
@@ -111,6 +112,27 @@ public class TestDataFileTools {
   @Test
   public void testReadToJsonPretty() throws Exception {
     assertEquals(jsonData, run(new DataFileReadTool(), "--pretty", sampleFile.getPath()));
+  }
+
+  @Test
+  public void testReadWithReaderSchema() throws Exception {
+    assertEquals(jsonData, run(new DataFileReadTool(), "--reader-schema", "\"long\"", sampleFile.getPath()));
+  }
+
+  @Test(expected = AvroTypeException.class)
+  public void testReadWithIncompatibleReaderSchema() throws Exception {
+    // Fails: an int can't be read as a string.
+    run(new DataFileReadTool(), "--reader-schema", "\"string\"", sampleFile.getPath());
+  }
+
+  @Test
+  public void testReadWithReaderSchemaFile() throws Exception {
+    File readerSchemaFile = new File(DIR.getRoot(), "reader-schema-temp.schema");
+    try (FileWriter fw = new FileWriter(readerSchemaFile)) {
+      fw.append("\"long\"");
+    }
+    assertEquals(jsonData,
+        run(new DataFileReadTool(), "--reader-schema-file", readerSchemaFile.getPath(), sampleFile.getPath()));
   }
 
   @Test
