@@ -30,6 +30,7 @@ import java.util.concurrent.*;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -38,6 +39,21 @@ import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
 public class TestGenericDatumWriter {
+  @Test
+  public void testUnionUnresolvedExceptionExplicitWhichField() throws IOException {
+    Schema s = schemaWithExplicitNullDefault();
+    GenericRecord r = new GenericData.Record(s);
+    r.put("f", 100);
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    EncoderFactory.get().jsonEncoder(s, bao);
+    try {
+      new GenericDatumWriter<>(s).write(r, EncoderFactory.get().jsonEncoder(s, bao));
+      fail();
+    } catch (final UnresolvedUnionException uue) {
+      assertEquals("Not in union [\"null\",\"string\"]: 100 (field=f)", uue.getMessage());
+    }
+  }
+
   @Test
   public void testWrite() throws IOException {
     String json = "{\"type\": \"record\", \"name\": \"r\", \"fields\": [" + "{ \"name\": \"f1\", \"type\": \"long\" }"

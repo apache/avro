@@ -32,6 +32,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -86,7 +87,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer).
-   * 
+   *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
    *                                  Please be noticed that the exception type
@@ -204,6 +205,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     Object value = data.getField(datum, f.name(), f.pos(), state);
     try {
       write(f.schema(), value, out);
+    } catch (final UnresolvedUnionException uue) { // recreate it with the right field info
+      final UnresolvedUnionException unresolvedUnionException = new UnresolvedUnionException(f.schema(), f, value);
+      unresolvedUnionException.addSuppressed(uue);
+      throw unresolvedUnionException;
     } catch (NullPointerException e) {
       throw npe(e, " in field " + f.name());
     }
