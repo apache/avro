@@ -118,7 +118,10 @@ namespace Avro
         /// </summary>
         public int Scale { get; }
 
-        public int Sign
+        /// <summary>
+        /// Gets the sign of the current <see cref="AvroDecimal"/>.
+        /// </summary>
+        internal int Sign
         {
             get { return UnscaledValue.Sign; }
         }
