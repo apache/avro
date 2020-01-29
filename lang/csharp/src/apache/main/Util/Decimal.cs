@@ -55,7 +55,7 @@ namespace Avro.Util
             if (precision <= 0)
                 throw new AvroTypeException("'decimal' requires a 'precision' property that is greater than zero");
 
-            var scale = GetIntPropertyValueFromSchema(schema, "scale");
+            var scale = GetScalePropertyValueFromSchema(schema);
 
             if (scale < 0 || scale > precision)
                 throw new AvroTypeException("'decimal' requires a 'scale' property that is zero or less than or equal to 'precision'");
@@ -65,7 +65,7 @@ namespace Avro.Util
         public override object ConvertToBaseValue(object logicalValue, LogicalSchema schema)
         {
             var decimalValue = (AvroDecimal)logicalValue;
-            var logicalScale = GetIntPropertyValueFromSchema(schema, "scale");
+            var logicalScale = GetScalePropertyValueFromSchema(schema);
             var scale = decimalValue.Scale;
 
             if (scale != logicalScale)
@@ -73,10 +73,7 @@ namespace Avro.Util
 
             var buffer = decimalValue.UnscaledValue.ToByteArray();
 
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(buffer);
-            }
+            Array.Reverse(buffer);
 
             return Schema.Type.Bytes == schema.BaseSchema.Tag
                 ? (object)buffer
@@ -93,12 +90,9 @@ namespace Avro.Util
                 ? (byte[])baseValue
                 : ((GenericFixed)baseValue).Value;
 
-            if (BitConverter.IsLittleEndian)
-            {
-                Array.Reverse(buffer);
-            }
+            Array.Reverse(buffer);
 
-            return new AvroDecimal(new BigInteger(buffer), GetIntPropertyValueFromSchema(schema, "scale"));
+            return new AvroDecimal(new BigInteger(buffer), GetScalePropertyValueFromSchema(schema));
         }
 
         /// <inheritdoc/>
@@ -113,9 +107,9 @@ namespace Avro.Util
             return logicalValue is AvroDecimal;
         }
 
-        private static int GetIntPropertyValueFromSchema(Schema schema, string propertyName, int defaultVal = 0)
+        private static int GetScalePropertyValueFromSchema(Schema schema, int defaultVal = 0)
         {
-            var scaleVal = schema.GetProperty(propertyName);
+            var scaleVal = schema.GetProperty("scale");
 
             return string.IsNullOrEmpty(scaleVal) ? defaultVal : int.Parse(scaleVal, CultureInfo.CurrentCulture);
         }

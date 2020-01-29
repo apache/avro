@@ -26,6 +26,7 @@ namespace Avro
     /// Represents a big decimal.
     /// </summary>
     #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    #pragma warning disable CA2225 // Operator overloads have named alternates
     public struct AvroDecimal : IConvertible, IFormattable, IComparable, IComparable<AvroDecimal>, IEquatable<AvroDecimal>
     {
         /// <summary>
@@ -54,8 +55,8 @@ namespace Avro
         {
             var bytes = GetBytesFromDecimal(value);
 
-            var unscaledValueBytes = new byte[13];
-            Array.Copy(bytes, unscaledValueBytes, unscaledValueBytes.Length - 1);
+            var unscaledValueBytes = new byte[12];
+            Array.Copy(bytes, unscaledValueBytes, unscaledValueBytes.Length);
 
             var unscaledValue = new BigInteger(unscaledValueBytes);
             var scale = bytes[14];
@@ -108,38 +109,19 @@ namespace Avro
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AvroDecimal"/> class from a given array of bytes.
-        /// </summary>
-        /// <param name="value">The byte array.</param>
-        public AvroDecimal(byte[] value)
-        {
-            byte[] number = new byte[value.Length - 4];
-            byte[] flags = new byte[4];
-
-            Array.Copy(value, 0, number, 0, number.Length);
-            Array.Copy(value, value.Length - 4, flags, 0, 4);
-
-            UnscaledValue = new BigInteger(number);
-            Scale = BitConverter.ToInt32(flags, 0);
-        }
-
-        /// <summary>
         /// Gets the unscaled integer value represented by the current <see cref="AvroDecimal"/>.
         /// </summary>
         public BigInteger UnscaledValue { get; }
 
         /// <summary>
-        /// Gets the sign of the current <see cref="AvroDecimal"/>.
+        /// Gets the scale of the current <see cref="AvroDecimal"/>.
         /// </summary>
+        public int Scale { get; }
+
         public int Sign
         {
             get { return UnscaledValue.Sign; }
         }
-
-        /// <summary>
-        /// Gets the scale of the current <see cref="AvroDecimal"/>.
-        /// </summary>
-        public int Scale { get; }
 
         /// <summary>
         /// Converts the current <see cref="AvroDecimal"/> to a string.
@@ -153,15 +135,6 @@ namespace Avro
                 return number.Insert(number.Length - Scale, CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
 
             return number;
-        }
-
-        /// <summary>
-        /// Converts the current <see cref="AvroDecimal"/> to a byte array.
-        /// </summary>
-        /// <returns>The current <see cref="AvroDecimal"/> converted to an array of bytes.</returns>
-        public byte[] ToByteArray()
-        {
-            return GetBytesFromDecimal(ToDecimal(this));
         }
 
         public static bool operator ==(AvroDecimal left, AvroDecimal right)
@@ -438,105 +411,35 @@ namespace Avro
 
         public static implicit operator AvroDecimal(byte value)
         {
-            return FromByte(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a byte.
-        /// </summary>
-        /// <param name="value">The byte.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromByte(byte value)
-        {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(sbyte value)
-        {
-            return FromSByte(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a signed byte.
-        /// </summary>
-        /// <param name="value">The signed byte.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromSByte(sbyte value)
         {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(short value)
         {
-            return FromInt16(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a short.
-        /// </summary>
-        /// <param name="value">The short.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromInt16(short value)
-        {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(int value)
-        {
-            return FromInt32(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from an int.
-        /// </summary>
-        /// <param name="value">The int.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromInt32(int value)
         {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(long value)
         {
-            return FromInt64(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a long.
-        /// </summary>
-        /// <param name="value">The long.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromInt64(long value)
-        {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(ushort value)
         {
-            return FromUInt16(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from an unsigned short.
-        /// </summary>
-        /// <param name="value">The unsigned short.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromUInt16(ushort value)
-        {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(uint value)
-        {
-            return FromUInt32(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from an unsigned int.
-        /// </summary>
-        /// <param name="value">The unsigned int.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromUInt32(uint value)
         {
             return new AvroDecimal(value);
         }
@@ -546,75 +449,25 @@ namespace Avro
             return new AvroDecimal(value);
         }
 
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from an unsigned long.
-        /// </summary>
-        /// <param name="value">The unsigned long.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromUInt64(ulong value)
-        {
-            return new AvroDecimal(value);
-        }
-
         public static implicit operator AvroDecimal(float value)
-        {
-            return FromSingle(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a single.
-        /// </summary>
-        /// <param name="value">The single.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromSingle(float value)
         {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(double value)
         {
-            return FromDouble(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a double.
-        /// </summary>
-        /// <param name="value">The double.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromDouble(double value)
-        {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(decimal value)
-        {
-            return FromDecimal(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a decimal.
-        /// </summary>
-        /// <param name="value">The decimal.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromDecimal(decimal value)
         {
             return new AvroDecimal(value);
         }
 
         public static implicit operator AvroDecimal(BigInteger value)
         {
-            return FromBigInteger(value);
-        }
-
-        /// <summary>
-        /// Creates an <see cref="AvroDecimal"/> from a <see cref="BigInteger"/>.
-        /// </summary>
-        /// <param name="value">The <see cref="BigInteger"/>.</param>
-        /// <returns>An <see cref="AvroDecimal"/>.</returns>
-        public static AvroDecimal FromBigInteger(BigInteger value)
-        {
             return new AvroDecimal(value, 0);
-        }
+        } 
 
         /// <summary>
         /// Converts the numeric value of the current <see cref="AvroDecimal"/> to a given type.
@@ -925,5 +778,6 @@ namespace Avro
             return bytes;
         }
     }
+    #pragma warning restore CA2225 // Operator overloads have named alternates
     #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
