@@ -44,6 +44,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private final GenericData data;
   private Schema actual;
   private Schema expected;
+  private DatumReader<D> fastDatumReader = null;
 
   private ResolvingDecoder creatorResolver = null;
   private final Thread creator;
@@ -90,6 +91,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       expected = actual;
     }
     creatorResolver = null;
+    fastDatumReader = null;
   }
 
   /** Get the reader's schema. */
@@ -139,6 +141,13 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @Override
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
+    if (data.isFastReaderEnabled()) {
+      if (this.fastDatumReader == null) {
+        this.fastDatumReader = data.getFastReaderBuilder().createDatumReader(actual, expected);
+      }
+      return fastDatumReader.read(reuse, in);
+    }
+
     ResolvingDecoder resolver = getResolver(actual, expected);
     resolver.configure(in);
     D result = (D) read(reuse, expected, resolver);
@@ -425,14 +434,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   @SuppressWarnings("unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericArray) {
-      ((GenericArray) old).reset();
-      return old;
-    } else if (old instanceof Collection) {
-      ((Collection) old).clear();
-      return old;
-    } else
-      return new GenericData.Array(size, schema);
+    return data.newArray(old, size, schema);
   }
 
   /**
@@ -441,11 +443,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   @SuppressWarnings("unchecked")
   protected Object newMap(Object old, int size) {
-    if (old instanceof Map) {
-      ((Map) old).clear();
-      return old;
-    } else
-      return new HashMap<>(size);
+    return data.newMap(old, size);
   }
 
   /**
