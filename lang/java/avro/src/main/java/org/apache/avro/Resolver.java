@@ -221,6 +221,7 @@ public class Resolver {
       this.error = e;
     }
 
+    @Override
     public String toString() {
       switch (this.error) {
       case INCOMPATIBLE_SCHEMA_TYPES:
@@ -365,9 +366,10 @@ public class Resolver {
    */
   public static class EnumAdjust extends Action {
     public final int[] adjustments;
+    public final Object[] values;
     public final boolean noAdjustmentsNeeded;
 
-    private EnumAdjust(Schema w, Schema r, GenericData d, int[] adj) {
+    private EnumAdjust(Schema w, Schema r, GenericData d, int[] adj, Object[] values) {
       super(w, r, d, Action.Type.ENUM);
       this.adjustments = adj;
       boolean noAdj;
@@ -378,6 +380,7 @@ public class Resolver {
         noAdj &= (i == adj[i]);
       }
       this.noAdjustmentsNeeded = noAdj;
+      this.values = values;
     }
 
     /**
@@ -393,11 +396,17 @@ public class Resolver {
       final List<String> rsymbols = r.getEnumSymbols();
       final int defaultIndex = (r.getEnumDefault() == null ? -1 : rsymbols.indexOf(r.getEnumDefault()));
       int[] adjustments = new int[wsymbols.size()];
+      Object[] values = new Object[wsymbols.size()];
+      Object defaultValue = (defaultIndex == -1) ? null : d.createEnum(r.getEnumDefault(), r);
       for (int i = 0; i < adjustments.length; i++) {
         int j = rsymbols.indexOf(wsymbols.get(i));
-        adjustments[i] = (0 <= j ? j : defaultIndex);
+        if (j < 0) {
+          j = defaultIndex;
+        }
+        adjustments[i] = j;
+        values[i] = (j == defaultIndex) ? defaultValue : d.createEnum(rsymbols.get(j), r);
       }
-      return new EnumAdjust(w, r, d, adjustments);
+      return new EnumAdjust(w, r, d, adjustments, values);
     }
   }
 
@@ -455,6 +464,11 @@ public class Resolver {
     public final Object[] defaults;
 
     /**
+     * Supplier that offers an optimized alternative to data.newRecord()
+     */
+    public final GenericData.InstanceSupplier instanceSupplier;
+
+    /**
      * Returns true iff <code>i&nbsp;==&nbsp;readerOrder[i].pos()</code> for all
      * indices <code>i</code>. Which is to say: the order of the reader's fields is
      * the same in both the reader's and writer's schema.
@@ -473,6 +487,7 @@ public class Resolver {
       this.readerOrder = ro;
       this.firstDefault = firstD;
       this.defaults = defaults;
+      this.instanceSupplier = d.getNewRecordSupplier(r);
     }
 
     /**
