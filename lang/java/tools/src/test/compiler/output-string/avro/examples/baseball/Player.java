@@ -117,8 +117,8 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: number = (java.lang.Integer)value$; break;
-    case 1: first_name = (java.lang.String)value$; break;
-    case 2: last_name = (java.lang.String)value$; break;
+    case 1: first_name = value$ != null ? value$.toString() : null; break;
+    case 2: last_name = value$ != null ? value$.toString() : null; break;
     case 3: position = (java.util.List<avro.examples.baseball.Position>)value$; break;
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
