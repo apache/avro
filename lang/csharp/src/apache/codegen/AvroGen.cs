@@ -69,7 +69,7 @@ namespace Avro
                     {
                         Console.Error.WriteLine("Missing namespace mapping");
                         Usage();
-                        return -1;
+                        return 1;
                     }
 
                     var parts = args[++i].Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
