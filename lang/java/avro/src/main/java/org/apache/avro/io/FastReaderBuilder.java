@@ -49,6 +49,7 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.FastReaderBuilder.RecordReader.Stage;
 import org.apache.avro.io.parsing.ResolvingGrammarGenerator;
+import org.apache.avro.reflect.ReflectionUtil;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.util.Utf8;
@@ -435,7 +436,7 @@ public class FastReaderBuilder {
       return stringReader;
     } else {
       Function<String, ?> transformer = findClass(valueClass)
-          .map(clazz -> ReflectionUtils.getConstructorAsFunction(String.class, clazz)).orElse(null);
+          .map(clazz -> ReflectionUtil.getConstructorAsFunction(String.class, clazz)).orElse(null);
       if (transformer != null) {
         return (old, decoder) -> transformer.apply((String) stringReader.read(null, decoder));
       }
