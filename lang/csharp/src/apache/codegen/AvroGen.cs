@@ -155,7 +155,7 @@ namespace Avro
             catch (Exception ex)
             {
                 Console.Error.WriteLine("Exception occurred. " + ex.Message);
-                return -1;
+                return 1;
             }
 
             return 0;
