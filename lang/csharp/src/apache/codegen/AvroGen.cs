@@ -45,7 +45,7 @@ namespace Avro
                     {
                         Console.Error.WriteLine("Missing path to protocol file");
                         Usage();
-                        return -1;
+                        return 1;
                     }
 
                     isProtocol = true;
