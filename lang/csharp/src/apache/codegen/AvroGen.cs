@@ -77,7 +77,7 @@ namespace Avro
                     {
                         Console.Error.WriteLine("Malformed namespace mapping. Required format is \"avro.namespace:csharp.namespace\"");
                         Usage();
-                        return -1;
+                        return 1;
                     }
 
                     namespaceMapping[parts[0]] = parts[1];
