@@ -19,11 +19,18 @@ package org.apache.avro.reflect;
 
 import org.apache.avro.AvroRuntimeException;
 
+import java.lang.invoke.CallSite;
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A few utility methods for using @link{java.misc.Unsafe}, mostly for private
@@ -32,9 +39,9 @@ import java.util.Map;
  * Use of Unsafe on Android is forbidden, as Android provides only a very
  * limited functionality for this class compared to the JDK version.
  *
+ * InterfaceAudience.Private
  */
-
-class ReflectionUtil {
+public class ReflectionUtil {
 
   private ReflectionUtil() {
   }
@@ -154,6 +161,45 @@ class ReflectionUtil {
       }
     }
     return reuse;
+  }
+
+  private static <D> Supplier<D> getConstructorAsSupplier(Class<D> clazz) {
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle constructorHandle = lookup.findConstructor(clazz, MethodType.methodType(void.class));
+
+      CallSite site = LambdaMetafactory.metafactory(lookup, "get", MethodType.methodType(Supplier.class),
+        constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
+
+      return (Supplier<D>) site.getTarget().invokeExact();
+    } catch (Throwable t) {
+      // if anything goes wrong, don't provide a Supplier
+      return null;
+    }
+  }
+
+  private static <V, R> Supplier<R> getOneArgConstructorAsSupplier(Class<R> clazz, Class<V> argumentClass, V argument) {
+    Function<V, R> supplierFunction = getConstructorAsFunction(argumentClass, clazz);
+    if (supplierFunction != null) {
+      return () -> supplierFunction.apply(argument);
+    } else {
+      return null;
+    }
+  }
+
+  public static <V, R> Function<V, R> getConstructorAsFunction(Class<V> parameterClass, Class<R> clazz) {
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle constructorHandle = lookup.findConstructor(clazz, MethodType.methodType(void.class, parameterClass));
+
+      CallSite site = LambdaMetafactory.metafactory(lookup, "apply", MethodType.methodType(Function.class),
+        constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
+
+      return (Function<V, R>) site.getTarget().invokeExact();
+    } catch (Throwable t) {
+      // if something goes wrong, do not provide a Function instance
+      return null;
+    }
   }
 
 }
