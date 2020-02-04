@@ -111,7 +111,7 @@ namespace Avro
             if (!isValid)
             {
                 Usage();
-                rc = -1;
+                rc = 1;
             }
             else if (isProtocol.Value)
                 rc = GenProtocol(inputFile, outputDir, namespaceMapping);
