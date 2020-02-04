@@ -169,7 +169,7 @@ public class ReflectionUtil {
       MethodHandle constructorHandle = lookup.findConstructor(clazz, MethodType.methodType(void.class));
 
       CallSite site = LambdaMetafactory.metafactory(lookup, "get", MethodType.methodType(Supplier.class),
-        constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
+          constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
 
       return (Supplier<D>) site.getTarget().invokeExact();
     } catch (Throwable t) {
@@ -193,7 +193,7 @@ public class ReflectionUtil {
       MethodHandle constructorHandle = lookup.findConstructor(clazz, MethodType.methodType(void.class, parameterClass));
 
       CallSite site = LambdaMetafactory.metafactory(lookup, "apply", MethodType.methodType(Function.class),
-        constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
+          constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
 
       return (Function<V, R>) site.getTarget().invokeExact();
     } catch (Throwable t) {
