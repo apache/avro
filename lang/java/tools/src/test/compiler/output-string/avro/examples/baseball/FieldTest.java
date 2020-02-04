@@ -145,7 +145,7 @@ static {
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: number = (java.lang.Integer)value$; break;
-    case 1: last_name = value$ != null ? value$.toString(): null; break;
+    case 1: last_name = value$ != null ? value$.toString() : null; break;
     case 2: timestamp = (java.time.Instant)value$; break;
     case 3: timestampMicros = (java.time.Instant)value$; break;
     case 4: timeMillis = (java.time.LocalTime)value$; break;
@@ -653,6 +653,7 @@ static {
   }
 
 }
+
 
 
 

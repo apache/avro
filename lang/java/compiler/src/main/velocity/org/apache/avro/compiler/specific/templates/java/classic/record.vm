@@ -201,7 +201,7 @@ static {
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-    case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String")!=null?value$.toString():null#{end}; break;
+    case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String") != null ? value$.toString() : null#{end}; break;
 #set ($i = $i + 1)
 #end
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
