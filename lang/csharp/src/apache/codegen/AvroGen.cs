@@ -29,7 +29,7 @@ namespace Avro
             if (args.Length == 0 || args[0] == "-h" || args[0] == "--help")
             {
                 Usage();
-                return 0;
+                return 1;
             }
 
             // Parse command line arguments
