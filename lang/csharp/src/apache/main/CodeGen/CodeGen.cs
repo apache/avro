@@ -232,6 +232,7 @@ namespace Avro
                 case Schema.Type.Double:
                 case Schema.Type.Bytes:
                 case Schema.Type.String:
+                case Schema.Type.Logical:
                     break;
 
                 case Schema.Type.Enumeration:
@@ -771,6 +772,13 @@ namespace Avro
                         return CodeGenUtil.Object;
                     else
                         return getType(nullibleType, true, ref nullibleEnum);
+
+                case Schema.Type.Logical:
+                    var logicalSchema = schema as LogicalSchema;
+                    if (null == logicalSchema)
+                        throw new CodeGenException("Unable to cast schema into a logical schema");
+                    return logicalSchema.LogicalType.GetCSharpType(nullible).ToString();
+
             }
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
