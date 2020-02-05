@@ -30,7 +30,7 @@ namespace Avro
         /// <summary>
         /// Set of reserved schema property names, any other properties not defined in this set are custom properties and can be added to this map
         /// </summary>
-        private static readonly HashSet<string> ReservedProps = new HashSet<string>() { "type", "name", "namespace", "fields", "items", "size", "symbols", "values", "aliases", "order", "doc", "default" };
+        private static readonly HashSet<string> ReservedProps = new HashSet<string>() { "type", "name", "namespace", "fields", "items", "size", "symbols", "values", "aliases", "order", "doc", "default", "logicalType" };
 
         /// <summary>
         /// Parses the custom properties from the given JSON object and stores them
