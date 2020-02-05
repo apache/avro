@@ -20,7 +20,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>avrogen</AssemblyName>
     <RootNamespace>Avro.codegen</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
