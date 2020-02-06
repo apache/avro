@@ -35,9 +35,10 @@ final class ZstandardLoader {
   }
 
   static OutputStream output(OutputStream compressed, int level, boolean checksum) throws IOException {
-
     int bounded = Math.max(Math.min(level, Zstd.maxCompressionLevel()), Zstd.minCompressionLevel());
-
-    return new ZstdOutputStream(compressed, bounded, false, checksum);
+    ZstdOutputStream zstdOutputStream = new ZstdOutputStream(compressed, bounded);
+    zstdOutputStream.setCloseFrameOnFlush(false);
+    zstdOutputStream.setChecksum(checksum);
+    return zstdOutputStream;
   }
 }
