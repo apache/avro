@@ -710,7 +710,7 @@ public class GenericData {
   }
 
   /* Adapted from https://code.google.com/p/json-simple */
-  private void writeEscapedString(CharSequence string, StringBuilder builder) {
+  private static void writeEscapedString(CharSequence string, StringBuilder builder) {
     for (int i = 0; i < string.length(); i++) {
       char ch = string.charAt(i);
       switch (ch) {
