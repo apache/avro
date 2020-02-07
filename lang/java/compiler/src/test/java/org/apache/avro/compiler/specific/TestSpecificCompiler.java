@@ -699,6 +699,26 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testPojoWithOptionalCreateForNullableFieldsWhenOptionTurnedOn() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setGettersReturnOptional(true);
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int optionalFound = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.contains("Optional")) {
+          optionalFound++;
+        }
+      }
+    }
+    assertEquals(5, optionalFound);
+  }
+
+  @Test
   public void testPojoWithOptionalCreatedWhenOptionalForEverythingTurnedOn() throws IOException {
     SpecificCompiler compiler = createCompiler();
     // compiler.setGettersReturnOptional(true);
