@@ -1310,6 +1310,92 @@
         </ul>
       </section>
 
+      <section>
+        <title>Standard Canonical Form for Schemas</title>
+
+        <p>One of defined way to normalize the avro schema using
+          <em>Standard Canonical Form Transformation</em>. This involves
+          stripping unwanted properties and maintain same canonical
+          ordering. The canonical ordering involves ordering avro
+          reserved properties followed by custom properties if mentioned while
+          transforming. Normalization schema which helps to reduce the
+          total memory size of schema (removed unwanted properties and whitespace)
+          while transfer avro schema between two system and also reduce the parsing
+          time for compatibility check and schema evolution.
+        </p>
+
+        <p><em>Standard Canonical Form</em> is a transformation of a schema
+          into standard canonical ordered. It contains only avro reserved
+          properties <code>"name", "type", "fields", "symbols", "items", "values",
+            "logicalType", "size", "order", "doc", "aliases", "default"</code>
+          and <em>other (custom properties)</em> schema properties.
+        </p>
+
+        <section>
+          <title>Transforming into Standard Canonical Form</title>
+
+          <p>Assuming an input schema (in JSON form) that's already
+            UTF-8 text for a <em>valid</em> Avro schema (including all
+            quotes as required by JSON), the following transformations
+            will produce its Standard Canonical Form:</p>
+          <ul>
+            <li> [PRIMITIVES] Convert primitive schemas to their simple
+              form (e.g., <code>int</code> instead of
+              <code>{"type":"int"}</code>).</li>
+
+            <li> [FULLNAMES] Replace short names with fullnames, using
+              applicable namespaces to do so.  Then eliminate
+              <code>namespace</code> attributes, which are now redundant.</li>
+
+            <li> [STRIP] Keep only attributes that are relevant to
+              reserved properties, which are:
+              <code>type</code>, <code>name</code>,
+              <code>fields</code>, <code>symbols</code>,
+              <code>items</code>, <code>values</code>,
+              <code>logicalType</code>, <code>size</code>,
+              <code>order</code>, <code>doc</code>
+              <code>aliases</code> and <code>default</code>.
+              Strip all others user defined properties (e.g., <code>format</code>).</li>
+
+            <li> [ORDER] Order the appearance of fields of JSON objects
+              as follows: <code>name</code>, <code>type</code>,
+              <code>fields</code>, <code>symbols</code>,
+              <code>items</code>, <code>values</code>,
+              <code>logicalType</code>, <code>size</code>,
+              <code>order</code>, <code>doc</code>,
+              <code>aliases</code>, <code>default</code>.
+              For example, if an object has <code>type</code>,
+              <code>name</code>, and <code>size</code> fields, then the
+              <code>name</code> field should appear first, followed by the
+              <code>type</code> and then the <code>size</code> fields.</li>
+
+            <li> [STRINGS] For all JSON string literals in the schema
+              text, replace any escaped characters (e.g., \uXXXX escapes)
+              with their UTF-8 equivalents.</li>
+
+            <li> [INTEGERS] Eliminate quotes around and any leading
+              zeros in front of JSON integer literals (which appear in the
+              <code>size</code> attributes of <code>fixed</code> schemas).</li>
+
+            <li> [WHITESPACE] Eliminate all whitespace in JSON outside of string literals.</li>
+          </ul>
+        </section>
+
+        <section>
+          <title>Transforming with Custom Properties</title>
+
+          <p>In addition to the standard canonical form transformation, including
+            <em>custom</em> <code>Schema</code> or <code>Field</code> properties by
+            passing the properties names while transforming.
+            For example, if an object has <code>format</code>, <code>type</code>,
+            <code>name</code>, and <code>size</code> fields, then the
+            <code>name</code> field should appear first, followed by the
+            <code>type</code>, <code>size</code> and then <code>format</code>
+            (custom properties) fields.
+          </p>
+        </section>
+      </section>
+
       <section id="schema_fingerprints">
         <title>Schema Fingerprints</title>
 
