@@ -18,11 +18,15 @@ package com.commercehub.gradle.plugin.avro;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
@@ -43,10 +47,12 @@ import org.gradle.api.tasks.TaskAction;
 
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_OPTIONAL_GETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CUSTOM_CONVERSIONS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETURN_OPTIONAL;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_LOGICAL_TYPE_FACTORIES;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILITY;
@@ -75,6 +81,11 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Property<Boolean> createSetters;
     private final Property<Boolean> enableDecimalLogicalType;
     private final Property<String> dateTimeLogicalType;
+    // When we require Gradle 5.1+, we could use MapProperty here.
+    @SuppressWarnings("rawtypes")
+    private final Property<Map> logicalTypeFactories;
+    @SuppressWarnings("rawtypes")
+    private final Property<List> customConversions;
 
     private final Provider<StringType> stringTypeProvider;
     private final Provider<FieldVisibility> fieldVisibilityProvider;
@@ -99,6 +110,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.dateTimeLogicalTypeImplementationProvider = getDateTimeLogicalType()
             .map(input -> Enums.parseCaseInsensitive(OPTION_DATE_TIME_LOGICAL_TYPE,
                 SpecificCompiler.DateTimeLogicalTypeImplementation.values(), input));
+        this.logicalTypeFactories =
+            configurePropertyConvention(objects.property(Map.class), DEFAULT_LOGICAL_TYPE_FACTORIES);
+        this.customConversions = configurePropertyConvention(objects.property(List.class), DEFAULT_CUSTOM_CONVERSIONS);
     }
 
     @Optional
@@ -217,7 +231,44 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         setDateTimeLogicalType(dateTimeLogicalType.name());
     }
 
+    @Optional
+    @Input
+    @SuppressWarnings("rawtypes")
+    public Property<Map> getLogicalTypeFactories() {
+        return logicalTypeFactories;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void setLogicalTypeFactories(Provider<? extends Map<? extends String,
+        ? extends Class<? extends LogicalTypes.LogicalTypeFactory>>> provider) {
+        this.logicalTypeFactories.set(provider);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void setLogicalTypeFactories(Map<? extends String,
+        ? extends Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories) {
+        this.logicalTypeFactories.set(logicalTypeFactories);
+    }
+
+    @Optional
+    @Input
+    @SuppressWarnings("rawtypes")
+    public Property<List> getCustomConversions() {
+        return customConversions;
+    }
+
+    public void setCustomConversions(Provider<List<Class<? extends Conversion<?>>>> provider) {
+        // If we were using ListProperty, this method could take Iterables rather than Lists
+        this.customConversions.set(provider);
+    }
+
+    public void setCustomConversions(List<Class<? extends Conversion<?>>> customConversions) {
+        // If we were using ListProperty, this method could take Iterables rather than Lists
+        this.customConversions.set(customConversions);
+    }
+
     @TaskAction
+    @SuppressWarnings({"rawtypes", "unchecked"})
     protected void process() {
         getLogger().debug("Using outputCharacterEncoding {}", getOutputCharacterEncoding().getOrNull());
         getLogger().debug("Using stringType {}", stringTypeProvider.get().name());
@@ -228,6 +279,13 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using gettersReturnOptional {}", isGettersReturnOptional().get());
         getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType().get());
         getLogger().debug("Using dateTimeLogicalType {}", dateTimeLogicalTypeImplementationProvider.get().name());
+        getLogger().debug("Using logicalTypeFactories {}",
+            logicalTypeFactories.get().entrySet().stream().collect(Collectors.toMap(
+                (Map.Entry e) -> (String) e.getKey(),
+                (Map.Entry e) -> ((Class) e.getValue()).getName()
+            )));
+        getLogger().debug("Using customConversions {}",
+            customConversions.get().stream().map(v -> ((Class) v).getName()).collect(Collectors.toList()));
         getLogger().info("Found {} files", getInputs().getSourceFiles().getFiles().size());
         failOnUnsupportedFiles();
         processFiles();
@@ -242,6 +300,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     }
 
     private void processFiles() {
+        registerLogicalTypes();
         int processedFileCount = 0;
         processedFileCount += processProtoFiles();
         processedFileCount += processSchemaFiles();
@@ -342,6 +401,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         compile(new SpecificCompiler(schema, dateTimeLogicalTypeImplementationProvider.get()), sourceFile);
     }
 
+    @SuppressWarnings("rawtypes")
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
         compiler.setOutputCharacterEncoding(getOutputCharacterEncoding().getOrNull());
         compiler.setStringType(stringTypeProvider.get());
@@ -353,7 +413,35 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         compiler.setGettersReturnOptional(gettersReturnOptional.get());
         compiler.setCreateSetters(isCreateSetters().get());
         compiler.setEnableDecimalLogicalType(isEnableDecimalLogicalType().get());
+        registerCustomConversions(compiler);
 
         compiler.compileToDestination(sourceFile, getOutputDir().get().getAsFile());
+    }
+
+    /**
+     * Registers the logical types to be used in this run.
+     * This must be called before the Schemas are parsed, or they will not be applied correctly.
+     * Since {@link LogicalTypes} is a static registry, this may result in side-effects.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void registerLogicalTypes() {
+        Map<?, ?> logicalTypeFactoryMap = logicalTypeFactories.get();
+        Set<? extends Map.Entry<?, ?>> logicalTypeFactoryEntries = logicalTypeFactoryMap.entrySet();
+        for (Map.Entry<?, ?> entry : logicalTypeFactoryEntries) {
+            String logicalTypeName = (String) entry.getKey();
+            Class logicalTypeFactoryClass = (Class) entry.getValue();
+            try {
+                LogicalTypes.LogicalTypeFactory logicalTypeFactory =
+                    (LogicalTypes.LogicalTypeFactory) logicalTypeFactoryClass.getDeclaredConstructor().newInstance();
+                LogicalTypes.register(logicalTypeName, logicalTypeFactory);
+            } catch (ReflectiveOperationException ex) {
+                getLogger().error("Could not instantiate logicalTypeFactory class \"" + logicalTypeFactoryClass.getName() + "\"");
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void registerCustomConversions(SpecificCompiler compiler) {
+        customConversions.get().forEach(v -> compiler.addCustomConversion((Class) v));
     }
 }

@@ -16,6 +16,7 @@
 * GenerateAvroProtocolTask now properly declares the `classpath` as an input; fixes #86; thanks to [RichSteele](https://github.com/RichSteele) for the bug report
 * Fix handling of default `outputCharacterEncoding` (use of system default character set to match Java compiler)
 * Add support for generating getters that return Optional (#90); contribution from [bspeakmon](https://github.com/bspeakmon)
+* Add support for `logicalTypeFactories` and `customConversions`; fixes #92
 
 ## 0.17.0
 * Built using Avro 1.9.0

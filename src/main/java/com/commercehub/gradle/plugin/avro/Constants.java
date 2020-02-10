@@ -15,6 +15,9 @@
  */
 package com.commercehub.gradle.plugin.avro;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 import org.apache.avro.generic.GenericData.StringType;
@@ -35,6 +38,10 @@ class Constants {
     static final boolean DEFAULT_GETTERS_RETURN_OPTIONAL = false;
     static final boolean DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE = true;
     static final String DEFAULT_DATE_TIME_LOGICAL_TYPE = SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT.name();
+    @SuppressWarnings("rawtypes")
+    static final Map<String, Class> DEFAULT_LOGICAL_TYPE_FACTORIES = Collections.emptyMap();
+    @SuppressWarnings("rawtypes")
+    static final List<Class> DEFAULT_CUSTOM_CONVERSIONS = Collections.emptyList();
 
     static final String SCHEMA_EXTENSION = "avsc";
     static final String PROTOCOL_EXTENSION = "avpr";

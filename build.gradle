@@ -149,6 +149,9 @@ checkstyle {
 checkstyleMain {
     configProperties = ['basedir': "$rootDir/config/checkstyle"]
 }
+checkstyleTest {
+    configProperties = ['basedir': "$rootDir/config/checkstyle"]
+}
 
 codenarc {
     config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")

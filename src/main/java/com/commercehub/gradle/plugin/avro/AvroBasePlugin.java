@@ -40,6 +40,8 @@ public class AvroBasePlugin implements Plugin<Project> {
             configurePropertyConvention(task.isGettersReturnOptional(), avroExtension.isGettersReturnOptional());
             configurePropertyConvention(task.isEnableDecimalLogicalType(), avroExtension.isEnableDecimalLogicalType());
             configurePropertyConvention(task.getDateTimeLogicalType(), avroExtension.getDateTimeLogicalType());
+            configurePropertyConvention(task.getLogicalTypeFactories(), avroExtension.getLogicalTypeFactories());
+            configurePropertyConvention(task.getCustomConversions(), avroExtension.getCustomConversions());
         });
     }
 }
