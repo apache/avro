@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04, windows-2016, windows-2019, macOS-10.14]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
         java: [8.0.222, 11.0.4]
       fail-fast: true
       max-parallel: 5
