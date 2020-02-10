@@ -261,6 +261,27 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        [TestCase("{\"type\": \"int\", \"logicalType\": \"date\"}", "int", "date")]
+        public void TestLogicalPrimitive(string s, string baseType, string logicalType)
+        {
+            Schema sc = Schema.Parse(s);
+            Assert.AreEqual(Schema.Type.Logical, sc.Tag);
+            LogicalSchema logsc = sc as LogicalSchema;
+            Assert.AreEqual(baseType, logsc.BaseSchema.Name);
+            Assert.AreEqual(logicalType, logsc.LogicalType.Name);
+
+            testEquality(s, sc);
+            testToString(sc);
+        }
+
+        [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
+        public void TestUnknownLogical(string s, string unknownType)
+        {
+            var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
+
+            Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
+        }
+
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}", "long")]
         public void TestMap(string s, string value)
         {

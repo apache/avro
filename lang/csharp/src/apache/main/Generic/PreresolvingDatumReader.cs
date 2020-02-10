@@ -177,6 +177,8 @@ namespace Avro.Generic
                     return ResolveMap((MapSchema)writerSchema, (MapSchema)readerSchema);
                 case Schema.Type.Union:
                     return ResolveUnion((UnionSchema)writerSchema, readerSchema);
+                case Schema.Type.Logical:
+                    return ResolveLogical((LogicalSchema)writerSchema, (LogicalSchema)readerSchema);
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -390,6 +392,12 @@ namespace Avro.Generic
             return array;
         }
 
+        private ReadItem ResolveLogical(LogicalSchema writerSchema, LogicalSchema readerSchema)
+        {
+            var baseReader = ResolveReader(writerSchema.BaseSchema, readerSchema.BaseSchema);
+            return (r, d) => readerSchema.LogicalType.ConvertToLogicalValue(baseReader(r, d), readerSchema);
+        }
+
         private ReadItem ResolveFixed(FixedSchema writerSchema, FixedSchema readerSchema)
         {
             if (readerSchema.Size != writerSchema.Size)
@@ -496,6 +504,9 @@ namespace Avro.Generic
                         lookup[i] = GetSkip( unionSchema[i] );
                     }
                     return d => lookup[d.ReadUnionIndex()](d);
+                case Schema.Type.Logical:
+                    var logicalSchema = (LogicalSchema)writerSchema;
+                    return GetSkip(logicalSchema.BaseSchema);
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }

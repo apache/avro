@@ -47,8 +47,7 @@ public abstract class ParsingDecoder extends Decoder implements ActionHandler, S
     Symbol top = parser.topSymbol();
     if (top == Symbol.NULL) {
       readNull();
-    }
-    if (top == Symbol.BOOLEAN) {
+    } else if (top == Symbol.BOOLEAN) {
       readBoolean();
     } else if (top == Symbol.INT) {
       readInt();

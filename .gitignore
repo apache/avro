@@ -18,6 +18,7 @@ test-output
 /lang/java/compiler/nb-configuration.xml
 /lang/java/compiler/nbproject/
 **/.vscode/**/*
+.vs/
 .DS_Store
 .factorypath
 .mypy_cache

@@ -40,8 +40,8 @@
     <!-- version properties for dependencies -->
 
     <hadoop.version>2.7.7</hadoop.version>
-    <jackson.version>2.10.0</jackson.version>
-    <jackson.databind.version>2.10.0</jackson.databind.version>
+    <jackson.version>2.10.2</jackson.version>
+    <jackson.databind.version>2.10.2</jackson.databind.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.25.v20191220</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
@@ -51,8 +51,8 @@
     <thrift.version>0.12.0</thrift.version>
     <slf4j.version>1.7.25</slf4j.version>
     <snappy.version>1.1.7.3</snappy.version>
-    <velocity.version>2.1</velocity.version>
-    <maven.version>2.0.11</maven.version>
+    <velocity.version>2.2</velocity.version>
+    <maven.version>3.3.9</maven.version>
     <ant.version>1.10.5</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
     <commons-compress.version>1.19</commons-compress.version>
@@ -68,7 +68,7 @@
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <exec-plugin.version>1.6.0</exec-plugin.version>
-    <file-management.version>1.2.1</file-management.version>
+    <file-management.version>3.0.0</file-management.version>
     <jar-plugin.version>3.1.2</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
     <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
@@ -480,7 +480,7 @@
     <profile>
       <id>hadoop3</id>
       <properties>
-        <hadoop.version>3.2.0</hadoop.version>
+        <hadoop.version>3.2.1</hadoop.version>
       </properties>
     </profile>
   </profiles>

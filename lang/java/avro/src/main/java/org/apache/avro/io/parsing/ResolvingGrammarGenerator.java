@@ -176,7 +176,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.STRING;
 
     case FIXED:
-      return Symbol.seq(new Symbol.IntCheckAction(s.getFixedSize()), Symbol.FIXED);
+      return Symbol.seq(Symbol.intCheckAction(s.getFixedSize()), Symbol.FIXED);
 
     case ENUM:
       return Symbol.seq(Symbol.enumAdjustAction(s.getEnumSymbols().size(), null), Symbol.ENUM);
@@ -251,7 +251,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
    * @param n The Json node to encode.
    * @throws IOException
    */
-  static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
+  public static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
     switch (s.getType()) {
     case RECORD:
       for (Field f : s.getFields()) {
