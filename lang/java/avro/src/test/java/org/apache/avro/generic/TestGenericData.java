@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.*;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -303,13 +304,24 @@ public class TestGenericData {
     Field stringField = new Field("string", Schema.create(Type.STRING), null, null);
     Field enumField = new Field("enum", Schema.createEnum("my_enum", "doc", null, Arrays.asList("a", "b", "c")), null,
         null);
+
+    Schema timeSchema = Schema.create(Type.INT);
+    timeSchema.addProp("logicalType", "time-millis");
+    Field timeField = new Field("time", timeSchema, null, null);
+
+    Schema dateSchema = Schema.create(Type.LONG);
+    dateSchema.addProp("logicalType", "date");
+    Field dateField = new Field("date", dateSchema, null, null);
+
     Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
-    schema.setFields(Arrays.asList(stringField, enumField));
+    schema.setFields(Arrays.asList(stringField, enumField, timeField, dateField));
 
     GenericRecord r = new GenericData.Record(schema);
     // \u2013 is EN DASH
     r.put(stringField.name(), "hello\nthere\"\tyou\u2013}");
     r.put(enumField.name(), new GenericData.EnumSymbol(enumField.schema(), "a"));
+    r.put(timeField.name(), Instant.now());
+    r.put(dateField.name(), new Date());
 
     String json = r.toString();
     JsonFactory factory = new JsonFactory();

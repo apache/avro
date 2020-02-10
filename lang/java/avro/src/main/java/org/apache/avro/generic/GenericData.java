@@ -21,10 +21,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -704,6 +706,14 @@ public class GenericData {
       seenObjects.put(datum, datum);
       toString(datum, buffer, seenObjects);
       seenObjects.remove(datum);
+    } else if (datum instanceof Date) {
+      buffer.append("\"");
+      buffer.append(datum);
+      buffer.append("\"");
+    } else if (datum instanceof Instant) {
+      buffer.append("\"");
+      buffer.append(datum);
+      buffer.append("\"");
     } else {
       buffer.append(datum);
     }
