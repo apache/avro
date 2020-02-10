@@ -29,7 +29,7 @@ tasks.withType(JavaCompile) {
     options.compilerArgs << "-Xlint:all" << "-Xlint:-options" << "-Werror"
 }
 
-version = "0.18.0"
+version = "0.18.1-SNAPSHOT"
 group = "com.commercehub.gradle.plugin"
 
 tasks.withType(AbstractArchiveTask) {
