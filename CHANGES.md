@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.18.0
 * Use reproducible file order for plugin archives
 * Eliminate usage of internal conventions API, using new Lazy Configuration approach instead; requires Gradle 4.4+
   * Technically, the APIs needed are available in Gradle 4.3, but there is a bug related to un-set `Property` instances in 4.3 and 4.3.1; see https://github.com/gradle/gradle/issues/3879
