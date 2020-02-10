@@ -24,6 +24,8 @@ WORKDIR /root
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
     DEBIAN_FRONTEND=noninteractive
 
+RUN echo 'deb http://deb.debian.org/debian sid main' > /etc/apt/sources.list.d/openjdk8.list
+
 # Install dependencies from vanilla system packages
 RUN apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
