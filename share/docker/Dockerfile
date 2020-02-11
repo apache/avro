@@ -17,7 +17,7 @@
 # Dockerfile for installing the necessary dependencies for building Avro.
 # See BUILD.txt.
 
-FROM openjdk:8
+FROM openjdk:8-stretch
 WORKDIR /root
 CMD ["/avro/share/docker/run-tests.sh"]
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
