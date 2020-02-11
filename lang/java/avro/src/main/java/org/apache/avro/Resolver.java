@@ -231,7 +231,6 @@ public class Resolver {
         return "Found " + writer.getFullName() + ", expecting " + reader.getFullName();
 
       case MISSING_REQUIRED_FIELD: {
-        final List<Field> wfields = writer.getFields();
         final List<Field> rfields = reader.getFields();
         String fname = "<oops>";
         for (Field rf : rfields) {
