@@ -18,7 +18,7 @@
 # See BUILD.txt.
 
 # Despite this base, JDK8 is used by default.  See below.
-FROM openjdk:11
+FROM openjdk:11-stretch
 WORKDIR /root
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
