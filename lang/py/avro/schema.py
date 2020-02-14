@@ -802,15 +802,6 @@ class RecordSchema(NamedSchema):
 
 
 #
-# Logical Type
-#
-
-class LogicalSchema(object):
-   def __init__(self, logical_type):
-     self.logical_type = logical_type
-
-
-#
 # Date Type
 #
 
