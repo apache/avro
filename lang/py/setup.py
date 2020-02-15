@@ -25,7 +25,7 @@ import glob
 import os
 import subprocess
 
-import setuptools
+import setuptools  # type: ignore
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
