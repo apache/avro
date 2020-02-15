@@ -19,10 +19,10 @@
 
 from __future__ import absolute_import, division, print_function
 
+import string
 import sys
 import time
 from random import choice, randint, sample
-from string import lowercase
 
 import avro.datafile
 import avro.io
@@ -31,7 +31,7 @@ import avro.schema
 types = ["A", "CNAME"]
 
 def rand_name():
-    return ''.join(sample(lowercase, 15))
+    return ''.join(sample(string.ascii_lowercase, 15))
 
 def rand_ip():
     return "%s.%s.%s.%s" %(randint(0,255), randint(0,255), randint(0,255), randint(0,255))
