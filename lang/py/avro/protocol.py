@@ -113,16 +113,37 @@ class Protocol(object):
     self._md5 = hashlib.md5(str(self).encode()).digest()
 
   # read-only properties
-  name = property(lambda self: self.get_prop('name'))
-  namespace = property(lambda self: self.get_prop('namespace'))
-  fullname = property(lambda self:
-                      avro.schema.Name(self.name, self.namespace).fullname)
-  types = property(lambda self: self.get_prop('types'))
-  types_dict = property(lambda self: dict([(type.name, type)
-                                           for type in self.types]))
-  messages = property(lambda self: self.get_prop('messages'))
-  md5 = property(lambda self: self._md5)
-  props = property(lambda self: self._props)
+  @property
+  def name(self):
+    return self.get_prop('name')
+
+  @property
+  def namespace(self):
+    return self.get_prop('namespace')
+
+  @property
+  def fullname(self):
+    return avro.schema.Name(self.name, self.namespace, None).fullname
+
+  @property
+  def types(self):
+    return self.get_prop('types')
+
+  @property
+  def types_dict(self):
+    return {type.name: type for type in self.types}
+
+  @property
+  def messages(self):
+    return self.get_prop('messages')
+
+  @property
+  def md5(self):
+    return self._md5
+
+  @property
+  def props(self):
+    return self._props
 
   # utility functions to manipulate properties dict
   def get_prop(self, key):
