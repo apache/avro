@@ -365,7 +365,7 @@ class TestProtocol(unittest.TestCase):
         if not example.valid:
           num_correct += 1
         else:
-          self.fail("Coudl not parse valid protocol: %s" % (example.name,))
+          self.fail("Could not parse valid protocol: %s" % (example.name,))
 
     fail_msg = "Parse behavior correct on %d out of %d protocols." % \
       (num_correct, len(EXAMPLES))
@@ -378,6 +378,7 @@ class TestProtocol(unittest.TestCase):
     print('')
     proto = protocol.parse(HELLO_WORLD.protocol_string)
     self.assertEqual(proto.namespace, "com.acme")
+    self.assertEqual(proto.fullname, "com.acme.HelloWorld")
     greeting_type = proto.types_dict['Greeting']
     self.assertEqual(greeting_type.namespace, 'com.acme')
 
