@@ -48,11 +48,13 @@ if (inputProtocol is None):
   with open(pfile,'r') as hf:
     prototxt=hf.read()
 
-  inputProtocol=protocol.parse(prototxt)
+  inputProtocol = protocol.parse(prototxt)
 
   # use a named tuple to represent the tasktype enumeration
-  taskschema=inputProtocol.types_dict["TaskType"]
-  _ttype=collections.namedtuple("_tasktype",taskschema.symbols)
+  taskschema = inputProtocol.types_dict["TaskType"]
+  # Mypy cannot statically type check a dynamically constructed named tuple.
+  # Since InputProtocol.avpr is hard-coded here, we can hard-code the symbols.
+  _ttype = collections.namedtuple("_tasktype", ("MAP", "REDUCE"))
   TaskType=_ttype(*taskschema.symbols)
 
 if (outputProtocol is None):
