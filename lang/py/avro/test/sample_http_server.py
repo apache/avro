@@ -19,9 +19,13 @@
 
 from __future__ import absolute_import, division, print_function
 
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import avro.ipc
+import avro.protocol
 
-from avro import ipc, protocol
+try:
+  import BaseHTTPServer as http_server  # type: ignore
+except ImportError:
+  import http.server as http_server  # type: ignore
 
 MAIL_PROTOCOL_JSON = """\
 {"namespace": "example.proto",
@@ -49,12 +53,12 @@ MAIL_PROTOCOL_JSON = """\
  }
 }
 """
-MAIL_PROTOCOL = protocol.parse(MAIL_PROTOCOL_JSON)
+MAIL_PROTOCOL = avro.protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_ADDRESS = ('localhost', 9090)
 
-class MailResponder(ipc.Responder):
+class MailResponder(avro.ipc.Responder):
   def __init__(self):
-    ipc.Responder.__init__(self, MAIL_PROTOCOL)
+    avro.ipc.Responder.__init__(self, MAIL_PROTOCOL)
 
   def invoke(self, message, request):
     if message.name == 'send':
@@ -65,19 +69,19 @@ class MailResponder(ipc.Responder):
     elif message.name == 'replay':
       return 'replay'
 
-class MailHandler(BaseHTTPRequestHandler):
+class MailHandler(http_server.BaseHTTPRequestHandler):
   def do_POST(self):
     self.responder = MailResponder()
-    call_request_reader = ipc.FramedReader(self.rfile)
+    call_request_reader = avro.ipc.FramedReader(self.rfile)
     call_request = call_request_reader.read_framed_message()
     resp_body = self.responder.respond(call_request)
     self.send_response(200)
     self.send_header('Content-Type', 'avro/binary')
     self.end_headers()
-    resp_writer = ipc.FramedWriter(self.wfile)
+    resp_writer = avro.ipc.FramedWriter(self.wfile)
     resp_writer.write_framed_message(resp_body)
 
 if __name__ == '__main__':
-  mail_server = HTTPServer(SERVER_ADDRESS, MailHandler)
+  mail_server = http_server.HTTPServer(SERVER_ADDRESS, MailHandler)
   mail_server.allow_reuse_address = True
   mail_server.serve_forever()
