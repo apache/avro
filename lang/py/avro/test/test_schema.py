@@ -37,6 +37,11 @@ try:
 except NameError:
   basestring = (bytes, unicode)
 
+try:
+  from typing import List
+except ImportError:
+  pass
+
 
 class TestSchema(object):
   """A proxy for a schema string that provides useful test metadata."""
@@ -61,18 +66,17 @@ class ValidTestSchema(TestSchema):
   valid = True
 
 
-class InvalidTestSchema(ValidTestSchema):
+class InvalidTestSchema(TestSchema):
   """A proxy for an invalid schema string that provides useful test metadata."""
   valid = False
 
 
-PRIMITIVE_EXAMPLES = ([
-  InvalidTestSchema('"True"'),
-  InvalidTestSchema('True'),
-  InvalidTestSchema('{"no_type": "test"}'),
-  InvalidTestSchema('{"type": "panther"}'),
-] + [ValidTestSchema('"{}"'.format(t)) for t in schema.PRIMITIVE_TYPES]
-  + [ValidTestSchema({"type": t}) for t in schema.PRIMITIVE_TYPES])
+PRIMITIVE_EXAMPLES = [InvalidTestSchema('"True"')]  # type: List[TestSchema]
+PRIMITIVE_EXAMPLES.append(InvalidTestSchema('True'))
+PRIMITIVE_EXAMPLES.append(InvalidTestSchema('{"no_type": "test"}'))
+PRIMITIVE_EXAMPLES.append(InvalidTestSchema('{"type": "panther"}'))
+PRIMITIVE_EXAMPLES.extend([ValidTestSchema('"{}"'.format(t)) for t in schema.PRIMITIVE_TYPES])
+PRIMITIVE_EXAMPLES.extend([ValidTestSchema({"type": t}) for t in schema.PRIMITIVE_TYPES])
 
 FIXED_EXAMPLES = [
   ValidTestSchema({"type": "fixed", "name": "Test", "size": 1}),
@@ -314,8 +318,9 @@ EXAMPLES += TIMESTAMPMILLIS_LOGICAL_TYPE
 EXAMPLES += TIMESTAMPMICROS_LOGICAL_TYPE
 EXAMPLES += IGNORED_LOGICAL_TYPE
 
-VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
-INVALID_EXAMPLES = [e for e in EXAMPLES if not e.valid]
+VALID_EXAMPLES = [e for e in EXAMPLES if getattr(e, "valid", False)]
+INVALID_EXAMPLES = [e for e in EXAMPLES if not getattr(e, "valid", True)]
+
 
 class TestMisc(unittest.TestCase):
   """Miscellaneous tests for schema"""
