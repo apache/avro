@@ -229,7 +229,7 @@ class TetherTask(object):
     self.midCollector=None
     self.outCollector=None
 
-    self._partitions=None
+    self._partitions = None
 
     # cache a list of the fields used by the reducer as the keys
     # we need the fields to decide when we have finished processing all values for
@@ -339,17 +339,14 @@ class TetherTask(object):
       estr= traceback.format_exc()
       self.fail(estr)
 
-  def set_partitions(self,npartitions):
-
-    try:
-      self._partitions=npartitions
-    except Exception as e:
-      estr= traceback.format_exc()
-      self.fail(estr)
-
-  def get_partitions():
-    """ Return the number of map output partitions of this job."""
+  @property
+  def partitions(self):
+    """Return the number of map output partitions of this job."""
     return self._partitions
+
+  @partitions.setter
+  def partitions(self, npartitions):
+    self._partitions = npartitions
 
   def input(self,data,count):
     """ Recieve input from the server

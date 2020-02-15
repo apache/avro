@@ -68,7 +68,7 @@ class TaskRunnerResponder(ipc.Responder):
       elif message.name=='partitions':
         self.log.info("TetherTaskRunner: Recieved partitions")
         try:
-          self.task.set_partitions(request["partitions"])
+          self.task.partitions = request["partitions"]
         except Exception as e:
           self.log.error("Exception occured while processing the partitions message: Message:\n"+traceback.format_exc())
           raise
