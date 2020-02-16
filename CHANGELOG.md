@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2020-02-16
+### Added
+- Export de::Error and ser::Error as DeError and SerError
+
+### Fixed
+- Fix union resolution of default values
+
 ## [0.6.6] - 2019-12-22
 ### Fixed
 - Negative block lengths are not handled
