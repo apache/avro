@@ -219,12 +219,12 @@ public class SortedKeyValueFile {
 
       // Load the whole index file into memory.
       Path indexFilePath = new Path(options.getPath(), INDEX_FILENAME);
-      LOG.debug("Loading the index from " + indexFilePath);
+      LOG.debug("Loading the index from {}", indexFilePath);
       mIndex = loadIndexFile(options.getConfiguration(), indexFilePath, mKeySchema);
 
       // Open the data file.
       Path dataFilePath = new Path(options.getPath(), DATA_FILENAME);
-      LOG.debug("Loading the data file " + dataFilePath);
+      LOG.debug("Loading the data file {}", dataFilePath);
       Schema recordSchema = AvroKeyValue.getSchema(mKeySchema, options.getValueSchema());
       DatumReader<GenericRecord> datumReader = model.createDatumReader(recordSchema);
       mDataFileReader = new DataFileReader<>(new FsInput(dataFilePath, options.getConfiguration()), datumReader);
@@ -245,13 +245,13 @@ public class SortedKeyValueFile {
      */
     public V get(K key) throws IOException {
       // Look up the entry in the index.
-      LOG.debug("Looking up key " + key + " in the index.");
+      LOG.debug("Looking up key {} in the index", key);
       Map.Entry<K, Long> indexEntry = mIndex.floorEntry(key);
       if (null == indexEntry) {
-        LOG.debug("Key " + key + " was not found in the index (it is before the first entry)");
+        LOG.debug("Key {} was not found in the index (it is before the first entry)", key);
         return null;
       }
-      LOG.debug("Key was found in the index, seeking to syncpoint " + indexEntry.getValue());
+      LOG.debug("Key was found in the index, seeking to syncpoint {}", indexEntry.getValue());
 
       // Seek to the data block that would contain the entry.
       mDataFileReader.seek(indexEntry.getValue());
@@ -261,18 +261,18 @@ public class SortedKeyValueFile {
         int comparison = model.compare(record.getKey(), key, mKeySchema);
         if (0 == comparison) {
           // We've found it!
-          LOG.debug("Found record for key " + key);
+          LOG.debug("Found record for key {}", key);
           return record.getValue();
         }
         if (comparison > 0) {
           // We've passed it.
-          LOG.debug("Searched beyond the point where key " + key + " would appear in the file.");
+          LOG.debug("Searched beyond the point where key {} would appear in the file", key);
           return null;
         }
       }
 
       // We've reached the end of the file.
-      LOG.debug("Searched to the end of the file but did not find key " + key);
+      LOG.debug("Searched to the end of the file but did not find key {}", key);
       return null;
     }
 
@@ -568,11 +568,11 @@ public class SortedKeyValueFile {
       if (!fileSystem.mkdirs(options.getPath())) {
         throw new IOException("Unable to create directory for SortedKeyValueFile: " + options.getPath());
       }
-      LOG.debug("Created directory " + options.getPath());
+      LOG.debug("Created directory {}", options.getPath());
 
       // Open a writer for the data file.
       Path dataFilePath = new Path(options.getPath(), DATA_FILENAME);
-      LOG.debug("Creating writer for avro data file: " + dataFilePath);
+      LOG.debug("Creating writer for avro data file: {}", dataFilePath);
       mRecordSchema = AvroKeyValue.getSchema(mKeySchema, mValueSchema);
       DatumWriter<GenericRecord> datumWriter = model.createDatumWriter(mRecordSchema);
       OutputStream dataOutputStream = fileSystem.create(dataFilePath);
@@ -584,7 +584,7 @@ public class SortedKeyValueFile {
 
       // Open a writer for the index file.
       Path indexFilePath = new Path(options.getPath(), INDEX_FILENAME);
-      LOG.debug("Creating writer for avro index file: " + indexFilePath);
+      LOG.debug("Creating writer for avro index file: {}", indexFilePath);
       mIndexSchema = AvroKeyValue.getSchema(mKeySchema, Schema.create(Schema.Type.LONG));
       DatumWriter<GenericRecord> indexWriter = model.createDatumWriter(mIndexSchema);
       OutputStream indexOutputStream = fileSystem.create(indexFilePath);
