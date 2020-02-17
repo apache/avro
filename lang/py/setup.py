@@ -121,35 +121,12 @@ def _get_version():
     return verfile.read().rstrip().replace("-", "+")
 
 
-class LintCommand(setuptools.Command):
-    """Run pycodestyle on all your modules"""
-    description = __doc__
-    user_options = []  # type: ignore
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        # setuptools does not seem to make pycodestyle available
-        # in the pythonpath, so we do it ourselves.
-        try:
-            env = {'PYTHONPATH': next(glob.iglob('.eggs/pycodestyle-*.egg'))}
-        except StopIteration:
-            env = None  # pycodestyle is already installed
-        p = subprocess.Popen(['python', '-m', 'pycodestyle', '.'], close_fds=True, env=env)
-        if p.wait():
-            raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
-
 def main():
     if not _is_distribution():
         _generate_package_data()
 
     setuptools.setup(cmdclass={
         "generate_interop_data": GenerateInteropDataCommand,
-        "lint": LintCommand,
     })
 
 

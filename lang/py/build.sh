@@ -51,11 +51,11 @@ interop-data-test() {
 }
 
 lint() {
-  ./setup.py isort lint
+  tox -e lint
 }
 
 test_() {
-  tox
+  TOX_SKIP_ENV=lint tox --skip-missing-interpreters
 }
 
 main() {
