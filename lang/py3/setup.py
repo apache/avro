@@ -38,8 +38,6 @@ import subprocess
 
 import setuptools
 
-import pycodestyle
-
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
 _VERSION_FILE_NAME = 'VERSION.txt'
