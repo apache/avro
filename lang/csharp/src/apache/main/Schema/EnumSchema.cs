@@ -33,6 +33,11 @@ namespace Avro
         public IList<string> Symbols { get; private set;  }
 
         /// <summary>
+        /// The default token to use when deserializing an enum when the provided token is not found
+        /// </summary>
+        public string Default { get; private set; }
+
+        /// <summary>
         /// Map of enum symbols and it's corresponding ordinal number
         /// </summary>
         private readonly IDictionary<string, int> symbolMap;
@@ -74,7 +79,7 @@ namespace Avro
             try
             {
                 return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
-                    JsonHelper.GetOptionalString(jtok, "doc"));
+                    JsonHelper.GetOptionalString(jtok, "doc"), JsonHelper.GetOptionalString(jtok, "default"));
             }
             catch (SchemaParseException e)
             {
@@ -92,14 +97,19 @@ namespace Avro
         /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
+        /// <param name="defaultSymbol">default symbol</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
                             IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
-                            string doc)
+                            string doc, string defaultSymbol)
                             : base(Type.Enumeration, name, aliases, props, names, doc)
         {
             if (null == name.Name) throw new SchemaParseException("name cannot be null for enum schema.");
             this.Symbols = symbols;
             this.symbolMap = symbolMap;
+
+            if (null != defaultSymbol && !symbolMap.ContainsKey(defaultSymbol))
+                throw new SchemaParseException($"Default symbol: {defaultSymbol} not found in symbols");
+            Default = defaultSymbol;
         }
 
         /// <summary>
@@ -117,6 +127,11 @@ namespace Avro
             foreach (string s in this.Symbols)
                 writer.WriteValue(s);
             writer.WriteEndArray();
+            if (null != Default) 
+            {
+                writer.WritePropertyName("default");
+                writer.WriteValue(Default);
+            }
         }
 
         /// <summary>
@@ -128,7 +143,11 @@ namespace Avro
         public int Ordinal(string symbol)
         {
             int result;
-            if (symbolMap.TryGetValue(symbol, out result)) return result;
+            if (symbolMap.TryGetValue(symbol, out result))
+                return result;
+            if (null != Default)
+                return symbolMap[Default];
+
             throw new AvroException("No such symbol: " + symbol);
         }
 
