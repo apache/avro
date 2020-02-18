@@ -97,7 +97,7 @@ namespace Avro
         /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
-        /// <param name="defaultSymbol">default token</param>
+        /// <param name="defaultSymbol">default symbol</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
                             IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
                             string doc, string defaultSymbol)
