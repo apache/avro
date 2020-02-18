@@ -37,8 +37,15 @@ namespace Avro.Generic
             get { return value; }
             set
             {
-                if (! Schema.Contains(value)) throw new AvroException("Unknown value for enum: " + value + "(" + Schema + ")");
-                this.value = value;
+                if (!string.IsNullOrEmpty(Schema.Default))
+                {
+                    this.value = Schema.Contains(value) ? value : Schema.Default;
+                }
+                else
+                {
+                    if (! Schema.Contains(value)) throw new AvroException("Unknown value for enum: " + value + "(" + Schema + ")");
+                    this.value = value;
+                }
             }
         }
 
