@@ -249,6 +249,20 @@ namespace Avro.Test
             Assert.AreEqual(expectedDoc, es.Documentation);
         }
 
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"Unknown\", \"A\", \"B\"], \"default\": \"Unknown\" }", "Unknown")]
+        public void TestEnumDefault(string s, string expectedToken) 
+        {
+            var es = Schema.Parse(s) as EnumSchema;
+            Assert.IsNotNull(es);
+            Assert.AreEqual(es.Default, expectedToken);
+        }
+
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"Unknown\", \"A\", \"B\"], \"default\": \"Something\" }")]
+        public void TestEnumDefaultSymbolDoesntExist(string s)
+        {
+            Assert.Throws<SchemaParseException>(() => Schema.Parse(s));
+        }
+
         [TestCase("{\"type\": \"array\", \"items\": \"long\"}", "long")]
         public void TestArray(string s, string item)
         {

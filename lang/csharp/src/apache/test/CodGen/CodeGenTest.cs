@@ -18,7 +18,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
 using NUnit.Framework;
@@ -45,7 +44,7 @@ namespace Avro.Test
 			{ ""name"" : ""internal"", ""type"" : ""bytes"" },
 			{ ""name"" : ""while"", ""type"" : ""string"" },
 			{ ""name"" : ""return"", ""type"" : ""null"" },
-			{ ""name"" : ""enum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""class"", ""symbols"" : [ ""A"", ""B"" ] } },
+			{ ""name"" : ""enum"", ""type"" : { ""type"" : ""enum"", ""name"" : ""class"", ""symbols"" : [ ""Unknown"", ""A"", ""B"" ], ""default"" : ""Unknown"" } },
 			{ ""name"" : ""string"", ""type"" : { ""type"": ""fixed"", ""size"": 16, ""name"": ""static"" } }
 		]
 }
