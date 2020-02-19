@@ -69,6 +69,27 @@ namespace Avro.Test
 	]
 }
 ", new object[] { "schematest.SchemaObject", typeof(IList<object>) }, TestName = "TestCodeGen1")]
+        [TestCase(@"{
+	""type"" : ""record"",
+	""name"" : ""LogicalTypes"",
+	""namespace"" : ""schematest"",
+	""fields"" :
+		[ 	
+			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
+			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
+			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
+			{ ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
+			{ ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
+			{ ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+			{ ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
+			{ ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
+			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
+			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
+			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+		]
+}
+", new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) }, TestName = "TestCodeGen2 - Logical Types")]
         public static void TestCodeGen(string str, object[] result)
         {
             Schema schema = Schema.Parse(str);
@@ -94,6 +115,8 @@ namespace Avro.Test
                     stype = (Type)result[i];
                 if (!stype.IsValueType)
                     Assert.IsNull(field);   // can't test reference type, it will be null
+                else if (stype.IsValueType && field == null)
+                    Assert.IsNull(field); // nullable value type, so we can't get the type using GetType
                 else
                     Assert.AreEqual(stype, field.GetType());
             }
