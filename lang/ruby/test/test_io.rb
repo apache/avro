@@ -166,7 +166,7 @@ EOS
     ret_val = { "sym"=> "foo", "str"=>"bar"}
     schema = Schema.parse('{"type":"record", "name":"rec", "fields":[{"name":"sym", "type":"string"}, {"name":"str", "type":"string"}]}')
 
-    writer, encoder, datum_writer = write_datum(datum, schema)
+    writer, _encoder, _datum_writer = write_datum(datum, schema)
 
     ret_datum = read_datum(writer, schema)
     assert_equal ret_datum, ret_val
