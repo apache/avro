@@ -491,6 +491,77 @@ namespace Avro.Test.File
             }
         }
 
+        /// <summary>
+        /// Test leaveOpen flag
+        /// </summary>
+        /// <param name="schemaStr"></param>
+        /// <param name="value"></param>
+        /// <param name="codecType"></param>
+        /// <param name="leaveOpen"></param>
+        [TestCase(specificSchema, Codec.Type.Null, true, false)]
+        [TestCase(specificSchema, Codec.Type.Null, true, true)]
+        [TestCase(specificSchema, Codec.Type.Null, false, false)]
+        [TestCase(specificSchema, Codec.Type.Null, false, true)]
+        public void TestLeaveOpen(string schemaStr, Codec.Type codecType, bool leaveWriteOpen, bool leaveReadOpen)
+        {
+            // create and write out
+            IList<Foo> records = MakeRecords(GetTestFooObject());
+
+            byte[] inputBuffer;
+            using (MemoryStream dataFileOutputStream = new MemoryStream())
+            {
+                Schema schema = Schema.Parse(schemaStr);
+                DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
+                using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType), leaveWriteOpen))
+                {
+                    dataFileWriter.Flush();
+                }
+
+                try
+                {
+                    // Check if stream is still valid and not closed
+                    // If opened with leaveOpen=false, it should throw an exception
+                    Assert.AreNotEqual(dataFileOutputStream.Length, 0);
+                    dataFileOutputStream.Flush();
+
+                    // If we get here we must have used leaveOpen=true
+                    Assert.True(leaveWriteOpen);
+
+                }
+                catch(System.ObjectDisposedException)
+                {
+                    // If we get here we must have used leaveOpen=false
+                    Assert.False(leaveWriteOpen);
+                }
+
+                inputBuffer = dataFileOutputStream.ToArray();
+            }
+
+            using (MemoryStream dataFileInputStream = new MemoryStream(inputBuffer))
+            {
+                // read back
+                using (IFileReader<Foo> reader = DataFileReader<Foo>.OpenReader(dataFileInputStream, leaveReadOpen))
+                {
+                }
+
+                try
+                {
+                    // Check if stream is still valid and not closed
+                    // If opened with leaveOpen=false, it should throw an exception
+                    Assert.AreNotEqual(dataFileInputStream.Length, 0);
+
+                    // If we get here we must have used leaveOpen=true
+                    Assert.True(leaveReadOpen);
+
+                }
+                catch(System.ObjectDisposedException)
+                {
+                    // If we get here we must have used leaveOpen=false
+                    Assert.False(leaveReadOpen);
+                }
+            }
+        }
+
         class SyncLog
         {
             public long Position { get; set; }
