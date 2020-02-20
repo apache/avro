@@ -24,6 +24,8 @@ use Encode();
 use Error::Simple;
 use Regexp::Common qw(number);
 
+our $VERSION = '++MODULE_VERSION++';
+
 our $max64;
 our $complement = ~0x7F;
 if ($Config{use64bitint}) {

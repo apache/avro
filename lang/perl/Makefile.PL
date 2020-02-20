@@ -18,7 +18,13 @@
 use Config;
 use inc::Module::Install;
 
-my $version = `cat ../../share/VERSION.txt`;
+my $version;
+for ('VERSION.txt', '../../share/VERSION.txt') {
+    if (-f) {
+        $version = `cat $_`;
+        last;
+    }
+}
 chomp $version;
 
 license 'apache';

@@ -23,6 +23,8 @@ use Carp;
 use JSON::XS();
 use Try::Tiny;
 
+our $VERSION = '++MODULE_VERSION++';
+
 my $json = JSON::XS->new->allow_nonref;
 
 sub parse {

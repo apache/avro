@@ -39,6 +39,8 @@ use Compress::Zstd;
 use Error::Simple;
 use IO::Compress::RawDeflate qw(rawdeflate $RawDeflateError);
 
+our $VERSION = '++MODULE_VERSION++';
+
 sub new {
     my $class = shift;
     my $datafile = $class->SUPER::new(@_);
