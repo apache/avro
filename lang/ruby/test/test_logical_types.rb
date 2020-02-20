@@ -18,6 +18,37 @@
 require 'test_help'
 
 class TestLogicalTypes < Test::Unit::TestCase
+  def test_decimal
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 4,
+        "scale": 2
+      }
+    SCHEMA
+
+    assert_equal 'decimal', schema.logical_type
+
+    value = BigDecimal('5230.23')
+    assert_encode_and_decode value, schema
+  end
+
+  def test_decimal_converstion
+    Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 4,
+        "scale": 2
+      }
+    SCHEMA
+
+    value = BigDecimal('5230.23')
+
+    assert_equal(value, Avro::LogicalTypes::Decimal.decode(value.to_s))
+  end
+
   def test_int_date
     schema = Avro::Schema.parse <<-SCHEMA
       { "type": "int", "logicalType": "date" }

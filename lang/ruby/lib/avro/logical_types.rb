@@ -16,9 +16,20 @@
 # limitations under the License.
 
 require 'date'
+require 'bigdecimal'
 
 module Avro
   module LogicalTypes
+    module Decimal
+      def self.encode(value)
+        value.to_s
+      end
+
+      def self.decode(value)
+        BigDecimal(value)
+      end
+    end
+
     module IntDate
       EPOCH_START = Date.new(1970, 1, 1)
 
@@ -79,6 +90,9 @@ module Avro
         "timestamp-millis" => TimestampMillis,
         "timestamp-micros" => TimestampMicros
       },
+      "bytes" => {
+        "decimal" => Decimal
+      }
     }.freeze
 
     def self.type_adapter(type, logical_type)
