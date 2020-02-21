@@ -16,7 +16,7 @@
 
 require 'test_help'
 
-class TestSchema < Test::Unit::TestCase
+class TestSchemaValidator < Test::Unit::TestCase
   def validate!(schema, value, options=nil)
     Avro::SchemaValidator.validate!(schema, value, options)
   end
