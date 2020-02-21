@@ -17,17 +17,6 @@
  */
 package org.apache.avro.generic;
 
-import static org.junit.Assert.*;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.*;
-
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
@@ -36,6 +25,15 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.util.Utf8;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.concurrent.*;
+
+import static org.junit.Assert.*;
 
 public class TestGenericDatumWriter {
   @Test
@@ -120,6 +118,25 @@ public class TestGenericDatumWriter {
     } catch (ExecutionException ex) {
       assertTrue(ex.getCause() instanceof ConcurrentModificationException);
     }
+  }
+
+  @Test
+  public void testAllowWritingPrimitives() throws IOException {
+    Schema doubleType = Schema.create(Schema.Type.DOUBLE);
+    Schema.Field field = new Schema.Field("double", doubleType);
+    List<Schema.Field> fields = Collections.singletonList(field);
+    Schema schema = Schema.createRecord("test", "doc", "", false, fields);
+
+    GenericRecord record = new GenericData.Record(schema);
+    record.put("double", 456.4);
+    record.put("double", 100000L);
+    record.put("double", 444);
+
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
+    Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
+
+    writer.write(record, encoder);
   }
 
   static class TestEncoder extends Encoder {
