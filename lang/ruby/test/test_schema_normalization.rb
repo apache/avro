@@ -166,6 +166,7 @@ class TestSchemaNormalization < Test::Unit::TestCase
     CaseFinder.cases.each do |test_case|
       schema = Avro::Schema.parse(test_case.input)
       assert_equal test_case.canonical, Avro::SchemaNormalization.to_parsing_form(schema)
+      assert_equal test_case.fingerprint, schema.crc_64_avro_fingerprint
     end
   end
 end
