@@ -547,13 +547,16 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
 
 
 class EnumSchema(NamedSchema):
-  def __init__(self, name, namespace, symbols, names=None, doc=None, other_props=None):
-
-    for symbol in symbols:
-      try:
-        validate_basename(symbol)
-      except InvalidName:
-        raise InvalidName("An enum symbol must be a valid schema name.")
+  def __init__(self, name, namespace, symbols, names=None, doc=None, other_props=None, validate_enum_symbols=True):
+    """
+    @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
+    """
+    if validate_enum_symbols:
+      for symbol in symbols:
+        try:
+          validate_basename(symbol)
+        except InvalidName:
+          raise InvalidName("An enum symbol must be a valid schema name.")
 
     if len(set(symbols)) < len(symbols):
       fail_msg = 'Duplicate symbol: %s' % symbols
@@ -927,11 +930,12 @@ def make_logical_schema(logical_type, type_, other_props):
     warnings.warn(warning)
   return None
 
-def make_avsc_object(json_data, names=None):
+def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
   """
   Build Avro Schema from data parsed out of JSON string.
 
   @arg names: A Names object (tracks seen names and default space)
+  @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
   """
   if names is None:
     names = Names()
@@ -961,7 +965,7 @@ def make_avsc_object(json_data, names=None):
       elif type == 'enum':
         symbols = json_data.get('symbols')
         doc = json_data.get('doc')
-        return EnumSchema(name, namespace, symbols, names, doc, other_props)
+        return EnumSchema(name, namespace, symbols, names, doc, other_props, validate_enum_symbols)
       elif type in ['record', 'error']:
         fields = json_data.get('fields')
         doc = json_data.get('doc')
@@ -998,8 +1002,11 @@ def make_avsc_object(json_data, names=None):
     raise SchemaParseException(fail_msg)
 
 # TODO(hammer): make method for reading from a file?
-def parse(json_string):
-  """Constructs the Schema from the JSON text."""
+def parse(json_string, validate_enum_symbols=True):
+  """Constructs the Schema from the JSON text.
+
+  @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
+  """
   # parse the JSON
   try:
     json_data = json.loads(json_string)
@@ -1015,4 +1022,4 @@ def parse(json_string):
   names = Names()
 
   # construct the Avro Schema object
-  return make_avsc_object(json_data, names)
+  return make_avsc_object(json_data, names, validate_enum_symbols)

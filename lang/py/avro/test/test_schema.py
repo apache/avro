@@ -443,6 +443,26 @@ class TestMisc(unittest.TestCase):
     self.assertIsInstance(fixed_decimal, schema.FixedSchema)
     self.assertNotIsInstance(fixed_decimal, schema.DecimalLogicalSchema)
 
+  def test_parse_invalid_symbol(self):
+    """Disabling enumschema symbol validation should allow invalid symbols to pass."""
+    test_schema_string = json.dumps({
+      "type": "enum", "name": "AVRO2174", "symbols": ["white space"]})
+
+    try:
+      case = schema.parse(test_schema_string, validate_enum_symbols=True)
+    except schema.InvalidName:
+      pass
+    else:
+      self.fail("When enum symbol validation is enabled, "
+                "an invalid symbol should raise InvalidName.")
+
+    try:
+      case = schema.parse(test_schema_string, validate_enum_symbols=False)
+    except schema.InvalidName:
+      self.fail("When enum symbol validation is disabled, "
+                "an invalid symbol should not raise InvalidName.")
+
+
 class SchemaParseTestCase(unittest.TestCase):
   """Enable generating parse test cases over all the valid and invalid example schema."""
 
@@ -480,6 +500,7 @@ class SchemaParseTestCase(unittest.TestCase):
       pass
     else:
       self.fail("Invalid schema should not have parsed: {!s}".format(self.test_schema))
+
 
 class RoundTripParseTestCase(unittest.TestCase):
   """Enable generating round-trip parse test cases over all the valid test schema."""
