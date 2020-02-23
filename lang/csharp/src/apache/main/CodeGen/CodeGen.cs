@@ -780,7 +780,7 @@ namespace Avro
                     var csharpType = logicalSchema.LogicalType.GetCSharpType(nullible);
                     if (csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>))
                     {
-                        return $"Nullable<{csharpType.GetGenericArguments()[0]}>";
+                        return $"System.Nullable<{csharpType.GetGenericArguments()[0]}>";
                     }
                     else
                     {
