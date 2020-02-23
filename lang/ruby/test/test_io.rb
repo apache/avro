@@ -90,7 +90,10 @@ EOS
        "name": "Test",
        "fields": [{"name": "ts",
                    "type": {"type": "long",
-                            "logicalType": "timestamp-micros"}}]}
+                            "logicalType": "timestamp-micros"}},
+                  {"name": "ts2",
+                   "type": {"type": "long",
+                            "logicalType": "timestamp-millis"}}]}
 EOS
     check(record_schema)
   end
