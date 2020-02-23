@@ -585,61 +585,8 @@ class BinaryEncoder(object):
 #
 # DatumReader/Writer
 #
-
 class DatumReader(object):
   """Deserialize Avro-encoded data into a Python data structure."""
-  @staticmethod
-  def check_props(schema_one, schema_two, prop_list):
-    for prop in prop_list:
-      if getattr(schema_one, prop) != getattr(schema_two, prop):
-        return False
-    return True
-
-  @staticmethod
-  def match_schemas(writers_schema, readers_schema):
-    w_type = writers_schema.type
-    r_type = readers_schema.type
-    if 'union' in [w_type, r_type] or 'error_union' in [w_type, r_type]:
-      return True
-    elif (w_type in schema.PRIMITIVE_TYPES and r_type in schema.PRIMITIVE_TYPES
-          and w_type == r_type):
-      return True
-    elif (w_type == r_type == 'record' and
-          DatumReader.check_props(writers_schema, readers_schema,
-                                  ['fullname'])):
-      return True
-    elif (w_type == r_type == 'error' and
-          DatumReader.check_props(writers_schema, readers_schema,
-                                  ['fullname'])):
-      return True
-    elif (w_type == r_type == 'request'):
-      return True
-    elif (w_type == r_type == 'fixed' and
-          DatumReader.check_props(writers_schema, readers_schema,
-                                  ['fullname', 'size'])):
-      return True
-    elif (w_type == r_type == 'enum' and
-          DatumReader.check_props(writers_schema, readers_schema,
-                                  ['fullname'])):
-      return True
-    elif (w_type == r_type == 'map' and
-          DatumReader.check_props(writers_schema.values,
-                                  readers_schema.values, ['type'])):
-      return True
-    elif (w_type == r_type == 'array' and
-          DatumReader.check_props(writers_schema.items,
-                                  readers_schema.items, ['type'])):
-      return True
-
-    # Handle schema promotion
-    if w_type == 'int' and r_type in ['long', 'float', 'double']:
-      return True
-    elif w_type == 'long' and r_type in ['float', 'double']:
-      return True
-    elif w_type == 'float' and r_type == 'double':
-      return True
-    return False
-
   def __init__(self, writers_schema=None, readers_schema=None):
     """
     As defined in the Avro specification, we call the schema encoded
@@ -658,7 +605,6 @@ class DatumReader(object):
     self._readers_schema = readers_schema
   readers_schema = property(lambda self: self._readers_schema,
                             set_readers_schema)
-
   def read(self, decoder):
     if self.readers_schema is None:
       self.readers_schema = self.writers_schema
@@ -666,21 +612,26 @@ class DatumReader(object):
 
   def read_data(self, writers_schema, readers_schema, decoder):
     # schema matching
-    if not DatumReader.match_schemas(writers_schema, readers_schema):
+    if not readers_schema.match(writers_schema):
       fail_msg = 'Schemas do not match.'
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
     logical_type = getattr(writers_schema, 'logical_type', None)
-    # schema resolution: reader's schema is a union, writer's schema is not
-    if (writers_schema.type not in ['union', 'error_union']
-        and readers_schema.type in ['union', 'error_union']):
+
+    # function dispatch for reading data based on type of writer's schema
+    if writers_schema.type in ['union', 'error_union']:
+      return self.read_union(writers_schema, readers_schema, decoder)
+
+    if readers_schema.type in ['union', 'error_union']:
+      # schema resolution: reader's schema is a union, writer's schema is not
       for s in readers_schema.schemas:
-        if DatumReader.match_schemas(writers_schema, s):
+        if s.match(writers_schema):
           return self.read_data(writers_schema, s, decoder)
+
+      # This shouldn't happen because of the match check at the start of this method.
       fail_msg = 'Schemas do not match.'
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
-    # function dispatch for reading data based on type of writer's schema
     if writers_schema.type == 'null':
       return decoder.read_null()
     elif writers_schema.type == 'boolean':
@@ -728,8 +679,6 @@ class DatumReader(object):
       return self.read_array(writers_schema, readers_schema, decoder)
     elif writers_schema.type == 'map':
       return self.read_map(writers_schema, readers_schema, decoder)
-    elif writers_schema.type in ['union', 'error_union']:
-      return self.read_union(writers_schema, readers_schema, decoder)
     elif writers_schema.type in ['record', 'error', 'request']:
       return self.read_record(writers_schema, readers_schema, decoder)
     else:
