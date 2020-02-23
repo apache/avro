@@ -50,7 +50,12 @@ class CaseFinder
       input = scan_input
       canonical = scan_canonical
       fingerprint = scan_fingerprint
-
+      if not fingerprint and @cases
+        fingerprint = @cases[-1].fingerprint
+      end
+      if fingerprint
+        fingerprint = fingerprint.to_i & 0xFFFF_FFFF_FFFF_FFFF
+      end
       Case.new(id, input, canonical, fingerprint)
     else
       @scanner.skip(/.*\n/)
