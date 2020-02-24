@@ -4,6 +4,7 @@
 * Add support for Gradle 6.0-6.2 (#101)
 * Drop support for Gradle versions prior to 5.1
 * Update version of kotlin plugin in tests/example
+* Built using Avro 1.9.2 (#104)
 
 ## 0.18.0
 * Use reproducible file order for plugin archives

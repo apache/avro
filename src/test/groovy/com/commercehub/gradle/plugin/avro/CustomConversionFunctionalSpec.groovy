@@ -15,10 +15,7 @@
  */
 package com.commercehub.gradle.plugin.avro
 
-import spock.lang.Requires
-
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
-import static org.gradle.util.GradleVersion.version
 
 class CustomConversionFunctionalSpec extends FunctionalSpec {
     def "setup"() {
@@ -35,9 +32,10 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
             "com/commercehub/gradle/plugin/avro/test/custom/TimeZoneLogicalTypeFactory.java")
     }
 
-    @Requires({ version(avroVersion).compareTo(version("1.9.2")) >= 0 })
     def "can use a custom conversion when generating java from a schema with stringType = \"String\""() {
         // since Avro 1.9.2 https://issues.apache.org/jira/browse/AVRO-2548 is fixed
+        // This is a behavior of the buildscript version of avro rather than the compile-time one,
+        // so our version compatibility tests won't cover the difference
         given:
         copyResource("customConversion.avsc", avroDir)
         buildFile << """
