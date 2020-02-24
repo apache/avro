@@ -16,9 +16,6 @@
 package com.commercehub.gradle.plugin.avro;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import org.apache.avro.Conversion;
@@ -26,6 +23,8 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.generic.GenericData;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 
@@ -38,8 +37,8 @@ import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBIL
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETURN_OPTIONAL;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_LOGICAL_TYPE_FACTORIES;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
-import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class DefaultAvroExtension implements AvroExtension {
     private final Property<String> outputCharacterEncoding;
     private final Property<String> stringType;
@@ -50,26 +49,23 @@ public class DefaultAvroExtension implements AvroExtension {
     private final Property<Boolean> gettersReturnOptional;
     private final Property<Boolean> enableDecimalLogicalType;
     private final Property<String> dateTimeLogicalType;
-    // When we require Gradle 5.1+, we could use MapProperty here.
-    @SuppressWarnings("rawtypes")
-    private final Property<Map> logicalTypeFactories;
-    // When we require Gradle 4.5+, we could use ListProperty here.
-    @SuppressWarnings("rawtypes")
-    private final Property<List> customConversions;
+    private final MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories;
+    private final ListProperty<Class<? extends Conversion<?>>> customConversions;
 
     @Inject
     public DefaultAvroExtension(ObjectFactory objects) {
         this.outputCharacterEncoding = objects.property(String.class);
-        this.stringType = configurePropertyConvention(objects.property(String.class), DEFAULT_STRING_TYPE);
-        this.fieldVisibility = configurePropertyConvention(objects.property(String.class), DEFAULT_FIELD_VISIBILITY);
+        this.stringType = objects.property(String.class).convention(DEFAULT_STRING_TYPE);
+        this.fieldVisibility = objects.property(String.class).convention(DEFAULT_FIELD_VISIBILITY);
         this.templateDirectory = objects.property(String.class);
-        this.createSetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_SETTERS);
-        this.createOptionalGetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_OPTIONAL_GETTERS);
-        this.gettersReturnOptional = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_GETTERS_RETURN_OPTIONAL);
-        this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
-        this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
-        this.logicalTypeFactories = configurePropertyConvention(objects.property(Map.class), DEFAULT_LOGICAL_TYPE_FACTORIES);
-        this.customConversions = configurePropertyConvention(objects.property(List.class), DEFAULT_CUSTOM_CONVERSIONS);
+        this.createSetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_SETTERS);
+        this.createOptionalGetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_OPTIONAL_GETTERS);
+        this.gettersReturnOptional = objects.property(Boolean.class).convention(DEFAULT_GETTERS_RETURN_OPTIONAL);
+        this.enableDecimalLogicalType = objects.property(Boolean.class).convention(DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
+        this.dateTimeLogicalType = objects.property(String.class).convention(DEFAULT_DATE_TIME_LOGICAL_TYPE);
+        this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
+            .convention(DEFAULT_LOGICAL_TYPE_FACTORIES);
+        this.customConversions = objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(DEFAULT_CUSTOM_CONVERSIONS);
     }
 
     @Override
@@ -186,8 +182,7 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
-    public Property<Map> getLogicalTypeFactories() {
+    public MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> getLogicalTypeFactories() {
         return logicalTypeFactories;
     }
 
@@ -202,40 +197,27 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
-    @SuppressWarnings("rawtypes")
-    public Property<List> getCustomConversions() {
+    public ListProperty<Class<? extends Conversion<?>>> getCustomConversions() {
         return customConversions;
     }
 
-    @SuppressWarnings("rawtypes")
-    public void setCustomConversions(Provider<List<Class<? extends Conversion>>> provider) {
-        // If we were using ListProperty, this method could take Iterables rather than Lists
+    public void setCustomConversions(Provider<Iterable<Class<? extends Conversion<?>>>> provider) {
         this.customConversions.set(provider);
     }
 
-    @SuppressWarnings("rawtypes")
-    public void setCustomConversions(List<Class<? extends Conversion>> customConversions) {
-        // If we were using ListProperty, this method could take Iterables rather than Lists
+    public void setCustomConversions(Iterable<Class<? extends Conversion<?>>> customConversions) {
         this.customConversions.set(customConversions);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public AvroExtension logicalTypeFactory(String typeName, Class<? extends LogicalTypes.LogicalTypeFactory> typeFactoryClass) {
-        // If we were using MapProperty, we could use the put method here
-        Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> newValue = new LinkedHashMap<>(logicalTypeFactories.get());
-        newValue.put(typeName, typeFactoryClass);
-        logicalTypeFactories.set(newValue);
+        logicalTypeFactories.put(typeName, typeFactoryClass);
         return this;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     public AvroExtension customConversion(Class<? extends Conversion<?>> conversionClass) {
-        // If we were using ListProperty, we could use the add method here
-        List<Class<? extends Conversion>> newValue = new ArrayList<>(customConversions.get());
-        newValue.add(conversionClass);
-        customConversions.set(newValue);
+        customConversions.add(conversionClass);
         return this;
     }
 }

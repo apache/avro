@@ -38,7 +38,6 @@ import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.JAVA_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
-import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME;
 
 public class AvroPlugin implements Plugin<Project> {
@@ -95,7 +94,7 @@ public class AvroPlugin implements Plugin<Project> {
         task.source(getAvroSourceDir(project, sourceSet));
         task.include("**/*." + IDL_EXTENSION);
         task.setClasspath(project.getConfigurations().getByName(RUNTIME_CLASSPATH_CONFIGURATION_NAME));
-        configurePropertyConvention(task.getOutputDir(), getGeneratedOutputDir(project, sourceSet, PROTOCOL_EXTENSION));
+        task.getOutputDir().convention(getGeneratedOutputDir(project, sourceSet, PROTOCOL_EXTENSION));
         return task;
     }
 
@@ -110,7 +109,7 @@ public class AvroPlugin implements Plugin<Project> {
         task.source(protoTask.getOutputDir());
         task.source(protoTask.getOutputs());
         task.include("**/*." + SCHEMA_EXTENSION, "**/*." + PROTOCOL_EXTENSION);
-        configurePropertyConvention(task.getOutputDir(), getGeneratedOutputDir(project, sourceSet, JAVA_EXTENSION));
+        task.getOutputDir().convention(getGeneratedOutputDir(project, sourceSet, JAVA_EXTENSION));
 
         sourceSet.getJava().srcDir(task.getOutputDir());
 
@@ -118,7 +117,7 @@ public class AvroPlugin implements Plugin<Project> {
         compileJavaTask.source(task.getOutputDir());
         compileJavaTask.source(task.getOutputs());
 
-        configurePropertyConvention(task.getOutputCharacterEncoding(), project.provider(() ->
+        task.getOutputCharacterEncoding().convention(project.provider(() ->
             Optional.ofNullable(compileJavaTask.getOptions().getEncoding()).orElse(Charset.defaultCharset().name())));
 
         return task;

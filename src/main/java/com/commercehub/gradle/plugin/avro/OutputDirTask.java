@@ -16,6 +16,7 @@
 package com.commercehub.gradle.plugin.avro;
 
 import java.io.File;
+import javax.annotation.Nonnull;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
@@ -24,14 +25,13 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.SourceTask;
 
-import static com.commercehub.gradle.plugin.avro.GradleCompatibility.createDirectoryProperty;
 import static org.gradle.api.tasks.PathSensitivity.RELATIVE;
 
 class OutputDirTask extends SourceTask {
     private final DirectoryProperty outputDir;
 
-    protected OutputDirTask() {
-        this.outputDir = createDirectoryProperty(getProject());
+    OutputDirTask() {
+        this.outputDir = getProject().getObjects().directoryProperty();
     }
 
     public void setOutputDir(File outputDir) {
@@ -39,6 +39,7 @@ class OutputDirTask extends SourceTask {
         getOutputs().dir(outputDir);
     }
 
+    @Nonnull
     @PathSensitive(value = RELATIVE)
     public FileTree getSource() {
         return super.getSource();
@@ -49,7 +50,7 @@ class OutputDirTask extends SourceTask {
         return outputDir;
     }
 
-    protected FileCollection filterSources(Spec<? super File> spec) {
+    FileCollection filterSources(Spec<? super File> spec) {
         return getSource().filter(spec);
     }
 }

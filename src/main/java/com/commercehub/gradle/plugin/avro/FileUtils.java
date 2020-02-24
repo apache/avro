@@ -111,23 +111,14 @@ class FileUtils {
      * @throws IOException in case of an I/O error
      * @throws java.io.UnsupportedEncodingException if the encoding is not supported by the VM
      */
-    static void writeStringToFile(File file, String data, String encoding) throws IOException {
+    @SuppressWarnings("SameParameterValue")
+    private static void writeStringToFile(File file, String data, String encoding) throws IOException {
         if (encoding == null) {
             throw new IllegalArgumentException("Must specify encoding");
         }
-        OutputStream out = null;
-        try {
-            out = openOutputStream(file);
+        try (OutputStream out = openOutputStream(file)) {
             if (data != null) {
                 out.write(data.getBytes(encoding));
-            }
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException ioe) {
-                // ignore
             }
         }
     }

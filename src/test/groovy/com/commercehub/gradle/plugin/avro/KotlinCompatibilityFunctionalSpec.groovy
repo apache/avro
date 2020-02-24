@@ -15,26 +15,12 @@
  */
 package com.commercehub.gradle.plugin.avro
 
-import org.gradle.util.GradleVersion
-import spock.lang.IgnoreIf
-
 class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
         addAvroDependency()
     }
 
-    /**
-     * Since Kotlin 1.1.2, the Kotlin compiler requires Java 8+
-     * https://blog.jetbrains.com/kotlin/2017/04/kotlin-1-1-2-is-out/
-     *
-     * Kotlin support appears broken on Gradle 3.2-3.2.1
-     * https://discuss.kotlinlang.org/t/1-1-50-js-compiler-requires-kotlin-reflect/4699
-     */
-    @IgnoreIf({
-        javaVersion < 1.8 ||
-            (gradleVersion >= GradleVersion.version("3.2") && gradleVersion <= GradleVersion.version("3.2.1"))
-    })
     def "works with kotlin-gradle-plugin"() {
         given:
         File kotlinDir = testProjectDir.newFolder("src", "main", "kotlin")
@@ -44,7 +30,7 @@ class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
                     jcenter()
                 }
                 dependencies {
-                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.31"
+                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.61"
                 }
             }
             apply plugin: "kotlin"

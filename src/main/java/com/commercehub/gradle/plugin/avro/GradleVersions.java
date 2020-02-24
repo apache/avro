@@ -19,9 +19,6 @@ package com.commercehub.gradle.plugin.avro;
 import org.gradle.util.GradleVersion;
 
 class GradleVersions {
-    static final GradleVersion v4_8 = GradleVersion.version("4.8");
-    static final GradleVersion v5_0 = GradleVersion.version("5.0");
-    static final GradleVersion v5_1 = GradleVersion.version("5.1");
     static final GradleVersion v5_2 = GradleVersion.version("5.2");
     static final GradleVersion v5_3 = GradleVersion.version("5.3");
 }

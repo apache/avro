@@ -18,7 +18,6 @@ package com.commercehub.gradle.plugin.avro;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -37,6 +36,8 @@ import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.NotSpec;
@@ -59,13 +60,13 @@ import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILI
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
-import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 
 /**
  * Task to generate Java source files based on Avro protocol files and Avro schema files using {@link Protocol} and
  * {@link SpecificCompiler}.
  */
+@SuppressWarnings("WeakerAccess")
 @CacheableTask
 public class GenerateAvroJavaTask extends OutputDirTask {
     private static Pattern ERROR_UNKNOWN_TYPE = Pattern.compile("(?i).*(undefined name|not a defined name).*");
@@ -81,11 +82,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Property<Boolean> createSetters;
     private final Property<Boolean> enableDecimalLogicalType;
     private final Property<String> dateTimeLogicalType;
-    // When we require Gradle 5.1+, we could use MapProperty here.
-    @SuppressWarnings("rawtypes")
-    private final Property<Map> logicalTypeFactories;
-    @SuppressWarnings("rawtypes")
-    private final Property<List> customConversions;
+    private final MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories;
+    private final ListProperty<Class<? extends Conversion<?>>> customConversions;
 
     private final Provider<StringType> stringTypeProvider;
     private final Provider<FieldVisibility> fieldVisibilityProvider;
@@ -95,14 +93,14 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     public GenerateAvroJavaTask(ObjectFactory objects) {
         super();
         this.outputCharacterEncoding = objects.property(String.class);
-        this.stringType = configurePropertyConvention(objects.property(String.class), DEFAULT_STRING_TYPE);
-        this.fieldVisibility = configurePropertyConvention(objects.property(String.class), DEFAULT_FIELD_VISIBILITY);
+        this.stringType = objects.property(String.class).convention(DEFAULT_STRING_TYPE);
+        this.fieldVisibility = objects.property(String.class).convention(DEFAULT_FIELD_VISIBILITY);
         this.templateDirectory = objects.property(String.class);
-        this.createOptionalGetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_OPTIONAL_GETTERS);
-        this.gettersReturnOptional = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_GETTERS_RETURN_OPTIONAL);
-        this.createSetters = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_CREATE_SETTERS);
-        this.enableDecimalLogicalType = configurePropertyConvention(objects.property(Boolean.class), DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
-        this.dateTimeLogicalType = configurePropertyConvention(objects.property(String.class), DEFAULT_DATE_TIME_LOGICAL_TYPE);
+        this.createOptionalGetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_OPTIONAL_GETTERS);
+        this.gettersReturnOptional = objects.property(Boolean.class).convention(DEFAULT_GETTERS_RETURN_OPTIONAL);
+        this.createSetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_SETTERS);
+        this.enableDecimalLogicalType = objects.property(Boolean.class).convention(DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
+        this.dateTimeLogicalType = objects.property(String.class).convention(DEFAULT_DATE_TIME_LOGICAL_TYPE);
         this.stringTypeProvider = getStringType()
             .map(input -> Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), input));
         this.fieldVisibilityProvider = getFieldVisibility()
@@ -110,9 +108,9 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.dateTimeLogicalTypeImplementationProvider = getDateTimeLogicalType()
             .map(input -> Enums.parseCaseInsensitive(OPTION_DATE_TIME_LOGICAL_TYPE,
                 SpecificCompiler.DateTimeLogicalTypeImplementation.values(), input));
-        this.logicalTypeFactories =
-            configurePropertyConvention(objects.property(Map.class), DEFAULT_LOGICAL_TYPE_FACTORIES);
-        this.customConversions = configurePropertyConvention(objects.property(List.class), DEFAULT_CUSTOM_CONVERSIONS);
+        this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
+            .convention(DEFAULT_LOGICAL_TYPE_FACTORIES);
+        this.customConversions = objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(DEFAULT_CUSTOM_CONVERSIONS);
     }
 
     @Optional
@@ -233,18 +231,15 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     @Optional
     @Input
-    @SuppressWarnings("rawtypes")
-    public Property<Map> getLogicalTypeFactories() {
+    public MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> getLogicalTypeFactories() {
         return logicalTypeFactories;
     }
 
-    @SuppressWarnings("rawtypes")
     public void setLogicalTypeFactories(Provider<? extends Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>>> provider) {
         this.logicalTypeFactories.set(provider);
     }
 
-    @SuppressWarnings("rawtypes")
     public void setLogicalTypeFactories(Map<? extends String,
         ? extends Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories) {
         this.logicalTypeFactories.set(logicalTypeFactories);
@@ -252,23 +247,19 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     @Optional
     @Input
-    @SuppressWarnings("rawtypes")
-    public Property<List> getCustomConversions() {
+    public ListProperty<Class<? extends Conversion<?>>> getCustomConversions() {
         return customConversions;
     }
 
-    public void setCustomConversions(Provider<List<Class<? extends Conversion<?>>>> provider) {
-        // If we were using ListProperty, this method could take Iterables rather than Lists
+    public void setCustomConversions(Provider<Iterable<Class<? extends Conversion<?>>>> provider) {
         this.customConversions.set(provider);
     }
 
-    public void setCustomConversions(List<Class<? extends Conversion<?>>> customConversions) {
-        // If we were using ListProperty, this method could take Iterables rather than Lists
+    public void setCustomConversions(Iterable<Class<? extends Conversion<?>>> customConversions) {
         this.customConversions.set(customConversions);
     }
 
     @TaskAction
-    @SuppressWarnings({"rawtypes", "unchecked"})
     protected void process() {
         getLogger().debug("Using outputCharacterEncoding {}", getOutputCharacterEncoding().getOrNull());
         getLogger().debug("Using stringType {}", stringTypeProvider.get().name());
@@ -281,8 +272,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using dateTimeLogicalType {}", dateTimeLogicalTypeImplementationProvider.get().name());
         getLogger().debug("Using logicalTypeFactories {}",
             logicalTypeFactories.get().entrySet().stream().collect(Collectors.toMap(
-                (Map.Entry e) -> (String) e.getKey(),
-                (Map.Entry e) -> ((Class) e.getValue()).getName()
+                Map.Entry::getKey,
+                (Map.Entry<String, Class<? extends LogicalTypes.LogicalTypeFactory>> e) -> e.getValue().getName()
             )));
         getLogger().debug("Using customConversions {}",
             customConversions.get().stream().map(v -> ((Class) v).getName()).collect(Collectors.toList()));
@@ -401,7 +392,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         compile(new SpecificCompiler(schema, dateTimeLogicalTypeImplementationProvider.get()), sourceFile);
     }
 
-    @SuppressWarnings("rawtypes")
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
         compiler.setOutputCharacterEncoding(getOutputCharacterEncoding().getOrNull());
         compiler.setStringType(stringTypeProvider.get());
@@ -423,16 +413,15 @@ public class GenerateAvroJavaTask extends OutputDirTask {
      * This must be called before the Schemas are parsed, or they will not be applied correctly.
      * Since {@link LogicalTypes} is a static registry, this may result in side-effects.
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private void registerLogicalTypes() {
-        Map<?, ?> logicalTypeFactoryMap = logicalTypeFactories.get();
-        Set<? extends Map.Entry<?, ?>> logicalTypeFactoryEntries = logicalTypeFactoryMap.entrySet();
-        for (Map.Entry<?, ?> entry : logicalTypeFactoryEntries) {
-            String logicalTypeName = (String) entry.getKey();
-            Class logicalTypeFactoryClass = (Class) entry.getValue();
+        Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactoryMap = logicalTypeFactories.get();
+        Set<Map.Entry<String, Class<? extends LogicalTypes.LogicalTypeFactory>>> logicalTypeFactoryEntries =
+            logicalTypeFactoryMap.entrySet();
+        for (Map.Entry<String, Class<? extends LogicalTypes.LogicalTypeFactory>> entry : logicalTypeFactoryEntries) {
+            String logicalTypeName = entry.getKey();
+            Class<? extends LogicalTypes.LogicalTypeFactory> logicalTypeFactoryClass = entry.getValue();
             try {
-                LogicalTypes.LogicalTypeFactory logicalTypeFactory =
-                    (LogicalTypes.LogicalTypeFactory) logicalTypeFactoryClass.getDeclaredConstructor().newInstance();
+                LogicalTypes.LogicalTypeFactory logicalTypeFactory = logicalTypeFactoryClass.getDeclaredConstructor().newInstance();
                 LogicalTypes.register(logicalTypeName, logicalTypeFactory);
             } catch (ReflectiveOperationException ex) {
                 getLogger().error("Could not instantiate logicalTypeFactory class \"" + logicalTypeFactoryClass.getName() + "\"");
@@ -440,8 +429,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void registerCustomConversions(SpecificCompiler compiler) {
-        customConversions.get().forEach(v -> compiler.addCustomConversion((Class) v));
+        customConversions.get().forEach(compiler::addCustomConversion);
     }
 }

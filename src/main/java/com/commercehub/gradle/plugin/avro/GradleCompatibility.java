@@ -18,9 +18,6 @@ package com.commercehub.gradle.plugin.avro;
 
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 
 class GradleCompatibility {
     static <T> T createExtensionWithObjectFactory(Project project, String extensionName, Class<T> extensionType) {
@@ -32,40 +29,11 @@ class GradleCompatibility {
     }
 
     @SuppressWarnings("deprecation")
-    static DirectoryProperty createDirectoryProperty(Project project) {
-        if (GradleFeatures.objectFactoryDirectoryProperty.isSupported()) {
-            return project.getObjects().directoryProperty();
-        } else {
-            return project.getLayout().directoryProperty();
-        }
-    }
-
-    @SuppressWarnings("deprecation")
     static ConfigurableFileCollection createConfigurableFileCollection(Project project) {
         if (GradleFeatures.objectFactoryFileCollection.isSupported()) {
             return project.getObjects().fileCollection();
-        } else if (GradleFeatures.projectLayoutConfigurableFiles.isSupported()) {
+        } else {
             return project.getLayout().configurableFiles();
-        } else {
-            return project.files();
         }
-    }
-
-    static <T> Property<T> configurePropertyConvention(Property<T> property, Provider<? extends T> valueProvider) {
-        if (GradleFeatures.propertyConventions.isSupported()) {
-            property.convention(valueProvider);
-        } else {
-            property.set(valueProvider);
-        }
-        return property;
-    }
-
-    static <T> Property<T> configurePropertyConvention(Property<T> property, T value) {
-        if (GradleFeatures.propertyConventions.isSupported()) {
-            property.convention(value);
-        } else {
-            property.set(value);
-        }
-        return property;
     }
 }

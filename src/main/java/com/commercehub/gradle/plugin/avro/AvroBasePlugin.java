@@ -19,7 +19,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 import static com.commercehub.gradle.plugin.avro.Constants.AVRO_EXTENSION_NAME;
-import static com.commercehub.gradle.plugin.avro.GradleCompatibility.configurePropertyConvention;
 import static com.commercehub.gradle.plugin.avro.GradleCompatibility.createExtensionWithObjectFactory;
 
 public class AvroBasePlugin implements Plugin<Project> {
@@ -31,17 +30,17 @@ public class AvroBasePlugin implements Plugin<Project> {
     private static void configureExtension(final Project project) {
         final AvroExtension avroExtension = createExtensionWithObjectFactory(project, AVRO_EXTENSION_NAME, DefaultAvroExtension.class);
         project.getTasks().withType(GenerateAvroJavaTask.class).all(task -> {
-            configurePropertyConvention(task.getOutputCharacterEncoding(), avroExtension.getOutputCharacterEncoding());
-            configurePropertyConvention(task.getStringType(), avroExtension.getStringType());
-            configurePropertyConvention(task.getFieldVisibility(), avroExtension.getFieldVisibility());
-            configurePropertyConvention(task.getTemplateDirectory(), avroExtension.getTemplateDirectory());
-            configurePropertyConvention(task.isCreateSetters(), avroExtension.isCreateSetters());
-            configurePropertyConvention(task.isCreateOptionalGetters(), avroExtension.isCreateOptionalGetters());
-            configurePropertyConvention(task.isGettersReturnOptional(), avroExtension.isGettersReturnOptional());
-            configurePropertyConvention(task.isEnableDecimalLogicalType(), avroExtension.isEnableDecimalLogicalType());
-            configurePropertyConvention(task.getDateTimeLogicalType(), avroExtension.getDateTimeLogicalType());
-            configurePropertyConvention(task.getLogicalTypeFactories(), avroExtension.getLogicalTypeFactories());
-            configurePropertyConvention(task.getCustomConversions(), avroExtension.getCustomConversions());
+            task.getOutputCharacterEncoding().convention(avroExtension.getOutputCharacterEncoding());
+            task.getStringType().convention(avroExtension.getStringType());
+            task.getFieldVisibility().convention(avroExtension.getFieldVisibility());
+            task.getTemplateDirectory().convention(avroExtension.getTemplateDirectory());
+            task.isCreateSetters().convention(avroExtension.isCreateSetters());
+            task.isCreateOptionalGetters().convention(avroExtension.isCreateOptionalGetters());
+            task.isGettersReturnOptional().convention(avroExtension.isGettersReturnOptional());
+            task.isEnableDecimalLogicalType().convention(avroExtension.isEnableDecimalLogicalType());
+            task.getDateTimeLogicalType().convention(avroExtension.getDateTimeLogicalType());
+            task.getLogicalTypeFactories().convention(avroExtension.getLogicalTypeFactories());
+            task.getCustomConversions().convention(avroExtension.getCustomConversions());
         });
     }
 }

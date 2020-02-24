@@ -65,7 +65,7 @@ class ProcessingState {
         return delayedFiles;
     }
 
-    TypeState getTypeState(String typeName) {
+    private TypeState getTypeState(String typeName) {
         TypeState typeState = typeStates.get(typeName);
         if (typeState == null) {
             typeState = new TypeState(typeName);

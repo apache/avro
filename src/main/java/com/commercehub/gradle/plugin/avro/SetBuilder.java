@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+@SuppressWarnings("UnusedReturnValue")
 class SetBuilder<T> {
     private Set<T> set = new HashSet<T>();
 

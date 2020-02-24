@@ -10,6 +10,7 @@
     <allow pkg="java.nio.charset"/>
     <allow pkg="java.util"/>
     <allow pkg="java.util.concurrent"/>
+    <allow pkg="javax.annotation"/>
     <allow pkg="javax.inject"/>
 
     <allow pkg="org.apache.avro"/>
