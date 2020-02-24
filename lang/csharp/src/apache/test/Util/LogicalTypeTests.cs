@@ -178,5 +178,20 @@ namespace Avro.Test
 
             }
         }
+
+        [TestCase("633a6cf0-52cb-43aa-b00a-658510720958")]
+        public void TestUuid(string guidString)
+        {
+            var schema = (LogicalSchema)Schema.Parse("{\"type\": \"string\", \"logicalType\": \"uuid\" }");
+
+            var guid = new Guid(guidString);
+
+            var avroUuid = new Uuid();
+
+            Assert.True(avroUuid.IsInstanceOfLogicalType(guid));
+
+            var converted = (Guid) avroUuid.ConvertToLogicalValue(avroUuid.ConvertToBaseValue(guid, schema), schema);
+            Assert.AreEqual(guid, converted);
+        }
     }
 }
