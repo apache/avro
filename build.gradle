@@ -185,7 +185,10 @@ sourceCompatibility = 8
 
 def avroVersions = ["1.9.0", "1.9.1", "1.9.2"]
 def gradleVersions = []
-gradleVersions.addAll("5.1", "5.1.1", "5.2", "5.2.1", "5.3", "5.3.1", "5.4", "5.4.1", "5.5", "5.5.1", "5.6", "5.6.1", "5.6.2", "5.6.3", "5.6.4")
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
+    // Java 13 support was added in Gradle 6.0
+    gradleVersions.addAll("5.1", "5.1.1", "5.2", "5.2.1", "5.3", "5.3.1", "5.4", "5.4.1", "5.5", "5.5.1", "5.6", "5.6.1", "5.6.2", "5.6.3", "5.6.4")
+}
 gradleVersions.addAll("6.0", "6.0.1", "6.1", "6.1.1", "6.2")
 
 avroVersions.each { def avroVersion ->
