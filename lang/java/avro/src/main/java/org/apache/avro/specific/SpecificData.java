@@ -145,7 +145,7 @@ public class SpecificData extends GenericData {
    *         instance.
    */
   public static SpecificData getForSchema(Schema reader) {
-    if (reader.getType() == Type.RECORD) {
+    if (reader != null && reader.getType() == Type.RECORD) {
       final String className = getClassName(reader);
       if (className != null) {
         final Class<?> clazz;
