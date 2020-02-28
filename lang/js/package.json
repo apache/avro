@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.7",
-    "istanbul": "^0.3.19",
+    "istanbul": "^0.4.5",
     "jshint": "^2.10.2",
     "mocha": "^6.2.2",
     "tmp": "^0.0.28"
