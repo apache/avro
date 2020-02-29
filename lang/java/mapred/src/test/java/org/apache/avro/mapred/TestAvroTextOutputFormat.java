@@ -78,6 +78,7 @@ public class TestAvroTextOutputFormat {
     assertEquals("k3\tv3", asString(fileReader.next()));
     assertEquals("k4\tv4", asString(fileReader.next()));
     assertFalse("End", fileReader.hasNext());
+    fileReader.close();
   }
 
   private String asString(ByteBuffer buf) {

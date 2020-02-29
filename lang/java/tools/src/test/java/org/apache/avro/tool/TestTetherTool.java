@@ -98,8 +98,8 @@ public class TestTetherTool {
     // validate the output
     int numWords = 0;
     DatumReader<Pair<Utf8, Long>> reader = new SpecificDatumReader<>();
-    try (InputStream cin = new BufferedInputStream(new FileInputStream(outputPathStr + "/part-00000.avro"))) {
-      DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(cin, reader);
+    try (InputStream cin = new BufferedInputStream(new FileInputStream(outputPathStr + "/part-00000.avro"));
+        DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(cin, reader)) {
       for (Pair<Utf8, Long> wc : counts) {
         assertEquals(wc.key().toString(), WordCountUtil.COUNTS.get(wc.key().toString()), wc.value());
         numWords++;
