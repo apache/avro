@@ -76,19 +76,19 @@ public class TestDataFileCorruption {
     out.close();
 
     // Read the data file
-    DataFileReader r = new DataFileReader<>(file, new GenericDatumReader<>(schema));
-    assertEquals("apple", r.next().toString());
-    assertEquals("banana", r.next().toString());
-    long prevSync = r.previousSync();
-    try {
+    try (DataFileReader r = new DataFileReader<>(file, new GenericDatumReader<>(schema))) {
+      assertEquals("apple", r.next().toString());
+      assertEquals("banana", r.next().toString());
+      long prevSync = r.previousSync();
       r.next();
       fail("Corrupt block should throw exception");
+      r.sync(prevSync); // go to sync point after previous successful one
+      assertEquals("endive", r.next().toString());
+      assertEquals("fig", r.next().toString());
+      assertFalse(r.hasNext());
     } catch (AvroRuntimeException e) {
       assertEquals("Invalid sync!", e.getCause().getMessage());
     }
-    r.sync(prevSync); // go to sync point after previous successful one
-    assertEquals("endive", r.next().toString());
-    assertEquals("fig", r.next().toString());
-    assertFalse(r.hasNext());
+
   }
 }

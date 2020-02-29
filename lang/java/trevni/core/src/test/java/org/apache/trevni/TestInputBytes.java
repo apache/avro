@@ -44,5 +44,6 @@ public class TestInputBytes {
       in.read(p, buffer, 0, l);
       Assert.assertArrayEquals(Arrays.copyOfRange(data, p, p + l), buffer);
     }
+    in.close();
   }
 }

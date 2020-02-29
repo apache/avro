@@ -150,6 +150,7 @@ public class TestSpecificCompilerTool {
       }
       sb.append(line);
     }
+    reader.close();
     return sb.toString();
   }
 }
