@@ -98,11 +98,10 @@ def send_message(uri, proto, msg, datum):
   requestor = ipc.Requestor(protocol.parse(proto_json), client)
   print(requestor.Request(msg, datum))
 
+##
+# TODO: Replace this with fileinput()
 def file_or_stdin(f):
-  if f == "-":
-    return sys.stdin
-  else:
-    return file(f)
+  return sys.stdin if f == '-' else open(f, 'rb')
 
 def main(args=sys.argv):
   if len(args) == 1:
