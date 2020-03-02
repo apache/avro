@@ -31,6 +31,8 @@ use Object::Tiny qw{
     errors
 };
 
+our $VERSION = '++MODULE_VERSION++';
+
 sub new {
     my $class = shift;
     my $struct = shift;

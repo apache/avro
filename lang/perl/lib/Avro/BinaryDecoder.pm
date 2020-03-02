@@ -24,6 +24,8 @@ use Encode();
 use Error::Simple;
 use Avro::Schema;
 
+our $VERSION = '++MODULE_VERSION++';
+
 our $complement = ~0x7F;
 unless ($Config{use64bitint}) {
     require Math::BigInt;
