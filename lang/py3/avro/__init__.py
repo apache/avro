@@ -21,14 +21,11 @@
 __all__ = ('schema', 'io', 'datafile', 'protocol', 'ipc')
 
 
-import os
+import pkgutil
 
 
 def LoadResource(name):
-  dir_path = os.path.dirname(__file__)
-  rsrc_path = os.path.join(dir_path, name)
-  with open(rsrc_path, 'r') as f:
-    return f.read()
+    return pkgutil.get_data(__name__, name).decode('UTF-8')
 
 
 VERSION = LoadResource('VERSION.txt').strip()
