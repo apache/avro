@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <array>
+#include <cstddef>
 
 #include "Config.hh"
 /// \file
