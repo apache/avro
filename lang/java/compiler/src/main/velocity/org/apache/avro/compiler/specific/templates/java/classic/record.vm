@@ -211,7 +211,7 @@ static {
 #foreach ($field in $schema.getFields())
 #if (${this.gettersReturnOptional})
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
@@ -233,7 +233,7 @@ static {
 
 #if (${this.createOptionalGetters})
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
@@ -389,10 +389,10 @@ static {
 
 #if (${this.createOptionalGetters})
     /**
-      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
+      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
-      * @return The Optional&lt;value&gt;.
+      * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
       */
     public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
       return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
