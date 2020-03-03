@@ -16,10 +16,10 @@ repositories {
 def compileAvroVersion = "1.9.2"
 
 dependencies {
-    compile localGroovy()
-    compile "org.apache.avro:avro-compiler:${compileAvroVersion}"
-    testCompile "org.spockframework:spock-core:1.3-groovy-2.5"
-    testCompile gradleTestKit()
+    implementation localGroovy()
+    implementation "org.apache.avro:avro-compiler:${compileAvroVersion}"
+    testImplementation "org.spockframework:spock-core:1.3-groovy-2.5"
+    testImplementation gradleTestKit()
 }
 
 tasks.withType(AbstractCompile) {
@@ -40,13 +40,13 @@ tasks.withType(AbstractArchiveTask) {
 task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
     classifier "sources"
-    extension "jar"
+    archiveExtension.set("jar")
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
     classifier "javadoc"
-    extension "jar"
+    archiveExtension.set("jar")
 }
 
 publishing {
@@ -135,7 +135,7 @@ task createClasspathManifest {
 
 // Add the classpath file to the test runtime classpath
 dependencies {
-    testRuntime files(createClasspathManifest)
+    testRuntimeOnly files(createClasspathManifest)
 }
 
 checkstyle {
