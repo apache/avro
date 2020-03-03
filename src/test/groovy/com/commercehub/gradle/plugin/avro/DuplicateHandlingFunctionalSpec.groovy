@@ -27,6 +27,7 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
+        addDefaultRepository()
         addAvroDependency()
     }
 
@@ -38,8 +39,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/Person.class")).file
         projectFile(buildOutputClassPath("example/Cat.class")).file
         projectFile(buildOutputClassPath("example/Gender.class")).file
@@ -53,8 +54,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/Person.class")).file
         projectFile(buildOutputClassPath("example/Fish.class")).file
         projectFile(buildOutputClassPath("example/Gender.class")).file
@@ -70,7 +71,7 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = runAndFail()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Found conflicting definition of type example.Gender in "
             + "[$errorFilePath1, $errorFilePath2]")
     }
@@ -84,7 +85,7 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = runAndFail()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Found conflicting definition of type example.Person in "
             + "[$errorFilePath1, $errorFilePath2]")
     }
@@ -98,7 +99,7 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         def result = runAndFail()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Failed to compile schema definition file $errorFilePath; " +
             "contains duplicate type definition example.avro.date")
     }

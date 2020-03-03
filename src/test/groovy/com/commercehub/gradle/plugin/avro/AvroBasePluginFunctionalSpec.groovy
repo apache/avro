@@ -25,12 +25,12 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
     def "can generate java files from json schema"() {
         given:
         buildFile << """
-            task("generateAvroJava", type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
-                source file("src/main/avro")
-                include("**/*.avsc")
-                outputDir = file("build/generated-main-avro-java")
-            }
-        """
+        |task("generateAvroJava", type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+        |    source file("src/main/avro")
+        |    include("**/*.avsc")
+        |    outputDir = file("build/generated-main-avro-java")
+        |}
+        |""".stripMargin()
 
         copyResource("user.avsc", avroDir)
 
@@ -38,19 +38,19 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         projectFile("build/generated-main-avro-java/example/avro/User.java").file
     }
 
     def "can generate json schema files from json protocol"() {
         given:
         buildFile << """
-            task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
-                source file("src/main/avro")
-                include("**/*.avpr")
-                outputDir = file("build/generated-main-avro-avsc")
-            }
-        """
+        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |    source file("src/main/avro")
+        |    include("**/*.avpr")
+        |    outputDir = file("build/generated-main-avro-avsc")
+        |}
+        |""".stripMargin()
 
         copyResource("mail.avpr", avroDir)
 
@@ -58,7 +58,7 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         def result = run("generateSchema")
 
         then:
-        taskInfoAbsent || result.task(":generateSchema").outcome == SUCCESS
+        result.task(":generateSchema").outcome == SUCCESS
         def expectedFileContents = getClass().getResource("Message.avsc").text.trim()
         def generateFileContents = new File(testProjectDir.root,
             "build/generated-main-avro-avsc/org/apache/avro/test/Message.avsc").text.trim()
@@ -68,18 +68,17 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
     def "can generate json schema files from IDL"() {
         given:
         buildFile << """
-            task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
-                source file("src/main/avro")
-                outputDir = file("build/generated-avro-main-avpr")
-            }
-
-            task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
-                dependsOn generateProtocol
-                source file("build/generated-avro-main-avpr")
-                include("**/*.avpr")
-                outputDir = file("build/generated-main-avro-avsc")
-            }
-        """
+        |task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+        |    source file("src/main/avro")
+        |    outputDir = file("build/generated-avro-main-avpr")
+        |}
+        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |    dependsOn generateProtocol
+        |    source file("build/generated-avro-main-avpr")
+        |    include("**/*.avpr")
+        |    outputDir = file("build/generated-main-avro-avsc")
+        |}
+        |""".stripMargin()
 
         copyResource("interop.avdl", avroDir)
 
@@ -87,7 +86,7 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         def result = run("generateSchema")
 
         then:
-        taskInfoAbsent || result.task(":generateSchema").outcome == SUCCESS
+        result.task(":generateSchema").outcome == SUCCESS
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Foo.avsc").file
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Kind.avsc").file
         projectFile("build/generated-main-avro-avsc/org/apache/avro/MD5.avsc").file
@@ -98,20 +97,19 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
     def "example of converting both IDL and json protocol simultaneously"() {
         given:
         buildFile << """
-            task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
-                source file("src/main/avro")
-                include("**/*.avdl")
-                outputDir = file("build/generated-avro-main-avpr")
-            }
-
-            task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
-                dependsOn generateProtocol
-                source file("src/main/avro")
-                source file("build/generated-avro-main-avpr")
-                include("**/*.avpr")
-                outputDir = file("build/generated-main-avro-avsc")
-            }
-        """
+        |task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+        |    source file("src/main/avro")
+        |    include("**/*.avdl")
+        |    outputDir = file("build/generated-avro-main-avpr")
+        |}
+        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |    dependsOn generateProtocol
+        |    source file("src/main/avro")
+        |    source file("build/generated-avro-main-avpr")
+        |    include("**/*.avpr")
+        |    outputDir = file("build/generated-main-avro-avsc")
+        |}
+        |""".stripMargin()
 
         copyResource("mail.avpr", avroDir)
         copyResource("interop.avdl", avroDir)
@@ -120,7 +118,7 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
         def result = run("generateSchema")
 
         then:
-        taskInfoAbsent || result.task(":generateSchema").outcome == SUCCESS
+        result.task(":generateSchema").outcome == SUCCESS
         projectFile("build/generated-main-avro-avsc/org/apache/avro/test/Message.avsc").file
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Foo.avsc").file
         projectFile("build/generated-main-avro-avsc/org/apache/avro/Kind.avsc").file

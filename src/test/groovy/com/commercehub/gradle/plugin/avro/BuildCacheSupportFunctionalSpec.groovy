@@ -23,6 +23,7 @@ import static org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
+        addDefaultRepository()
         addAvroDependency()
     }
 
@@ -40,8 +41,8 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         def result = run("build", "--build-cache")
 
         then: "the expected outputs were produced from the build cache"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FROM_CACHE
-        taskInfoAbsent || result.task(":compileJava").outcome == FROM_CACHE
+        result.task(":generateAvroJava").outcome == FROM_CACHE
+        result.task(":compileJava").outcome == FROM_CACHE
         projectFile("build/generated-main-avro-java/example/avro/User.java").file
         projectFile("build/generated-main-avro-java/org/apache/avro/test/Mail.java").file
         projectFile(buildOutputClassPath("example/avro/User.class")).file
@@ -60,9 +61,9 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         def result = run("build", "--build-cache")
 
         then: "the expected outputs were produced from the build cache"
-        taskInfoAbsent || result.task(":generateAvroProtocol").outcome == FROM_CACHE
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FROM_CACHE
-        taskInfoAbsent || result.task(":compileJava").outcome == FROM_CACHE
+        result.task(":generateAvroProtocol").outcome == FROM_CACHE
+        result.task(":generateAvroJava").outcome == FROM_CACHE
+        result.task(":compileJava").outcome == FROM_CACHE
         projectFile("build/generated-main-avro-avpr/interop.avpr").file
         projectFile("build/generated-main-avro-java/org/apache/avro/Interop.java").file
         projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
@@ -87,7 +88,7 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         def result = run("generateSchema", "--build-cache")
 
         then: "the expected outputs were produced from the build cache"
-        taskInfoAbsent || result.task(":generateSchema").outcome == FROM_CACHE
+        result.task(":generateSchema").outcome == FROM_CACHE
         projectFile("build/generated-main-avro-avsc/org/apache/avro/test/Message.avsc").file
     }
 }

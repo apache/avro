@@ -17,7 +17,6 @@ package com.commercehub.gradle.plugin.avro
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import org.gradle.testkit.runner.internal.feature.TestKitFeature
 import org.gradle.util.GradleVersion
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -44,26 +43,16 @@ abstract class FunctionalSpec extends Specification {
         buildFile = testProjectDir.newFile("build.gradle")
         avroDir = testProjectDir.newFolder("src", "main", "avro")
         avroSubDir = testProjectDir.newFolder("src", "main", "avro", "foo")
+    }
 
+    protected String readPluginClasspath() {
         def pluginClasspathResource = getClass().classLoader.findResource("plugin-classpath.txt")
         if (pluginClasspathResource == null) {
             throw new IllegalStateException("Did not find plugin classpath resource, run `testClasses` build task.")
         }
 
-         // escape backslashes in Windows paths and assemble
-        def pluginClasspath = pluginClasspathResource.readLines()*.replace('\\', '\\\\').collect { "'$it'" }.join(", ")
-
-        // Add the logic under test to the test build
-        buildFile << """
-            buildscript {
-                dependencies {
-                    classpath files($pluginClasspath)
-                }
-            }
-            repositories {
-                jcenter()
-            }
-        """
+        // escape backslashes in Windows paths and assemble
+        return pluginClasspathResource.readLines()*.replace('\\', '\\\\').collect { "\"$it\"" }.join(", ")
     }
 
     protected void applyAvroPlugin() {
@@ -75,19 +64,35 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected void applyPlugin(String pluginId) {
-        buildFile << "apply plugin: \"${pluginId}\"\n"
+        buildFile << "plugins { id \"${pluginId}\" }\n"
     }
 
-    protected void addDependency(String dependencySpec) {
-        buildFile << "dependencies { compile \"${dependencySpec}\" }\n"
+    protected void applyPlugin(String pluginId, String version) {
+        buildFile << "plugins { id \"${pluginId}\" version \"${version}\" }\n"
+    }
+
+    protected void addDefaultRepository() {
+        buildFile << "repositories { jcenter() }\n"
+    }
+
+    protected void addImplementationDependency(String dependencySpec) {
+        addDependency("implementation", dependencySpec)
+    }
+
+    protected void addRuntimeDependency(String dependencySpec) {
+        addDependency("runtimeOnly", dependencySpec)
+    }
+
+    protected void addDependency(String configuration, String dependencySpec) {
+        buildFile << "dependencies { ${configuration} \"${dependencySpec}\" }\n"
     }
 
     protected void addAvroDependency() {
-        addDependency("org.apache.avro:avro:${avroVersion}")
+        addImplementationDependency("org.apache.avro:avro:${avroVersion}")
     }
 
     protected void addAvroIpcDependency() {
-        addDependency("org.apache.avro:avro-ipc:${avroVersion}")
+        addImplementationDependency("org.apache.avro:avro-ipc:${avroVersion}")
     }
 
     protected void copyResource(String name, File targetFolder) {
@@ -108,7 +113,7 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected GradleRunner createGradleRunner() {
-        return GradleRunner.create().withProjectDir(testProjectDir.root).withGradleVersion(gradleVersion.version)
+        return GradleRunner.create().withProjectDir(testProjectDir.root).withGradleVersion(gradleVersion.version).withPluginClasspath()
     }
 
     protected BuildResult run(String... args = ["build"]) {
@@ -119,16 +124,7 @@ abstract class FunctionalSpec extends Specification {
         return createGradleRunner().withArguments(Arrays.asList(args) + "--stacktrace").buildAndFail()
     }
 
-    protected boolean isTaskInfoAbsent() {
-        return gradleVersion < TestKitFeature.CAPTURE_BUILD_RESULT_TASKS.since
-    }
-
-    protected isMultipleClassDirectoriesUsed() {
-        return gradleVersion >= GradleVersion.version("4.0")
-    }
-
-    @SuppressWarnings("UnnecessaryGetter")
     protected String buildOutputClassPath(String suffix) {
-        return isMultipleClassDirectoriesUsed() ? "build/classes/java/main/${suffix}" : "build/classes/main/${suffix}"
+        return "build/classes/java/main/${suffix}"
     }
 }

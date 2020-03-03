@@ -24,21 +24,21 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
     def "With base plugin, declares input on classpath"() {
         given: "a build that declares another task's output in the classpath"
         applyAvroBasePlugin()
+        applyPlugin("java") // Jar task appears to only work with the java plugin applied
         buildFile << """
-            apply plugin: "java" // Jar task appears to only work with the java plugin applied
-            configurations.create("shared")
-            task sharedIdlJar(type: Jar) {
-                from "src/shared"
-            }
-            dependencies {
-                shared sharedIdlJar.outputs.files  
-            }
-            task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
-                classpath = configurations.shared
-                source file("src/dependent")
-                outputDir = file("build/protocol")
-            }
-        """
+        |configurations.create("shared")
+        |task sharedIdlJar(type: Jar) {
+        |    from "src/shared"
+        |}
+        |dependencies {
+        |    shared sharedIdlJar.outputs.files  
+        |}
+        |task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+        |    classpath = configurations.shared
+        |    source file("src/dependent")
+        |    outputDir = file("build/protocol")
+        |}
+        |""".stripMargin()
         
         copyResource("shared.avdl", testProjectDir.newFolder("src", "shared"))
         copyResource("dependent.avdl", testProjectDir.newFolder("src", "dependent"))
@@ -48,7 +48,7 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
 
         then: "running the generate protocol task occurs after running the producing task"
         result.tasks*.path == [":sharedIdlJar", ":generateProtocol"]
-        taskInfoAbsent || result.task(":generateProtocol").outcome == SUCCESS
+        result.task(":generateProtocol").outcome == SUCCESS
         projectFile("build/protocol/dependent.avpr").file
     }
 
@@ -56,13 +56,13 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         given: "a build that declares another task's output in the classpath"
         applyAvroPlugin()
         buildFile << """
-            task sharedIdlJar(type: Jar) {
-                from "src/shared"
-            }
-            dependencies {
-                runtime sharedIdlJar.outputs.files  
-            }
-        """
+        |task sharedIdlJar(type: Jar) {
+        |    from "src/shared"
+        |}
+        |dependencies {
+        |    runtimeOnly sharedIdlJar.outputs.files  
+        |}
+        |""".stripMargin()
 
         copyResource("shared.avdl", testProjectDir.newFolder("src", "shared"))
         copyResource("dependent.avdl", avroDir)
@@ -72,7 +72,7 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
 
         then: "running the generate protocol task occurs after running the producing task"
         result.tasks*.path == [":sharedIdlJar", ":generateAvroProtocol"]
-        taskInfoAbsent || result.task(":generateAvroProtocol").outcome == SUCCESS
+        result.task(":generateAvroProtocol").outcome == SUCCESS
         projectFile("build/generated-main-avro-avpr/dependent.avpr").file
     }
 }

@@ -20,6 +20,7 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 class ExamplesFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
+        addDefaultRepository()
         addAvroDependency()
     }
 
@@ -31,8 +32,8 @@ class ExamplesFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/Cat.class")).file
         projectFile(buildOutputClassPath("example/Breed.class")).file
     }
@@ -46,8 +47,8 @@ class ExamplesFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/Cat.class")).file
         projectFile(buildOutputClassPath("example/Breed.class")).file
     }

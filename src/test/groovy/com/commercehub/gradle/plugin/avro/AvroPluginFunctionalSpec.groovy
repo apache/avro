@@ -21,6 +21,7 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 class AvroPluginFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
+        addDefaultRepository()
         addAvroDependency()
     }
 
@@ -32,8 +33,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/avro/User.class")).file
     }
 
@@ -46,8 +47,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("org/apache/avro/test/Mail.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/test/Message.class")).file
     }
@@ -60,9 +61,9 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroProtocol").outcome == SUCCESS
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroProtocol").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("org/apache/avro/Foo.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Kind.class")).file
@@ -78,8 +79,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/avro/User.class")).file
     }
 
@@ -92,8 +93,8 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("org/apache/avro/test/Mail.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/test/Message.class")).file
     }
@@ -106,9 +107,9 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroProtocol").outcome == SUCCESS
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroProtocol").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("org/apache/avro/Foo.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Kind.class")).file
@@ -125,7 +126,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         def result = runAndFail()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("> Could not compile schema definition files:")
         result.output.contains("* $errorFilePath: \"enum\" is not a defined name. The type of the \"gender\" " +
                 "field must be a defined name or a {\"type\": ...} expression.")

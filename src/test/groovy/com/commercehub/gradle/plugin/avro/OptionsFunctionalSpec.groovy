@@ -31,19 +31,16 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 class OptionsFunctionalSpec extends FunctionalSpec {
     static actualDateTimeImplementationDefault = DEFAULT == JSR310 ? "java.time.LocalDate" : "org.joda.time.LocalDate"
 
-    def "setup"() {
-        applyAvroPlugin()
-    }
-
     def "works with default options"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
 
         when:
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the stringType is string"
@@ -75,6 +72,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "supports configuring stringType to #stringType"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    stringType = ${stringType}
@@ -85,7 +83,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified stringType is used"
@@ -105,6 +103,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "supports configuring fieldVisibility to #fieldVisibility"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    fieldVisibility = "${fieldVisibility}"
@@ -115,7 +114,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified fieldVisibility is used"
@@ -133,6 +132,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "supports configuring createSetters to #createSetters"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    createSetters = ${createSetters}
@@ -143,7 +143,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified createSetters is used"
@@ -163,6 +163,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "supports configuring createOptionalGetters to #createOptionalGetters"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    createOptionalGetters = ${createOptionalGetters}
@@ -173,7 +174,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified createOptionalGetters is used"
@@ -193,6 +194,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "supports configuring gettersReturnOptional to #gettersReturnOptional"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    gettersReturnOptional = ${gettersReturnOptional}
@@ -203,7 +205,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified createOptionalGetters is used"
@@ -224,12 +226,16 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def templatesDir = testProjectDir.newFolder("templates", "alternateTemplates")
         copyResource("user.avsc", avroDir)
         copyResource("record.vm", templatesDir)
+        // This functionality doesn't work with the plugins DSL syntax.
+        // To load files from the buildscript classpath you need to load the plugin from it as well.
         buildFile << """
         |buildscript {
         |    dependencies {
+        |        classpath files(${readPluginClasspath()})
         |        classpath files(["${templatesDir.parentFile.toURI()}"])
         |    }
         |}
+        |apply plugin: "com.commercehub.gradle.plugin.avro"
         |avro {
         |    templateDirectory = "/alternateTemplates/"
         |}
@@ -239,7 +245,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified templates are used"
@@ -249,6 +255,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "rejects unsupported stringType values"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    stringType = "badValue"
@@ -259,13 +266,14 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = runAndFail("generateAvroJava")
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Invalid stringType 'badValue'.  Value values are: [CharSequence, String, Utf8]")
     }
 
     def "rejects unsupported fieldVisibility values"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    fieldVisibility = "badValue"
@@ -276,7 +284,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = runAndFail("generateAvroJava")
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Invalid fieldVisibility 'badValue'.  Value values are: [PUBLIC, PUBLIC_DEPRECATED, PRIVATE]")
     }
 
@@ -284,6 +292,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "supports configuring enableDecimalLogicalType to #enableDecimalLogicalType"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    enableDecimalLogicalType = $enableDecimalLogicalType
@@ -294,7 +303,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified enableDecimalLogicalType is used"
@@ -314,6 +323,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "supports configuration of dateTimeLogicalType to #dateTimeLogicalType"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    dateTimeLogicalType = "${dateTimeLogicalType}"
@@ -324,7 +334,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "the task succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified dateTimeLogicalType is used"
@@ -340,6 +350,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     def "rejects unsupported dateTimeLogicalType values"() {
         given:
         copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
         buildFile << """
         |avro {
         |    dateTimeLogicalType = "badValue"
@@ -350,7 +361,7 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def result = runAndFail("generateAvroJava")
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == FAILED
+        result.task(":generateAvroJava").outcome == FAILED
         result.output.contains("Invalid dateTimeLogicalType 'badValue'.  Value values are: [JODA, JSR310]")
     }
 }

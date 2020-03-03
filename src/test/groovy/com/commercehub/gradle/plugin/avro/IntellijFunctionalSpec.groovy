@@ -51,7 +51,7 @@ class IntellijFunctionalSpec extends FunctionalSpec {
         def result = run("idea")
 
         then:
-        taskInfoAbsent || result.task(":idea").outcome == SUCCESS
+        result.task(":idea").outcome == SUCCESS
         projectFile("build/generated-main-avro-java").directory
         projectFile("build/generated-test-avro-java").directory
     }
@@ -59,19 +59,19 @@ class IntellijFunctionalSpec extends FunctionalSpec {
     def "overriding task's outputDir doesn't result in default directory still being created"() {
         given:
         buildFile << """
-            generateAvroJava {
-                outputDir = file("build/generatedMainAvro")
-            }
-            generateTestAvroJava {
-                outputDir = file("build/generatedTestAvro")
-            }
-        """
+        |generateAvroJava {
+        |    outputDir = file("build/generatedMainAvro")
+        |}
+        |generateTestAvroJava {
+        |    outputDir = file("build/generatedTestAvro")
+        |}
+        |""".stripMargin()
 
         when:
         def result = run("idea")
 
         then:
-        taskInfoAbsent || result.task(":idea").outcome == SUCCESS
+        result.task(":idea").outcome == SUCCESS
         !projectFile("build/generated-main-avro-java").directory
         !projectFile("build/generated-test-avro-java").directory
         projectFile("build/generatedMainAvro").directory

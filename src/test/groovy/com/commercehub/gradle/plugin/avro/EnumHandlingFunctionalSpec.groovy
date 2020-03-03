@@ -23,6 +23,7 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 class EnumHandlingFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
+        addDefaultRepository()
         addAvroDependency()
     }
 
@@ -34,8 +35,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/avro/MyEnum.class")).file
     }
 
@@ -47,8 +48,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/avro/Test.class")).file
         projectFile(buildOutputClassPath("example/avro/Gender.class")).file
     }
@@ -61,8 +62,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/avro/Test.class")).file
         projectFile(buildOutputClassPath("example/avro/Kind.class")).file
     }
@@ -76,8 +77,8 @@ class EnumHandlingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("example/avro/User.class")).file
         projectFile(buildOutputClassPath("example/avro/MyEnum.class")).file
     }

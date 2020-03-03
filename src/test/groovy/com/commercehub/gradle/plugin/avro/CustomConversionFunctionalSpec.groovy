@@ -18,11 +18,6 @@ package com.commercehub.gradle.plugin.avro
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class CustomConversionFunctionalSpec extends FunctionalSpec {
-    def "setup"() {
-        applyAvroPlugin()
-        addAvroDependency()
-    }
-
     private void copyCustomConversion(String destDir) {
         copyFile("src/test/java", destDir,
             "com/commercehub/gradle/plugin/avro/test/custom/TimeZoneConversion.java")
@@ -38,23 +33,33 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         // so our version compatibility tests won't cover the difference
         given:
         copyResource("customConversion.avsc", avroDir)
+        // This functionality doesn't work with the plugins DSL syntax.
+        // To load files from the buildSrc classpath you need to load the plugin from the buildscript classpath.
         buildFile << """
-            import com.commercehub.gradle.plugin.avro.test.custom.*
-            avro {
-                stringType = "String"
-                logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
-                customConversion(TimeZoneConversion)
-            }
-        """
+        |buildscript {
+        |    dependencies {
+        |        classpath files(${readPluginClasspath()})
+        |    }
+        |}
+        |apply plugin: "com.commercehub.gradle.plugin.avro"
+        |import com.commercehub.gradle.plugin.avro.test.custom.*
+        |avro {
+        |    stringType = "String"
+        |    logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
+        |    customConversion(TimeZoneConversion)
+        |}
+        |""".stripMargin()
+        addDefaultRepository()
+        addAvroDependency()
         testProjectDir.newFolder("buildSrc")
         testProjectDir.newFile("buildSrc/build.gradle") << """
-            repositories {
-                jcenter()
-            }
-            dependencies {
-                compile "org.apache.avro:avro:${avroVersion}"
-            }
-        """
+        |repositories {
+        |    jcenter()
+        |}
+        |dependencies {
+        |    implementation "org.apache.avro:avro:${avroVersion}"
+        |}
+        |""".stripMargin()
         copyCustomConversion("buildSrc/src/main/java")
         copyCustomConversion("src/main/java")
 
@@ -62,8 +67,8 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("test/Event.class")).file
         def javaSource = projectFile("build/generated-main-avro-java/test/Event.java").text
         javaSource.contains("java.time.Instant start;")
@@ -75,23 +80,33 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         // See https://issues.apache.org/jira/browse/AVRO-2548
         given:
         copyResource("customConversion.avsc", avroDir)
+        // This functionality doesn't work with the plugins DSL syntax.
+        // To load files from the buildSrc classpath you need to load the plugin from the buildscript classpath.
         buildFile << """
-            import com.commercehub.gradle.plugin.avro.test.custom.*
-            avro {
-                stringType = "CharSequence"
-                logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
-                customConversion(TimeZoneConversion)
-            }
-        """
+        |buildscript {
+        |    dependencies {
+        |        classpath files(${readPluginClasspath()})
+        |    }
+        |}
+        |apply plugin: "com.commercehub.gradle.plugin.avro"
+        |import com.commercehub.gradle.plugin.avro.test.custom.*
+        |avro {
+        |    stringType = "CharSequence"
+        |    logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
+        |    customConversion(TimeZoneConversion)
+        |}
+        |""".stripMargin()
+        addDefaultRepository()
+        addAvroDependency()
         testProjectDir.newFolder("buildSrc")
         testProjectDir.newFile("buildSrc/build.gradle") << """
-            repositories {
-                jcenter()
-            }
-            dependencies {
-                compile "org.apache.avro:avro:${avroVersion}"
-            }
-        """
+        |repositories {
+        |    jcenter()
+        |}
+        |dependencies {
+        |    implementation "org.apache.avro:avro:${avroVersion}"
+        |}
+        |""".stripMargin()
         copyCustomConversion("buildSrc/src/main/java")
         copyCustomConversion("src/main/java")
 
@@ -99,8 +114,8 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("test/Event.class")).file
         def javaSource = projectFile("build/generated-main-avro-java/test/Event.java").text
         javaSource.contains("java.time.Instant start;")
@@ -112,23 +127,33 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         // See https://issues.apache.org/jira/browse/AVRO-2548
         given:
         copyResource("customConversion.avpr", avroDir)
+        // This functionality doesn't work with the plugins DSL syntax.
+        // To load files from the buildSrc classpath you need to load the plugin from the buildscript classpath.
         buildFile << """
-            import com.commercehub.gradle.plugin.avro.test.custom.*
-            avro {
-                stringType = "CharSequence"
-                logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
-                customConversion(TimeZoneConversion)
-            }
-        """
+        |buildscript {
+        |    dependencies {
+        |        classpath files(${readPluginClasspath()})
+        |    }
+        |}
+        |apply plugin: "com.commercehub.gradle.plugin.avro"
+        |import com.commercehub.gradle.plugin.avro.test.custom.*
+        |avro {
+        |    stringType = "CharSequence"
+        |    logicalTypeFactory("timezone", TimeZoneLogicalTypeFactory)
+        |    customConversion(TimeZoneConversion)
+        |}
+        |""".stripMargin()
+        addDefaultRepository()
+        addAvroDependency()
         testProjectDir.newFolder("buildSrc")
         testProjectDir.newFile("buildSrc/build.gradle") << """
-            repositories {
-                jcenter()
-            }
-            dependencies {
-                compile "org.apache.avro:avro:${avroVersion}"
-            }
-        """
+        |repositories {
+        |    jcenter()
+        |}
+        |dependencies {
+        |    implementation "org.apache.avro:avro:${avroVersion}"
+        |}
+        |""".stripMargin()
         copyCustomConversion("buildSrc/src/main/java")
         copyCustomConversion("src/main/java")
 
@@ -136,8 +161,8 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then:
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
         projectFile(buildOutputClassPath("test/Event.class")).file
         def javaSource = projectFile("build/generated-main-avro-java/test/Event.java").text
         javaSource.contains("java.time.Instant start;")
@@ -147,19 +172,20 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
     def "can use a custom logical type while generating a schema from a protocol"() {
         given:
         copyResource("customConversion.avpr", avroDir)
+        applyAvroPlugin()
         buildFile << """
-            task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
-                source file("src/main/avro")
-                include("**/*.avpr")
-                outputDir = file("build/generated-main-avro-avsc")
-            }
-        """
+        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |    source file("src/main/avro")
+        |    include("**/*.avpr")
+        |    outputDir = file("build/generated-main-avro-avsc")
+        |}
+        |""".stripMargin()
 
         when:
         def result = run("generateSchema")
 
         then:
-        taskInfoAbsent || result.task(":generateSchema").outcome == SUCCESS
+        result.task(":generateSchema").outcome == SUCCESS
         def schemaFile = projectFile("build/generated-main-avro-avsc/test/Event.avsc").text
         schemaFile.contains('"logicalType" : "timestamp-millis"')
         schemaFile.contains('"logicalType" : "timezone"')

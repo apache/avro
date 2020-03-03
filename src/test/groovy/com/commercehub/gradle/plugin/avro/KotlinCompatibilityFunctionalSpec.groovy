@@ -22,33 +22,19 @@ class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
 
     def "setup"() {
         println "Testing using Kotlin version ${kotlinVersion}."
-        applyAvroPlugin()
-        addAvroDependency()
     }
 
     def "works with kotlin-gradle-plugin"() {
         given:
         File kotlinDir = testProjectDir.newFolder("src", "main", "kotlin")
-        buildFile << """
-            buildscript {
-                repositories {
-                    jcenter()
-                }
-                dependencies {
-                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
-                }
-            }
-            apply plugin: "kotlin"
-            apply plugin: "application"
-            repositories {
-                jcenter()
-            }
-            dependencies {
-                compile "org.jetbrains.kotlin:kotlin-stdlib"
-                runtime "joda-time:joda-time:2.9.9"
-            }
-            mainClassName = "demo.HelloWorldKt"
-        """
+        applyAvroPlugin()
+        applyPlugin("org.jetbrains.kotlin.jvm", kotlinVersion)
+        applyPlugin("application")
+        addDefaultRepository()
+        addAvroDependency()
+        addImplementationDependency("org.jetbrains.kotlin:kotlin-stdlib")
+        addRuntimeDependency("joda-time:joda-time:2.9.9")
+        buildFile << 'mainClassName = "demo.HelloWorldKt"'
         copyResource("user.avsc", avroDir)
         copyResource("helloWorld.kt", kotlinDir)
 

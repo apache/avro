@@ -31,6 +31,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
     def "with convention plugin, default encoding matches default compilation behavior"() {
         given:
         applyAvroPlugin()
+        addDefaultRepository()
         addAvroDependency()
         copyResource("idioma.avsc", avroDir)
 
@@ -38,8 +39,8 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then: "compilation succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
 
         and: "the system default encoding is used"
         def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(SYSTEM_ENCODING)
@@ -50,6 +51,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
     def "with convention plugin, configuring Java compilation task with encoding=#encoding will use it for outputCharacterEncoding"() {
         given:
         applyAvroPlugin()
+        addDefaultRepository()
         addAvroDependency()
         copyResource("idioma.avsc", avroDir)
         buildFile << """
@@ -62,8 +64,8 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         def result = run()
 
         then: "compilation succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
-        taskInfoAbsent || result.task(":compileJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
         def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(encoding)
@@ -93,7 +95,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         def result = run("generateAvroJava")
 
         then: "compilation succeeds"
-        taskInfoAbsent || result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":generateAvroJava").outcome == SUCCESS
 
         and: "the specified encoding is used"
         def content = projectFile("build/generated-main-avro-java/example/avro/Idioma.java").getText(expectedEncoding)
