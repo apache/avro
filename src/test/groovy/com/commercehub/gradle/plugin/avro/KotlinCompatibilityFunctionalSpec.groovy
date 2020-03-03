@@ -15,8 +15,13 @@
  */
 package com.commercehub.gradle.plugin.avro
 
+@SuppressWarnings(["Println"])
 class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
+    @SuppressWarnings(["FieldName"])
+    protected static final String kotlinVersion = System.getProperty("kotlinVersion", "undefined")
+
     def "setup"() {
+        println "Testing using Kotlin version ${kotlinVersion}."
         applyAvroPlugin()
         addAvroDependency()
     }
@@ -30,7 +35,7 @@ class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
                     jcenter()
                 }
                 dependencies {
-                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.61"
+                    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
                 }
             }
             apply plugin: "kotlin"

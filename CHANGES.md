@@ -6,6 +6,7 @@
 * Update version of kotlin plugin in tests/example
 * Built using Avro 1.9.2 (#104)
 * Add support for Java 13
+* Add support for testing multiple Kotlin versions
 
 ## 0.18.0
 * Use reproducible file order for plugin archives

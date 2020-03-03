@@ -22,8 +22,10 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * If you need support for Avro 1.8.0-1.8.1, try plugin version 0.10.0
     * If you need support for Avro 1.7.7, try plugin version 0.8.1 (updated for Gradle 5.6)
     * Versions of Avro prior to 1.7.x are unlikely to work
-* Incubating: support for Kotlin
-    * Currently tested against Kotlin plugin version 1.3.61
+* Support for Kotlin
+    * Currently tested against Kotlin plugin versions 1.3.20-1.3.61 using the latest supported version of Gradle
+    * Currently tested against Kotlin plugin versions 1.2.20-1.2.71 and 1.3.0-1.3.11 using Gradle 5.1
+    * Version of the Kotlin plugin prior to 1.2.20 are unlikely to work
 * Incubating: support for Gradle Kotlin DSL
     * No test coverage yet; will attempt to address incompatibilities as they are discovered
 
