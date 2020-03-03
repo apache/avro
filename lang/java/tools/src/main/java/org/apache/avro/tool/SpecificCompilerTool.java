@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Arrays;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
@@ -61,31 +60,30 @@ public class SpecificCompilerTool implements Tool {
     Optional<String> encoding = Optional.empty();
     Optional<String> templateDir = Optional.empty();
     int arg = 0;
-    int[] positionIndex = new int[4];
+    int counter = 0;
 
     if (args.contains("-encoding")) {
       arg = args.indexOf("-encoding") + 1;
       encoding = Optional.of(args.get(arg));
-      positionIndex[0] = arg;
+      counter = counter + 2;
     }
 
     if (args.contains("-string")) {
       stringType = StringType.String;
-      positionIndex[1] = args.indexOf("-string");
+      counter = counter + 1;
     }
 
     if (args.contains("-bigDecimal")) {
       useLogicalDecimal = true;
-      positionIndex[2] = args.indexOf("-bigDecimal");
+      counter = counter + 1;
     }
 
     if (args.contains("-templateDir")) {
       arg = args.indexOf("-templateDir") + 1;
       templateDir = Optional.of(args.get(arg));
-      positionIndex[3] = arg;
+      counter = counter + 2;
     }
-
-    arg = Arrays.stream(positionIndex).max().getAsInt() + 1;
+    arg = counter;
     String method = args.get(arg);
     List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
