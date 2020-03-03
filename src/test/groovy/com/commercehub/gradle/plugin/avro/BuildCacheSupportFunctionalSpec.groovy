@@ -15,17 +15,11 @@
  */
 package com.commercehub.gradle.plugin.avro
 
-import org.gradle.util.GradleVersion
-import spock.lang.IgnoreIf
-
 import static org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 
 /**
  * Testing for <a href="https://docs.gradle.org/current/userguide/build_cache.html">Build Cache</a> feature support.
- *
- * Only run if on a version of Gradle after Build Cache support was introduced.
  */
-@IgnoreIf({ gradleVersion < GradleVersion.version("3.5") })
 class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
     def "setup"() {
         applyAvroPlugin()
