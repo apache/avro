@@ -8,6 +8,7 @@
 * Add support for Java 13
 * Add support for testing multiple Kotlin versions
 * Update plugin's own build to address some deprecation warnings of APIs being removed in Gradle 7
+* Add tests for Kotlin DSL usage (#61)
 
 ## 0.18.0
 * Use reproducible file order for plugin archives

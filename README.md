@@ -26,8 +26,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * Currently tested against Kotlin plugin versions 1.3.20-1.3.61 using the latest supported version of Gradle
     * Currently tested against Kotlin plugin versions 1.2.20-1.2.71 and 1.3.0-1.3.11 using Gradle 5.1
     * Version of the Kotlin plugin prior to 1.2.20 are unlikely to work
-* Incubating: support for Gradle Kotlin DSL
-    * No test coverage yet; will attempt to address incompatibilities as they are discovered
+* Support for Gradle Kotlin DSL
 
 # Usage
 
@@ -334,7 +333,7 @@ This support does *not* support producing the Avro generated classes as Kotlin c
 Special notes relevant to using this plugin via the Gradle Kotlin DSL:
 
 * Apply the plugin declaratively using the `plugins {}` block.  Otherwise, various features may not work as intended.  See [Configuring Plugins in the Gradle Kotlin DSL](https://github.com/gradle/kotlin-dsl/blob/master/doc/getting-started/Configuring-Plugins.md) for more details.
-* Most configuration in the `avro {}` block can be used identically to the Groovy DSL.  Boolean settings are an exception, as they require an "is" prefix.  For example, instead of `createSetters = false`, one would use `isCreateSetters = false`.  See [Getters and Setters](https://kotlinlang.org/docs/reference/java-interop.html#getters-and-setters) for more details.
+* Configuration in the `avro {}` block must be applied differently than in the Groovy DSL.  See the example below for details.
 
 ### Example Kotlin DSL Setup:
 
@@ -343,7 +342,7 @@ In `gradle.build.kts` add:
 ```kotlin
 plugins {
 	// Find latest release here: https://github.com/davidmc24/gradle-avro-plugin/releases
-	id("com.commercehub.gradle.plugin.avro") version "0.17.0"
+	id("com.commercehub.gradle.plugin.avro") version "VERSION"
 }
 ```
 
@@ -356,6 +355,22 @@ pluginManagement {
 		jcenter()
 		maven (url="https://dl.bintray.com/gradle/gradle-plugins")
 	}
+}
+```
+
+The syntax for configuring the extension looks like this:
+
+```kotlin
+avro {
+    isCreateSetters.set(true)
+    isCreateOptionalGetters.set(false)
+    isGettersReturnOptional.set(false)
+    fieldVisibility.set("PUBLIC_DEPRECATED")
+    outputCharacterEncoding.set("UTF-8")
+    stringType.set("String")
+    templateDirectory.set(null as String?)
+    isEnableDecimalLogicalType.set(true)
+    dateTimeLogicalType.set("JSR310")
 }
 ```
 
