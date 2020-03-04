@@ -15,6 +15,9 @@
  */
 package com.commercehub.gradle.plugin.avro
 
+import spock.lang.IgnoreIf
+import spock.util.environment.OperatingSystem
+
 import static org.gradle.testkit.runner.TaskOutcome.FROM_CACHE
 
 /**
@@ -49,6 +52,10 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         projectFile(buildOutputClassPath("org/apache/avro/test/Mail.class")).file
     }
 
+    /**
+     * This test appears to fail on Windows due to clean being unable to delete interop.avpr.
+     */
+    @IgnoreIf({ OperatingSystem.current.windows })
     def "supports build cache for IDL to protocol conversion"() {
         given: "a project is built once with build cache enabled"
         copyResource("interop.avdl", avroDir)
