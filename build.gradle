@@ -192,18 +192,32 @@ sourceCompatibility = 8
 
 def avroVersions = ["1.9.0", "1.9.1", "1.9.2"]
 def keyAvroVersions = avroVersions.last()
-def gradle5KotlinVersions = [
-    "1.2.20", "1.2.21", "1.2.30", "1.2.31", "1.2.40", "1.2.41", "1.2.50", "1.2.51", "1.2.60", "1.2.61", "1.2.70", "1.2.71",
+def gradle5KotlinVersions =[]
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_10)) {
+    // Java 10 support was added in Kotlin 1.2.30
+    gradle5KotlinVersions.addAll([
+        "1.2.20", "1.2.21",
+    ])
+}
+gradle5KotlinVersions.addAll([
+    "1.2.30", "1.2.31", "1.2.40", "1.2.41", "1.2.50", "1.2.51", "1.2.60", "1.2.61", "1.2.70", "1.2.71",
     "1.3.0", "1.3.10", "1.3.11",
-]
+])
 def latestGradleKotlinVersions = [
     "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61",
 ]
 def kotlinVersions = gradle5KotlinVersions + latestGradleKotlinVersions
-def keyKotlinVersions = [ // First and last version for each supported line
-    "1.2.20", "1.2.71",
+def keyKotlinVersions = [] // First and last version for each supported line
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_10)) {
+    // Java 10 support was added in Kotlin 1.2.30
+    keyKotlinVersions.add("1.2.20")
+} else {
+    keyKotlinVersions.add("1.2.30")
+}
+keyKotlinVersions.addAll([
+    "1.2.71",
     "1.3.0", "1.3.61",
-]
+])
 def keyGradleVersions = [] // First and last version for each supported line
 def firstSupportedGradleVersion = null
 def gradleVersions = []
