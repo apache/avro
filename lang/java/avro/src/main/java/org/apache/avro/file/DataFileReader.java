@@ -88,12 +88,36 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     return dreader;
   }
 
-  /** Construct a reader for a file. Please close resource files yourself. */
+  /**
+   * Construct a reader for a file. For example,if you want to read a file
+   * record,you need to close the resource. You can use try-with-resource as
+   * follows:
+   * 
+   * <pre>
+   * try (FileReader<User> dataFileReader =
+   * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
+   * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
+   * file: %s", file); }
+   * 
+   * <pre/>
+   */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
     this(new SeekableFileInput(file), reader, true);
   }
 
-  /** Construct a reader for a file. Please close resource files yourself. */
+  /**
+   * Construct a reader for a file. For example,if you want to read a file
+   * record,you need to close the resource. You can use try-with-resource as
+   * follows:
+   * 
+   * <pre>
+   * try (FileReader<User> dataFileReader =
+   * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
+   * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
+   * file: %s", file); }
+   * 
+   * <pre/>
+   */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader) throws IOException {
     this(sin, reader, false);
   }
