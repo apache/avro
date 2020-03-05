@@ -131,8 +131,8 @@ public class AvroPlugin implements Plugin<Project> {
                                                   final TaskProvider<GenerateAvroJavaTask> javaTaskProvider) {
         project.getPluginManager().withPlugin("org.jetbrains.kotlin.jvm", appliedPlugin ->
             project.getTasks()
-                .matching(task -> sourceSet.getCompileTaskName("kotlin").equals(task.getName()))
                 .withType(SourceTask.class)
+                .matching(task -> sourceSet.getCompileTaskName("kotlin").equals(task.getName()))
                 .configureEach(task ->
                     task.source(javaTaskProvider.get().getOutputs())
                 )
