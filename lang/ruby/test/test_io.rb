@@ -358,6 +358,21 @@ EOS
     end
   end
 
+  def test_record_with_bigdecimal
+    require 'bigdecimal'
+    writer = StringIO.new
+    encoder = Avro::IO::BinaryEncoder.new(writer)
+    schema = Avro::Schema.parse('{"type":"bytes","logicalType":"decimal","precision":9,"scale":2}')
+    datum_writer = Avro::IO::DatumWriter.new(schema)
+    datum_writer.write(BigDecimal('1.2'), encoder)
+
+    reader = StringIO.new(writer.string)
+    decoder = Avro::IO::BinaryDecoder.new(reader)
+    datum_reader = Avro::IO::DatumReader.new(schema)
+    read_value = datum_reader.read(decoder)
+
+    assert_equal 0.12e1, read_value
+  end
 
   def test_schema_promotion
     promotable_schemas = ['"int"', '"long"', '"float"', '"double"']
