@@ -173,7 +173,7 @@ Examples:
 
 ```groovy
 // Option 1: configure compilation task (avro plugin will automatically match)
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 // Option 2: just configure avro plugin
@@ -255,15 +255,17 @@ apply plugin: "java"
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
 dependencies {
-    compile "org.apache.avro:avro:1.9.2"
+    implementation "org.apache.avro:avro:1.9.2"
 }
 
-task generateAvro(type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+def generateAvro = tasks.register("generateAvro", com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
     source("src/avro")
     outputDir = file("dest/avro")
 }
 
-compileJava.source(generateAvro.outputs)
+tasks.named("compileJava").configure {
+    source(generateAvro)
+}
 ```
 
 # File Processing
@@ -387,13 +389,13 @@ Example using base plugin with support for both IDL and JSON protocol files in `
 ```groovy
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
-task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+def generateProtocol = tasks.register("generateProtocol", com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
     source file("src/main/avro")
     include("**/*.avdl")
     outputDir = file("build/generated-avro-main-avpr")
 }
 
-task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+tasks.register("generateSchema", com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
     dependsOn generateProtocol
     source file("src/main/avro")
     source file("build/generated-avro-main-avpr")

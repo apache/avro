@@ -27,13 +27,13 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         applyPlugin("java") // Jar task appears to only work with the java plugin applied
         buildFile << """
         |configurations.create("shared")
-        |task sharedIdlJar(type: Jar) {
+        |tasks.register("sharedIdlJar", Jar) {
         |    from "src/shared"
         |}
         |dependencies {
         |    shared sharedIdlJar.outputs.files  
         |}
-        |task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+        |tasks.register("generateProtocol", com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
         |    classpath = configurations.shared
         |    source file("src/dependent")
         |    outputDir = file("build/protocol")
@@ -56,7 +56,7 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         given: "a build that declares another task's output in the classpath"
         applyAvroPlugin()
         buildFile << """
-        |task sharedIdlJar(type: Jar) {
+        |tasks.register("sharedIdlJar", Jar) {
         |    from "src/shared"
         |}
         |dependencies {

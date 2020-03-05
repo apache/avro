@@ -174,7 +174,7 @@ class CustomConversionFunctionalSpec extends FunctionalSpec {
         copyResource("customConversion.avpr", avroDir)
         applyAvroPlugin()
         buildFile << """
-        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |tasks.register("generateSchema", com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
         |    source file("src/main/avro")
         |    include("**/*.avpr")
         |    outputDir = file("build/generated-main-avro-avsc")

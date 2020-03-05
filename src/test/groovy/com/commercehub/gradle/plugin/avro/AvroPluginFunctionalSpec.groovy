@@ -131,4 +131,26 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         result.output.contains("* $errorFilePath: \"enum\" is not a defined name. The type of the \"gender\" " +
                 "field must be a defined name or a {\"type\": ...} expression.")
     }
+
+    @SuppressWarnings(["GStringExpressionWithinString"])
+    def "avro plugin correctly uses task configuration avoidance"() {
+        given:
+        buildFile << """
+        |def configuredTasks = []
+        |tasks.configureEach {
+        |    configuredTasks << it
+        |}        
+        |gradle.buildFinished {
+        |    println "Configured tasks: \${configuredTasks*.path}"
+        |}
+        |""".stripMargin()
+        when:
+        def result = run("help")
+
+        then:
+        def taskMatcher = result.output =~ /(?m)^Configured tasks: (.*)$/
+        taskMatcher.find()
+        def configuredTasks = taskMatcher.group(1)
+        configuredTasks == "[:help]"
+    }
 }

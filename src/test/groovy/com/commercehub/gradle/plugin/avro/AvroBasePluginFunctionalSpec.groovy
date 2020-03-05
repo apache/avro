@@ -25,7 +25,7 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
     def "can generate java files from json schema"() {
         given:
         buildFile << """
-        |task("generateAvroJava", type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+        |tasks.register("generateAvroJava", com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
         |    source file("src/main/avro")
         |    include("**/*.avsc")
         |    outputDir = file("build/generated-main-avro-java")
@@ -45,7 +45,7 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
     def "can generate json schema files from json protocol"() {
         given:
         buildFile << """
-        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |tasks.register("generateSchema", com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
         |    source file("src/main/avro")
         |    include("**/*.avpr")
         |    outputDir = file("build/generated-main-avro-avsc")
@@ -68,11 +68,11 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
     def "can generate json schema files from IDL"() {
         given:
         buildFile << """
-        |task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+        |tasks.register("generateProtocol", com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
         |    source file("src/main/avro")
         |    outputDir = file("build/generated-avro-main-avpr")
         |}
-        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |tasks.register("generateSchema", com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
         |    dependsOn generateProtocol
         |    source file("build/generated-avro-main-avpr")
         |    include("**/*.avpr")
@@ -97,12 +97,12 @@ class AvroBasePluginFunctionalSpec extends FunctionalSpec {
     def "example of converting both IDL and json protocol simultaneously"() {
         given:
         buildFile << """
-        |task("generateProtocol", type: com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+        |tasks.register("generateProtocol", com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
         |    source file("src/main/avro")
         |    include("**/*.avdl")
         |    outputDir = file("build/generated-avro-main-avpr")
         |}
-        |task("generateSchema", type: com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+        |tasks.register("generateSchema", com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
         |    dependsOn generateProtocol
         |    source file("src/main/avro")
         |    source file("build/generated-avro-main-avpr")

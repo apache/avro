@@ -59,10 +59,10 @@ class IntellijFunctionalSpec extends FunctionalSpec {
     def "overriding task's outputDir doesn't result in default directory still being created"() {
         given:
         buildFile << """
-        |generateAvroJava {
+        |tasks.named("generateAvroJava").configure {
         |    outputDir = file("build/generatedMainAvro")
         |}
-        |generateTestAvroJava {
+        |tasks.named("generateTestAvroJava").configure {
         |    outputDir = file("build/generatedTestAvro")
         |}
         |""".stripMargin()

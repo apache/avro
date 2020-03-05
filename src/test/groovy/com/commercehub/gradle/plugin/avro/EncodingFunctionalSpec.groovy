@@ -55,7 +55,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         addAvroDependency()
         copyResource("idioma.avsc", avroDir)
         buildFile << """
-        |compileJava {
+        |tasks.named("compileJava").configure {
         |    options.encoding = '${encoding}'
         |}
         |""".stripMargin()
@@ -84,7 +84,7 @@ class EncodingFunctionalSpec extends FunctionalSpec {
         |avro {
         |    outputCharacterEncoding = ${outputCharacterEncoding}
         |}
-        |task("generateAvroJava", type: com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+        |tasks.register("generateAvroJava", com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
         |    source file("src/main/avro")
         |    include("**/*.avsc")
         |    outputDir = file("build/generated-main-avro-java")
