@@ -253,8 +253,8 @@ avroVersions.each { def avroVersion ->
                 kotlinVersion: kotlinVersion,
             ]
             reports {
-                html.destination = file("$buildDir/reports/tests-${avroVersion}-${gradleVersion}")
-                junitXml.destination = file("$buildDir/reports/tests-${avroVersion}-${gradleVersion}")
+                html.destination = file("$buildDir/reports/tests-avro${avroVersion}-gradle${gradleVersion}")
+                junitXml.destination = file("$buildDir/reports/tests-avro${avroVersion}-gradle${gradleVersion}")
             }
         }
         testVersionCompatibility.dependsOn newTask
@@ -283,8 +283,8 @@ gradle5KotlinVersions.each { def kotlinVersion ->
             ]
             include("**/KotlinCompatibilityFunctionalSpec.class")
             reports {
-                html.destination = file("$buildDir/reports/tests-${kotlinVersion}")
-                junitXml.destination = file("$buildDir/reports/tests-${kotlinVersion}")
+                html.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
+                junitXml.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
             }
         }
         testVersionCompatibility.dependsOn newTask
@@ -307,8 +307,8 @@ latestGradleKotlinVersions.each { def kotlinVersion ->
         ]
         include("**/KotlinCompatibilityFunctionalSpec.class")
         reports {
-            html.destination = file("$buildDir/reports/tests-${kotlinVersion}")
-            junitXml.destination = file("$buildDir/reports/tests-${kotlinVersion}")
+            html.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
+            junitXml.destination = file("$buildDir/reports/tests-kotlin${kotlinVersion}-gradle${gradleVersion}")
         }
     }
     testVersionCompatibility.dependsOn newTask
