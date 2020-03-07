@@ -19,4 +19,4 @@
 
 from __future__ import absolute_import, division, print_function
 
-__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs']
+__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs', 'units']

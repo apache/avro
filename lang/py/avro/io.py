@@ -50,7 +50,9 @@ import sys
 from decimal import Decimal, getcontext
 from struct import Struct
 
-from avro import constants, schema, timezones
+import avro
+from avro import constants, schema, timezones, units
+from avro.units import UnitAnalysisDB
 
 try:
   unicode
@@ -596,7 +598,7 @@ class DatumReader(object):
     return True
 
   @staticmethod
-  def match_schemas(writers_schema, readers_schema):
+  def match_schemas(writers_schema, readers_schema, unit_db=None):
     w_type = writers_schema.type
     r_type = readers_schema.type
     if 'union' in [w_type, r_type] or 'error_union' in [w_type, r_type]:
@@ -607,6 +609,8 @@ class DatumReader(object):
     elif (w_type == r_type == 'record' and
           DatumReader.check_props(writers_schema, readers_schema,
                                   ['fullname'])):
+      if unit_db is not None:
+        return unit_db.resolve_schemas(writers_schema, readers_schema)
       return True
     elif (w_type == r_type == 'error' and
           DatumReader.check_props(writers_schema, readers_schema,
@@ -640,7 +644,7 @@ class DatumReader(object):
       return True
     return False
 
-  def __init__(self, writers_schema=None, readers_schema=None):
+  def __init__(self, writers_schema=None, readers_schema=None, unit_db=None):
     """
     As defined in the Avro specification, we call the schema encoded
     in the data the "writer's schema", and the schema expected by the
@@ -648,6 +652,11 @@ class DatumReader(object):
     """
     self._writers_schema = writers_schema
     self._readers_schema = readers_schema
+    if (unit_db is not None) and (not isinstance(unit_db, UnitAnalysisDB)):
+      raise TypeError('unit DB was not UnitAnalysisDB: "%s"' % (unit_db))
+    self._unit_db = unit_db
+
+  unit_db = property(lambda self: self._unit_db)
 
   # read/write properties
   def set_writers_schema(self, writers_schema):
@@ -666,7 +675,7 @@ class DatumReader(object):
 
   def read_data(self, writers_schema, readers_schema, decoder):
     # schema matching
-    if not DatumReader.match_schemas(writers_schema, readers_schema):
+    if not DatumReader.match_schemas(writers_schema, readers_schema, unit_db=self.unit_db):
       fail_msg = 'Schemas do not match.'
       raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
@@ -935,6 +944,18 @@ class DatumReader(object):
         read_record[field.name] = field_val
       else:
         self.skip_data(field.type, decoder)
+
+    if self.unit_db is not None:
+      wsid = str(id(writers_schema))
+      for rfname in read_record.keys():
+        rf = readers_fields_dict[rfname]
+        coef = rf.props.get(wsid)
+        if coef is not None:
+          v = read_record[rfname]
+          v *= coef.as_float
+          if rf.type.type in ['int', 'long']:
+            v = round(v)
+          read_record[rfname] = v
 
     # fill in default values
     if len(readers_fields_dict) > len(read_record):
