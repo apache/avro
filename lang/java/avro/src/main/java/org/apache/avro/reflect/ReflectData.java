@@ -500,6 +500,27 @@ public class ReflectData extends SpecificData {
     return false;
   }
 
+  /**
+   * Get default value for a schema field.
+   * Derived classes can override this method to provide values based on object instantiation
+   *
+   * @param type  Type
+   * @param fieldSchema Schema of the field
+   * @param field Field
+   * @return The default value
+   */
+  protected Object createSchemaDefaultValue(Type type, Schema fieldSchema, Field field) {
+    AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
+    Object defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
+
+    if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
+      Schema defaultType = fieldSchema.getTypes().get(0);
+      if (defaultType.getType() == Schema.Type.NULL) {
+        defaultValue = JsonProperties.NULL_VALUE;
+      }
+    }
+    return defaultValue;
+  }
   @Override
   protected Schema createSchema(Type type, Map<String, Schema> names) {
     if (type instanceof GenericArrayType) { // generic array
