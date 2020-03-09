@@ -7,8 +7,10 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 # Compatibility
 
 * Currently tested against Java 8-13
+    * Java 14 support is expected to require Gradle 6.3 or higher (currently tested against pre-release versions)
     * Java 13 support requires Gradle 6.0 or higher
     * Java 11 support requires Gradle 4.8 or higher
+    * Though not supported yet, tests are also run against early-access builds of Java 14 and Java 15 to provide early notification of potential incompatibilities
     * If you need support for Java 7, version 0.16.0 was the last supported version
     * If you need support for Java 6, version 0.9.1 was the last supported version; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
 * Currently built against Gradle 6.2.2

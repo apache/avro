@@ -1,6 +1,7 @@
 plugins {
     id "groovy"
     id "checkstyle"
+    id "codenarc"
     id "idea"
     id "maven-publish"
     id "java-gradle-plugin"
@@ -12,12 +13,44 @@ repositories {
 }
 
 def compileAvroVersion = "1.9.2"
+def codenarcVersion = "1.5"
+def codenarcGroovyVersion = "2.5.10" // Newer version than included in 1.5 required for Java 14 support
+
+// Write the plugin's classpath to a file to share with the tests
+task createClasspathManifest {
+    def outputDir = file("$buildDir/$name")
+
+    inputs.files sourceSets.main.runtimeClasspath
+    outputs.dir outputDir
+
+    doLast {
+        outputDir.mkdirs()
+        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
+    }
+}
 
 dependencies {
     implementation localGroovy()
     implementation "org.apache.avro:avro-compiler:${compileAvroVersion}"
     testImplementation "org.spockframework:spock-core:1.3-groovy-2.5"
     testImplementation gradleTestKit()
+    testRuntimeOnly files(createClasspathManifest) // Add the classpath file to the test runtime classpath
+}
+
+configurations {
+    codenarc {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == "org.codehaus.groovy") {
+                if (details.requested.name == "groovy" && details.requested.version != codenarcGroovyVersion) {
+                    // Template support appears to have moved between modules in between versions
+                    details.useTarget("${details.requested.group}:groovy-all:${codenarcGroovyVersion}")
+                } else {
+                    details.useVersion codenarcGroovyVersion
+                }
+                details.because "Required for Java 14+ support"
+            }
+        }
+    }
 }
 
 tasks.withType(AbstractCompile) {
@@ -118,24 +151,6 @@ idea {
     }
 }
 
-// Write the plugin's classpath to a file to share with the tests
-task createClasspathManifest {
-    def outputDir = file("$buildDir/$name")
-
-    inputs.files sourceSets.main.runtimeClasspath
-    outputs.dir outputDir
-
-    doLast {
-        outputDir.mkdirs()
-        file("$outputDir/plugin-classpath.txt").text = sourceSets.main.runtimeClasspath.join("\n")
-    }
-}
-
-// Add the classpath file to the test runtime classpath
-dependencies {
-    testRuntimeOnly files(createClasspathManifest)
-}
-
 checkstyle {
     ignoreFailures = false
     maxErrors = 0
@@ -151,17 +166,13 @@ checkstyleTest {
     configProperties = ['basedir': "$rootDir/config/checkstyle"]
 }
 
-if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_14)) {
-    // CodeNarc is not yet compatible with Java 14 due to usage of Groovy less than 2.5.10
-    apply plugin: "codenarc"
-    codenarc {
-        config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")
-        ignoreFailures = false
-        maxPriority1Violations = 0
-        maxPriority2Violations = 0
-        maxPriority3Violations = 0
-        toolVersion = "1.4"
-    }
+codenarc {
+    config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")
+    ignoreFailures = false
+    maxPriority1Violations = 0
+    maxPriority2Violations = 0
+    maxPriority3Violations = 0
+    toolVersion = codenarcVersion
 }
 
 tasks.create("testAvroCompatibility") {

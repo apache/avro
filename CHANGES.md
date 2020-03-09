@@ -10,6 +10,8 @@
 * Update plugin's own build to address some deprecation warnings of APIs being removed in Gradle 7
 * Add tests for Kotlin DSL usage (#61)
 * Support [Task Configuration Avoidance](https://docs.gradle.org/current/userguide/task_configuration_avoidance.html) (#97); thanks to [dcabasson](https://github.com/dcabasson) for the collaboration
+* Upgrade Codenarc from 1.4 to 1.5
+* Preliminary Java 14 support
 
 ## 0.18.0
 * Use reproducible file order for plugin archives
