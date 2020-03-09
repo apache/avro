@@ -501,12 +501,12 @@ public class ReflectData extends SpecificData {
   }
 
   /**
-   * Get default value for a schema field.
-   * Derived classes can override this method to provide values based on object instantiation
+   * Get default value for a schema field. Derived classes can override this
+   * method to provide values based on object instantiation
    *
-   * @param type  Type
+   * @param type        Type
    * @param fieldSchema Schema of the field
-   * @param field Field
+   * @param field       Field
    * @return The default value
    */
   protected Object createSchemaDefaultValue(Type type, Schema fieldSchema, Field field) {
@@ -521,6 +521,7 @@ public class ReflectData extends SpecificData {
     }
     return defaultValue;
   }
+
   @Override
   protected Schema createSchema(Type type, Map<String, Schema> names) {
     if (type instanceof GenericArrayType) { // generic array
