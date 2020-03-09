@@ -1,7 +1,6 @@
 plugins {
     id "groovy"
     id "checkstyle"
-    id "codenarc"
     id "idea"
     id "maven-publish"
     id "java-gradle-plugin"
@@ -152,13 +151,17 @@ checkstyleTest {
     configProperties = ['basedir': "$rootDir/config/checkstyle"]
 }
 
-codenarc {
-    config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")
-    ignoreFailures = false
-    maxPriority1Violations = 0
-    maxPriority2Violations = 0
-    maxPriority3Violations = 0
-    toolVersion = "1.4"
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_14)) {
+    // CodeNarc is not yet compatible with Java 14 due to usage of Groovy less than 2.5.10
+    apply plugin: "codenarc"
+    codenarc {
+        config = project.resources.text.fromFile("config/codenarc/codenarc.groovy")
+        ignoreFailures = false
+        maxPriority1Violations = 0
+        maxPriority2Violations = 0
+        maxPriority3Violations = 0
+        toolVersion = "1.4"
+    }
 }
 
 tasks.create("testAvroCompatibility") {
@@ -227,8 +230,13 @@ if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
     keyGradleVersions.addAll("5.1", "5.6.4") // First and last for the 5.x line
     firstSupportedGradleVersion = gradleVersions.first()
 }
-gradleVersions.addAll("6.0", "6.0.1", "6.1", "6.1.1", "6.2", "6.2.1", "6.2.2")
-keyGradleVersions.addAll("6.0", "6.2.2") // First and last for the 6.x line
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_14)) {
+    // Java 14 support will be added in Gradle 6.3
+    gradleVersions.addAll("6.0", "6.0.1", "6.1", "6.1.1", "6.2", "6.2.1", "6.2.2")
+    keyGradleVersions.addAll("6.0", "6.2.2") // First and last for the 6.x line
+}
+gradleVersions.addAll("6.3-20200309143235+0000")
+keyGradleVersions.addAll("6.3-20200309143235+0000")
 
 def latestAvroVersion = avroVersions.last()
 def latestGradleVersion = gradleVersions.last()
