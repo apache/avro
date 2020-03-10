@@ -941,7 +941,8 @@ avro_logical_schema_from_json(json_t *json, struct avro_logical_schema_t **schem
 	}
 
 	avro_logical_type_t type;
-	int precision, scale;
+	int precision = 0;
+	int scale = 0;
 	const char *logical_type = json_string_value(json_logical_type);
 
 	if (strcmp(logical_type, "decimal") == 0) {
@@ -1025,7 +1026,7 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			avro_set_error("Bytes type can only be annotated with \"decimal\" logical type");
 			return EINVAL;
 		}
-		avro_schema_to_bytes(schema)->logical_type = logical_schema;
+		avro_schema_to_bytes(*schema)->logical_type = logical_schema;
 		break;
 
 	case AVRO_INT32:
@@ -1035,7 +1036,7 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			avro_set_error("Int type can only be annotated with \"date\" or \"time-millis\" logical types");
 			return EINVAL;
 		}
-		avro_schema_to_int(schema)->logical_type = logical_schema;
+		avro_schema_to_int(*schema)->logical_type = logical_schema;
 		break;
 
 	case AVRO_INT64:
@@ -1047,7 +1048,7 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 			avro_set_error("Int type can only be annotated with \"time-micros\", \"timestamp-millis\" or \"timestamp-micros\" logical types");
 			return EINVAL;
 		}
-		avro_schema_to_long(schema)->logical_type = logical_schema;
+		avro_schema_to_long(*schema)->logical_type = logical_schema;
 		break;
 
 	case AVRO_FLOAT:
@@ -1363,7 +1364,7 @@ avro_schema_from_json_t(json_t *json, avro_schema_t *schema,
 				return ENOMEM;
 			}
 
-			avro_schema_to_fixed(schema)->logical_type = logical_schema;
+			avro_schema_to_fixed(*schema)->logical_type = logical_schema;
 
 			if (save_named_schemas(*schema, named_schemas)) {
 				avro_set_error("Cannot save fixed schema");
@@ -2145,10 +2146,10 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 		return write_link(out, avro_schema_to_link(schema), parent_namespace);
 	}
 
-	check(rval, write_logical_schema(out, logical_schema));
-
 	if (is_avro_primitive(schema)) {
-		return avro_write_str(out, "\"}");
+		check(rval, avro_write_str(out, "\""));
+		check(rval, write_logical_schema(out, logical_schema));
+		return avro_write_str(out, "}");
 	}
 	avro_set_error("Unknown schema type");
 	return EINVAL;

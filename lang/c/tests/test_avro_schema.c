@@ -47,14 +47,16 @@ static void run_tests(char *dirpath, int should_pass)
 		fprintf(stderr, "Unable to open '%s'\n", dirpath);
 		exit(EXIT_FAILURE);
 	}
-	do {
-		dent = readdir(dir);
+	while(1) {
+		if ((dent = readdir(dir)) == NULL) {
+			break;
+		}
 
 		/* Suppress failures on CVS directories */
-		if ( dent && !strcmp( (const char *) dent->d_name, "CVS" ) )
+		if (!strcmp( (const char *) dent->d_name, "CVS" ) )
 			continue;
 
-		if (dent && dent->d_name[0] != '.') {
+		if (dent->d_name[0] != '.') {
 			int test_rval;
 			snprintf(filepath, sizeof(filepath), "%s/%s", dirpath,
 				 dent->d_name);
@@ -126,7 +128,6 @@ static void run_tests(char *dirpath, int should_pass)
 			}
 		}
 	}
-	while (dent != NULL);
 	closedir(dir);
 }
 
