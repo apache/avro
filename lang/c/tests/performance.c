@@ -74,7 +74,7 @@ test_refcount(unsigned long num_tests)
 {
 	unsigned long  i;
 
-	avro_datum_t  datum = avro_int32(42);
+	avro_datum_t  datum = avro_int32(avro_schema_int(), 42);
 	for (i = 0; i < num_tests; i++) {
 		avro_datum_incref(datum);
 		avro_datum_decref(datum);

@@ -1,0 +1,10 @@
+{"type": "record", "name": "org.apache.avro.tests.LogicalTypes", "fields": [
+  {"name": "f1", "type": {"type":"bytes","logicalType":"decimal","precision":12,"scale":6},
+  {"name": "f2", "type": {"type":"fixed","name":"test","size":16,"logicalType":"decimal","precision":38,"scale":9},
+  {"name": "f3", "type": {"type":"int","logicalType":"date"},
+  {"name": "f4", "type": {"type":"int","logicalType":"time-millis"},
+  {"name": "f5", "type": {"type":"long","logicalType":"time-micros"},
+  {"name": "f6", "type": {"type":"long","logicalType":"timestamp-millis"},
+  {"name": "f7", "type": {"type":"long","logicalType":"timestamp-micros"},
+  {"name": "f8", "type": {"type":"fixed","name":"test","size":12,"logicalType":"duration"}
+]}

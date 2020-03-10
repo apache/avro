@@ -19,6 +19,21 @@
 #include "schema.h"
 #include <string.h>
 
+
+static int
+logical_schema_equal(struct avro_logical_schema_t *a, struct avro_logical_schema_t *b)
+{
+  if ((a && !b) || (b && !a)) {
+    return 0;
+  }
+  if (!a && !b) {
+    return 1;
+  }
+	return a->type == b->type
+    && a->precision == b->precision
+    && a->scale == b->scale;
+}
+
 static int
 schema_record_equal(struct avro_record_schema_t *a,
 		    struct avro_record_schema_t *b)
@@ -106,6 +121,9 @@ schema_fixed_equal(struct avro_fixed_schema_t *a, struct avro_fixed_schema_t *b)
 	if (nullstrcmp(a->space, b->space)) {
 		return 0;
 	}
+  if (!logical_schema_equal(a->logical_type, b->logical_type)) {
+    return 0;
+  }
 	return (a->size == b->size);
 }
 
@@ -164,6 +182,24 @@ schema_link_equal(struct avro_link_schema_t *a, struct avro_link_schema_t *b)
 	return (strcmp(avro_schema_name(a->to), avro_schema_name(b->to)) == 0);
 }
 
+static int
+schema_bytes_equal(struct avro_bytes_schema_t *a, struct avro_bytes_schema_t *b)
+{
+  return logical_schema_equal(a->logical_type, b->logical_type);
+}
+
+static int
+schema_int_equal(struct avro_int_schema_t *a, struct avro_int_schema_t *b)
+{
+  return logical_schema_equal(a->logical_type, b->logical_type);
+}
+
+static long
+schema_long_equal(struct avro_long_schema_t *a, struct avro_long_schema_t *b)
+{
+  return logical_schema_equal(a->logical_type, b->logical_type);
+}
+
 int avro_schema_equal(avro_schema_t a, avro_schema_t b)
 {
 	if (!a || !b) {
@@ -199,6 +235,15 @@ int avro_schema_equal(avro_schema_t a, avro_schema_t b)
 	} else if (is_avro_link(a)) {
 		return schema_link_equal(avro_schema_to_link(a),
 					 avro_schema_to_link(b));
+	} else if (is_avro_bytes(a)) {
+		return schema_bytes_equal(avro_schema_to_bytes(a),
+					 avro_schema_to_bytes(b));
+	} else if (is_avro_int32(a)) {
+		return schema_int_equal(avro_schema_to_int(a),
+					 avro_schema_to_int(b));
+	} else if (is_avro_int64(a)) {
+		return schema_long_equal(avro_schema_to_long(a),
+					 avro_schema_to_long(b));
 	}
 	return 1;
 }

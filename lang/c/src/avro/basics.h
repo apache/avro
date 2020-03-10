@@ -44,6 +44,18 @@ enum avro_type_t {
 };
 typedef enum avro_type_t avro_type_t;
 
+enum avro_logical_type_t {
+  AVRO_LOGICAL_TYPE_NONE,
+  AVRO_DECIMAL,
+  AVRO_DATE,
+  AVRO_TIME_MILLIS,
+  AVRO_TIME_MICROS,
+  AVRO_TIMESTAMP_MILLIS,
+  AVRO_TIMESTAMP_MICROS,
+  AVRO_DURATION
+};
+typedef enum avro_logical_type_t avro_logical_type_t;
+
 enum avro_class_t {
 	AVRO_SCHEMA,
 	AVRO_DATUM

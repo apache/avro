@@ -52,7 +52,7 @@ int main()
 
 	// crash
 	avro_datum_t main_datum = avro_record(schema);		
-	avro_datum_t id_datum = avro_int32(1);
+	avro_datum_t id_datum = avro_int32(avro_schema_int(), 1);
 	
 	if (avro_record_set (main_datum, "ID", id_datum))
 	{
