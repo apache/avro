@@ -1796,6 +1796,29 @@ const char *avro_schema_type_name(const avro_schema_t schema)
 	return NULL;
 }
 
+const char *avro_logical_type_name(const struct avro_logical_schema_t *logical_schema)
+{
+	switch(logical_schema->type) {
+		case AVRO_DECIMAL:
+			return "decimal";
+		case AVRO_DATE:
+			return "date";
+		case AVRO_TIME_MILLIS:
+			return "time-millis";
+		case AVRO_TIME_MICROS:
+			return "time-micros";
+		case AVRO_TIMESTAMP_MILLIS:
+			return "timestamp-millis";
+		case AVRO_TIMESTAMP_MICROS:
+			return "timestamp-micros";
+		case AVRO_DURATION:
+			return "duration";
+    default:
+      avro_set_error("Unknown logical type");
+      return NULL;
+	}
+}
+
 avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 {
 	check_param(NULL, is_avro_schema(schema), "schema");
@@ -1885,6 +1908,35 @@ avro_datum_t avro_datum_from_schema(const avro_schema_t schema)
 static int avro_write_str(avro_writer_t out, const char *str)
 {
 	return avro_write(out, (char *)str, strlen(str));
+}
+
+static int avro_write_int(avro_writer_t out, int num)
+{
+	char buf[12];
+	snprintf(buf, sizeof(buf), "%d", num);
+	return avro_write_str(out, buf);
+}
+
+static int write_logical_schema(avro_writer_t out,
+		       const struct avro_logical_schema_t *logical_schema)
+{
+	if (logical_schema == NULL || logical_schema->type == AVRO_LOGICAL_TYPE_NONE) {
+		return 0;
+	}
+
+	int rval;
+	check(rval, avro_write_str(out, ",\"logicalType\":\""));
+	check(rval, avro_write_str(out, avro_logical_type_name(logical_schema)));
+	check(rval, avro_write_str(out, "\""));
+	if (logical_schema->type == AVRO_DECIMAL) {
+		check(rval, avro_write_str(out, ",\"precision\":"));
+		check(rval, avro_write_int(out, logical_schema->precision));
+		if (logical_schema->scale > 0) {
+			check(rval, avro_write_str(out, ",\"scale\":"));
+			check(rval, avro_write_int(out, logical_schema->scale));
+		}
+	}
+	return rval;
 }
 
 static int write_field(avro_writer_t out, const struct avro_record_field_t *field,
@@ -1980,6 +2032,7 @@ static int write_fixed(avro_writer_t out, const struct avro_fixed_schema_t *fixe
 	check(rval, avro_write_str(out, "\"size\":"));
 	snprintf(size, sizeof(size), "%" PRId64, fixed->size);
 	check(rval, avro_write_str(out, size));
+	check(rval, write_logical_schema(out, fixed->logical_type));
 	return avro_write_str(out, "}");
 }
 
@@ -2046,17 +2099,22 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 		check(rval, avro_write_str(out, "{\"type\":\""));
 	}
 
+	struct avro_logical_schema_t *logical_schema = NULL;
+
 	switch (avro_typeof(schema)) {
 	case AVRO_STRING:
 		check(rval, avro_write_str(out, "string"));
 		break;
 	case AVRO_BYTES:
+		logical_schema = avro_schema_to_bytes(schema)->logical_type;
 		check(rval, avro_write_str(out, "bytes"));
 		break;
 	case AVRO_INT32:
+		logical_schema = avro_schema_to_int(schema)->logical_type;
 		check(rval, avro_write_str(out, "int"));
 		break;
 	case AVRO_INT64:
+		logical_schema = avro_schema_to_long(schema)->logical_type;
 		check(rval, avro_write_str(out, "long"));
 		break;
 	case AVRO_FLOAT:
@@ -2086,6 +2144,8 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 	case AVRO_LINK:
 		return write_link(out, avro_schema_to_link(schema), parent_namespace);
 	}
+
+	check(rval, write_logical_schema(out, logical_schema));
 
 	if (is_avro_primitive(schema)) {
 		return avro_write_str(out, "\"}");
