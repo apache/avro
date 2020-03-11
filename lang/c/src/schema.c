@@ -262,7 +262,8 @@ avro_schema_decref(avro_schema_t schema)
 	return 1;
 }
 
-avro_logical_schema_t* avro_logical_schema(avro_logical_type_t type,
+static avro_logical_schema_t*
+avro_logical_schema_init(avro_logical_type_t type,
 		int precision,
 		int scale)
 {
@@ -982,7 +983,7 @@ avro_logical_schema_from_json(json_t *json, avro_logical_schema_t **schema)
 		return EINVAL;
 	}
 
-	*schema = avro_logical_schema(type, precision, scale);
+	*schema = avro_logical_schema_init(type, precision, scale);
 	return 0;
 }
 
@@ -1488,7 +1489,7 @@ avro_logical_schema_copy(avro_logical_schema_t *logical_schema)
 		return NULL;
 	}
 
-	return avro_logical_schema(logical_schema->type, logical_schema->precision,
+	return avro_logical_schema_init(logical_schema->type, logical_schema->precision,
 						logical_schema->scale);
 }
 
@@ -2188,4 +2189,19 @@ avro_schema_to_json2(const avro_schema_t schema, avro_writer_t out,
 int avro_schema_to_json(const avro_schema_t schema, avro_writer_t out)
 {
 	return avro_schema_to_json2(schema, out, NULL);
+}
+
+avro_logical_schema_t *avro_logical_schema(avro_schema_t schema)
+{
+	switch (avro_typeof(schema)) {
+	case AVRO_INT32:
+		return avro_schema_to_int(schema)->logical_type;
+	case AVRO_INT64:
+		return avro_schema_to_long(schema)->logical_type;
+	case AVRO_BYTES:
+		return avro_schema_to_bytes(schema)->logical_type;
+	case AVRO_FIXED:
+		return avro_schema_to_fixed(schema)->logical_type;
+	}
+	return NULL;
 }
