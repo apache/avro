@@ -29,6 +29,7 @@ set(AVRO_SRC
     avro/generic.h
     avro/io.h
     avro/legacy.h
+    avro/logical.h
     avro/refcount.h
     avro/resolver.h
     avro/schema.h

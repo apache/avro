@@ -133,14 +133,16 @@ static void run_tests(char *dirpath, int should_pass)
 
 static int test_array(void)
 {
-	avro_schema_t schema = avro_schema_array(avro_schema_int());
+	avro_schema_t int_schema = avro_schema_int();
+	avro_schema_t schema = avro_schema_array(int_schema);
 
 	if (!avro_schema_equal
-	    (avro_schema_array_items(schema), avro_schema_int())) {
+	    (avro_schema_array_items(schema), int_schema)) {
 		fprintf(stderr, "Unexpected array items schema");
 		exit(EXIT_FAILURE);
 	}
 
+	avro_schema_decref(int_schema);
 	avro_schema_decref(schema);
 	return 0;
 }
@@ -196,14 +198,16 @@ static int test_fixed(void)
 
 static int test_map(void)
 {
-	avro_schema_t schema = avro_schema_map(avro_schema_long());
+	avro_schema_t long_schema = avro_schema_long();
+	avro_schema_t schema = avro_schema_map(long_schema);
 
 	if (!avro_schema_equal
-	    (avro_schema_map_values(schema), avro_schema_long())) {
+	    (avro_schema_map_values(schema), long_schema)) {
 		fprintf(stderr, "Unexpected map values schema");
 		exit(EXIT_FAILURE);
 	}
 
+	avro_schema_decref(long_schema);
 	avro_schema_decref(schema);
 	return 0;
 }
@@ -211,9 +215,10 @@ static int test_map(void)
 static int test_record(void)
 {
 	avro_schema_t schema = avro_schema_record("person", NULL);
+	avro_schema_t age_schema = avro_schema_int();
 
 	avro_schema_record_field_append(schema, "name", avro_schema_string());
-	avro_schema_record_field_append(schema, "age", avro_schema_int());
+	avro_schema_record_field_append(schema, "age", age_schema);
 
 	if (avro_schema_record_field_get_index(schema, "name") != 0) {
 		fprintf(stderr, "Incorrect index for \"name\" field\n");
@@ -234,21 +239,23 @@ static int test_record(void)
 
 	avro_schema_t  field1 =
 		avro_schema_record_field_get_by_index(schema, 1);
-	if (!avro_schema_equal(field1, avro_schema_int())) {
+	if (!avro_schema_equal(field1, age_schema)) {
 		fprintf(stderr, "Unexpected field 1\n");
 		exit(EXIT_FAILURE);
 	}
 
+	avro_schema_decref(age_schema);
 	avro_schema_decref(schema);
 	return 0;
 }
 
 static int test_union(void)
 {
+	avro_schema_t int_schema = avro_schema_int();
 	avro_schema_t schema = avro_schema_union();
 
 	avro_schema_union_append(schema, avro_schema_string());
-	avro_schema_union_append(schema, avro_schema_int());
+	avro_schema_union_append(schema, int_schema);
 	avro_schema_union_append(schema, avro_schema_null());
 
 	if (!avro_schema_equal
@@ -265,6 +272,7 @@ static int test_union(void)
 		exit(EXIT_FAILURE);
 	}
 
+	avro_schema_decref(int_schema);
 	avro_schema_decref(schema);
 	return 0;
 }

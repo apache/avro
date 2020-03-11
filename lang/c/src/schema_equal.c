@@ -21,7 +21,7 @@
 
 
 static int
-logical_schema_equal(struct avro_logical_schema_t *a, struct avro_logical_schema_t *b)
+logical_schema_equal(avro_logical_schema_t *a, avro_logical_schema_t *b)
 {
   if ((a && !b) || (b && !a)) {
     return 0;

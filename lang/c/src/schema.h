@@ -19,15 +19,10 @@
 
 #include <avro/platform.h>
 #include "avro/basics.h"
+#include "avro/logical.h"
 #include "avro/schema.h"
 #include "avro_private.h"
 #include "st.h"
-
-struct avro_logical_schema_t {
-  avro_logical_type_t type;
-  int precision;
-  int scale; 
-};
 
 struct avro_record_field_t {
 	int index;
@@ -72,7 +67,7 @@ struct avro_union_schema_t {
 
 struct avro_fixed_schema_t {
 	struct avro_obj_t obj;
-  struct avro_logical_schema_t *logical_type;
+	avro_logical_schema_t *logical_type;
 	const char *name;
 	const char *space;
 	int64_t size;
@@ -85,17 +80,17 @@ struct avro_link_schema_t {
 
 struct avro_bytes_schema_t {
   struct avro_obj_t obj;
-  struct avro_logical_schema_t *logical_type;
+  avro_logical_schema_t *logical_type;
 };
 
 struct avro_int_schema_t {
   struct avro_obj_t obj;
-  struct avro_logical_schema_t *logical_type;
+  avro_logical_schema_t *logical_type;
 };
 
 struct avro_long_schema_t {
   struct avro_obj_t obj;
-  struct avro_logical_schema_t *logical_type;
+  avro_logical_schema_t *logical_type;
 };
 
 #define avro_schema_to_record(schema_)  (container_of(schema_, struct avro_record_schema_t, obj))

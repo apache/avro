@@ -42,6 +42,7 @@ void add_record (avro_file_writer_t writer)
 
 	avro_file_writer_append (writer, main_datum);
 
+	avro_schema_decref (id_schema);
 	avro_datum_decref (id_datum);
 	avro_datum_decref (main_datum);
 }
@@ -81,7 +82,7 @@ int main()
 	avro_file_writer_flush (writer);
 	avro_file_writer_close (writer);
 
-    avro_schema_decref(schema);
+	avro_schema_decref(schema);
 
 	remove (dbname);
 
