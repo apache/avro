@@ -2202,6 +2202,7 @@ avro_logical_schema_t *avro_logical_schema(avro_schema_t schema)
 		return avro_schema_to_bytes(schema)->logical_type;
 	case AVRO_FIXED:
 		return avro_schema_to_fixed(schema)->logical_type;
+  default:
+    return NULL;
 	}
-	return NULL;
 }
