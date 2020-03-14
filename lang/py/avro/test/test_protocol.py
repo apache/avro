@@ -274,6 +274,7 @@ class TestMisc(unittest.TestCase):
     print('')
     proto = HELLO_WORLD.parse()
     self.assertEqual(proto.namespace, "com.acme")
+    self.assertEqual(proto.fullname, "com.acme.HelloWorld")
     greeting_type = proto.types_dict['Greeting']
     self.assertEqual(greeting_type.namespace, 'com.acme')
 

@@ -777,7 +777,15 @@ namespace Avro
                     var logicalSchema = schema as LogicalSchema;
                     if (null == logicalSchema)
                         throw new CodeGenException("Unable to cast schema into a logical schema");
-                    return logicalSchema.LogicalType.GetCSharpType(nullible).ToString();
+                    var csharpType = logicalSchema.LogicalType.GetCSharpType(nullible);
+                    if (csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        return $"System.Nullable<{csharpType.GetGenericArguments()[0]}>";
+                    }
+                    else
+                    {
+                        return csharpType.ToString();
+                    }
 
             }
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);

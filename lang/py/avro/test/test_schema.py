@@ -85,11 +85,13 @@ FIXED_EXAMPLES = [
 
 ENUM_EXAMPLES = [
   ValidTestSchema({"type": "enum", "name": "Test", "symbols": ["A", "B"]}),
+  ValidTestSchema({"type": "enum", "name": "AVRO2174", "symbols": ["nowhitespace"]}),
   InvalidTestSchema({"type": "enum", "name": "Status", "symbols": "Normal Caution Critical"}),
   InvalidTestSchema({"type": "enum", "name": [0, 1, 1, 2, 3, 5, 8],
                      "symbols": ["Golden", "Mean"]}),
   InvalidTestSchema({"type": "enum", "symbols" : ["I", "will", "fail", "no", "name"]}),
   InvalidTestSchema({"type": "enum", "name": "Test", "symbols": ["AA", "AA"]}),
+  InvalidTestSchema({"type": "enum", "name": "AVRO2174", "symbols": ["white space"]}),
 ]
 
 ARRAY_EXAMPLES = [
@@ -441,6 +443,26 @@ class TestMisc(unittest.TestCase):
     self.assertIsInstance(fixed_decimal, schema.FixedSchema)
     self.assertNotIsInstance(fixed_decimal, schema.DecimalLogicalSchema)
 
+  def test_parse_invalid_symbol(self):
+    """Disabling enumschema symbol validation should allow invalid symbols to pass."""
+    test_schema_string = json.dumps({
+      "type": "enum", "name": "AVRO2174", "symbols": ["white space"]})
+
+    try:
+      case = schema.parse(test_schema_string, validate_enum_symbols=True)
+    except schema.InvalidName:
+      pass
+    else:
+      self.fail("When enum symbol validation is enabled, "
+                "an invalid symbol should raise InvalidName.")
+
+    try:
+      case = schema.parse(test_schema_string, validate_enum_symbols=False)
+    except schema.InvalidName:
+      self.fail("When enum symbol validation is disabled, "
+                "an invalid symbol should not raise InvalidName.")
+
+
 class SchemaParseTestCase(unittest.TestCase):
   """Enable generating parse test cases over all the valid and invalid example schema."""
 
@@ -478,6 +500,7 @@ class SchemaParseTestCase(unittest.TestCase):
       pass
     else:
       self.fail("Invalid schema should not have parsed: {!s}".format(self.test_schema))
+
 
 class RoundTripParseTestCase(unittest.TestCase):
   """Enable generating round-trip parse test cases over all the valid test schema."""

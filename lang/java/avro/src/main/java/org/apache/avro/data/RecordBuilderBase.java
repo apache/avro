@@ -29,7 +29,6 @@ import java.util.Arrays;
 
 /** Abstract base class for RecordBuilder implementations. Not thread-safe. */
 public abstract class RecordBuilderBase<T extends IndexedRecord> implements RecordBuilder<T> {
-  private static final Field[] EMPTY_FIELDS = new Field[0];
   private final Schema schema;
   private final Field[] fields;
   private final boolean[] fieldSetFlags;
@@ -59,7 +58,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord> implements Reco
   protected RecordBuilderBase(Schema schema, GenericData data) {
     this.schema = schema;
     this.data = data;
-    fields = schema.getFields().toArray(EMPTY_FIELDS);
+    fields = schema.getFields().toArray(new Field[0]);
     fieldSetFlags = new boolean[fields.length];
   }
 
@@ -72,7 +71,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord> implements Reco
   protected RecordBuilderBase(RecordBuilderBase<T> other, GenericData data) {
     this.schema = other.schema;
     this.data = data;
-    fields = schema.getFields().toArray(EMPTY_FIELDS);
+    fields = schema.getFields().toArray(new Field[0]);
     fieldSetFlags = Arrays.copyOf(other.fieldSetFlags, other.fieldSetFlags.length);
   }
 

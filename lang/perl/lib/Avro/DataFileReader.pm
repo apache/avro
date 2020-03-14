@@ -39,6 +39,8 @@ use Compress::Zstd;
 use IO::Uncompress::RawInflate ;
 use Fcntl();
 
+our $VERSION = '++MODULE_VERSION++';
+
 sub new {
     my $class = shift;
     my $datafile = $class->SUPER::new(@_);

@@ -18,7 +18,7 @@
 # See BUILD.txt.
 
 # Despite this base, JDK8 is used by default.  See below.
-FROM openjdk:11
+FROM openjdk:11-stretch
 WORKDIR /root
 
 ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
@@ -28,6 +28,7 @@ ENV APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=isolemnlysweariamuptonogood \
 RUN apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends ant \
                                                  apt-transport-https \
+                                                 apt-utils \
                                                  asciidoc \
                                                  bison \
                                                  bzip2 \
@@ -124,11 +125,11 @@ RUN curl -sSL https://cpanmin.us \
 ENV PIP_NO_CACHE_DIR=off
 
 # Install Python2 packages
-RUN python2 -m pip install --upgrade pip setuptools \
+RUN python2 -m pip install --upgrade pip setuptools wheel \
  && python2 -m pip install zstandard
 
 # Install Python3 packages
-RUN python3 -m pip install --upgrade pip setuptools \
+RUN python3 -m pip install --upgrade pip setuptools wheel \
  && python3 -m pip install tox zstandard
 
 # Install .NET SDK
