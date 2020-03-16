@@ -505,11 +505,11 @@ public class ReflectData extends SpecificData {
    * method to provide values based on object instantiation
    *
    * @param type        Type
-   * @param fieldSchema Schema of the field
    * @param field       Field
+   * @param fieldSchema Schema of the field
    * @return The default value
    */
-  protected Object createSchemaDefaultValue(Type type, Schema fieldSchema, Field field) {
+  protected Object createSchemaDefaultValue(Type type, Field field, Schema fieldSchema) {
     AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
     Object defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
 
@@ -638,7 +638,7 @@ public class ReflectData extends SpecificData {
               annotatedDoc = field.getAnnotation(AvroDoc.class); // Docstring
               doc = (annotatedDoc != null) ? annotatedDoc.value() : null;
 
-              Object defaultValue = createSchemaDefaultValue(type, fieldSchema, field);
+              Object defaultValue = createSchemaDefaultValue(type, field, fieldSchema);
 
               AvroName annotatedName = field.getAnnotation(AvroName.class); // Rename fields
               String fieldName = (annotatedName != null) ? annotatedName.value() : field.getName();
