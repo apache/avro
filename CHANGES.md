@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.19.0
 * Add support for Gradle 6.0-6.2.2 (#101)
 * Drop support for Gradle versions prior to 5.1
 * Update version of kotlin plugin in tests/example
