@@ -50,6 +50,7 @@ import org.apache.avro.SchemaNormalization;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -91,6 +92,16 @@ public class SpecificCompiler {
    * Note: This is protected instead of private only so it's visible for testing.
    */
   protected static final int MAX_FIELD_PARAMETER_UNIT_COUNT = JVM_METHOD_ARG_LIMIT - 1;
+
+  /*
+   * Java reserved words to scape
+   */
+  private List<String> javaReservedWords = Arrays.asList("abstract", "assert", "boolean", "break", "byte", "case",
+      "catch", "char", "class", "const", "default", "do", "double", "else", "enum", "extends", "false", "final",
+      "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long",
+      "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp",
+      "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile",
+      "while", "continue");
 
   public enum FieldVisibility {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
@@ -518,7 +529,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String mangledName = mangle(protocol.getName());
-    outputFile.path = makePath(mangledName, protocol.getNamespace());
+    outputFile.path = makePath(mangledName, escapeNamespace(protocol.getNamespace()));
     outputFile.contents = out;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -590,7 +601,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String name = mangle(schema.getName());
-    outputFile.path = makePath(name, schema.getNamespace());
+    outputFile.path = makePath(name, escapeNamespace(schema.getNamespace()));
     outputFile.contents = output;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -1203,5 +1214,18 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  public String escapeNamespace(String namespace) {
+    if (StringUtils.isBlank(namespace)) {
+      return namespace;
+    }
+    String[] namespaceWords = namespace.split("\\.");
+    String[] newNamespaceWords = new String[namespaceWords.length];
+    for (int i = 0; i < newNamespaceWords.length; i++) {
+      String oldName = namespaceWords[i];
+      newNamespaceWords[i] = javaReservedWords.contains(oldName) ? "_" + oldName : oldName;
+    }
+    return String.join(".", newNamespaceWords);
   }
 }
