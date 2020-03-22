@@ -43,7 +43,7 @@ impl ser::Error for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str(error::Error::description(self))
+        formatter.write_str(&self.to_string())
     }
 }
 

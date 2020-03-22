@@ -3,7 +3,7 @@ use std::collections::{
     hash_map::{Keys, Values},
     HashMap,
 };
-use std::error::{self, Error as StdError};
+use std::error;
 use std::fmt;
 use std::slice::Iter;
 
@@ -30,7 +30,7 @@ impl de::Error for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str(error::Error::description(self))
+        formatter.write_str(&self.to_string())
     }
 }
 
@@ -128,7 +128,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match *self.input {
             Value::String(ref s) => visitor.visit_str(s),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => ::std::str::from_utf8(bytes)
-                .map_err(|e| Error::custom(e.description()))
+                .map_err(|e| Error::custom(e.to_string()))
                 .and_then(|s| visitor.visit_str(s)),
             _ => Err(Error::custom("not a string|bytes|fixed")),
         }
@@ -142,7 +142,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Value::String(ref s) => visitor.visit_string(s.to_owned()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 String::from_utf8(bytes.to_owned())
-                    .map_err(|e| Error::custom(e.description()))
+                    .map_err(|e| Error::custom(e.to_string()))
                     .and_then(|s| visitor.visit_string(s))
             }
             _ => Err(Error::custom("not a string|bytes|fixed")),
