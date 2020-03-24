@@ -99,12 +99,9 @@ impl<R: Read> Block<R> {
     fn fill_buf(&mut self, n: usize) -> Result<(), Error> {
         // We don't have enough space in the buffer, need to grow it.
         if n >= self.buf.capacity() {
-            self.buf.reserve(n);
+            self.buf.resize(n, 0);
         }
 
-        unsafe {
-            self.buf.set_len(n);
-        }
         self.reader.read_exact(&mut self.buf[..n])?;
         self.buf_idx = 0;
         Ok(())

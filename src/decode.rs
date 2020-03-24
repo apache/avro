@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::io::Read;
-use std::mem::transmute;
 
 use failure::Error;
 
@@ -42,28 +41,22 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
         Schema::Float => {
             let mut buf = [0u8; 4];
             reader.read_exact(&mut buf[..])?;
-            Ok(Value::Float(unsafe { transmute::<[u8; 4], f32>(buf) }))
+            Ok(Value::Float(f32::from_ne_bytes(buf)))
         }
         Schema::Double => {
             let mut buf = [0u8; 8];
             reader.read_exact(&mut buf[..])?;
-            Ok(Value::Double(unsafe { transmute::<[u8; 8], f64>(buf) }))
+            Ok(Value::Double(f64::from_ne_bytes(buf)))
         }
         Schema::Bytes => {
             let len = decode_len(reader)?;
-            let mut buf = Vec::with_capacity(len);
-            unsafe {
-                buf.set_len(len);
-            }
+            let mut buf = vec![0u8; len];
             reader.read_exact(&mut buf)?;
             Ok(Value::Bytes(buf))
         }
         Schema::String => {
             let len = decode_len(reader)?;
-            let mut buf = Vec::with_capacity(len);
-            unsafe {
-                buf.set_len(len);
-            }
+            let mut buf = vec![0u8; len];
             reader.read_exact(&mut buf)?;
 
             String::from_utf8(buf)
@@ -136,17 +129,12 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
         }
         Schema::Record { ref fields, .. } => {
             // Benchmarks indicate ~10% improvement using this method.
-            let mut items = Vec::new();
+            let mut items = Vec::with_capacity(fields.len());
             for field in fields {
                 // This clone is also expensive. See if we can do away with it...
                 items.push((field.name.clone(), decode(&field.schema, reader)?));
             }
             Ok(Value::Record(items))
-            // fields
-            // .iter()
-            // .map(|field| decode(&field.schema, reader).map(|value| (field.name.clone(), value)))
-            // .collect::<Result<Vec<(String, Value)>, _>>()
-            // .map(|items| Value::Record(items))
         }
         Schema::Enum { ref symbols, .. } => {
             if let Value::Int(index) = decode_int(reader)? {
