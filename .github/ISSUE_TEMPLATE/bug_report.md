@@ -40,6 +40,7 @@ A clear and concise description of what you expected to happen.
  - Gradle Version [e.g. 5.6.1]
  - Apache Avro Version [e.g. 1.8.2]
  - Gradle-Avro Plugin Version [e.g. 0.17.0]
+ - Java Version [e.g. 13.0.2]
  - OS: [e.g. Mac OS X Mojave, Windows 10, Ubuntu 16.04]
 
 **Additional context**
