@@ -590,13 +590,8 @@ module Avro
 
       def write_record(writers_schema, datum, encoder)
         raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
-
-        datum_s = {}
-          datum.each do |k,v|
-          datum_s[k.to_s] = v
-        end
         writers_schema.fields.each do |field|
-          write_data(field.type, datum_s[field.name], encoder)
+          write_data(field.type, datum.key?(field.name) ? datum[field.name] : datum[field.name.to_sym], encoder)
         end
       end
     end # DatumWriter
