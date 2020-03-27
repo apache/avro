@@ -19,8 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Avro.IO;
+using System.Linq;
 using Avro.Generic;
+using Avro.IO;
 
 namespace Avro.File
 {
@@ -98,10 +99,69 @@ namespace Avro.File
             return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec);
         }
 
-        DataFileWriter(DatumWriter<T> writer)
+        /// <summary>
+        /// Class constructor.
+        /// </summary>
+        /// <param name="writer">Datum writer to use.</param>
+        public DataFileWriter(DatumWriter<T> writer)
         {
             _writer = writer;
             _syncInterval = DataFileConstants.DefaultSyncInterval;
+        }
+
+        /// <summary>
+        /// Open a writer appending to an existing file.
+        /// </summary>
+        /// <param name="path">A relative or absolute path to the file.</param>
+        /// <returns>A new file writer.</returns>
+        public IFileWriter<T> AppendTo(string path)
+        {
+            using (var readerStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                var writeStream = new FileStream(path, FileMode.Append);
+                return AppendTo(readerStream, writeStream);
+            }
+
+            // output does not need to be closed here. It will be closed by invoking close()
+            // of this writer.
+        }
+
+        /// <summary>
+        /// Open a writer appending to an existing file.
+        /// </summary>
+        /// <param name="inStream">reading the existing file.</param>
+        /// <param name="outStream">positioned at the end of the existing file.</param>
+        /// <returns>A new file writer.</returns>
+        public IFileWriter<T> AppendTo(Stream inStream, Stream outStream)
+        {
+            using (var dataFileReader = DataFileReader<T>.OpenReader(inStream))
+            {
+                var header = dataFileReader.GetHeader();
+                _schema = header.Schema;
+                _syncData = header.SyncData;
+
+                if (_metaData == null)
+                    _metaData = header.MetaData;
+                else
+                    _metaData.Concat(header.MetaData);
+            }
+
+            if (_metaData.TryGetValue(DataFileConstants.MetaDataCodec, out byte[] codecBytes))
+            {
+                string codec = System.Text.Encoding.UTF8.GetString(codecBytes);
+                _codec = Codec.CreateCodecFromString(codec);
+            }
+            else
+            {
+                _codec = Codec.CreateCodec(Codec.Type.Null);
+            }
+
+            _headerWritten = true;
+            _stream = outStream;
+
+            Init();
+
+            return this;
         }
 
         /// <inheritdoc/>
