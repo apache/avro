@@ -42,7 +42,7 @@ namespace Avro.Generic
             var record = (GenericRecord) recordObj;
             foreach (var writer in writers)
             {
-                writer.WriteField(record[writer.Field.Name], encoder);
+                writer.WriteField(record.GetValue(writer.Field.Pos), encoder);
             }
         }
 
@@ -58,7 +58,7 @@ namespace Avro.Generic
         /// <inheritdoc/>
         protected override void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder)
         {
-            writer(((GenericRecord)record)[fieldName], encoder);
+            writer(((GenericRecord)record).GetValue(fieldPos), encoder);
         }
 
         /// <inheritdoc/>

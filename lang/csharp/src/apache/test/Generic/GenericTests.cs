@@ -557,7 +557,7 @@ namespace Avro.Test.Generic
                     gf.Value = (byte[])fieldValue;
                     fieldValue = gf;
                 }
-                input.Add(fieldName, fieldValue);
+                input.Add(s[fieldName].Pos, fieldValue);
             }
             return input;
         }
