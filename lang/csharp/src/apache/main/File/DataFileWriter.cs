@@ -100,68 +100,42 @@ namespace Avro.File
         }
 
         /// <summary>
-        /// Class constructor.
+        /// Open a new writer instance to append to an output file.
         /// </summary>
         /// <param name="writer">Datum writer to use.</param>
-        public DataFileWriter(DatumWriter<T> writer)
+        /// <param name="path">Path to the file.</param>
+        /// <returns>A new file writer.</returns>
+        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, string path)
+        {
+            return new DataFileWriter<T>(writer).AppendTo(path);
+        }
+
+        /// <summary>
+        /// Open a new writer instance to append to an output stream.
+        /// </summary>
+        /// <param name="writer">Datum writer to use.</param>
+        /// <param name="readStream">reading the existing file.</param>
+        /// <param name="appendStream">positioned at the end of the existing file.</param>
+        /// <returns>A new file writer.</returns>
+        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream readStream, Stream appendStream)
+        {
+            if (!readStream.CanRead)
+            {
+                throw new AvroRuntimeException("inStream must have Read access");
+            }
+
+            if (!appendStream.CanWrite)
+            {
+                throw new AvroRuntimeException("outStream must have Write access");
+            }
+
+            return new DataFileWriter<T>(writer).AppendTo(readStream, appendStream);
+        }
+
+        private DataFileWriter(DatumWriter<T> writer)
         {
             _writer = writer;
             _syncInterval = DataFileConstants.DefaultSyncInterval;
-        }
-
-        /// <summary>
-        /// Open a writer appending to an existing file.
-        /// </summary>
-        /// <param name="path">A relative or absolute path to the file.</param>
-        /// <returns>A new file writer.</returns>
-        public IFileWriter<T> AppendTo(string path)
-        {
-            using (var readerStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                var writeStream = new FileStream(path, FileMode.Append);
-                return AppendTo(readerStream, writeStream);
-            }
-
-            // output does not need to be closed here. It will be closed by invoking close()
-            // of this writer.
-        }
-
-        /// <summary>
-        /// Open a writer appending to an existing file.
-        /// </summary>
-        /// <param name="inStream">reading the existing file.</param>
-        /// <param name="outStream">positioned at the end of the existing file.</param>
-        /// <returns>A new file writer.</returns>
-        public IFileWriter<T> AppendTo(Stream inStream, Stream outStream)
-        {
-            using (var dataFileReader = DataFileReader<T>.OpenReader(inStream))
-            {
-                var header = dataFileReader.GetHeader();
-                _schema = header.Schema;
-                _syncData = header.SyncData;
-
-                if (_metaData == null)
-                    _metaData = header.MetaData;
-                else
-                    _metaData.Concat(header.MetaData);
-            }
-
-            if (_metaData.TryGetValue(DataFileConstants.MetaDataCodec, out byte[] codecBytes))
-            {
-                string codec = System.Text.Encoding.UTF8.GetString(codecBytes);
-                _codec = Codec.CreateCodecFromString(codec);
-            }
-            else
-            {
-                _codec = Codec.CreateCodec(Codec.Type.Null);
-            }
-
-            _headerWritten = true;
-            _stream = outStream;
-
-            Init();
-
-            return this;
         }
 
         /// <inheritdoc/>
@@ -235,6 +209,50 @@ namespace Avro.File
             }
             _blockCount++;
             WriteIfBlockFull();
+        }
+
+        private IFileWriter<T> AppendTo(string path)
+        {
+            using (var readerStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                var writeStream = new FileStream(path, FileMode.Append);
+                return AppendTo(readerStream, writeStream);
+            }
+
+            // output does not need to be closed here. It will be closed by invoking close()
+            // of this writer.
+        }
+
+        private IFileWriter<T> AppendTo(Stream inStream, Stream outStream)
+        {
+            using (var dataFileReader = DataFileReader<T>.OpenReader(inStream))
+            {
+                var header = dataFileReader.GetHeader();
+                _schema = header.Schema;
+                _syncData = header.SyncData;
+
+                if (_metaData == null)
+                    _metaData = header.MetaData;
+                else
+                    _metaData.Concat(header.MetaData);
+            }
+
+            if (_metaData.TryGetValue(DataFileConstants.MetaDataCodec, out byte[] codecBytes))
+            {
+                string codec = System.Text.Encoding.UTF8.GetString(codecBytes);
+                _codec = Codec.CreateCodecFromString(codec);
+            }
+            else
+            {
+                _codec = Codec.CreateCodec(Codec.Type.Null);
+            }
+
+            _headerWritten = true;
+            _stream = outStream;
+
+            Init();
+
+            return this;
         }
 
         private void EnsureHeader()
