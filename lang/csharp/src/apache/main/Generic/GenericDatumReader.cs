@@ -131,7 +131,7 @@ namespace Avro.Generic
             public object GetField(object record, string fieldName, int fieldPos)
             {
                 object result;
-                if(!((GenericRecord)record).TryGetValue(fieldName, out result))
+                if(!((GenericRecord)record).TryGetValue(fieldPos, out result))
                 {
                     return null;
                 }
