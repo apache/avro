@@ -83,10 +83,6 @@ class SchemaResolver {
             } else {
                 throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
             }
-        } catch (NullPointerException ex) {
-            fileState.setError(ex);
-            processingState.queueForDelayedProcessing(fileState);
-            logger.debug("Encountered null reference while parsing {} (possibly due to unresolved dependency); will try again", path);
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
         }

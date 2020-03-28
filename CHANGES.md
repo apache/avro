@@ -2,6 +2,7 @@
 
 ## Unreleased
 * Fix schema dependency resolution when types are referenced with a `{ "type": NAME }` block rather than just `NAME` (#107)
+* Eliminate `NullPointerException` handling in schema dependency resolution, as it no longer appears to be needed.
 
 ## 0.19.0
 * Add support for Gradle 6.0-6.2.2 (#101)
