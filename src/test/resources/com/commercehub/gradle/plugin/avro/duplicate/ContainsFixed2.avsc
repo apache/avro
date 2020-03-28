@@ -1,0 +1,8 @@
+{
+    "name": "ContainsFixed2",
+    "namespace": "example",
+    "type": "record",
+    "fields": [
+        { "name": "picture", "type": { "type": "fixed", "name": "Picture", "size": 16 } }
+    ]
+}

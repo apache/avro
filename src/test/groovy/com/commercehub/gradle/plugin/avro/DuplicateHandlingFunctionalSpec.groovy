@@ -31,6 +31,21 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         addAvroDependency()
     }
 
+    def "Duplicate record definition succeeds if definition identical"() {
+        given:
+        copyIdenticalRecord()
+
+        when:
+        def result = run()
+
+        then:
+        result.task(":generateAvroJava").outcome == SUCCESS
+        result.task(":compileJava").outcome == SUCCESS
+        projectFile(buildOutputClassPath("example/Person.class")).file
+        projectFile(buildOutputClassPath("example/Fish.class")).file
+        projectFile(buildOutputClassPath("example/Gender.class")).file
+    }
+
     def "Duplicate enum definition succeeds if definition identical"() {
         given:
         copyIdenticalEnum()
@@ -46,9 +61,9 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         projectFile(buildOutputClassPath("example/Gender.class")).file
     }
 
-    def "Duplicate record definition succeeds if definition identical"() {
+    def "Duplicate fixed definition succeeds if definition identical"() {
         given:
-        copyIdenticalRecord()
+        copyIdenticalFixed()
 
         when:
         def result = run()
@@ -56,9 +71,23 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         then:
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
-        projectFile(buildOutputClassPath("example/Person.class")).file
-        projectFile(buildOutputClassPath("example/Fish.class")).file
-        projectFile(buildOutputClassPath("example/Gender.class")).file
+        projectFile(buildOutputClassPath("example/ContainsFixed1.class")).file
+        projectFile(buildOutputClassPath("example/ContainsFixed2.class")).file
+        projectFile(buildOutputClassPath("example/Picture.class")).file
+    }
+
+    def "Duplicate record definition fails if definition differs"() {
+        given:
+        copyDifferentRecord()
+        def errorFilePath1 = new File("src/main/avro/duplicate/Person.avsc").path
+        def errorFilePath2 = new File("src/main/avro/duplicate/Spider.avsc").path
+        when:
+        def result = runAndFail()
+
+        then:
+        result.task(":generateAvroJava").outcome == FAILED
+        result.output.contains("Found conflicting definition of type example.Person in "
+            + "[$errorFilePath1, $errorFilePath2]")
     }
 
     def "Duplicate enum definition fails if definition differs"() {
@@ -76,17 +105,18 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
             + "[$errorFilePath1, $errorFilePath2]")
     }
 
-    def "Duplicate record definition fails if definition differs"() {
+    def "Duplicate fixed definition fails if definition differs"() {
         given:
-        copyDifferentRecord()
-        def errorFilePath1 = new File("src/main/avro/duplicate/Person.avsc").path
-        def errorFilePath2 = new File("src/main/avro/duplicate/Spider.avsc").path
+        copyDifferentFixed()
+        def errorFilePath1 = new File("src/main/avro/duplicate/ContainsFixed1.avsc").path
+        def errorFilePath2 = new File("src/main/avro/duplicate/ContainsFixed3.avsc").path
+
         when:
         def result = runAndFail()
 
         then:
         result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Found conflicting definition of type example.Person in "
+        result.output.contains("Found conflicting definition of type example.Picture in "
             + "[$errorFilePath1, $errorFilePath2]")
     }
 
@@ -104,9 +134,24 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
             "contains duplicate type definition example.avro.date")
     }
 
+    private void copyIdenticalRecord() {
+        copyResource("duplicate/Person.avsc", avroDir)
+        copyResource("duplicate/Fish.avsc", avroDir)
+    }
+
     private void copyIdenticalEnum() {
         copyResource("duplicate/Person.avsc", avroDir)
         copyResource("duplicate/Cat.avsc", avroDir)
+    }
+
+    private void copyIdenticalFixed() {
+        copyResource("duplicate/ContainsFixed1.avsc", avroDir)
+        copyResource("duplicate/ContainsFixed2.avsc", avroDir)
+    }
+
+    private void copyDifferentRecord() {
+        copyResource("duplicate/Person.avsc", avroDir)
+        copyResource("duplicate/Spider.avsc", avroDir)
     }
 
     private void copyDifferentEnum() {
@@ -114,13 +159,8 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
         copyResource("duplicate/Dog.avsc", avroDir)
     }
 
-    private void copyIdenticalRecord() {
-        copyResource("duplicate/Person.avsc", avroDir)
-        copyResource("duplicate/Fish.avsc", avroDir)
-    }
-
-    private void copyDifferentRecord() {
-        copyResource("duplicate/Person.avsc", avroDir)
-        copyResource("duplicate/Spider.avsc", avroDir)
+    private void copyDifferentFixed() {
+        copyResource("duplicate/ContainsFixed1.avsc", avroDir)
+        copyResource("duplicate/ContainsFixed3.avsc", avroDir)
     }
 }

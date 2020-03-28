@@ -1,0 +1,6 @@
+{
+    "name": "SimpleFixed",
+    "type": "fixed",
+    "namespace": "resolver",
+    "size": 16
+}

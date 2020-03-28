@@ -20,15 +20,12 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaParseException;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 import org.apache.avro.generic.GenericData;
@@ -60,7 +57,6 @@ import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILI
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
-import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 
 /**
  * Task to generate Java source files based on Avro protocol files and Avro schema files using {@link Protocol} and
@@ -69,8 +65,6 @@ import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
 @SuppressWarnings("WeakerAccess")
 @CacheableTask
 public class GenerateAvroJavaTask extends OutputDirTask {
-    private static Pattern ERROR_UNKNOWN_TYPE = Pattern.compile("(?i).*(undefined name|not a defined name).*");
-    private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
     private static Set<String> SUPPORTED_EXTENSIONS = new SetBuilder<String>().add(PROTOCOL_EXTENSION).add(SCHEMA_EXTENSION).build();
 
     private final Property<String> outputCharacterEncoding;
@@ -88,6 +82,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Provider<StringType> stringTypeProvider;
     private final Provider<FieldVisibility> fieldVisibilityProvider;
     private final Provider<SpecificCompiler.DateTimeLogicalTypeImplementation> dateTimeLogicalTypeImplementationProvider;
+
+    private final SchemaResolver resolver;
 
     @Inject
     public GenerateAvroJavaTask(ObjectFactory objects) {
@@ -111,6 +107,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
             .convention(DEFAULT_LOGICAL_TYPE_FACTORIES);
         this.customConversions = objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(DEFAULT_CUSTOM_CONVERSIONS);
+        this.resolver = new SchemaResolver(getProject(), getLogger());
     }
 
     @Optional
@@ -318,70 +315,18 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     private int processSchemaFiles() {
         Set<File> files = filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles();
-        ProcessingState processingState = new ProcessingState(files, getProject());
-        while (processingState.isWorkRemaining()) {
-            processSchemaFile(processingState, processingState.nextFileState());
-        }
-        Set<FileState> failedFiles = processingState.getFailedFiles();
-        if (!failedFiles.isEmpty()) {
-            StringBuilder errorMessage = new StringBuilder("Could not compile schema definition files:");
-            for (FileState fileState : failedFiles) {
-                String path = fileState.getPath();
-                String fileErrorMessage = fileState.getErrorMessage();
-                errorMessage.append(System.lineSeparator()).append("* ").append(path).append(": ").append(fileErrorMessage);
+        ProcessingState processingState = resolver.resolve(files);
+        for (File file : files) {
+            String path = getProject().relativePath(file);
+            for (Schema schema : processingState.getSchemasForLocation(path)) {
+                try {
+                    compile(schema, file);
+                } catch (IOException ex) {
+                    throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
+                }
             }
-            throw new GradleException(errorMessage.toString());
         }
         return processingState.getProcessedTotal();
-    }
-
-    private void processSchemaFile(ProcessingState processingState, FileState fileState) {
-        String path = fileState.getPath();
-        getLogger().debug("Processing {}, excluding types {}", path, fileState.getDuplicateTypeNames());
-        File sourceFile = fileState.getFile();
-        Map<String, Schema> parserTypes = processingState.determineParserTypes(fileState);
-        try {
-            Schema.Parser parser = new Schema.Parser();
-            parser.addTypes(parserTypes);
-
-            compile(parser.parse(sourceFile), sourceFile);
-            Map<String, Schema> typesDefinedInFile = asymmetricDifference(parser.getTypes(), parserTypes);
-            processingState.processTypeDefinitions(fileState, typesDefinedInFile);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("Processed {}; contained types {}", path, typesDefinedInFile.keySet());
-            } else {
-                getLogger().info("Processed {}", path);
-            }
-        } catch (SchemaParseException ex) {
-            String errorMessage = ex.getMessage();
-            Matcher unknownTypeMatcher = ERROR_UNKNOWN_TYPE.matcher(errorMessage);
-            Matcher duplicateTypeMatcher = ERROR_DUPLICATE_TYPE.matcher(errorMessage);
-            if (unknownTypeMatcher.matches()) {
-                fileState.setError(ex);
-                processingState.queueForDelayedProcessing(fileState);
-                getLogger().debug("Found undefined name in {} ({}); will try again", path, errorMessage);
-            } else if (duplicateTypeMatcher.matches()) {
-                String typeName = duplicateTypeMatcher.group(1);
-                if (fileState.containsDuplicateTypeName(typeName)) {
-                    throw new GradleException(
-                        String.format("Failed to compile schema definition file %s; contains duplicate type definition %s", path, typeName),
-                        ex);
-                } else {
-                    fileState.setError(ex);
-                    fileState.addDuplicateTypeName(typeName);
-                    processingState.queueForProcessing(fileState);
-                    getLogger().debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
-                }
-            } else {
-                throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
-            }
-        } catch (NullPointerException ex) {
-            fileState.setError(ex);
-            processingState.queueForDelayedProcessing(fileState);
-            getLogger().debug("Encountered null reference while parsing {} (possibly due to unresolved dependency); will try again", path);
-        } catch (IOException ex) {
-            throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
-        }
     }
 
     private void compile(Protocol protocol, File sourceFile) throws IOException {

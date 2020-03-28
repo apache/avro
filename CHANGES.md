@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Fix schema dependency resolution when types are referenced with a `{ "type": NAME }` block rather than just `NAME` (#107)
 
 ## 0.19.0
 * Add support for Gradle 6.0-6.2.2 (#101)

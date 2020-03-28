@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.gradle.api.Project;
 
@@ -31,7 +32,7 @@ class ProcessingState {
     private final Queue<FileState> filesToProcess = new LinkedList<>();
     private int processedTotal;
 
-    ProcessingState(Set<File> files, Project project) {
+    ProcessingState(Iterable<File> files, Project project) {
         for (File file : files) {
             filesToProcess.add(new FileState(file, project.relativePath(file)));
         }
@@ -97,5 +98,9 @@ class ProcessingState {
 
     int getProcessedTotal() {
         return processedTotal;
+    }
+
+    Iterable<? extends Schema> getSchemasForLocation(String path) {
+        return typeStates.values().stream().filter(it -> it.hasLocation(path)).map(TypeState::getSchema).collect(Collectors.toList());
     }
 }

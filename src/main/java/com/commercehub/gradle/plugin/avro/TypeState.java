@@ -45,4 +45,8 @@ class TypeState {
     Schema getSchema() {
         return schema;
     }
+
+    boolean hasLocation(String location) {
+        return locations.contains(location);
+    }
 }
