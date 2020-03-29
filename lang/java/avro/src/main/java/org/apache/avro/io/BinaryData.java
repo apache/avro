@@ -288,11 +288,10 @@ public class BinaryData {
   }
 
   /** Skip a binary-encoded long, returning the position after it. */
-  public static int skipLong(byte[] bytes, int start) {
-    int i = start;
-    for (int b = bytes[i++]; ((b & 0x80) != 0); b = bytes[i++]) {
+  public static int skipLong(final byte[] bytes, int start) {
+    while ((bytes[start++] & 0x80) != 0) {
     }
-    return i;
+    return start;
   }
 
   /**
