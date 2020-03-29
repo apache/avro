@@ -615,6 +615,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       in.readBoolean();
       break;
     case NULL:
+      in.readNull();
       break;
     default:
       throw new RuntimeException("Unknown type: " + schema);
