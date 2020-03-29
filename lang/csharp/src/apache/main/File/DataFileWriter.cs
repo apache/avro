@@ -114,22 +114,22 @@ namespace Avro.File
         /// Both in and out streams must point to the same file.
         /// </summary>
         /// <param name="writer">Datum writer to use.</param>
-        /// <param name="readStream">reading the existing file.</param>
-        /// <param name="appendStream">stream to write to, positioned at the end of the existing file.</param>
+        /// <param name="inStream">reading the existing file.</param>
+        /// <param name="outStream">stream to write to, positioned at the end of the existing file.</param>
         /// <returns>A new file writer.</returns>
-        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream readStream, Stream appendStream)
+        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream inStream, Stream outStream)
         {
-            if (!readStream.CanRead)
+            if (!inStream.CanRead)
             {
-                throw new AvroRuntimeException("inStream must have Read access");
+                throw new AvroRuntimeException($"{nameof(inStream)} must have Read access");
             }
 
-            if (!appendStream.CanWrite)
+            if (!outStream.CanWrite)
             {
-                throw new AvroRuntimeException("outStream must have Write access");
+                throw new AvroRuntimeException($"{nameof(outStream)} must have Write access");
             }
 
-            return new DataFileWriter<T>(writer).AppendTo(readStream, appendStream);
+            return new DataFileWriter<T>(writer).AppendTo(inStream, outStream);
         }
 
         private DataFileWriter(DatumWriter<T> writer)
