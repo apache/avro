@@ -23,11 +23,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.LinkedHashMap;
 import java.nio.ByteBuffer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
@@ -97,14 +97,8 @@ public class SpecificData extends GenericData {
    * e.g., those without a no-arg constructor or those whose fields are all
    * transient.
    */
-  protected Set<Class> stringableClasses = new HashSet<>();
-  {
-    stringableClasses.add(java.math.BigDecimal.class);
-    stringableClasses.add(java.math.BigInteger.class);
-    stringableClasses.add(java.net.URI.class);
-    stringableClasses.add(java.net.URL.class);
-    stringableClasses.add(java.io.File.class);
-  }
+  protected Set<Class> stringableClasses = new HashSet<>(Arrays.asList(java.math.BigDecimal.class,
+      java.math.BigInteger.class, java.net.URI.class, java.net.URL.class, java.io.File.class));
 
   /** For subclasses. Applications normally use {@link SpecificData#get()}. */
   public SpecificData() {
@@ -247,19 +241,17 @@ public class SpecificData extends GenericData {
       String name = schema.getFullName();
       if (name == null)
         return null;
-      Class c = classCache.get(name);
-      if (c == null) {
+      Class c = classCache.computeIfAbsent(name, n -> {
         try {
-          c = ClassUtils.forName(getClassLoader(), getClassName(schema));
+          return ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
           try { // nested class?
-            c = ClassUtils.forName(getClassLoader(), getNestedClassName(schema));
+            return ClassUtils.forName(getClassLoader(), getNestedClassName(schema));
           } catch (ClassNotFoundException ex) {
-            c = NO_CLASS;
+            return NO_CLASS;
           }
         }
-        classCache.put(name, c);
-      }
+      });
       return c == NO_CLASS ? null : c;
     case ARRAY:
       return List.class;
@@ -305,8 +297,9 @@ public class SpecificData extends GenericData {
       return Double.class;
     case BOOLEAN:
       return Boolean.class;
+    default:
+      return getClass(schema);
     }
-    return getClass(schema);
   }
 
   /** Returns the Java class name indicated by a schema's name and namespace. */
@@ -332,7 +325,7 @@ public class SpecificData extends GenericData {
   private final ClassValue<Schema> schemaClassCache = new ClassValue<Schema>() {
     @Override
     protected Schema computeValue(Class<?> type) {
-      return createSchema(type, new LinkedHashMap<>());
+      return createSchema(type, new HashMap<>());
     }
   };
   // for non-class objects, use a WeakHashMap, but this needs a sync block around
@@ -345,7 +338,7 @@ public class SpecificData extends GenericData {
       if (type instanceof Class) {
         return schemaClassCache.get((Class<?>) type);
       }
-      return schemaTypeCache.computeIfAbsent(type, t -> createSchema(t, new LinkedHashMap<>()));
+      return schemaTypeCache.computeIfAbsent(type, t -> createSchema(t, new HashMap<>()));
     } catch (Exception e) {
       throw (e instanceof AvroRuntimeException) ? (AvroRuntimeException) e : new AvroRuntimeException(e);
     }
