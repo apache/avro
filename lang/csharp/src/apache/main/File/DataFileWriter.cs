@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using Avro.Generic;
 using Avro.IO;
 
@@ -112,10 +111,11 @@ namespace Avro.File
 
         /// <summary>
         /// Open a new writer instance to append to an output stream.
+        /// Both in and out streams must point to the same file.
         /// </summary>
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="readStream">reading the existing file.</param>
-        /// <param name="appendStream">positioned at the end of the existing file.</param>
+        /// <param name="appendStream">stream to write to, positioned at the end of the existing file.</param>
         /// <returns>A new file writer.</returns>
         public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream readStream, Stream appendStream)
         {
@@ -230,11 +230,7 @@ namespace Avro.File
                 var header = dataFileReader.GetHeader();
                 _schema = header.Schema;
                 _syncData = header.SyncData;
-
-                if (_metaData == null)
-                    _metaData = header.MetaData;
-                else
-                    _metaData.Concat(header.MetaData);
+                _metaData = header.MetaData;
             }
 
             if (_metaData.TryGetValue(DataFileConstants.MetaDataCodec, out byte[] codecBytes))
