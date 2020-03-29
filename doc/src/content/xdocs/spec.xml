@@ -546,7 +546,7 @@
 
           <section id="union_encoding">
             <title>Unions</title>
-            <p>A union is encoded by first writing a <code>long</code>
+            <p>A union is encoded by first writing an <code>int</code>
               value indicating the zero-based position within the
               union of the schema of its value.  The value is then
               encoded per the indicated schema within the union.</p>
