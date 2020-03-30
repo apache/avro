@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.19.1
 * Fix schema dependency resolution when types are referenced with a `{ "type": NAME }` block rather than just `NAME` (#107)
 * Eliminate `NullPointerException` handling in schema dependency resolution, as it no longer appears to be needed.
 
