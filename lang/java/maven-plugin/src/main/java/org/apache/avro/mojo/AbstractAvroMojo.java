@@ -292,12 +292,13 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   }
 
   private List<URL> appendElements(List runtimeClasspathElements) throws MalformedURLException {
-    List<URL> runtimeUrls = new ArrayList<>();
-    if (runtimeClasspathElements != null) {
-      for (Object runtimeClasspathElement : runtimeClasspathElements) {
-        String element = (String) runtimeClasspathElement;
-        runtimeUrls.add(new File(element).toURI().toURL());
-      }
+    if (runtimeClasspathElements == null) {
+      return new ArrayList<>();
+    }
+    List<URL> runtimeUrls = new ArrayList<>(runtimeClasspathElements.size());
+    for (Object runtimeClasspathElement : runtimeClasspathElements) {
+      String element = (String) runtimeClasspathElement;
+      runtimeUrls.add(new File(element).toURI().toURL());
     }
     return runtimeUrls;
   }

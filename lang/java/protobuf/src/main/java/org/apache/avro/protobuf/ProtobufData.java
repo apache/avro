@@ -212,7 +212,7 @@ public class ProtobufData extends GenericData {
 
       seen.put(descriptor, result);
 
-      List<Field> fields = new ArrayList<>();
+      List<Field> fields = new ArrayList<>(descriptor.getFields().size());
       for (FieldDescriptor f : descriptor.getFields())
         fields.add(Accessor.createField(f.getName(), getSchema(f), null, getDefault(f)));
       result.setFields(fields);
@@ -253,7 +253,7 @@ public class ProtobufData extends GenericData {
 
   private static String toCamelCase(String s) {
     String[] parts = s.split("_");
-    StringBuilder camelCaseString = new StringBuilder();
+    StringBuilder camelCaseString = new StringBuilder(s.length());
     for (String part : parts) {
       camelCaseString.append(cap(part));
     }
@@ -315,7 +315,7 @@ public class ProtobufData extends GenericData {
   }
 
   public Schema getSchema(EnumDescriptor d) {
-    List<String> symbols = new ArrayList<>();
+    List<String> symbols = new ArrayList<>(d.getValues().size());
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
     }
