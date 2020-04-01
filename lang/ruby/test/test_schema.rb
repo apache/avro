@@ -249,6 +249,39 @@ class TestSchema < Test::Unit::TestCase
     assert_equal field_schema_hash, field_schema_json.to_avro
   end
 
+  def test_record_field_non_spec_metadata
+    field_schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "record",
+        "name": "Record",
+        "namespace": "my.name.space",
+        "fields": [
+          {
+            "name": "name",
+            "type": "boolean",
+            "some_key": "some_value"
+          }
+        ]
+      }
+    SCHEMA
+
+    field_schema_hash =
+      {
+        'type' => 'record',
+        'name' => 'Record',
+        'namespace' => 'my.name.space',
+        'fields' => [
+          {
+            'name' => 'name',
+            'type' => 'boolean',
+            'some_key' => 'some_value'
+          }
+        ]
+      }
+
+    assert_equal field_schema_hash, field_schema.to_avro
+  end
+
   def test_record_doc_attribute
     record_schema_json = Avro::Schema.parse <<-SCHEMA
       {
@@ -280,6 +313,39 @@ class TestSchema < Test::Unit::TestCase
       }
 
     assert_equal record_schema_hash, record_schema_json.to_avro
+  end
+
+  def test_record_non_spec_metadata
+    record_schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "record",
+        "name": "Record",
+        "namespace": "my.name.space",
+        "some_key": "some_value",
+        "fields": [
+          {
+            "name": "name",
+            "type": "boolean"
+          }
+        ]
+      }
+    SCHEMA
+
+    record_schema_hash =
+      {
+        'type' => 'record',
+        'name' => 'Record',
+        'namespace' => 'my.name.space',
+        'some_key' => 'some_value',
+        'fields' => [
+          {
+            'name' => 'name',
+            'type' => 'boolean'
+          }
+        ]
+      }
+
+    assert_equal record_schema_hash, record_schema.to_avro
   end
 
   def test_enum_doc_attribute
