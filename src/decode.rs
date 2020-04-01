@@ -39,14 +39,14 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
         Schema::Int => decode_int(reader),
         Schema::Long => decode_long(reader),
         Schema::Float => {
-            let mut buf = [0u8; 4];
+            let mut buf = [0u8; std::mem::size_of::<f32>()];
             reader.read_exact(&mut buf[..])?;
-            Ok(Value::Float(f32::from_ne_bytes(buf)))
+            Ok(Value::Float(f32::from_le_bytes(buf)))
         }
         Schema::Double => {
-            let mut buf = [0u8; 8];
+            let mut buf = [0u8; std::mem::size_of::<f64>()];
             reader.read_exact(&mut buf[..])?;
-            Ok(Value::Double(f64::from_ne_bytes(buf)))
+            Ok(Value::Double(f64::from_le_bytes(buf)))
         }
         Schema::Bytes => {
             let len = decode_len(reader)?;

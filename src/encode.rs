@@ -36,8 +36,8 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
         Value::Boolean(b) => buffer.push(if *b { 1u8 } else { 0u8 }),
         Value::Int(i) => encode_int(*i, buffer),
         Value::Long(i) => encode_long(*i, buffer),
-        Value::Float(x) => buffer.extend_from_slice(&x.to_ne_bytes()),
-        Value::Double(x) => buffer.extend_from_slice(&x.to_ne_bytes()),
+        Value::Float(x) => buffer.extend_from_slice(&x.to_le_bytes()),
+        Value::Double(x) => buffer.extend_from_slice(&x.to_le_bytes()),
         Value::Bytes(bytes) => encode_bytes(bytes, buffer),
         Value::String(s) => match *schema {
             Schema::String => {
