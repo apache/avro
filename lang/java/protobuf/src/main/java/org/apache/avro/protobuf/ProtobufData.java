@@ -327,8 +327,11 @@ public class ProtobufData extends GenericData {
   private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
   private JsonNode getDefault(FieldDescriptor f) {
-    if (f.isRequired() || f.isRepeated()) // no default
+    if (f.isRequired()) // no default
       return null;
+
+    if (f.isRepeated()) // empty array as repeated fields' default value
+      return NODES.arrayNode();
 
     if (f.hasDefaultValue()) { // parse spec'd default value
       Object value = f.getDefaultValue();
