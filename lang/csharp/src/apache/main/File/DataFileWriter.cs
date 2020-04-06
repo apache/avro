@@ -245,6 +245,7 @@ namespace Avro.File
 
             _headerWritten = true;
             _stream = outStream;
+            _stream.Seek(0, SeekOrigin.End);
 
             Init();
 
