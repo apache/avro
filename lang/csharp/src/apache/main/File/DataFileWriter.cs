@@ -99,7 +99,7 @@ namespace Avro.File
         }
 
         /// <summary>
-        /// Open a new writer instance to append to an output file.
+        /// Open a new writer instance to append to a file path.
         /// </summary>
         /// <param name="writer">Datum writer to use.</param>
         /// <param name="path">Path to the file.</param>
@@ -213,13 +213,13 @@ namespace Avro.File
 
         private IFileWriter<T> AppendTo(string path)
         {
-            using (var readerStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var inStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                var writeStream = new FileStream(path, FileMode.Append);
-                return AppendTo(readerStream, writeStream);
+                var outStream = new FileStream(path, FileMode.Append);
+                return AppendTo(inStream, outStream);
             }
 
-            // output does not need to be closed here. It will be closed by invoking close()
+            // outStream does not need to be closed here. It will be closed by invoking Close()
             // of this writer.
         }
 
