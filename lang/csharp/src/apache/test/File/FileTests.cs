@@ -17,15 +17,14 @@
  */
 using System;
 using System.Collections;
-using System.IO;
 using System.Collections.Generic;
-using Avro.Generic;
-using NUnit.Framework;
-using Avro.Specific;
-using System.Reflection;
-using Avro.File;
-using System.Linq;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using Avro.File;
+using Avro.Generic;
+using Avro.Specific;
+using NUnit.Framework;
 
 namespace Avro.Test.File
 {
@@ -96,7 +95,13 @@ namespace Avro.Test.File
             }
         }
 
-        // Test appending of specific (custom) record objects
+        /// <summary>
+        /// Test appending of specific (custom) record objects
+        /// </summary>
+        /// <param name="schemaStr">schema</param>
+        /// <param name="recs">initial records</param>
+        /// <param name="appendRecs">append records</param>
+        /// <param name="codecType">initial compression codec type</param>
         [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, new object[] { new object[] { "Jane", 21 } }, Codec.Type.Deflate, TestName = "TestAppendSpecificData0")]
         [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, new object[] { new object[] { "Jane", 21 } }, Codec.Type.Null, TestName = "TestAppendSpecificData1")]
         [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
@@ -259,7 +264,13 @@ namespace Avro.Test.File
             }
         }
 
-        // Test appending of generic record objects
+        /// <summary>
+        /// Test appending of generic record objects
+        /// </summary>
+        /// <param name="schemaStr">schema</param>
+        /// <param name="recs">initial records</param>
+        /// <param name="appendRecs">append records</param>
+        /// <param name="codecType">innitial compression codec type</param>
         [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
             new object[] { "f1", true }, new object[] { "f1", false }, Codec.Type.Deflate)]
         [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
@@ -298,9 +309,35 @@ namespace Avro.Test.File
                     }
                 }
 
-                Assert.IsTrue((readFoos != null && readFoos.Count == (recs.Length + appendRecs.Length) / 2),
-                               string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
+                Assert.NotNull(readFoos);
+                Assert.AreEqual((recs.Length + appendRecs.Length) / 2, readFoos.Count,
+                    $"Generic object: {readFoos} did not serialise/deserialise correctly");
             }
+        }
+
+        [Test]
+        public void OpenAppendWriter_IncorrectInStream_Throws()
+        {
+            MemoryStream compressedStream = new MemoryStream();
+            // using here a DeflateStream as it is a standard non-seekable stream, so if it works for this one,
+            // it should also works with any standard non-seekable stream (ie: NetworkStreams)
+            DeflateStream dataFileInputStream = new DeflateStream(compressedStream, CompressionMode.Compress);
+
+            var action =  new TestDelegate(() => DataFileWriter<Foo>.OpenAppendWriter(null, dataFileInputStream, null));
+
+            var ex = Assert.Throws(typeof(AvroRuntimeException), action);
+        }
+
+        [Test]
+        public void OpenAppendWriter_IncorrectOutStream_Throws()
+        {
+            MemoryStream inStream = new MemoryStream();
+            MemoryStream outStream = new MemoryStream();
+            outStream.Close();
+
+            var action = new TestDelegate(() => DataFileWriter<Foo>.OpenAppendWriter(null, inStream, outStream));
+
+            Assert.Throws(typeof(AvroRuntimeException), action);
         }
 
         /// <summary>
