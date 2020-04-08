@@ -129,13 +129,13 @@ namespace Avro.Test.Generic
         [TestCase()]
         public void TestLogical_TimestampMillisecond()
         {
-            test("{\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}", new DateTime(1990, 1, 1, 14, 15, 30));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}", new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc));
         }
 
         [TestCase()]
         public void TestLogical_TimestampMicrosecond()
         {
-            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", new DateTime(1990, 1, 1, 14, 15, 30));
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc));
         }
 
         [TestCase()]
