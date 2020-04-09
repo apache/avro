@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -634,7 +635,7 @@ public class SpecificCompiler {
   private Schema addStringType(Schema s) {
     if (stringType != StringType.String)
       return s;
-    return addStringType(s, new LinkedHashMap<>());
+    return addStringType(s, new HashMap<>());
   }
 
   // annotate map and string schemas with string type

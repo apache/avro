@@ -763,16 +763,7 @@ public class Resolver {
     case ENUM: {
       final List<String> ws = write.getEnumSymbols();
       final List<String> rs = read.getEnumSymbols();
-      if (ws.size() != rs.size()) {
-        return false;
-      }
-      int i = 0;
-      for (; i < ws.size(); i++) {
-        if (!ws.get(i).equals(rs.get(i))) {
-          break;
-        }
-      }
-      return i == ws.size();
+      return ws.equals(rs);
     }
 
     case UNION: {
@@ -781,13 +772,12 @@ public class Resolver {
       if (wb.size() != rb.size()) {
         return false;
       }
-      int i = 0;
-      for (; i < wb.size(); i++) {
+      for (int i = 0; i < wb.size(); i++) {
         if (!unionEquiv(wb.get(i), rb.get(i), seen)) {
-          break;
+          return false;
         }
       }
-      return i == wb.size();
+      return true;
     }
 
     case RECORD: {
@@ -799,15 +789,14 @@ public class Resolver {
         if (wb.size() != rb.size()) {
           seen.put(wsc, false);
         } else {
-          int i = 0;
-          for (; i < wb.size(); i++) {
+          for (int i = 0; i < wb.size(); i++) {
             // Loop through each of the elements, and check if they are equal
             if (!wb.get(i).name().equals(rb.get(i).name())
                 || !unionEquiv(wb.get(i).schema(), rb.get(i).schema(), seen)) {
+              seen.put(wsc, false);
               break;
             }
           }
-          seen.put(wsc, (i == wb.size()));
         }
       }
       return seen.get(wsc);
