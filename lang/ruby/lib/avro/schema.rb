@@ -367,6 +367,8 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
+      SYMBOL_PATTERN = /[A-Za-z_][A-Za-z0-9_]*/
+
       attr_reader :symbols, :doc
 
       def initialize(name, space, symbols, names=nil, doc=nil)
@@ -374,6 +376,14 @@ module Avro
           fail_msg = "Duplicate symbol: #{symbols}"
           raise Avro::SchemaParseError, fail_msg
         end
+
+        invalid_symbols = symbols.select { |symbol| symbol !~ SYMBOL_PATTERN }
+
+        if invalid_symbols.any?
+          raise SchemaParseError,
+            "Invalid symbols for #{name}: #{invalid_symbols.join(', ')} don't match #{SYMBOL_PATTERN.inspect}"
+        end
+
         super(:enum, name, space, names, doc)
         @symbols = symbols
       end

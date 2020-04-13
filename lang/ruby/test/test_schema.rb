@@ -541,4 +541,33 @@ class TestSchema < Test::Unit::TestCase
     schema_str = 'bytes'
     assert_equal schema_str, schema.to_avro
   end
+
+  def test_validate_duplicate_symbols
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'enum',
+        name: 'name',
+        symbols: ['erica', 'erica']
+      )
+    end
+    assert_equal(
+      'Duplicate symbol: ["erica", "erica"]',
+      exception.to_s
+    )
+  end
+
+  def test_validate_enum_symbols
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'enum',
+        name: 'operator_enum',
+        symbols: ['==', '>=']
+      )
+    end
+
+    assert_equal(
+      "Invalid symbols for operator_enum: ==, >= don't match #{Avro::Schema::EnumSchema::SYMBOL_PATTERN.inspect}",
+      exception.to_s
+    )
+  end
 end
