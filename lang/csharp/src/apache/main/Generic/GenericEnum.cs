@@ -43,7 +43,8 @@ namespace Avro.Generic
                 }
                 else
                 {
-                    if (! Schema.Contains(value)) throw new AvroException("Unknown value for enum: " + value + "(" + Schema + ")");
+                    if (!Schema.Contains(value))
+                        throw new AvroException("Unknown value for enum: " + value + "(" + Schema + ")");
                     this.value = value;
                 }
             }

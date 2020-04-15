@@ -35,7 +35,7 @@ namespace Avro
         /// <summary>
         /// The default token to use when deserializing an enum when the provided token is not found
         /// </summary>
-        public string Default {get; private set; }
+        public string Default { get; private set; }
 
         /// <summary>
         /// Map of enum symbols and it's corresponding ordinal number
@@ -97,18 +97,19 @@ namespace Avro
         /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="doc">documentation for this named schema</param>
-        /// <param name="defaultToken">default token</param>
+        /// <param name="defaultSymbol">default token</param>
         private EnumSchema(SchemaName name, IList<SchemaName> aliases, List<string> symbols,
                             IDictionary<String, int> symbolMap, PropertyMap props, SchemaNames names,
-                            string doc, string defaultToken)
+                            string doc, string defaultSymbol)
                             : base(Type.Enumeration, name, aliases, props, names, doc)
         {
             if (null == name.Name) throw new SchemaParseException("name cannot be null for enum schema.");
             this.Symbols = symbols;
             this.symbolMap = symbolMap;
 
-            if (defaultToken != null && !symbolMap.ContainsKey(defaultToken)) throw new SchemaParseException($"Default symbol: {defaultToken} not found in symbols");
-            Default = defaultToken;
+            if (null != defaultSymbol && !symbolMap.ContainsKey(defaultSymbol))
+                throw new SchemaParseException($"Default symbol: {defaultSymbol} not found in symbols");
+            Default = defaultSymbol;
         }
 
         /// <summary>
@@ -126,7 +127,7 @@ namespace Avro
             foreach (string s in this.Symbols)
                 writer.WriteValue(s);
             writer.WriteEndArray();
-            if(Default != null) 
+            if (Default != null) 
             {
                 writer.WritePropertyName("default");
                 writer.WriteValue(Default);
