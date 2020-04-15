@@ -18,12 +18,24 @@ pub struct SeqSerializer {
     items: Vec<Value>,
 }
 
+pub struct SeqVariantSerializer<'a> {
+    index: u32,
+    variant: &'a str,
+    items: Vec<Value>,
+}
+
 pub struct MapSerializer {
     indices: HashMap<String, usize>,
     values: Vec<Value>,
 }
 
 pub struct StructSerializer {
+    fields: Vec<(String, Value)>,
+}
+
+pub struct StructVariantSerializer<'a> {
+    index: u32,
+    variant: &'a str,
     fields: Vec<(String, Value)>,
 }
 
@@ -64,6 +76,20 @@ impl SeqSerializer {
     }
 }
 
+impl<'a> SeqVariantSerializer<'a> {
+    pub fn new(index: u32, variant: &'a str, len: Option<usize>) -> SeqVariantSerializer {
+        let items = match len {
+            Some(len) => Vec::with_capacity(len),
+            None => Vec::new(),
+        };
+        SeqVariantSerializer {
+            index,
+            variant,
+            items,
+        }
+    }
+}
+
 impl MapSerializer {
     pub fn new(len: Option<usize>) -> MapSerializer {
         let (indices, values) = match len {
@@ -83,16 +109,26 @@ impl StructSerializer {
     }
 }
 
+impl<'a> StructVariantSerializer<'a> {
+    pub fn new(index: u32, variant: &'a str, len: usize) -> StructVariantSerializer {
+        StructVariantSerializer {
+            index,
+            variant,
+            fields: Vec::with_capacity(len),
+        }
+    }
+}
+
 impl<'b> ser::Serializer for &'b mut Serializer {
     type Ok = Value;
     type Error = Error;
     type SerializeSeq = SeqSerializer;
     type SerializeTuple = SeqSerializer;
     type SerializeTupleStruct = SeqSerializer;
-    type SerializeTupleVariant = SeqSerializer;
+    type SerializeTupleVariant = SeqVariantSerializer<'b>;
     type SerializeMap = MapSerializer;
     type SerializeStruct = StructSerializer;
-    type SerializeStructVariant = StructSerializer;
+    type SerializeStructVariant = StructVariantSerializer<'b>;
 
     fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
         Ok(Value::Boolean(v))
@@ -201,14 +237,23 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     fn serialize_newtype_variant<T: ?Sized>(
         self,
         _: &'static str,
-        _: u32,
-        _: &'static str,
+        index: u32,
+        variant: &'static str,
         value: &T,
     ) -> Result<Self::Ok, Self::Error>
     where
         T: Serialize,
     {
-        value.serialize(self)
+        Ok(Value::Record(vec![
+            (
+                "type".to_owned(),
+                Value::Enum(index as i32, variant.to_owned()),
+            ),
+            (
+                "value".to_owned(),
+                Value::Union(Box::new(value.serialize(self)?)),
+            ),
+        ]))
     }
 
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
@@ -230,11 +275,11 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     fn serialize_tuple_variant(
         self,
         _: &'static str,
-        _: u32,
-        _: &'static str,
-        _: usize,
+        index: u32,
+        variant: &'static str,
+        len: usize,
     ) -> Result<Self::SerializeTupleVariant, Self::Error> {
-        unimplemented!() // TODO ?
+        Ok(SeqVariantSerializer::new(index, variant, Some(len)))
     }
 
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
@@ -252,11 +297,11 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     fn serialize_struct_variant(
         self,
         _: &'static str,
-        _: u32,
-        _: &'static str,
-        _: usize,
+        index: u32,
+        variant: &'static str,
+        len: usize,
     ) -> Result<Self::SerializeStructVariant, Self::Error> {
-        unimplemented!() // TODO ?
+        Ok(StructVariantSerializer::new(index, variant, len))
     }
 }
 
@@ -310,19 +355,44 @@ impl ser::SerializeTupleStruct for SeqSerializer {
     }
 }
 
-impl ser::SerializeTupleVariant for SeqSerializer {
+impl<'a> ser::SerializeSeq for SeqVariantSerializer<'a> {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, _: &T) -> Result<(), Self::Error>
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
     where
         T: Serialize,
     {
-        unimplemented!()
+        self.items.push(Value::Union(Box::new(
+            value.serialize(&mut Serializer::default())?,
+        )));
+        Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!()
+        Ok(Value::Record(vec![
+            (
+                "type".to_owned(),
+                Value::Enum(self.index as i32, self.variant.to_owned()),
+            ),
+            ("value".to_owned(), Value::Array(self.items)),
+        ]))
+    }
+}
+
+impl<'a> ser::SerializeTupleVariant for SeqVariantSerializer<'a> {
+    type Ok = Value;
+    type Error = Error;
+
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    where
+        T: Serialize,
+    {
+        ser::SerializeSeq::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        Ok(ser::SerializeSeq::end(self)?)
     }
 }
 
@@ -389,19 +459,36 @@ impl ser::SerializeStruct for StructSerializer {
     }
 }
 
-impl ser::SerializeStructVariant for StructSerializer {
+impl<'a> ser::SerializeStructVariant for StructVariantSerializer<'a> {
     type Ok = Value;
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, _: &'static str, _: &T) -> Result<(), Self::Error>
+    fn serialize_field<T: ?Sized>(
+        &mut self,
+        name: &'static str,
+        value: &T,
+    ) -> Result<(), Self::Error>
     where
         T: Serialize,
     {
-        unimplemented!()
+        self.fields.push((
+            name.to_owned(),
+            value.serialize(&mut Serializer::default())?,
+        ));
+        Ok(())
     }
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
-        unimplemented!()
+        Ok(Value::Record(vec![
+            (
+                "type".to_owned(),
+                Value::Enum(self.index as i32, self.variant.to_owned()),
+            ),
+            (
+                "value".to_owned(),
+                Value::Union(Box::new(Value::Record(self.fields))),
+            ),
+        ]))
     }
 }
 
@@ -419,10 +506,193 @@ mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, Clone)]
     struct Test {
         a: i64,
         b: String,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct TestInner {
+        a: Test,
+        b: i32,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct TestUnitExternalEnum {
+        a: UnitExternalEnum,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    enum UnitExternalEnum {
+        Val1,
+        Val2,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct TestUnitInternalEnum {
+        a: UnitInternalEnum,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(tag = "t")]
+    enum UnitInternalEnum {
+        Val1,
+        Val2,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct TestUnitAdjacentEnum {
+        a: UnitAdjacentEnum,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(tag = "t", content = "v")]
+    enum UnitAdjacentEnum {
+        Val1,
+        Val2,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct TestUnitUntaggedEnum {
+        a: UnitUntaggedEnum,
+    }
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(untagged)]
+    enum UnitUntaggedEnum {
+        Val1,
+        Val2,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestSingleValueExternalEnum {
+        a: SingleValueExternalEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    enum SingleValueExternalEnum {
+        Double(f64),
+        String(String),
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestSingleValueInternalEnum {
+        a: SingleValueInternalEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(tag = "t")]
+    enum SingleValueInternalEnum {
+        Double(f64),
+        String(String),
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestSingleValueAdjacentEnum {
+        a: SingleValueAdjacentEnum,
+    }
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(tag = "t", content = "v")]
+    enum SingleValueAdjacentEnum {
+        Double(f64),
+        String(String),
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestSingleValueUntaggedEnum {
+        a: SingleValueUntaggedEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(untagged)]
+    enum SingleValueUntaggedEnum {
+        Double(f64),
+        String(String),
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestStructExternalEnum {
+        a: StructExternalEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    enum StructExternalEnum {
+        Val1 { x: f32, y: f32 },
+        Val2 { x: f32, y: f32 },
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestStructInternalEnum {
+        a: StructInternalEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(tag = "type")]
+    enum StructInternalEnum {
+        Val1 { x: f32, y: f32 },
+        Val2 { x: f32, y: f32 },
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestStructAdjacentEnum {
+        a: StructAdjacentEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(tag = "t", content = "v")]
+    enum StructAdjacentEnum {
+        Val1 { x: f32, y: f32 },
+        Val2 { x: f32, y: f32 },
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestStructUntaggedEnum {
+        a: StructUntaggedEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(untagged)]
+    enum StructUntaggedEnum {
+        Val1 { x: f32, y: f32 },
+        Val2 { x: f32, y: f32, z: f32 },
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestTupleExternalEnum {
+        a: TupleExternalEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    enum TupleExternalEnum {
+        Val1(f32, f32),
+        Val2(f32, f32, f32),
+    }
+
+    // Tuple Internal Enum cannot be instantiated
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestTupleAdjacentEnum {
+        a: TupleAdjacentEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(tag = "t", content = "v")]
+    enum TupleAdjacentEnum {
+        Val1(f32, f32),
+        Val2(f32, f32, f32),
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct TestTupleUntaggedEnum {
+        a: TupleUntaggedEnum,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(untagged)]
+    enum TupleUntaggedEnum {
+        Val1(f32, f32),
+        Val2(f32, f32, f32),
     }
 
     #[test]
@@ -436,6 +706,314 @@ mod tests {
             ("b".to_owned(), Value::String("foo".to_owned())),
         ]);
 
-        assert_eq!(to_value(test).unwrap(), expected);
+        assert_eq!(to_value(test.clone()).unwrap(), expected);
+
+        let test_inner = TestInner {
+            a: test.clone(),
+            b: 35,
+        };
+
+        let expected_inner = Value::Record(vec![
+            (
+                "a".to_owned(),
+                Value::Record(vec![
+                    ("a".to_owned(), Value::Long(27)),
+                    ("b".to_owned(), Value::String("foo".to_owned())),
+                ]),
+            ),
+            ("b".to_owned(), Value::Int(35)),
+        ]);
+
+        assert_eq!(to_value(test_inner).unwrap(), expected_inner);
+    }
+
+    #[test]
+    fn test_to_value_unit_enum() {
+        let test = TestUnitExternalEnum {
+            a: UnitExternalEnum::Val1,
+        };
+
+        let expected = Value::Record(vec![("a".to_owned(), Value::Enum(0, "Val1".to_owned()))]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "Error serializing unit external enum"
+        );
+
+        let test = TestUnitInternalEnum {
+            a: UnitInternalEnum::Val1,
+        };
+
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![("t".to_owned(), Value::String("Val1".to_owned()))]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "Error serializing unit internal enum"
+        );
+
+        let test = TestUnitAdjacentEnum {
+            a: UnitAdjacentEnum::Val1,
+        };
+
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![("t".to_owned(), Value::String("Val1".to_owned()))]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "Error serializing unit adjacent enum"
+        );
+
+        let test = TestUnitUntaggedEnum {
+            a: UnitUntaggedEnum::Val1,
+        };
+
+        let expected = Value::Record(vec![("a".to_owned(), Value::Null)]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "Error serializing unit untagged enum"
+        );
+    }
+
+    #[test]
+    fn test_to_value_single_value_enum() {
+        let test = TestSingleValueExternalEnum {
+            a: SingleValueExternalEnum::Double(64.0),
+        };
+
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::Enum(0, "Double".to_owned())),
+                (
+                    "value".to_owned(),
+                    Value::Union(Box::new(Value::Double(64.0))),
+                ),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "Error serializing single value external enum"
+        );
+
+        // It is not possible to serialize an internal Single Value enum...
+        let test = TestSingleValueInternalEnum {
+            a: SingleValueInternalEnum::Double(64.0),
+        };
+
+        assert_eq!(to_value(test).is_err(), true);
+
+        let test = TestSingleValueAdjacentEnum {
+            a: SingleValueAdjacentEnum::Double(64.0),
+        };
+
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("t".to_owned(), Value::String("Double".to_owned())),
+                ("v".to_owned(), Value::Double(64.0)),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "Error serializing single value adjacent enum"
+        );
+
+        let test = TestSingleValueUntaggedEnum {
+            a: SingleValueUntaggedEnum::Double(64.0),
+        };
+
+        let expected = Value::Record(vec![("a".to_owned(), Value::Double(64.0))]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "Error serializing single value untagged enum"
+        );
+    }
+
+    #[test]
+    fn test_to_value_struct_enum() {
+        let test = TestStructExternalEnum {
+            a: StructExternalEnum::Val1 { x: 1.0, y: 2.0 },
+        };
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::Enum(0, "Val1".to_owned())),
+                (
+                    "value".to_owned(),
+                    Value::Union(Box::new(Value::Record(vec![
+                        ("x".to_owned(), Value::Float(1.0)),
+                        ("y".to_owned(), Value::Float(2.0)),
+                    ]))),
+                ),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing struct external enum"
+        );
+
+        // I don't think that this is feasible in avro
+
+        let test = TestStructInternalEnum {
+            a: StructInternalEnum::Val1 { x: 1.0, y: 2.0 },
+        };
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::String("Val1".to_owned())),
+                ("x".to_owned(), Value::Float(1.0)),
+                ("y".to_owned(), Value::Float(2.0)),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing struct internal enum"
+        );
+
+        let test = TestStructAdjacentEnum {
+            a: StructAdjacentEnum::Val1 { x: 1.0, y: 2.0 },
+        };
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("t".to_owned(), Value::String("Val1".to_owned())),
+                (
+                    "v".to_owned(),
+                    Value::Record(vec![
+                        ("x".to_owned(), Value::Float(1.0)),
+                        ("y".to_owned(), Value::Float(2.0)),
+                    ]),
+                ),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing struct adjacent enum"
+        );
+
+        let test = TestStructUntaggedEnum {
+            a: StructUntaggedEnum::Val1 { x: 1.0, y: 2.0 },
+        };
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("x".to_owned(), Value::Float(1.0)),
+                ("y".to_owned(), Value::Float(2.0)),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing struct untagged enum"
+        );
+
+        let test = TestStructUntaggedEnum {
+            a: StructUntaggedEnum::Val2 {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+            },
+        };
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("x".to_owned(), Value::Float(1.0)),
+                ("y".to_owned(), Value::Float(2.0)),
+                ("z".to_owned(), Value::Float(3.0)),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing struct untagged enum variant"
+        );
+    }
+
+    #[test]
+    fn test_to_value_tuple_enum() {
+        let test = TestTupleExternalEnum {
+            a: TupleExternalEnum::Val2(1.0, 2.0, 3.0),
+        };
+
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("type".to_owned(), Value::Enum(1, "Val2".to_owned())),
+                (
+                    "value".to_owned(),
+                    Value::Array(vec![
+                        Value::Union(Box::new(Value::Float(1.0))),
+                        Value::Union(Box::new(Value::Float(2.0))),
+                        Value::Union(Box::new(Value::Float(3.0))),
+                    ]),
+                ),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing tuple external enum"
+        );
+
+        let test = TestTupleAdjacentEnum {
+            a: TupleAdjacentEnum::Val1(1.0, 2.0),
+        };
+
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Record(vec![
+                ("t".to_owned(), Value::String("Val1".to_owned())),
+                (
+                    "v".to_owned(),
+                    Value::Array(vec![Value::Float(1.0), Value::Float(2.0)]),
+                ),
+            ]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing tuple adjacent enum"
+        );
+
+        let test = TestTupleUntaggedEnum {
+            a: TupleUntaggedEnum::Val1(1.0, 2.0),
+        };
+
+        let expected = Value::Record(vec![(
+            "a".to_owned(),
+            Value::Array(vec![Value::Float(1.0), Value::Float(2.0)]),
+        )]);
+
+        assert_eq!(
+            to_value(test).unwrap(),
+            expected,
+            "error serializing tuple untagged enum"
+        );
     }
 }
