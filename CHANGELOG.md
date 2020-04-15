@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2020-04-15
+### Added
+- Partial rust enum serialization/deserialization support
+
 ## [0.7.0] - 2020-02-16
 ### Added
 - Export de::Error and ser::Error as DeError and SerError
