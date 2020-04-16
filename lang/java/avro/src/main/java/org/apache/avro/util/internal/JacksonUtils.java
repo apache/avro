@@ -18,6 +18,8 @@
 package org.apache.avro.util.internal;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +85,10 @@ public class JacksonUtils {
       generator.writeNumber((Integer) datum);
     } else if (datum instanceof Boolean) { // boolean
       generator.writeBoolean((Boolean) datum);
+    } else if (datum instanceof BigInteger) {
+      generator.writeNumber((BigInteger) datum);
+    } else if (datum instanceof BigDecimal) {
+      generator.writeNumber((BigDecimal) datum);
     } else {
       throw new AvroRuntimeException("Unknown datum class: " + datum.getClass());
     }
