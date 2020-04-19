@@ -17,49 +17,26 @@
  */
 package org.apache.avro.reflect;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Conversion;
-import org.apache.avro.JsonProperties;
-import org.apache.avro.LogicalType;
-import org.apache.avro.Protocol;
+import org.apache.avro.*;
 import org.apache.avro.Protocol.Message;
-import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.io.BinaryData;
-import org.apache.avro.util.ClassUtils;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.FixedSize;
 import org.apache.avro.specific.SpecificData;
-import org.apache.avro.SchemaNormalization;
+import org.apache.avro.util.ClassUtils;
+
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
@@ -110,12 +87,65 @@ public class ReflectData extends SpecificData {
   }
 
   /**
-   * Cause a class to be treated as though it had an {@link Stringable}
-   ** annotation.
+   * Cause a class to be treated as though it had an {@link Stringable} *
+   * annotation.
    */
   public ReflectData addStringable(Class c) {
     stringableClasses.add(c);
     return this;
+  }
+
+  /**
+   * If this flag is set to true, default values for fields will be assigned
+   * dynamically using Java reflections. The flag is initial disabled.
+   */
+  protected boolean defaultGenerated = false;
+
+  /** Enable or disable defaults-generated feature */
+  public ReflectData setDefaultsGenerated(boolean enabled) {
+    this.defaultGenerated = enabled;
+    return this;
+  }
+
+  protected boolean isFieldInitialized(Type type, Field field) {
+    return false;
+  }
+
+  protected final Map<String, Object> defaultValues = new HashMap<>();
+
+  public ReflectData setDefaultValue(String className, Object value) {
+    this.defaultValues.put(className, value);
+    return this;
+  }
+
+  protected Object getOrCreateDefaultValue(Type type, Field field) {
+    Object defaultValue = null;
+    String className = ((Class) type).getName();
+    field.setAccessible(true);
+    try {
+      Object typeValue = getOrCreateDefaultValue(className);
+      if (typeValue != null) {
+        defaultValue = field.get(typeValue);
+      }
+    } catch (Exception e) {
+
+    }
+    return defaultValue;
+  }
+
+  protected Object getOrCreateDefaultValue(String className) {
+    return this.defaultValues.computeIfAbsent(className, ignored -> {
+      try {
+        Class<?> aClass = Class.forName(className);
+        Constructor constructor = aClass.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        return constructor.newInstance();
+      } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException
+          | InvocationTargetException e) {
+        // do nothing
+      }
+      return null;
+    });
   }
 
   @Override
@@ -192,19 +222,16 @@ public class ReflectData extends SpecificData {
 
   /**
    * Returns true for arrays and false otherwise, with the following exceptions:
+   *
    * <ul>
    * <li>
    * <p>
    * Returns true for non-string-keyed maps, which are written as an array of
    * key/value pair records.
-   * </p>
-   * </li>
    * <li>
    * <p>
    * Returns false for arrays of bytes, since those should be treated as byte data
    * type instead.
-   * </p>
-   * </li>
    * </ul>
    */
   @Override
@@ -363,6 +390,7 @@ public class ReflectData extends SpecificData {
 
   private static final Class BYTES_CLASS = byte[].class;
   private static final IdentityHashMap<Class, Class> ARRAY_CLASSES;
+
   static {
     ARRAY_CLASSES = new IdentityHashMap<>();
     ARRAY_CLASSES.put(byte.class, byte[].class);
@@ -510,8 +538,17 @@ public class ReflectData extends SpecificData {
    * @return The default value
    */
   protected Object createSchemaDefaultValue(Type type, Field field, Schema fieldSchema) {
+    Object defaultValue;
+    if (defaultGenerated) {
+      defaultValue = getOrCreateDefaultValue(type, field);
+      if (defaultValue != null) {
+        return defaultValue;
+      }
+      // if we can't get the default value, try to use previous code below
+    }
+
     AvroDefault defaultAnnotation = field.getAnnotation(AvroDefault.class);
-    Object defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
+    defaultValue = (defaultAnnotation == null) ? null : Schema.parseJsonToObject(defaultAnnotation.value());
 
     if (defaultValue == null && fieldSchema.getType() == Schema.Type.UNION) {
       Schema defaultType = fieldSchema.getTypes().get(0);
@@ -782,6 +819,7 @@ public class ReflectData extends SpecificData {
 
   /**
    * Return the protocol for a Java interface.
+   *
    * <p>
    * The correct name of the method parameters needs the <code>-parameters</code>
    * java compiler argument. More info at https://openjdk.java.net/jeps/118
