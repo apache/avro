@@ -18,11 +18,9 @@
 
 package org.apache.avro.reflect;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.util.internal.JacksonUtils;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -108,36 +106,17 @@ public class TestReflectData {
     // public User usr = new User();
   }
 
-  protected static Map objectToMap(Object datum) {
-    ObjectMapper mapper = new ObjectMapper();
-    // we only care about fields
-    mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
-    mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-    return mapper.convertValue(datum, Map.class);
-  }
-
   @Test
   public void testCreateSchemaDefaultValue() {
-    Schema schema = ReflectData.get().setDefaultsGenerated(true).getSchema(Meta.class);
+    Meta meta = new Meta();
+    validateSchema(meta);
 
-    final String schemaString = schema.toString(true);
-
-    Schema.Parser parser = new Schema.Parser();
-    Schema cloneSchema = parser.parse(schemaString);
-
-    Map testCases = objectToMap(new Meta());
-
-    for (Schema.Field field : cloneSchema.getFields()) {
-      assertEquals(field.defaultVal(), testCases.get(field.name()));
-    }
+    meta.f4 = 0x1987;
+    validateSchema(meta);
   }
 
-  @Test
-  public void testCreateSchemaDefaultValueCustomized() {
-    Meta meta = new Meta();
-    meta.f4 = 0x1987;
-
-    Schema schema = ReflectData.get().setDefaultsGenerated(true).setDefaultValue(Meta.class.getName(), meta)
+  private void validateSchema(Meta meta) {
+    Schema schema = new ReflectData().setDefaultsGenerated(true).setDefaultValue(Meta.class, meta)
         .getSchema(Meta.class);
 
     final String schemaString = schema.toString(true);
@@ -145,10 +124,10 @@ public class TestReflectData {
     Schema.Parser parser = new Schema.Parser();
     Schema cloneSchema = parser.parse(schemaString);
 
-    Map testCases = objectToMap(meta);
+    Map testCases = JacksonUtils.objectToMap(meta);
 
     for (Schema.Field field : cloneSchema.getFields()) {
-      assertEquals(field.defaultVal(), testCases.get(field.name()));
+      assertEquals("Invalid field " + field.name(), field.defaultVal(), testCases.get(field.name()));
     }
   }
 }

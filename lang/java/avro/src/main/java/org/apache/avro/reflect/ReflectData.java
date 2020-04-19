@@ -113,7 +113,8 @@ public class ReflectData extends SpecificData {
 
   protected final Map<String, Object> defaultValues = new HashMap<>();
 
-  public ReflectData setDefaultValue(String className, Object value) {
+  public ReflectData setDefaultValue(Type type, Object value) {
+    String className = ((Class) type).getName();
     this.defaultValues.put(className, value);
     return this;
   }
