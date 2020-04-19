@@ -25,15 +25,10 @@ import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.junit.Test;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
@@ -100,54 +95,6 @@ public class TestReflectData {
     private int baz;
   }
 
-  protected static class DefaultReflector extends ReflectData {
-    private static final DefaultReflector INSTANCE = new DefaultReflector();
-
-    /** Return the singleton instance. */
-    public static DefaultReflector get() {
-      return INSTANCE;
-    }
-
-    private final Map<String, Object> defaultValues = new ConcurrentHashMap<>();
-
-    protected Object getOrCreateDefaultValue(String className) {
-      return this.defaultValues.computeIfAbsent(className, ignored -> {
-        try {
-          Class<?> aClass = Class.forName(className);
-          Constructor constructor = aClass.getDeclaredConstructor();
-          constructor.setAccessible(true);
-          return constructor.newInstance();
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException
-            | InvocationTargetException e) {
-          e.printStackTrace();
-        }
-        return null;
-      });
-    }
-
-    @Override
-    protected Object createSchemaDefaultValue(Type type, Field field, Schema fieldSchema) {
-      String className = ((Class) type).getName();
-      field.setAccessible(true);
-      Object def = null;
-
-      try {
-        Object value = getOrCreateDefaultValue(className);
-        if (value != null) {
-          def = field.get(value);
-        }
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-      }
-
-      if (def == null) {
-        def = super.createSchemaDefaultValue(type, field, fieldSchema);
-      }
-
-      return def;
-    }
-  }
-
   static class User {
     public String first = "Avro";
     public String last = "Apache";
@@ -155,6 +102,7 @@ public class TestReflectData {
 
   static class Meta {
     public int f1 = 55;
+    public int f4;
     public String f2 = "a-string";
     public List<String> f3 = Arrays.asList("one", "two", "three");
     // public User usr = new User();
@@ -170,7 +118,7 @@ public class TestReflectData {
 
   @Test
   public void testCreateSchemaDefaultValue() {
-    Schema schema = DefaultReflector.get().getSchema(Meta.class);
+    Schema schema = ReflectData.get().setDefaultsGenerated(true).getSchema(Meta.class);
 
     final String schemaString = schema.toString(true);
 
@@ -178,6 +126,26 @@ public class TestReflectData {
     Schema cloneSchema = parser.parse(schemaString);
 
     Map testCases = objectToMap(new Meta());
+
+    for (Schema.Field field : cloneSchema.getFields()) {
+      assertEquals(field.defaultVal(), testCases.get(field.name()));
+    }
+  }
+
+  @Test
+  public void testCreateSchemaDefaultValueCustomized() {
+    Meta meta = new Meta();
+    meta.f4 = 0x1987;
+
+    Schema schema = ReflectData.get().setDefaultsGenerated(true).setDefaultValue(Meta.class.getName(), meta)
+        .getSchema(Meta.class);
+
+    final String schemaString = schema.toString(true);
+
+    Schema.Parser parser = new Schema.Parser();
+    Schema cloneSchema = parser.parse(schemaString);
+
+    Map testCases = objectToMap(meta);
 
     for (Schema.Field field : cloneSchema.getFields()) {
       assertEquals(field.defaultVal(), testCases.get(field.name()));
