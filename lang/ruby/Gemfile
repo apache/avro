@@ -20,7 +20,8 @@ gem 'multi_json'
 gem 'snappy'
 gem 'zstd-ruby'
 gem 'test-unit'
-gem 'rubocop'
+# rubocop 0.82 requires Ruby 2.4+
+gem 'rubocop', '<= 0.81'
 
 # rdoc 6.2.1 requires Ruby 2.4+
 gem 'rdoc', '<= 6.2.0'
