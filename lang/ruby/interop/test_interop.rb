@@ -19,7 +19,7 @@ require 'rubygems'
 require 'test/unit'
 require 'avro'
 
-CODECS_TO_VALIDATE = ['deflate', 'zstandard']  # The 'null' codec is implicitly included
+CODECS_TO_VALIDATE = ['deflate', 'snappy', 'zstandard']  # The 'null' codec is implicitly included
 
 class TestInterop < Test::Unit::TestCase
   HERE = File.expand_path(File.dirname(__FILE__))
