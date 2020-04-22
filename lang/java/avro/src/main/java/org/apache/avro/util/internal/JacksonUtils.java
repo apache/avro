@@ -151,6 +151,11 @@ public class JacksonUtils {
     return null;
   }
 
+  /**
+   * Convert an object into a map
+   * @param datum The object
+   * @return Its Map representation
+   */
   public static Map objectToMap(Object datum) {
     ObjectMapper mapper = new ObjectMapper();
     // we only care about fields

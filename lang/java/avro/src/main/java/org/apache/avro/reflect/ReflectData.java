@@ -122,28 +122,49 @@ public class ReflectData extends SpecificData {
 
   /**
    * If this flag is set to true, default values for fields will be assigned
-   * dynamically using Java reflections. The flag is initial disabled.
+   * dynamically using Java reflections. Let's call this feature `default
+   * reflection`. Initially this feature is disabled
    */
-  protected boolean defaultGenerated = false;
+  private boolean defaultGenerated = false;
 
-  /** Enable or disable defaults-generated feature */
+  /**
+   * Enable or disable `default reflection`
+   *
+   * @param enabled set to `true` to enable the feature. This feature is disabled
+   *                by default
+   * @return The current instance
+   */
   public ReflectData setDefaultsGenerated(boolean enabled) {
     this.defaultGenerated = enabled;
     return this;
   }
 
-  protected boolean isFieldInitialized(Type type, Field field) {
-    return false;
-  }
+  private final Map<String, Object> defaultValues = new WeakHashMap<>();
 
-  protected final Map<String, Object> defaultValues = new HashMap<>();
-
+  /**
+   * Set the default value for a type. When encountering such type, we'll use this
+   * provided value instead of trying to create a new one.
+   *
+   * NOTE: This method automatically enable feature `default reflection`.
+   *
+   * @param type  A type
+   * @param value Its default value
+   * @return The current instance
+   */
   public ReflectData setDefaultValue(Type type, Object value) {
     String className = ((Class) type).getName();
     this.defaultValues.put(className, value);
+    this.setDefaultsGenerated(true);
     return this;
   }
 
+  /**
+   * Get or create new value instance for a field
+   *
+   * @param type  The current type
+   * @param field A child field
+   * @return The default field value
+   */
   protected Object getOrCreateDefaultValue(Type type, Field field) {
     Object defaultValue = null;
     String className = ((Class) type).getName();
@@ -159,6 +180,13 @@ public class ReflectData extends SpecificData {
     return defaultValue;
   }
 
+  /**
+   * Get or create new value instance for a class based on its class name The
+   * newly created instance will be cached for later use
+   *
+   * @param className The class name
+   * @return The value
+   */
   protected Object getOrCreateDefaultValue(String className) {
     return this.defaultValues.computeIfAbsent(className, ignored -> {
       try {
