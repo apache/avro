@@ -38,7 +38,7 @@ from avro import datafile, ipc, protocol
 
 class GenericResponder(ipc.Responder):
   def __init__(self, proto, msg, datum):
-    proto_json = file(proto, 'r').read()
+    proto_json = open(proto, 'rb').read()
     ipc.Responder.__init__(self, protocol.parse(proto_json))
     self.msg = msg
     self.datum = datum
@@ -85,15 +85,14 @@ def run_server(uri, proto, msg, datum):
 def send_message(uri, proto, msg, datum):
   url_obj = urlparse.urlparse(uri)
   client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
-  proto_json = file(proto, 'r').read()
+  proto_json = open(proto, 'rb').read()
   requestor = ipc.Requestor(protocol.parse(proto_json), client)
   print(requestor.request(msg, datum))
 
+##
+# TODO: Replace this with fileinput()
 def file_or_stdin(f):
-  if f == "-":
-    return sys.stdin
-  else:
-    return file(f)
+  return sys.stdin if f == '-' else open(f, 'rb')
 
 def main(args=sys.argv):
   if len(args) == 1:
