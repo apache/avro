@@ -116,7 +116,7 @@ public class TestReflectData {
   }
 
   private void validateSchema(Meta meta) {
-    Schema schema = new ReflectData().setDefaultsGenerated(true).setDefaultValue(Meta.class, meta)
+    Schema schema = new ReflectData().setDefaultsGenerated(true).setDefaultGeneratedValue(Meta.class, meta)
         .getSchema(Meta.class);
 
     final String schemaString = schema.toString(true);

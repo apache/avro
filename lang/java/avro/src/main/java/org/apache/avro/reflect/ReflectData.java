@@ -151,7 +151,7 @@ public class ReflectData extends SpecificData {
    * @param value Its default value
    * @return The current instance
    */
-  public ReflectData setDefaultValue(Type type, Object value) {
+  public ReflectData setDefaultGeneratedValue(Type type, Object value) {
     String className = ((Class) type).getName();
     this.defaultValues.put(className, value);
     this.setDefaultsGenerated(true);
