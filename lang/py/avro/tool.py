@@ -77,7 +77,7 @@ class GenericHandler(http_server.BaseHTTPRequestHandler):
       quitter.start()
 
 def run_server(uri, proto, msg, datum):
-  url_obj = urlparse.urlparse(uri)
+  url_obj = urlparse(uri)
   server_addr = (url_obj.hostname, url_obj.port)
   global responder
   global server_should_shutdown
@@ -91,7 +91,7 @@ def run_server(uri, proto, msg, datum):
   server.serve_forever()
 
 def send_message(uri, proto, msg, datum):
-  url_obj = urlparse.urlparse(uri)
+  url_obj = urlparse(uri)
   client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
   proto_json = open(proto, 'rb').read()
   requestor = ipc.Requestor(protocol.parse(proto_json), client)
