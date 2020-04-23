@@ -88,7 +88,7 @@ do
       (cd lang/py && ./build.sh lint test)
       (cd lang/py3 && ./build.sh lint test)
       (cd lang/c; ./build.sh test)
-      (cd lang/c++; ./build.sh test)
+      (cd lang/c++; ./build.sh lint test)
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh lint test)
       (cd lang/ruby; ./build.sh lint test)
