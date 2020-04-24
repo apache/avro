@@ -13,9 +13,7 @@ use crate::ser::Serializer;
 use crate::types::{ToAvro, Value};
 use crate::Codec;
 
-const SYNC_SIZE: usize = 16;
-const SYNC_INTERVAL: usize = 1000 * SYNC_SIZE; // TODO: parametrize in Writer
-
+const DEFAULT_BLOCK_SIZE: usize = 16000;
 const AVRO_OBJECT_HEADER: &[u8] = &[b'O', b'b', b'j', 1u8];
 
 /// Describes errors happened while validating Avro data.
@@ -33,14 +31,23 @@ impl ValidationError {
 }
 
 /// Main interface for writing Avro formatted values.
+#[derive(typed_builder::TypedBuilder)]
 pub struct Writer<'a, W> {
     schema: &'a Schema,
-    serializer: Serializer,
     writer: W,
-    buffer: Vec<u8>,
-    num_values: usize,
+    #[builder(default = Codec::Null)]
     codec: Codec,
+    #[builder(default = DEFAULT_BLOCK_SIZE)]
+    block_size: usize,
+    #[builder(default = Vec::with_capacity(block_size), setter(skip))]
+    buffer: Vec<u8>,
+    #[builder(default, setter(skip))]
+    serializer: Serializer,
+    #[builder(default = 0, setter(skip))]
+    num_values: usize,
+    #[builder(default = std::iter::repeat_with(random).take(16).collect(), setter(skip))]
     marker: Vec<u8>,
+    #[builder(default = false, setter(skip))]
     has_header: bool,
 }
 
@@ -48,28 +55,18 @@ impl<'a, W: Write> Writer<'a, W> {
     /// Creates a `Writer` given a `Schema` and something implementing the `io::Write` trait to write
     /// to.
     /// No compression `Codec` will be used.
-    pub fn new(schema: &'a Schema, writer: W) -> Writer<'a, W> {
-        Self::with_codec(schema, writer, Codec::Null)
+    pub fn new(schema: &'a Schema, writer: W) -> Self {
+        Self::builder().schema(schema).writer(writer).build()
     }
 
     /// Creates a `Writer` with a specific `Codec` given a `Schema` and something implementing the
     /// `io::Write` trait to write to.
-    pub fn with_codec(schema: &'a Schema, writer: W, codec: Codec) -> Writer<'a, W> {
-        let mut marker = Vec::with_capacity(16);
-        for _ in 0..16 {
-            marker.push(random::<u8>());
-        }
-
-        Writer {
-            schema,
-            serializer: Serializer::default(),
-            writer,
-            buffer: Vec::with_capacity(SYNC_INTERVAL),
-            num_values: 0,
-            codec,
-            marker,
-            has_header: false,
-        }
+    pub fn with_codec(schema: &'a Schema, writer: W, codec: Codec) -> Self {
+        Self::builder()
+            .schema(schema)
+            .writer(writer)
+            .codec(codec)
+            .build()
     }
 
     /// Get a reference to the `Schema` associated to a `Writer`.
@@ -100,7 +97,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
         self.num_values += 1;
 
-        if self.buffer.len() >= SYNC_INTERVAL {
+        if self.buffer.len() >= self.block_size {
             return self.flush().map(|b| b + n);
         }
 
@@ -128,7 +125,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
         self.num_values += 1;
 
-        if self.buffer.len() >= SYNC_INTERVAL {
+        if self.buffer.len() >= self.block_size {
             return self.flush().map(|b| b + n);
         }
 
@@ -749,12 +746,21 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_writer_with_codec() {
-        let schema = Schema::parse_str(SCHEMA).unwrap();
-        let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Deflate);
+    fn make_writer_with_codec(schema: &Schema) -> Writer<'_, Vec<u8>> {
+        Writer::with_codec(schema, Vec::new(), Codec::Deflate)
+    }
 
-        let mut record = Record::new(&schema).unwrap();
+    fn make_writer_with_builder(schema: &Schema) -> Writer<'_, Vec<u8>> {
+        Writer::builder()
+            .writer(Vec::new())
+            .schema(schema)
+            .codec(Codec::Deflate)
+            .block_size(100)
+            .build()
+    }
+
+    fn check_writer(mut writer: Writer<'_, Vec<u8>>, schema: &Schema) {
+        let mut record = Record::new(schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
 
@@ -799,5 +805,19 @@ mod tests {
                 .collect::<Vec<u8>>(),
             data
         );
+    }
+
+    #[test]
+    fn test_writer_with_codec() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let writer = make_writer_with_codec(&schema);
+        check_writer(writer, &schema);
+    }
+
+    #[test]
+    fn test_writer_with_builder() {
+        let schema = Schema::parse_str(SCHEMA).unwrap();
+        let writer = make_writer_with_builder(&schema);
+        check_writer(writer, &schema);
     }
 }

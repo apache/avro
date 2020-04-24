@@ -24,6 +24,7 @@ serde = { version = "1.0", features = ["derive"] }
 snap = { version = "0.2.3", optional = true }
 strum = "0.18.0"
 strum_macros = "0.18.0"
+typed-builder = "0.5.1"
 uuid = { version = "0.8.1", features = ["v4"] }
 zerocopy = "0.3.0"
 
