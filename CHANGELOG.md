@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Port benchmarks to criterion
+
 ## [0.9.0] - 2020-04-24
 - Add support for logical types
 - Make writer block size configurable via builder pattern
