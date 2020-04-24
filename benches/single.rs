@@ -1,5 +1,4 @@
-#![feature(test)]
-extern crate test;
+use criterion::{criterion_group, criterion_main, Criterion};
 
 use avro_rs::{
     schema::Schema,
@@ -156,17 +155,23 @@ fn make_big_record() -> (Schema, Value) {
     (big_schema, big_record)
 }
 
-fn bench_write(b: &mut test::Bencher, make_record: &Fn() -> (Schema, Value)) {
-    let (schema, record) = make_record();
-    b.iter(|| to_avro_datum(&schema, record.clone()));
+fn bench_small_schema_write_record(c: &mut Criterion) {
+    let (schema, record) = make_small_record();
+    c.bench_function("small record", |b| {
+        b.iter(|| to_avro_datum(&schema, record.clone()))
+    });
 }
 
-#[bench]
-fn bench_small_schema_write_record(b: &mut test::Bencher) {
-    bench_write(b, &make_small_record);
+fn bench_big_schema_write_record(c: &mut Criterion) {
+    let (schema, record) = make_big_record();
+    c.bench_function("big record", |b| {
+        b.iter(|| to_avro_datum(&schema, record.clone()))
+    });
 }
 
-#[bench]
-fn bench_big_schema_write_record(b: &mut test::Bencher) {
-    bench_write(b, &make_big_record);
-}
+criterion_group!(
+    benches,
+    bench_small_schema_write_record,
+    bench_big_schema_write_record
+);
+criterion_main!(benches);
