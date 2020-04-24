@@ -464,10 +464,129 @@
 //!     Ok(())
 //! }
 //! ```
+//!
+//! `avro-rs` also supports the logical types listed in the [Avro specification](https://avro.apache.org/docs/current/spec.html#Logical+Types):
+//!
+//! 1. `Decimal` using the [`num_bigint`](https://docs.rs/num-bigint/0.2.6/num_bigint) crate
+//! 1. UUID using the [`uuid`](https://docs.rs/uuid/0.8.1/uuid) crate
+//! 1. Date, Time (milli) as `i32` and Time (micro) as `i64`
+//! 1. Timestamp (milli and micro) as `i64`
+//! 1. Duration as a custom type with `months`, `days` and `millis` accessor methods each of which returns an `i32`
+//!
+//! Note that the on-disk representation is identical to the underlying primitive/complex type.
+//!
+//! ### Read and write logical types
+//!
+//! ```rust
+//! use avro_rs::{
+//!     types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
+//!     Writer,
+//! };
+//! use num_bigint::ToBigInt;
+//! use failure::Error;
+//!
+//! fn main() -> Result<(), Error> {
+//!     let raw_schema = r#"
+//!     {
+//!       "type": "record",
+//!       "name": "test",
+//!       "fields": [
+//!         {
+//!           "name": "decimal_fixed",
+//!           "type": {
+//!             "type": "fixed",
+//!             "size": 2,
+//!             "name": "decimal"
+//!           },
+//!           "logicalType": "decimal",
+//!           "precision": 4,
+//!           "scale": 2
+//!         },
+//!         {
+//!           "name": "decimal_var",
+//!           "type": "bytes",
+//!           "logicalType": "decimal",
+//!           "precision": 10,
+//!           "scale": 3
+//!         },
+//!         {
+//!           "name": "uuid",
+//!           "type": "string",
+//!           "logicalType": "uuid"
+//!         },
+//!         {
+//!           "name": "date",
+//!           "type": "int",
+//!           "logicalType": "date"
+//!         },
+//!         {
+//!           "name": "time_millis",
+//!           "type": "int",
+//!           "logicalType": "time-millis"
+//!         },
+//!         {
+//!           "name": "time_micros",
+//!           "type": "long",
+//!           "logicalType": "time-micros"
+//!         },
+//!         {
+//!           "name": "timestamp_millis",
+//!           "type": "long",
+//!           "logicalType": "timestamp-millis"
+//!         },
+//!         {
+//!           "name": "timestamp_micros",
+//!           "type": "long",
+//!           "logicalType": "timestamp-micros"
+//!         },
+//!         {
+//!           "name": "duration",
+//!           "type": {
+//!             "type": "fixed",
+//!             "size": 12,
+//!             "name": "duration"
+//!           },
+//!           "logicalType": "duration"
+//!         }
+//!       ]
+//!     }
+//!     "#;
+//!
+//!     let schema = Schema::parse_str(raw_schema)?;
+//!
+//!     println!("{:?}", schema);
+//!
+//!     let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Deflate);
+//!
+//!     let mut record = Record::new(writer.schema()).unwrap();
+//!     record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
+//!     record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
+//!     record.put("uuid", uuid::Uuid::new_v4());
+//!     record.put("date", Value::Date(1));
+//!     record.put("time_millis", Value::TimeMillis(2));
+//!     record.put("time_micros", Value::TimeMicros(3));
+//!     record.put("timestamp_millis", Value::TimestampMillis(4));
+//!     record.put("timestamp_micros", Value::TimestampMicros(5));
+//!     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
+//!
+//!     writer.append(record)?;
+//!     writer.flush()?;
+//!
+//!     let input = writer.into_inner();
+//!     let reader = Reader::with_schema(&schema, &input[..])?;
+//!
+//!     for record in reader {
+//!         println!("{:?}", record?);
+//!     }
+//!     Ok(())
+//! }
+//! ```
 
 mod codec;
 mod de;
+mod decimal;
 mod decode;
+mod duration;
 mod encode;
 mod reader;
 mod ser;
@@ -479,6 +598,8 @@ pub mod types;
 
 pub use crate::codec::Codec;
 pub use crate::de::{from_value, Error as DeError};
+pub use crate::decimal::Decimal;
+pub use crate::duration::{Days, Duration, Millis, Months};
 pub use crate::reader::{from_avro_datum, Reader};
 pub use crate::schema::{ParseSchemaError, Schema};
 pub use crate::ser::{to_value, Error as SerError};

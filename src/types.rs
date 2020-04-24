@@ -1,12 +1,17 @@
 //! Logic handling the intermediate representation of Avro values.
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::hash::BuildHasher;
+use std::str::FromStr;
 use std::u8;
 
 use failure::{Error, Fail};
 use serde_json::Value as JsonValue;
+use uuid::Uuid;
 
-use crate::schema::{RecordField, Schema, SchemaKind, UnionSchema};
+use crate::decimal::Decimal;
+use crate::duration::Duration;
+use crate::schema::{Precision, RecordField, Scale, Schema, SchemaKind, UnionSchema};
 
 /// Describes errors happened while performing schema resolution on Avro data.
 #[derive(Fail, Debug)]
@@ -22,9 +27,17 @@ impl SchemaResolutionError {
     }
 }
 
-/// Represents any valid Avro value
-/// More information about Avro values can be found in the
-/// [Avro Specification](https://avro.apache.org/docs/current/spec.html#schemas)
+/// Compute the maximum decimal value precision of a byte array of length `len` could hold.
+fn max_prec_for_len(len: usize) -> Result<usize, std::num::TryFromIntError> {
+    Ok((2.0_f64.powi(i32::try_from(8 * len - 1)?) - 1.0 as f64)
+        .log10()
+        .floor() as usize)
+}
+
+/// A valid Avro value.
+///
+/// More information about Avro values can be found in the [Avro
+/// Specification](https://avro.apache.org/docs/current/spec.html#schemas)
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     /// A `null` Avro value.
@@ -66,8 +79,27 @@ pub enum Value {
     ///
     /// See [Record](types.Record) for a more user-friendly support.
     Record(Vec<(String, Value)>),
+    /// A date value.
+    ///
+    /// Serialized and deserialized as `i32` directly. Can only be deserialized properly with a
+    /// schema.
+    Date(i32),
+    /// An Avro Decimal value. Bytes are in big-endian order, per the Avro spec.
+    Decimal(Decimal),
+    /// Time in milliseconds.
+    TimeMillis(i32),
+    /// Time in microseconds.
+    TimeMicros(i64),
+    /// Timestamp in milliseconds.
+    TimestampMillis(i64),
+    /// Timestamp in microseconds.
+    TimestampMicros(i64),
+    /// Avro Duration. An amount of time defined by months, days and milliseconds.
+    Duration(Duration),
+    /// Universally unique identifier.
+    /// Universally unique identifier.
+    Uuid(Uuid),
 }
-
 /// Any structure implementing the [ToAvro](trait.ToAvro.html) trait will be usable
 /// from a [Writer](../writer/struct.Writer.html).
 pub trait ToAvro {
@@ -91,6 +123,10 @@ to_avro!(i64, Value::Long);
 to_avro!(f32, Value::Float);
 to_avro!(f64, Value::Double);
 to_avro!(String, Value::String);
+to_avro!(Vec<u8>, Value::Bytes);
+to_avro!(uuid::Uuid, Value::Uuid);
+to_avro!(Decimal, Value::Decimal);
+to_avro!(Duration, Value::Duration);
 
 impl ToAvro for () {
     fn avro(self) -> Value {
@@ -121,11 +157,7 @@ where
     T: ToAvro,
 {
     fn avro(self) -> Value {
-        let v = match self {
-            Some(v) => T::avro(v),
-            None => Value::Null,
-        };
-        Value::Union(Box::new(v))
+        Value::Union(Box::new(self.map_or_else(|| Value::Null, T::avro)))
     }
 }
 
@@ -137,7 +169,7 @@ where
         Value::Map(
             self.into_iter()
                 .map(|(key, value)| (key, value.avro()))
-                .collect::<_>(),
+                .collect(),
         )
     }
 }
@@ -160,16 +192,6 @@ impl ToAvro for Value {
         self
     }
 }
-
-/*
-impl<S: Serialize> ToAvro for S {
-    fn avro(self) -> Value {
-        use ser::Serializer;
-
-        self.serialize(&mut Serializer::new()).unwrap()
-    }
-}
-*/
 
 /// Utility interface to build `Value::Record` objects.
 #[derive(Debug, Clone)]
@@ -259,12 +281,30 @@ impl Value {
             (&Value::Null, &Schema::Null) => true,
             (&Value::Boolean(_), &Schema::Boolean) => true,
             (&Value::Int(_), &Schema::Int) => true,
+            (&Value::Int(_), &Schema::Date) => true,
+            (&Value::Int(_), &Schema::TimeMillis) => true,
             (&Value::Long(_), &Schema::Long) => true,
+            (&Value::Long(_), &Schema::TimeMicros) => true,
+            (&Value::Long(_), &Schema::TimestampMillis) => true,
+            (&Value::Long(_), &Schema::TimestampMicros) => true,
+            (&Value::TimestampMicros(_), &Schema::TimestampMicros) => true,
+            (&Value::TimestampMillis(_), &Schema::TimestampMillis) => true,
+            (&Value::TimeMicros(_), &Schema::TimeMicros) => true,
+            (&Value::TimeMillis(_), &Schema::TimeMillis) => true,
+            (&Value::Date(_), &Schema::Date) => true,
+            (&Value::Decimal(_), &Schema::Decimal { .. }) => true,
+            (&Value::Duration(_), &Schema::Duration) => true,
+            (&Value::Uuid(_), &Schema::Uuid) => true,
             (&Value::Float(_), &Schema::Float) => true,
             (&Value::Double(_), &Schema::Double) => true,
             (&Value::Bytes(_), &Schema::Bytes) => true,
+            (&Value::Bytes(_), &Schema::Decimal { .. }) => true,
             (&Value::String(_), &Schema::String) => true,
+            (&Value::String(_), &Schema::Uuid) => true,
             (&Value::Fixed(n, _), &Schema::Fixed { size, .. }) => n == size,
+            (&Value::Fixed(n, _), &Schema::Duration) => n == 12,
+            // TODO: check precision against n
+            (&Value::Fixed(_n, _), &Schema::Decimal { .. }) => true,
             (&Value::String(ref s), &Schema::Enum { ref symbols, .. }) => symbols.contains(s),
             (&Value::Enum(i, ref s), &Schema::Enum { ref symbols, .. }) => symbols
                 .get(i as usize)
@@ -325,24 +365,182 @@ impl Value {
             Schema::Array(ref inner) => self.resolve_array(inner),
             Schema::Map(ref inner) => self.resolve_map(inner),
             Schema::Record { ref fields, .. } => self.resolve_record(fields),
+            Schema::Decimal {
+                scale,
+                precision,
+                ref inner,
+            } => self.resolve_decimal(precision, scale, inner),
+            Schema::Date => self.resolve_date(),
+            Schema::TimeMillis => self.resolve_time_millis(),
+            Schema::TimeMicros => self.resolve_time_micros(),
+            Schema::TimestampMillis => self.resolve_timestamp_millis(),
+            Schema::TimestampMicros => self.resolve_timestamp_micros(),
+            Schema::Duration => self.resolve_duration(),
+            Schema::Uuid => self.resolve_uuid(),
+        }
+    }
+
+    fn resolve_uuid(self) -> Result<Self, Error> {
+        match self {
+            uuid @ Value::Uuid(_) => Ok(uuid),
+            Value::String(ref string) => Ok(Value::Uuid(Uuid::from_str(string)?)),
+            other => {
+                Err(SchemaResolutionError::new(format!("UUID expected, got {:?}", other)).into())
+            }
+        }
+    }
+
+    fn resolve_duration(self) -> Result<Self, Error> {
+        match self {
+            duration @ Value::Duration { .. } => Ok(duration),
+            Value::Fixed(size, bytes) => {
+                if size != 12 {
+                    return Err(SchemaResolutionError::new(format!(
+                        "Fixed bytes of size 12 expected, got Fixed of size {}",
+                        size
+                    ))
+                    .into());
+                }
+                Ok(Value::Duration(Duration::from([
+                    bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
+                    bytes[8], bytes[9], bytes[10], bytes[11],
+                ])))
+            }
+            other => Err(
+                SchemaResolutionError::new(format!("Duration expected, got {:?}", other)).into(),
+            ),
+        }
+    }
+
+    fn resolve_decimal(
+        self,
+        precision: Precision,
+        scale: Scale,
+        inner: &Schema,
+    ) -> Result<Self, Error> {
+        if scale > precision {
+            Err(SchemaResolutionError::new(format!(
+                "Scale {} is greater than precision {}",
+                scale, precision
+            )))?
+        }
+        match inner {
+            &Schema::Fixed { size, .. } => {
+                if max_prec_for_len(size)? < precision {
+                    Err(SchemaResolutionError::new(format!(
+                        "Fixed size {} is not large enough to hold decimal values of precision {}",
+                        size, precision,
+                    )))?
+                }
+            }
+            Schema::Bytes => (),
+            _ => Err(SchemaResolutionError::new(format!(
+                "Underlying decimal type must be fixed or bytes, got {:?}",
+                inner
+            )))?,
+        };
+        match self {
+            Value::Decimal(num) => {
+                let num_bytes = num.len();
+                if max_prec_for_len(num_bytes)? > precision {
+                    Err(SchemaResolutionError::new(format!(
+                        "Precision {} too small to hold decimal values with {} bytes",
+                        precision, num_bytes,
+                    )))?
+                } else {
+                    Ok(Value::Decimal(num))
+                }
+                // check num.bits() here
+            }
+            Value::Fixed(_, bytes) | Value::Bytes(bytes) => {
+                if max_prec_for_len(bytes.len())? > precision {
+                    Err(SchemaResolutionError::new(format!(
+                        "Precision {} too small to hold decimal values with {} bytes",
+                        precision,
+                        bytes.len(),
+                    )))?
+                } else {
+                    // precision and scale match, can we assume the underlying type can hold the data?
+                    Ok(Value::Decimal(Decimal::from(bytes)))
+                }
+            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Decimal expected, got {:?}",
+                other
+            )))?,
+        }
+    }
+
+    fn resolve_date(self) -> Result<Self, Error> {
+        match self {
+            Value::Date(d) | Value::Int(d) => Ok(Value::Date(d)),
+            other => Err(SchemaResolutionError::new(format!(
+                "Date expected, got {:?}",
+                other
+            )))?,
+        }
+    }
+
+    fn resolve_time_millis(self) -> Result<Self, Error> {
+        match self {
+            Value::TimeMillis(t) | Value::Int(t) => Ok(Value::TimeMillis(t)),
+            other => Err(SchemaResolutionError::new(format!(
+                "TimeMillis expected, got {:?}",
+                other
+            )))?,
+        }
+    }
+
+    fn resolve_time_micros(self) -> Result<Self, Error> {
+        match self {
+            Value::TimeMicros(t) | Value::Long(t) => Ok(Value::TimeMicros(t)),
+            Value::Int(t) => Ok(Value::TimeMicros(i64::from(t))),
+            other => Err(SchemaResolutionError::new(format!(
+                "TimeMicros expected, got {:?}",
+                other
+            )))?,
+        }
+    }
+
+    fn resolve_timestamp_millis(self) -> Result<Self, Error> {
+        match self {
+            Value::TimestampMillis(ts) | Value::Long(ts) => Ok(Value::TimestampMillis(ts)),
+            Value::Int(ts) => Ok(Value::TimestampMillis(i64::from(ts))),
+            other => Err(SchemaResolutionError::new(format!(
+                "TimestampMillis expected, got {:?}",
+                other
+            )))?,
+        }
+    }
+
+    fn resolve_timestamp_micros(self) -> Result<Self, Error> {
+        match self {
+            Value::TimestampMicros(ts) | Value::Long(ts) => Ok(Value::TimestampMicros(ts)),
+            Value::Int(ts) => Ok(Value::TimestampMicros(i64::from(ts))),
+            other => Err(SchemaResolutionError::new(format!(
+                "TimestampMicros expected, got {:?}",
+                other
+            )))?,
         }
     }
 
     fn resolve_null(self) -> Result<Self, Error> {
         match self {
             Value::Null => Ok(Value::Null),
-            other => {
-                Err(SchemaResolutionError::new(format!("Null expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Null expected, got {:?}",
+                other
+            )))?,
         }
     }
 
     fn resolve_boolean(self) -> Result<Self, Error> {
         match self {
             Value::Boolean(b) => Ok(Value::Boolean(b)),
-            other => {
-                Err(SchemaResolutionError::new(format!("Boolean expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Boolean expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -350,9 +548,10 @@ impl Value {
         match self {
             Value::Int(n) => Ok(Value::Int(n)),
             Value::Long(n) => Ok(Value::Int(n as i32)),
-            other => {
-                Err(SchemaResolutionError::new(format!("Int expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Int expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -360,9 +559,10 @@ impl Value {
         match self {
             Value::Int(n) => Ok(Value::Long(i64::from(n))),
             Value::Long(n) => Ok(Value::Long(n)),
-            other => {
-                Err(SchemaResolutionError::new(format!("Long expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Long expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -372,9 +572,10 @@ impl Value {
             Value::Long(n) => Ok(Value::Float(n as f32)),
             Value::Float(x) => Ok(Value::Float(x)),
             Value::Double(x) => Ok(Value::Float(x as f32)),
-            other => {
-                Err(SchemaResolutionError::new(format!("Float expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Float expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -384,9 +585,10 @@ impl Value {
             Value::Long(n) => Ok(Value::Double(n as f64)),
             Value::Float(x) => Ok(Value::Double(f64::from(x))),
             Value::Double(x) => Ok(Value::Double(x)),
-            other => {
-                Err(SchemaResolutionError::new(format!("Double expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Double expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -400,9 +602,10 @@ impl Value {
                     .map(Value::try_u8)
                     .collect::<Result<Vec<_>, _>>()?,
             )),
-            other => {
-                Err(SchemaResolutionError::new(format!("Bytes expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "Bytes expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -410,9 +613,10 @@ impl Value {
         match self {
             Value::String(s) => Ok(Value::String(s)),
             Value::Bytes(bytes) => Ok(Value::String(String::from_utf8(bytes)?)),
-            other => {
-                Err(SchemaResolutionError::new(format!("String expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "String expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -425,13 +629,13 @@ impl Value {
                     Err(SchemaResolutionError::new(format!(
                         "Fixed size mismatch, {} expected, got {}",
                         size, n
-                    ))
-                    .into())
+                    )))?
                 }
             }
-            other => {
-                Err(SchemaResolutionError::new(format!("String expected, got {:?}", other)).into())
-            }
+            other => Err(SchemaResolutionError::new(format!(
+                "String expected, got {:?}",
+                other
+            )))?,
         }
     }
 
@@ -443,8 +647,7 @@ impl Value {
                 Err(SchemaResolutionError::new(format!(
                     "Enum default {} is not among allowed symbols {:?}",
                     symbol, symbols,
-                ))
-                .into())
+                )))?
             }
         };
 
@@ -457,16 +660,14 @@ impl Value {
                         "Enum value {} is out of bound {}",
                         i,
                         symbols.len() as i32
-                    ))
-                    .into())
+                    )))?
                 }
             }
             Value::String(s) => validate_symbol(s, symbols),
             other => Err(SchemaResolutionError::new(format!(
                 "Enum({:?}) expected, got {:?}",
                 symbols, other
-            ))
-            .into()),
+            )))?,
         }
     }
 
@@ -490,13 +691,12 @@ impl Value {
                 items
                     .into_iter()
                     .map(|item| item.resolve(schema))
-                    .collect::<Result<Vec<_>, _>>()?,
+                    .collect::<Result<_, _>>()?,
             )),
             other => Err(SchemaResolutionError::new(format!(
                 "Array({:?}) expected, got {:?}",
                 schema, other
-            ))
-            .into()),
+            )))?,
         }
     }
 
@@ -506,13 +706,12 @@ impl Value {
                 items
                     .into_iter()
                     .map(|(key, value)| value.resolve(schema).map(|value| (key, value)))
-                    .collect::<Result<HashMap<_, _>, _>>()?,
+                    .collect::<Result<_, _>>()?,
             )),
             other => Err(SchemaResolutionError::new(format!(
                 "Map({:?}) expected, got {:?}",
                 schema, other
-            ))
-            .into()),
+            )))?,
         }
     }
 
@@ -553,8 +752,7 @@ impl Value {
                             return Err(SchemaResolutionError::new(format!(
                                 "missing field {} in record",
                                 field.name
-                            ))
-                            .into());
+                            )))?;
                         }
                     },
                 };
@@ -575,14 +773,20 @@ impl Value {
             }
         }
 
-        Err(SchemaResolutionError::new(format!("Unable to convert to u8, got {:?}", int)).into())
+        Err(SchemaResolutionError::new(format!(
+            "Unable to convert to u8, got {:?}",
+            int
+        )))?
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::schema::{Name, RecordField, RecordFieldOrder, UnionSchema};
+    use crate::decimal::Decimal;
+    use crate::duration::{Days, Duration, Millis, Months};
+    use crate::schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema};
+    use crate::types::Value;
+    use uuid::Uuid;
 
     #[test]
     fn validate() {
@@ -681,6 +885,7 @@ mod tests {
 
     #[test]
     fn validate_record() {
+        use std::collections::HashMap;
         // {
         //    "type": "record",
         //    "fields": [
@@ -757,5 +962,122 @@ mod tests {
     fn resolve_bytes_failure() {
         let value = Value::Array(vec![Value::Int(2000), Value::Int(-42)]);
         assert!(value.resolve(&Schema::Bytes).is_err());
+    }
+
+    #[test]
+    fn resolve_decimal_bytes() {
+        let value = Value::Decimal(Decimal::from(vec![1, 2]));
+        value
+            .clone()
+            .resolve(&Schema::Decimal {
+                precision: 10,
+                scale: 4,
+                inner: Box::new(Schema::Bytes),
+            })
+            .unwrap();
+        assert!(value.resolve(&Schema::String).is_err());
+    }
+
+    #[test]
+    fn resolve_decimal_invalid_scale() {
+        let value = Value::Decimal(Decimal::from(vec![1]));
+        assert!(value
+            .clone()
+            .resolve(&Schema::Decimal {
+                precision: 2,
+                scale: 3,
+                inner: Box::new(Schema::Bytes),
+            })
+            .is_err());
+    }
+
+    #[test]
+    fn resolve_decimal_invalid_precision_for_length() {
+        let value = Value::Decimal(Decimal::from((1u8..=8u8).rev().collect::<Vec<_>>()));
+        assert!(value
+            .clone()
+            .resolve(&Schema::Decimal {
+                precision: 1,
+                scale: 0,
+                inner: Box::new(Schema::Bytes),
+            })
+            .is_err());
+    }
+
+    #[test]
+    fn resolve_decimal_fixed() {
+        let value = Value::Decimal(Decimal::from(vec![1, 2]));
+        assert!(value
+            .clone()
+            .resolve(&Schema::Decimal {
+                precision: 10,
+                scale: 1,
+                inner: Box::new(Schema::Fixed {
+                    name: Name::new("decimal"),
+                    size: 20
+                })
+            })
+            .is_ok());
+        assert!(value.resolve(&Schema::String).is_err());
+    }
+
+    #[test]
+    fn resolve_date() {
+        let value = Value::Date(2345);
+        assert!(value.clone().resolve(&Schema::Date).is_ok());
+        assert!(value.resolve(&Schema::String).is_err());
+    }
+
+    #[test]
+    fn resolve_time_millis() {
+        let value = Value::TimeMillis(10);
+        assert!(value.clone().resolve(&Schema::TimeMillis).is_ok());
+        assert!(value.resolve(&Schema::TimeMicros).is_err());
+    }
+
+    #[test]
+    fn resolve_time_micros() {
+        let value = Value::TimeMicros(10);
+        assert!(value.clone().resolve(&Schema::TimeMicros).is_ok());
+        assert!(value.resolve(&Schema::TimeMillis).is_err());
+    }
+
+    #[test]
+    fn resolve_timestamp_millis() {
+        let value = Value::TimestampMillis(10);
+        assert!(value.clone().resolve(&Schema::TimestampMillis).is_ok());
+        assert!(value.resolve(&Schema::Float).is_err());
+
+        let value = Value::Float(10.0f32);
+        assert!(value.resolve(&Schema::TimestampMillis).is_err());
+    }
+
+    #[test]
+    fn resolve_timestamp_micros() {
+        let value = Value::TimestampMicros(10);
+        assert!(value.clone().resolve(&Schema::TimestampMicros).is_ok());
+        assert!(value.resolve(&Schema::Int).is_err());
+
+        let value = Value::Double(10.0);
+        assert!(value.resolve(&Schema::TimestampMicros).is_err());
+    }
+
+    #[test]
+    fn resolve_duration() {
+        let value = Value::Duration(Duration::new(
+            Months::new(10),
+            Days::new(5),
+            Millis::new(3000),
+        ));
+        assert!(value.clone().resolve(&Schema::Duration).is_ok());
+        assert!(value.resolve(&Schema::TimestampMicros).is_err());
+        assert!(Value::Long(1i64).resolve(&Schema::Duration).is_err());
+    }
+
+    #[test]
+    fn resolve_uuid() {
+        let value = Value::Uuid(Uuid::parse_str("1481531d-ccc9-46d9-a56f-5b67459c0537").unwrap());
+        assert!(value.clone().resolve(&Schema::Uuid).is_ok());
+        assert!(value.resolve(&Schema::TimestampMicros).is_err());
     }
 }

@@ -1,6 +1,7 @@
 use crate::schema::Schema;
 use crate::types::Value;
 use crate::util::{zig_i32, zig_i64};
+use std::convert::TryInto;
 
 /// Encode a `Value` into avro format.
 ///
@@ -34,10 +35,37 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
     match value {
         Value::Null => (),
         Value::Boolean(b) => buffer.push(if *b { 1u8 } else { 0u8 }),
-        Value::Int(i) => encode_int(*i, buffer),
-        Value::Long(i) => encode_long(*i, buffer),
+        // Pattern | Pattern here to signify that these _must_ have the same encoding.
+        Value::Int(i) | Value::Date(i) | Value::TimeMillis(i) => encode_int(*i, buffer),
+        Value::Long(i)
+        | Value::TimestampMillis(i)
+        | Value::TimestampMicros(i)
+        | Value::TimeMicros(i) => encode_long(*i, buffer),
         Value::Float(x) => buffer.extend_from_slice(&x.to_le_bytes()),
         Value::Double(x) => buffer.extend_from_slice(&x.to_le_bytes()),
+        Value::Decimal(decimal) => match schema {
+            Schema::Decimal { inner, .. } => match *inner.clone() {
+                Schema::Fixed { size, .. } => {
+                    let bytes = decimal.to_sign_extended_bytes_with_len(size).unwrap();
+                    let num_bytes = bytes.len();
+                    if num_bytes != size {
+                        panic!(
+                            "signed decimal bytes length {} not equal to fixed schema size {}",
+                            num_bytes, size
+                        );
+                    }
+                    encode(&Value::Fixed(size, bytes), inner, buffer)
+                }
+                Schema::Bytes => encode(&Value::Bytes(decimal.try_into().unwrap()), inner, buffer),
+                _ => panic!("invalid inner type for decimal: {:?}", inner),
+            },
+            _ => panic!("invalid type for decimal: {:?}", schema),
+        },
+        &Value::Duration(duration) => {
+            let slice: [u8; 12] = duration.into();
+            buffer.extend_from_slice(&slice);
+        }
+        Value::Uuid(uuid) => encode_bytes(&uuid.to_string(), buffer),
         Value::Bytes(bytes) => encode_bytes(bytes, buffer),
         Value::String(s) => match *schema {
             Schema::String => {

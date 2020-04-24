@@ -1,8 +1,12 @@
 use std::collections::HashMap;
 use std::io::Read;
+use std::str::FromStr;
 
 use failure::Error;
+use uuid::Uuid;
 
+use crate::decimal::Decimal;
+use crate::duration::Duration;
 use crate::schema::Schema;
 use crate::types::Value;
 use crate::util::{safe_len, zag_i32, zag_i64, DecodeError};
@@ -36,8 +40,43 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
                 _ => Err(DecodeError::new("not a bool").into()),
             }
         }
+        Schema::Decimal { ref inner, .. } => match **inner {
+            Schema::Fixed { .. } => match decode(inner, reader)? {
+                Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
+                _ => Err(DecodeError::new(
+                    "not a fixed value, required for decimal with fixed schema",
+                )
+                .into()),
+            },
+            Schema::Bytes => match decode(inner, reader)? {
+                Value::Bytes(bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
+                _ => Err(DecodeError::new(
+                    "not a bytes value, required for decimal with bytes schema",
+                )
+                .into()),
+            },
+            _ => Err(
+                DecodeError::new("not a fixed or bytes type, required for decimal schema").into(),
+            ),
+        },
+        Schema::Uuid => Ok(Value::Uuid(Uuid::from_str(
+            match decode(&Schema::String, reader)? {
+                Value::String(ref s) => s,
+                _ => return Err(DecodeError::new("not a string type, required for uuid").into()),
+            },
+        )?)),
         Schema::Int => decode_int(reader),
+        Schema::Date => zag_i32(reader).map(Value::Date),
+        Schema::TimeMillis => zag_i32(reader).map(Value::TimeMillis),
         Schema::Long => decode_long(reader),
+        Schema::TimeMicros => zag_i64(reader).map(Value::TimeMicros),
+        Schema::TimestampMillis => zag_i64(reader).map(Value::TimestampMillis),
+        Schema::TimestampMicros => zag_i64(reader).map(Value::TimestampMicros),
+        Schema::Duration => {
+            let mut buf = [0u8; 12];
+            reader.read_exact(&mut buf)?;
+            Ok(Value::Duration(Duration::from(buf)))
+        }
         Schema::Float => {
             let mut buf = [0u8; std::mem::size_of::<f32>()];
             reader.read_exact(&mut buf[..])?;
@@ -186,5 +225,53 @@ mod tests {
         let mut expected = HashMap::new();
         expected.insert(String::from("test"), Int(1));
         assert_eq!(Map(expected), result.unwrap());
+    }
+
+    #[test]
+    fn test_negative_decimal_value() {
+        use crate::{encode::encode, schema::Name};
+        use num_bigint::ToBigInt;
+        let inner = Box::new(Schema::Fixed {
+            size: 2,
+            name: Name::new("decimal"),
+        });
+        let schema = Schema::Decimal {
+            inner,
+            precision: 4,
+            scale: 2,
+        };
+        let bigint = -423.to_bigint().unwrap();
+        let value = Value::Decimal(Decimal::from(bigint.to_signed_bytes_be()));
+
+        let mut buffer = Vec::new();
+        encode(&value, &schema, &mut buffer);
+
+        let mut bytes = &buffer[..];
+        let result = decode(&schema, &mut bytes).unwrap();
+        assert_eq!(result, value);
+    }
+
+    #[test]
+    fn test_decode_decimal_with_bigger_than_necessary_size() {
+        use crate::{encode::encode, schema::Name};
+        use num_bigint::ToBigInt;
+        let inner = Box::new(Schema::Fixed {
+            size: 13,
+            name: Name::new("decimal"),
+        });
+        let schema = Schema::Decimal {
+            inner,
+            precision: 4,
+            scale: 2,
+        };
+        let value = Value::Decimal(Decimal::from(
+            (-423.to_bigint().unwrap()).to_signed_bytes_be(),
+        ));
+        let mut buffer = Vec::<u8>::new();
+
+        encode(&value, &schema, &mut buffer);
+        let mut bytes: &[u8] = &buffer[..];
+        let result = decode(&schema, &mut bytes).unwrap();
+        assert_eq!(result, value);
     }
 }

@@ -148,6 +148,113 @@ fn main() {
 
 ```
 
+### Logical types
+
+```rust
+use avro_rs::{
+    types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
+    Writer,
+};
+use num_bigint::ToBigInt;
+use failure::Error;
+
+fn main() -> Result<(), Error> {
+    let raw_schema = r#"
+    {
+      "type": "record",
+      "name": "test",
+      "fields": [
+        {
+          "name": "decimal_fixed",
+          "type": {
+            "type": "fixed",
+            "size": 2,
+            "name": "decimal"
+          },
+          "logicalType": "decimal",
+          "precision": 4,
+          "scale": 2
+        },
+        {
+          "name": "decimal_var",
+          "type": "bytes",
+          "logicalType": "decimal",
+          "precision": 10,
+          "scale": 3
+        },
+        {
+          "name": "uuid",
+          "type": "string",
+          "logicalType": "uuid"
+        },
+        {
+          "name": "date",
+          "type": "int",
+          "logicalType": "date"
+        },
+        {
+          "name": "time_millis",
+          "type": "int",
+          "logicalType": "time-millis"
+        },
+        {
+          "name": "time_micros",
+          "type": "long",
+          "logicalType": "time-micros"
+        },
+        {
+          "name": "timestamp_millis",
+          "type": "long",
+          "logicalType": "timestamp-millis"
+        },
+        {
+          "name": "timestamp_micros",
+          "type": "long",
+          "logicalType": "timestamp-micros"
+        },
+        {
+          "name": "duration",
+          "type": {
+            "type": "fixed",
+            "size": 12,
+            "name": "duration"
+          },
+          "logicalType": "duration"
+        }
+      ]
+    }
+    "#;
+
+    let schema = Schema::parse_str(raw_schema)?;
+
+    println!("{:?}", schema);
+
+    let mut writer = Writer::with_codec(&schema, Vec::new(), Codec::Deflate);
+
+    let mut record = Record::new(writer.schema()).unwrap();
+    record.put("decimal_fixed", Decimal::from(9936.to_bigint().unwrap().to_signed_bytes_be()));
+    record.put("decimal_var", Decimal::from((-32442.to_bigint().unwrap()).to_signed_bytes_be()));
+    record.put("uuid", uuid::Uuid::new_v4());
+    record.put("date", Value::Date(1));
+    record.put("time_millis", Value::TimeMillis(2));
+    record.put("time_micros", Value::TimeMicros(3));
+    record.put("timestamp_millis", Value::TimestampMillis(4));
+    record.put("timestamp_micros", Value::TimestampMicros(5));
+    record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
+
+    writer.append(record)?;
+    writer.flush()?;
+
+    let input = writer.into_inner();
+    let reader = Reader::with_schema(&schema, &input[..])?;
+
+    for record in reader {
+        println!("{:?}", record?);
+    }
+    Ok(())
+}
+```
+
 ## License
 This project is licensed under [MIT License](https://github.com/flavray/avro-rs/blob/master/LICENSE).
 Please note that this is not an official project maintained by [Apache Avro](https://avro.apache.org/).
