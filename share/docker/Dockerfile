@@ -118,7 +118,6 @@ RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
  && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                  Module::Install::Repository \
-                                                 Test::Pod \
  && rm -rf .cpanm
 
 # Install Python packages
