@@ -122,8 +122,12 @@ public class ReflectData extends SpecificData {
 
   /**
    * If this flag is set to true, default values for fields will be assigned
-   * dynamically using Java reflections. Let's call this feature `default
-   * reflection`. Initially this feature is disabled
+   * dynamically using Java reflections. When enabled, defaults are the field
+   * values of an instance created with a no-arg constructor.
+   *
+   * <p>
+   * Let's call this feature `default reflection`. Initially this feature is
+   * disabled.
    */
   private boolean defaultGenerated = false;
 
@@ -139,21 +143,21 @@ public class ReflectData extends SpecificData {
     return this;
   }
 
-  private final Map<String, Object> defaultValues = new WeakHashMap<>();
+  private final Map<Type, Object> defaultValues = new WeakHashMap<>();
 
   /**
    * Set the default value for a type. When encountering such type, we'll use this
    * provided value instead of trying to create a new one.
    *
+   * <p>
    * NOTE: This method automatically enable feature `default reflection`.
    *
-   * @param type  A type
+   * @param type  The type
    * @param value Its default value
    * @return The current instance
    */
   public ReflectData setDefaultGeneratedValue(Type type, Object value) {
-    String className = ((Class) type).getName();
-    this.defaultValues.put(className, value);
+    this.defaultValues.put(type, value);
     this.setDefaultsGenerated(true);
     return this;
   }
@@ -167,10 +171,9 @@ public class ReflectData extends SpecificData {
    */
   protected Object getOrCreateDefaultValue(Type type, Field field) {
     Object defaultValue = null;
-    String className = ((Class) type).getName();
     field.setAccessible(true);
     try {
-      Object typeValue = getOrCreateDefaultValue(className);
+      Object typeValue = getOrCreateDefaultValue(type);
       if (typeValue != null) {
         defaultValue = field.get(typeValue);
       }
@@ -181,20 +184,21 @@ public class ReflectData extends SpecificData {
   }
 
   /**
-   * Get or create new value instance for a class based on its class name The
-   * newly created instance will be cached for later use
+   * Get or create new value instance for a type.
    *
-   * @param className The class name
+   * New instances will be instantiated using no-arg constructors. The newly
+   * created one will be cached for later use.
+   *
+   * @param type The type
    * @return The value
    */
-  protected Object getOrCreateDefaultValue(String className) {
-    return this.defaultValues.computeIfAbsent(className, ignored -> {
+  protected Object getOrCreateDefaultValue(Type type) {
+    return this.defaultValues.computeIfAbsent(type, ignored -> {
       try {
-        Class<?> aClass = Class.forName(className);
-        Constructor constructor = aClass.getDeclaredConstructor();
+        Constructor constructor = ((Class) type).getDeclaredConstructor();
         constructor.setAccessible(true);
         return constructor.newInstance();
-      } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | NoSuchMethodException
+      } catch (ClassCastException | InstantiationException | IllegalAccessException | NoSuchMethodException
           | InvocationTargetException e) {
         // do nothing
       }
@@ -596,7 +600,7 @@ public class ReflectData extends SpecificData {
     if (defaultGenerated) {
       defaultValue = getOrCreateDefaultValue(type, field);
       if (defaultValue != null) {
-        return defaultValue;
+        return deepCopy(fieldSchema, defaultValue);
       }
       // if we can't get the default value, try to use previous code below
     }
