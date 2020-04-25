@@ -56,5 +56,9 @@ fn bench_big_schema_json_read_10000_record(c: &mut Criterion) {
     );
 }
 
-criterion_group!(benches, bench_big_schema_json_read_10000_record);
+criterion_group!(
+    name = benches;
+    config = Criterion::default().sample_size(10);
+    targets = bench_big_schema_json_read_10000_record,
+);
 criterion_main!(benches);

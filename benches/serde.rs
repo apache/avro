@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
+use std::time::Duration;
 
 use avro_rs::{
     schema::Schema,
@@ -287,17 +288,30 @@ criterion_group!(
     benches,
     bench_small_schema_write_1_record,
     bench_small_schema_write_100_record,
-    bench_small_schema_write_10000_record,
     bench_small_schema_read_1_record,
     bench_small_schema_read_100_record,
-    bench_small_schema_read_10000_record,
     bench_big_schema_write_1_record,
     bench_big_schema_write_100_record,
-    bench_big_schema_write_10000_record,
     bench_big_schema_read_1_record,
     bench_big_schema_read_100_record,
-    bench_big_schema_read_10000_record,
-    bench_big_schema_read_100000_record,
-    bench_file_quickstop_null
 );
-criterion_main!(benches);
+
+criterion_group!(
+    name = long_benches;
+    config = Criterion::default().sample_size(20).measurement_time(Duration::from_secs(10));
+    targets =
+        bench_file_quickstop_null,
+        bench_small_schema_write_10000_record,
+        bench_small_schema_read_10000_record,
+        bench_big_schema_read_10000_record,
+        bench_big_schema_write_10000_record
+);
+
+criterion_group!(
+    name = very_long_benches;
+    config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(20));
+    targets =
+        bench_big_schema_read_100000_record,
+);
+
+criterion_main!(benches, long_benches, very_long_benches);
