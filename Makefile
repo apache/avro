@@ -51,7 +51,7 @@ test: install-hooks
 
 .PHONY: benchmark
 benchmark:
-	cargo +nightly bench
+	cargo bench
 
 # DOCS
 
