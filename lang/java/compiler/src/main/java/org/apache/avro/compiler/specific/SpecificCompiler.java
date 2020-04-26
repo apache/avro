@@ -973,8 +973,8 @@ public class SpecificCompiler {
   }
 
   /** Utility for template use. Escapes quotes and backslashes. */
-  public static String javaEscape(Object o) {
-    return o.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+  public static String javaEscape(String o) {
+    return o.replace("\\", "\\\\").replace("\"", "\\\"");
   }
 
   /** Utility for template use. Escapes comment end with HTML entities. */
