@@ -2,10 +2,6 @@
 use std::io::{Read, Write};
 use std::str::FromStr;
 
-#[cfg(feature = "snappy")]
-use byteorder;
-#[cfg(feature = "snappy")]
-use crc;
 use failure::Error;
 use libflate::deflate::{Decoder, Encoder};
 
@@ -59,8 +55,8 @@ impl FromStr for Codec {
 
 impl Codec {
     /// Compress a stream of bytes in-place.
-    pub fn compress(&self, stream: &mut Vec<u8>) -> Result<(), Error> {
-        match *self {
+    pub fn compress(self, stream: &mut Vec<u8>) -> Result<(), Error> {
+        match self {
             Codec::Null => (),
             Codec::Deflate => {
                 let mut encoder = Encoder::new(Vec::new());
@@ -87,8 +83,8 @@ impl Codec {
     }
 
     /// Decompress a stream of bytes in-place.
-    pub fn decompress(&self, stream: &mut Vec<u8>) -> Result<(), Error> {
-        match *self {
+    pub fn decompress(self, stream: &mut Vec<u8>) -> Result<(), Error> {
+        match self {
             Codec::Null => (),
             Codec::Deflate => {
                 let mut decoded = Vec::new();

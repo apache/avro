@@ -93,7 +93,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
         }
         Value::Array(items) => {
             if let Schema::Array(ref inner) = *schema {
-                if items.len() > 0 {
+                if !items.is_empty() {
                     encode_long(items.len() as i64, buffer);
                     for item in items.iter() {
                         encode_ref(item, inner, buffer);
@@ -104,7 +104,7 @@ pub fn encode_ref(value: &Value, schema: &Schema, buffer: &mut Vec<u8>) {
         }
         Value::Map(items) => {
             if let Schema::Map(ref inner) = *schema {
-                if items.len() > 0 {
+                if !items.is_empty() {
                     encode_long(items.len() as i64, buffer);
                     for (key, value) in items {
                         encode_bytes(key, buffer);

@@ -63,7 +63,7 @@ pub struct EnumUnitDeserializer<'a> {
 }
 
 pub struct EnumDeserializer<'de> {
-    input: &'de Vec<(String, Value)>,
+    input: &'de [(String, Value)],
 }
 
 impl<'de> Deserializer<'de> {
@@ -107,7 +107,7 @@ impl<'a> EnumUnitDeserializer<'a> {
 }
 
 impl<'de> EnumDeserializer<'de> {
-    pub fn new(input: &'de Vec<(String, Value)>) -> Self {
+    pub fn new(input: &'de [(String, Value)]) -> Self {
         EnumDeserializer { input }
     }
 }
@@ -183,9 +183,9 @@ impl<'de> de::EnumAccess<'de> for EnumDeserializer<'de> {
                     "Expected first field named 'type': got '{}' instead",
                     field
                 ))),
-                (_, _) => Err(Error::custom(format!(
-                    "Expected first field of type String for the type name"
-                ))),
+                (_, _) => Err(Error::custom(
+                    "Expected first field of type String for the type name".to_string(),
+                )),
             },
         )
     }

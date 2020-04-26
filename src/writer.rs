@@ -5,7 +5,6 @@ use std::io::Write;
 use failure::{Error, Fail};
 use rand::random;
 use serde::Serialize;
-use serde_json;
 
 use crate::encode::{encode, encode_ref, encode_to_vec};
 use crate::schema::Schema;

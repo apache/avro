@@ -156,7 +156,6 @@
 //!     b: String,
 //! }
 //!
-//! # fn main() {
 //! # let raw_schema = r#"
 //! #     {
 //! #         "type": "record",
@@ -185,7 +184,6 @@
 //!
 //! // this is how to get back the resulting avro bytecode
 //! let encoded = writer.into_inner();
-//! # }
 //! ```
 //!
 //! The vast majority of the times, schemas tend to define a record as a top-level container
@@ -377,7 +375,6 @@
 //!     b: String,
 //! }
 //!
-//! # fn main() {
 //! # let raw_schema = r#"
 //! #     {
 //! #         "type": "record",
@@ -403,7 +400,6 @@
 //! for value in reader {
 //!     println!("{:?}", from_value::<Test>(&value.unwrap()));
 //! }
-//! # }
 //! ```
 //!
 //! # Putting everything together

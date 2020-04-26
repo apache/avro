@@ -38,7 +38,7 @@ clean-lint:
 
 .PHONY: clippy
 clippy:
-	cargo clippy --all-features
+	cargo clippy --all-features -- -Dclippy::all
 
 # TESTING
 

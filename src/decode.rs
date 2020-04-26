@@ -111,16 +111,17 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
             let mut items = Vec::new();
 
             loop {
-                let mut len = zag_i64(reader)?;
+                let raw_len = zag_i64(reader)?;
                 // arrays are 0-terminated, 0i64 is also encoded as 0 in Avro
                 // reading a length of 0 means the end of the array
-                if len == 0 {
-                    break;
-                } else if len < 0 {
-                    let _size = zag_i64(reader)?;
-                    len = -len;
-                }
-                let len = safe_len(len as usize)?;
+                let len = safe_len(match raw_len.cmp(&0) {
+                    std::cmp::Ordering::Equal => break,
+                    std::cmp::Ordering::Less => {
+                        let _size = zag_i64(reader)?;
+                        -raw_len
+                    }
+                    std::cmp::Ordering::Greater => raw_len,
+                } as usize)?;
 
                 items.reserve(len as usize);
                 for _ in 0..len {
@@ -134,18 +135,19 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
             let mut items = HashMap::new();
 
             loop {
-                let mut len = zag_i64(reader)?;
+                let raw_len = zag_i64(reader)?;
                 // maps are 0-terminated, 0i64 is also encoded as 0 in Avro
                 // reading a length of 0 means the end of the map
-                if len == 0 {
-                    break;
-                } else if len < 0 {
-                    let _size = zag_i64(reader)?;
-                    len = -len;
-                }
-                let len = safe_len(len as usize)?;
+                let len = safe_len(match raw_len.cmp(&0) {
+                    std::cmp::Ordering::Equal => break,
+                    std::cmp::Ordering::Less => {
+                        let _size = zag_i64(reader)?;
+                        -raw_len
+                    }
+                    std::cmp::Ordering::Greater => raw_len,
+                } as usize)?;
 
-                items.reserve(len as usize);
+                items.reserve(len);
                 for _ in 0..len {
                     if let Value::String(key) = decode(&Schema::String, reader)? {
                         let value = decode(inner, reader)?;
@@ -161,10 +163,11 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> Result<Value, Error> 
         Schema::Union(ref inner) => {
             let index = zag_i64(reader)?;
             let variants = inner.variants();
-            match variants.get(index as usize) {
-                Some(variant) => decode(variant, reader).map(|x| Value::Union(Box::new(x))),
-                None => Err(DecodeError::new("Union index out of bounds").into()),
-            }
+            let variant = variants
+                .get(index as usize)
+                .ok_or_else(|| DecodeError::new("Union index out of bounds"))?;
+            let value = decode(variant, reader)?;
+            Ok(Value::Union(Box::new(value)))
         }
         Schema::Record { ref fields, .. } => {
             // Benchmarks indicate ~10% improvement using this method.

@@ -327,15 +327,13 @@ impl UnionSchema {
         let mut vindex = HashMap::new();
         for (i, schema) in schemas.iter().enumerate() {
             if let Schema::Union(_) = schema {
-                Err(ParseSchemaError::new(
-                    "Unions may not directly contain a union",
-                ))?;
+                return Err(
+                    ParseSchemaError::new("Unions may not directly contain a union").into(),
+                );
             }
             let kind = SchemaKind::from(schema);
             if vindex.insert(kind, i).is_some() {
-                Err(ParseSchemaError::new(
-                    "Unions cannot contain duplicate types",
-                ))?;
+                return Err(ParseSchemaError::new("Unions cannot contain duplicate types").into());
             }
         }
         Ok(UnionSchema {
@@ -377,7 +375,7 @@ pub(crate) type Scale = DecimalMetadata;
 
 fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalMetadata, Error> {
     if value.is_u64() {
-        return Ok(value
+        Ok(value
             .as_u64()
             .ok_or_else(|| {
                 ParseSchemaError::new(format!(
@@ -385,11 +383,9 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
                     value
                 ))
             })?
-            .try_into()?);
-    }
-
-    if value.is_i64() {
-        return Ok(value
+            .try_into()?)
+    } else if value.is_i64() {
+        Ok(value
             .as_i64()
             .ok_or_else(|| {
                 ParseSchemaError::new(format!(
@@ -397,12 +393,14 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
                     value
                 ))
             })?
-            .try_into()?);
+            .try_into()?)
+    } else {
+        Err(ParseSchemaError::new(format!(
+            "Invalid JSON value for decimal precision/scale integer: {}",
+            value
+        ))
+        .into())
     }
-    return Err(ParseSchemaError::new(format!(
-        "Invalid JSON value for decimal precision/scale integer: {}",
-        value
-    )))?;
 }
 
 impl Schema {
@@ -473,17 +471,13 @@ impl Schema {
             match complex.get(key) {
                 Some(&Value::Number(ref value)) => parse_json_integer_for_decimal(value),
                 None => {
-                    return Err(ParseSchemaError::new(format!(
-                        "{} missing for decimal type",
-                        key
-                    )))?
+                    Err(ParseSchemaError::new(format!("{} missing for decimal type", key)).into())
                 }
-                precision => {
-                    return Err(ParseSchemaError::new(format!(
-                        "invalid JSON for {}: {:?}",
-                        key, precision,
-                    )))?
-                }
+                precision => Err(ParseSchemaError::new(format!(
+                    "invalid JSON for {}: {:?}",
+                    key, precision,
+                ))
+                .into()),
             }
         }
         let precision = get_decimal_integer(complex, "precision")?;
@@ -513,12 +507,13 @@ impl Schema {
                         Err(ParseSchemaError::new(format!(
                             "Unexpected `type` ({}) variant for `logicalType`",
                             value
-                        )))?
+                        ))
+                        .into())
                     }
                 }
-                None => Err(ParseSchemaError::new(
-                    "No `type` field found for `logicalType`",
-                ))?,
+                None => {
+                    Err(ParseSchemaError::new("No `type` field found for `logicalType`").into())
+                }
             }
         }
         match complex.get("logicalType") {
@@ -572,7 +567,7 @@ impl Schema {
             // The spec says to ignore invalid logical types and just continue through to the
             // underlying type - It is unclear whether that applies to this case or not, where the
             // `logicalType` is not a string.
-            Some(_) => Err(ParseSchemaError::new("logicalType must be a string"))?,
+            Some(_) => return Err(ParseSchemaError::new("logicalType must be a string").into()),
             _ => {}
         }
         match complex.get("type") {

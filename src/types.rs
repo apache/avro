@@ -419,25 +419,30 @@ impl Value {
         inner: &Schema,
     ) -> Result<Self, Error> {
         if scale > precision {
-            Err(SchemaResolutionError::new(format!(
+            return Err(SchemaResolutionError::new(format!(
                 "Scale {} is greater than precision {}",
                 scale, precision
-            )))?
+            ))
+            .into());
         }
         match inner {
             &Schema::Fixed { size, .. } => {
                 if max_prec_for_len(size)? < precision {
-                    Err(SchemaResolutionError::new(format!(
+                    return Err(SchemaResolutionError::new(format!(
                         "Fixed size {} is not large enough to hold decimal values of precision {}",
                         size, precision,
-                    )))?
+                    ))
+                    .into());
                 }
             }
             Schema::Bytes => (),
-            _ => Err(SchemaResolutionError::new(format!(
-                "Underlying decimal type must be fixed or bytes, got {:?}",
-                inner
-            )))?,
+            _ => {
+                return Err(SchemaResolutionError::new(format!(
+                    "Underlying decimal type must be fixed or bytes, got {:?}",
+                    inner
+                ))
+                .into())
+            }
         };
         match self {
             Value::Decimal(num) => {
@@ -446,7 +451,8 @@ impl Value {
                     Err(SchemaResolutionError::new(format!(
                         "Precision {} too small to hold decimal values with {} bytes",
                         precision, num_bytes,
-                    )))?
+                    ))
+                    .into())
                 } else {
                     Ok(Value::Decimal(num))
                 }
@@ -458,26 +464,25 @@ impl Value {
                         "Precision {} too small to hold decimal values with {} bytes",
                         precision,
                         bytes.len(),
-                    )))?
+                    ))
+                    .into())
                 } else {
                     // precision and scale match, can we assume the underlying type can hold the data?
                     Ok(Value::Decimal(Decimal::from(bytes)))
                 }
             }
-            other => Err(SchemaResolutionError::new(format!(
-                "Decimal expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Decimal expected, got {:?}", other)).into())
+            }
         }
     }
 
     fn resolve_date(self) -> Result<Self, Error> {
         match self {
             Value::Date(d) | Value::Int(d) => Ok(Value::Date(d)),
-            other => Err(SchemaResolutionError::new(format!(
-                "Date expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Date expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -487,7 +492,8 @@ impl Value {
             other => Err(SchemaResolutionError::new(format!(
                 "TimeMillis expected, got {:?}",
                 other
-            )))?,
+            ))
+            .into()),
         }
     }
 
@@ -498,7 +504,8 @@ impl Value {
             other => Err(SchemaResolutionError::new(format!(
                 "TimeMicros expected, got {:?}",
                 other
-            )))?,
+            ))
+            .into()),
         }
     }
 
@@ -509,7 +516,8 @@ impl Value {
             other => Err(SchemaResolutionError::new(format!(
                 "TimestampMillis expected, got {:?}",
                 other
-            )))?,
+            ))
+            .into()),
         }
     }
 
@@ -520,27 +528,26 @@ impl Value {
             other => Err(SchemaResolutionError::new(format!(
                 "TimestampMicros expected, got {:?}",
                 other
-            )))?,
+            ))
+            .into()),
         }
     }
 
     fn resolve_null(self) -> Result<Self, Error> {
         match self {
             Value::Null => Ok(Value::Null),
-            other => Err(SchemaResolutionError::new(format!(
-                "Null expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Null expected, got {:?}", other)).into())
+            }
         }
     }
 
     fn resolve_boolean(self) -> Result<Self, Error> {
         match self {
             Value::Boolean(b) => Ok(Value::Boolean(b)),
-            other => Err(SchemaResolutionError::new(format!(
-                "Boolean expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Boolean expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -548,10 +555,9 @@ impl Value {
         match self {
             Value::Int(n) => Ok(Value::Int(n)),
             Value::Long(n) => Ok(Value::Int(n as i32)),
-            other => Err(SchemaResolutionError::new(format!(
-                "Int expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Int expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -559,10 +565,9 @@ impl Value {
         match self {
             Value::Int(n) => Ok(Value::Long(i64::from(n))),
             Value::Long(n) => Ok(Value::Long(n)),
-            other => Err(SchemaResolutionError::new(format!(
-                "Long expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Long expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -572,10 +577,9 @@ impl Value {
             Value::Long(n) => Ok(Value::Float(n as f32)),
             Value::Float(x) => Ok(Value::Float(x)),
             Value::Double(x) => Ok(Value::Float(x as f32)),
-            other => Err(SchemaResolutionError::new(format!(
-                "Float expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Float expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -585,10 +589,9 @@ impl Value {
             Value::Long(n) => Ok(Value::Double(n as f64)),
             Value::Float(x) => Ok(Value::Double(f64::from(x))),
             Value::Double(x) => Ok(Value::Double(x)),
-            other => Err(SchemaResolutionError::new(format!(
-                "Double expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Double expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -602,10 +605,9 @@ impl Value {
                     .map(Value::try_u8)
                     .collect::<Result<Vec<_>, _>>()?,
             )),
-            other => Err(SchemaResolutionError::new(format!(
-                "Bytes expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("Bytes expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -613,10 +615,9 @@ impl Value {
         match self {
             Value::String(s) => Ok(Value::String(s)),
             Value::Bytes(bytes) => Ok(Value::String(String::from_utf8(bytes)?)),
-            other => Err(SchemaResolutionError::new(format!(
-                "String expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("String expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -629,13 +630,13 @@ impl Value {
                     Err(SchemaResolutionError::new(format!(
                         "Fixed size mismatch, {} expected, got {}",
                         size, n
-                    )))?
+                    ))
+                    .into())
                 }
             }
-            other => Err(SchemaResolutionError::new(format!(
-                "String expected, got {:?}",
-                other
-            )))?,
+            other => {
+                Err(SchemaResolutionError::new(format!("String expected, got {:?}", other)).into())
+            }
         }
     }
 
@@ -647,7 +648,8 @@ impl Value {
                 Err(SchemaResolutionError::new(format!(
                     "Enum default {} is not among allowed symbols {:?}",
                     symbol, symbols,
-                )))?
+                ))
+                .into())
             }
         };
 
@@ -660,14 +662,16 @@ impl Value {
                         "Enum value {} is out of bound {}",
                         i,
                         symbols.len() as i32
-                    )))?
+                    ))
+                    .into())
                 }
             }
             Value::String(s) => validate_symbol(s, symbols),
             other => Err(SchemaResolutionError::new(format!(
                 "Enum({:?}) expected, got {:?}",
                 symbols, other
-            )))?,
+            ))
+            .into()),
         }
     }
 
@@ -696,7 +700,8 @@ impl Value {
             other => Err(SchemaResolutionError::new(format!(
                 "Array({:?}) expected, got {:?}",
                 schema, other
-            )))?,
+            ))
+            .into()),
         }
     }
 
@@ -711,7 +716,8 @@ impl Value {
             other => Err(SchemaResolutionError::new(format!(
                 "Map({:?}) expected, got {:?}",
                 schema, other
-            )))?,
+            ))
+            .into()),
         }
     }
 
@@ -752,7 +758,8 @@ impl Value {
                             return Err(SchemaResolutionError::new(format!(
                                 "missing field {} in record",
                                 field.name
-                            )))?;
+                            ))
+                            .into());
                         }
                     },
                 };
@@ -773,10 +780,7 @@ impl Value {
             }
         }
 
-        Err(SchemaResolutionError::new(format!(
-            "Unable to convert to u8, got {:?}",
-            int
-        )))?
+        Err(SchemaResolutionError::new(format!("Unable to convert to u8, got {:?}", int)).into())
     }
 }
 
