@@ -34,6 +34,7 @@ RUN apt-get -qqy update \
                                                  bzip2 \
                                                  bundler \
                                                  cmake \
+                                                 cppcheck \
                                                  curl \
                                                  doxygen \
                                                  flex \
