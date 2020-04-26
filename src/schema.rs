@@ -1182,4 +1182,16 @@ mod tests {
             Schema::parse_str(r#"{"type": "long", "logicalType": "timestamp-micros"}"#).unwrap();
         assert_eq!(schema, Schema::TimestampMicros);
     }
+
+    #[test]
+    fn test_nullable_logical_type() {
+        let schema = Schema::parse_str(
+            r#"{"type": ["null", {"type": "long", "logicalType": "timestamp-micros"}]}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            schema,
+            Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::TimestampMicros]).unwrap())
+        );
+    }
 }
