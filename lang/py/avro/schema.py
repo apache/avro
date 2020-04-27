@@ -177,6 +177,23 @@ class Schema(object):
   other_props = property(lambda self: get_other_props(self._props, SCHEMA_RESERVED_PROPS),
                          doc="dictionary of non-reserved properties")
 
+  def check_props(self, other, props):
+    """Check that the given props are identical in two schemas.
+
+    @arg other: The other schema to check
+    @arg props: An iterable of properties to check
+    @return bool: True if all the properties match
+    """
+    return all(getattr(self, prop) == getattr(other, prop) for prop in props)
+
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the writer schema.
+
+    @arg writer: the writer schema to match against.
+    @return bool
+    """
+    raise NotImplemented("Must be implemented by subclasses")
+
   # utility functions to manipulate properties dict
   def get_prop(self, key):
     return self._props.get(key)
@@ -460,6 +477,19 @@ class PrimitiveSchema(Schema):
 
     self.fullname = type
 
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the writer schema.
+
+    @arg writer: the schema to match against
+    @return bool
+    """
+    return self.type == writer.type or {
+      'float': self.type == 'double',
+      'int': self.type in {'double', 'float', 'long'},
+      'long': self.type in {'double', 'float',},
+    }.get(writer.type, False)
+
+
   def to_json(self, names=None):
     if len(self.props) == 1:
       return self.fullname
@@ -472,7 +502,6 @@ class PrimitiveSchema(Schema):
 #
 # Decimal Bytes Type
 #
-
 class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
   def __init__(self, precision, scale=0, other_props=None):
     DecimalLogicalSchema.__init__(self, precision, scale, max_precision=((1 << 31) - 1))
@@ -494,7 +523,6 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
 #
 # Complex Types (non-recursive)
 #
-
 class FixedSchema(NamedSchema):
   def __init__(self, name, namespace, size, names=None, other_props=None):
     # Ensure valid ctor args
@@ -510,6 +538,14 @@ class FixedSchema(NamedSchema):
 
   # read-only properties
   size = property(lambda self: self.get_prop('size'))
+
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the writer schema.
+
+    @arg writer: the schema to match against
+    @return bool
+    """
+    return self.type == writer.type and self.check_props(writer, ['fullname', 'size'])
 
   def to_json(self, names=None):
     if names is None:
@@ -574,6 +610,14 @@ class EnumSchema(NamedSchema):
   symbols = property(lambda self: self.get_prop('symbols'))
   doc = property(lambda self: self.get_prop('doc'))
 
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the writer schema.
+
+    @arg writer: the schema to match against
+    @return bool
+    """
+    return self.type == writer.type and self.check_props(writer, ['fullname'])
+
   def to_json(self, names=None):
     if names is None:
       names = Names()
@@ -610,6 +654,14 @@ class ArraySchema(Schema):
   # read-only properties
   items = property(lambda self: self.get_prop('items'))
 
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the writer schema.
+
+    @arg writer: the schema to match against
+    @return bool
+    """
+    return self.type == writer.type and self.items.check_props(writer.items, ['type'])
+
   def to_json(self, names=None):
     if names is None:
       names = Names()
@@ -642,6 +694,14 @@ class MapSchema(Schema):
 
   # read-only properties
   values = property(lambda self: self.get_prop('values'))
+
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the writer schema.
+
+    @arg writer: the schema to match against
+    @return bool
+    """
+    return writer.type == self.type and self.values.check_props(writer.values, ['type'])
 
   def to_json(self, names=None):
     if names is None:
@@ -689,6 +749,14 @@ class UnionSchema(Schema):
 
   # read-only properties
   schemas = property(lambda self: self._schemas)
+
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the writer schema.
+
+    @arg writer: the schema to match against
+    @return bool
+    """
+    return writer.type in {'union', 'error_union'} or any(s.match(writer) for s in self.schemas)
 
   def to_json(self, names=None):
     if names is None:
@@ -749,6 +817,14 @@ class RecordSchema(NamedSchema):
         raise SchemaParseException('Not a valid field: %s' % field)
       field_objects.append(new_field)
     return field_objects
+
+  def match(self, writer):
+    """Return True if the current schema (as reader) matches the other schema.
+
+    @arg writer: the schema to match against
+    @return bool
+    """
+    return writer.type == self.type and (self.type == 'request' or self.check_props(writer, ['fullname']))
 
   def __init__(self, name, namespace, fields, names=None, schema_type='record',
                doc=None, other_props=None):
