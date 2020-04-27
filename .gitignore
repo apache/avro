@@ -24,3 +24,4 @@ test-output
 .mypy_cache
 .python-version
 .coverage
+/lang/s958/
