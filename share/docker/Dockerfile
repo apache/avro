@@ -50,6 +50,7 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  make \
                                                  maven \
+                                                 mypy \
                                                  openjdk-8-jdk \
                                                  perl \
                                                  python \

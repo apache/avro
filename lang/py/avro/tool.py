@@ -28,12 +28,20 @@ from __future__ import absolute_import, division, print_function
 import os.path
 import sys
 import threading
-import urlparse
 import warnings
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 import avro.io
 from avro import datafile, ipc, protocol
+
+try:
+  import BaseHTTPServer as http_server  # type: ignore
+except ImportError:
+  import http.server as http_server  # type: ignore
+
+try:
+  from urllib.parse import urlparse
+except ImportError:
+  from urlparse import urlparse  # type: ignore
 
 
 class GenericResponder(ipc.Responder):
@@ -51,7 +59,7 @@ class GenericResponder(ipc.Responder):
       server_should_shutdown = True
       return self.datum
 
-class GenericHandler(BaseHTTPRequestHandler):
+class GenericHandler(http_server.BaseHTTPRequestHandler):
   def do_POST(self):
     self.responder = responder
     call_request_reader = ipc.FramedReader(self.rfile)
@@ -69,13 +77,13 @@ class GenericHandler(BaseHTTPRequestHandler):
       quitter.start()
 
 def run_server(uri, proto, msg, datum):
-  url_obj = urlparse.urlparse(uri)
+  url_obj = urlparse(uri)
   server_addr = (url_obj.hostname, url_obj.port)
   global responder
   global server_should_shutdown
   server_should_shutdown = False
   responder = GenericResponder(proto, msg, datum)
-  server = HTTPServer(server_addr, GenericHandler)
+  server = http_server.HTTPServer(server_addr, GenericHandler)
   print("Port: %s" % server.server_port)
   sys.stdout.flush()
   server.allow_reuse_address = True
@@ -83,7 +91,7 @@ def run_server(uri, proto, msg, datum):
   server.serve_forever()
 
 def send_message(uri, proto, msg, datum):
-  url_obj = urlparse.urlparse(uri)
+  url_obj = urlparse(uri)
   client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
   proto_json = open(proto, 'rb').read()
   requestor = ipc.Requestor(protocol.parse(proto_json), client)

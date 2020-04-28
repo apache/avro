@@ -264,7 +264,8 @@ EXAMPLES = [HELLO_WORLD, ValidTestProtocol({
   }),
 ]
 
-VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
+VALID_EXAMPLES = [e for e in EXAMPLES if getattr(e, "valid", False)]
+
 
 class TestMisc(unittest.TestCase):
   def test_inner_namespace_set(self):
