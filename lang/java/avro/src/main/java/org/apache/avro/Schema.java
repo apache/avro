@@ -392,11 +392,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   /**
-   * Render this as <a href="https://json.org/">JSON</a>,
-   * but without inlining the referenced schemas.
+   * Render this as <a href="https://json.org/">JSON</a>, but without inlining the
+   * referenced schemas.
    *
    * @param referencedSchemas referenced schemas
-   * @param pretty if true, pretty-print JSON.
+   * @param pretty            if true, pretty-print JSON.
    */
   public String toString(Collection<Schema> referencedSchemas, boolean pretty) {
     Schema.Names names = new Schema.Names();
