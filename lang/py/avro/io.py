@@ -185,7 +185,8 @@ def validate(expected_schema, datum):
     else:
         result = _valid[expected_type](expected_schema, datum)
         if _DEBUG_VALIDATE:
-            print('{!s}{!s}{!s}: {!s} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT, expected_schema.type, name, type(datum).__name__, result), file=sys.stderr)
+            print('{!s}{!s}{!s}: {!s} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT,
+                  expected_schema.type, name, type(datum).__name__, result), file=sys.stderr)
     return result
 
 

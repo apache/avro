@@ -327,7 +327,17 @@ class TestMisc(unittest.TestCase):
 
     def test_correct_recursive_extraction(self):
         """A recursive reference within a schema should be the same type every time."""
-        s = schema.parse('{"type": "record", "name": "X", "fields": [{"name": "y", "type": {"type": "record", "name": "Y", "fields": [{"name": "Z", "type": "X"}]}}]}')
+        s = schema.parse('''{
+            "type": "record",
+            "name": "X",
+            "fields": [{
+                "name": "y",
+                "type": {
+                    "type": "record",
+                    "name": "Y",
+                    "fields": [{"name": "Z", "type": "X"}]}
+            }]
+        }''')
         t = schema.parse(str(s.fields[0].type))
         # If we've made it this far, the subschema was reasonably stringified; it ccould be reparsed.
         self.assertEqual("X", t.fields[0].type.name)

@@ -231,10 +231,18 @@ class Name(object):
         """The fullname is determined in one of the following ways:
 
         - A name and namespace are both specified. For example, one might use "name": "X", "namespace": "org.foo" to indicate the fullname org.foo.X.
-        - A fullname is specified. If the name specified contains a dot, then it is assumed to be a fullname, and any namespace also specified is ignored. For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
-        - A name only is specified, i.e., a name that contains no dots. In this case the namespace is taken from the most tightly enclosing schema or protocol. For example, if "name": "X" is specified, and this occurs within a field of the record definition of org.foo.Y, then the fullname is org.foo.X. If there is no enclosing namespace then the null namespace is used.
+        - A fullname is specified. If the name specified contains a dot,
+          then it is assumed to be a fullname, and any namespace also specified is ignored.
+          For example, use "name": "org.foo.X" to indicate the fullname org.foo.X.
+        - A name only is specified, i.e., a name that contains no dots.
+          In this case the namespace is taken from the most tightly enclosing schema or protocol.
+          For example, if "name": "X" is specified, and this occurs within a field of
+          the record definition of org.foo.Y, then the fullname is org.foo.X.
+          If there is no enclosing namespace then the null namespace is used.
 
-        References to previously defined names are as in the latter two cases above: if they contain a dot they are a fullname, if they do not contain a dot, the namespace is the namespace of the enclosing definition.
+        References to previously defined names are as in the latter two cases above:
+        if they contain a dot they are a fullname,
+        if they do not contain a dot, the namespace is the namespace of the enclosing definition.
 
         @arg name_attr: name value read in schema or None.
         @arg space_attr: namespace value read in schema or None. The empty string may be used as a namespace to indicate the null namespace.

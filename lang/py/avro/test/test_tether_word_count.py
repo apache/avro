@@ -76,7 +76,10 @@ def _has_java():
 
     On most systems, this is just checking if `java` is in the PATH.
 
-    But macos always has a /usr/bin/java, which does not mean java is installed. If you invoke java on macos and java is not installed, macos will spawn a popup telling you how to install java. This code does additional work around that to be completely automatic.
+    But macos always has a /usr/bin/java, which does not mean java is installed.
+    If you invoke java on macos and java is not installed, macos will spawn a popup
+    telling you how to install java. This code does additional work around that
+    to be completely automatic.
     """
     if platform.system() == "Darwin":
         try:

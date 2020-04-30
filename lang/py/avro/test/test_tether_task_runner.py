@@ -166,7 +166,8 @@ class TestTetherTaskRunner(unittest.TestCase):
             env = {"AVRO_TETHER_OUTPUT_PORT": "{0}".format(parent_port)}
             env["PYTHONPATH"] = ':'.join(sys.path)
 
-            runnerproc = subprocess.Popen([sys.executable, avro.tether.tether_task_runner.__file__, "avro.test.word_count_task.WordCountTask"], env=env)
+            runnerproc = subprocess.Popen([sys.executable, avro.tether.tether_task_runner.__file__,
+                                          "avro.test.word_count_task.WordCountTask"], env=env)
 
             # possible race condition wait for the process to start
             time.sleep(1)
