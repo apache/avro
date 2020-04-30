@@ -25,6 +25,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Schema;
@@ -146,5 +149,19 @@ public class JacksonUtils {
       return m;
     }
     return null;
+  }
+
+  /**
+   * Convert an object into a map
+   * 
+   * @param datum The object
+   * @return Its Map representation
+   */
+  public static Map objectToMap(Object datum) {
+    ObjectMapper mapper = new ObjectMapper();
+    // we only care about fields
+    mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
+    mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    return mapper.convertValue(datum, Map.class);
   }
 }
