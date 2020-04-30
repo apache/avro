@@ -161,5 +161,5 @@ class TestTetherWordCount(unittest.TestCase):
             actual_counts = {r["key"]: r["value"] for r in reader}
         self.assertDictEqual(actual_counts, expected_counts)
 
-if __name__== "__main__":
+if __name__ == "__main__":
     unittest.main()

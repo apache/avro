@@ -47,15 +47,15 @@ class TestTetherTaskRunner(unittest.TestCase):
         # set the logging level to debug so that debug messages are printed
         logging.basicConfig(level=logging.DEBUG)
 
-        proc=None
+        proc = None
         try:
             # launch the server in a separate process
-            env=dict()
-            env["PYTHONPATH"]=':'.join(sys.path)
+            env = dict()
+            env["PYTHONPATH"] = ':'.join(sys.path)
             parent_port = avro.tether.util.find_port()
 
-            pyfile=avro.test.mock_tether_parent.__file__
-            proc=subprocess.Popen([sys.executable, pyfile,"start_server","{0}".format(parent_port)])
+            pyfile = avro.test.mock_tether_parent.__file__
+            proc = subprocess.Popen([sys.executable, pyfile, "start_server", "{0}".format(parent_port)])
             input_port = avro.tether.util.find_port()
 
             print("Mock server started process pid={0}".format(proc.pid))
@@ -65,7 +65,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
             runner = avro.tether.tether_task_runner.TaskRunner(avro.test.word_count_task.WordCountTask())
 
-            runner.start(outputport=parent_port,join=False)
+            runner.start(outputport=parent_port, join=False)
 
             # Test sending various messages to the server and ensuring they are processed correctly
             requestor = avro.tether.tether_task.HTTPRequestor(
@@ -89,11 +89,11 @@ class TestTetherTaskRunner(unittest.TestCase):
             datum_writer.write(datum, encoder)
 
             writer.seek(0)
-            data=writer.read()
+            data = writer.read()
 
 
             # Call input to simulate calling map
-            requestor.request("input",{"data":data,"count":1})
+            requestor.request("input", {"data": data, "count": 1})
 
             # Test the reducer
             requestor.request("configure", {
@@ -102,7 +102,7 @@ class TestTetherTaskRunner(unittest.TestCase):
                 "outSchema": unicode(str(runner.task.outschema))}
             )
 
-            #Serialize some data so we can send it to the input function
+            # Serialize some data so we can send it to the input function
             datum = {"key": unicode("word"), "value": 2}
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
@@ -110,35 +110,35 @@ class TestTetherTaskRunner(unittest.TestCase):
             datum_writer.write(datum, encoder)
 
             writer.seek(0)
-            data=writer.read()
+            data = writer.read()
 
 
-            #Call input to simulate calling reduce
-            requestor.request("input",{"data":data,"count":1})
+            # Call input to simulate calling reduce
+            requestor.request("input", {"data": data, "count": 1})
 
-            requestor.request("complete",{})
+            requestor.request("complete", {})
 
 
             runner.task.ready_for_shutdown.wait()
             runner.server.shutdown()
-            #time.sleep(2)
-            #runner.server.shutdown()
+            # time.sleep(2)
+            # runner.server.shutdown()
 
-            sthread=runner.sthread
+            sthread = runner.sthread
 
-            #Possible race condition?
+            # Possible race condition?
             time.sleep(1)
 
-            #make sure the other thread terminated
+            # make sure the other thread terminated
             self.assertFalse(sthread.isAlive())
 
-            #shutdown the logging
+            # shutdown the logging
             logging.shutdown()
 
         except Exception as e:
             raise
         finally:
-            #close the process
+            # close the process
             if not(proc is None):
                 proc.kill()
 
@@ -149,50 +149,50 @@ class TestTetherTaskRunner(unittest.TestCase):
         as our main script everything works as expected. We do this by using subprocess to run it
         in a separate thread.
         """
-        proc=None
+        proc = None
 
-        runnerproc=None
+        runnerproc = None
         try:
-            #launch the server in a separate process
-            env=dict()
-            env["PYTHONPATH"]=':'.join(sys.path)
+            # launch the server in a separate process
+            env = dict()
+            env["PYTHONPATH"] = ':'.join(sys.path)
             parent_port = avro.tether.util.find_port()
 
-            pyfile=avro.test.mock_tether_parent.__file__
-            proc=subprocess.Popen([sys.executable, pyfile,"start_server","{0}".format(parent_port)])
+            pyfile = avro.test.mock_tether_parent.__file__
+            proc = subprocess.Popen([sys.executable, pyfile, "start_server", "{0}".format(parent_port)])
 
-            #Possible race condition? when we start tether_task_runner it will call
+            # Possible race condition? when we start tether_task_runner it will call
             # open tries to connect to the subprocess before the subprocess is fully started
-            #so we give the subprocess time to start up
+            # so we give the subprocess time to start up
             time.sleep(1)
 
 
-            #start the tether_task_runner in a separate process
-            env={"AVRO_TETHER_OUTPUT_PORT":"{0}".format(parent_port)}
-            env["PYTHONPATH"]=':'.join(sys.path)
+            # start the tether_task_runner in a separate process
+            env = {"AVRO_TETHER_OUTPUT_PORT": "{0}".format(parent_port)}
+            env["PYTHONPATH"] = ':'.join(sys.path)
 
             runnerproc = subprocess.Popen([sys.executable, avro.tether.tether_task_runner.__file__, "avro.test.word_count_task.WordCountTask"], env=env)
 
-            #possible race condition wait for the process to start
+            # possible race condition wait for the process to start
             time.sleep(1)
 
 
 
             print("Mock server started process pid={0}".format(proc.pid))
-            #Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
-            #so we give the subprocess time to start up
+            # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
+            # so we give the subprocess time to start up
             time.sleep(1)
 
 
         except Exception as e:
             raise
         finally:
-            #close the process
+            # close the process
             if not(runnerproc is None):
                 runnerproc.kill()
 
             if not(proc is None):
                 proc.kill()
 
-if __name__==("__main__"):
+if __name__ == ("__main__"):
     unittest.main()

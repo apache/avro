@@ -42,12 +42,12 @@ class MockParentResponder(ipc.Responder):
         ipc.Responder.__init__(self, avro.tether.tether_task.outputProtocol)
 
     def invoke(self, message, request):
-        if message.name=='configure':
+        if message.name == 'configure':
             print("MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"]))
 
-        elif message.name=='status':
+        elif message.name == 'status':
             print("MockParentResponder: Recieved 'status': message={0}".format(request["message"]))
-        elif message.name=='fail':
+        elif message.name == 'fail':
             print("MockParentResponder: Recieved 'fail': message={0}".format(request["message"]))
         else:
             print("MockParentResponder: Recieved {0}".format(message.name))
@@ -72,17 +72,17 @@ class MockParentHandler(http_server.BaseHTTPRequestHandler):
         resp_writer.write_framed_message(resp_body)
 
 if __name__ == '__main__':
-    if (len(sys.argv)<=1):
+    if (len(sys.argv) <= 1):
         raise ValueError("Usage: mock_tether_parent command")
 
-    cmd=sys.argv[1].lower()
-    if (sys.argv[1]=='start_server'):
-        if (len(sys.argv)==3):
-            port=int(sys.argv[2])
+    cmd = sys.argv[1].lower()
+    if (sys.argv[1] == 'start_server'):
+        if (len(sys.argv) == 3):
+            port = int(sys.argv[2])
         else:
             raise ValueError("Usage: mock_tether_parent start_server port")
 
-        SERVER_ADDRESS=(SERVER_ADDRESS[0],port)
+        SERVER_ADDRESS = (SERVER_ADDRESS[0], port)
         print("mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1]))
 
         # flush the output so it shows up in the parent process

@@ -67,7 +67,7 @@ LOONIES = (
 
 def looney_records():
     for f, l, t in LOONIES:
-        yield {"first": f, "last" : l, "type" : t}
+        yield {"first": f, "last": l, "type": t}
 
 SCRIPT = join(dirname(dirname(dirname(__file__))), "scripts", "avro")
 

@@ -76,7 +76,7 @@ HELLO_WORLD = ValidTestProtocol({
     ],
     "messages": {
         "hello": {
-            "request": [{"name": "greeting", "type": "Greeting" }],
+            "request": [{"name": "greeting", "type": "Greeting"}],
             "response": "Greeting",
             "errors": ["Curse"]
         }
@@ -86,7 +86,7 @@ EXAMPLES = [HELLO_WORLD, ValidTestProtocol({
     "namespace": "org.apache.avro.test",
     "protocol": "Simple",
     "types": [
-        {"name": "Kind", "type": "enum", "symbols": ["FOO","BAR","BAZ"]},
+        {"name": "Kind", "type": "enum", "symbols": ["FOO", "BAR", "BAZ"]},
         {"name": "MD5", "type": "fixed", "size": 16},
         {"name": "TestRecord", "type": "record", "fields": [
             {"name": "name", "type": "string", "order": "ignore"},
@@ -123,7 +123,7 @@ EXAMPLES = [HELLO_WORLD, ValidTestProtocol({
             {"name": "hash", "type": "org.apache.avro.test.util.MD5"}
         ]},
         {"name": "TestError", "namespace": "org.apache.avro.test.errors", "type": "error",
-         "fields": [ {"name": "message", "type": "string"}]}
+         "fields": [{"name": "message", "type": "string"}]}
     ],
     "messages": {
         "echo": {
@@ -141,7 +141,7 @@ EXAMPLES = [HELLO_WORLD, ValidTestProtocol({
     "types": [
                 {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
                 {"name": "ReferencedRecord", "type": "record",
-                 "fields": [ {"name": "foo", "type": "string"}]},
+                 "fields": [{"name": "foo", "type": "string"}]},
                 {"name": "TestRecord", "type": "record",
                  "fields": [{"name": "hash", "type": "org.apache.avro.test.util.MD5"},
                             {"name": "unqualified", "type": "ReferencedRecord"}]
@@ -210,9 +210,9 @@ EXAMPLES = [HELLO_WORLD, ValidTestProtocol({
     "types": [
         {"name": "org.apache.avro.test.util.MD5", "type": "fixed", "size": 16},
         {"name": "ReferencedRecord", "type": "record",
-         "fields": [ {"name": "foo", "type": "string"}]},
+         "fields": [{"name": "foo", "type": "string"}]},
         {"name": "ReferencedRecord", "type": "record",
-         "fields": [ {"name": "bar", "type": "double"}]},
+         "fields": [{"name": "bar", "type": "double"}]},
         {"name": "TestError",
          "type": "error", "fields": [{"name": "message", "type": "string"}]}],
     "messages": {
@@ -235,7 +235,7 @@ EXAMPLES = [HELLO_WORLD, ValidTestProtocol({
                 "request": [],
                 "response": "bytes"
             }, "write": {
-                "request": [ {"name": "data", "type": "bytes"} ],
+                "request": [{"name": "data", "type": "bytes"}],
                 "response": "null"
             }
         }

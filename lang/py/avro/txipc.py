@@ -142,7 +142,7 @@ class AvroProtocol(Protocol):
     def dataReceived(self, data):
         self.recvd = self.recvd + data
         while len(self.recvd) >= ipc.BUFFER_HEADER_LENGTH:
-            buffer_length ,= ipc.BIG_ENDIAN_INT_STRUCT.unpack(
+            buffer_length, = ipc.BIG_ENDIAN_INT_STRUCT.unpack(
                 self.recvd[:ipc.BUFFER_HEADER_LENGTH])
             if buffer_length == 0:
                 response = ''.join(self.message)

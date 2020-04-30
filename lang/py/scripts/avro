@@ -83,7 +83,7 @@ def select_printer(format):
     }[format]
 
 def record_match(expr, record):
-    return eval(expr, None, {"r" : record})
+    return eval(expr, None, {"r": record})
 
 def parse_fields(fields):
     fields = fields or ''
@@ -142,8 +142,8 @@ def cat(opts, args):
 def _open(filename, mode):
     if filename == "-":
         return {
-            "rb" : sys.stdin,
-            "wb" : sys.stdout
+            "rb": sys.stdin,
+            "wb": sys.stdout
         }[mode]
 
     return open(filename, mode)
@@ -162,15 +162,15 @@ def convert(value, field):
         return convert_union(value, field)
 
     return  {
-        "int" : int,
-        "long" : long,
-        "float" : float,
-        "double" : float,
-        "string" : unicode,
-        "bytes" : bytes,
-        "boolean" : bool,
-        "null" : lambda _: None,
-        "union" : lambda v: convert_union(v, field),
+        "int": int,
+        "long": long,
+        "float": float,
+        "double": float,
+        "string": unicode,
+        "bytes": bytes,
+        "boolean": bool,
+        "null": lambda _: None,
+        "union": lambda v: convert_union(v, field),
     }[type](value)
 
 def convert_union(value, field):
@@ -205,7 +205,7 @@ def write(opts, files):
     input_type = opts.input_type or guess_input_type(files)
     if not input_type:
         raise AvroError("Can't guess input file type (not .json or .csv)")
-    iter_records = {"json" : iter_json, "csv" : iter_csv}[input_type]
+    iter_records = {"json": iter_json, "csv": iter_csv}[input_type]
 
     try:
         with open(opts.schema) as schema_file:
@@ -271,7 +271,7 @@ def main(argv=None):
         else:
             raise AvroError("Unknown command - %s" % command)
     except AvroError as e:
-        parser.error("%s" % e) # Will exit
+        parser.error("%s" % e)  # Will exit
 
 if __name__ == "__main__":
     main()

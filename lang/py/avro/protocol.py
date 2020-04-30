@@ -158,7 +158,7 @@ class Protocol(object):
         if self.namespace:
             to_dump['namespace'] = self.namespace
         if self.types:
-            to_dump['types'] = [ t.to_json(names) for t in self.types ]
+            to_dump['types'] = [t.to_json(names) for t in self.types]
         if self.messages:
             messages_dict = {}
             for name, body in self.messages.items():
@@ -194,7 +194,7 @@ class Message(object):
         errors_for_parsing = {'type': 'error_union', 'declared_errors': errors}
         return avro.schema.make_avsc_object(errors_for_parsing, names)
 
-    def __init__(self,  name, request, response, errors=None, names=None):
+    def __init__(self, name, request, response, errors=None, names=None):
         self._name = name
 
         self._props = {}

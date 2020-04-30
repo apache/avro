@@ -67,7 +67,7 @@ class TestTetherTask(unittest.TestCase):
             # TODO: We should validate that open worked by grabbing the STDOUT of the subproces
             # and ensuring that it outputted the correct message.
 
-            #***************************************************************
+            # ***************************************************************
             # Test the mapper
             task.configure(
                 avro.tether.tether_task.TaskType.MAP,

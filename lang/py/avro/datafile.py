@@ -37,7 +37,7 @@ VERSION = 1
 MAGIC = bytes(b'Obj' + bytearray([VERSION]))
 MAGIC_SIZE = len(MAGIC)
 SYNC_SIZE = 16
-SYNC_INTERVAL = 4000 * SYNC_SIZE # TODO(hammer): make configurable
+SYNC_INTERVAL = 4000 * SYNC_SIZE  # TODO(hammer): make configurable
 META_SCHEMA = avro.schema.parse("""\
 {"type": "record", "name": "org.apache.avro.file.Header",
  "fields" : [
@@ -48,7 +48,7 @@ META_SCHEMA = avro.schema.parse("""\
 
 NULL_CODEC = 'null'
 VALID_CODECS = Codecs.supported_codec_names()
-VALID_ENCODINGS = ['binary'] # not used yet
+VALID_ENCODINGS = ['binary']  # not used yet
 
 CODEC_KEY = "avro.codec"
 SCHEMA_KEY = "avro.schema"
@@ -254,7 +254,7 @@ class DataFileReader(_DataFile):
     def __init__(self, reader, datum_reader):
         self._reader = reader
         self._raw_decoder = avro.io.BinaryDecoder(reader)
-        self._datum_decoder = None # Maybe reset at every block.
+        self._datum_decoder = None  # Maybe reset at every block.
         self._datum_reader = datum_reader
 
         # read the header: magic, meta, sync
