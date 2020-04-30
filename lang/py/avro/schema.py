@@ -446,9 +446,12 @@ class Field(object):
         self.type = type_schema
         self.name = name
         # TODO(hammer): check to ensure default is valid
-        if has_default: self.set_prop('default', default)
-        if order is not None: self.set_prop('order', order)
-        if doc is not None: self.set_prop('doc', doc)
+        if has_default:
+            self.set_prop('default', default)
+        if order is not None:
+            self.set_prop('order', order)
+        if doc is not None:
+            self.set_prop('doc', doc)
 
     # read-only properties
     default = property(lambda self: self.get_prop('default'))
@@ -811,7 +814,8 @@ class ErrorUnionSchema(UnionSchema):
         to_dump = []
         for schema in self.schemas:
             # Don't print the system error schema
-            if schema.type == 'string': continue
+            if schema.type == 'string':
+                continue
             to_dump.append(schema.to_json(names))
         return to_dump
 
@@ -882,7 +886,8 @@ class RecordSchema(NamedSchema):
         # Add class members
         field_objects = RecordSchema.make_field_objects(fields, names)
         self.set_prop('fields', field_objects)
-        if doc is not None: self.set_prop('doc', doc)
+        if doc is not None:
+            self.set_prop('doc', doc)
 
         if schema_type == 'record':
             names.default_namespace = old_default

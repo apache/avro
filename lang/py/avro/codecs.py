@@ -150,7 +150,7 @@ if has_snappy:
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
         def check_crc32(self, bytes, checksum):
-            checksum = STRUCT_CRC32.unpack(checksum)[0];
+            checksum = STRUCT_CRC32.unpack(checksum)[0]
             if crc32(bytes) & 0xffffffff != checksum:
                 raise schema.AvroException("Checksum failure")
 

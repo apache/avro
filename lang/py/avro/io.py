@@ -106,8 +106,10 @@ class SchemaResolutionException(schema.AvroException):
     def __init__(self, fail_msg, writers_schema=None, readers_schema=None):
         pretty_writers = json.dumps(json.loads(str(writers_schema)), indent=2)
         pretty_readers = json.dumps(json.loads(str(readers_schema)), indent=2)
-        if writers_schema: fail_msg += "\nWriter's Schema: %s" % pretty_writers
-        if readers_schema: fail_msg += "\nReader's Schema: %s" % pretty_readers
+        if writers_schema:
+            fail_msg += "\nWriter's Schema: %s" % pretty_writers
+        if readers_schema:
+            fail_msg += "\nReader's Schema: %s" % pretty_readers
         schema.AvroException.__init__(self, fail_msg)
 
 #
@@ -431,7 +433,7 @@ class BinaryEncoder(object):
         """
         int and long values are written using variable-length, zig-zag coding.
         """
-        self.write_long(datum);
+        self.write_long(datum)
 
     def write_long(self, datum):
         """
@@ -950,7 +952,8 @@ class DatumReader(object):
             read_record = {}
             for field in field_schema.fields:
                 json_val = default_value.get(field.name)
-                if json_val is None: json_val = field.default
+                if json_val is None:
+                    json_val = field.default
                 field_val = self._read_default_value(field.type, json_val)
                 read_record[field.name] = field_val
             return read_record
@@ -1102,7 +1105,8 @@ class DatumWriter(object):
         for i, candidate_schema in enumerate(writers_schema.schemas):
             if validate(candidate_schema, datum):
                 index_of_schema = i
-        if index_of_schema < 0: raise AvroTypeException(writers_schema, datum)
+        if index_of_schema < 0:
+            raise AvroTypeException(writers_schema, datum)
 
         # write data
         encoder.write_long(index_of_schema)

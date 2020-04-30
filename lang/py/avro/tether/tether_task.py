@@ -374,8 +374,8 @@ class TetherTask(object):
                     prev = self.midRecord
 
                     # read the new record
-                    self.midRecord = self.midReader.read(decoder);
-                    if (prev != None and not(keys_are_equal(self.midRecord, prev, self._red_fkeys))):
+                    self.midRecord = self.midReader.read(decoder)
+                    if (prev is not None and not(keys_are_equal(self.midRecord, prev, self._red_fkeys))):
                         # since the key has changed we need to finalize the processing
                         # for this group of key,value pairs
                         self.reduceFlush(prev, self.outCollector)
@@ -392,10 +392,10 @@ class TetherTask(object):
         """
         if ((self.taskType == TaskType.REDUCE) and not(self.midRecord is None)):
             try:
-                self.reduceFlush(self.midRecord, self.outCollector);
+                self.reduceFlush(self.midRecord, self.outCollector)
             except Exception as e:
                 estr = traceback.format_exc()
-                self.log.warning("failing: " + estr);
+                self.log.warning("failing: " + estr)
                 self.fail(estr)
 
         self.outputClient.request("complete", dict())
