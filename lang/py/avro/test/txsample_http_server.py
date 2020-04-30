@@ -53,19 +53,19 @@ MAIL_PROTOCOL = protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_ADDRESS = ('localhost', 9090)
 
 class MailResponder(ipc.Responder):
-  def __init__(self):
-    ipc.Responder.__init__(self, MAIL_PROTOCOL)
+    def __init__(self):
+        ipc.Responder.__init__(self, MAIL_PROTOCOL)
 
-  def invoke(self, message, request):
-    if message.name == 'send':
-      request_content = request['message']
-      response = "Sent message to %(to)s from %(from)s with body %(body)s" % \
-                 request_content
-      return response
-    elif message.name == 'replay':
-      return 'replay'
+    def invoke(self, message, request):
+        if message.name == 'send':
+            request_content = request['message']
+            response = "Sent message to %(to)s from %(from)s with body %(body)s" % \
+                       request_content
+            return response
+        elif message.name == 'replay':
+            return 'replay'
 
 if __name__ == '__main__':
-  root = server.Site(txipc.AvroResponderResource(MailResponder()))
-  reactor.listenTCP(9090, root)
-  reactor.run()
+    root = server.Site(txipc.AvroResponderResource(MailResponder()))
+    reactor.listenTCP(9090, root)
+    reactor.run()

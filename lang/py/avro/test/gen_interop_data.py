@@ -29,43 +29,43 @@ import avro.schema
 from avro.codecs import Codecs
 
 try:
-  unicode
+    unicode
 except NameError:
-  unicode = str
+    unicode = str
 
 NULL_CODEC = 'null'
 CODECS_TO_VALIDATE = Codecs.supported_codec_names()
 
 DATUM = {
-  'intField': 12,
-  'longField': 15234324,
-  'stringField': unicode('hey'),
-  'boolField': True,
-  'floatField': 1234.0,
-  'doubleField': -1234.0,
-  'bytesField': b'12312adf',
-  'nullField': None,
-  'arrayField': [5.0, 0.0, 12.0],
-  'mapField': {unicode('a'): {'label': unicode('a')},
-               unicode('bee'): {'label': unicode('cee')}},
-  'unionField': 12.0,
-  'enumField': 'C',
-  'fixedField': b'1019181716151413',
-  'recordField': {'label': unicode('blah'),
-                  'children': [{'label': unicode('inner'), 'children': []}]},
+    'intField': 12,
+    'longField': 15234324,
+    'stringField': unicode('hey'),
+    'boolField': True,
+    'floatField': 1234.0,
+    'doubleField': -1234.0,
+    'bytesField': b'12312adf',
+    'nullField': None,
+    'arrayField': [5.0, 0.0, 12.0],
+    'mapField': {unicode('a'): {'label': unicode('a')},
+                 unicode('bee'): {'label': unicode('cee')}},
+    'unionField': 12.0,
+    'enumField': 'C',
+    'fixedField': b'1019181716151413',
+    'recordField': {'label': unicode('blah'),
+                    'children': [{'label': unicode('inner'), 'children': []}]},
 }
 
 def generate(schema_path, output_path):
-  with open(schema_path, 'r') as schema_file:
-    interop_schema = avro.schema.parse(schema_file.read())
-  for codec in CODECS_TO_VALIDATE:
-    filename = output_path
-    if codec != NULL_CODEC:
-      base, ext = os.path.splitext(output_path)
-      filename = base + "_" + codec + ext
-    with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),
-                                      interop_schema, codec=codec) as dfw:
-      dfw.append(DATUM)
+    with open(schema_path, 'r') as schema_file:
+        interop_schema = avro.schema.parse(schema_file.read())
+    for codec in CODECS_TO_VALIDATE:
+        filename = output_path
+        if codec != NULL_CODEC:
+            base, ext = os.path.splitext(output_path)
+            filename = base + "_" + codec + ext
+        with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),
+                                          interop_schema, codec=codec) as dfw:
+            dfw.append(DATUM)
 
 if __name__ == "__main__":
-  generate(sys.argv[1], sys.argv[2])
+    generate(sys.argv[1], sys.argv[2])

@@ -39,18 +39,18 @@ ifilter = getattr(itertools, 'ifilter', filter)
 imap = getattr(itertools, 'imap', map)
 
 try:
-  unicode
+    unicode
 except NameError:
-  unicode = str
+    unicode = str
 
 try:
-  long
+    long
 except NameError:
-  long = int
+    long = int
 
 def _version():
-  with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
-    return v.read()
+    with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
+        return v.read()
 
 _AVRO_VERSION = _version()
 
@@ -227,26 +227,26 @@ def main(argv=None):
     argv = argv or sys.argv
 
     parser = OptionParser(description="Display/write for Avro files",
-                      version=_AVRO_VERSION,
-                      usage="usage: %prog cat|write [options] FILE [FILE...]")
+                          version=_AVRO_VERSION,
+                          usage="usage: %prog cat|write [options] FILE [FILE...]")
     # cat options
 
     cat_options = OptionGroup(parser, "cat options")
     cat_options.add_option("-n", "--count", default=float("Infinity"),
-                    help="number of records to print", type=int)
+                           help="number of records to print", type=int)
     cat_options.add_option("-s", "--skip", help="number of records to skip",
                            type=int, default=0)
     cat_options.add_option("-f", "--format", help="record format",
                            default="json",
                            choices=["json", "csv", "json-pretty"])
     cat_options.add_option("--header", help="print CSV header", default=False,
-                   action="store_true")
+                           action="store_true")
     cat_options.add_option("--filter", help="filter records (e.g. r['age']>1)",
-                    default=None)
+                           default=None)
     cat_options.add_option("--print-schema", help="print schema",
-                      action="store_true", default=False)
+                           action="store_true", default=False)
     cat_options.add_option('--fields', default=None,
-                help='fields to show, comma separated (show all by default)')
+                           help='fields to show, comma separated (show all by default)')
     parser.add_option_group(cat_options)
 
     # write options

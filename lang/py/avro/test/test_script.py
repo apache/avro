@@ -35,9 +35,9 @@ from avro.datafile import DataFileWriter
 from avro.io import DatumWriter
 
 try:
-  unicode
+    unicode
 except NameError:
-  unicode = str
+    unicode = str
 
 NUM_RECORDS = 7
 
@@ -157,8 +157,8 @@ class TestCat(unittest.TestCase):
         # Empty fields should get all
         out = self._run('--fields', '')
         assert json.loads(out[0]) == \
-                {'first': unicode('daffy'), 'last': unicode('duck'),
-                 'type': unicode('duck')}
+            {'first': unicode('daffy'), 'last': unicode('duck'),
+             'type': unicode('duck')}
 
         # Non existing fields are ignored
         out = self._run('--fields', 'first,last,age')
@@ -207,7 +207,7 @@ class TestWrite(unittest.TestCase):
     def format_check(self, format, filename):
         tmp = tempfile()
         with open(tmp, "wb") as fo:
-          self._run(filename, "-f", format, stdout=fo)
+            self._run(filename, "-f", format, stdout=fo)
 
         records = self.load_avro(tmp)
         assert len(records) == NUM_RECORDS

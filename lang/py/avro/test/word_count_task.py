@@ -29,72 +29,72 @@ __all__ = ["WordCountTask"]
 #TODO::Make the logging level a parameter we can set
 #logging.basicConfig(level=logging.INFO)
 class WordCountTask(avro.tether.tether_task.TetherTask):
-  """
-  Implements the mapper and reducer for the word count example
-  """
-
-  def __init__(self):
     """
+    Implements the mapper and reducer for the word count example
     """
 
-    inschema="""{"type":"string"}"""
-    midschema="""{"type":"record", "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
+    def __init__(self):
+        """
+        """
+
+        inschema="""{"type":"string"}"""
+        midschema="""{"type":"record", "name":"Pair","namespace":"org.apache.avro.mapred","fields":[
               {"name":"key","type":"string"},
               {"name":"value","type":"long","order":"ignore"}]
               }"""
-    outschema=midschema
-    avro.tether.tether_task.TetherTask.__init__(self, inschema, midschema, outschema)
+        outschema=midschema
+        avro.tether.tether_task.TetherTask.__init__(self, inschema, midschema, outschema)
 
 
-    #keep track of the partial sums of the counts
-    self.psum=0
+        #keep track of the partial sums of the counts
+        self.psum=0
 
 
-  def map(self,record,collector):
-    """Implement the mapper for the word count example
+    def map(self,record,collector):
+        """Implement the mapper for the word count example
 
-    Parameters
-    ----------------------------------------------------------------------------
-    record - The input record
-    collector - The collector to collect the output
-    """
+        Parameters
+        ----------------------------------------------------------------------------
+        record - The input record
+        collector - The collector to collect the output
+        """
 
-    words=record.split()
+        words=record.split()
 
-    for w in words:
-      logging.info("WordCountTask.Map: word={0}".format(w))
-      collector.collect({"key":w,"value":1})
+        for w in words:
+            logging.info("WordCountTask.Map: word={0}".format(w))
+            collector.collect({"key":w,"value":1})
 
-  def reduce(self,record, collector):
-    """Called with input values to generate reducer output. Inputs are sorted by the mapper
-    key.
+    def reduce(self,record, collector):
+        """Called with input values to generate reducer output. Inputs are sorted by the mapper
+        key.
 
-    The reduce function is invoked once for each value belonging to a given key outputted
-    by the mapper.
+        The reduce function is invoked once for each value belonging to a given key outputted
+        by the mapper.
 
-    Parameters
-    ----------------------------------------------------------------------------
-    record - The mapper output
-    collector - The collector to collect the output
-    """
+        Parameters
+        ----------------------------------------------------------------------------
+        record - The mapper output
+        collector - The collector to collect the output
+        """
 
-    self.psum+=record["value"]
+        self.psum+=record["value"]
 
-  def reduceFlush(self,record, collector):
-    """
-    Called with the last intermediate value in each equivalence run.
-    In other words, reduceFlush is invoked once for each key produced in the reduce
-    phase. It is called after reduce has been invoked on each value for the given key.
+    def reduceFlush(self,record, collector):
+        """
+        Called with the last intermediate value in each equivalence run.
+        In other words, reduceFlush is invoked once for each key produced in the reduce
+        phase. It is called after reduce has been invoked on each value for the given key.
 
-    Parameters
-    ------------------------------------------------------------------
-    record - the last record on which reduce was invoked.
-    """
+        Parameters
+        ------------------------------------------------------------------
+        record - the last record on which reduce was invoked.
+        """
 
-    #collect the current record
-    logging.info("WordCountTask.reduceFlush key={0} value={1}".format(record["key"],self.psum))
+        #collect the current record
+        logging.info("WordCountTask.reduceFlush key={0} value={1}".format(record["key"],self.psum))
 
-    collector.collect({"key":record["key"],"value":self.psum})
+        collector.collect({"key":record["key"],"value":self.psum})
 
-    #reset the sum
-    self.psum=0
+        #reset the sum
+        self.psum=0

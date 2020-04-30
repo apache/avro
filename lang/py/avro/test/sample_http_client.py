@@ -55,42 +55,42 @@ SERVER_HOST = 'localhost'
 SERVER_PORT = 9090
 
 class UsageError(Exception):
-  def __init__(self, value):
-    self.value = value
-  def __str__(self):
-    return repr(self.value)
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 def make_requestor(server_host, server_port, protocol):
-  client = ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
-  return ipc.Requestor(protocol, client)
+    client = ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
+    return ipc.Requestor(protocol, client)
 
 if __name__ == '__main__':
-  if len(sys.argv) not in [4, 5]:
-    raise UsageError("Usage: <to> <from> <body> [<count>]")
+    if len(sys.argv) not in [4, 5]:
+        raise UsageError("Usage: <to> <from> <body> [<count>]")
 
-  # client code - attach to the server and send a message
-  # fill in the Message record
-  message = dict()
-  message['to'] = sys.argv[1]
-  message['from'] = sys.argv[2]
-  message['body'] = sys.argv[3]
+    # client code - attach to the server and send a message
+    # fill in the Message record
+    message = dict()
+    message['to'] = sys.argv[1]
+    message['from'] = sys.argv[2]
+    message['body'] = sys.argv[3]
 
-  try:
-    num_messages = int(sys.argv[4])
-  except IndexError:
-    num_messages = 1
+    try:
+        num_messages = int(sys.argv[4])
+    except IndexError:
+        num_messages = 1
 
-  # build the parameters for the request
-  params = {}
-  params['message'] = message
+    # build the parameters for the request
+    params = {}
+    params['message'] = message
 
-  # send the requests and print the result
-  for msg_count in range(num_messages):
+    # send the requests and print the result
+    for msg_count in range(num_messages):
+        requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
+        result = requestor.request('send', params)
+        print("Result: " + result)
+
+    # try out a replay message
     requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
-    result = requestor.request('send', params)
-    print("Result: " + result)
-
-  # try out a replay message
-  requestor = make_requestor(SERVER_HOST, SERVER_PORT, MAIL_PROTOCOL)
-  result = requestor.request('replay', dict())
-  print("Replay Result: " + result)
+    result = requestor.request('replay', dict())
+    print("Replay Result: " + result)
