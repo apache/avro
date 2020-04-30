@@ -147,12 +147,12 @@ _valid = {
     'enum': lambda s, d: d in s.symbols,
 
     'array': lambda s, d: isinstance(d, list) and all(validate(s.items, item) for item in d),
-    'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, unicode) for key in d)
-                         and all(validate(s.values, value) for value in d.values())),
+    'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, unicode) for key in d) and
+                         all(validate(s.values, value) for value in d.values())),
     'union': lambda s, d: any(validate(branch, d) for branch in s.schemas),
-    'record': lambda s, d: (isinstance(d, dict)
-                            and all(validate(f.type, d.get(f.name)) for f in s.fields)
-                            and {f.name for f in s.fields}.issuperset(d.keys())),
+    'record': lambda s, d: (isinstance(d, dict) and
+                            all(validate(f.type, d.get(f.name)) for f in s.fields) and
+                            {f.name for f in s.fields}.issuperset(d.keys())),
 }
 _valid['double'] = _valid['float']
 _valid['error_union'] = _valid['union']
