@@ -45,6 +45,7 @@ def _load(name):
     with open(rsrc_path, 'r') as f:
         return f.read()
 
+
 HANDSHAKE_REQUEST_SCHEMA_JSON = _load('HandshakeRequest.avsc')
 HANDSHAKE_RESPONSE_SCHEMA_JSON = _load('HandshakeResponse.avsc')
 HANDSHAKE_REQUEST_SCHEMA = schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
@@ -73,12 +74,15 @@ BUFFER_SIZE = 8192
 # Exceptions
 #
 
+
 class AvroRemoteException(schema.AvroException):
     """
     Raised when an error message is sent by an Avro requestor or responder.
     """
+
     def __init__(self, fail_msg=None):
         schema.AvroException.__init__(self, fail_msg)
+
 
 class ConnectionClosedException(schema.AvroException):
     pass
@@ -87,8 +91,10 @@ class ConnectionClosedException(schema.AvroException):
 # Base IPC Classes (Requestor/Responder)
 #
 
+
 class BaseRequestor(object):
     """Base class for the client side of a protocol interaction."""
+
     def __init__(self, local_protocol, transceiver):
         self._local_protocol = local_protocol
         self._transceiver = transceiver
@@ -236,6 +242,7 @@ class BaseRequestor(object):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
         return AvroRemoteException(datum_reader.read(decoder))
 
+
 class Requestor(BaseRequestor):
 
     def issue_request(self, call_request, message_name, request_datum):
@@ -248,8 +255,10 @@ class Requestor(BaseRequestor):
             return self.read_call_response(message_name, buffer_decoder)
         return self.request(message_name, request_datum)
 
+
 class Responder(object):
     """Base class for the server side of a protocol interaction."""
+
     def __init__(self, local_protocol):
         self._local_protocol = local_protocol
         self._local_hash = self.local_protocol.md5
@@ -264,6 +273,7 @@ class Responder(object):
     # utility functions to manipulate protocol cache
     def get_protocol_cache(self, hash):
         return self.protocol_cache.get(hash)
+
     def set_protocol_cache(self, hash, protocol):
         self.protocol_cache[hash] = protocol
 
@@ -383,8 +393,10 @@ class Responder(object):
 # Utility classes
 #
 
+
 class FramedReader(object):
     """Wrapper around a file-like object to read framed data."""
+
     def __init__(self, reader):
         self._reader = reader
 
@@ -411,8 +423,10 @@ class FramedReader(object):
             raise ConnectionClosedException("Reader read 0 bytes.")
         return BIG_ENDIAN_INT_STRUCT.unpack(read)[0]
 
+
 class FramedWriter(object):
     """Wrapper around a file-like object to write framed data."""
+
     def __init__(self, writer):
         self._writer = writer
 
@@ -445,11 +459,13 @@ class FramedWriter(object):
 # Transceiver Implementations
 #
 
+
 class HTTPTransceiver(object):
     """
     A simple HTTP-based transceiver implementation.
     Useful for clients but not for servers
     """
+
     def __init__(self, host, port, req_resource='/'):
         self.req_resource = req_resource
         self.conn = httplib.HTTPConnection(host, port)

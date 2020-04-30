@@ -525,6 +525,7 @@ class RoundTripParseTestCase(unittest.TestCase):
         round_trip = schema.parse(str(parsed))
         self.assertEqual(parsed, round_trip)
 
+
 class DocAttributesTestCase(unittest.TestCase):
     """Enable generating document attribute test cases over all the document test schema."""
 
@@ -594,6 +595,7 @@ def load_tests(loader, default_tests, pattern):
     suite.addTests(DocAttributesTestCase(ex) for ex in DOC_EXAMPLES)
     suite.addTests(OtherAttributesTestCase(ex) for ex in OTHER_PROP_EXAMPLES)
     return suite
+
 
 if __name__ == '__main__':
     unittest.main()

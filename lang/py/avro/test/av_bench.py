@@ -30,11 +30,14 @@ import avro.schema
 
 types = ["A", "CNAME"]
 
+
 def rand_name():
     return ''.join(sample(string.ascii_lowercase, 15))
 
+
 def rand_ip():
     return "%s.%s.%s.%s" % (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
+
 
 def write(n):
     schema_s = """
@@ -58,6 +61,7 @@ def write(n):
 
     dw.close()
 
+
 def read():
     f = open("datafile.avr")
     reader = avro.io.DatumReader()
@@ -67,11 +71,13 @@ def read():
     for _ in af:
         pass
 
+
 def t(f, *args):
     s = time.time()
     f(*args)
     e = time.time()
     return e - s
+
 
 if __name__ == "__main__":
     n = int(sys.argv[1])

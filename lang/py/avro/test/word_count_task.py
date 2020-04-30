@@ -45,10 +45,8 @@ class WordCountTask(avro.tether.tether_task.TetherTask):
         outschema = midschema
         avro.tether.tether_task.TetherTask.__init__(self, inschema, midschema, outschema)
 
-
         # keep track of the partial sums of the counts
         self.psum = 0
-
 
     def map(self, record, collector):
         """Implement the mapper for the word count example

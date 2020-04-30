@@ -54,15 +54,19 @@ MAIL_PROTOCOL = protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_HOST = 'localhost'
 SERVER_PORT = 9090
 
+
 class UsageError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
+
 
 def make_requestor(server_host, server_port, protocol):
     client = ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
     return ipc.Requestor(protocol, client)
+
 
 if __name__ == '__main__':
     if len(sys.argv) not in [4, 5]:

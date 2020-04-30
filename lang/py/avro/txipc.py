@@ -36,6 +36,7 @@ from twisted.web.iweb import IBodyProducer
 class TwistedRequestor(ipc.BaseRequestor):
     """A Twisted-compatible requestor. Returns a Deferred that will fire with the
        returning value, instead of blocking until the request completes."""
+
     def _process_handshake(self, call_response, message_name, request_datum):
         # process the handshake and call response
         buffer_decoder = avro.io.BinaryDecoder(io.BytesIO(call_response))
@@ -49,6 +50,7 @@ class TwistedRequestor(ipc.BaseRequestor):
         d = self.transceiver.transceive(call_request)
         d.addCallback(self._process_handshake, message_name, request_datum)
         return d
+
 
 class RequestStreamingProducer(object):
     """A streaming producer for issuing requests with the Twisted.web Agent."""
@@ -130,6 +132,7 @@ class RequestStreamingProducer(object):
     def write_buffer_length(self, n):
         self.consumer.write(ipc.BIG_ENDIAN_INT_STRUCT.pack(n))
 
+
 class AvroProtocol(Protocol):
 
     recvd = ''
@@ -159,9 +162,11 @@ class AvroProtocol(Protocol):
         if not self.done:
             self.finished.errback(ipc.ConnectionClosedException("Reader read 0 bytes."))
 
+
 class TwistedHTTPTransceiver(object):
     """This transceiver uses the Agent class present in Twisted.web >= 9.0
        for issuing requests to the remote endpoint."""
+
     def __init__(self, host, port, remote_name=None, reactor=None):
         self.url = "http://%s:%d/" % (host, port)
 
@@ -194,6 +199,7 @@ class TwistedHTTPTransceiver(object):
             headers=Headers(req_headers),
             bodyProducer=body_producer)
         return d.addCallback(self.read_framed_message)
+
 
 class AvroResponderResource(resource.Resource):
     """This Twisted.web resource can be placed anywhere in a URL hierarchy

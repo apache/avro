@@ -55,6 +55,7 @@ DATUM = {
                     'children': [{'label': unicode('inner'), 'children': []}]},
 }
 
+
 def generate(schema_path, output_path):
     with open(schema_path, 'r') as schema_file:
         interop_schema = avro.schema.parse(schema_file.read())
@@ -66,6 +67,7 @@ def generate(schema_path, output_path):
         with avro.datafile.DataFileWriter(open(filename, 'wb'), avro.io.DatumWriter(),
                                           interop_schema, codec=codec) as dfw:
             dfw.append(DATUM)
+
 
 if __name__ == "__main__":
     generate(sys.argv[1], sys.argv[2])

@@ -48,9 +48,11 @@ try:
 except NameError:
     long = int
 
+
 def _version():
     with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
         return v.read()
+
 
 _AVRO_VERSION = _version()
 
@@ -58,8 +60,10 @@ _AVRO_VERSION = _version()
 class AvroError(Exception):
     pass
 
+
 def print_json(row):
     print(json.dumps(row))
+
 
 def print_json_pretty(row):
     """Pretty print JSON"""
@@ -68,12 +72,15 @@ def print_json_pretty(row):
     result = json.dumps(row, sort_keys=True, indent=4).replace(' \n', '\n')
     print(result)
 
+
 _write_row = csv.writer(sys.stdout).writerow
+
 
 def print_csv(row):
     # We sort the keys to the fields will be in the same place
     # FIXME: Do we want to do it in schema order?
     _write_row([row[key] for key in sorted(row)])
+
 
 def select_printer(format):
     return {
@@ -82,8 +89,10 @@ def select_printer(format):
         "csv": print_csv
     }[format]
 
+
 def record_match(expr, record):
     return eval(expr, None, {"r": record})
+
 
 def parse_fields(fields):
     fields = fields or ''
@@ -92,11 +101,14 @@ def parse_fields(fields):
 
     return [field.strip() for field in fields.split(',') if field.strip()]
 
+
 def field_selector(fields):
     fields = set(fields)
+
     def keys_filter(obj):
         return dict((k, obj[k]) for k in (set(obj) & fields))
     return keys_filter
+
 
 def print_avro(avro, opts):
     if opts.header and (opts.format != "csv"):
@@ -124,10 +136,12 @@ def print_avro(avro, opts):
             break
         printer(record)
 
+
 def print_schema(avro):
     schema = avro.schema
     # Pretty print
     print(json.dumps(json.loads(schema), indent=4))
+
 
 def cat(opts, args):
     if not args:
@@ -139,6 +153,7 @@ def cat(opts, args):
                 continue
             print_avro(avro, opts)
 
+
 def _open(filename, mode):
     if filename == "-":
         return {
@@ -148,6 +163,7 @@ def _open(filename, mode):
 
     return open(filename, mode)
 
+
 def iter_json(info, _):
     for i in info:
         try:
@@ -155,6 +171,7 @@ def iter_json(info, _):
         except AttributeError:
             s = i
         yield json.loads(s)
+
 
 def convert(value, field):
     type = field.type.type
@@ -173,6 +190,7 @@ def convert(value, field):
         "union": lambda v: convert_union(v, field),
     }[type](value)
 
+
 def convert_union(value, field):
     for name in [s.name for s in field.type.schemas]:
         try:
@@ -180,11 +198,13 @@ def convert_union(value, field):
         except ValueError:
             continue
 
+
 def iter_csv(info, schema):
     header = [field.name for field in schema.fields]
     for row in csv.reader((getattr(i, "decode", lambda: i)() for i in info)):
         values = [convert(v, f) for v, f in zip(row, schema.fields)]
         yield dict(zip(header, values))
+
 
 def guess_input_type(files):
     if not files:
@@ -197,6 +217,7 @@ def guess_input_type(files):
         return "csv"
 
     return None
+
 
 def write(opts, files):
     if not opts.schema:
@@ -222,6 +243,7 @@ def write(opts, files):
             writer.append(record)
 
     writer.close()
+
 
 def main(argv=None):
     argv = argv or sys.argv
@@ -272,6 +294,7 @@ def main(argv=None):
             raise AvroError("Unknown command - %s" % command)
     except AvroError as e:
         parser.error("%s" % e)  # Will exit
+
 
 if __name__ == "__main__":
     main()

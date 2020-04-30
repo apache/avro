@@ -42,5 +42,6 @@ class TestIPC(unittest.TestCase):
         client_with_default_path = ipc.HTTPTransceiver('apache.org', 80)
         self.assertEqual('/', client_with_default_path.req_resource)
 
+
 if __name__ == '__main__':
     unittest.main()

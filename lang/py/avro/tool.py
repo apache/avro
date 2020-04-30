@@ -59,6 +59,7 @@ class GenericResponder(ipc.Responder):
             server_should_shutdown = True
             return self.datum
 
+
 class GenericHandler(http_server.BaseHTTPRequestHandler):
     def do_POST(self):
         self.responder = responder
@@ -76,6 +77,7 @@ class GenericHandler(http_server.BaseHTTPRequestHandler):
             quitter.daemon = True
             quitter.start()
 
+
 def run_server(uri, proto, msg, datum):
     url_obj = urlparse(uri)
     server_addr = (url_obj.hostname, url_obj.port)
@@ -90,6 +92,7 @@ def run_server(uri, proto, msg, datum):
     print("Starting server.", file=sys.stderr)
     server.serve_forever()
 
+
 def send_message(uri, proto, msg, datum):
     url_obj = urlparse(uri)
     client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
@@ -99,8 +102,11 @@ def send_message(uri, proto, msg, datum):
 
 ##
 # TODO: Replace this with fileinput()
+
+
 def file_or_stdin(f):
     return sys.stdin if f == '-' else open(f, 'rb')
+
 
 def main(args=sys.argv):
     if len(args) == 1:
@@ -156,6 +162,7 @@ def main(args=sys.argv):
                 return 1
         send_message(uri, proto, msg, datum)
     return 0
+
 
 if __name__ == "__main__":
     if os.path.dirname(avro.io.__file__) in sys.path:

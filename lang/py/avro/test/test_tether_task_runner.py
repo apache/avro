@@ -91,7 +91,6 @@ class TestTetherTaskRunner(unittest.TestCase):
             writer.seek(0)
             data = writer.read()
 
-
             # Call input to simulate calling map
             requestor.request("input", {"data": data, "count": 1})
 
@@ -112,12 +111,10 @@ class TestTetherTaskRunner(unittest.TestCase):
             writer.seek(0)
             data = writer.read()
 
-
             # Call input to simulate calling reduce
             requestor.request("input", {"data": data, "count": 1})
 
             requestor.request("complete", {})
-
 
             runner.task.ready_for_shutdown.wait()
             runner.server.shutdown()
@@ -142,7 +139,6 @@ class TestTetherTaskRunner(unittest.TestCase):
             if not(proc is None):
                 proc.kill()
 
-
     def test2(self):
         """
         In this test we want to make sure that when we run "tether_task_runner.py"
@@ -166,7 +162,6 @@ class TestTetherTaskRunner(unittest.TestCase):
             # so we give the subprocess time to start up
             time.sleep(1)
 
-
             # start the tether_task_runner in a separate process
             env = {"AVRO_TETHER_OUTPUT_PORT": "{0}".format(parent_port)}
             env["PYTHONPATH"] = ':'.join(sys.path)
@@ -176,13 +171,10 @@ class TestTetherTaskRunner(unittest.TestCase):
             # possible race condition wait for the process to start
             time.sleep(1)
 
-
-
             print("Mock server started process pid={0}".format(proc.pid))
             # Possible race condition? open tries to connect to the subprocess before the subprocess is fully started
             # so we give the subprocess time to start up
             time.sleep(1)
-
 
         except Exception as e:
             raise
@@ -193,6 +185,7 @@ class TestTetherTaskRunner(unittest.TestCase):
 
             if not(proc is None):
                 proc.kill()
+
 
 if __name__ == ("__main__"):
     unittest.main()

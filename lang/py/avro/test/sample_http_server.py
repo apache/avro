@@ -56,6 +56,7 @@ MAIL_PROTOCOL_JSON = """\
 MAIL_PROTOCOL = avro.protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_ADDRESS = ('localhost', 9090)
 
+
 class MailResponder(avro.ipc.Responder):
     def __init__(self):
         avro.ipc.Responder.__init__(self, MAIL_PROTOCOL)
@@ -69,6 +70,7 @@ class MailResponder(avro.ipc.Responder):
         elif message.name == 'replay':
             return 'replay'
 
+
 class MailHandler(http_server.BaseHTTPRequestHandler):
     def do_POST(self):
         self.responder = MailResponder()
@@ -80,6 +82,7 @@ class MailHandler(http_server.BaseHTTPRequestHandler):
         self.end_headers()
         resp_writer = avro.ipc.FramedWriter(self.wfile)
         resp_writer.write_framed_message(resp_body)
+
 
 if __name__ == '__main__':
     mail_server = http_server.HTTPServer(SERVER_ADDRESS, MailHandler)

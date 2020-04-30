@@ -67,6 +67,7 @@ SCHEMAS_TO_VALIDATE = (
 FILENAME = 'test_datafile.out'
 CODECS_TO_VALIDATE = Codecs.supported_codec_names()
 
+
 class TestDataFile(unittest.TestCase):
     def test_round_trip(self):
         print('')
@@ -213,6 +214,7 @@ class TestDataFile(unittest.TestCase):
 
         with datafile.DataFileReader(open(FILENAME, 'rb'), io.DatumReader()) as dfr:
             self.assertEqual([], list(dfr))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -34,10 +34,12 @@ except ImportError:
 
 SERVER_ADDRESS = ('localhost', avro.tether.util.find_port())
 
+
 class MockParentResponder(ipc.Responder):
     """
     The responder for the mocked parent
     """
+
     def __init__(self):
         ipc.Responder.__init__(self, avro.tether.tether_task.outputProtocol)
 
@@ -57,9 +59,11 @@ class MockParentResponder(ipc.Responder):
 
         return None
 
+
 class MockParentHandler(http_server.BaseHTTPRequestHandler):
     """Create a handler for the parent.
     """
+
     def do_POST(self):
         self.responder = MockParentResponder()
         call_request_reader = ipc.FramedReader(self.rfile)
@@ -70,6 +74,7 @@ class MockParentHandler(http_server.BaseHTTPRequestHandler):
         self.end_headers()
         resp_writer = ipc.FramedWriter(self.wfile)
         resp_writer.write_framed_message(resp_body)
+
 
 if __name__ == '__main__':
     if (len(sys.argv) <= 1):

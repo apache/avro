@@ -52,6 +52,7 @@ MAIL_PROTOCOL_JSON = """\
 MAIL_PROTOCOL = protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_ADDRESS = ('localhost', 9090)
 
+
 class MailResponder(ipc.Responder):
     def __init__(self):
         ipc.Responder.__init__(self, MAIL_PROTOCOL)
@@ -64,6 +65,7 @@ class MailResponder(ipc.Responder):
             return response
         elif message.name == 'replay':
             return 'replay'
+
 
 if __name__ == '__main__':
     root = server.Site(txipc.AvroResponderResource(MailResponder()))

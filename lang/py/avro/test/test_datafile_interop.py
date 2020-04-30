@@ -52,5 +52,6 @@ class TestDataFileInterop(unittest.TestCase):
                 print('SKIPPING %s due to an unsupported codec' % f)
                 print()
 
+
 if __name__ == '__main__':
     unittest.main()

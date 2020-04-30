@@ -123,17 +123,22 @@ VALID_FIELD_SORT_ORDERS = (
 # Exceptions
 #
 
+
 class AvroException(Exception):
     pass
+
 
 class SchemaParseException(AvroException):
     pass
 
+
 class InvalidName(SchemaParseException):
     """User attempted to parse a schema with an invalid name."""
 
+
 class AvroWarning(UserWarning):
     """Base class for warnings."""
+
 
 class IgnoredLogicalType(AvroWarning):
     """Warnings for unknown or invalid logical types."""
@@ -150,9 +155,11 @@ def validate_basename(basename):
 # Base Classes
 #
 
+
 class Schema(object):
     """Base class for all Schema classes."""
     _props = None
+
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
         if not isinstance(type, basestring):
@@ -215,7 +222,6 @@ class Schema(object):
         raise Exception("Must be implemented by subclasses.")
 
 
-
 class Name(object):
     """Class to describe Avro name."""
 
@@ -273,6 +279,7 @@ class Name(object):
 
 class Names(object):
     """Track name set and default namespace during parsing."""
+
     def __init__(self, default_namespace=None):
         self.names = {}
         self.default_namespace = default_namespace
@@ -325,8 +332,10 @@ class Names(object):
         self.names[to_add.fullname] = new_schema
         return to_add
 
+
 class NamedSchema(Schema):
     """Named Schemas specified in NAMED_TYPES."""
+
     def __init__(self, type, name, namespace=None, names=None, other_props=None):
         # Ensure valid ctor args
         if not name:
@@ -365,6 +374,7 @@ class NamedSchema(Schema):
 # Logical type class
 #
 
+
 class LogicalSchema(object):
     def __init__(self, logical_type):
         self.logical_type = logical_type
@@ -372,6 +382,7 @@ class LogicalSchema(object):
 #
 # Decimal logical schema
 #
+
 
 class DecimalLogicalSchema(LogicalSchema):
     def __init__(self, precision, scale=0, max_precision=0):
@@ -445,6 +456,7 @@ class Field(object):
 # utility functions to manipulate properties dict
     def get_prop(self, key):
         return self._props.get(key)
+
     def set_prop(self, key, value):
         self._props[key] = value
 
@@ -465,8 +477,11 @@ class Field(object):
 #
 # Primitive Types
 #
+
+
 class PrimitiveSchema(Schema):
     """Valid primitive types are in PRIMITIVE_TYPES."""
+
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
         if type not in PRIMITIVE_TYPES:
@@ -489,7 +504,6 @@ class PrimitiveSchema(Schema):
             'long': self.type in {'double', 'float', },
         }.get(writer.type, False)
 
-
     def to_json(self, names=None):
         if len(self.props) == 1:
             return self.fullname
@@ -502,6 +516,8 @@ class PrimitiveSchema(Schema):
 #
 # Decimal Bytes Type
 #
+
+
 class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
     def __init__(self, precision, scale=0, other_props=None):
         DecimalLogicalSchema.__init__(self, precision, scale, max_precision=((1 << 31) - 1))
@@ -562,6 +578,7 @@ class FixedSchema(NamedSchema):
 #
 # Decimal Fixed Type
 #
+
 
 class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
     def __init__(self, size, name, precision, scale=0, namespace=None, names=None, other_props=None):
@@ -634,6 +651,7 @@ class EnumSchema(NamedSchema):
 # Complex Types (recursive)
 #
 
+
 class ArraySchema(Schema):
     def __init__(self, items, names=None, other_props=None):
         # Call parent ctor
@@ -673,6 +691,7 @@ class ArraySchema(Schema):
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
+
 
 class MapSchema(Schema):
     def __init__(self, values, names=None, other_props=None):
@@ -714,10 +733,12 @@ class MapSchema(Schema):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
 
+
 class UnionSchema(Schema):
     """
     names is a dictionary of schema objects
     """
+
     def __init__(self, schemas, names=None):
         # Ensure valid ctor args
         if not isinstance(schemas, list):
@@ -770,6 +791,7 @@ class UnionSchema(Schema):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
 
+
 class ErrorUnionSchema(UnionSchema):
     def __init__(self, schemas, names=None):
         # Prepend "string" to handle system errors
@@ -784,6 +806,7 @@ class ErrorUnionSchema(UnionSchema):
             if schema.type == 'string': continue
             to_dump.append(schema.to_json(names))
         return to_dump
+
 
 class RecordSchema(NamedSchema):
     @staticmethod
@@ -907,6 +930,7 @@ class DateSchema(LogicalSchema, PrimitiveSchema):
 # time-millis Type
 #
 
+
 class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, constants.TIME_MILLIS)
@@ -921,6 +945,7 @@ class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
 #
 # time-micros Type
 #
+
 
 class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
@@ -937,6 +962,7 @@ class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
 # timestamp-millis Type
 #
 
+
 class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, constants.TIMESTAMP_MILLIS)
@@ -952,6 +978,7 @@ class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
 # timestamp-micros Type
 #
 
+
 class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
         LogicalSchema.__init__(self, constants.TIMESTAMP_MICROS)
@@ -966,6 +993,8 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
 #
 # Module Methods
 #
+
+
 def get_other_props(all_props, reserved_props):
     """
     Retrieve the non-reserved properties from a dictionary of properties
@@ -974,9 +1003,11 @@ def get_other_props(all_props, reserved_props):
     if callable(getattr(all_props, 'items', None)):
         return {k: v for k, v in all_props.items() if k not in reserved_props}
 
+
 def make_bytes_decimal_schema(other_props):
     """Make a BytesDecimalSchema from just other_props."""
     return BytesDecimalSchema(other_props.get('precision'), other_props.get('scale', 0))
+
 
 def make_logical_schema(logical_type, type_, other_props):
     """Map the logical types to the appropriate literal type and schema class."""
@@ -1005,6 +1036,7 @@ def make_logical_schema(logical_type, type_, other_props):
     except IgnoredLogicalType as warning:
         warnings.warn(warning)
     return None
+
 
 def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
     """
@@ -1078,6 +1110,8 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
         raise SchemaParseException(fail_msg)
 
 # TODO(hammer): make method for reading from a file?
+
+
 def parse(json_string, validate_enum_symbols=True):
     """Constructs the Schema from the JSON text.
 

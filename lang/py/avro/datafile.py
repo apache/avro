@@ -57,16 +57,19 @@ SCHEMA_KEY = "avro.schema"
 # Exceptions
 #
 
+
 class DataFileException(avro.schema.AvroException):
     """
     Raised when there's a problem reading or writing file object containers.
     """
+
     def __init__(self, fail_msg):
         avro.schema.AvroException.__init__(self, fail_msg)
 
 #
 # Write Path
 #
+
 
 class _DataFile(object):
     """Mixin for methods common to both reading and writing."""
@@ -247,10 +250,12 @@ class DataFileWriter(_DataFile):
         self.flush()
         self.writer.close()
 
+
 class DataFileReader(_DataFile):
     """Read files written by DataFileWriter."""
     # TODO(hammer): allow user to specify expected schema?
     # TODO(hammer): allow user to specify the encoder
+
     def __init__(self, reader, datum_reader):
         self._reader = reader
         self._raw_decoder = avro.io.BinaryDecoder(reader)

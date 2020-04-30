@@ -41,6 +41,7 @@ class TaskRunnerResponder(ipc.Responder):
     """
     The responder for the tethered process
     """
+
     def __init__(self, runner):
         """
         Param
@@ -114,6 +115,7 @@ def HTTPHandlerGen(runner):
         """
 
         runner = runnerref
+
         def __init__(self, *args, **param):
             """
             """
@@ -131,6 +133,7 @@ def HTTPHandlerGen(runner):
             resp_writer.write_framed_message(resp_body)
 
     return TaskRunnerHTTPHandler
+
 
 class TaskRunner(object):
     """This class ties together the server handling the requests from
@@ -176,7 +179,6 @@ class TaskRunner(object):
         port = avro.tether.util.find_port()
         address = ("localhost", port)
 
-
         def thread_run(task_runner=None):
             task_runner.server = http_server.HTTPServer(address, HTTPHandlerGen(task_runner))
             task_runner.server.allow_reuse_address = True
@@ -206,6 +208,7 @@ class TaskRunner(object):
         """
 
         self.task.close()
+
 
 if __name__ == '__main__':
     # TODO::Make the logging level a parameter we can set

@@ -316,6 +316,7 @@ class ProtocolParseTestCase(unittest.TestCase):
         else:
             self.fail("Invalid protocol should not have parsed: {!s}".format(self.test_proto))
 
+
 class ErrorSchemaTestCase(unittest.TestCase):
     """Enable generating error schema test cases across all the valid test protocols."""
 
@@ -334,6 +335,7 @@ class ErrorSchemaTestCase(unittest.TestCase):
         for k, m in p.messages.items():
             self.assertIsNotNone(m.errors, "Message {} did not have the expected implicit "
                                            "string error schema.".format(k))
+
 
 class RoundTripParseTestCase(unittest.TestCase):
     """Enable generating round-trip parse test cases over all the valid test protocols."""
@@ -361,6 +363,7 @@ def load_tests(loader, default_tests, pattern):
     suite.addTests(ProtocolParseTestCase(ex) for ex in EXAMPLES)
     suite.addTests(RoundTripParseTestCase(ex) for ex in VALID_EXAMPLES)
     return suite
+
 
 if __name__ == '__main__':
     unittest.main()

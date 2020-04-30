@@ -42,10 +42,12 @@ except NameError:
 
 _AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
 
+
 def _version():
     with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
         # Convert it back to the java version
         return v.read().strip().replace('+', '-')
+
 
 _AVRO_VERSION = _version()
 _JAR_PATH = os.path.join(os.path.dirname(os.path.dirname(_AVRO_DIR)),
@@ -160,6 +162,7 @@ class TestTetherWordCount(unittest.TestCase):
         with avro.datafile.DataFileReader(open(outfile, 'rb'), datum_reader) as reader:
             actual_counts = {r["key"]: r["value"] for r in reader}
         self.assertDictEqual(actual_counts, expected_counts)
+
 
 if __name__ == "__main__":
     unittest.main()
