@@ -17,10 +17,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
+import unittest
 
-import pkgutil
+import avro
 
-__all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs']
 
-__version__ = (pkgutil.get_data(__name__, 'VERSION.txt') or b'0.0.1+unknown').decode().strip()
+class TestVersion(unittest.TestCase):
+
+  def test_import_version(self):
+
+    # make sure we have __version__ attribute in avro module
+    avro.__version__
+
+if __name__ == '__main__':
+  unittest.main()
