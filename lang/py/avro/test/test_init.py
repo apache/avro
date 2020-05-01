@@ -24,10 +24,10 @@ import avro
 
 class TestVersion(unittest.TestCase):
 
-  def test_import_version(self):
+    def test_import_version(self):
+        # make sure we have __version__ attribute in avro module
+        self.assertTrue(hasattr(avro, '__version__'))
 
-    # make sure we have __version__ attribute in avro module
-    avro.__version__
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()
