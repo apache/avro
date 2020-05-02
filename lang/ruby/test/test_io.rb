@@ -115,6 +115,13 @@ EOS
     check_default(enum_schema, '"B"', "B")
   end
 
+  def test_enum_field_default
+    record_schema = '{"type":"record","name":"enum_field_default","fields":[{"name":"msg","type":"string"},{"name":"logClass","type":{"type":"enum","name":"logClass","symbols":["UNCATEGORIZED","E1","E2","E3","E4","E5","E6","E7","E8","E9","E10"]},"default":"UNCATEGORIZED"}]}'
+    check(record_schema)
+    check_default(record_schema, '{"msg": "boom"}', {"msg" => "boom", "logClass" => "UNCATEGORIZED"})
+    check_default(record_schema, '{"msg": "boom","logClass": "E1"}', {"msg" => "boom", "logClass" => "E1"})
+  end
+
   def test_recursive
     recursive_schema = <<EOS
       {"type": "record",
