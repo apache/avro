@@ -84,16 +84,14 @@ impl Codec {
 
     /// Decompress a stream of bytes in-place.
     pub fn decompress(self, stream: &mut Vec<u8>) -> Result<(), Error> {
-        match self {
-            Codec::Null => (),
+        *stream = match self {
+            Codec::Null => return Ok(()),
             Codec::Deflate => {
                 let mut decoded = Vec::new();
-                {
-                    // either the compiler or I is dumb
-                    let mut decoder = Decoder::new(&stream[..]);
-                    decoder.read_to_end(&mut decoded)?;
-                }
-                *stream = decoded;
+                // either the compiler or I is dumb
+                let mut decoder = Decoder::new(&stream[..]);
+                decoder.read_to_end(&mut decoded)?;
+                decoded
             }
             #[cfg(feature = "snappy")]
             Codec::Snappy => {
@@ -113,10 +111,9 @@ impl Codec {
                     ))
                     .into());
                 }
-                *stream = decoded;
+                decoded
             }
         };
-
         Ok(())
     }
 }
@@ -125,7 +122,7 @@ impl Codec {
 mod tests {
     use super::*;
 
-    static INPUT: &'static [u8] = b"theanswertolifetheuniverseandeverythingis42theanswertolifetheuniverseandeverythingis4theanswertolifetheuniverseandeverythingis2";
+    const INPUT: &[u8] = b"theanswertolifetheuniverseandeverythingis42theanswertolifetheuniverseandeverythingis4theanswertolifetheuniverseandeverythingis2";
 
     #[test]
     fn null_compress_and_decompress() {
