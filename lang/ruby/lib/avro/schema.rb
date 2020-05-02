@@ -367,7 +367,7 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
-      SYMBOL_PATTERN = /[A-Za-z_][A-Za-z0-9_]*/
+      SYMBOL_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/
 
       attr_reader :symbols, :doc
 
@@ -377,11 +377,13 @@ module Avro
           raise Avro::SchemaParseError, fail_msg
         end
 
-        invalid_symbols = symbols.select { |symbol| symbol !~ SYMBOL_PATTERN }
+        if !Avro.disable_enum_symbol_validation
+          invalid_symbols = symbols.select { |symbol| symbol !~ SYMBOL_REGEX }
 
-        if invalid_symbols.any?
-          raise SchemaParseError,
-            "Invalid symbols for #{name}: #{invalid_symbols.join(', ')} don't match #{SYMBOL_PATTERN.inspect}"
+          if invalid_symbols.any?
+            raise SchemaParseError,
+              "Invalid symbols for #{name}: #{invalid_symbols.join(', ')} don't match #{SYMBOL_REGEX.inspect}"
+          end
         end
 
         super(:enum, name, space, names, doc)

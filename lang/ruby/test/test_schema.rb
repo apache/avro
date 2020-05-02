@@ -560,14 +560,40 @@ class TestSchema < Test::Unit::TestCase
     exception = assert_raise(Avro::SchemaParseError) do
       hash_to_schema(
         type: 'enum',
-        name: 'operator_enum',
-        symbols: ['==', '>=']
+        name: 'things',
+        symbols: ['good_symbol', '_GOOD_SYMBOL_2', '8ad_symbol', 'also-bad-symbol', '>=', '$']
       )
     end
 
     assert_equal(
-      "Invalid symbols for operator_enum: ==, >= don't match #{Avro::Schema::EnumSchema::SYMBOL_PATTERN.inspect}",
+      "Invalid symbols for things: 8ad_symbol, also-bad-symbol, >=, $ don't match #{Avro::Schema::EnumSchema::SYMBOL_REGEX.inspect}",
       exception.to_s
     )
+  end
+
+  def test_enum_symbol_validation_disabled_via_env
+    Avro.disable_enum_symbol_validation = nil
+    ENV['AVRO_DISABLE_ENUM_SYMBOL_VALIDATION'] = '1'
+
+    hash_to_schema(
+      type: 'enum',
+      name: 'things',
+      symbols: ['good_symbol', '_GOOD_SYMBOL_2', '8ad_symbol', 'also-bad-symbol', '>=', '$'],
+    )
+  ensure
+    ENV.delete('AVRO_DISABLE_ENUM_SYMBOL_VALIDATION')
+    Avro.disable_enum_symbol_validation = nil
+  end
+
+  def test_enum_symbol_validation_disabled_via_class_method
+    Avro.disable_enum_symbol_validation = true
+
+    hash_to_schema(
+      type: 'enum',
+      name: 'things',
+      symbols: ['good_symbol', '_GOOD_SYMBOL_2', '8ad_symbol', 'also-bad-symbol', '>=', '$'],
+    )
+  ensure
+    Avro.disable_enum_symbol_validation = nil
   end
 end
