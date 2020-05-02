@@ -88,7 +88,6 @@ impl Codec {
             Codec::Null => return Ok(()),
             Codec::Deflate => {
                 let mut decoded = Vec::new();
-                // either the compiler or I is dumb
                 let mut decoder = Decoder::new(&stream[..]);
                 decoder.read_to_end(&mut decoded)?;
                 decoded
