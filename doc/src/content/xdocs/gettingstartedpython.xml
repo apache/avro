@@ -80,7 +80,7 @@ $ python
       </p>
       <source>
 $ cd lang/py/
-$ pip install -e .
+$ python3 -m pip install -e .
 $ python
       </source>
     </section>
