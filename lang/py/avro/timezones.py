@@ -23,27 +23,29 @@ from datetime import datetime, timedelta, tzinfo
 
 
 class UTCTzinfo(tzinfo):
-  def utcoffset(self, dt):
-    return timedelta(0)
+    def utcoffset(self, dt):
+        return timedelta(0)
 
-  def tzname(self, dt):
-    return "UTC"
+    def tzname(self, dt):
+        return "UTC"
 
-  def dst(self, dt):
-    return timedelta(0)
+    def dst(self, dt):
+        return timedelta(0)
+
 
 utc = UTCTzinfo()
 
 
 # Test Time Zone with fixed offset and no DST
 class TSTTzinfo(tzinfo):
-  def utcoffset(self, dt):
-    return timedelta(hours=10)
+    def utcoffset(self, dt):
+        return timedelta(hours=10)
 
-  def tzname(self, dt):
-    return "TST"
+    def tzname(self, dt):
+        return "TST"
 
-  def dst(self, dt):
-    return timedelta(0)
+    def dst(self, dt):
+        return timedelta(0)
+
 
 tst = TSTTzinfo()

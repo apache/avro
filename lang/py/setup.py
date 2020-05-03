@@ -25,7 +25,7 @@ import glob
 import os
 import subprocess
 
-import setuptools
+import setuptools  # type: ignore
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
@@ -86,39 +86,39 @@ class GenerateInteropDataCommand(setuptools.Command):
     """A command to generate Avro files for data interop test."""
 
     user_options = [
-      ('schema-file=', None, 'path to input Avro schema file'),
-      ('output-path=', None, 'path to output Avro data files'),
+        ('schema-file=', None, 'path to input Avro schema file'),
+        ('output-path=', None, 'path to output Avro data files'),
     ]
 
     def initialize_options(self):
-      self.schema_file = os.path.join(_AVRO_DIR, 'interop.avsc')
-      self.output_path = os.path.join(_AVRO_DIR, 'test', 'interop', 'data')
+        self.schema_file = os.path.join(_AVRO_DIR, 'interop.avsc')
+        self.output_path = os.path.join(_AVRO_DIR, 'test', 'interop', 'data')
 
     def finalize_options(self):
         pass
 
     def run(self):
-      # Late import -- this can only be run when avro is on the pythonpath,
-      # more or less after install.
-      import avro.test.gen_interop_data
-      if not os.path.exists(self.output_path):
-        os.makedirs(self.output_path)
-      avro.test.gen_interop_data.generate(self.schema_file,
-                                          os.path.join(self.output_path, 'py.avro'))
+        # Late import -- this can only be run when avro is on the pythonpath,
+        # more or less after install.
+        import avro.test.gen_interop_data
+        if not os.path.exists(self.output_path):
+            os.makedirs(self.output_path)
+        avro.test.gen_interop_data.generate(self.schema_file,
+                                            os.path.join(self.output_path, 'py.avro'))
 
 
 def _get_version():
-  curdir = os.getcwd()
-  if os.path.isfile("avro/VERSION.txt"):
-    version_file = "avro/VERSION.txt"
-  else:
-    index = curdir.index("lang/py")
-    path = curdir[:index]
-    version_file = os.path.join(path, "share/VERSION.txt")
-  with open(version_file) as verfile:
-    # To follow the naming convention defined by PEP 440
-    # in the case that the version is like "x.y.z-SNAPSHOT"
-    return verfile.read().rstrip().replace("-", "+")
+    curdir = os.getcwd()
+    if os.path.isfile("avro/VERSION.txt"):
+        version_file = "avro/VERSION.txt"
+    else:
+        index = curdir.index("lang/py")
+        path = curdir[:index]
+        version_file = os.path.join(path, "share/VERSION.txt")
+    with open(version_file) as verfile:
+        # To follow the naming convention defined by PEP 440
+        # in the case that the version is like "x.y.z-SNAPSHOT"
+        return verfile.read().rstrip().replace("-", "+")
 
 
 def main():

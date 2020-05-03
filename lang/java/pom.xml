@@ -49,7 +49,7 @@
     <netty.version>3.10.6.Final</netty.version>
     <protobuf.version>3.11.1</protobuf.version>
     <thrift.version>0.12.0</thrift.version>
-    <slf4j.version>1.7.25</slf4j.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <snappy.version>1.1.7.3</snappy.version>
     <velocity.version>2.2</velocity.version>
     <maven.version>3.3.9</maven.version>
@@ -60,7 +60,7 @@
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.0.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
-    <grpc.version>1.26.0</grpc.version>
+    <grpc.version>1.28.0</grpc.version>
     <netty-codec-http2.version>4.1.45.Final</netty-codec-http2.version>
     <zstd-jni.version>1.4.4-7</zstd-jni.version>
     <!-- version properties for plugins -->
