@@ -115,6 +115,13 @@ EOS
     check_default(enum_schema, '"B"', "B")
   end
 
+  def test_enum_with_default
+    enum_schema = '{"type": "enum", "name": "Test", "symbols": ["A", "B"], "default": "A"}'
+    check(enum_schema)
+    # Field default is used for missing field.
+    check_default(enum_schema, '"B"', "B")
+  end
+
   def test_recursive
     recursive_schema = <<EOS
       {"type": "record",
@@ -402,6 +409,50 @@ EOS
       end
     end
     assert_equal(incorrect, 0)
+  end
+
+  def test_unknown_enum_symbol
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["B", "C"]
+      }
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["A", "B"]
+      }
+    SCHEMA
+    datum_to_write = "C"
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    # Ruby implementation did not follow the spec and returns the writer's symbol here
+    assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_unknown_enum_symbol_with_enum_default
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["B", "C"]
+      }
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["A", "B", "UNKNOWN"],
+        "default": "UNKNOWN"
+      }
+    SCHEMA
+    datum_to_write = "C"
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, "UNKNOWN")
   end
 
   def test_array_schema_promotion

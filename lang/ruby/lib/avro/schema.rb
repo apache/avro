@@ -76,7 +76,8 @@ module Avro
           when :enum
             symbols = json_obj['symbols']
             doc     = json_obj['doc']
-            return EnumSchema.new(name, namespace, symbols, names, doc)
+            default = json_obj['default']
+            return EnumSchema.new(name, namespace, symbols, names, doc, default)
           when :record, :error
             fields = json_obj['fields']
             doc    = json_obj['doc']
@@ -367,20 +368,28 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
-      attr_reader :symbols, :doc
+      attr_reader :symbols, :doc, :default
 
-      def initialize(name, space, symbols, names=nil, doc=nil)
+      def initialize(name, space, symbols, names=nil, doc=nil, default=nil)
         if symbols.uniq.length < symbols.length
           fail_msg = "Duplicate symbol: #{symbols}"
           raise Avro::SchemaParseError, fail_msg
         end
+        if default && !symbols.include?(default)
+          raise Avro::SchemaParseError, "Default '#{default}' is not a valid symbol for enum #{name}"
+        end
         super(:enum, name, space, names, doc)
+        @default = default
         @symbols = symbols
       end
 
       def to_avro(_names=Set.new)
         avro = super
-        avro.is_a?(Hash) ? avro.merge('symbols' => symbols) : avro
+        if avro.is_a?(Hash)
+          avro['symbols'] = symbols
+          avro['default'] = default if default
+        end
+        avro
       end
     end
 
