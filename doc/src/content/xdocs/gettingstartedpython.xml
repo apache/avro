@@ -55,7 +55,7 @@
         Python's Avro API is available over <a href="https://pypi.org/project/avro/">PyPi</a>.
       </p>
       <source>
-$ pip install avro
+$ python3 -m pip install avro
       </source>
       <p>
         The official releases of the Avro implementations for C, C++, C#, Java,
