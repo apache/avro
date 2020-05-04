@@ -51,15 +51,15 @@ public class AvroInputFormat<T> extends FileInputFormat<AvroWrapper<T>, NullWrit
 
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
+    FileStatus[] status = super.listStatus(job);
     if (job.getBoolean(IGNORE_FILES_WITHOUT_EXTENSION_KEY, IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT)) {
-      List<FileStatus> result = new ArrayList<>();
-      for (FileStatus file : super.listStatus(job))
+      List<FileStatus> result = new ArrayList<>(status.length);
+      for (FileStatus file : status)
         if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
           result.add(file);
-      return result.toArray(new FileStatus[0]);
-    } else {
-      return super.listStatus(job);
+      status = result.toArray(new FileStatus[0]);
     }
+    return status;
   }
 
   @Override
