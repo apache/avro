@@ -314,6 +314,40 @@ class TestSchema < Test::Unit::TestCase
     assert_equal enum_schema_hash, enum_schema_json.to_avro
   end
 
+  def test_enum_default_attribute
+    enum_schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "enum",
+        "name": "fruit",
+        "default": "apples",
+        "symbols": ["apples", "oranges"]
+      }
+    SCHEMA
+
+    enum_schema_hash = {
+      'type' => 'enum',
+      'name' => 'fruit',
+      'default' => 'apples',
+      'symbols' => %w(apples oranges)
+    }
+
+    assert_equal(enum_schema.default, "apples")
+    assert_equal(enum_schema_hash, enum_schema.to_avro)
+  end
+
+  def test_validate_enum_default
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'enum',
+        name: 'fruit',
+        default: 'bananas',
+        symbols: %w(apples oranges)
+      )
+    end
+    assert_equal("Default 'bananas' is not a valid symbol for enum fruit",
+                 exception.to_s)
+  end
+
   def test_empty_record
     schema = Avro::Schema.parse('{"type":"record", "name":"Empty"}')
     assert_empty(schema.fields)

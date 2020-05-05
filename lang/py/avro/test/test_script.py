@@ -35,9 +35,9 @@ from avro.datafile import DataFileWriter
 from avro.io import DatumWriter
 
 try:
-  unicode
+    unicode
 except NameError:
-  unicode = str
+    unicode = str
 
 NUM_RECORDS = 7
 
@@ -65,9 +65,11 @@ LOONIES = (
     (unicode("foghorn"), unicode("leghorn"), unicode("rooster")),
 )
 
+
 def looney_records():
     for f, l, t in LOONIES:
-        yield {"first": f, "last" : l, "type" : t}
+        yield {"first": f, "last": l, "type": t}
+
 
 SCRIPT = join(dirname(dirname(dirname(__file__))), "scripts", "avro")
 
@@ -76,6 +78,7 @@ _JSON_PRETTY = '''{
     "last": "duck",
     "type": "duck"
 }'''
+
 
 def gen_avro(filename):
     schema = avro.schema.parse(SCHEMA)
@@ -86,8 +89,10 @@ def gen_avro(filename):
     writer.close()
     fo.close()
 
+
 def tempfile():
     return NamedTemporaryFile(delete=False).name
+
 
 class TestCat(unittest.TestCase):
     def setUp(self):
@@ -157,12 +162,13 @@ class TestCat(unittest.TestCase):
         # Empty fields should get all
         out = self._run('--fields', '')
         assert json.loads(out[0]) == \
-                {'first': unicode('daffy'), 'last': unicode('duck'),
-                 'type': unicode('duck')}
+            {'first': unicode('daffy'), 'last': unicode('duck'),
+             'type': unicode('duck')}
 
         # Non existing fields are ignored
         out = self._run('--fields', 'first,last,age')
         assert json.loads(out[0]) == {'first': unicode('daffy'), 'last': unicode('duck')}
+
 
 class TestWrite(unittest.TestCase):
     def setUp(self):
@@ -207,7 +213,7 @@ class TestWrite(unittest.TestCase):
     def format_check(self, format, filename):
         tmp = tempfile()
         with open(tmp, "wb") as fo:
-          self._run(filename, "-f", format, stdout=fo)
+            self._run(filename, "-f", format, stdout=fo)
 
         records = self.load_avro(tmp)
         assert len(records) == NUM_RECORDS

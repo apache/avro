@@ -128,6 +128,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     this.bytes = getBytesFor(string);
     this.length = bytes.length;
     this.string = string;
+    this.hasHash = false;
     return this;
   }
 
@@ -138,6 +139,8 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     this.length = other.length;
     System.arraycopy(other.bytes, 0, bytes, 0, length);
     this.string = other.string;
+    this.hash = other.hash;
+    this.hasHash = other.hasHash;
     return this;
   }
 

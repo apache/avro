@@ -34,6 +34,7 @@ RUN apt-get -qqy update \
                                                  bzip2 \
                                                  bundler \
                                                  cmake \
+                                                 cppcheck \
                                                  curl \
                                                  doxygen \
                                                  flex \
@@ -49,6 +50,7 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  make \
                                                  maven \
+                                                 mypy \
                                                  openjdk-8-jdk \
                                                  perl \
                                                  python \
@@ -118,7 +120,6 @@ RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
  && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                  Module::Install::Repository \
-                                                 Test::Pod \
  && rm -rf .cpanm
 
 # Install Python packages

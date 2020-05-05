@@ -19,10 +19,10 @@
 
 from __future__ import absolute_import, division, print_function
 
+import string
 import sys
 import time
 from random import choice, randint, sample
-from string import lowercase
 
 import avro.datafile
 import avro.io
@@ -30,14 +30,17 @@ import avro.schema
 
 types = ["A", "CNAME"]
 
+
 def rand_name():
-    return ''.join(sample(lowercase, 15))
+    return ''.join(sample(string.ascii_lowercase, 15))
+
 
 def rand_ip():
-    return "%s.%s.%s.%s" %(randint(0,255), randint(0,255), randint(0,255), randint(0,255))
+    return "%s.%s.%s.%s" % (randint(0, 255), randint(0, 255), randint(0, 255), randint(0, 255))
+
 
 def write(n):
-    schema_s="""
+    schema_s = """
     { "type": "record",
       "name": "Query",
     "fields" : [
@@ -45,11 +48,11 @@ def write(n):
         {"name": "response", "type": "string"},
         {"name": "type", "type": "string", "default": "A"}
     ]}"""
-    out = open("datafile.avr",'w')
+    out = open("datafile.avr", 'w')
 
     schema = avro.schema.parse(schema_s)
     writer = avro.io.DatumWriter(schema)
-    dw = avro.datafile.DataFileWriter(out, writer, schema) #,codec='deflate')
+    dw = avro.datafile.DataFileWriter(out, writer, schema)  # ,codec='deflate')
     for _ in xrange(n):
         response = rand_ip()
         query = rand_name()
@@ -58,20 +61,23 @@ def write(n):
 
     dw.close()
 
+
 def read():
     f = open("datafile.avr")
     reader = avro.io.DatumReader()
-    af=avro.datafile.DataFileReader(f,reader)
+    af = avro.datafile.DataFileReader(f, reader)
 
-    x=0
+    x = 0
     for _ in af:
         pass
+
 
 def t(f, *args):
     s = time.time()
     f(*args)
     e = time.time()
-    return e-s
+    return e - s
+
 
 if __name__ == "__main__":
     n = int(sys.argv[1])
