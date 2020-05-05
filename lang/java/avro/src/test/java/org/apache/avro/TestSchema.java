@@ -200,4 +200,26 @@ public class TestSchema {
     }
   }
 
+  @Test
+  public void testReconstructSchemaStringWithoutInlinedChildReference() {
+    String child = "{\"type\":\"record\","
+      + "\"name\":\"Child\","
+      + "\"namespace\":\"org.apache.avro.nested\","
+      + "\"fields\":"
+      + "[{\"name\":\"childField\",\"type\":\"string\"}]}";
+    String parent = "{\"type\":\"record\","
+      + "\"name\":\"Parent\","
+      + "\"namespace\":\"org.apache.avro.nested\","
+      + "\"fields\":"
+      + "[{\"name\":\"child\",\"type\":\"Child\"}]}";
+    Schema.Parser parser = new Schema.Parser();
+    Schema childSchema = parser.parse(child);
+    Schema parentSchema = parser.parse(parent);
+    String parentWithoutInlinedChildReference =
+      parentSchema.toString(Collections.singleton(childSchema), false);
+    // The generated string should be the same as the original parent
+    // schema string that did not have the child schema inlined.
+    assertEquals(parent, parentWithoutInlinedChildReference);
+  }
+
 }
