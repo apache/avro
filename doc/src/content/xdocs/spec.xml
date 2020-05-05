@@ -491,8 +491,6 @@
 	    <p>This would be encoded by an <code>int</code> between
 	      zero and three, with zero indicating "A", and 3 indicating
 	      "D".</p>
-      <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long. 
-      In reality, we don't expect unions with 215M members </p>
 	  </section>
 
 
@@ -562,6 +560,8 @@
                 followed by the serialized string:
                 <source>02 02 61</source></li>
             </ul>
+            <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long. 
+            In reality, we don't expect unions with 215M members </p>
           </section>
 
           <section id="fixed_encoding">
