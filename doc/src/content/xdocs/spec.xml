@@ -491,8 +491,6 @@
 	    <p>This would be encoded by an <code>int</code> between
 	      zero and three, with zero indicating "A", and 3 indicating
 	      "D".</p>
-      <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long. 
-      In reality, we don't expect unions with 215M members </p>
 	  </section>
 
 
