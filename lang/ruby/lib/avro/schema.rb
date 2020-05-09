@@ -368,6 +368,8 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
+      SYMBOL_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/
+
       attr_reader :symbols, :doc, :default
 
       def initialize(name, space, symbols, names=nil, doc=nil, default=nil)
@@ -375,9 +377,20 @@ module Avro
           fail_msg = "Duplicate symbol: #{symbols}"
           raise Avro::SchemaParseError, fail_msg
         end
+
+        if !Avro.disable_enum_symbol_validation
+          invalid_symbols = symbols.select { |symbol| symbol !~ SYMBOL_REGEX }
+
+          if invalid_symbols.any?
+            raise SchemaParseError,
+              "Invalid symbols for #{name}: #{invalid_symbols.join(', ')} don't match #{SYMBOL_REGEX.inspect}"
+          end
+        end
+
         if default && !symbols.include?(default)
           raise Avro::SchemaParseError, "Default '#{default}' is not a valid symbol for enum #{name}"
         end
+
         super(:enum, name, space, names, doc)
         @default = default
         @symbols = symbols
