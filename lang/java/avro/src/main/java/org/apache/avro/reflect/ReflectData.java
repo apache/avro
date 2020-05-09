@@ -737,6 +737,9 @@ public class ReflectData extends SpecificData {
 
               AvroName annotatedName = field.getAnnotation(AvroName.class); // Rename fields
               String fieldName = (annotatedName != null) ? annotatedName.value() : field.getName();
+              if ("this$0".equals(fieldName)) {
+                throw new AvroTypeException("Class " + fullName + " must be a static inner class");
+              }
               Schema.Field recordField = new Schema.Field(fieldName, fieldSchema, doc, defaultValue);
 
               AvroMeta[] metadata = field.getAnnotationsByType(AvroMeta.class); // add metadata
