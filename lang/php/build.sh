@@ -57,7 +57,7 @@ do
       ;;
 
     lint)
-      echo 'This is a stub where someone can provide linting.'
+      find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
       ;;
 
     test)
