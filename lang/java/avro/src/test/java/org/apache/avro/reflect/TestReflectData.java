@@ -18,6 +18,7 @@
 
 package org.apache.avro.reflect;
 
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.util.internal.JacksonUtils;
@@ -29,8 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class TestReflectData {
   @Test
@@ -128,6 +128,36 @@ public class TestReflectData {
 
     for (Schema.Field field : cloneSchema.getFields()) {
       assertEquals("Invalid field " + field.name(), field.defaultVal(), testCases.get(field.name()));
+    }
+  }
+
+  public class Definition {
+    public Map<String, String> tokens;
+  }
+
+  @Test
+  public void testInnerClasses() {
+    testStaticInnerClasses();
+    testNonStaticInnerClasses();
+  }
+
+  public void testNonStaticInnerClasses() {
+    boolean successful = false;
+    try {
+      ReflectData.get().getSchema(Definition.class);
+    } catch (AvroTypeException ex) {
+      if (ex.getMessage().contains("must be a static inner class")) {
+        successful = true;
+      }
+    }
+    assertTrue(successful);
+  }
+
+  public void testStaticInnerClasses() {
+    try {
+      ReflectData.get().getSchema(Meta.class);
+    } catch (AvroTypeException ex) {
+      fail("Should have no exception");
     }
   }
 }
