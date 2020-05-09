@@ -81,23 +81,16 @@ RUN curl -sSL https://deb.nodesource.com/setup_10.x \
  && npm cache clean --force
 
 # Install PHP
-# TODO: Remove php5-related packages when we drop PHP 5.6 support in the future
-# TODO: Consolidate the php versions into a single one (7.x) when we drop PHP 5.6 support in the future
-ENV PHP5_VERSION=5.6 \
-    PHP7_VERSION=7.1
+ENV PHP7_VERSION=7.3
 RUN curl -sSL https://packages.sury.org/php/apt.gpg \
   | apt-key add --no-tty - \
  && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
  && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends php${PHP5_VERSION} \
-                                                 php${PHP5_VERSION}-gmp \
-                                                 php${PHP7_VERSION} \
+ && apt-get -qqy install --no-install-recommends php${PHP7_VERSION} \
                                                  php${PHP7_VERSION}-gmp \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
-# Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
-# TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future
-RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit \
+RUN curl -sSL https://phar.phpunit.de/phpunit-9.0.phar > /usr/local/bin/phpunit \
  && chmod +x /usr/local/bin/phpunit
 
 # Install Perl modules
