@@ -114,6 +114,7 @@ public class SpecificCompiler {
   private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
+  private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
@@ -254,6 +255,17 @@ public class SpecificCompiler {
    */
   public void setGettersReturnOptional(boolean gettersReturnOptional) {
     this.gettersReturnOptional = gettersReturnOptional;
+  }
+
+  public boolean isOptionalGettersForNullableFieldsOnly() {
+    return optionalGettersForNullableFieldsOnly;
+  }
+
+  /**
+   * Set to true to create the Optional getters only for nullable fields.
+   */
+  public void setOptionalGettersForNullableFieldsOnly(boolean optionalGettersForNullableFieldsOnly) {
+    this.optionalGettersForNullableFieldsOnly = optionalGettersForNullableFieldsOnly;
   }
 
   /**
