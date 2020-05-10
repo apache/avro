@@ -95,10 +95,6 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
                                                  php${PHP7_VERSION}-gmp \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
-# Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
-# TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future
-RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit \
- && chmod +x /usr/local/bin/phpunit
 
 # Install Perl modules
 RUN apt-get -qqy update \

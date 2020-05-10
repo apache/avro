@@ -52,7 +52,8 @@ do
       ;;
 
     test-interop)
-      phpunit test/InterOpTest.php
+      composer install
+      vendor/bin/phpunit test/InterOpTest.php
       ;;
 
     lint)
@@ -60,7 +61,8 @@ do
       ;;
 
     test)
-      phpunit -v test/AllTests.php
+      composer install
+      vendor/bin/phpunit -v
 
       # Check backward compatibility with PHP 5.x if both PHP 5.6 and PHPUnit 5.7 are installed.
       # TODO: remove this check when we drop PHP 5.x support in the future
