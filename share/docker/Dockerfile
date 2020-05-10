@@ -96,6 +96,8 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 # Install Perl modules
 RUN apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
