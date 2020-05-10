@@ -135,29 +135,13 @@ public class TestReflectData {
     public Map<String, String> tokens;
   }
 
-  @Test
-  public void testInnerClasses() {
-    testStaticInnerClasses();
-    testNonStaticInnerClasses();
-  }
-
+  @Test(expected = AvroTypeException.class)
   public void testNonStaticInnerClasses() {
-    boolean successful = false;
-    try {
-      ReflectData.get().getSchema(Definition.class);
-    } catch (AvroTypeException ex) {
-      if (ex.getMessage().contains("must be a static inner class")) {
-        successful = true;
-      }
-    }
-    assertTrue(successful);
+    ReflectData.get().getSchema(Definition.class);
   }
 
+  @Test
   public void testStaticInnerClasses() {
-    try {
-      ReflectData.get().getSchema(Meta.class);
-    } catch (AvroTypeException ex) {
-      fail("Should have no exception");
-    }
+    ReflectData.get().getSchema(Meta.class);
   }
 }
