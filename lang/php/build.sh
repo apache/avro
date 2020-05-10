@@ -52,7 +52,7 @@ do
       ;;
 
     test-interop)
-      composer install
+      composer install -d "../.."
       vendor/bin/phpunit test/InterOpTest.php
       ;;
 
@@ -61,7 +61,7 @@ do
       ;;
 
     test)
-      composer install
+      composer install -d "../.."
       vendor/bin/phpunit -v
 
       # Check backward compatibility with PHP 5.x if both PHP 5.6 and PHPUnit 5.7 are installed.
