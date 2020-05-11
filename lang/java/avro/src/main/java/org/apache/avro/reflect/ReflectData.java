@@ -66,7 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /** Utilities to use existing Java classes and interfaces via reflection. */
 public class ReflectData extends SpecificData {
 
-  private final String STRING_OUTER_PARENT_REFERENCE = "this$0";
+  private static final String STRING_OUTER_PARENT_REFERENCE = "this$0";
 
   @Override
   public boolean useCustomCoders() {
