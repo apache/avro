@@ -76,7 +76,7 @@ class AvroIODatumWriter
    * Schema used by this instance to write Avro data.
    * @var AvroSchema
    */
-  private $writers_schema;
+  public $writers_schema;
 
   /**
    * @param AvroSchema $writers_schema
