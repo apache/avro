@@ -47,17 +47,17 @@ class DataFileTest extends PHPUnit\Framework\TestCase
     if (self::REMOVE_DATA_FILES
         && !empty($this->data_files))
       foreach ($this->data_files as $data_file)
-        $this->remove_data_file($data_file);
+        self::remove_data_file($data_file);
   }
 
-  protected function setUp()
+  protected function setUp(): void
   {
     if (!file_exists(TEST_TEMP_DIR))
       mkdir(TEST_TEMP_DIR);
     $this->remove_data_files();
   }
 
-  protected function tearDown()
+  protected function tearDown(): void
   {
     $this->remove_data_files();
   }
@@ -192,7 +192,7 @@ class DataFileTest extends PHPUnit\Framework\TestCase
   public function test_differing_schemas_with_primitives()
   {
     foreach (AvroDataIO::valid_codecs() as $codec) {
-      $data_file = $this->add_data_file('data-prim-%s.avr', $codec);
+      $data_file = $this->add_data_file('data-prim-%s.avr');
 
       $writer_schema = <<<JSON
 { "type": "record",

@@ -165,7 +165,7 @@ class AvroDataIO
    * @param string $codec
    * @returns AvroDataIOWriter
    */
-  protected function open_writer($io, $schema, $codec=self::NULL_CODEC)
+  protected static function open_writer($io, $schema, $codec=self::NULL_CODEC)
   {
     $writer = new AvroIODatumWriter($schema);
     return new AvroDataIOWriter($io, $writer, $schema, $codec);
@@ -176,7 +176,7 @@ class AvroDataIO
    * @param AvroSchema $schema
    * @returns AvroDataIOReader
    */
-  protected function open_reader($io, $schema)
+  protected static function open_reader($io, $schema)
   {
     $reader = new AvroIODatumReader(null, $schema);
     return new AvroDataIOReader($io, $reader);
@@ -209,12 +209,12 @@ class AvroDataIOReader
   /**
    * @var string
    */
-  private $sync_marker;
+  public $sync_marker;
 
   /**
    * @var array object container metadata
    */
-  private $metadata;
+  public $metadata;
 
   /**
    * @var int count of items in block
@@ -451,7 +451,7 @@ class AvroDataIOWriter
 
       $this->sync_marker = self::generate_sync_marker();
       $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] = $this->codec = $codec;
-      $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = strval($writers_schema);
+      $this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR] = (string) $writers_schema;
       $this->write_header();
     }
     else
