@@ -2,7 +2,7 @@
 
 # Apache Avro™
 
-Apache Avro™ is a data serialization system.
+Apache Avro™ is a really nice data serialization system.
 
 Learn more about Avro, please visit our website at:
 
