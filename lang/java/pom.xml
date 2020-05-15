@@ -62,7 +62,7 @@
     <hamcrest.version>2.1</hamcrest.version>
     <grpc.version>1.28.0</grpc.version>
     <netty-codec-http2.version>4.1.45.Final</netty-codec-http2.version>
-    <zstd-jni.version>1.4.4-7</zstd-jni.version>
+    <zstd-jni.version>1.4.4-11</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.0.1</archetype-plugin.version>
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
