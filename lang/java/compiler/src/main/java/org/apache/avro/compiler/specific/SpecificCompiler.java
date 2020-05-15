@@ -328,6 +328,11 @@ public class SpecificCompiler {
       break;
     case ENUM:
     case FIXED:
+      String convertedLogicalType = getConvertedLogicalType(schema);
+      if (convertedLogicalType != null) {
+        result.add(convertedLogicalType);
+      }
+      break;
     case NULL:
       break;
     case STRING:
@@ -337,7 +342,7 @@ public class SpecificCompiler {
     case FLOAT:
     case DOUBLE:
     case BOOLEAN:
-      result.add(javaType(schema));
+      result.add(javaType(schema, true));
       break;
     default:
       throw new RuntimeException("Unknown type: " + schema);

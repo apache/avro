@@ -22,9 +22,12 @@ import org.apache.avro.Conversion;
 import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericFixed;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class CustomDecimalConversion extends Conversion<CustomDecimal> {
   @Override
@@ -48,5 +51,26 @@ public class CustomDecimalConversion extends Conversion<CustomDecimal> {
   public ByteBuffer toBytes(CustomDecimal value, Schema schema, LogicalType type) {
     int scale = ((LogicalTypes.Decimal) type).getScale();
     return ByteBuffer.wrap(value.toByteArray(scale));
+  }
+
+  @Override
+  public CustomDecimal fromFixed(GenericFixed value, Schema schema, LogicalType type) {
+    int scale = ((LogicalTypes.Decimal) type).getScale();
+    return new CustomDecimal(new BigInteger(value.bytes()), scale);
+  }
+
+  @Override
+  public GenericFixed toFixed(CustomDecimal value, Schema schema, LogicalType type) {
+    int scale = ((LogicalTypes.Decimal) type).getScale();
+    byte fillByte = (byte) (value.signum() < 0 ? 0xFF : 0x00);
+    byte[] unscaled = value.toByteArray(scale);
+    byte[] bytes = new byte[schema.getFixedSize()];
+    int offset = bytes.length - unscaled.length;
+
+    // Fill the front of the array and copy remaining with unscaled values
+    Arrays.fill(bytes, 0, offset, fillByte);
+    System.arraycopy(unscaled, 0, bytes, offset, bytes.length - offset);
+
+    return new GenericData.Fixed(schema, bytes);
   }
 }

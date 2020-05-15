@@ -17,11 +17,20 @@
  */
 package org.apache.avro.codegentest;
 
-import java.time.LocalDate;
-
-import org.apache.avro.codegentest.testdata.*;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesArray;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesMap;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesRecord;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesUnion;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesUnionFixedDecimal;
+import org.apache.avro.codegentest.testdata.NestedRecord;
+import org.apache.avro.codegentest.testdata.NullableLogicalTypesArray;
+import org.apache.avro.codegentest.testdata.RecordInArray;
+import org.apache.avro.codegentest.testdata.RecordInMap;
+import org.apache.avro.codegentest.testdata.RecordInUnion;
 import org.junit.Test;
 
+import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.Collections;
 
 public class TestNestedLogicalTypes extends AbstractSpecificRecordTest {
@@ -64,4 +73,12 @@ public class TestNestedLogicalTypes extends AbstractSpecificRecordTest {
         .build();
     verifySerDeAndStandardMethods(nestedLogicalTypesMap);
   }
+
+  @Test
+  public void testNullableLogicalTypeInRecordInFixedDecimal() {
+    final NestedLogicalTypesUnionFixedDecimal nestedLogicalTypesUnionFixedDecimal = NestedLogicalTypesUnionFixedDecimal
+        .newBuilder().setUnionOfFixedDecimal(new CustomDecimal(BigInteger.TEN, 15)).build();
+    verifySerDeAndStandardMethods(nestedLogicalTypesUnionFixedDecimal);
+  }
+
 }
