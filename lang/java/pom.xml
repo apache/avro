@@ -43,7 +43,7 @@
     <jackson.version>2.10.2</jackson.version>
     <jackson.databind.version>2.10.2</jackson.databind.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.25.v20191220</jetty.version>
+    <jetty.version>9.4.28.v20200408</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.12</junit.version>
     <netty.version>3.10.6.Final</netty.version>
