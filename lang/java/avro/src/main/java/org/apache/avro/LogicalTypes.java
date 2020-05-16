@@ -18,6 +18,7 @@
 
 package org.apache.avro;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,6 +43,19 @@ public class LogicalTypes {
   /**
    * Register a logical type.
    *
+   * @param factory The logical type factory
+   *
+   * @throws NullPointerException if {@code factory} or
+   *                              {@code factory.getTypedName()} is {@code null}
+   */
+  public static void register(LogicalTypeFactory factory) {
+    Objects.requireNonNull(factory, "Logical type factory cannot be null");
+    register(factory.getTypeName(), factory);
+  }
+
+  /**
+   * Register a logical type.
+   *
    * @param logicalTypeName The logical type name
    * @param factory         The logical type factory
    *
@@ -51,7 +65,25 @@ public class LogicalTypes {
   public static void register(String logicalTypeName, LogicalTypeFactory factory) {
     Objects.requireNonNull(logicalTypeName, "Logical type name cannot be null");
     Objects.requireNonNull(factory, "Logical type factory cannot be null");
+
+    try {
+      String factoryTypeName = factory.getTypeName();
+      if (!logicalTypeName.equals(factoryTypeName)) {
+        throw new IllegalArgumentException(String.format(
+            "Provided logicalTypeName '%s' does not match factory typeName '%s'", logicalTypeName, factoryTypeName));
+      }
+    } catch (UnsupportedOperationException ignore) {
+      // ignore exception, as by default this value has not been provided
+    }
+
     REGISTERED_TYPES.put(logicalTypeName, factory);
+  }
+
+  /**
+   * Return an unmodifiable map of any registered custom {@link LogicalType}
+   */
+  public static Map<String, LogicalTypes.LogicalTypeFactory> getCustomRegisteredTypes() {
+    return Collections.unmodifiableMap(REGISTERED_TYPES);
   }
 
   /**

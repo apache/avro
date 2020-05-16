@@ -42,6 +42,9 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import org.apache.avro.AvroTypeException;
+import java.util.Set;
+
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -82,7 +85,9 @@ public class TestSpecificCompiler {
     assertCompilesWithJavaCompiler(dstDir, outputs, false);
   }
 
-  /** Uses the system's java compiler to actually compile the generated code. */
+  /**
+   * Uses the system's java compiler to actually compile the generated code.
+   */
   static void assertCompilesWithJavaCompiler(File dstDir, Collection<SpecificCompiler.OutputFile> outputs,
       boolean ignoreWarnings) throws IOException {
     if (outputs.isEmpty()) {
@@ -300,8 +305,8 @@ public class TestSpecificCompiler {
     is.close(); // close input stream otherwise delete might fail
     if (!this.outputFile.delete()) {
       throw new IllegalStateException("unable to delete " + this.outputFile); // delete otherwise compiler might not
-                                                                              // overwrite because src timestamp hasn't
-                                                                              // changed.
+      // overwrite because src timestamp hasn't
+      // changed.
     }
     // Generate file in another encoding (make sure it has different number of bytes
     // per character)
@@ -514,6 +519,36 @@ public class TestSpecificCompiler {
         "java.lang.Boolean");
     Assert.assertEquals("Should return boxed type", compiler.javaUnbox(nullableBooleanSchema2, false),
         "java.lang.Boolean");
+  }
+
+  @Test
+  public void testGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-constant", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse(
+        "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}},{\"name\":\"myLogical\",\"type\":{\"type\":\"string\",\"logicalType\":\"string-constant\"}}]}");
+
+    final Set<String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(1, usedCustomLogicalTypeFactories.size());
+    Assert.assertEquals("org.apache.avro.compiler.specific.TestSpecificCompiler.StringCustomLogicalTypeFactory",
+        usedCustomLogicalTypeFactories.iterator().next());
+  }
+
+  @Test
+  public void testEmptyGetUsedCustomLogicalTypeFactories() throws Exception {
+    LogicalTypes.register("string-constant", new StringCustomLogicalTypeFactory());
+
+    SpecificCompiler compiler = createCompiler();
+    compiler.setEnableDecimalLogicalType(true);
+
+    final Schema schema = new Schema.Parser().parse(
+        "{\"type\":\"record\",\"name\":\"NestedLogicalTypesRecord\",\"namespace\":\"org.apache.avro.codegentest.testdata\",\"doc\":\"Test nested types with logical types in generated Java classes\",\"fields\":[{\"name\":\"nestedRecord\",\"type\":{\"type\":\"record\",\"name\":\"NestedRecord\",\"fields\":[{\"name\":\"nullableDateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}}]}");
+
+    final Set<String> usedCustomLogicalTypeFactories = compiler.getUsedCustomLogicalTypeFactories(schema);
+    Assert.assertEquals(0, usedCustomLogicalTypeFactories.size());
   }
 
   @Test
@@ -858,6 +893,13 @@ public class TestSpecificCompiler {
       }
     }
     assertEquals(1, itWorksFound);
+  }
+
+  public static class StringCustomLogicalTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new LogicalType("string-constant");
+    }
   }
 
 }

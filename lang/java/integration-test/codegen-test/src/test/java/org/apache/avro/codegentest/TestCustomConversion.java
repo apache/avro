@@ -19,6 +19,7 @@
 package org.apache.avro.codegentest;
 
 import org.apache.avro.LogicalTypes;
+import org.apache.avro.codegentest.testdata.CustomConversionWithLogicalTypes;
 import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversion;
 import org.apache.avro.codegentest.testdata.LogicalTypesWithCustomConversionIdl;
 import org.junit.BeforeClass;
@@ -66,5 +67,12 @@ public class TestCustomConversion extends AbstractSpecificRecordTest {
         .setNonNullFixedSizeString(new FixedSizeString("")).build();
 
     verifySerDeAndStandardMethods(instanceOfGeneratedClass);
+  }
+
+  @Test
+  public void testCustomConversionWithCustomLogicalType() {
+    final CustomConversionWithLogicalTypes customConversionWithLogicalTypes = CustomConversionWithLogicalTypes
+        .newBuilder().setCustomEnum(new CustomEnumType("TWO")).build();
+    verifySerDeAndStandardMethods(customConversionWithLogicalTypes);
   }
 }

@@ -292,7 +292,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
             .loadClass(factory);
         LogicalTypes.LogicalTypeFactory factoryInstance = logicalTypeFactoryClass.getDeclaredConstructor()
             .newInstance();
-        LogicalTypes.register(factoryInstance.getTypeName(), factoryInstance);
+        LogicalTypes.register(factoryInstance);
       }
     } catch (DependencyResolutionRequiredException | ClassNotFoundException e) {
       throw new IOException(e);

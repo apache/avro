@@ -38,13 +38,24 @@ import org.apache.avro.message.SchemaStore;
 @org.apache.avro.specific.AvroGenerated
 public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends org.apache.avro.specific.SpecificExceptionBase#else extends org.apache.avro.specific.SpecificRecordBase#end implements org.apache.avro.specific.SpecificRecord {
   private static final long serialVersionUID = ${this.fingerprint64($schema)}L;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
+
+#set ($schemaString = $this.javaSplit($schema.toString()))
+#set ($customLogicalTypeFactories = $this.getUsedCustomLogicalTypeFactories($schema))
+#if (!$customLogicalTypeFactories.isEmpty())
+  static {
+#foreach ($customLogicalTypeFactory in $customLogicalTypeFactories)
+    org.apache.avro.LogicalTypes.register(new ${customLogicalTypeFactory}());
+#end
+  }
+#end
+
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse($schemaString);
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static SpecificData MODEL$ = new SpecificData();
 #set ($usedConversions = $this.getUsedConversionClasses($schema))
 #if (!$usedConversions.isEmpty())
-static {
+  static {
 #foreach ($conversion in $usedConversions)
     MODEL$.addLogicalTypeConversion(new ${conversion}());
 #end
