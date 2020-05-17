@@ -21,7 +21,7 @@ require_once('test_helper.php');
 class LongEncodingTest extends PHPUnit\Framework\TestCase
 {
 
-  function setUp()
+  function setUp(): void
   {
     Avro::check_platform();
   }

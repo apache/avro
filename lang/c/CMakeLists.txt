@@ -17,7 +17,7 @@
 # under the License.
 #
 cmake_minimum_required(VERSION 2.4)
-project(AvroC)
+project(AvroC C)
 enable_testing()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR})

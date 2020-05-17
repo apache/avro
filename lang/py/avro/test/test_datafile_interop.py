@@ -27,6 +27,7 @@ from avro import datafile, io
 
 _INTEROP_DATA_DIR = os.path.join(os.path.dirname(avro.__file__), 'test', 'interop', 'data')
 
+
 @unittest.skipUnless(os.path.exists(_INTEROP_DATA_DIR),
                      "{} does not exist".format(_INTEROP_DATA_DIR))
 class TestDataFileInterop(unittest.TestCase):

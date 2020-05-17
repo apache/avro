@@ -76,7 +76,7 @@ class AvroIODatumWriter
    * Schema used by this instance to write Avro data.
    * @var AvroSchema
    */
-  private $writers_schema;
+  public $writers_schema;
 
   /**
    * @param AvroSchema $writers_schema
@@ -943,7 +943,7 @@ class AvroIOBinaryDecoder
 
   public function skip_int() { return $this->skip_long(); }
 
-  protected function skip_long()
+  public function skip_long()
   {
     $b = $this->next_byte();
     while (0 != (ord($b) & 0x80))

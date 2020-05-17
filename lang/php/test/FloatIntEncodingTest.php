@@ -54,7 +54,7 @@ class FloatIntEncodingTest extends PHPUnit\Framework\TestCase
     self::$INT_BITS_NEG_INF  = strrev(pack('H*', 'ff800000'));
   }
 
-  function setUp()
+  function setUp(): void
   {
     self::make_special_vals();
   }
