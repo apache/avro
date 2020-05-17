@@ -109,7 +109,7 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && make install \
  && ./configure --with-snappy-includedir=/usr/local/include \
  && cd .. && rm -rf php-ext-snappy \
- && php -m \
+ && php -i \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
