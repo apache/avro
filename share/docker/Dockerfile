@@ -90,6 +90,7 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
                                                  php${PHP7_VERSION}-gmp \
                                                  php${PHP7_VERSION}-xml \
                                                  php${PHP7_VERSION}-mbstring \
+                                                 php${PHP7_VERSION}-dev \
  && mkdir tmp && cd tmp \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
  && cd php-ext-zstd \
