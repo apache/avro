@@ -88,6 +88,8 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends php${PHP7_VERSION} \
                                                  php${PHP7_VERSION}-gmp \
+                                                 php-xml \
+                                                 php-mbstring
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
