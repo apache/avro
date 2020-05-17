@@ -81,14 +81,11 @@ RUN curl -sSL https://deb.nodesource.com/setup_10.x \
  && npm cache clean --force
 
 # Install PHP
-ENV PHP7_VERSION=7.3
 RUN curl -sSL https://packages.sury.org/php/apt.gpg \
   | apt-key add --no-tty - \
  && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
  && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends php${PHP7_VERSION} \
-                                                 php${PHP7_VERSION}-gmp \
-                                                 php-xml \
+ && apt-get -qqy install --no-install-recommends php-xml \
                                                  php-mbstring \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
