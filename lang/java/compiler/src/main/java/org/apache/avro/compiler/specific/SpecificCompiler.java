@@ -93,6 +93,16 @@ public class SpecificCompiler {
    */
   protected static final int MAX_FIELD_PARAMETER_UNIT_COUNT = JVM_METHOD_ARG_LIMIT - 1;
 
+  /*
+   * Java reserved words to scape
+   */
+  private List<String> javaReservedWords = Arrays.asList("abstract", "assert", "boolean", "break", "byte", "case",
+      "catch", "char", "class", "const", "default", "do", "double", "else", "enum", "extends", "false", "final",
+      "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long",
+      "native", "new", "null", "package", "private", "protected", "public", "return", "short", "static", "strictfp",
+      "super", "switch", "synchronized", "this", "throw", "throws", "transient", "true", "try", "void", "volatile",
+      "while", "continue");
+
   public enum FieldVisibility {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
   }
@@ -519,7 +529,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String mangledName = mangle(protocol.getName());
-    outputFile.path = makePath(mangledName, mangle(protocol.getNamespace()));
+    outputFile.path = makePath(mangledName, escapeNamespace(protocol.getNamespace()));
     outputFile.contents = out;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -591,7 +601,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String name = mangle(schema.getName());
-    outputFile.path = makePath(name, mangle(schema.getNamespace()));
+    outputFile.path = makePath(name, escapeNamespace(schema.getNamespace()));
     outputFile.contents = output;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -1006,15 +1016,11 @@ public class SpecificCompiler {
   public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
     if (word.contains(".")) {
       // If the 'word' is really a full path of a class we must mangle just the
-      String[] packageWords = word.split("\\.");
-      String[] newPackageWords = new String[packageWords.length];
-
-      for (int i = 0; i < packageWords.length; i++) {
-        String oldName = packageWords[i];
-        newPackageWords[i] = mangle(oldName, reservedWords, false);
-      }
-
-      return String.join(".", newPackageWords);
+      // classname
+      int lastDot = word.lastIndexOf(".");
+      String packageName = word.substring(0, lastDot + 1);
+      String className = word.substring(lastDot + 1);
+      return packageName + mangle(className, reservedWords, isMethod);
     }
     if (reservedWords.contains(word) || (isMethod && reservedWords
         .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {
@@ -1208,5 +1214,18 @@ public class SpecificCompiler {
    */
   public void setOutputCharacterEncoding(String outputCharacterEncoding) {
     this.outputCharacterEncoding = outputCharacterEncoding;
+  }
+
+  public String escapeNamespace(String namespace) {
+    if (StringUtils.isBlank(namespace)) {
+      return namespace;
+    }
+    String[] namespaceWords = namespace.split("\\.");
+    String[] newNamespaceWords = new String[namespaceWords.length];
+    for (int i = 0; i < newNamespaceWords.length; i++) {
+      String oldName = namespaceWords[i];
+      newNamespaceWords[i] = javaReservedWords.contains(oldName) ? "_" + oldName : oldName;
+    }
+    return String.join(".", newNamespaceWords);
   }
 }
