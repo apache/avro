@@ -15,8 +15,8 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
-#if ($this.escapeNamespace($this.escapeNamespace($this.escapeNamespace($schema.getNamespace()))))
-package $this.escapeNamespace($schema.getNamespace());
+#if ($schema.getNamespace())
+package $this.mangle($schema.getNamespace());
 #end
 #if ($schema.getDoc())
 /** $schema.getDoc() */
