@@ -100,6 +100,7 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && make         \
  && make install \
  && ./configure --with-libzstd \
+ && echo "extension=/usr/lib/php/20180731/zstd.so" > /etc/php/7.3/mods-available/zstd.ini \
  && cd .. && rm -rf php-ext-zstd \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git \
  && cd php-ext-snappy \
@@ -108,8 +109,9 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && make \
  && make install \
  && ./configure --with-snappy-includedir=/usr/local/include \
+ && echo "extension=/usr/lib/php/20180731/snappy.so" > /etc/php/7.3/mods-available/snappy.ini \
  && cd .. && rm -rf php-ext-snappy \
- && php -i \
+ && php -m \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
