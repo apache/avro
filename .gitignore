@@ -24,3 +24,5 @@ test-output
 .mypy_cache
 .python-version
 .coverage
+vendor
+composer.lock
