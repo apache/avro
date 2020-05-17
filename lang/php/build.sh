@@ -63,13 +63,6 @@ do
     test)
       composer install -d "../.."
       vendor/bin/phpunit -v
-
-      # Check backward compatibility with PHP 5.x if both PHP 5.6 and PHPUnit 5.7 are installed.
-      # TODO: remove this check when we drop PHP 5.x support in the future
-      if command -v php5.6 > /dev/null && phpunit --version | grep -q 'PHPUnit 5.7'; then
-        echo 'Checking backward compatibility with PHP 5.x'
-        php5.6 $(which phpunit) -v test/AllTests.php
-      fi
       ;;
 
     dist)

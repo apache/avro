@@ -90,8 +90,23 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
                                                  php${PHP7_VERSION}-gmp \
                                                  php${PHP7_VERSION}-xml \
                                                  php${PHP7_VERSION}-mbstring \
-                                                 php${PHP7_VERSION}-zstd \
-                                                 php${PHP7_VERSION}-snappy \
+ && mkdir tmp && cd tmp \
+ && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
+ && cd php-ext-zstd \
+ && phpize       \
+ && ./configure  \
+ && make         \
+ && make install \
+ && ./configure --with-libzstd \
+ && cd .. && rm -rf php-ext-zstd \
+ && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git \
+ && cd php-ext-snappy \
+ && phpize \
+ && ./configure \
+ && make \
+ && make install \
+ && ./configure --with-snappy-includedir=/usr \
+ && cd .. && rm -rf php-ext-snappy \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
