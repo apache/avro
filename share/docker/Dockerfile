@@ -90,6 +90,8 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
                                                  php${PHP7_VERSION}-gmp \
                                                  php${PHP7_VERSION}-xml \
                                                  php${PHP7_VERSION}-mbstring \
+                                                 php${PHP7_VERSION}-zstd \
+                                                 php${PHP7_VERSION}-snappy \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
