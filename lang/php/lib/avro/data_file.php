@@ -73,10 +73,14 @@ class AvroDataIO
    */
   const DEFLATE_CODEC = 'deflate';
 
+  const SNAPPY_CODEC = 'snappy';
+
+  const ZSTANDARD_CODEC = 'zstandard';
+  
   /**
    * @var array array of valid codec names
    */
-  private static $valid_codecs = array(self::NULL_CODEC, self::DEFLATE_CODEC);
+  private static $valid_codecs = [self::NULL_CODEC, self::DEFLATE_CODEC, self::SNAPPY_CODEC, self::ZSTANDARD_CODEC];
 
   /**
    * @var AvroSchema cached version of metadata schema object
@@ -308,6 +312,20 @@ class AvroDataIOReader
           $compressed = $decoder->read($length);
           $datum = gzinflate($compressed);
           $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+        } elseif ($this->codec === AvroDataIO::ZSTANDARD_CODEC) {
+            if (!extension_loaded('zstd')) {
+                throw new AvroException('Please install ext-zstd to use zstandard compression.');
+            }
+            $compressed = $decoder->read($length);
+            $datum = zstd_uncompress($compressed);
+            $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+        } elseif ($this->codec === AvroDataIO::SNAPPY_CODEC) {
+            if (!extension_loaded('snappy')) {
+                throw new AvroException('Please install ext-snappy to use snappy compression.');
+            }
+            $compressed = $decoder->read($length);
+            $datum = snappy_uncompress($compressed);
+            $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
         }
       }
       $data []= $this->datum_reader->read($decoder);
@@ -509,10 +527,21 @@ class AvroDataIOWriter
     if ($this->block_count > 0)
     {
       $this->encoder->write_long($this->block_count);
-      $to_write = strval($this->buffer);
+      $to_write = (string) $this->buffer;
 
-      if ($this->codec == AvroDataIO::DEFLATE_CODEC)
-        $to_write = gzdeflate($to_write);
+      if ($this->codec === AvroDataIO::DEFLATE_CODEC) {
+          $to_write = gzdeflate($to_write);
+      } elseif ($this->codec === AvroDataIO::ZSTANDARD_CODEC) {
+          if (!extension_loaded('zstd')) {
+              throw new AvroException('Please install ext-zstd to use zstandard compression.');
+          }
+          $to_write = zstd_compress($to_write);
+      } elseif ($this->codec === AvroDataIO::SNAPPY_CODEC) {
+          if (!extension_loaded('snappy')) {
+              throw new AvroException('Please install ext-snappy to use snappy compression.');
+          }
+          $to_write = snappy_compress($to_write);
+      }
 
       $this->encoder->write_long(strlen($to_write));
       $this->write($to_write);
