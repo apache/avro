@@ -50,7 +50,6 @@ import org.apache.avro.SchemaNormalization;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
