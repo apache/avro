@@ -17,55 +17,34 @@
  */
 package org.apache.avro.ipc.netty;
 
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.socket.SocketChannel;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.apache.avro.ipc.Transceiver;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 
-import static org.junit.Assert.assertFalse;
+import io.netty.channel.socket.SocketChannel;
 
 /**
  * This is a very specific test that verifies that if the NettyTransceiver fails
  * to connect it cleans up the netty channel that it has created.
  */
-public class NettyTransceiverWhenFailsToConnect {
+public class TestNettyTransceiverWhenFailsToConnect {
+  SocketChannel channel = null;
 
   @Test(expected = IOException.class)
   public void testNettyTransceiverReleasesNettyChannelOnFailingToConnect() throws Exception {
-
-    LastChannelRememberingChannelFactory socketChannelFactory = null;
     try (ServerSocket serverSocket = new ServerSocket(0)) {
-      socketChannelFactory = new LastChannelRememberingChannelFactory();
-
-      try {
-        new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), socketChannelFactory, 1L);
-      } finally {
-        assertFalse("expected that the channel opened by the transceiver is closed",
-            socketChannelFactory.lastChannel.isOpen());
+      try (Transceiver t = new NettyTransceiver(new InetSocketAddress(serverSocket.getLocalPort()), 1, c -> {
+        channel = c;
+      })) {
+        Assert.fail("should have thrown an exception");
       }
     } finally {
-
-      // closing the server socket will actually free up the open channel in the
-      // transceiver, which would have hung otherwise (pre AVRO-1407)
-
-      if (socketChannelFactory != null) {
-        socketChannelFactory.releaseExternalResources();
-      }
-    }
-  }
-
-  class LastChannelRememberingChannelFactory extends NioClientSocketChannelFactory implements ChannelFactory {
-
-    volatile SocketChannel lastChannel;
-
-    @Override
-    public SocketChannel newChannel(ChannelPipeline pipeline) {
-      return lastChannel = super.newChannel(pipeline);
+      Assert.assertTrue("Channel not shut down", channel.isShutdown());
     }
   }
 }
