@@ -50,6 +50,7 @@ import org.apache.avro.SchemaNormalization;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -1003,6 +1004,9 @@ public class SpecificCompiler {
 
   /** Utility for template use. Adds a dollar sign to reserved words. */
   public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
+    if (StringUtils.isBlank(word)) {
+      return word;
+    }
     if (word.contains(".")) {
       // If the 'word' is really a full path of a class we must mangle just the
       String[] packageWords = word.split("\\.");
