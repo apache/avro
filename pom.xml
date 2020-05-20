@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>22</version>
+    <version>23</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -49,15 +49,15 @@
 
     <!-- plugin versions -->
     <antrun-plugin.version>1.8</antrun-plugin.version>
-    <checkstyle-plugin.version>3.1.0</checkstyle-plugin.version>
-    <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
+    <checkstyle-plugin.version>3.1.1</checkstyle-plugin.version>
+    <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.2</extra-enforcer-rules.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
-    <javadoc-plugin.version>3.1.1</javadoc-plugin.version>
+    <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
-    <source-plugin.version>3.0.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.27.0</spotless-maven-plugin.version>
+    <source-plugin.version>3.2.1</source-plugin.version>
+    <spotless-maven-plugin.version>1.31.0</spotless-maven-plugin.version>
   </properties>
 
   <modules>
@@ -118,6 +118,19 @@
         <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
+            <id>enforce-maven-version</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[3.3.9,)</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+          <execution>
             <id>enforce</id>
             <goals>
               <goal>enforce</goal>
@@ -135,9 +148,6 @@
                 <requireJavaVersion>
                   <version>[1.8,)</version>
                 </requireJavaVersion>
-                <requireMavenVersion>
-                  <version>[3.3.9,)</version>
-                </requireMavenVersion>
               </rules>
             </configuration>
           </execution>
