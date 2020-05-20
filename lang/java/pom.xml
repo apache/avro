@@ -45,7 +45,7 @@
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.28.v20200408</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13</junit.version>
     <netty.version>3.10.6.Final</netty.version>
     <protobuf.version>3.11.1</protobuf.version>
     <thrift.version>0.12.0</thrift.version>
@@ -58,7 +58,7 @@
     <commons-compress.version>1.20</commons-compress.version>
     <commons-lang.version>3.9</commons-lang.version>
     <tukaani.version>1.8</tukaani.version>
-    <easymock.version>4.0.2</easymock.version>
+    <easymock.version>4.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
     <grpc.version>1.29.0</grpc.version>
     <netty-codec-http2.version>4.1.45.Final</netty-codec-http2.version>
