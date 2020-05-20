@@ -328,7 +328,7 @@ class AvroDataIOReader
             $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
         }
       }
-      $data []= $this->datum_reader->read($decoder);
+      $data[] = $this->datum_reader->read($decoder);
       $this->block_count -= 1;
     }
     return $data;
@@ -540,11 +540,15 @@ class AvroDataIOWriter
           if (!extension_loaded('snappy')) {
               throw new AvroException('Please install ext-snappy to use snappy compression.');
           }
+          $uncompressed = $to_write;
           $to_write = snappy_compress($to_write);
       }
 
       $this->encoder->write_long(strlen($to_write));
       $this->write($to_write);
+      if ($this->codec === AvroDataIO::SNAPPY_CODEC) {
+          $this->encoder->write_crc32($uncompressed);
+      }
       $this->write($this->sync_marker);
       $this->buffer->truncate();
       $this->block_count = 0;
