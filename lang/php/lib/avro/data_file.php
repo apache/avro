@@ -324,7 +324,7 @@ class AvroDataIOReader
                 throw new AvroException('Please install ext-snappy to use snappy compression.');
             }
             $compressed = $decoder->read($length);
-            $datum = snappy_uncompress($compressed);
+            $datum = snappy_uncompress(substr($compressed, 0, -4));
             $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
         }
       }
