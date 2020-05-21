@@ -4,8 +4,13 @@
     "vendor/squizlabs/php_codesniffer"
   ],
   "autoload": {
-    "classmap": [
-      "lib/"
-    ]
+    "psr-4": {
+      "Apache\\Avro\\": "lib/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Apache\\Avro\\Tests\\": "test/"
+    }
   }
 }

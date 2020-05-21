@@ -18,32 +18,43 @@
  * limitations under the License.
  */
 
+use Apache\Avro\DataFile\AvroDataIO;
+
 require_once('test_helper.php');
 
-$datum = array('nullField' => null,
-               'boolField' => true,
-               'intField' => -42,
-               'longField' => (int) 2147483650,
-               'floatField' => 1234.0,
-               'doubleField' => -5432.6,
-               'stringField' => 'hello avro',
-               'bytesField' => "\x16\xa6",
-               'arrayField' => array(5.0, -6.0, -10.5),
-               'mapField' => array('a' => array('label' => 'a'),
-                                   'c' => array('label' => '3P0')),
-               'unionField' => 14.5,
-               'enumField' => 'C',
-               'fixedField' => '1019181716151413',
-               'recordField' => array('label' => 'blah',
-                                      'children' => array(
-                                        array('label' => 'inner',
-                                              'children' => array()))));
+$datum = [
+    'nullField' => null,
+    'boolField' => true,
+    'intField' => -42,
+    'longField' => (int) 2147483650,
+    'floatField' => 1234.0,
+    'doubleField' => -5432.6,
+    'stringField' => 'hello avro',
+    'bytesField' => "\x16\xa6",
+    'arrayField' => [5.0, -6.0, -10.5],
+    'mapField' => [
+        'a' => ['label' => 'a'],
+        'c' => ['label' => '3P0']
+    ],
+    'unionField' => 14.5,
+    'enumField' => 'C',
+    'fixedField' => '1019181716151413',
+    'recordField' => [
+        'label' => 'blah',
+        'children' => [
+            [
+                'label' => 'inner',
+                'children' => []
+            ]
+        ]
+    ]
+];
 
 $schema_json = file_get_contents(AVRO_INTEROP_SCHEMA);
 foreach (AvroDataIO::valid_codecs() as $codec) {
-  $file_name = $codec == AvroDataIO::NULL_CODEC ? 'php.avro' : sprintf('php_%s.avro', $codec);
-  $data_file = join(DIRECTORY_SEPARATOR, array(AVRO_BUILD_DATA_DIR, $file_name));
-  $io_writer = AvroDataIO::open_file($data_file, 'w', $schema_json, $codec);
-  $io_writer->append($datum);
-  $io_writer->close();
+    $file_name = $codec == AvroDataIO::NULL_CODEC ? 'php.avro' : sprintf('php_%s.avro', $codec);
+    $data_file = implode(DIRECTORY_SEPARATOR, [AVRO_BUILD_DATA_DIR, $file_name]);
+    $io_writer = AvroDataIO::open_file($data_file, 'w', $schema_json, $codec);
+    $io_writer->append($datum);
+    $io_writer->close();
 }

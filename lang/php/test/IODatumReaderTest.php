@@ -17,20 +17,23 @@
  * limitations under the License.
  */
 
-require_once('test_helper.php');
+namespace Apache\Avro\Tests;
 
-class IODatumReaderTest extends PHPUnit\Framework\TestCase
+use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\Schema\AvroSchema;
+use PHPUnit\Framework\TestCase;
+
+class IODatumReaderTest extends TestCase
 {
-
-  public function testSchemaMatching()
-  {
-    $writers_schema = <<<JSON
+    public function testSchemaMatching()
+    {
+        $writers_schema = <<<JSON
       { "type": "map",
         "values": "bytes" }
 JSON;
-    $readers_schema = $writers_schema;
-    $this->assertTrue(AvroIODatumReader::schemas_match(
-                        AvroSchema::parse($writers_schema),
-                        AvroSchema::parse($readers_schema)));
-  }
+        $readers_schema = $writers_schema;
+        $this->assertTrue(AvroIODatumReader::schemas_match(
+            AvroSchema::parse($writers_schema),
+            AvroSchema::parse($readers_schema)));
+    }
 }

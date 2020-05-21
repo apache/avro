@@ -17,15 +17,25 @@
  * limitations under the License.
  */
 
-include __DIR__ . '/../vendor/autoload.php';
+namespace Apache\Avro\Datum;
 
-define('AVRO_TEST_HELPER_DIR', __DIR__);
+use Apache\Avro\AvroException;
+use Apache\Avro\Schema\AvroSchema;
 
-define('TEST_TEMP_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_TEST_HELPER_DIR, 'tmp']));
-
-define('AVRO_BASE_DIR', dirname(AVRO_TEST_HELPER_DIR, 3));
-define('AVRO_SHARE_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_BASE_DIR, 'share']));
-define('AVRO_BUILD_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_BASE_DIR, 'build']));
-define('AVRO_BUILD_DATA_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_BUILD_DIR, 'interop', 'data']));
-define('AVRO_TEST_SCHEMAS_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_SHARE_DIR, 'test', 'schemas']));
-define('AVRO_INTEROP_SCHEMA', implode(DIRECTORY_SEPARATOR, [AVRO_TEST_SCHEMAS_DIR, 'interop.avsc']));
+/**
+ * Exceptions arising from writing or reading Avro data.
+ *
+ * @package Avro
+ */
+class AvroIOTypeException extends AvroException
+{
+    /**
+     * @param AvroSchema $expected_schema
+     * @param mixed $datum
+     */
+    public function __construct($expected_schema, $datum)
+    {
+        parent::__construct(sprintf('The datum %s is not an example of schema %s',
+            var_export($datum, true), $expected_schema));
+    }
+}

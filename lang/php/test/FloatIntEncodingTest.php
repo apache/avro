@@ -16,9 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-require_once('test_helper.php');
 
-class FloatIntEncodingTest extends PHPUnit\Framework\TestCase
+namespace Apache\Avro\Tests;
+
+use Apache\Avro\AvroDebug;
+use PHPUnit\Framework\TestCase;
+
+class FloatIntEncodingTest extends TestCase
 {
   const FLOAT_TYPE = 'float';
   const DOUBLE_TYPE = 'double';
@@ -285,5 +289,4 @@ _RUBY;
                       sprintf("%s\n expected: '%f'\n     given: '%f'",
                               'ROUND TRIP BITS', $val, $round_trip_value));
   }
-
 }
