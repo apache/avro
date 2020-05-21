@@ -192,7 +192,7 @@ class DataFileTest extends PHPUnit\Framework\TestCase
   public function test_differing_schemas_with_primitives()
   {
     foreach (AvroDataIO::valid_codecs() as $codec) {
-      $data_file = $this->add_data_file('data-prim-%s.avr');
+      $data_file = $this->add_data_file(sprintf('data-prim-%s.avr', $codec));
 
       $writer_schema = <<<JSON
 { "type": "record",
@@ -229,7 +229,7 @@ JSON;
   public function test_differing_schemas_with_complex_objects()
   {
     foreach (AvroDataIO::valid_codecs() as $codec) {
-      $data_file = $this->add_data_file('data-complex-%s.avr', $codec);
+      $data_file = $this->add_data_file(sprintf('data-complex-%s.avr', $codec));
 
       $writers_schema = <<<JSON
 { "type": "record",
