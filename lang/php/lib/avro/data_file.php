@@ -76,7 +76,9 @@ class AvroDataIO
   const SNAPPY_CODEC = 'snappy';
 
   const ZSTANDARD_CODEC = 'zstandard';
-  
+
+  const BZIP2_CODEC = 'bzip2';
+
   /**
    * @var array array of valid codec names
    */
@@ -331,6 +333,13 @@ class AvroDataIOReader
             } else {
                 $decoder = new AvroIOBinaryDecoder(new AvroStringIO(snappy_uncompress($datum)));
             }
+        } elseif ($this->codec === AvroDataIO::BZIP2_CODEC) {
+            if (!extension_loaded('bz2')) {
+                throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
+            }
+            $compressed = $decoder->read($length);
+            $datum = bzdecompress($compressed);
+            $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
         }
       }
       $data[] = $this->datum_reader->read($decoder);
@@ -548,6 +557,11 @@ class AvroDataIOWriter
           $crc32 = crc32($to_write);
           $compressed = snappy_compress($to_write);
           $to_write = pack('a*N', $compressed, $crc32);
+      } elseif ($this->codec === AvroDataIO::BZIP2_CODEC) {
+          if (!extension_loaded('bz2')) {
+              throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
+          }
+          $to_write = bzcompress($to_write);
       }
 
       $this->encoder->write_long(strlen($to_write));

@@ -87,7 +87,9 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
  && apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends libzstd-dev \
+                                                 libbz2-dev \
                                                  php${PHP7_VERSION} \
+                                                 php${PHP7_VERSION}-bz2 \
                                                  php${PHP7_VERSION}-gmp \
                                                  php${PHP7_VERSION}-xml \
                                                  php${PHP7_VERSION}-mbstring \
