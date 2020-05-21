@@ -75,6 +75,9 @@ void LogicalType::printJson(std::ostream& os) const {
     case DURATION:
         os << "\"logicalType\": \"duration\"";
         break;
+    case UUID:
+        os << "\"logicalType\": \"uuid\"";
+        break;
     }
 }
 

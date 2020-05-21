@@ -788,12 +788,31 @@
       <section>
 	<title>Optional Codecs</title>
         <section>
+          <title>bzip2</title>
+          <p>The "bzip2" codec uses the <a href="https://sourceware.org/bzip2/">bzip2</a>
+            compression library.</p>
+        </section>
+
+        <section>
           <title>snappy</title>
           <p>The "snappy" codec uses
             Google's <a href="https://code.google.com/p/snappy/">Snappy</a>
             compression library.  Each compressed block is followed
             by the 4-byte, big-endian CRC32 checksum of the
             uncompressed data in the block.</p>
+        </section>
+
+        <section>
+          <title>xz</title>
+          <p>The "xz" codec uses the <a href="https://tukaani.org/xz/">XZ</a>
+            compression library.</p>
+        </section>
+
+        <section>
+          <title>zstandard</title>
+          <p>The "zstandard" codec uses
+            Facebook's <a href="https://facebook.github.io/zstd/">Zstandard</a>
+            compression library.</p>
         </section>
       </section>
     </section>

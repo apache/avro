@@ -111,7 +111,7 @@ static {
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
 #end
-  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #end
 #if ($schema.isError())
 
@@ -211,7 +211,7 @@ static {
 #foreach ($field in $schema.getFields())
 #if (${this.gettersReturnOptional} && (!${this.optionalGettersForNullableFieldsOnly} || ${field.schema().isNullable()}))
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
@@ -226,14 +226,14 @@ static {
 #else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
-  public ${this.javaUnbox($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
 #end
 
 #if (${this.createOptionalGetters})
   /**
-   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
@@ -250,7 +250,7 @@ static {
 #end
    * @param value the value to set.
    */
-  public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
+  public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
     ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
   }
 #end
@@ -302,9 +302,9 @@ static {
 #if ($field.doc())
     /** $field.doc() */
 #end
-    private ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+    private ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #if (${this.hasBuilder($field.schema())})
-    private ${this.javaUnbox($field.schema())}.Builder ${this.mangle($field.name(), $schema.isError())}Builder;
+    private ${this.javaUnbox($field.schema(), false)}.Builder ${this.mangle($field.name(), $schema.isError())}Builder;
 #end
 #end
 
@@ -383,16 +383,16 @@ static {
 #end
       * @return The value.
       */
-    public ${this.javaUnbox($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
       return ${this.mangle($field.name(), $schema.isError())};
     }
 
 #if (${this.createOptionalGetters})
     /**
-      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
+      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
 #if ($field.doc())      * $field.doc()
 #end
-      * @return The Optional&lt;value&gt;.
+      * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
       */
     public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
       return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
@@ -406,7 +406,7 @@ static {
       * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
+    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
       validate(fields()[$field.pos()], value);
 #if (${this.hasBuilder($field.schema())})
       this.${this.mangle($field.name(), $schema.isError())}Builder = null;
@@ -451,7 +451,7 @@ static {
      * @param value The builder instance that must be set.
      * @return This builder.
      */
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema())}.Builder value) {
+    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)}.Builder value) {
       ${this.generateClearMethod($schema, $field)}();
       ${this.mangle($field.name(), $schema.isError())}Builder = value;
       return this;
@@ -758,7 +758,21 @@ $I    $var = ${this.javaType($s)}.values()[in.readEnum()];
 #macro( decodeString $II $var $s )
 #set ($st = ${this.getStringType($s)})
 #if ($this.isStringable($s))
+#if ($st.equals("java.net.URI"))
+$II    try {
+$II      ${var} = new ${st}(in.readString());
+$II    } catch (java.net.URISyntaxException e) {
+$II      throw new java.io.IOException(e.getMessage());
+$II    }
+#elseif ($st.equals("java.net.URL"))
+$II    try {
+$II      ${var} = new ${st}(in.readString());
+$II    } catch (java.net.MalformedURLException e) {
+$II      throw new java.io.IOException(e.getMessage());
+$II    }
+#else
 $II    ${var} = new ${st}(in.readString());
+#end
 #elseif ($st.equals("java.lang.String"))
 $II    $var = in.readString();
 #elseif ($st.equals("org.apache.avro.util.Utf8"))

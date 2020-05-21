@@ -18,7 +18,7 @@
 package Avro;
 
 use strict;
-use 5.008_001;
+use 5.010_001;
 our $VERSION = '++MODULE_VERSION++';
 
 1;

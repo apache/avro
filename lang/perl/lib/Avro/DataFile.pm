@@ -38,6 +38,7 @@ EOH
 our %ValidCodec = (
     null      => 1,
     deflate   => 1,
+    bzip2     => 1,
     zstandard => 1,
 );
 

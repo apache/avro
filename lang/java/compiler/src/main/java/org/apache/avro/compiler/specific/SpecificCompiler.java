@@ -485,7 +485,7 @@ public class SpecificCompiler {
 
   /** Generate java classes for enqueued schemas. */
   Collection<OutputFile> compile() {
-    List<OutputFile> out = new ArrayList<>();
+    List<OutputFile> out = new ArrayList<>(queue.size() + 1);
     for (Schema schema : queue) {
       out.add(compile(schema));
     }
@@ -667,7 +667,7 @@ public class SpecificCompiler {
       for (String alias : s.getAliases())
         result.addAlias(alias, null); // copy aliases
       seen.put(s, result);
-      List<Field> newFields = new ArrayList<>();
+      List<Field> newFields = new ArrayList<>(s.getFields().size());
       for (Field f : s.getFields()) {
         Schema fSchema = addStringType(f.schema(), seen);
         Field newF = new Field(f, fSchema);
@@ -685,7 +685,7 @@ public class SpecificCompiler {
       GenericData.setStringType(result, stringType);
       break;
     case UNION:
-      List<Schema> types = new ArrayList<>();
+      List<Schema> types = new ArrayList<>(s.getTypes().size());
       for (Schema branch : s.getTypes())
         types.add(addStringType(branch, seen));
       result = Schema.createUnion(types);
@@ -820,9 +820,10 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
-   * @Deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
+   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
    *             of custom templates
    */
+  @Deprecated
   public String javaUnbox(Schema schema) {
     return javaUnbox(schema, false);
   }
@@ -953,7 +954,7 @@ public class SpecificCompiler {
       return new String[] { value.toString() };
     if (value instanceof List) {
       final List<?> list = (List<?>) value;
-      final List<String> annots = new ArrayList<>();
+      final List<String> annots = new ArrayList<>(list.size());
       for (Object o : list) {
         annots.add(o.toString());
       }
@@ -973,7 +974,8 @@ public class SpecificCompiler {
    * @return A sequence of quoted, comma-separated, escaped strings
    */
   public String javaSplit(String s) throws IOException {
-    StringBuilder b = new StringBuilder("\""); // initial quote
+    StringBuilder b = new StringBuilder(s.length());
+    b.append("\""); // initial quote
     for (int i = 0; i < s.length(); i += maxStringChars) {
       if (i != 0)
         b.append("\",\""); // insert quote-comma-quote

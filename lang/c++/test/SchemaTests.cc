@@ -212,6 +212,7 @@ const char* roundTripSchemas[] = {
     "{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}",
     "{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}",
     "{\"type\":\"fixed\",\"name\":\"test\",\"size\":12,\"logicalType\":\"duration\"}",
+    "{\"type\":\"string\",\"logicalType\":\"uuid\"}",
 
     // namespace with '$' in it.
     "{\"type\":\"record\",\"namespace\":\"a.b$\",\"name\":\"Test\",\"fields\":"
@@ -227,6 +228,7 @@ const char* malformedLogicalTypes[] = {
     "{\"type\":\"string\",\"logicalType\":\"timestamp-millis\"}",
     "{\"type\":\"string\",\"logicalType\":\"timestamp-micros\"}",
     "{\"type\":\"string\",\"logicalType\":\"duration\"}",
+    "{\"type\":\"long\",\"logicalType\":\"uuid\"}",
     // Missing the required field 'precision'.
     "{\"type\":\"bytes\",\"logicalType\":\"decimal\"}",
     // The claimed precision is not supported by the size of the fixed type.
@@ -349,6 +351,10 @@ static void testLogicalTypes()
         \"name\": \"durationType\",\n\
         \"logicalType\": \"duration\"\n\
     }";
+    const char* uuidType = "{\n\
+        \"type\": \"string\",\n\
+        \"logicalType\": \"uuid\"\n\
+    }";
     {
         BOOST_TEST_CHECKPOINT(bytesDecimalType);
         ValidSchema schema1 = compileJsonSchemaFromString(bytesDecimalType);
@@ -426,6 +432,15 @@ static void testLogicalTypes()
         BOOST_CHECK(logicalType.type() == LogicalType::DURATION);
         GenericDatum datum(schema);
         BOOST_CHECK(datum.logicalType().type() == LogicalType::DURATION);
+    }
+    {
+        BOOST_TEST_CHECKPOINT(uuidType);
+        ValidSchema schema = compileJsonSchemaFromString(uuidType);
+        BOOST_CHECK(schema.root()->type() == AVRO_STRING);
+        LogicalType logicalType = schema.root()->logicalType();
+        BOOST_CHECK(logicalType.type() == LogicalType::UUID);
+        GenericDatum datum(schema);
+        BOOST_CHECK(datum.logicalType().type() == LogicalType::UUID);
     }
 }
 
