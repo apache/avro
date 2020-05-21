@@ -759,4 +759,64 @@ public class TestSpecificCompiler {
     }
     assertEquals(1, itWorksFound);
   }
+
+  @Test
+  public void testFieldNameForGetter() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setUseFieldNameForGetter(true);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int foundGetter = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        // We should find the getter in the main class
+        line = line.trim();
+        if (line.startsWith("public int value()")) {
+          foundGetter++;
+        }
+      }
+    }
+    assertEquals("Found the wrong number of getter", 1, foundGetter);
+  }
+
+  @Test
+  public void testFieldNameForGetterReturnsOptional() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setUseFieldNameForGetter(true);
+    compiler.setGettersReturnOptional(true);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    int foundGetter = 0;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        // We should find the getter in the main class
+        line = line.trim();
+        if (line.startsWith("public Optional<java.lang.Integer> value()")) {
+          foundGetter++;
+        }
+      }
+    }
+    assertEquals("Found the wrong number of getter", 1, foundGetter);
+  }
+
+  @Test
+  public void testFieldNameForGetterCompiles() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setUseFieldNameForGetter(true);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName()), compiler.compile());
+  }
+
+  @Test
+  public void testFieldNameForGetterReturnsOptionalCompiles() throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setUseFieldNameForGetter(true);
+    compiler.setGettersReturnOptional(true);
+    compiler.compileToDestination(this.src, this.OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    assertCompilesWithJavaCompiler(new File(OUTPUT_DIR.getRoot(), name.getMethodName()), compiler.compile());
+  }
 }

@@ -117,6 +117,7 @@ public class SpecificCompiler {
   private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
+  private boolean useFieldNameForGetter = false;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
   private String suffix = ".java";
@@ -237,6 +238,18 @@ public class SpecificCompiler {
 
   public boolean isCreateOptionalGetters() {
     return this.createOptionalGetters;
+  }
+
+  /**
+   * set to true to create "getters" without the "get" prefix. The resulting
+   * getter methods will have the same name as fields.
+   */
+  public void setUseFieldNameForGetter(boolean useFieldNameForGetter) {
+    this.useFieldNameForGetter = useFieldNameForGetter;
+  }
+
+  public boolean isUseFieldNameForGetter() {
+    return useFieldNameForGetter;
   }
 
   /**

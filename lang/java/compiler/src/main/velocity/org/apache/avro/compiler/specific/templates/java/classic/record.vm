@@ -216,7 +216,11 @@ static {
 #end
    * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
    */
+#if ($this.isUseFieldNameForGetter())
+  public Optional<${this.javaType($field.schema())}> ${this.mangle($field.name(), $schema.isError())}() {
+#else
   public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
+#end
     return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
   }
 #else
@@ -226,7 +230,11 @@ static {
 #else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
+#if ($this.isUseFieldNameForGetter())
+  public ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())}() {
+#else
   public ${this.javaUnbox($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+#end
     return ${this.mangle($field.name(), $schema.isError())};
   }
 #end
