@@ -82,7 +82,7 @@ class AvroDataIO
   /**
    * @var array array of valid codec names
    */
-  private static $valid_codecs = [self::NULL_CODEC, self::DEFLATE_CODEC, self::SNAPPY_CODEC, self::ZSTANDARD_CODEC];
+  private static $valid_codecs = [self::NULL_CODEC, self::DEFLATE_CODEC, self::SNAPPY_CODEC, self::ZSTANDARD_CODEC, self::BZIP2_CODEC];
 
   /**
    * @var AvroSchema cached version of metadata schema object
