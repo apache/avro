@@ -97,9 +97,9 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && mkdir tmp && cd tmp \
  && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
  && cd php-ext-zstd \
- && phpize       \
- && ./configure  \
- && make         \
+ && phpize \
+ && ./configure \
+ && make \
  && make install \
  && echo "extension=zstd.so" > /etc/php/7.3/cli/conf.d/10-zstd.ini \
  && cd .. && rm -rf php-ext-zstd \
