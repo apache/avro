@@ -57,7 +57,7 @@ do
       ;;
 
     lint)
-      echo 'This is a stub where someone can provide linting.'
+      vendor/bin/phpcs --standard=PSR12 lib
       ;;
 
     test)
