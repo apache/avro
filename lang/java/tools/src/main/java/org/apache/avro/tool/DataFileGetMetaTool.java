@@ -74,6 +74,7 @@ public class DataFileGetMetaTool implements Tool {
         out.println();
       }
     }
+    reader.close();
     return 0;
   }
 

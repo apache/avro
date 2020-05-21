@@ -32,7 +32,7 @@ import static org.apache.avro.file.DataFileConstants.MAGIC;
 
 /**
  * Random access to files written with {@link DataFileWriter}.
- * 
+ *
  * @see DataFileWriter
  */
 public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D> {
@@ -73,7 +73,7 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
   /**
    * Construct a reader for a file at the current position of the input, without
    * reading the header.
-   * 
+   *
    * @param sync True to read forward to the next sync point after opening, false
    *             to assume that the input is already at a valid sync point.
    */
@@ -88,17 +88,41 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     return dreader;
   }
 
-  /** Construct a reader for a file. */
+  /**
+   * Construct a reader for a file. For example,if you want to read a file
+   * record,you need to close the resource. You can use try-with-resource as
+   * follows:
+   * 
+   * <pre>
+   * try (FileReader<User> dataFileReader =
+   * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
+   * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
+   * file: %s", file); }
+   * 
+   * <pre/>
+   */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
     this(new SeekableFileInput(file), reader, true);
   }
 
-  /** Construct a reader for a file. */
+  /**
+   * Construct a reader for a file. For example,if you want to read a file
+   * record,you need to close the resource. You can use try-with-resource as
+   * follows:
+   * 
+   * <pre>
+   * try (FileReader<User> dataFileReader =
+   * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
+   * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
+   * file: %s", file); }
+   * 
+   * <pre/>
+   */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader) throws IOException {
     this(sin, reader, false);
   }
 
-  /** Construct a reader for a file. */
+  /** Construct a reader for a file. Please close resource files yourself. */
   protected DataFileReader(SeekableInput sin, DatumReader<D> reader, boolean closeOnError) throws IOException {
     super(reader);
     try {
