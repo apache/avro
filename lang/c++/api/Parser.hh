@@ -100,11 +100,11 @@ class Parser : private boost::noncopyable
         reader_.readFixed(val);
     }
 
-    void readRecord() { 
+    void readRecord() {
         reader_.readRecord();
     }
 
-    void readRecordEnd() { 
+    void readRecordEnd() {
         reader_.readRecordEnd();
     }
 
@@ -112,7 +112,7 @@ class Parser : private boost::noncopyable
         return reader_.readArrayBlockSize();
     }
 
-    int64_t readUnion() { 
+    int64_t readUnion() {
         return reader_.readUnion();
     }
 

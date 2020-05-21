@@ -23,64 +23,70 @@ cd `dirname "$0"`                  # connect to root
 ROOT=../..
 VERSION=`cat $ROOT/share/VERSION.txt`
 
-case "$1" in
+for target in "$@"
+do
 
-  lint)
-    echo 'This is a stub where someone can provide linting.'
-    ;;
+  case "$target" in
 
-  test)
-    dotnet build --configuration Release Avro.sln
+    lint)
+      echo 'This is a stub where someone can provide linting.'
+      ;;
 
-    # AVRO-2442: Explictly set LANG to work around ICU bug in `dotnet test`
-    LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build \
-        --filter "TestCategory!=Interop" Avro.sln
-    ;;
+    test)
+      dotnet build --configuration Release Avro.sln
 
-  perf)
-    pushd ./src/apache/perf/
-    dotnet run --configuration Release --framework netcoreapp2.2
-    ;;
+      # AVRO-2442: Explictly set LANG to work around ICU bug in `dotnet test`
+      LANG=en_US.UTF-8 dotnet test  --configuration Release --no-build \
+          --filter "TestCategory!=Interop" Avro.sln
+      ;;
 
-  dist)
-    # pack NuGet packages
-    dotnet pack --configuration Release Avro.sln
+    perf)
+      pushd ./src/apache/perf/
+      dotnet run --configuration Release --framework netcoreapp3.1
+      ;;
 
-    # add the binary LICENSE and NOTICE to the tarball
-    mkdir build/
-    cp LICENSE NOTICE build/
+    dist)
+      # pack NuGet packages
+      dotnet pack --configuration Release Avro.sln
 
-    # add binaries to the tarball
-    mkdir build/main/
-    cp -R src/apache/main/bin/Release/* build/main/
-    mkdir build/codegen/
-    cp -R src/apache/codegen/bin/Release/* build/codegen/
+      # add the binary LICENSE and NOTICE to the tarball
+      mkdir build/
+      cp LICENSE NOTICE build/
 
-    # build the tarball
-    mkdir -p ${ROOT}/dist/csharp
-    (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE)
+      # add binaries to the tarball
+      mkdir build/main/
+      cp -R src/apache/main/bin/Release/* build/main/
+      mkdir build/codegen/
+      cp -R src/apache/codegen/bin/Release/* build/codegen/
 
-    # build documentation
-    doxygen Avro.dox
-    mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
-    cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
-    ;;
+      # build the tarball
+      mkdir -p ${ROOT}/dist/csharp
+      (cd build; tar czf ${ROOT}/../dist/csharp/avro-csharp-${VERSION}.tar.gz main codegen LICENSE NOTICE)
 
-  interop-data-generate)
-    dotnet run --project src/apache/test/Avro.test.csproj --framework netcoreapp2.2 ../../share/test/schemas/interop.avsc ../../build/interop/data
-    ;;
+      # build documentation
+      doxygen Avro.dox
+      mkdir -p ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+      cp -pr build/doc/* ${ROOT}/build/avro-doc-${VERSION}/api/csharp
+      ;;
 
-  interop-data-test)
-    LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop"
-    ;;
+    interop-data-generate)
+      dotnet run --project src/apache/test/Avro.test.csproj --framework netcoreapp3.1 ../../share/test/schemas/interop.avsc ../../build/interop/data
+      ;;
 
-  clean)
-    rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
-    rm -rf build
-    rm -f  TestResult.xml
-    ;;
+    interop-data-test)
+      LANG=en_US.UTF-8 dotnet test --filter "TestCategory=Interop"
+      ;;
 
-  *)
-    echo "Usage: $0 {lint|test|clean|dist|perf|interop-data-generate|interop-data-test}"
-    exit 1
-esac
+    clean)
+      rm -rf src/apache/{main,test,codegen,ipc,msbuild,perf}/{obj,bin}
+      rm -rf build
+      rm -f  TestResult.xml
+      ;;
+
+    *)
+      echo "Usage: $0 {lint|test|clean|dist|perf|interop-data-generate|interop-data-test}"
+      exit 1
+
+  esac
+
+done

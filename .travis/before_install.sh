@@ -32,7 +32,7 @@ case "$TRAVIS_OS_NAME" in
     rm /tmp/apache-yetus-0.10.0/lib/precommit/robots.d/travisci.sh
     ;;
 "windows")
-    choco install dotnetcore-sdk --version 2.2.300
+    choco install dotnetcore-sdk --version 3.1.101
     ;;
 *)
     echo "Invalid PLATFORM"

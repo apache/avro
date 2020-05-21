@@ -84,7 +84,7 @@ public class TetherTool implements Tool {
 
     Option cacheopt = OptionBuilder.withType(Boolean.class).hasArg()
         .withDescription(
-            "(optional) boolean indicating whether or not the exectuable should be distributed via distributed cache")
+            "(optional) boolean indicating whether or not the executable should be distributed via distributed cache")
         .create("exec_cached");
 
     Option protoopt = OptionBuilder.hasArg()
@@ -103,7 +103,6 @@ public class TetherTool implements Tool {
 
     CommandLineParser parser = new GnuParser();
 
-    String[] genargs = null;
     CommandLine line = null;
     HelpFormatter formatter = new HelpFormatter();
 
@@ -116,8 +115,6 @@ public class TetherTool implements Tool {
         formatter.printHelp("tether", opts);
         return 0;
       }
-
-      genargs = line.getArgs();
 
       FileInputFormat.addInputPaths(job, line.getOptionValue("in"));
       FileOutputFormat.setOutputPath(job, new Path(line.getOptionValue("out")));

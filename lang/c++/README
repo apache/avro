@@ -7,7 +7,7 @@ The C++ port is thus far incomplete.  Currently, it contains:
  - xxxSchema- objects for composing schemas.
 
  - ValidSchema- a schema object that has been converted to a parse tree
-   (with some sanity checks). 
+   (with some sanity checks).
 
  - ValidSchema.toJson() writes the schema as a json object.
 

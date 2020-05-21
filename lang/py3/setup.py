@@ -26,16 +26,16 @@ The avro-python3 software is designed for Python 3, but this file and the packag
 https://pypi.org/project/avro-python3/
 """
 
-import distutils
 import distutils.command.clean
 import distutils.dir_util
+import distutils.errors
 import distutils.file_util
 import distutils.log
 import fnmatch
+import glob
 import os
 import subprocess
 
-import pycodestyle
 import setuptools
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -145,8 +145,14 @@ class LintCommand(setuptools.Command):
         pass
 
     def run(self):
+        # setuptools does not seem to make pycodestyle available
+        # in the pythonpath, so we do it ourselves.
         try:
-            subprocess.run(['pycodestyle', '.'], check=True)
+            env = {'PYTHONPATH': next(glob.iglob('.eggs/pycodestyle-*.egg'))}
+        except StopIteration:
+            env = None  # pycodestyle is already installed
+        try:
+            subprocess.run(['python3', '-m', 'pycodestyle', '.'], env=env, check=True)
         except subprocess.CalledProcessError:
             raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
 

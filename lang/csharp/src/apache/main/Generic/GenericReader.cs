@@ -226,6 +226,8 @@ namespace Avro.Generic
                     return ReadMap(reuse, (MapSchema)writerSchema, readerSchema, d);
                 case Schema.Type.Union:
                     return ReadUnion(reuse, (UnionSchema)writerSchema, readerSchema, d);
+                case Schema.Type.Logical:
+                    return ReadLogical(reuse, (LogicalSchema)writerSchema, readerSchema, d);
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);
             }
@@ -551,6 +553,22 @@ namespace Avro.Generic
         }
 
         /// <summary>
+        /// Deserializes an object based on the writer's logical schema. Uses the underlying logical type to convert
+        /// the value to the logical type.
+        /// </summary>
+        /// <param name="reuse">If appropriate, uses this object instead of creating a new one.</param>
+        /// <param name="writerSchema">The UnionSchema that the writer used.</param>
+        /// <param name="readerSchema">The schema the reader uses.</param>
+        /// <param name="d">The decoder for serialization.</param>
+        /// <returns>The deserialized object.</returns>
+        protected virtual object ReadLogical(object reuse, LogicalSchema writerSchema, Schema readerSchema, Decoder d)
+        {
+            LogicalSchema ls = (LogicalSchema)readerSchema;
+
+            return writerSchema.LogicalType.ConvertToLogicalValue(Read(reuse, writerSchema.BaseSchema, ls.BaseSchema, d), ls);
+        }
+
+        /// <summary>
         /// Deserializes a fixed object and returns the object. The default implementation uses CreateFixed()
         /// and GetFixedBuffer() and returns what CreateFixed() returned.
         /// </summary>
@@ -660,6 +678,9 @@ namespace Avro.Generic
                     break;
                 case Schema.Type.Union:
                     Skip((writerSchema as UnionSchema)[d.ReadUnionIndex()], d);
+                    break;
+                case Schema.Type.Logical:
+                    Skip((writerSchema as LogicalSchema).BaseSchema, d);
                     break;
                 default:
                     throw new AvroException("Unknown schema type: " + writerSchema);

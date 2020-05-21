@@ -30,6 +30,7 @@ class AvroProtocol
   public $name;
   public $namespace;
   public $schemata;
+  public $messages;
 
   public static function parse($json)
   {
@@ -54,7 +55,7 @@ class AvroProtocol
     if (!is_null($avro["messages"])) {
       foreach ($avro["messages"] as $messageName => $messageAvro) {
         $message = new AvroProtocolMessage($messageName, $messageAvro, $this);
-        $this->messages{$messageName} = $message;
+        $this->messages[$messageName] = $message;
       }
     }
   }
@@ -73,12 +74,12 @@ class AvroProtocolMessage
   public function __construct($name, $avro, $protocol)
   {
     $this->name = $name;
-    $this->request = new AvroRecordSchema(new AvroName($name, null, $protocol->namespace), null, $avro{'request'}, $protocol->schemata, AvroSchema::REQUEST_SCHEMA);
+    $this->request = new AvroRecordSchema(new AvroName($name, null, $protocol->namespace), null, $avro['request'], $protocol->schemata, AvroSchema::REQUEST_SCHEMA);
 
     if (array_key_exists('response', $avro)) {
-      $this->response = $protocol->schemata->schema_by_name(new AvroName($avro{'response'}, $protocol->namespace, $protocol->namespace));
+      $this->response = $protocol->schemata->schema_by_name(new AvroName($avro['response'], $protocol->namespace, $protocol->namespace));
       if ($this->response == null)
-        $this->response = new AvroPrimitiveSchema($avro{'response'});
+        $this->response = new AvroPrimitiveSchema($avro['response']);
     }
   }
 }

@@ -111,7 +111,7 @@ static {
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
 #end
-  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #end
 #if ($schema.isError())
 
@@ -201,7 +201,7 @@ static {
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-    case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end}value$; break;
+    case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String") != null ? value$.toString() : null#{end}; break;
 #set ($i = $i + 1)
 #end
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
@@ -209,7 +209,7 @@ static {
   }
 
 #foreach ($field in $schema.getFields())
-#if (${this.gettersReturnOptional})
+#if (${this.gettersReturnOptional} && (!${this.optionalGettersForNullableFieldsOnly} || ${field.schema().isNullable()}))
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional<${this.javaType($field.schema())}>.
 #if ($field.doc())      * $field.doc()
@@ -226,7 +226,7 @@ static {
 #else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
-  public ${this.javaUnbox($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
 #end
@@ -250,7 +250,7 @@ static {
 #end
    * @param value the value to set.
    */
-  public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
+  public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
     ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
   }
 #end
@@ -302,9 +302,9 @@ static {
 #if ($field.doc())
     /** $field.doc() */
 #end
-    private ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+    private ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #if (${this.hasBuilder($field.schema())})
-    private ${this.javaUnbox($field.schema())}.Builder ${this.mangle($field.name(), $schema.isError())}Builder;
+    private ${this.javaUnbox($field.schema(), false)}.Builder ${this.mangle($field.name(), $schema.isError())}Builder;
 #end
 #end
 
@@ -383,7 +383,7 @@ static {
 #end
       * @return The value.
       */
-    public ${this.javaUnbox($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
       return ${this.mangle($field.name(), $schema.isError())};
     }
 
@@ -406,7 +406,7 @@ static {
       * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
+    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
       validate(fields()[$field.pos()], value);
 #if (${this.hasBuilder($field.schema())})
       this.${this.mangle($field.name(), $schema.isError())}Builder = null;
@@ -451,7 +451,7 @@ static {
      * @param value The builder instance that must be set.
      * @return This builder.
      */
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema())}.Builder value) {
+    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)}.Builder value) {
       ${this.generateClearMethod($schema, $field)}();
       ${this.mangle($field.name(), $schema.isError())}Builder = value;
       return this;

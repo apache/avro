@@ -30,7 +30,7 @@
 ///
 
 namespace avro {
-    
+
 class ValidSchema;
 class Layout;
 class Resolver;
@@ -45,7 +45,7 @@ class AVRO_DECL ResolverSchema {
 
     friend class ResolvingReader;
 
-    void parse(Reader &reader, uint8_t *address); 
+    void parse(Reader &reader, uint8_t *address);
 
     std::shared_ptr<Resolver> resolver_;
 

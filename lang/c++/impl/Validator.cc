@@ -33,7 +33,7 @@ Validator::Validator(const ValidSchema &schema) :
     setupOperation(schema_.root());
 }
 
-void 
+void
 Validator::setWaitingForCount()
 {
     waitingForCount_ = true;
@@ -55,7 +55,7 @@ Validator::enumAdvance()
     }
 }
 
-bool 
+bool
 Validator::countingSetup()
 {
     bool proceed = true;
@@ -82,7 +82,7 @@ void
 Validator::countingAdvance()
 {
     if(countingSetup()) {
-    
+
         size_t index = (compoundStack_.back().pos)++;
         const NodePtr &node = compoundStack_.back().node;
 
@@ -125,7 +125,7 @@ Validator::unionAdvance()
             throw Exception(
                 boost::format("Union selection out of range, got %1%," \
                     " expecting 0-%2%")
-                    % count_ % (node->leaves() -1) 
+                    % count_ % (node->leaves() -1)
             );
         }
     }
@@ -138,7 +138,7 @@ Validator::fixedAdvance()
     compoundStack_.pop_back();
 }
 
-int 
+int
 Validator::nextSizeExpected() const
 {
     return compoundStack_.back().node->fixedSize();
@@ -170,9 +170,9 @@ Validator::doAdvance()
             "Invalid number of advance functions");
 
     expectedTypesFlag_ = 0;
-    // loop until we encounter a next expected type, or we've exited all compound types 
+    // loop until we encounter a next expected type, or we've exited all compound types
     while(!expectedTypesFlag_ && !compoundStack_.empty() ) {
-    
+
         Type type = compoundStack_.back().node->type();
 
         AdvanceFunc func = funcs[type];
@@ -197,7 +197,7 @@ void Validator::advance()
 }
 
 void
-Validator::setCount(int64_t count) 
+Validator::setCount(int64_t count)
 {
     if(!waitingForCount_) {
         throw Exception("Not expecting count");
@@ -259,7 +259,7 @@ Validator::setupOperation(const NodePtr &node)
     }
 }
 
-bool 
+bool
 Validator::getCurrentRecordName(std::string &name) const
 {
     bool found = false;
@@ -273,7 +273,7 @@ Validator::getCurrentRecordName(std::string &name) const
     else {
         idx = compoundStack_.size() -2;
     }
-    
+
     if(idx >= 0 && compoundStack_[idx].node->type() == AVRO_RECORD) {
         name = compoundStack_[idx].node->name().simpleName();
         found = true;
@@ -281,7 +281,7 @@ Validator::getCurrentRecordName(std::string &name) const
     return found;
 }
 
-bool 
+bool
 Validator::getNextFieldName(std::string &name) const
 {
     bool found = false;

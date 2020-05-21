@@ -18,13 +18,13 @@
 package org.apache.avro.generic;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.Collection;
 import java.nio.ByteBuffer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Conversion;
@@ -44,6 +44,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   private final GenericData data;
   private Schema actual;
   private Schema expected;
+  private DatumReader<D> fastDatumReader = null;
 
   private ResolvingDecoder creatorResolver = null;
   private final Thread creator;
@@ -90,6 +91,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
       expected = actual;
     }
     creatorResolver = null;
+    fastDatumReader = null;
   }
 
   /** Get the reader's schema. */
@@ -139,6 +141,13 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   @Override
   @SuppressWarnings("unchecked")
   public D read(D reuse, Decoder in) throws IOException {
+    if (data.isFastReaderEnabled()) {
+      if (this.fastDatumReader == null) {
+        this.fastDatumReader = data.getFastReaderBuilder().createDatumReader(actual, expected);
+      }
+      return fastDatumReader.read(reuse, in);
+    }
+
     ResolvingDecoder resolver = getResolver(actual, expected);
     resolver.configure(in);
     D result = (D) read(reuse, expected, resolver);
@@ -203,7 +212,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /**
    * Convert a underlying representation of a logical type (such as a ByteBuffer)
    * to a higher level object (such as a BigDecimal).
-   * 
+   *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
    *                                  Please be noticed that the exception type
@@ -224,28 +233,30 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * representations.
    */
   protected Object readRecord(Object old, Schema expected, ResolvingDecoder in) throws IOException {
-    Object r = data.newRecord(old, expected);
-    Object state = data.getRecordState(r, expected);
+    final Object record = data.newRecord(old, expected);
+    final Object state = data.getRecordState(record, expected);
 
-    for (Field f : in.readFieldOrder()) {
-      int pos = f.pos();
-      String name = f.name();
+    for (Field field : in.readFieldOrder()) {
+      int pos = field.pos();
+      String name = field.name();
       Object oldDatum = null;
       if (old != null) {
-        oldDatum = data.getField(r, name, pos, state);
+        oldDatum = data.getField(record, name, pos, state);
       }
-      readField(r, f, oldDatum, in, state);
+
+      readField(record, field, oldDatum, in, state);
     }
 
-    return r;
+    return record;
   }
 
   /**
    * Called to read a single field of a record. May be overridden for more
    * efficient or alternate implementations.
    */
-  protected void readField(Object r, Field f, Object oldDatum, ResolvingDecoder in, Object state) throws IOException {
-    data.setField(r, f.name(), f.pos(), read(oldDatum, f.schema(), in), state);
+  protected void readField(Object record, Field field, Object oldDatum, ResolvingDecoder in, Object state)
+      throws IOException {
+    data.setField(record, field.name(), field.pos(), read(oldDatum, field.schema(), in), state);
   }
 
   /**
@@ -379,7 +390,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations. By default, returns {@link GenericFixed}.
-   * 
+   *
    * @deprecated As of Avro 1.6.0 this method has been moved to
    *             {@link GenericData#createFixed(Object, Schema)}
    */
@@ -391,7 +402,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
   /**
    * Called to create an fixed value. May be overridden for alternate fixed
    * representations. By default, returns {@link GenericFixed}.
-   * 
+   *
    * @deprecated As of Avro 1.6.0 this method has been moved to
    *             {@link GenericData#createFixed(Object, byte[], Schema)}
    */
@@ -407,7 +418,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    * they should either be removed from the old object, or it should create a new
    * instance that conforms to the schema. By default, this returns a
    * {@link GenericData.Record}.
-   * 
+   *
    * @deprecated As of Avro 1.6.0 this method has been moved to
    *             {@link GenericData#newRecord(Object, Schema)}
    */
@@ -423,14 +434,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   @SuppressWarnings("unchecked")
   protected Object newArray(Object old, int size, Schema schema) {
-    if (old instanceof GenericArray) {
-      ((GenericArray) old).reset();
-      return old;
-    } else if (old instanceof Collection) {
-      ((Collection) old).clear();
-      return old;
-    } else
-      return new GenericData.Array(size, schema);
+    return data.newArray(old, size, schema);
   }
 
   /**
@@ -439,11 +443,7 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   @SuppressWarnings("unchecked")
   protected Object newMap(Object old, int size) {
-    if (old instanceof Map) {
-      ((Map) old).clear();
-      return old;
-    } else
-      return new HashMap<>(size);
+    return data.newMap(old, size);
   }
 
   /**
@@ -452,10 +452,12 @@ public class GenericDatumReader<D> implements DatumReader<D> {
    */
   protected Object readString(Object old, Schema expected, Decoder in) throws IOException {
     Class stringClass = getStringClass(expected);
-    if (stringClass == String.class)
+    if (stringClass == String.class) {
       return in.readString();
-    if (stringClass == CharSequence.class)
+    }
+    if (stringClass == CharSequence.class) {
       return readString(old, in);
+    }
     return newInstanceFromString(stringClass, in.readString());
   }
 

@@ -217,7 +217,7 @@ public:
     {
         return Symbol(sDefaultStart, bb);
     }
- 
+
     static Symbol defaultEndAction()
     {
         return Symbol(sDefaultEnd);
@@ -308,7 +308,7 @@ void fixup(const ProductionPtr& p,
         fixup(*it, m, seen);
     }
 }
-    
+
 
 /**
  * Recursively replaces all placeholders in the symbol with the values with the
@@ -485,7 +485,7 @@ public:
                         size_t n = handler_.handle(s);
                         if (s.kind() == Symbol::sWriterUnion) {
                             parsingStack.pop();
-                            selectBranch(n); 
+                            selectBranch(n);
                         } else {
                             parsingStack.pop();
                         }

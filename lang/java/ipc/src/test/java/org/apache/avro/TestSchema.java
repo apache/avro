@@ -448,6 +448,16 @@ public class TestSchema {
   }
 
   @Test
+  public void testDeeplyNestedNullNamespace() {
+    Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":["
+        + "{\"name\":\"x\",\"type\":{\"type\":\"record\",\"name\":\"Deeper\",\"fields\":["
+        + "{\"name\":\"y\",\"type\":\"int\"}]}}]}");
+    Schema outer = Schema.createRecord("Outer", null, "space", false);
+    outer.setFields(Collections.singletonList(new Field("f", inner, null, null)));
+    assertEquals(outer, new Schema.Parser().parse(outer.toString()));
+  }
+
+  @Test
   public void testNestedNullNamespaceReferencing() {
     Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);

@@ -46,7 +46,7 @@ DATUM = {
 
 
 def generate(schema_file, output_path):
-  interop_schema = schema.Parse(open(schema_file, 'r').read())
+  interop_schema = schema.parse(open(schema_file, 'r').read())
   datum_writer = io.DatumWriter()
   for codec in datafile.VALID_CODECS:
     filename = 'py3'

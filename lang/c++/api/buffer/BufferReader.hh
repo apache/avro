@@ -25,8 +25,8 @@
 #ifdef min
 #undef min
 #endif
-/** 
- * \file BufferReader.hh 
+/**
+ * \file BufferReader.hh
  *
  * \brief Helper class for reading bytes from buffer in a streaming manner,
  * without the overhead of istreams.
@@ -35,19 +35,19 @@
 
 namespace avro {
 
-/** 
+/**
  * Helper class for reading bytes from buffer without worrying about
  * chunk boundaries.  May read from an InputBuffer or OutputBuffer.
  *
  **/
-class AVRO_DECL BufferReader : private boost::noncopyable 
+class AVRO_DECL BufferReader : private boost::noncopyable
 {
 
   public:
 
     typedef detail::data_type data_type;
     typedef detail::size_type size_type;
-    
+
   private:
 
     size_type chunkRemaining() const {
@@ -91,7 +91,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         chunkPos_(0)
     { }
 
-    /** 
+    /**
      * How many bytes are still not read from this buffer.
      **/
 
@@ -99,7 +99,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return bytesRemaining_;
     }
 
-    /** 
+    /**
      * Read a block of data from the front of the buffer.
      **/
 
@@ -107,11 +107,11 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return bytes_ - bytesRemaining_;
     }
 
-    /** 
+    /**
      * Read a block of data from the buffer.
      **/
 
-    size_type read(data_type *data, size_type size) { 
+    size_type read(data_type *data, size_type size) {
 
         if(size > bytesRemaining_) {
             size = bytesRemaining_;
@@ -129,11 +129,11 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return size;
     }
 
-    /** 
+    /**
      * Read a block of data from the buffer.
      **/
 
-    bool read(std::string &str, size_type size) { 
+    bool read(std::string &str, size_type size) {
         if(size > bytesRemaining_) {
             return false;
         }
@@ -149,7 +149,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
     }
 
 
-    /** 
+    /**
      * Read a single value from the buffer.  The value must be a "fundamental"
      * type, e.g. int, float, etc.  (otherwise use the other writeTo tests).
      *
@@ -160,7 +160,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return read(val, std::is_fundamental<T>());
     }
 
-    /** 
+    /**
      * Skips a block of data from the buffer.
      **/
 
@@ -173,7 +173,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return skipped;
     }
 
-    /** 
+    /**
      * Seek to a position in the buffer.
      **/
 
@@ -264,7 +264,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         str.assign(addr(), sizeToCopy);
         incrementChunk(sizeToCopy);
     }
-            
+
     void slowStringRead(std::string &str, size_type sizeToCopy) {
         str.clear();
         str.reserve(sizeToCopy);

@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -170,13 +171,13 @@ public class NettyTransceiver extends Transceiver {
    *                                    Channel.
    * @param nettyClientBootstrapOptions map of Netty ClientBootstrap options to
    *                                    use.
-   * @throws IOException if an error occurs connecting to the given address.
+   * @throws IOException          if an error occurs connecting to the given
+   *                              address.
+   * @throws NullPointerException if {@code channelFactory} is {@code null}
    */
   public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory,
       Map<String, Object> nettyClientBootstrapOptions) throws IOException {
-    if (channelFactory == null) {
-      throw new NullPointerException("channelFactory is null");
-    }
+    Objects.requireNonNull(channelFactory, "channelFactory cannot be null");
 
     // Set up.
     this.channelFactory = channelFactory;
@@ -194,7 +195,7 @@ public class NettyTransceiver extends Transceiver {
     });
 
     if (nettyClientBootstrapOptions != null) {
-      LOG.debug("Using Netty bootstrap options: " + nettyClientBootstrapOptions);
+      LOG.debug("Using Netty bootstrap options: {}", nettyClientBootstrapOptions);
       bootstrap.setOptions(nettyClientBootstrapOptions);
     }
 
@@ -272,7 +273,7 @@ public class NettyTransceiver extends Transceiver {
         if (!isChannelReady(channel)) {
           synchronized (channelFutureLock) {
             if (!stopping) {
-              LOG.debug("Connecting to " + remoteAddr);
+              LOG.debug("Connecting to {}", remoteAddr);
               channelFuture = bootstrap.connect(remoteAddr);
             }
           }
@@ -300,13 +301,6 @@ public class NettyTransceiver extends Transceiver {
       }
     }
     return channel;
-  }
-
-  /**
-   * Closes the connection to the remote peer if connected.
-   */
-  private void disconnect() {
-    disconnect(false, false, null);
   }
 
   /**
@@ -342,9 +336,9 @@ public class NettyTransceiver extends Transceiver {
     try {
       if (channel != null) {
         if (cause != null) {
-          LOG.debug("Disconnecting from " + remoteAddr, cause);
+          LOG.debug("Disconnecting from {}", remoteAddr, cause);
         } else {
-          LOG.debug("Disconnecting from " + remoteAddr);
+          LOG.debug("Disconnecting from {}", remoteAddr);
         }
         channelToClose = channel;
         channel = null;
@@ -365,7 +359,7 @@ public class NettyTransceiver extends Transceiver {
 
     // Cancel any pending requests by sending errors to the callbacks:
     if ((requestsToCancel != null) && !requestsToCancel.isEmpty()) {
-      LOG.debug("Removing " + requestsToCancel.size() + " pending request(s).");
+      LOG.debug("Removing {} pending request(s)", requestsToCancel.size());
       for (Callback<List<ByteBuffer>> request : requestsToCancel.values()) {
         request.handleError(cause != null ? cause : new IOException(getClass().getSimpleName() + " closed"));
       }
@@ -571,11 +565,11 @@ public class NettyTransceiver extends Transceiver {
     @Override
     public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
       if (e instanceof ChannelStateEvent) {
-        LOG.debug(e.toString());
+        LOG.debug("{}", e);
         ChannelStateEvent cse = (ChannelStateEvent) e;
         if ((cse.getState() == ChannelState.OPEN) && (Boolean.FALSE.equals(cse.getValue()))) {
           // Server closed connection; disconnect client side
-          LOG.debug("Remote peer " + remoteAddr + " closed connection.");
+          LOG.debug("Remote peer {} closed connection", remoteAddr);
           disconnect(false, true, null);
         }
       }

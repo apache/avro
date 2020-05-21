@@ -24,7 +24,7 @@ class InterOpTest extends PHPUnit\Framework\TestCase
   var $projection_json;
   var $projection;
 
-  public function setUp()
+  public function setUp(): void
   {
     $interop_schema_file_name = AVRO_INTEROP_SCHEMA;
     $this->projection_json = file_get_contents($interop_schema_file_name);
@@ -39,8 +39,8 @@ class InterOpTest extends PHPUnit\Framework\TestCase
       die("Could not open data dir '$data_dir'\n");
 
     while ($file = readdir($dh))
-      if (0 < preg_match('/^[a-z]+(_deflate)?\.avro$/', $file))
-        $data_files []= join(DIRECTORY_SEPARATOR, array($data_dir, $file));
+      if (0 < preg_match('/^[a-z]+(_deflate|_snappy|_zstandard)?\.avro$/', $file))
+        $data_files []= implode(DIRECTORY_SEPARATOR, array($data_dir, $file));
     closedir($dh);
 
     $ary = array();

@@ -55,8 +55,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 /** Utilities for serializing Protobuf data in Avro format. */
 public class ProtobufData extends GenericData {
-  private static final String PROTOBUF_TYPE = "protobuf";
-
   private static final ProtobufData INSTANCE = new ProtobufData();
 
   protected ProtobufData() {
@@ -78,8 +76,8 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  public void setField(Object r, String n, int pos, Object o) {
-    setField(r, n, pos, o, getRecordState(r, getSchema(r.getClass())));
+  public void setField(Object r, String n, int pos, Object value) {
+    setField(r, n, pos, value, getRecordState(r, getSchema(r.getClass())));
   }
 
   @Override
@@ -88,17 +86,17 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  protected void setField(Object r, String n, int pos, Object o, Object state) {
-    Builder b = (Builder) r;
-    FieldDescriptor f = ((FieldDescriptor[]) state)[pos];
+  protected void setField(Object record, String name, int position, Object value, Object state) {
+    Builder b = (Builder) record;
+    FieldDescriptor f = ((FieldDescriptor[]) state)[position];
     switch (f.getType()) {
     case MESSAGE:
-      if (o == null) {
+      if (value == null) {
         b.clearField(f);
         break;
       }
     default:
-      b.setField(f, o);
+      b.setField(f, value);
     }
   }
 
@@ -329,8 +327,11 @@ public class ProtobufData extends GenericData {
   private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
   private JsonNode getDefault(FieldDescriptor f) {
-    if (f.isRequired() || f.isRepeated()) // no default
+    if (f.isRequired()) // no default
       return null;
+
+    if (f.isRepeated()) // empty array as repeated fields' default value
+      return NODES.arrayNode();
 
     if (f.hasDefaultValue()) { // parse spec'd default value
       Object value = f.getDefaultValue();

@@ -118,7 +118,7 @@ class TestCat(unittest.TestCase):
 
   @staticmethod
   def WriteAvroFile(file_path):
-    schema = avro.schema.Parse(SCHEMA)
+    schema = avro.schema.parse(SCHEMA)
     with open(file_path, 'wb') as writer:
       with avro.datafile.DataFileWriter(
           writer=writer,

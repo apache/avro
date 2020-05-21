@@ -24,7 +24,7 @@
 #include <iomanip>
 #include "BufferReader.hh"
 
-/** 
+/**
  * \file BufferPrint.hh
  *
  * \brief Convenience functions for printing buffer contents
@@ -36,8 +36,8 @@ namespace detail {
 
 /**
  * \fn hexPrint
- * 
- * Prints a buffer to a stream in the canonical hex+ASCII format, 
+ *
+ * Prints a buffer to a stream in the canonical hex+ASCII format,
  * the same used by the program 'hexdump -C'
  *
  **/
@@ -115,4 +115,4 @@ std::ostream& operator<<(std::ostream& os, const avro::InputBuffer& buffer)
     return os;
 }
 
-#endif 
+#endif

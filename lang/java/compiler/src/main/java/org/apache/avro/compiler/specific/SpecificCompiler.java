@@ -28,6 +28,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -112,12 +114,13 @@ public class SpecificCompiler {
   private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
+  private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
   private String suffix = ".java";
-  private List<Object> additionalVelocityTools = new ArrayList<>();
+  private List<Object> additionalVelocityTools = Collections.emptyList();
 
   /*
    * Used in the record.vm template.
@@ -254,6 +257,17 @@ public class SpecificCompiler {
     this.gettersReturnOptional = gettersReturnOptional;
   }
 
+  public boolean isOptionalGettersForNullableFieldsOnly() {
+    return optionalGettersForNullableFieldsOnly;
+  }
+
+  /**
+   * Set to true to create the Optional getters only for nullable fields.
+   */
+  public void setOptionalGettersForNullableFieldsOnly(boolean optionalGettersForNullableFieldsOnly) {
+    this.optionalGettersForNullableFieldsOnly = optionalGettersForNullableFieldsOnly;
+  }
+
   /**
    * Set to true to use {@link java.math.BigDecimal} instead of
    * {@link java.nio.ByteBuffer} for logical type "decimal"
@@ -330,24 +344,22 @@ public class SpecificCompiler {
     }
   }
 
-  private static String logChuteName = null;
-
   private void initializeVelocity() {
     this.velocityEngine = new VelocityEngine();
 
     // These properties tell Velocity to use its own classpath-based
     // loader, then drop down to check the root and the current folder
-    velocityEngine.addProperty("resource.loader", "class, file");
-    velocityEngine.addProperty("class.resource.loader.class",
+    velocityEngine.addProperty("resource.loaders", "class, file");
+    velocityEngine.addProperty("resource.loader.class.class",
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-    velocityEngine.addProperty("file.resource.loader.class",
+    velocityEngine.addProperty("resource.loader.file.class",
         "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-    velocityEngine.addProperty("file.resource.loader.path", "/, .");
-    velocityEngine.setProperty("runtime.references.strict", true);
+    velocityEngine.addProperty("resource.loader.file.path", "/, .");
+    velocityEngine.setProperty("runtime.strict_mode.enable", true);
 
     // Set whitespace gobbling to Backward Compatible (BC)
     // https://velocity.apache.org/engine/2.0/developer-guide.html#space-gobbling
-    velocityEngine.setProperty("space.gobbling", "bc");
+    velocityEngine.setProperty("parser.space_gobbling", "bc");
   }
 
   private void initializeSpecificData() {
@@ -635,7 +647,7 @@ public class SpecificCompiler {
   private Schema addStringType(Schema s) {
     if (stringType != StringType.String)
       return s;
-    return addStringType(s, new LinkedHashMap<>());
+    return addStringType(s, new HashMap<>());
   }
 
   // annotate map and string schemas with string type
@@ -646,7 +658,9 @@ public class SpecificCompiler {
     switch (s.getType()) {
     case STRING:
       result = Schema.create(Schema.Type.STRING);
-      GenericData.setStringType(result, stringType);
+      if (s.getLogicalType() == null) {
+        GenericData.setStringType(result, stringType);
+      }
       break;
     case RECORD:
       result = Schema.createRecord(s.getFullName(), s.getDoc(), null, s.isError());
@@ -678,6 +692,9 @@ public class SpecificCompiler {
       break;
     }
     result.addAllProps(s);
+    if (s.getLogicalType() != null) {
+      s.getLogicalType().addToSchema(result);
+    }
     seen.put(s, result);
     return result;
   }
@@ -803,9 +820,10 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
-   * @Deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
+   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
    *             of custom templates
    */
+  @Deprecated
   public String javaUnbox(Schema schema) {
     return javaUnbox(schema, false);
   }
@@ -968,8 +986,8 @@ public class SpecificCompiler {
   }
 
   /** Utility for template use. Escapes quotes and backslashes. */
-  public static String javaEscape(Object o) {
-    return o.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+  public static String javaEscape(String o) {
+    return o.replace("\\", "\\\\").replace("\"", "\\\"");
   }
 
   /** Utility for template use. Escapes comment end with HTML entities. */

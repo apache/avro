@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.Objects;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -80,8 +81,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   // by default, one object per line.
   // with pretty option use default pretty printer with root line separator.
   private static JsonGenerator getJsonGenerator(OutputStream out, boolean pretty) throws IOException {
-    if (null == out)
-      throw new NullPointerException("OutputStream cannot be null");
+    Objects.requireNonNull(out, "OutputStream cannot be null");
     JsonGenerator g = new JsonFactory().createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       DefaultPrettyPrinter pp = new DefaultPrettyPrinter() {
@@ -118,6 +118,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    *
    * @param out The OutputStream to direct output to. Cannot be null.
    * @throws IOException
+   * @throws NullPointerException if {@code out} is {@code null}
    * @return this JsonEncoder
    */
   public JsonEncoder configure(OutputStream out) throws IOException {
@@ -135,11 +136,11 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    *
    * @param generator The JsonGenerator to direct output to. Cannot be null.
    * @throws IOException
+   * @throws NullPointerException if {@code generator} is {@code null}
    * @return this JsonEncoder
    */
   private JsonEncoder configure(JsonGenerator generator) throws IOException {
-    if (null == generator)
-      throw new NullPointerException("JsonGenerator cannot be null");
+    Objects.requireNonNull(generator, "JsonGenerator cannot be null");
     if (null != parser) {
       flush();
     }

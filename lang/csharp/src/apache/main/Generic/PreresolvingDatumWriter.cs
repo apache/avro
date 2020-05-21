@@ -99,6 +99,8 @@ namespace Avro.Generic
                     return ResolveMap((MapSchema)schema);
                 case Schema.Type.Union:
                     return ResolveUnion((UnionSchema)schema);
+                case Schema.Type.Logical:
+                    return ResolveLogical((LogicalSchema)schema);
                 default:
                     return (v, e) => Error(schema, v);
             }
@@ -230,6 +232,17 @@ namespace Avro.Generic
             encoder.SetItemCount(l);
             _arrayAccess.WriteArrayValues(array, itemWriter, encoder);
             encoder.WriteArrayEnd();
+        }
+
+        /// <summary>
+        /// Serializes a logical value object by using the underlying logical type to convert the value
+        /// to its base value.
+        /// </summary>
+        /// <param name="schema">The logical schema.</param>
+        protected WriteItem ResolveLogical(LogicalSchema schema)
+        {
+            var baseWriter = ResolveWriter(schema.BaseSchema);
+            return (d, e) => baseWriter(schema.LogicalType.ConvertToBaseValue(d, schema), e);
         }
 
         private WriteItem ResolveMap(MapSchema mapSchema)

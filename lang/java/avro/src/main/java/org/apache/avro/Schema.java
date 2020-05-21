@@ -388,12 +388,33 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @param pretty if true, pretty-print JSON.
    */
   public String toString(boolean pretty) {
+    return toString(new Names(), pretty);
+  }
+
+  /**
+   * Render this as <a href="https://json.org/">JSON</a>, but without inlining the
+   * referenced schemas.
+   *
+   * @param referencedSchemas referenced schemas
+   * @param pretty            if true, pretty-print JSON.
+   */
+  public String toString(Collection<Schema> referencedSchemas, boolean pretty) {
+    Schema.Names names = new Schema.Names();
+    if (referencedSchemas != null) {
+      for (Schema s : referencedSchemas) {
+        names.add(s);
+      }
+    }
+    return toString(names, pretty);
+  }
+
+  String toString(Names names, boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
       JsonGenerator gen = FACTORY.createGenerator(writer);
       if (pretty)
         gen.useDefaultPrettyPrinter();
-      toJson(new Names(), gen);
+      toJson(names, gen);
       gen.flush();
       return writer.toString();
     } catch (IOException e) {
@@ -1611,9 +1632,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         if (space == null)
           space = names.space();
         name = new Name(getRequiredText(schema, "name", "No name in schema"), space);
-        if (name.space != null) { // set default namespace
-          names.space(name.space);
-        }
+        names.space(name.space); // set default namespace
       }
       if (PRIMITIVES.containsKey(type)) { // primitive
         result = create(PRIMITIVES.get(type));

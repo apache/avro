@@ -77,7 +77,9 @@ do
 
 case "$target" in
   lint)
-    echo 'This is a stub where someone can provide linting.'
+    # some versions of cppcheck seem to require an explicit
+    # "--error-exitcode" option to return non-zero code
+    cppcheck --error-exitcode=1 --inline-suppr -f -q -x c++ .
     ;;
 
   test)

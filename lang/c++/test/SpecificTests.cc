@@ -51,7 +51,7 @@ template <> struct codec_traits<C> {
         e.encodeInt(c.i());
         e.encodeLong(c.l());
     }
-    
+
     static void decode(Decoder& d, C& c) {
         c.i(d.decodeInt());
         c.l(d.decodeLong());
@@ -88,7 +88,7 @@ template <typename T> T encodeAndDecode(const T& t)
     tst.encode(t);
 
     T actual = T();
-    
+
     tst.decode(actual);
     return actual;
 }
@@ -154,7 +154,7 @@ void testArray()
     int32_t values[] = { 101, 709, 409, 34 };
     vector<int32_t> n(values, values + 4);
     vector<int32_t> b = encodeAndDecode(n);
-    
+
     BOOST_CHECK_EQUAL_COLLECTIONS(b.begin(), b.end(), n.begin(), n.end());
 }
 
@@ -163,7 +163,7 @@ void testBoolArray()
     bool values[] = { true, false, true, false };
     vector<bool> n(values, values + 4);
     vector<bool> b = encodeAndDecode(n);
-    
+
     BOOST_CHECK_EQUAL_COLLECTIONS(b.begin(), b.end(), n.begin(), n.end());
 }
 
@@ -174,7 +174,7 @@ void testMap()
     n["b"] = 101;
 
     map<string, int32_t> b = encodeAndDecode(n);
-    
+
     BOOST_CHECK(b == n);
 }
 
@@ -189,7 +189,7 @@ void testCustom()
 }
 
 boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite( int argc, char* argv[] )
 {
     using namespace boost::unit_test;
 

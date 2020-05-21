@@ -204,7 +204,7 @@ size_t BinaryDecoder::skipArray()
     for (; ;) {
         int64_t r = doDecodeLong();
         if (r < 0) {
-            size_t n = static_cast<size_t>(doDecodeLong()); 
+            size_t n = static_cast<size_t>(doDecodeLong());
             in_.skipBytes(n);
         } else {
             return static_cast<size_t>(r);

@@ -149,6 +149,8 @@ namespace Avro.Specific
                 case Schema.Type.Fixed:
                     return obj is SpecificFixed &&
                            ((obj as SpecificFixed).Schema as FixedSchema).SchemaName.Equals((sc as FixedSchema).SchemaName);
+                case Schema.Type.Logical:
+                    return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

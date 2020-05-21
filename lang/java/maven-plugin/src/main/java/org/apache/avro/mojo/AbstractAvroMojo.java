@@ -72,7 +72,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * string values of SpecificCompiler.FieldVisibility. The text is case
    * insensitive.
    *
-   * @parameter default-value="PUBLIC_DEPRECATED"
+   * @parameter default-value="PRIVATE"
    */
   private String fieldVisibility;
 
@@ -144,6 +144,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter property="gettersReturnOptional"
    */
   protected boolean gettersReturnOptional = false;
+
+  /**
+   * The optionalGettersForNullableFieldsOnly parameter works in conjunction with
+   * gettersReturnOptional option. If it is set, Optional getters will be
+   * generated only for fields that are nullable. If the field is mandatory,
+   * regular getter will be generated. This works ONLY on Java 8+.
+   *
+   * @parameter property="optionalGettersForNullableFieldsOnly"
+   */
+  protected boolean optionalGettersForNullableFieldsOnly = false;
 
   /**
    * Determines whether or not to create setters for the fields of the record. The

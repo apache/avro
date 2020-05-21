@@ -36,8 +36,11 @@ use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
 use Compress::Zstd;
+use IO::Uncompress::Bunzip2 qw(bunzip2);
 use IO::Uncompress::RawInflate ;
 use Fcntl();
+
+our $VERSION = '++MODULE_VERSION++';
 
 sub new {
     my $class = shift;
@@ -213,9 +216,19 @@ sub read_block_header {
     $datafile->{block_marker} = $marker;
 
     ## this is our new reader
-    $datafile->{reader} = $codec eq 'deflate' ?
-        IO::Uncompress::RawInflate->new(\$block) :
-        do { open $fh, '<', \(decompress(\$block)); $fh };
+    $datafile->{reader} = do {
+        if ($codec eq 'deflate') {
+            IO::Uncompress::RawInflate->new(\$block);
+        }
+        elsif ($codec eq 'bzip2') {
+            my $uncompressed;
+            bunzip2 \$block => \$uncompressed;
+            do { open $fh, '<', \$uncompressed; $fh };
+        }
+        elsif ($codec eq 'zstandard') {
+            do { open $fh, '<', \(decompress(\$block)); $fh };
+        }
+    };
 
     return;
 }

@@ -44,41 +44,38 @@ function dist {
     cp "$tarball" "../$dist_dir"
 }
 
-case "$1" in
-     interop-data-generate)
-       php test/generate_interop_data.php
-       ;;
+for target in "$@"
+do
+  case "$target" in
+    interop-data-generate)
+      php test/generate_interop_data.php
+      ;;
 
-     test-interop)
-       phpunit test/InterOpTest.php
-       ;;
+    test-interop)
+      composer install -d "../.."
+      vendor/bin/phpunit test/InterOpTest.php
+      ;;
 
-     lint)
-       echo 'This is a stub where someone can provide linting.'
-       ;;
+    lint)
+      echo 'This is a stub where someone can provide linting.'
+      ;;
 
-     test)
-       phpunit -v test/AllTests.php
+    test)
+      composer install -d "../.."
+      vendor/bin/phpunit -v
+      ;;
 
-       # Check backward compatibility with PHP 5.x if both PHP 5.6 and PHPUnit 5.7 are installed.
-       # TODO: remove this check when we drop PHP 5.x support in the future
-       if command -v php5.6 > /dev/null && phpunit --version | grep -q 'PHPUnit 5.7'; then
-         echo 'Checking backward compatibility with PHP 5.x'
-         php5.6 $(which phpunit) -v test/AllTests.php
-       fi
-       ;;
+    dist)
+      dist
+      ;;
 
-     dist)
-       dist
-       ;;
+    clean)
+      clean
+      ;;
 
-     clean)
-       clean
-       ;;
-
-     *)
-       echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
-esac
-
+    *)
+      echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
+  esac
+done
 
 exit 0

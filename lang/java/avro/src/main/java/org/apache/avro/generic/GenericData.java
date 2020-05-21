@@ -17,9 +17,9 @@
  */
 package org.apache.avro.generic;
 
-import java.nio.ByteBuffer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
 import java.util.Arrays;
@@ -27,8 +27,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -47,10 +47,11 @@ import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.BinaryData;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.FastReaderBuilder;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.util.internal.Accessor;
 
@@ -176,6 +177,26 @@ public class GenericData {
       return null;
     }
     return (Conversion<Object>) conversions.get(logicalType.getName());
+  }
+
+  public static final String FAST_READER_PROP = "org.apache.avro.fastread";
+  private boolean fastReaderEnabled = "true".equalsIgnoreCase(System.getProperty(FAST_READER_PROP));
+  private FastReaderBuilder fastReaderBuilder = null;
+
+  public GenericData setFastReaderEnabled(boolean flag) {
+    this.fastReaderEnabled = flag;
+    return this;
+  }
+
+  public boolean isFastReaderEnabled() {
+    return fastReaderEnabled && FastReaderBuilder.isSupportedData(this);
+  }
+
+  public FastReaderBuilder getFastReaderBuilder() {
+    if (fastReaderBuilder == null) {
+      fastReaderBuilder = new FastReaderBuilder(this);
+    }
+    return this.fastReaderBuilder;
   }
 
   /**
@@ -520,7 +541,7 @@ public class GenericData {
 
   /** Returns a {@link DatumReader} for this kind of data. */
   public DatumReader createDatumReader(Schema schema) {
-    return new GenericDatumReader(schema, schema, this);
+    return createDatumReader(schema, schema);
   }
 
   /** Returns a {@link DatumReader} for this kind of data. */
@@ -689,7 +710,7 @@ public class GenericData {
   }
 
   /* Adapted from https://code.google.com/p/json-simple */
-  private void writeEscapedString(CharSequence string, StringBuilder builder) {
+  private static void writeEscapedString(CharSequence string, StringBuilder builder) {
     for (int i = 0; i < string.length(); i++) {
       char ch = string.charAt(i);
       switch (ch) {
@@ -791,8 +812,8 @@ public class GenericData {
    * to a record instance. The default implementation is for
    * {@link IndexedRecord}.
    */
-  public void setField(Object record, String name, int position, Object o) {
-    ((IndexedRecord) record).put(position, o);
+  public void setField(Object record, String name, int position, Object value) {
+    ((IndexedRecord) record).put(position, value);
   }
 
   /**
@@ -814,8 +835,8 @@ public class GenericData {
   }
 
   /** Version of {@link #setField} that has state. */
-  protected void setField(Object r, String n, int p, Object o, Object state) {
-    setField(r, n, p, o);
+  protected void setField(Object record, String name, int position, Object value, Object state) {
+    setField(record, name, position, value);
   }
 
   /** Version of {@link #getField} that has state. */
@@ -848,8 +869,9 @@ public class GenericData {
     }
 
     Integer i = union.getIndexNamed(getSchemaName(datum));
-    if (i != null)
+    if (i != null) {
       return i;
+    }
     throw new UnresolvedUnionException(union, datum);
   }
 
@@ -1328,4 +1350,43 @@ public class GenericData {
     return new GenericData.Record(schema);
   }
 
+  /**
+   * Called to create new array instances. Subclasses may override to use a
+   * different array implementation. By default, this returns a
+   * {@link GenericData.Array}.
+   */
+  public Object newArray(Object old, int size, Schema schema) {
+    if (old instanceof GenericArray) {
+      ((GenericArray<?>) old).reset();
+      return old;
+    } else if (old instanceof Collection) {
+      ((Collection<?>) old).clear();
+      return old;
+    } else
+      return new GenericData.Array<Object>(size, schema);
+  }
+
+  /**
+   * Called to create new array instances. Subclasses may override to use a
+   * different map implementation. By default, this returns a {@link HashMap}.
+   */
+  public Object newMap(Object old, int size) {
+    if (old instanceof Map) {
+      ((Map<?, ?>) old).clear();
+      return old;
+    } else
+      return new HashMap<>(size);
+  }
+
+  /**
+   * create a supplier that allows to get new record instances for a given schema
+   * in an optimized way
+   */
+  public InstanceSupplier getNewRecordSupplier(Schema schema) {
+    return this::newRecord;
+  }
+
+  public interface InstanceSupplier {
+    public Object newInstance(Object oldInstance, Schema schema);
+  }
 }

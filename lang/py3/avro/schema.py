@@ -42,6 +42,7 @@ import abc
 import json
 import logging
 import re
+import warnings
 from types import MappingProxyType
 
 logger = logging.getLogger(__name__)
@@ -1217,7 +1218,7 @@ def SchemaFromJSONData(json_data, names=None):
 # ------------------------------------------------------------------------------
 
 
-def Parse(json_string):
+def parse(json_string):
   """Constructs a Schema from its JSON descriptor in text form.
 
   Args:
@@ -1241,3 +1242,11 @@ def Parse(json_string):
 
   # construct the Avro Schema object
   return SchemaFromJSONData(json_data, names)
+
+
+def Parse(json_string):
+  """Deprecated implementation of parse."""
+  warnings.warn("`Parse` is deprecated in avro 1.10. "
+                "Please use `parse` (lowercase) instead.",
+                DeprecationWarning)
+  return parse(json_string)

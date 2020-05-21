@@ -232,6 +232,7 @@ namespace Avro
                 case Schema.Type.Double:
                 case Schema.Type.Bytes:
                 case Schema.Type.String:
+                case Schema.Type.Logical:
                     break;
 
                 case Schema.Type.Enumeration:
@@ -406,19 +407,20 @@ namespace Avro
 
             if (protocol.Messages.Count > 0)
             {
-                builder.Append("switch(messageName)\n\t\t\t{");
+                builder.AppendLine("switch(messageName)");
+                builder.Append("\t\t\t{");
 
                 foreach (var a in protocol.Messages)
                 {
-                    builder.Append("\n\t\t\t\tcase \"").Append(a.Key).Append("\":\n");
+                    builder.AppendLine().Append("\t\t\t\tcase \"").Append(a.Key).AppendLine("\":");
 
                     bool unused = false;
                     string type = getType(a.Value.Response, false, ref unused);
 
                     builder.Append("\t\t\t\trequestor.Request<")
                            .Append(type)
-                           .Append(">(messageName, args, callback);\n");
-                    builder.Append("\t\t\t\tbreak;\n");
+                           .AppendLine(">(messageName, args, callback);");
+                    builder.AppendLine("\t\t\t\tbreak;");
                 }
 
                 builder.Append("\t\t\t}");
@@ -575,7 +577,8 @@ namespace Avro
             cmmGet.Attributes = MemberAttributes.Public;
             cmmGet.ReturnType = new CodeTypeReference("System.Object");
             cmmGet.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
-            StringBuilder getFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
+            StringBuilder getFieldStmt = new StringBuilder("switch (fieldPos)")
+                .AppendLine().AppendLine("\t\t\t{");
 
             // declare Put() to be used by the Reader classes
             var cmmPut = new CodeMemberMethod();
@@ -584,7 +587,8 @@ namespace Avro
             cmmPut.ReturnType = new CodeTypeReference(typeof(void));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression("System.Object", "fieldValue"));
-            var putFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
+            var putFieldStmt = new StringBuilder("switch (fieldPos)")
+                .AppendLine().AppendLine("\t\t\t{");
 
             if (isError)
             {
@@ -638,7 +642,7 @@ namespace Avro
                 getFieldStmt.Append(field.Pos);
                 getFieldStmt.Append(": return this.");
                 getFieldStmt.Append(mangledName);
-                getFieldStmt.Append(";\n");
+                getFieldStmt.AppendLine(";");
 
                 // add to Put()
                 putFieldStmt.Append("\t\t\tcase ");
@@ -656,24 +660,26 @@ namespace Avro
                     type = type.Remove(type.Length - 1);   // remove >
 
                     putFieldStmt.Append(type);
-                    putFieldStmt.Append(")fieldValue; break;\n");
+                    putFieldStmt.AppendLine(")fieldValue; break;");
                 }
                 else
                 {
                     putFieldStmt.Append(" = (");
                     putFieldStmt.Append(baseType);
-                    putFieldStmt.Append(")fieldValue; break;\n");
+                    putFieldStmt.AppendLine(")fieldValue; break;");
                 }
             }
 
             // end switch block for Get()
-            getFieldStmt.Append("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");\n\t\t\t}");
+            getFieldStmt.AppendLine("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");")
+                .Append("\t\t\t}");
             var cseGet = new CodeSnippetExpression(getFieldStmt.ToString());
             cmmGet.Statements.Add(cseGet);
             ctd.Members.Add(cmmGet);
 
             // end switch block for Put()
-            putFieldStmt.Append("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");\n\t\t\t}");
+            putFieldStmt.AppendLine("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");")
+                .Append("\t\t\t}");
             var csePut = new CodeSnippetExpression(putFieldStmt.ToString());
             cmmPut.Statements.Add(csePut);
             ctd.Members.Add(cmmPut);
@@ -703,21 +709,21 @@ namespace Avro
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
-                    return "System.Object";
+                    return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    if (nullible) return "System.Nullable<bool>";
+                    if (nullible) return $"System.Nullable<{typeof(bool)}>";
                     else return typeof(bool).ToString();
                 case Schema.Type.Int:
-                    if (nullible) return "System.Nullable<int>";
+                    if (nullible) return $"System.Nullable<{typeof(int)}>";
                     else return typeof(int).ToString();
                 case Schema.Type.Long:
-                    if (nullible) return "System.Nullable<long>";
+                    if (nullible) return $"System.Nullable<{typeof(long)}>";
                     else return typeof(long).ToString();
                 case Schema.Type.Float:
-                    if (nullible) return "System.Nullable<float>";
+                    if (nullible) return $"System.Nullable<{typeof(float)}>";
                     else return typeof(float).ToString();
                 case Schema.Type.Double:
-                    if (nullible) return "System.Nullable<double>";
+                    if (nullible) return $"System.Nullable<{typeof(double)}>";
                     else return typeof(double).ToString();
 
                 case Schema.Type.Bytes:
@@ -766,6 +772,21 @@ namespace Avro
                         return CodeGenUtil.Object;
                     else
                         return getType(nullibleType, true, ref nullibleEnum);
+
+                case Schema.Type.Logical:
+                    var logicalSchema = schema as LogicalSchema;
+                    if (null == logicalSchema)
+                        throw new CodeGenException("Unable to cast schema into a logical schema");
+                    var csharpType = logicalSchema.LogicalType.GetCSharpType(nullible);
+                    if (csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        return $"System.Nullable<{csharpType.GetGenericArguments()[0]}>";
+                    }
+                    else
+                    {
+                        return csharpType.ToString();
+                    }
+
             }
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
@@ -837,7 +858,7 @@ namespace Avro
         protected virtual CodeCommentStatement createDocComment(string comment)
         {
             string text = string.Format(CultureInfo.InvariantCulture,
-                "<summary>\r\n {0}\r\n </summary>", comment);
+                "<summary>{1} {0}{1} </summary>", comment, Environment.NewLine);
             return new CodeCommentStatement(text, true);
         }
 

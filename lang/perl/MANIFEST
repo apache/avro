@@ -41,6 +41,7 @@ META.yml
 LICENSE
 NOTICE
 README
+VERSION.txt
 t/00_compile.t
 t/01_names.t
 t/01_schema.t

@@ -1,0 +1,10 @@
+{
+  "deps": [
+    "vendor/phpunit/phpunit"
+  ],
+  "autoload": {
+    "classmap": [
+      "lib/"
+    ]
+  }
+}

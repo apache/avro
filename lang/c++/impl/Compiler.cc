@@ -368,6 +368,8 @@ static LogicalType makeLogicalType(const Entity& e, const Object& m) {
         t = LogicalType::TIMESTAMP_MICROS;
     else if (typeField == "duration")
         t = LogicalType::DURATION;
+    else if (typeField == "uuid")
+        t = LogicalType::UUID;
     return LogicalType(t);
 }
 

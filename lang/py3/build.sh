@@ -33,8 +33,8 @@ main() {
       clean|dist|isort|test) :;;
       *) usage; return 1;;
     esac
+    python3 setup.py "$target"
   done
-  python3 setup.py "$@"
 }
 
 main "$@"
