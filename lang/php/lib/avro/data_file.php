@@ -324,8 +324,13 @@ class AvroDataIOReader
                 throw new AvroException('Please install ext-snappy to use snappy compression.');
             }
             $compressed = $decoder->read($length);
+            $crc32 = unpack('N', substr($compressed, -4))[1];
             $datum = snappy_uncompress(substr($compressed, 0, -4));
-            $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+            if ($crc32 === crc32($datum)) {
+                $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
+            } else {
+                $decoder = new AvroIOBinaryDecoder(new AvroStringIO(snappy_uncompress($datum)));
+            }
         }
       }
       $data[] = $this->datum_reader->read($decoder);
@@ -540,15 +545,13 @@ class AvroDataIOWriter
           if (!extension_loaded('snappy')) {
               throw new AvroException('Please install ext-snappy to use snappy compression.');
           }
-          $uncompressed = $to_write;
-          $to_write = snappy_compress($to_write);
+          $crc32 = crc32($to_write);
+          $compressed = snappy_compress($to_write);
+          $to_write = pack('a*N', $compressed, $crc32);
       }
 
       $this->encoder->write_long(strlen($to_write));
       $this->write($to_write);
-      if ($this->codec === AvroDataIO::SNAPPY_CODEC) {
-          $this->encoder->write_crc32($uncompressed);
-      }
       $this->write($this->sync_marker);
       $this->buffer->truncate();
       $this->block_count = 0;

@@ -358,11 +358,6 @@ class AvroIOBinaryEncoder
     $this->write($bytes);
   }
 
-  public function write_crc32($bytes)
-  {
-    $this->write(pack('N', crc32($bytes)));
-  }
-
   /**
    * @param string $datum
    */
