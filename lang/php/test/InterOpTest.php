@@ -39,7 +39,7 @@ class InterOpTest extends PHPUnit\Framework\TestCase
       die("Could not open data dir '$data_dir'\n");
 
     while ($file = readdir($dh))
-      if (0 < preg_match('/^[a-z]+(_deflate|_snappy|_zstandard)?\.avro$/', $file))
+      if (0 < preg_match('/^[a-z]+(_deflate|_snappy|_zstandard|_bzip2)?\.avro$/', $file))
         $data_files []= implode(DIRECTORY_SEPARATOR, array($data_dir, $file));
     closedir($dh);
 
