@@ -64,20 +64,20 @@ class AvroName
 
         if (
             strpos($name, self::NAME_SEPARATOR)
-            && self::check_namespace_names($name)
+            && self::checkNamespaceNames($name)
         ) {
             $this->fullname = $name;
         } elseif (0 == preg_match(self::NAME_REGEXP, $name)) {
             throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $name));
         } elseif (!is_null($namespace)) {
-            $this->fullname = self::parse_fullname($name, $namespace);
+            $this->fullname = self::parseFullname($name, $namespace);
         } elseif (!is_null($default_namespace)) {
-            $this->fullname = self::parse_fullname($name, $default_namespace);
+            $this->fullname = self::parseFullname($name, $default_namespace);
         } else {
             $this->fullname = $name;
         }
 
-        [$this->name, $this->namespace] = self::extract_namespace($this->fullname);
+        [$this->name, $this->namespace] = self::extractNamespace($this->fullname);
         $this->qualified_name = (is_null($this->namespace)
             || $this->namespace == $default_namespace)
             ? $this->name : $this->fullname;
@@ -89,7 +89,7 @@ class AvroName
      * @throws AvroSchemaParseException if any of the namespace components
      *                                  are invalid.
      */
-    private static function check_namespace_names($namespace)
+    private static function checkNamespaceNames($namespace)
     {
         foreach (explode(self::NAME_SEPARATOR, $namespace) as $n) {
             if (empty($n) || (0 == preg_match(self::NAME_REGEXP, $n))) {
@@ -105,19 +105,19 @@ class AvroName
      * @returns string
      * @throws AvroSchemaParseException if any of the names are not valid.
      */
-    private static function parse_fullname($name, $namespace)
+    private static function parseFullname($name, $namespace)
     {
         if (!is_string($namespace) || empty($namespace)) {
             throw new AvroSchemaParseException('Namespace must be a non-empty string.');
         }
-        self::check_namespace_names($namespace);
+        self::checkNamespaceNames($namespace);
         return $namespace . '.' . $name;
     }
 
     /**
      * @returns string[] array($name, $namespace)
      */
-    public static function extract_namespace($name, $namespace = null)
+    public static function extractNamespace($name, $namespace = null)
     {
         $parts = explode(self::NAME_SEPARATOR, $name);
         if (count($parts) > 1) {
@@ -131,7 +131,7 @@ class AvroName
      * @returns boolean true if the given name is well-formed
      *          (is a non-null, non-empty string) and false otherwise
      */
-    public static function is_well_formed_name($name)
+    public static function isWellFormedName($name)
     {
         return (is_string($name) && !empty($name)
             && preg_match(self::NAME_REGEXP, $name));
@@ -140,7 +140,7 @@ class AvroName
     /**
      * @returns array array($name, $namespace)
      */
-    public function name_and_namespace()
+    public function nameAndNamespace()
     {
         return array($this->name, $this->namespace);
     }
@@ -165,7 +165,7 @@ class AvroName
     /**
      * @returns string name qualified for its context
      */
-    public function qualified_name()
+    public function qualifiedName()
     {
         return $this->qualified_name;
     }

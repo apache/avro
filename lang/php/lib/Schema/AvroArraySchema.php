@@ -43,10 +43,10 @@ class AvroArraySchema extends AvroSchema
     /**
      * @param string|mixed $items AvroNamedSchema name or object form
      *        of decoded JSON schema representation.
-     * @param string $default_namespace namespace of enclosing schema
+     * @param string $defaultNamespace namespace of enclosing schema
      * @param AvroNamedSchemata &$schemata
      */
-    public function __construct($items, $default_namespace, &$schemata = null)
+    public function __construct($items, $defaultNamespace, &$schemata = null)
     {
         parent::__construct(AvroSchema::ARRAY_SCHEMA);
 
@@ -54,13 +54,13 @@ class AvroArraySchema extends AvroSchema
         $items_schema = null;
         if (
             is_string($items)
-            && $items_schema = $schemata->schema_by_name(
-                new AvroName($items, null, $default_namespace)
+            && $items_schema = $schemata->schemaByName(
+                new AvroName($items, null, $defaultNamespace)
             )
         ) {
             $this->is_items_schema_from_schemata = true;
         } else {
-            $items_schema = AvroSchema::subparse($items, $default_namespace, $schemata);
+            $items_schema = AvroSchema::subparse($items, $defaultNamespace, $schemata);
         }
 
         $this->items = $items_schema;
@@ -78,11 +78,11 @@ class AvroArraySchema extends AvroSchema
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
+        $avro = parent::toAvro();
         $avro[AvroSchema::ITEMS_ATTR] = $this->is_items_schema_from_schemata
-            ? $this->items->qualified_name() : $this->items->to_avro();
+            ? $this->items->qualifiedName() : $this->items->toAvro();
         return $avro;
     }
 }

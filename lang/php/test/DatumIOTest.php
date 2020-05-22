@@ -44,8 +44,8 @@ class DatumIOTest extends TestCase
         $output = strval($written);
         $this->assertEquals($binary, $output,
             sprintf("expected: %s\n  actual: %s",
-                AvroDebug::ascii_string($binary, 'hex'),
-                AvroDebug::ascii_string($output, 'hex')));
+                AvroDebug::asciiString($binary, 'hex'),
+                AvroDebug::asciiString($output, 'hex')));
 
         $read = new AvroStringIO($binary);
         $decoder = new AvroIOBinaryDecoder($read);

@@ -53,16 +53,16 @@ class Avro
     const PHP_BIGINTEGER_MODE = 0x00;
     const GMP_BIGINTEGER_MODE = 0x01;
     /**
-     * Memoized result of self::set_endianness()
+     * Memoized result of self::setEndianness()
      * @var int self::BIG_ENDIAN or self::LITTLE_ENDIAN
-     * @see self::set_endianness()
+     * @see self::setEndianness()
      */
     private static $endianness;
     /**#@-*/
     /**
      * @var int
-     * Mode used to handle bigintegers. After Avro::check_64_bit() has been called,
-     * (usually via a call to Avro::check_platform(), set to
+     * Mode used to handle bigintegers. After Avro::check64Bit() has been called,
+     * (usually via a call to Avro::checkPlatform(), set to
      * self::GMP_BIGINTEGER_MODE on 32-bit platforms that have GMP available,
      * and to self::PHP_BIGINTEGER_MODE otherwise.
      */
@@ -72,10 +72,10 @@ class Avro
      * Wrapper method to call each required check.
      *
      */
-    public static function check_platform()
+    public static function checkPlatform()
     {
-        self::check_64_bit();
-        self::check_little_endian();
+        self::check64Bit();
+        self::checkLittleEndian();
     }
 
     /**
@@ -83,7 +83,7 @@ class Avro
      *
      * @throws AvroException if the platform cannot handle long integers.
      */
-    private static function check_64_bit()
+    private static function check64Bit()
     {
         if (8 != PHP_INT_SIZE) {
             if (extension_loaded('gmp')) {
@@ -103,9 +103,9 @@ class Avro
      *
      * @throws AvroException if the platform is not little endian.
      */
-    private static function check_little_endian()
+    private static function checkLittleEndian()
     {
-        if (!self::is_little_endian_platform()) {
+        if (!self::isLittleEndianPlatform()) {
             throw new AvroException('This is not a little-endian platform');
         }
     }
@@ -115,20 +115,20 @@ class Avro
      *                  and false otherwise.
      * @uses self::is_bin_endian_platform()
      */
-    private static function is_little_endian_platform()
+    private static function isLittleEndianPlatform()
     {
-        return !self::is_big_endian_platform();
+        return !self::isBigEndianPlatform();
     }
 
     /**
      * @returns boolean true if the host platform is big endian
      *                  and false otherwise.
-     * @uses self::set_endianness()
+     * @uses self::setEndianness()
      */
-    private static function is_big_endian_platform()
+    private static function isBigEndianPlatform()
     {
         if (is_null(self::$endianness)) {
-            self::set_endianness();
+            self::setEndianness();
         }
 
         return (self::BIG_ENDIAN == self::$endianness);
@@ -142,7 +142,7 @@ class Avro
      *
      * @throws AvroException if the endianness cannot be determined.
      */
-    private static function set_endianness()
+    private static function setEndianness()
     {
         $packed = pack('d', 1);
         switch ($packed) {
@@ -156,7 +156,7 @@ class Avro
                 throw new AvroException(
                     sprintf(
                         'Error determining platform endianness: %s',
-                        AvroDebug::hex_string($packed)
+                        AvroDebug::hexString($packed)
                     )
                 );
         }
@@ -164,10 +164,10 @@ class Avro
 
     /**
      * @returns boolean true if the PHP GMP extension is used and false otherwise.
-     * @internal Requires Avro::check_64_bit() (exposed via Avro::check_platform())
+     * @internal Requires Avro::check64Bit() (exposed via Avro::checkPlatform())
      *           to have been called to set Avro::$biginteger_mode.
      */
-    public static function uses_gmp()
+    public static function usesGmp()
     {
         return self::GMP_BIGINTEGER_MODE === self::$biginteger_mode;
     }

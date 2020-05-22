@@ -51,10 +51,10 @@ $datum = [
 ];
 
 $schema_json = file_get_contents(AVRO_INTEROP_SCHEMA);
-foreach (AvroDataIO::valid_codecs() as $codec) {
+foreach (AvroDataIO::validCodecs() as $codec) {
     $file_name = $codec == AvroDataIO::NULL_CODEC ? 'php.avro' : sprintf('php_%s.avro', $codec);
     $data_file = implode(DIRECTORY_SEPARATOR, [AVRO_BUILD_DATA_DIR, $file_name]);
-    $io_writer = AvroDataIO::open_file($data_file, 'w', $schema_json, $codec);
+    $io_writer = AvroDataIO::openFile($data_file, 'w', $schema_json, $codec);
     $io_writer->append($datum);
     $io_writer->close();
 }

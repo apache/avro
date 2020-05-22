@@ -31,15 +31,15 @@ use Apache\Avro\Schema\AvroSchema;
 class AvroIOTypeException extends AvroException
 {
     /**
-     * @param AvroSchema $expected_schema
+     * @param AvroSchema $expectedSchema
      * @param mixed $datum
      */
-    public function __construct($expected_schema, $datum)
+    public function __construct($expectedSchema, $datum)
     {
         parent::__construct(sprintf(
             'The datum %s is not an example of schema %s',
             var_export($datum, true),
-            $expected_schema
+            $expectedSchema
         ));
     }
 }

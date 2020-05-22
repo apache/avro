@@ -59,7 +59,7 @@ class AvroField extends AvroSchema
     /**
      * @var array list of valid field sort order values
      */
-    private static $valid_field_sort_orders = array(
+    private static $validFieldSortOrders = array(
         self::ASC_SORT_ORDER,
         self::DESC_SORT_ORDER,
         self::IGNORE_SORT_ORDER
@@ -71,7 +71,7 @@ class AvroField extends AvroSchema
     /**
      * @var boolean whether or no there is a default value
      */
-    private $has_default;
+    private $hasDefault;
     /**
      * @var string field default value
      */
@@ -84,7 +84,7 @@ class AvroField extends AvroSchema
      * @var boolean whether or not the AvroNamedSchema of this field is
      *              defined in the AvroNamedSchemata instance
      */
-    private $is_type_from_schemata;
+    private $isTypeFromSchemata;
 
     /**
      * @param string $type
@@ -104,18 +104,18 @@ class AvroField extends AvroSchema
         $default,
         $order = null
     ) {
-        if (!AvroName::is_well_formed_name($name)) {
+        if (!AvroName::isWellFormedName($name)) {
             throw new AvroSchemaParseException('Field requires a "name" attribute');
         }
 
         $this->type = $schema;
-        $this->is_type_from_schemata = $is_type_from_schemata;
+        $this->isTypeFromSchemata = $is_type_from_schemata;
         $this->name = $name;
-        $this->has_default = $has_default;
-        if ($this->has_default) {
+        $this->hasDefault = $has_default;
+        if ($this->hasDefault) {
             $this->default = $default;
         }
-        self::check_order_value($order);
+        self::checkOrderValue($order);
         $this->order = $order;
     }
 
@@ -124,9 +124,9 @@ class AvroField extends AvroSchema
      * @throws AvroSchemaParseException if $order is not a valid
      *                                  field order value.
      */
-    private static function check_order_value($order)
+    private static function checkOrderValue($order)
     {
-        if (!is_null($order) && !self::is_valid_field_sort_order($order)) {
+        if (!is_null($order) && !self::isValidFieldSortOrder($order)) {
             throw new AvroSchemaParseException(
                 sprintf('Invalid field sort order %s', $order)
             );
@@ -137,20 +137,20 @@ class AvroField extends AvroSchema
      * @param string $order
      * @returns boolean
      */
-    private static function is_valid_field_sort_order($order)
+    private static function isValidFieldSortOrder($order)
     {
-        return in_array($order, self::$valid_field_sort_orders);
+        return in_array($order, self::$validFieldSortOrders);
     }
 
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
         $avro = array(AvroField::FIELD_NAME_ATTR => $this->name);
 
-        $avro[AvroSchema::TYPE_ATTR] = ($this->is_type_from_schemata)
-            ? $this->type->qualified_name() : $this->type->to_avro();
+        $avro[AvroSchema::TYPE_ATTR] = ($this->isTypeFromSchemata)
+            ? $this->type->qualifiedName() : $this->type->toAvro();
 
         if (isset($this->default)) {
             $avro[AvroField::DEFAULT_ATTR] = $this->default;
@@ -174,7 +174,7 @@ class AvroField extends AvroSchema
     /**
      * @returns mixed the default value of this field
      */
-    public function default_value()
+    public function defaultValue()
     {
         return $this->default;
     }
@@ -182,8 +182,8 @@ class AvroField extends AvroSchema
     /**
      * @returns boolean true if the field has a default and false otherwise
      */
-    public function has_default_value()
+    public function hasDefaultValue()
     {
-        return $this->has_default;
+        return $this->hasDefault;
     }
 }

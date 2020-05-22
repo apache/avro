@@ -111,6 +111,6 @@ class NameTest extends TestCase
      */
     function test_name($name, $is_well_formed)
     {
-        $this->assertEquals(AvroName::is_well_formed_name($name), $is_well_formed);
+        $this->assertEquals(AvroName::isWellFormedName($name), $is_well_formed);
     }
 }

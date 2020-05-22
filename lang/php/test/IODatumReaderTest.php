@@ -32,7 +32,7 @@ class IODatumReaderTest extends TestCase
         "values": "bytes" }
 JSON;
         $readers_schema = $writers_schema;
-        $this->assertTrue(AvroIODatumReader::schemas_match(
+        $this->assertTrue(AvroIODatumReader::schemasMatch(
             AvroSchema::parse($writers_schema),
             AvroSchema::parse($readers_schema)));
     }

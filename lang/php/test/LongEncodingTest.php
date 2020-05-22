@@ -29,7 +29,7 @@ class LongEncodingTest extends TestCase
 {
     public function setUp(): void
     {
-        Avro::check_platform();
+        Avro::checkPlatform();
     }
 
     /**
@@ -86,7 +86,7 @@ class LongEncodingTest extends TestCase
         $rbin
     ) {
         $this->skip_if_no_gmp();
-        $lval = gmp_strval(AvroGMP::shift_left($val, $shift));
+        $lval = gmp_strval(AvroGMP::shiftLeft($val, $shift));
         $this->assert_bit_shift($expected_lval, $lval, 'gmp left shift',
             $lbin, decbin((int) $lval));
     }
@@ -110,7 +110,7 @@ class LongEncodingTest extends TestCase
         $rbin
     ) {
         $this->skip_if_no_gmp();
-        $rval = gmp_strval(AvroGMP::shift_right($val, $shift));
+        $rval = gmp_strval(AvroGMP::shiftRight($val, $shift));
         $this->assert_bit_shift($expected_rval, $rval, 'gmp right shift',
             $rbin, decbin((int) $rval));
     }
@@ -121,7 +121,7 @@ class LongEncodingTest extends TestCase
     function test_encode_long($val, $expected_bytes)
     {
         $this->skip_64_bit_test_on_32_bit();
-        $bytes = AvroIOBinaryEncoder::encode_long($val);
+        $bytes = AvroIOBinaryEncoder::encodeLong($val);
         $this->assertEquals($expected_bytes, $bytes);
     }
 
@@ -131,7 +131,7 @@ class LongEncodingTest extends TestCase
     function test_gmp_encode_long($val, $expected_bytes)
     {
         $this->skip_if_no_gmp();
-        $bytes = AvroGMP::encode_long($val);
+        $bytes = AvroGMP::encodeLong($val);
         $this->assertEquals($expected_bytes, $bytes);
     }
 
@@ -142,7 +142,7 @@ class LongEncodingTest extends TestCase
     {
         $this->skip_64_bit_test_on_32_bit();
         $ary = array_map('ord', str_split($bytes));
-        $val = AvroIOBinaryDecoder::decode_long_from_array($ary);
+        $val = AvroIOBinaryDecoder::decodeLongFromArray($ary);
         $this->assertEquals($expected_val, $val);
     }
 
@@ -153,7 +153,7 @@ class LongEncodingTest extends TestCase
     {
         $this->skip_if_no_gmp();
         $ary = array_map('ord', str_split($bytes));
-        $val = AvroGMP::decode_long_from_array($ary);
+        $val = AvroGMP::decodeLongFromArray($ary);
         $this->assertEquals($expected_val, $val);
     }
 

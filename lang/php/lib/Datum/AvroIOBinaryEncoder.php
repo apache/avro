@@ -43,14 +43,14 @@ class AvroIOBinaryEncoder
      */
     public function __construct($io)
     {
-        Avro::check_platform();
+        Avro::checkPlatform();
         $this->io = $io;
     }
 
     /**
      * @param null $datum actual value is ignored
      */
-    public function write_null($datum)
+    public function writeNull($datum)
     {
         return null;
     }
@@ -58,7 +58,7 @@ class AvroIOBinaryEncoder
     /**
      * @param boolean $datum
      */
-    public function write_boolean($datum)
+    public function writeBoolean($datum)
     {
         $byte = $datum ? chr(1) : chr(0);
         $this->write($byte);
@@ -75,20 +75,20 @@ class AvroIOBinaryEncoder
     /**
      * @param int $datum
      */
-    public function write_int($datum)
+    public function writeInt($datum)
     {
-        $this->write_long($datum);
+        $this->writeLong($datum);
     }
 
     /**
      * @param int $n
      */
-    public function write_long($n)
+    public function writeLong($n)
     {
-        if (Avro::uses_gmp()) {
-            $this->write(AvroGMP::encode_long($n));
+        if (Avro::usesGmp()) {
+            $this->write(AvroGMP::encodeLong($n));
         } else {
-            $this->write(self::encode_long($n));
+            $this->write(self::encodeLong($n));
         }
     }
 
@@ -97,7 +97,7 @@ class AvroIOBinaryEncoder
      * @returns string long $n encoded as bytes
      * @internal This relies on 64-bit PHP.
      */
-    public static function encode_long($n)
+    public static function encodeLong($n)
     {
         $n = (int) $n;
         $n = ($n << 1) ^ ($n >> 63);
@@ -112,68 +112,68 @@ class AvroIOBinaryEncoder
 
     /**
      * @param float $datum
-     * @uses self::float_to_int_bits()
+     * @uses self::floatToIntBits()
      */
-    public function write_float($datum)
+    public function writeFloat($datum)
     {
-        $this->write(self::float_to_int_bits($datum));
+        $this->write(self::floatToIntBits($datum));
     }
 
     /**
      * Performs encoding of the given float value to a binary string
      *
-     * XXX: This is <b>not</b> endian-aware! The {@link Avro::check_platform()}
+     * XXX: This is <b>not</b> endian-aware! The {@link Avro::checkPlatform()}
      * called in {@link AvroIOBinaryEncoder::__construct()} should ensure the
      * library is only used on little-endian platforms, which ensure the little-endian
      * encoding required by the Avro spec.
      *
      * @param float $float
      * @returns string bytes
-     * @see Avro::check_platform()
+     * @see Avro::checkPlatform()
      */
-    public static function float_to_int_bits($float)
+    public static function floatToIntBits($float)
     {
         return pack('f', (float) $float);
     }
 
     /**
      * @param float $datum
-     * @uses self::double_to_long_bits()
+     * @uses self::doubleToLongBits()
      */
-    public function write_double($datum)
+    public function writeDouble($datum)
     {
-        $this->write(self::double_to_long_bits($datum));
+        $this->write(self::doubleToLongBits($datum));
     }
 
     /**
      * Performs encoding of the given double value to a binary string
      *
      * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link AvroIOBinaryEncoder::float_to_int_bits()} for details.
+     * {@link AvroIOBinaryEncoder::floatToIntBits()} for details.
      *
      * @param double $double
      * @returns string bytes
      */
-    public static function double_to_long_bits($double)
+    public static function doubleToLongBits($double)
     {
         return pack('d', (double) $double);
     }
 
     /**
      * @param string $str
-     * @uses self::write_bytes()
+     * @uses self::writeBytes()
      */
-    public function write_string($str)
+    public function writeString($str)
     {
-        $this->write_bytes($str);
+        $this->writeBytes($str);
     }
 
     /**
      * @param string $bytes
      */
-    public function write_bytes($bytes)
+    public function writeBytes($bytes)
     {
-        $this->write_long(strlen($bytes));
+        $this->writeLong(strlen($bytes));
         $this->write($bytes);
     }
 }

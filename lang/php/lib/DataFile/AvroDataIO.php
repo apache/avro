@@ -78,18 +78,18 @@ class AvroDataIO
     /**
      * @var array array of valid codec names
      */
-    private static $valid_codecs = [self::NULL_CODEC, self::DEFLATE_CODEC, self::SNAPPY_CODEC, self::ZSTANDARD_CODEC];
+    private static $validCodecs = [self::NULL_CODEC, self::DEFLATE_CODEC, self::SNAPPY_CODEC, self::ZSTANDARD_CODEC];
 
     /**
      * @var AvroSchema cached version of metadata schema object
      */
-    private static $metadata_schema;
+    private static $metadataSchema;
 
     /**
      * @returns int count of bytes in the initial "magic" segment of the
      *              Avro container file header
      */
-    public static function magic_size()
+    public static function magicSize()
     {
         return strlen(self::magic());
     }
@@ -105,32 +105,32 @@ class AvroDataIO
     /**
      * @returns AvroSchema object of Avro container file metadata.
      */
-    public static function metadata_schema()
+    public static function metadataSchema()
     {
-        if (is_null(self::$metadata_schema)) {
-            self::$metadata_schema = AvroSchema::parse(self::METADATA_SCHEMA_JSON);
+        if (is_null(self::$metadataSchema)) {
+            self::$metadataSchema = AvroSchema::parse(self::METADATA_SCHEMA_JSON);
         }
-        return self::$metadata_schema;
+        return self::$metadataSchema;
     }
 
     /**
      * @param string $file_path file_path of file to open
      * @param string $mode one of AvroFile::READ_MODE or AvroFile::WRITE_MODE
-     * @param string $schema_json JSON of writer's schema
+     * @param string $schemaJson JSON of writer's schema
      * @param string $codec compression codec
      * @returns AvroDataIOWriter instance of AvroDataIOWriter
      *
      * @throws AvroDataIOException if $writers_schema is not provided
      *         or if an invalid $mode is given.
      */
-    public static function open_file(
+    public static function openFile(
         $file_path,
         $mode = AvroFile::READ_MODE,
-        $schema_json = null,
+        $schemaJson = null,
         $codec = self::NULL_CODEC
     ) {
-        $schema = !is_null($schema_json)
-            ? AvroSchema::parse($schema_json) : null;
+        $schema = !is_null($schemaJson)
+            ? AvroSchema::parse($schemaJson) : null;
 
         $io = false;
         switch ($mode) {
@@ -139,11 +139,11 @@ class AvroDataIO
                     throw new AvroDataIOException('Writing an Avro file requires a schema.');
                 }
                 $file = new AvroFile($file_path, AvroFile::WRITE_MODE);
-                $io = self::open_writer($file, $schema, $codec);
+                $io = self::openWriter($file, $schema, $codec);
                 break;
             case AvroFile::READ_MODE:
                 $file = new AvroFile($file_path, AvroFile::READ_MODE);
-                $io = self::open_reader($file, $schema);
+                $io = self::openReader($file, $schema);
                 break;
             default:
                 throw new AvroDataIOException(
@@ -164,7 +164,7 @@ class AvroDataIO
      * @param string $codec
      * @returns AvroDataIOWriter
      */
-    protected static function open_writer($io, $schema, $codec = self::NULL_CODEC)
+    protected static function openWriter($io, $schema, $codec = self::NULL_CODEC)
     {
         $writer = new AvroIODatumWriter($schema);
         return new AvroDataIOWriter($io, $writer, $schema, $codec);
@@ -175,7 +175,7 @@ class AvroDataIO
      * @param AvroSchema $schema
      * @returns AvroDataIOReader
      */
-    protected static function open_reader($io, $schema)
+    protected static function openReader($io, $schema)
     {
         $reader = new AvroIODatumReader(null, $schema);
         return new AvroDataIOReader($io, $reader);
@@ -185,16 +185,16 @@ class AvroDataIO
      * @param string $codec
      * @returns boolean true if $codec is a valid codec value and false otherwise
      */
-    public static function is_valid_codec($codec)
+    public static function isValidCodec($codec)
     {
-        return in_array($codec, self::valid_codecs());
+        return in_array($codec, self::validCodecs());
     }
 
     /**
      * @returns array array of valid codecs
      */
-    public static function valid_codecs()
+    public static function validCodecs()
     {
-        return self::$valid_codecs;
+        return self::$validCodecs;
     }
 }

@@ -72,7 +72,7 @@ class AvroDataIOReader
      * @throws AvroDataIOException if $io is not an instance of AvroIO
      *                             or the codec specified in the header
      *                             is not supported
-     * @uses read_header()
+     * @uses readHeader()
      */
     public function __construct($io, $datum_reader)
     {
@@ -84,10 +84,10 @@ class AvroDataIOReader
         $this->io = $io;
         $this->decoder = new AvroIOBinaryDecoder($this->io);
         $this->datum_reader = $datum_reader;
-        $this->read_header();
+        $this->readHeader();
 
-        $codec = AvroUtil::array_value($this->metadata, AvroDataIO::METADATA_CODEC_ATTR);
-        if ($codec && !AvroDataIO::is_valid_codec($codec)) {
+        $codec = AvroUtil::arrayValue($this->metadata, AvroDataIO::METADATA_CODEC_ATTR);
+        if ($codec && !AvroDataIO::isValidCodec($codec)) {
             throw new AvroDataIOException(sprintf('Unknown codec: %s', $codec));
         }
         $this->codec = $codec;
@@ -95,7 +95,7 @@ class AvroDataIOReader
         $this->block_count = 0;
         // FIXME: Seems unsanitary to set writers_schema here.
         // Can't constructor take it as an argument?
-        $this->datum_reader->set_writers_schema(
+        $this->datum_reader->setWritersSchema(
             AvroSchema::parse($this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR])
         );
     }
@@ -104,13 +104,13 @@ class AvroDataIOReader
      * Reads header of object container
      * @throws AvroDataIOException if the file is not an Avro data file.
      */
-    private function read_header()
+    private function readHeader()
     {
         $this->seek(0, AvroIO::SEEK_SET);
 
-        $magic = $this->read(AvroDataIO::magic_size());
+        $magic = $this->read(AvroDataIO::magicSize());
 
-        if (strlen($magic) < AvroDataIO::magic_size()) {
+        if (strlen($magic) < AvroDataIO::magicSize()) {
             throw new AvroDataIOException(
                 'Not an Avro data file: shorter than the Avro magic block'
             );
@@ -126,9 +126,9 @@ class AvroDataIOReader
             );
         }
 
-        $this->metadata = $this->datum_reader->read_data(
-            AvroDataIO::metadata_schema(),
-            AvroDataIO::metadata_schema(),
+        $this->metadata = $this->datum_reader->readData(
+            AvroDataIO::metadataSchema(),
+            AvroDataIO::metadataSchema(),
             $this->decoder
         );
         $this->sync_marker = $this->read(AvroDataIO::SYNC_SIZE);
@@ -159,17 +159,17 @@ class AvroDataIOReader
         $data = array();
         while (true) {
             if (0 == $this->block_count) {
-                if ($this->is_eof()) {
+                if ($this->isEof()) {
                     break;
                 }
 
-                if ($this->skip_sync()) {
-                    if ($this->is_eof()) {
+                if ($this->skipSync()) {
+                    if ($this->isEof()) {
                         break;
                     }
                 }
 
-                $length = $this->read_block_header();
+                $length = $this->readBlockHeader();
                 $decoder = $this->decoder;
                 if ($this->codec == AvroDataIO::DEFLATE_CODEC) {
                     $compressed = $decoder->read($length);
@@ -203,14 +203,14 @@ class AvroDataIOReader
     }
 
     /**
-     * @uses AvroIO::is_eof()
+     * @uses AvroIO::isEof()
      */
-    private function is_eof()
+    private function isEof()
     {
-        return $this->io->is_eof();
+        return $this->io->isEof();
     }
 
-    private function skip_sync()
+    private function skipSync()
     {
         $proposed_sync_marker = $this->read(AvroDataIO::SYNC_SIZE);
         if ($proposed_sync_marker != $this->sync_marker) {
@@ -225,10 +225,10 @@ class AvroDataIOReader
      * and the length in bytes of the block)
      * @returns int length in bytes of the block.
      */
-    private function read_block_header()
+    private function readBlockHeader()
     {
-        $this->block_count = $this->decoder->read_long();
-        return $this->decoder->read_long();
+        $this->block_count = $this->decoder->readLong();
+        return $this->decoder->readLong();
     }
 
     /**

@@ -34,9 +34,9 @@ class AvroRecordSchema extends AvroNamedSchema
     private $fields;
     /**
      * @var array map of field names to field objects.
-     * @internal Not called directly. Memoization of AvroRecordSchema->fields_hash()
+     * @internal Not called directly. Memoization of AvroRecordSchema->fieldsHash()
      */
-    private $fields_hash;
+    private $fieldsHash;
 
     /**
      * @param string $name
@@ -67,7 +67,7 @@ class AvroRecordSchema extends AvroNamedSchema
         }
 
         [$x, $namespace] = $name->name_and_namespace();
-        $this->fields = self::parse_fields($fields, $namespace, $schemata);
+        $this->fields = self::parseFields($fields, $namespace, $schemata);
     }
 
     /**
@@ -77,14 +77,14 @@ class AvroRecordSchema extends AvroNamedSchema
      * @returns AvroField[]
      * @throws AvroSchemaParseException
      */
-    public static function parse_fields($field_data, $default_namespace, &$schemata)
+    public static function parseFields($field_data, $default_namespace, &$schemata)
     {
         $fields = array();
         $field_names = array();
         foreach ($field_data as $index => $field) {
-            $name = AvroUtil::array_value($field, AvroField::FIELD_NAME_ATTR);
-            $type = AvroUtil::array_value($field, AvroSchema::TYPE_ATTR);
-            $order = AvroUtil::array_value($field, AvroField::ORDER_ATTR);
+            $name = AvroUtil::arrayValue($field, AvroField::FIELD_NAME_ATTR);
+            $type = AvroUtil::arrayValue($field, AvroSchema::TYPE_ATTR);
+            $order = AvroUtil::arrayValue($field, AvroField::ORDER_ATTR);
 
             $default = null;
             $has_default = false;
@@ -103,7 +103,7 @@ class AvroRecordSchema extends AvroNamedSchema
             $field_schema = null;
             if (
                 is_string($type)
-                && $field_schema = $schemata->schema_by_name(
+                && $field_schema = $schemata->schemaByName(
                     new AvroName($type, null, $default_namespace)
                 )
             ) {
@@ -129,13 +129,13 @@ class AvroRecordSchema extends AvroNamedSchema
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
+        $avro = parent::toAvro();
 
         $fields_avro = array();
         foreach ($this->fields as $field) {
-            $fields_avro [] = $field->to_avro();
+            $fields_avro [] = $field->toAvro();
         }
 
         if (AvroSchema::REQUEST_SCHEMA == $this->type) {
@@ -159,15 +159,15 @@ class AvroRecordSchema extends AvroNamedSchema
      * @returns array a hash table of the fields of this AvroRecordSchema fields
      *          keyed by each field's name
      */
-    public function fields_hash()
+    public function fieldsHash()
     {
-        if (is_null($this->fields_hash)) {
+        if (is_null($this->fieldsHash)) {
             $hash = array();
             foreach ($this->fields as $field) {
                 $hash[$field->name()] = $field;
             }
-            $this->fields_hash = $hash;
+            $this->fieldsHash = $hash;
         }
-        return $this->fields_hash;
+        return $this->fieldsHash;
     }
 }

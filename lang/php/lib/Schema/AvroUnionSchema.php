@@ -31,7 +31,7 @@ class AvroUnionSchema extends AvroSchema
      * @var int[] list of indices of named schemas which
      *                are defined in $schemata
      */
-    public $schema_from_schemata_indices;
+    public $schemaFromSchemataIndices;
     /**
      * @var AvroSchema[] list of schemas of this union
      */
@@ -39,46 +39,46 @@ class AvroUnionSchema extends AvroSchema
 
     /**
      * @param AvroSchema[] $schemas list of schemas in the union
-     * @param string $default_namespace namespace of enclosing schema
+     * @param string $defaultNamespace namespace of enclosing schema
      * @param AvroNamedSchemata &$schemata
      */
-    public function __construct($schemas, $default_namespace, &$schemata = null)
+    public function __construct($schemas, $defaultNamespace, &$schemata = null)
     {
         parent::__construct(AvroSchema::UNION_SCHEMA);
 
-        $this->schema_from_schemata_indices = array();
+        $this->schemaFromSchemataIndices = array();
         $schema_types = array();
         foreach ($schemas as $index => $schema) {
             $is_schema_from_schemata = false;
             $new_schema = null;
             if (
                 is_string($schema)
-                && ($new_schema = $schemata->schema_by_name(
-                    new AvroName($schema, null, $default_namespace)
+                && ($new_schema = $schemata->schemaByName(
+                    new AvroName($schema, null, $defaultNamespace)
                 ))
             ) {
                 $is_schema_from_schemata = true;
             } else {
-                $new_schema = self::subparse($schema, $default_namespace, $schemata);
+                $new_schema = self::subparse($schema, $defaultNamespace, $schemata);
             }
 
-            $schema_type = $new_schema->type;
+            $schemaType = $new_schema->type;
             if (
-                self::is_valid_type($schema_type)
-                && !self::is_named_type($schema_type)
-                && in_array($schema_type, $schema_types)
+                self::isValidType($schemaType)
+                && !self::isNamedType($schemaType)
+                && in_array($schemaType, $schema_types)
             ) {
-                throw new AvroSchemaParseException(
-                    sprintf('"%s" is already in union', $schema_type)
-                );
-            } elseif (AvroSchema::UNION_SCHEMA == $schema_type) {
+                throw new AvroSchemaParseException(sprintf('"%s" is already in union', $schemaType));
+            }
+
+            if (AvroSchema::UNION_SCHEMA === $schemaType) {
                 throw new AvroSchemaParseException('Unions cannot contain other unions');
-            } else {
-                $schema_types [] = $schema_type;
-                $this->schemas [] = $new_schema;
-                if ($is_schema_from_schemata) {
-                    $this->schema_from_schemata_indices [] = $index;
-                }
+            }
+
+            $schema_types[] = $schemaType;
+            $this->schemas[] = $new_schema;
+            if ($is_schema_from_schemata) {
+                $this->schemaFromSchemataIndices [] = $index;
             }
         }
     }
@@ -96,7 +96,7 @@ class AvroUnionSchema extends AvroSchema
      * the given (zero-based) index.
      * @throws AvroSchemaParseException if the index is invalid for this schema.
      */
-    public function schema_by_index($index)
+    public function schemaByIndex($index)
     {
         if (count($this->schemas) > $index) {
             return $this->schemas[$index];
@@ -108,13 +108,14 @@ class AvroUnionSchema extends AvroSchema
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
         $avro = array();
 
         foreach ($this->schemas as $index => $schema) {
-            $avro [] = (in_array($index, $this->schema_from_schemata_indices))
-                ? $schema->qualified_name() : $schema->to_avro();
+            $avro[] = in_array($index, $this->schemaFromSchemataIndices)
+                ? $schema->qualifiedName()
+                : $schema->toAvro();
         }
 
         return $avro;

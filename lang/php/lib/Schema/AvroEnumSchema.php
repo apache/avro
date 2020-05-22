@@ -42,7 +42,7 @@ class AvroEnumSchema extends AvroNamedSchema
      */
     public function __construct($name, $doc, $symbols, &$schemata = null)
     {
-        if (!AvroUtil::is_list($symbols)) {
+        if (!AvroUtil::isList($symbols)) {
             throw new AvroSchemaParseException('Enum Schema symbols are not a list');
         }
 
@@ -77,7 +77,7 @@ class AvroEnumSchema extends AvroNamedSchema
      * @returns boolean true if the given symbol exists in this
      *          enum schema and false otherwise
      */
-    public function has_symbol($symbol)
+    public function hasSymbol($symbol)
     {
         return in_array($symbol, $this->symbols);
     }
@@ -86,7 +86,7 @@ class AvroEnumSchema extends AvroNamedSchema
      * @param int $index
      * @returns string enum schema symbol with the given (zero-based) index
      */
-    public function symbol_by_index($index)
+    public function symbolByIndex($index)
     {
         if (array_key_exists($index, $this->symbols)) {
             return $this->symbols[$index];
@@ -98,7 +98,7 @@ class AvroEnumSchema extends AvroNamedSchema
      * @param string $symbol
      * @returns int the index of the given $symbol in the enum schema
      */
-    public function symbol_index($symbol)
+    public function symbolIndex($symbol)
     {
         $idx = array_search($symbol, $this->symbols, true);
         if (false !== $idx) {
@@ -110,9 +110,9 @@ class AvroEnumSchema extends AvroNamedSchema
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
+        $avro = parent::toAvro();
         $avro[AvroSchema::SYMBOLS_ATTR] = $this->symbols;
         return $avro;
     }

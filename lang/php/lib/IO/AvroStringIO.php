@@ -71,9 +71,9 @@ class AvroStringIO extends AvroIO
      */
     public function write($arg)
     {
-        $this->check_closed();
+        $this->checkClosed();
         if (is_string($arg)) {
-            return $this->append_str($arg);
+            return $this->appendStr($arg);
         }
         throw new AvroIOException(
             sprintf(
@@ -87,9 +87,9 @@ class AvroStringIO extends AvroIO
     /**
      * @throws AvroIOException if the buffer is closed.
      */
-    private function check_closed()
+    private function checkClosed()
     {
-        if ($this->is_closed()) {
+        if ($this->isClosed()) {
             throw new AvroIOException('Buffer is closed');
         }
     }
@@ -98,7 +98,7 @@ class AvroStringIO extends AvroIO
      * @returns boolean true if this buffer is closed and false
      *                       otherwise.
      */
-    public function is_closed()
+    public function isClosed()
     {
         return $this->is_closed;
     }
@@ -108,9 +108,9 @@ class AvroStringIO extends AvroIO
      * @param string $str
      * @returns integer count of bytes written.
      */
-    private function append_str($str)
+    private function appendStr($str)
     {
-        $this->check_closed();
+        $this->checkClosed();
         $this->string_buffer .= $str;
         $len = strlen($str);
         $this->current_index += $len;
@@ -123,7 +123,7 @@ class AvroStringIO extends AvroIO
      */
     public function read($len)
     {
-        $this->check_closed();
+        $this->checkClosed();
         $read = '';
         for ($i = $this->current_index; $i < ($this->current_index + $len); $i++) {
             $read .= $this->string_buffer[$i];
@@ -193,9 +193,9 @@ class AvroStringIO extends AvroIO
 
     /**
      * @returns boolean
-     * @see AvroIO::is_eof()
+     * @see AvroIO::isEof()
      */
-    public function is_eof()
+    public function isEof()
     {
         return ($this->current_index >= $this->length());
     }
@@ -215,7 +215,7 @@ class AvroStringIO extends AvroIO
      */
     public function close()
     {
-        $this->check_closed();
+        $this->checkClosed();
         $this->is_closed = true;
         return true;
     }
@@ -227,7 +227,7 @@ class AvroStringIO extends AvroIO
      */
     public function truncate()
     {
-        $this->check_closed();
+        $this->checkClosed();
         $this->string_buffer = '';
         $this->current_index = 0;
         return true;

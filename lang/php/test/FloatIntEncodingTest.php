@@ -234,13 +234,13 @@ _RUBY;
   {
     if (self::FLOAT_TYPE == $type)
     {
-      $decoder = array(AvroIOBinaryDecoder::class, 'int_bits_to_float');
-      $encoder = array(AvroIOBinaryEncoder::class, 'float_to_int_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'intBitsToFloat');
+      $encoder = array(AvroIOBinaryEncoder::class, 'floatToIntBits');
     }
     else
     {
-      $decoder = array(AvroIOBinaryDecoder::class, 'long_bits_to_double');
-      $encoder = array(AvroIOBinaryEncoder::class, 'double_to_long_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'longBitsToDouble');
+      $encoder = array(AvroIOBinaryEncoder::class, 'doubleToLongBits');
     }
 
     $decoded_bits_val = call_user_func($decoder, $bits);
@@ -252,8 +252,8 @@ _RUBY;
     $this->assertEquals($bits, $encoded_val_bits,
                         sprintf("%s\n expected: '%s'\n    given: '%s'",
                                 'ENCODED VAL',
-                                AvroDebug::hex_string($bits),
-                                AvroDebug::hex_string($encoded_val_bits)));
+                                AvroDebug::hexString($bits),
+                                AvroDebug::hexString($encoded_val_bits)));
 
     $round_trip_value = call_user_func($decoder, $encoded_val_bits);
     $this->assertEquals($val, $round_trip_value,
@@ -265,13 +265,13 @@ _RUBY;
   {
     if (self::FLOAT_TYPE == $type)
     {
-      $decoder = array(AvroIOBinaryDecoder::class, 'int_bits_to_float');
-      $encoder = array(AvroIOBinaryEncoder::class, 'float_to_int_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'intBitsToFloat');
+      $encoder = array(AvroIOBinaryEncoder::class, 'floatToIntBits');
     }
     else
     {
-      $decoder = array(AvroIOBinaryDecoder::class, 'long_bits_to_double');
-      $encoder = array(AvroIOBinaryEncoder::class, 'double_to_long_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'longBitsToDouble');
+      $encoder = array(AvroIOBinaryEncoder::class, 'doubleToLongBits');
     }
 
     $decoded_bits_val = call_user_func($decoder, $bits);
@@ -283,8 +283,8 @@ _RUBY;
     $this->assertEquals($bits, $encoded_val_bits,
                         sprintf("%s\n expected: '%s'\n    given: '%s'",
                                 'ENCODED VAL',
-                                AvroDebug::hex_string($bits),
-                                AvroDebug::hex_string($encoded_val_bits)));
+                                AvroDebug::hexString($bits),
+                                AvroDebug::hexString($encoded_val_bits)));
 
     $round_trip_value = call_user_func($decoder, $encoded_val_bits);
     $this->assertTrue(is_nan($round_trip_value),

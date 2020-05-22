@@ -123,9 +123,9 @@ class AvroFile extends AvroIO
     /**
      * @returns boolean true if the pointer is at the end of the file,
      *                  and false otherwise.
-     * @see AvroIO::is_eof() as behavior differs from feof()
+     * @see AvroIO::isEof() as behavior differs from feof()
      */
-    public function is_eof()
+    public function isEof()
     {
         $this->read(1);
         if (feof($this->file_handle)) {

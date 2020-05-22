@@ -38,30 +38,30 @@ class AvroMapSchema extends AvroSchema
      * XXX Couldn't we derive this based on whether or not
      * $this->values is a string?
      */
-    private $is_values_schema_from_schemata;
+    private $isValuesSchemaFromSchemata;
 
     /**
      * @param string|AvroSchema $values
-     * @param string $default_namespace namespace of enclosing schema
+     * @param string $defaultNamespace namespace of enclosing schema
      * @param AvroNamedSchemata &$schemata
      */
-    public function __construct($values, $default_namespace, &$schemata = null)
+    public function __construct($values, $defaultNamespace, &$schemata = null)
     {
         parent::__construct(AvroSchema::MAP_SCHEMA);
 
-        $this->is_values_schema_from_schemata = false;
+        $this->isValuesSchemaFromSchemata = false;
         $values_schema = null;
         if (
             is_string($values)
-            && $values_schema = $schemata->schema_by_name(
-                new AvroName($values, null, $default_namespace)
+            && $values_schema = $schemata->schemaByName(
+                new AvroName($values, null, $defaultNamespace)
             )
         ) {
-            $this->is_values_schema_from_schemata = true;
+            $this->isValuesSchemaFromSchemata = true;
         } else {
             $values_schema = AvroSchema::subparse(
                 $values,
-                $default_namespace,
+                $defaultNamespace,
                 $schemata
             );
         }
@@ -80,11 +80,11 @@ class AvroMapSchema extends AvroSchema
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
-        $avro[AvroSchema::VALUES_ATTR] = $this->is_values_schema_from_schemata
-            ? $this->values->qualified_name() : $this->values->to_avro();
+        $avro = parent::toAvro();
+        $avro[AvroSchema::VALUES_ATTR] = $this->isValuesSchemaFromSchemata
+            ? $this->values->qualifiedName() : $this->values->toAvro();
         return $avro;
     }
 }

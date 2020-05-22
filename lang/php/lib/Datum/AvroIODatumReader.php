@@ -55,7 +55,7 @@ class AvroIODatumReader
     /**
      * @param AvroSchema $readers_schema
      */
-    public function set_writers_schema($readers_schema)
+    public function setWritersSchema($readers_schema)
     {
         $this->writers_schema = $readers_schema;
     }
@@ -69,7 +69,7 @@ class AvroIODatumReader
         if (is_null($this->readers_schema)) {
             $this->readers_schema = $this->writers_schema;
         }
-        return $this->read_data(
+        return $this->readData(
             $this->writers_schema,
             $this->readers_schema,
             $decoder
@@ -79,9 +79,9 @@ class AvroIODatumReader
     /**
      * @returns mixed
      */
-    public function read_data($writers_schema, $readers_schema, $decoder)
+    public function readData($writers_schema, $readers_schema, $decoder)
     {
-        if (!self::schemas_match($writers_schema, $readers_schema)) {
+        if (!self::schemasMatch($writers_schema, $readers_schema)) {
             throw new AvroIOSchemaMatchException($writers_schema, $readers_schema);
         }
 
@@ -91,8 +91,8 @@ class AvroIODatumReader
             && AvroSchema::UNION_SCHEMA != $writers_schema->type()
         ) {
             foreach ($readers_schema->schemas() as $schema) {
-                if (self::schemas_match($writers_schema, $schema)) {
-                    return $this->read_data($writers_schema, $schema, $decoder);
+                if (self::schemasMatch($writers_schema, $schema)) {
+                    return $this->readData($writers_schema, $schema, $decoder);
                 }
             }
             throw new AvroIOSchemaMatchException($writers_schema, $readers_schema);
@@ -116,19 +116,19 @@ class AvroIODatumReader
             case AvroSchema::BYTES_TYPE:
                 return $decoder->read_bytes();
             case AvroSchema::ARRAY_SCHEMA:
-                return $this->read_array($writers_schema, $readers_schema, $decoder);
+                return $this->readArray($writers_schema, $readers_schema, $decoder);
             case AvroSchema::MAP_SCHEMA:
-                return $this->read_map($writers_schema, $readers_schema, $decoder);
+                return $this->readMap($writers_schema, $readers_schema, $decoder);
             case AvroSchema::UNION_SCHEMA:
-                return $this->read_union($writers_schema, $readers_schema, $decoder);
+                return $this->readUnion($writers_schema, $readers_schema, $decoder);
             case AvroSchema::ENUM_SCHEMA:
-                return $this->read_enum($writers_schema, $readers_schema, $decoder);
+                return $this->readEnum($writers_schema, $readers_schema, $decoder);
             case AvroSchema::FIXED_SCHEMA:
-                return $this->read_fixed($writers_schema, $readers_schema, $decoder);
+                return $this->readFixed($writers_schema, $readers_schema, $decoder);
             case AvroSchema::RECORD_SCHEMA:
             case AvroSchema::ERROR_SCHEMA:
             case AvroSchema::REQUEST_SCHEMA:
-                return $this->read_record($writers_schema, $readers_schema, $decoder);
+                return $this->readRecord($writers_schema, $readers_schema, $decoder);
             default:
                 throw new AvroException(sprintf(
                     "Cannot read unknown schema type: %s",
@@ -144,7 +144,7 @@ class AvroIODatumReader
      * @returns boolean true if the schemas are consistent with
      *                  each other and false otherwise.
      */
-    public static function schemas_match($writers_schema, $readers_schema)
+    public static function schemasMatch($writers_schema, $readers_schema)
     {
         $writers_schema_type = $writers_schema->type;
         $readers_schema_type = $readers_schema->type;
@@ -157,31 +157,31 @@ class AvroIODatumReader
         }
 
         if ($writers_schema_type == $readers_schema_type) {
-            if (AvroSchema::is_primitive_type($writers_schema_type)) {
+            if (AvroSchema::isPrimitiveType($writers_schema_type)) {
                 return true;
             }
 
             switch ($readers_schema_type) {
                 case AvroSchema::MAP_SCHEMA:
-                    return self::attributes_match(
+                    return self::attributesMatch(
                         $writers_schema->values(),
                         $readers_schema->values(),
                         array(AvroSchema::TYPE_ATTR)
                     );
                 case AvroSchema::ARRAY_SCHEMA:
-                    return self::attributes_match(
+                    return self::attributesMatch(
                         $writers_schema->items(),
                         $readers_schema->items(),
                         array(AvroSchema::TYPE_ATTR)
                     );
                 case AvroSchema::ENUM_SCHEMA:
-                    return self::attributes_match(
+                    return self::attributesMatch(
                         $writers_schema,
                         $readers_schema,
                         array(AvroSchema::FULLNAME_ATTR)
                     );
                 case AvroSchema::FIXED_SCHEMA:
-                    return self::attributes_match(
+                    return self::attributesMatch(
                         $writers_schema,
                         $readers_schema,
                         array(
@@ -191,7 +191,7 @@ class AvroIODatumReader
                     );
                 case AvroSchema::RECORD_SCHEMA:
                 case AvroSchema::ERROR_SCHEMA:
-                    return self::attributes_match(
+                    return self::attributesMatch(
                         $writers_schema,
                         $readers_schema,
                         array(AvroSchema::FULLNAME_ATTR)
@@ -249,7 +249,7 @@ class AvroIODatumReader
      *
      * @returns boolean true if the attributes match and false otherwise.
      */
-    static function attributes_match($schema_one, $schema_two, $attribute_names)
+    public static function attributesMatch($schema_one, $schema_two, $attribute_names)
     {
         foreach ($attribute_names as $attribute_name) {
             if (
@@ -265,7 +265,7 @@ class AvroIODatumReader
     /**
      * @returns array
      */
-    public function read_array($writers_schema, $readers_schema, $decoder)
+    public function readArray($writers_schema, $readers_schema, $decoder)
     {
         $items = array();
         $block_count = $decoder->read_long();
@@ -275,7 +275,7 @@ class AvroIODatumReader
                 $block_size = $decoder->read_long(); // Read (and ignore) block size
             }
             for ($i = 0; $i < $block_count; $i++) {
-                $items [] = $this->read_data(
+                $items [] = $this->readData(
                     $writers_schema->items(),
                     $readers_schema->items(),
                     $decoder
@@ -289,7 +289,7 @@ class AvroIODatumReader
     /**
      * @returns array
      */
-    public function read_map($writers_schema, $readers_schema, $decoder)
+    public function readMap($writers_schema, $readers_schema, $decoder)
     {
         $items = array();
         $pair_count = $decoder->read_long();
@@ -302,7 +302,7 @@ class AvroIODatumReader
 
             for ($i = 0; $i < $pair_count; $i++) {
                 $key = $decoder->read_string();
-                $items[$key] = $this->read_data(
+                $items[$key] = $this->readData(
                     $writers_schema->values(),
                     $readers_schema->values(),
                     $decoder
@@ -316,17 +316,17 @@ class AvroIODatumReader
     /**
      * @returns mixed
      */
-    public function read_union($writers_schema, $readers_schema, $decoder)
+    public function readUnion($writers_schema, $readers_schema, $decoder)
     {
         $schema_index = $decoder->read_long();
         $selected_writers_schema = $writers_schema->schema_by_index($schema_index);
-        return $this->read_data($selected_writers_schema, $readers_schema, $decoder);
+        return $this->readData($selected_writers_schema, $readers_schema, $decoder);
     }
 
     /**
      * @returns string
      */
-    public function read_enum($writers_schema, $readers_schema, $decoder)
+    public function readEnum($writers_schema, $readers_schema, $decoder)
     {
         $symbol_index = $decoder->read_int();
         $symbol = $writers_schema->symbol_by_index($symbol_index);
@@ -339,7 +339,7 @@ class AvroIODatumReader
     /**
      * @returns string
      */
-    public function read_fixed($writers_schema, $readers_schema, $decoder)
+    public function readFixed($writers_schema, $readers_schema, $decoder)
     {
         return $decoder->read($writers_schema->size());
     }
@@ -347,7 +347,7 @@ class AvroIODatumReader
     /**
      * @returns array
      */
-    public function read_record($writers_schema, $readers_schema, $decoder)
+    public function readRecord($writers_schema, $readers_schema, $decoder)
     {
         $readers_fields = $readers_schema->fields_hash();
         $record = array();
@@ -355,13 +355,13 @@ class AvroIODatumReader
             $type = $writers_field->type();
             if (isset($readers_fields[$writers_field->name()])) {
                 $record[$writers_field->name()]
-                    = $this->read_data(
+                    = $this->readData(
                         $type,
                         $readers_fields[$writers_field->name()]->type(),
                         $decoder
                     );
             } else {
-                $this->skip_data($type, $decoder);
+                $this->skipData($type, $decoder);
             }
         }
         // Fill in default values
@@ -371,7 +371,7 @@ class AvroIODatumReader
                 if (!isset($writers_fields[$field_name])) {
                     if ($field->has_default_value()) {
                         $record[$field->name()]
-                            = $this->read_default_value(
+                            = $this->readDefaultValue(
                                 $field->type(),
                                 $field->default_value()
                             );
@@ -390,25 +390,25 @@ class AvroIODatumReader
      * @param AvroSchema $writers_schema
      * @param AvroIOBinaryDecoder $decoder
      */
-    private function skip_data($writers_schema, $decoder)
+    private function skipData($writers_schema, $decoder)
     {
         switch ($writers_schema->type()) {
             case AvroSchema::NULL_TYPE:
-                return $decoder->skip_null();
+                return $decoder->skipNull();
             case AvroSchema::BOOLEAN_TYPE:
-                return $decoder->skip_boolean();
+                return $decoder->skipBoolean();
             case AvroSchema::INT_TYPE:
-                return $decoder->skip_int();
+                return $decoder->skipInt();
             case AvroSchema::LONG_TYPE:
-                return $decoder->skip_long();
+                return $decoder->skipLong();
             case AvroSchema::FLOAT_TYPE:
-                return $decoder->skip_float();
+                return $decoder->skipFloat();
             case AvroSchema::DOUBLE_TYPE:
-                return $decoder->skip_double();
+                return $decoder->skipDouble();
             case AvroSchema::STRING_TYPE:
-                return $decoder->skip_string();
+                return $decoder->skipString();
             case AvroSchema::BYTES_TYPE:
-                return $decoder->skip_bytes();
+                return $decoder->skipBytes();
             case AvroSchema::ARRAY_SCHEMA:
                 return $decoder->skip_array($writers_schema, $decoder);
             case AvroSchema::MAP_SCHEMA:
@@ -438,7 +438,7 @@ class AvroIODatumReader
      *
      * @throws AvroException if $field_schema type is unknown.
      */
-    public function read_default_value($field_schema, $default_value)
+    public function readDefaultValue($field_schema, $default_value)
     {
         switch ($field_schema->type()) {
             case AvroSchema::NULL_TYPE:
@@ -457,22 +457,22 @@ class AvroIODatumReader
             case AvroSchema::ARRAY_SCHEMA:
                 $array = array();
                 foreach ($default_value as $json_val) {
-                    $val = $this->read_default_value($field_schema->items(), $json_val);
+                    $val = $this->readDefaultValue($field_schema->items(), $json_val);
                     $array [] = $val;
                 }
                 return $array;
             case AvroSchema::MAP_SCHEMA:
                 $map = array();
                 foreach ($default_value as $key => $json_val) {
-                    $map[$key] = $this->read_default_value(
+                    $map[$key] = $this->readDefaultValue(
                         $field_schema->values(),
                         $json_val
                     );
                 }
                 return $map;
             case AvroSchema::UNION_SCHEMA:
-                return $this->read_default_value(
-                    $field_schema->schema_by_index(0),
+                return $this->readDefaultValue(
+                    $field_schema->schemaByIndex(0),
                     $default_value
                 );
             case AvroSchema::ENUM_SCHEMA:
@@ -486,7 +486,7 @@ class AvroIODatumReader
                         $json_val = $field->default_value();
                     }
 
-                    $record[$field_name] = $this->read_default_value(
+                    $record[$field_name] = $this->readDefaultValue(
                         $field->type(),
                         $json_val
                     );

@@ -33,7 +33,7 @@ class AvroPrimitiveSchema extends AvroSchema
      */
     public function __construct($type)
     {
-        if (!self::is_primitive_type($type)) {
+        if (!self::isPrimitiveType($type)) {
             throw new AvroSchemaParseException(sprintf('%s is not a valid primitive type.', $type));
         }
         parent::__construct($type);
@@ -42,9 +42,9 @@ class AvroPrimitiveSchema extends AvroSchema
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
+        $avro = parent::toAvro();
         // FIXME: Is this if really necessary? When *wouldn't* this be the case?
         if (1 == count($avro)) {
             return $this->type;

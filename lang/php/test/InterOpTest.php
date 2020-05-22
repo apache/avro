@@ -63,7 +63,7 @@ class InterOpTest extends TestCase
      */
     public function test_read($file_name)
     {
-        $dr = AvroDataIO::open_file(
+        $dr = AvroDataIO::openFile(
             $file_name, AvroFile::READ_MODE, $this->projection_json);
 
         $data = $dr->data();

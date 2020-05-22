@@ -59,9 +59,9 @@ class AvroFixedSchema extends AvroNamedSchema
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
+        $avro = parent::toAvro();
         $avro[AvroSchema::SIZE_ATTR] = $this->size;
         return $avro;
     }

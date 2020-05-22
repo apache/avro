@@ -60,17 +60,17 @@ class AvroGMP
      * @param int|str $n integer (or string representation of integer) to encode
      * @return string $bytes of the long $n encoded per the Avro spec
      */
-    public static function encode_long($n)
+    public static function encodeLong($n)
     {
         $g = gmp_init($n);
         $g = gmp_xor(
-            self::shift_left($g, 1),
-            self::shift_right($g, 63)
+            self::shiftLeft($g, 1),
+            self::shiftRight($g, 63)
         );
         $bytes = '';
         while (0 != gmp_cmp(self::gmp_0(), gmp_and($g, self::gmp_n0x7f()))) {
             $bytes .= chr(gmp_intval(gmp_and($g, self::gmp_0x7f())) | 0x80);
-            $g = self::shift_right($g, 7);
+            $g = self::shiftRight($g, 7);
         }
         $bytes .= chr(gmp_intval($g));
         return $bytes;
@@ -82,14 +82,14 @@ class AvroGMP
      * @param int $shift number of bits to shift left
      * @returns resource $g shifted left
      */
-    public static function shift_left($g, $shift)
+    public static function shiftLeft($g, $shift)
     {
         if (0 == $shift) {
             return $g;
         }
 
         if (0 > gmp_sign($g)) {
-            $g = self::gmp_twos_complement($g);
+            $g = self::gmpTwosComplement($g);
         }
 
         $m = gmp_mul($g, gmp_pow(self::gmp_2(), $shift));
@@ -107,10 +107,44 @@ class AvroGMP
      * @param GMP resource
      * @returns GMP resource 64-bit two's complement of input.
      */
-    public static function gmp_twos_complement($g)
+    public static function gmpTwosComplement($g)
     {
         return gmp_neg(gmp_sub(gmp_pow(self::gmp_2(), 64), $g));
     }
+
+    /**
+     * Arithmetic right shift
+     * @param resource|int|string $g
+     * @param int $shift number of bits to shift right
+     * @returns resource $g shifted right $shift bits
+     */
+    public static function shiftRight($g, $shift)
+    {
+        if (0 == $shift) {
+            return $g;
+        }
+
+        if (0 <= gmp_sign($g)) {
+            $m = gmp_div($g, gmp_pow(self::gmp_2(), $shift));
+        } else // negative
+        {
+            $g = gmp_and($g, self::gmp_0xfs());
+            $m = gmp_div($g, gmp_pow(self::gmp_2(), $shift));
+            $m = gmp_and($m, self::gmp_0xfs());
+            for ($i = 63; $i >= (63 - $shift); $i--) {
+                gmp_setbit($m, $i);
+            }
+
+            $m = gmp_neg(gmp_add(
+                gmp_and(gmp_com($m), self::gmp_0xfs()),
+                self::gmp_1()
+            ));
+        }
+
+        return $m;
+    }
+
+    // phpcs:disable PSR1.Methods.CamelCapsMethodName
 
     /**
      * @returns resource GMP resource for two (2)
@@ -146,38 +180,6 @@ class AvroGMP
     }
 
     /**
-     * Arithmetic right shift
-     * @param resource|int|string $g
-     * @param int $shift number of bits to shift right
-     * @returns resource $g shifted right $shift bits
-     */
-    public static function shift_right($g, $shift)
-    {
-        if (0 == $shift) {
-            return $g;
-        }
-
-        if (0 <= gmp_sign($g)) {
-            $m = gmp_div($g, gmp_pow(self::gmp_2(), $shift));
-        } else // negative
-        {
-            $g = gmp_and($g, self::gmp_0xfs());
-            $m = gmp_div($g, gmp_pow(self::gmp_2(), $shift));
-            $m = gmp_and($m, self::gmp_0xfs());
-            for ($i = 63; $i >= (63 - $shift); $i--) {
-                gmp_setbit($m, $i);
-            }
-
-            $m = gmp_neg(gmp_add(
-                gmp_and(gmp_com($m), self::gmp_0xfs()),
-                self::gmp_1()
-            ));
-        }
-
-        return $m;
-    }
-
-    /**
      * @returns resource GMP resource for zero
      */
     private static function gmp_0()
@@ -210,21 +212,23 @@ class AvroGMP
         return self::$gmp_0x7f;
     }
 
+    // phpcs:enable
+
     /**
      * @param int[] $bytes array of ascii codes of bytes to decode
      * @return string represenation of decoded long.
      */
-    public static function decode_long_from_array($bytes)
+    public static function decodeLongFromArray($bytes)
     {
         $b = array_shift($bytes);
         $g = gmp_init($b & 0x7f);
         $shift = 7;
         while (0 != ($b & 0x80)) {
             $b = array_shift($bytes);
-            $g = gmp_or($g, self::shift_left(($b & 0x7f), $shift));
+            $g = gmp_or($g, self::shiftLeft(($b & 0x7f), $shift));
             $shift += 7;
         }
-        $val = gmp_xor(self::shift_right($g, 1), gmp_neg(gmp_and($g, 1)));
+        $val = gmp_xor(self::shiftRight($g, 1), gmp_neg(gmp_and($g, 1)));
         return gmp_strval($val);
     }
 }

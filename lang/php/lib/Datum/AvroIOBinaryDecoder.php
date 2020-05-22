@@ -45,14 +45,14 @@ class AvroIOBinaryDecoder
      */
     public function __construct($io)
     {
-        Avro::check_platform();
+        Avro::checkPlatform();
         $this->io = $io;
     }
 
     /**
      * @returns null
      */
-    public function read_null()
+    public function readNull()
     {
         return null;
     }
@@ -60,16 +60,16 @@ class AvroIOBinaryDecoder
     /**
      * @returns boolean
      */
-    public function read_boolean()
+    public function readBoolean()
     {
-        return (bool) (1 == ord($this->next_byte()));
+        return (bool) (1 == ord($this->nextByte()));
     }
 
     /**
      * @returns string the next byte from $this->io.
      * @throws AvroException if the next byte cannot be read.
      */
-    private function next_byte()
+    private function nextByte()
     {
         return $this->read(1);
     }
@@ -86,28 +86,28 @@ class AvroIOBinaryDecoder
     /**
      * @returns int
      */
-    public function read_int()
+    public function readInt()
     {
-        return (int) $this->read_long();
+        return (int) $this->readLong();
     }
 
     /**
      * @returns long
      */
-    public function read_long()
+    public function readLong()
     {
-        $byte = ord($this->next_byte());
+        $byte = ord($this->nextByte());
         $bytes = array($byte);
         while (0 != ($byte & 0x80)) {
-            $byte = ord($this->next_byte());
+            $byte = ord($this->nextByte());
             $bytes [] = $byte;
         }
 
-        if (Avro::uses_gmp()) {
-            return AvroGMP::decode_long_from_array($bytes);
+        if (Avro::usesGmp()) {
+            return AvroGMP::decodeLongFromArray($bytes);
         }
 
-        return self::decode_long_from_array($bytes);
+        return self::decodeLongFromArray($bytes);
     }
 
     /**
@@ -115,7 +115,7 @@ class AvroIOBinaryDecoder
      * @returns long decoded value
      * @internal Requires 64-bit platform
      */
-    public static function decode_long_from_array($bytes)
+    public static function decodeLongFromArray($bytes)
     {
         $b = array_shift($bytes);
         $n = $b & 0x7f;
@@ -131,21 +131,21 @@ class AvroIOBinaryDecoder
     /**
      * @returns float
      */
-    public function read_float()
+    public function readFloat()
     {
-        return self::int_bits_to_float($this->read(4));
+        return self::intBitsToFloat($this->read(4));
     }
 
     /**
      * Performs decoding of the binary string to a float value.
      *
      * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link AvroIOBinaryEncoder::float_to_int_bits()} for details.
+     * {@link AvroIOBinaryEncoder::floatToIntBits()} for details.
      *
      * @param string $bits
      * @returns float
      */
-    public static function int_bits_to_float($bits)
+    public static function intBitsToFloat($bits)
     {
         $float = unpack('f', $bits);
         return (float) $float[1];
@@ -154,21 +154,21 @@ class AvroIOBinaryDecoder
     /**
      * @returns double
      */
-    public function read_double()
+    public function readDouble()
     {
-        return self::long_bits_to_double($this->read(8));
+        return self::longBitsToDouble($this->read(8));
     }
 
     /**
      * Performs decoding of the binary string to a double value.
      *
      * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link AvroIOBinaryEncoder::float_to_int_bits()} for details.
+     * {@link AvroIOBinaryEncoder::floatToIntBits()} for details.
      *
      * @param string $bits
      * @returns float
      */
-    public static function long_bits_to_double($bits)
+    public static function longBitsToDouble($bits)
     {
         $double = unpack('d', $bits);
         return (double) $double[1];
@@ -179,25 +179,25 @@ class AvroIOBinaryDecoder
      * of UTF-8 encoded character data.
      * @returns string
      */
-    public function read_string()
+    public function readString()
     {
-        return $this->read_bytes();
+        return $this->readBytes();
     }
 
     /**
      * @returns string
      */
-    public function read_bytes()
+    public function readBytes()
     {
-        return $this->read($this->read_long());
+        return $this->read($this->readLong());
     }
 
-    public function skip_null()
+    public function skipNull()
     {
         return null;
     }
 
-    public function skip_boolean()
+    public function skipBoolean()
     {
         return $this->skip(1);
     }
@@ -222,37 +222,37 @@ class AvroIOBinaryDecoder
         return $this->io->seek($offset, $whence);
     }
 
-    public function skip_int()
+    public function skipInt()
     {
-        return $this->skip_long();
+        return $this->skipLong();
     }
 
-    public function skip_long()
+    public function skipLong()
     {
-        $b = $this->next_byte();
+        $b = $this->nextByte();
         while (0 != (ord($b) & 0x80)) {
-            $b = $this->next_byte();
+            $b = $this->nextByte();
         }
     }
 
-    public function skip_float()
+    public function skipFloat()
     {
         return $this->skip(4);
     }
 
-    public function skip_double()
+    public function skipDouble()
     {
         return $this->skip(8);
     }
 
-    public function skip_string()
+    public function skipString()
     {
-        return $this->skip_bytes();
+        return $this->skipBytes();
     }
 
-    public function skip_bytes()
+    public function skipBytes()
     {
-        return $this->skip($this->read_long());
+        return $this->skip($this->readLong());
     }
 
     /**

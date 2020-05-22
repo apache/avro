@@ -41,7 +41,7 @@ class AvroNamedSchemata
         $this->schemata = $schemata;
     }
 
-    public function list_schemas()
+    public function listSchemas()
     {
         var_export($this->schemata);
         foreach ($this->schemata as $sch) {
@@ -53,7 +53,7 @@ class AvroNamedSchemata
      * @param AvroName $name
      * @returns AvroSchema|null
      */
-    public function schema_by_name($name)
+    public function schemaByName($name)
     {
         return $this->schema($name->fullname());
     }
@@ -77,13 +77,13 @@ class AvroNamedSchemata
      * @param AvroNamedSchema schema to add to this existing schemata
      * @returns AvroNamedSchemata
      */
-    public function clone_with_new_schema($schema)
+    public function cloneWithNewSchema($schema)
     {
         $name = $schema->fullname();
-        if (AvroSchema::is_valid_type($name)) {
+        if (AvroSchema::isValidType($name)) {
             throw new AvroSchemaParseException(sprintf('Name "%s" is a reserved type name', $name));
         }
-        if ($this->has_name($name)) {
+        if ($this->hasName($name)) {
             throw new AvroSchemaParseException(sprintf('Name "%s" is already in use', $name));
         }
         $schemata = new AvroNamedSchemata($this->schemata);
@@ -96,7 +96,7 @@ class AvroNamedSchemata
      * @returns boolean true if there exists a schema with the given name
      *                  and false otherwise.
      */
-    public function has_name($fullname)
+    public function hasName($fullname)
     {
         return array_key_exists($fullname, $this->schemata);
     }

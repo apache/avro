@@ -110,12 +110,12 @@ class AvroIO
      * Returns whether or not the current position at the end of this AvroIO
      * instance.
      *
-     * Note is_eof() is <b>not</b> like eof in C or feof in PHP:
+     * Note isEof() is <b>not</b> like eof in C or feof in PHP:
      * it returns TRUE if the *next* read would be end of file,
      * rather than if the *most recent* read read end of file.
      * @returns boolean true if at the end of file, and false otherwise
      */
-    public function is_eof()
+    public function isEof()
     {
         throw new AvroNotImplementedException('Not implemented');
     }

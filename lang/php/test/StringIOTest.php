@@ -80,7 +80,7 @@ class StringIOTest extends TestCase
         $dw->close();
 
         $this->assertEquals(57, strlen($strio->string()),
-            AvroDebug::ascii_string($strio->string()));
+            AvroDebug::asciiString($strio->string()));
 
         $read_strio = new AvroStringIO($strio->string());
 

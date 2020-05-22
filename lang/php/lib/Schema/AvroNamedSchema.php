@@ -56,17 +56,17 @@ class AvroNamedSchema extends AvroSchema
         $this->doc = $doc;
 
         if (!is_null($schemata)) {
-            $schemata = $schemata->clone_with_new_schema($this);
+            $schemata = $schemata->cloneWithNewSchema($this);
         }
     }
 
     /**
      * @returns mixed
      */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
-        [$name, $namespace] = AvroName::extract_namespace($this->qualified_name());
+        $avro = parent::toAvro();
+        [$name, $namespace] = AvroName::extractNamespace($this->qualifiedName());
         $avro[AvroSchema::NAME_ATTR] = $name;
         if ($namespace) {
             $avro[AvroSchema::NAMESPACE_ATTR] = $namespace;
@@ -77,9 +77,9 @@ class AvroNamedSchema extends AvroSchema
         return $avro;
     }
 
-    public function qualified_name()
+    public function qualifiedName()
     {
-        return $this->name->qualified_name();
+        return $this->name->qualifiedName();
     }
 
     /**

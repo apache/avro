@@ -41,11 +41,11 @@ class AvroProtocol
         }
 
         $protocol = new AvroProtocol();
-        $protocol->real_parse(json_decode($json, true));
+        $protocol->realParse(json_decode($json, true));
         return $protocol;
     }
 
-    public function real_parse($avro)
+    public function realParse($avro)
     {
         $this->protocol = $avro["protocol"];
         $this->namespace = $avro["namespace"];
@@ -53,7 +53,7 @@ class AvroProtocol
         $this->name = $avro["protocol"];
 
         if (!is_null($avro["types"])) {
-            $types = AvroSchema::real_parse($avro["types"], $this->namespace, $this->schemata);
+            $types = AvroSchema::realParse($avro["types"], $this->namespace, $this->schemata);
         }
 
         if (!is_null($avro["messages"])) {
