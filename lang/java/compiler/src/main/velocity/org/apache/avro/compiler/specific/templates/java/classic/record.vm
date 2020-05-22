@@ -176,7 +176,7 @@ static {
     case $i: return ${this.mangle($field.name(), $schema.isError())};
 #set ($i = $i + 1)
 #end
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -204,7 +204,7 @@ static {
     case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String") != null ? value$.toString() : null#{end}; break;
 #set ($i = $i + 1)
 #end
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 

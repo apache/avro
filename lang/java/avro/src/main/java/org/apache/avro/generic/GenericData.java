@@ -237,8 +237,9 @@ public class GenericData {
     @Override
     public void put(String key, Object value) {
       Schema.Field field = schema.getField(key);
-      if (field == null)
+      if (field == null) {
         throw new AvroRuntimeException("Not a valid schema field: " + key);
+      }
 
       values[field.pos()] = value;
     }
@@ -251,8 +252,9 @@ public class GenericData {
     @Override
     public Object get(String key) {
       Field field = schema.getField(key);
-      if (field == null)
-        return null;
+      if (field == null) {
+        throw new AvroRuntimeException("Not a valid schema field: " + key);
+      }
       return values[field.pos()];
     }
 
