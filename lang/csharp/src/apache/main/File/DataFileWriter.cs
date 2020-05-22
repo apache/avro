@@ -19,8 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Avro.IO;
 using Avro.Generic;
+using Avro.IO;
 
 namespace Avro.File
 {
@@ -126,7 +126,41 @@ namespace Avro.File
             return new DataFileWriter<T>(writer).Create(writer.Schema, outStream, codec, leaveOpen);
         }
 
-        DataFileWriter(DatumWriter<T> writer)
+        /// <summary>
+        /// Open a new writer instance to append to a file path.
+        /// </summary>
+        /// <param name="writer">Datum writer to use.</param>
+        /// <param name="path">Path to the file.</param>
+        /// <returns>A new file writer.</returns>
+        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, string path)
+        {
+            return new DataFileWriter<T>(writer).AppendTo(path);
+        }
+
+        /// <summary>
+        /// Open a new writer instance to append to an output stream.
+        /// Both in and out streams must point to the same file.
+        /// </summary>
+        /// <param name="writer">Datum writer to use.</param>
+        /// <param name="inStream">reading the existing file.</param>
+        /// <param name="outStream">stream to write to, positioned at the end of the existing file.</param>
+        /// <returns>A new file writer.</returns>
+        public static IFileWriter<T> OpenAppendWriter(DatumWriter<T> writer, Stream inStream, Stream outStream)
+        {
+            if (!inStream.CanRead)
+            {
+                throw new AvroRuntimeException($"{nameof(inStream)} must have Read access");
+            }
+
+            if (!outStream.CanWrite)
+            {
+                throw new AvroRuntimeException($"{nameof(outStream)} must have Write access");
+            }
+
+            return new DataFileWriter<T>(writer).AppendTo(inStream, outStream);
+        }
+
+        private DataFileWriter(DatumWriter<T> writer)
         {
             _writer = writer;
             _syncInterval = DataFileConstants.DefaultSyncInterval;
@@ -203,6 +237,47 @@ namespace Avro.File
             }
             _blockCount++;
             WriteIfBlockFull();
+        }
+
+        private IFileWriter<T> AppendTo(string path)
+        {
+            using (var inStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                var outStream = new FileStream(path, FileMode.Append);
+                return AppendTo(inStream, outStream);
+            }
+
+            // outStream does not need to be closed here. It will be closed by invoking Close()
+            // of this writer.
+        }
+
+        private IFileWriter<T> AppendTo(Stream inStream, Stream outStream)
+        {
+            using (var dataFileReader = DataFileReader<T>.OpenReader(inStream))
+            {
+                var header = dataFileReader.GetHeader();
+                _schema = header.Schema;
+                _syncData = header.SyncData;
+                _metaData = header.MetaData;
+            }
+
+            if (_metaData.TryGetValue(DataFileConstants.MetaDataCodec, out byte[] codecBytes))
+            {
+                string codec = System.Text.Encoding.UTF8.GetString(codecBytes);
+                _codec = Codec.CreateCodecFromString(codec);
+            }
+            else
+            {
+                _codec = Codec.CreateCodec(Codec.Type.Null);
+            }
+
+            _headerWritten = true;
+            _stream = outStream;
+            _stream.Seek(0, SeekOrigin.End);
+
+            Init();
+
+            return this;
         }
 
         private void EnsureHeader()
