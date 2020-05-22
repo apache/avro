@@ -645,8 +645,7 @@ public class TestSchemaBuilder {
     String strdef = "\u0003";
     HashMap<String, String> mapdef = new HashMap<>();
     mapdef.put("a", "A");
-    ArrayList<String> arrdef = new ArrayList<>();
-    arrdef.add("arr");
+    List<String> arrdef = Collections.singletonList("arr");
 
     Schema rec = SchemaBuilder.record("inner").fields().name("f").type().intType().noDefault().endRecord();
 
@@ -721,7 +720,7 @@ public class TestSchemaBuilder {
     for (CharSequence c : arr) {
       Assert.assertTrue(arrdef.contains(c.toString()));
     }
-    Assert.assertEquals(newRec.get("arrF"), newRec.get("arrU"));
+    Assert.assertEquals(newRec.get("arrayF"), newRec.get("arrayU"));
     Assert.assertEquals(recdef, newRec.get("recordF"));
     Assert.assertEquals(recdef2, newRec.get("recordU"));
     Assert.assertEquals("S", newRec.get("byName").toString());

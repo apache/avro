@@ -75,10 +75,18 @@ class AvroDataIO
 
     const ZSTANDARD_CODEC = 'zstandard';
 
+    const BZIP2_CODEC = 'bzip2';
+
     /**
      * @var array array of valid codec names
      */
-    private static $validCodecs = [self::NULL_CODEC, self::DEFLATE_CODEC, self::SNAPPY_CODEC, self::ZSTANDARD_CODEC];
+    private static $validCodecs = [
+        self::NULL_CODEC,
+        self::DEFLATE_CODEC,
+        self::SNAPPY_CODEC,
+        self::ZSTANDARD_CODEC,
+        self::BZIP2_CODEC
+    ];
 
     /**
      * @var AvroSchema cached version of metadata schema object

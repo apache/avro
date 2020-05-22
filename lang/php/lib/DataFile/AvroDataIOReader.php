@@ -194,6 +194,13 @@ class AvroDataIOReader
                     } else {
                         $decoder = new AvroIOBinaryDecoder(new AvroStringIO(snappy_uncompress($datum)));
                     }
+                } elseif ($this->codec === AvroDataIO::BZIP2_CODEC) {
+                    if (!extension_loaded('bz2')) {
+                        throw new AvroException('Please install ext-bz2 to use bzip2 compression.');
+                    }
+                    $compressed = $decoder->read($length);
+                    $datum = bzdecompress($compressed);
+                    $decoder = new AvroIOBinaryDecoder(new AvroStringIO($datum));
                 }
             }
             $data[] = $this->datum_reader->read($decoder);

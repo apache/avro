@@ -752,6 +752,23 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testPojoWithOptionalOnlyWhenNullableCreatedTurnedOnAndGettersReturnOptionalTurnedOff()
+      throws IOException {
+    SpecificCompiler compiler = createCompiler();
+    compiler.setOptionalGettersForNullableFieldsOnly(true);
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    assertTrue(this.outputFile.exists());
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        // no optionals since gettersReturnOptionalOnlyForNullable is false
+        assertFalse(line.contains("Optional"));
+      }
+    }
+  }
+
+  @Test
   public void testAdditionalToolsAreInjectedIntoTemplate() throws Exception {
     SpecificCompiler compiler = createCompiler();
     List<Object> customTools = new ArrayList<>();
@@ -772,4 +789,5 @@ public class TestSpecificCompiler {
     }
     assertEquals(1, itWorksFound);
   }
+
 }

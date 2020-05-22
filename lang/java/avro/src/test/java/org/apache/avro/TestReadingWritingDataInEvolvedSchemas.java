@@ -34,6 +34,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.*;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -342,7 +343,12 @@ public class TestReadingWritingDataInEvolvedSchemas {
     byte[] encoded = encodeGenericBlob(record);
     Record decoded = decodeGenericBlob(INT_RECORD, writer, encoded);
     assertEquals(42, decoded.get(FIELD_A));
-    assertNull(decoded.get("newTopField"));
+    try {
+      decoded.get("newTopField");
+      Assert.fail("get should throw a exception");
+    } catch (AvroRuntimeException ex) {
+      Assert.assertEquals("Not a valid schema field: newTopField", ex.getMessage());
+    }
   }
 
   @Test
