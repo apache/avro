@@ -18,6 +18,7 @@
 package org.apache.avro.file;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.zip.CRC32;
 
@@ -57,7 +58,7 @@ public class SnappyCodec extends Codec {
     crc32.update(in.array(), offset, in.remaining());
     out.putInt(size, (int) crc32.getValue());
 
-    out.limit(size + 4);
+    ((Buffer) out).limit(size + 4);
 
     return out;
   }
@@ -67,11 +68,11 @@ public class SnappyCodec extends Codec {
     int offset = computeOffset(in);
     ByteBuffer out = ByteBuffer.allocate(Snappy.uncompressedLength(in.array(), offset, in.remaining() - 4));
     int size = Snappy.uncompress(in.array(), offset, in.remaining() - 4, out.array(), 0);
-    out.limit(size);
+    ((Buffer) out).limit(size);
 
     crc32.reset();
     crc32.update(out.array(), 0, size);
-    if (in.getInt(in.limit() - 4) != (int) crc32.getValue())
+    if (in.getInt(((Buffer) in).limit() - 4) != (int) crc32.getValue())
       throw new IOException("Checksum failure");
 
     return out;

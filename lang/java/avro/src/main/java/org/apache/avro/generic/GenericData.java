@@ -19,6 +19,7 @@ package org.apache.avro.generic;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
@@ -1252,7 +1253,7 @@ public class GenericData {
       int length = byteBufferValue.limit() - start;
       byte[] bytesCopy = new byte[length];
       byteBufferValue.get(bytesCopy, 0, length);
-      byteBufferValue.position(start);
+      ((Buffer) byteBufferValue).position(start);
       return ByteBuffer.wrap(bytesCopy, 0, length);
     case DOUBLE:
       return value; // immutable

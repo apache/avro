@@ -18,6 +18,7 @@
 package org.apache.avro.util;
 
 import java.io.File;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -155,7 +156,7 @@ public class RandomData implements Iterable<Object> {
 
   private static ByteBuffer randomBytes(Random rand, int maxLength) {
     ByteBuffer bytes = ByteBuffer.allocate(rand.nextInt(maxLength));
-    bytes.limit(bytes.capacity());
+    ((Buffer) bytes).limit(bytes.capacity());
     rand.nextBytes(bytes.array());
     return bytes;
   }

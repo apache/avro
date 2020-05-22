@@ -18,6 +18,7 @@
 
 package org.apache.avro.ipc.netty;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,14 +99,14 @@ public class NettyTransportCodec {
       ByteBuffer header = ByteBuffer.allocate(8);
       header.putInt(dataPack.getSerial());
       header.putInt(dataPack.getDatas().size());
-      header.flip();
+      ((Buffer) header).flip();
       return header;
     }
 
     private ByteBuffer getLengthHeader(ByteBuffer buf) {
       ByteBuffer header = ByteBuffer.allocate(4);
       header.putInt(buf.limit());
-      header.flip();
+      ((Buffer) header).flip();
       return header;
     }
   }
@@ -186,7 +187,7 @@ public class NettyTransportCodec {
 
       ByteBuffer bb = ByteBuffer.allocate(length);
       buffer.readBytes(bb);
-      bb.flip();
+      ((Buffer) bb).flip();
       dataPack.getDatas().add(bb);
 
       return dataPack.getDatas().size() == listSize;
