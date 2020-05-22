@@ -229,9 +229,9 @@ class AvroIOBinaryDecoder
 
     public function skipLong()
     {
-        $b = $this->nextByte();
-        while (0 != (ord($b) & 0x80)) {
-            $b = $this->nextByte();
+        $b = ord($this->nextByte());
+        while (0 != ($b & 0x80)) {
+            $b = ord($this->nextByte());
         }
     }
 

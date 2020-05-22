@@ -41,7 +41,7 @@ class DatumIOTest extends TestCase
         $writer = new AvroIODatumWriter($schema);
 
         $writer->write($datum, $encoder);
-        $output = strval($written);
+        $output = (string) $written;
         $this->assertEquals($binary, $output,
             sprintf("expected: %s\n  actual: %s",
                 AvroDebug::asciiString($binary, 'hex'),

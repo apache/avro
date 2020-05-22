@@ -130,13 +130,13 @@ class AvroIODatumWriter
     {
         $datum_count = count($datum);
         if ($datum_count > 0) {
-            $encoder->write_long($datum_count);
+            $encoder->writeLong($datum_count);
             foreach ($datum as $k => $v) {
-                $encoder->write_string($k);
+                $encoder->writeString($k);
                 $this->writeData($writers_schema->values(), $v, $encoder);
             }
         }
-        $encoder->write_long(0);
+        $encoder->writeLong(0);
     }
 
     private function writeFixed($writers_schema, $datum, $encoder)
@@ -150,8 +150,8 @@ class AvroIODatumWriter
 
     private function writeEnum($writers_schema, $datum, $encoder)
     {
-        $datum_index = $writers_schema->symbol_index($datum);
-        return $encoder->write_int($datum_index);
+        $datum_index = $writers_schema->symbolIndex($datum);
+        return $encoder->writeInt($datum_index);
     }
 
     private function writeRecord($writers_schema, $datum, $encoder)
@@ -177,7 +177,7 @@ class AvroIODatumWriter
             throw new AvroIOTypeException($writers_schema, $datum);
         }
 
-        $encoder->write_long($datum_schema_index);
+        $encoder->writeLong($datum_schema_index);
         $this->writeData($datum_schema, $datum, $encoder);
     }
 

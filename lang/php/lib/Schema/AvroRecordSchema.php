@@ -66,7 +66,7 @@ class AvroRecordSchema extends AvroNamedSchema
             parent::__construct($schema_type, $name, $doc, $schemata);
         }
 
-        [$x, $namespace] = $name->name_and_namespace();
+        [$x, $namespace] = $name->nameAndNamespace();
         $this->fields = self::parseFields($fields, $namespace, $schemata);
     }
 

@@ -46,7 +46,7 @@ class AvroProtocolMessage
         );
 
         if (array_key_exists('response', $avro)) {
-            $this->response = $protocol->schemata->schema_by_name(new AvroName(
+            $this->response = $protocol->schemata->schemaByName(new AvroName(
                 $avro['response'],
                 $protocol->namespace,
                 $protocol->namespace

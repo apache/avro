@@ -100,21 +100,21 @@ class AvroIODatumReader
 
         switch ($writers_schema->type()) {
             case AvroSchema::NULL_TYPE:
-                return $decoder->read_null();
+                return $decoder->readNull();
             case AvroSchema::BOOLEAN_TYPE:
-                return $decoder->read_boolean();
+                return $decoder->readBoolean();
             case AvroSchema::INT_TYPE:
-                return $decoder->read_int();
+                return $decoder->readInt();
             case AvroSchema::LONG_TYPE:
-                return $decoder->read_long();
+                return $decoder->readLong();
             case AvroSchema::FLOAT_TYPE:
-                return $decoder->read_float();
+                return $decoder->readFloat();
             case AvroSchema::DOUBLE_TYPE:
-                return $decoder->read_double();
+                return $decoder->readDouble();
             case AvroSchema::STRING_TYPE:
-                return $decoder->read_string();
+                return $decoder->readString();
             case AvroSchema::BYTES_TYPE:
-                return $decoder->read_bytes();
+                return $decoder->readBytes();
             case AvroSchema::ARRAY_SCHEMA:
                 return $this->readArray($writers_schema, $readers_schema, $decoder);
             case AvroSchema::MAP_SCHEMA:
@@ -268,7 +268,7 @@ class AvroIODatumReader
     public function readArray($writers_schema, $readers_schema, $decoder)
     {
         $items = array();
-        $block_count = $decoder->read_long();
+        $block_count = $decoder->readLong();
         while (0 !== $block_count) {
             if ($block_count < 0) {
                 $block_count = -$block_count;
@@ -281,7 +281,7 @@ class AvroIODatumReader
                     $decoder
                 );
             }
-            $block_count = $decoder->read_long();
+            $block_count = $decoder->readLong();
         }
         return $items;
     }
@@ -292,23 +292,23 @@ class AvroIODatumReader
     public function readMap($writers_schema, $readers_schema, $decoder)
     {
         $items = array();
-        $pair_count = $decoder->read_long();
+        $pair_count = $decoder->readLong();
         while (0 != $pair_count) {
             if ($pair_count < 0) {
                 $pair_count = -$pair_count;
                 // Note: we're not doing anything with block_size other than skipping it
-                $block_size = $decoder->read_long();
+                $block_size = $decoder->readLong();
             }
 
             for ($i = 0; $i < $pair_count; $i++) {
-                $key = $decoder->read_string();
+                $key = $decoder->readString();
                 $items[$key] = $this->readData(
                     $writers_schema->values(),
                     $readers_schema->values(),
                     $decoder
                 );
             }
-            $pair_count = $decoder->read_long();
+            $pair_count = $decoder->readLong();
         }
         return $items;
     }
@@ -318,8 +318,8 @@ class AvroIODatumReader
      */
     public function readUnion($writers_schema, $readers_schema, $decoder)
     {
-        $schema_index = $decoder->read_long();
-        $selected_writers_schema = $writers_schema->schema_by_index($schema_index);
+        $schema_index = $decoder->readLong();
+        $selected_writers_schema = $writers_schema->schemaByIndex($schema_index);
         return $this->readData($selected_writers_schema, $readers_schema, $decoder);
     }
 
@@ -328,9 +328,9 @@ class AvroIODatumReader
      */
     public function readEnum($writers_schema, $readers_schema, $decoder)
     {
-        $symbol_index = $decoder->read_int();
-        $symbol = $writers_schema->symbol_by_index($symbol_index);
-        if (!$readers_schema->has_symbol($symbol)) {
+        $symbol_index = $decoder->readInt();
+        $symbol = $writers_schema->symbolByIndex($symbol_index);
+        if (!$readers_schema->hasSymbol($symbol)) {
             null;
         } // FIXME: unset wrt schema resolution
         return $symbol;
@@ -349,7 +349,7 @@ class AvroIODatumReader
      */
     public function readRecord($writers_schema, $readers_schema, $decoder)
     {
-        $readers_fields = $readers_schema->fields_hash();
+        $readers_fields = $readers_schema->fieldsHash();
         $record = array();
         foreach ($writers_schema->fields() as $writers_field) {
             $type = $writers_field->type();
@@ -366,14 +366,14 @@ class AvroIODatumReader
         }
         // Fill in default values
         if (count($readers_fields) > count($record)) {
-            $writers_fields = $writers_schema->fields_hash();
+            $writers_fields = $writers_schema->fieldsHash();
             foreach ($readers_fields as $field_name => $field) {
                 if (!isset($writers_fields[$field_name])) {
-                    if ($field->has_default_value()) {
+                    if ($field->hasDefaultValue()) {
                         $record[$field->name()]
                             = $this->readDefaultValue(
                                 $field->type(),
-                                $field->default_value()
+                                $field->defaultValue()
                             );
                     } else {
                         null;
@@ -410,19 +410,19 @@ class AvroIODatumReader
             case AvroSchema::BYTES_TYPE:
                 return $decoder->skipBytes();
             case AvroSchema::ARRAY_SCHEMA:
-                return $decoder->skip_array($writers_schema, $decoder);
+                return $decoder->skipArray($writers_schema, $decoder);
             case AvroSchema::MAP_SCHEMA:
-                return $decoder->skip_map($writers_schema, $decoder);
+                return $decoder->skipMap($writers_schema, $decoder);
             case AvroSchema::UNION_SCHEMA:
-                return $decoder->skip_union($writers_schema, $decoder);
+                return $decoder->skipUnion($writers_schema, $decoder);
             case AvroSchema::ENUM_SCHEMA:
-                return $decoder->skip_enum($writers_schema, $decoder);
+                return $decoder->skipEnum($writers_schema, $decoder);
             case AvroSchema::FIXED_SCHEMA:
-                return $decoder->skip_fixed($writers_schema, $decoder);
+                return $decoder->skipFixed($writers_schema, $decoder);
             case AvroSchema::RECORD_SCHEMA:
             case AvroSchema::ERROR_SCHEMA:
             case AvroSchema::REQUEST_SCHEMA:
-                return $decoder->skip_record($writers_schema, $decoder);
+                return $decoder->skipRecord($writers_schema, $decoder);
             default:
                 throw new AvroException(sprintf(
                     'Unknown schema type: %s',
