@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -51,9 +52,12 @@ class AvroArraySchema extends AvroSchema
 
         $this->is_items_schema_from_schemata = false;
         $items_schema = null;
-        if (is_string($items)
+        if (
+            is_string($items)
             && $items_schema = $schemata->schema_by_name(
-                new AvroName($items, null, $default_namespace))) {
+                new AvroName($items, null, $default_namespace)
+            )
+        ) {
             $this->is_items_schema_from_schemata = true;
         } else {
             $items_schema = AvroSchema::subparse($items, $default_namespace, $schemata);

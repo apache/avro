@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -62,8 +63,10 @@ class AvroGMP
     public static function encode_long($n)
     {
         $g = gmp_init($n);
-        $g = gmp_xor(self::shift_left($g, 1),
-            self::shift_right($g, 63));
+        $g = gmp_xor(
+            self::shift_left($g, 1),
+            self::shift_right($g, 63)
+        );
         $bytes = '';
         while (0 != gmp_cmp(self::gmp_0(), gmp_and($g, self::gmp_n0x7f()))) {
             $bytes .= chr(gmp_intval(gmp_and($g, self::gmp_0x7f())) | 0x80);
@@ -92,8 +95,10 @@ class AvroGMP
         $m = gmp_mul($g, gmp_pow(self::gmp_2(), $shift));
         $m = gmp_and($m, self::gmp_0xfs());
         if (gmp_testbit($m, 63)) {
-            $m = gmp_neg(gmp_add(gmp_and(gmp_com($m), self::gmp_0xfs()),
-                self::gmp_1()));
+            $m = gmp_neg(gmp_add(
+                gmp_and(gmp_com($m), self::gmp_0xfs()),
+                self::gmp_1()
+            ));
         }
         return $m;
     }
@@ -163,8 +168,10 @@ class AvroGMP
                 gmp_setbit($m, $i);
             }
 
-            $m = gmp_neg(gmp_add(gmp_and(gmp_com($m), self::gmp_0xfs()),
-                self::gmp_1()));
+            $m = gmp_neg(gmp_add(
+                gmp_and(gmp_com($m), self::gmp_0xfs()),
+                self::gmp_1()
+            ));
         }
 
         return $m;

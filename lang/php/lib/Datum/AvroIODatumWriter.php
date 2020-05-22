@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -40,7 +41,7 @@ class AvroIODatumWriter
     /**
      * @param AvroSchema $writers_schema
      */
-    function __construct($writers_schema = null)
+    public function __construct($writers_schema = null)
     {
         $this->writers_schema = $writers_schema;
     }
@@ -49,7 +50,7 @@ class AvroIODatumWriter
      * @param $datum
      * @param AvroIOBinaryEncoder $encoder
      */
-    function write($datum, $encoder)
+    public function write($datum, $encoder)
     {
         $this->write_data($this->writers_schema, $datum, $encoder);
     }
@@ -62,7 +63,7 @@ class AvroIODatumWriter
      *
      * @throws AvroIOTypeException if $datum is invalid for $writers_schema
      */
-    function write_data($writers_schema, $datum, $encoder)
+    public function write_data($writers_schema, $datum, $encoder)
     {
         if (!AvroSchema::is_valid_datum($writers_schema, $datum)) {
             throw new AvroIOTypeException($writers_schema, $datum);
@@ -100,8 +101,10 @@ class AvroIODatumWriter
             case AvroSchema::UNION_SCHEMA:
                 return $this->write_union($writers_schema, $datum, $encoder);
             default:
-                throw new AvroException(sprintf('Unknown type: %s',
-                    $writers_schema->type));
+                throw new AvroException(sprintf(
+                    'Unknown type: %s',
+                    $writers_schema->type
+                ));
         }
     }
 

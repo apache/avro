@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -56,7 +57,8 @@ class AvroStringIO extends AvroIO
             $this->string_buffer .= $str;
         } else {
             throw new AvroIOException(
-                sprintf('constructor argument must be a string: %s', gettype($str)));
+                sprintf('constructor argument must be a string: %s', gettype($str))
+            );
         }
     }
 

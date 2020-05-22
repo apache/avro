@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -50,20 +51,26 @@ class AvroUnionSchema extends AvroSchema
         foreach ($schemas as $index => $schema) {
             $is_schema_from_schemata = false;
             $new_schema = null;
-            if (is_string($schema)
+            if (
+                is_string($schema)
                 && ($new_schema = $schemata->schema_by_name(
-                    new AvroName($schema, null, $default_namespace)))) {
+                    new AvroName($schema, null, $default_namespace)
+                ))
+            ) {
                 $is_schema_from_schemata = true;
             } else {
                 $new_schema = self::subparse($schema, $default_namespace, $schemata);
             }
 
             $schema_type = $new_schema->type;
-            if (self::is_valid_type($schema_type)
+            if (
+                self::is_valid_type($schema_type)
                 && !self::is_named_type($schema_type)
-                && in_array($schema_type, $schema_types)) {
+                && in_array($schema_type, $schema_types)
+            ) {
                 throw new AvroSchemaParseException(
-                    sprintf('"%s" is already in union', $schema_type));
+                    sprintf('"%s" is already in union', $schema_type)
+                );
             } elseif (AvroSchema::UNION_SCHEMA == $schema_type) {
                 throw new AvroSchemaParseException('Unions cannot contain other unions');
             } else {
@@ -74,7 +81,6 @@ class AvroUnionSchema extends AvroSchema
                 }
             }
         }
-
     }
 
     /**

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -127,7 +128,8 @@ class AvroField extends AvroSchema
     {
         if (!is_null($order) && !self::is_valid_field_sort_order($order)) {
             throw new AvroSchemaParseException(
-                sprintf('Invalid field sort order %s', $order));
+                sprintf('Invalid field sort order %s', $order)
+            );
         }
     }
 

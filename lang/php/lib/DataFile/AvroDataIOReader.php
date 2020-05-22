@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -95,7 +96,8 @@ class AvroDataIOReader
         // FIXME: Seems unsanitary to set writers_schema here.
         // Can't constructor take it as an argument?
         $this->datum_reader->set_writers_schema(
-            AvroSchema::parse($this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR]));
+            AvroSchema::parse($this->metadata[AvroDataIO::METADATA_SCHEMA_ATTR])
+        );
     }
 
     /**
@@ -110,18 +112,25 @@ class AvroDataIOReader
 
         if (strlen($magic) < AvroDataIO::magic_size()) {
             throw new AvroDataIOException(
-                'Not an Avro data file: shorter than the Avro magic block');
+                'Not an Avro data file: shorter than the Avro magic block'
+            );
         }
 
         if (AvroDataIO::magic() != $magic) {
             throw new AvroDataIOException(
-                sprintf('Not an Avro data file: %s does not match %s',
-                    $magic, AvroDataIO::magic()));
+                sprintf(
+                    'Not an Avro data file: %s does not match %s',
+                    $magic,
+                    AvroDataIO::magic()
+                )
+            );
         }
 
-        $this->metadata = $this->datum_reader->read_data(AvroDataIO::metadata_schema(),
+        $this->metadata = $this->datum_reader->read_data(
             AvroDataIO::metadata_schema(),
-            $this->decoder);
+            AvroDataIO::metadata_schema(),
+            $this->decoder
+        );
         $this->sync_marker = $this->read(AvroDataIO::SYNC_SIZE);
     }
 

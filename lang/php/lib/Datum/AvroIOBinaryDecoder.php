@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -61,7 +62,7 @@ class AvroIOBinaryDecoder
      */
     public function read_boolean()
     {
-        return (boolean) (1 == ord($this->next_byte()));
+        return (bool) (1 == ord($this->next_byte()));
     }
 
     /**
@@ -263,4 +264,3 @@ class AvroIOBinaryDecoder
         return $this->io->tell();
     }
 }
-

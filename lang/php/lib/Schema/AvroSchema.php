@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -305,51 +306,74 @@ class AvroSchema
                 switch ($type) {
                     case self::FIXED_SCHEMA:
                         $size = AvroUtil::array_value($avro, self::SIZE_ATTR);
-                        return new AvroFixedSchema($new_name, $doc,
+                        return new AvroFixedSchema(
+                            $new_name,
+                            $doc,
                             $size,
-                            $schemata);
+                            $schemata
+                        );
                     case self::ENUM_SCHEMA:
                         $symbols = AvroUtil::array_value($avro, self::SYMBOLS_ATTR);
-                        return new AvroEnumSchema($new_name, $doc,
+                        return new AvroEnumSchema(
+                            $new_name,
+                            $doc,
                             $symbols,
-                            $schemata);
+                            $schemata
+                        );
                     case self::RECORD_SCHEMA:
                     case self::ERROR_SCHEMA:
                         $fields = AvroUtil::array_value($avro, self::FIELDS_ATTR);
-                        return new AvroRecordSchema($new_name, $doc,
+                        return new AvroRecordSchema(
+                            $new_name,
+                            $doc,
                             $fields,
-                            $schemata, $type);
+                            $schemata,
+                            $type
+                        );
                     default:
                         throw new AvroSchemaParseException(
-                            sprintf('Unknown named type: %s', $type));
+                            sprintf('Unknown named type: %s', $type)
+                        );
                 }
             } elseif (self::is_valid_type($type)) {
                 switch ($type) {
                     case self::ARRAY_SCHEMA:
-                        return new AvroArraySchema($avro[self::ITEMS_ATTR],
+                        return new AvroArraySchema(
+                            $avro[self::ITEMS_ATTR],
                             $default_namespace,
-                            $schemata);
+                            $schemata
+                        );
                     case self::MAP_SCHEMA:
-                        return new AvroMapSchema($avro[self::VALUES_ATTR],
+                        return new AvroMapSchema(
+                            $avro[self::VALUES_ATTR],
                             $default_namespace,
-                            $schemata);
+                            $schemata
+                        );
                     default:
                         throw new AvroSchemaParseException(
-                            sprintf('Unknown valid type: %s', $type));
+                            sprintf('Unknown valid type: %s', $type)
+                        );
                 }
-            } elseif (!array_key_exists(self::TYPE_ATTR, $avro)
-                && AvroUtil::is_list($avro)) {
+            } elseif (
+                !array_key_exists(self::TYPE_ATTR, $avro)
+                && AvroUtil::is_list($avro)
+            ) {
                 return new AvroUnionSchema($avro, $default_namespace, $schemata);
             } else {
-                throw new AvroSchemaParseException(sprintf('Undefined type: %s',
-                    $type));
+                throw new AvroSchemaParseException(sprintf(
+                    'Undefined type: %s',
+                    $type
+                ));
             }
         } elseif (self::is_primitive_type($avro)) {
             return new AvroPrimitiveSchema($avro);
         } else {
             throw new AvroSchemaParseException(
-                sprintf('%s is not a schema we know about.',
-                    print_r($avro, true)));
+                sprintf(
+                    '%s is not a schema we know about.',
+                    print_r($avro, true)
+                )
+            );
         }
     }
 
@@ -430,8 +454,10 @@ class AvroSchema
             case self::MAP_SCHEMA:
                 if (is_array($datum)) {
                     foreach ($datum as $k => $v) {
-                        if (!is_string($k)
-                            || !self::is_valid_datum($expected_schema->values(), $v)) {
+                        if (
+                            !is_string($k)
+                            || !self::is_valid_datum($expected_schema->values(), $v)
+                        ) {
                             return false;
                         }
                     }
@@ -455,8 +481,12 @@ class AvroSchema
             case self::REQUEST_SCHEMA:
                 if (is_array($datum)) {
                     foreach ($expected_schema->fields() as $field) {
-                        if (!array_key_exists($field->name(), $datum) || !self::is_valid_datum($field->type(),
-                                $datum[$field->name()])) {
+                        if (
+                            !array_key_exists($field->name(), $datum) || !self::is_valid_datum(
+                                $field->type(),
+                                $datum[$field->name()]
+                            )
+                        ) {
                             return false;
                         }
                     }

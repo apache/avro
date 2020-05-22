@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -146,8 +147,13 @@ class AvroDataIO
                 break;
             default:
                 throw new AvroDataIOException(
-                    sprintf("Only modes '%s' and '%s' allowed. You gave '%s'.",
-                        AvroFile::READ_MODE, AvroFile::WRITE_MODE, $mode));
+                    sprintf(
+                        "Only modes '%s' and '%s' allowed. You gave '%s'.",
+                        AvroFile::READ_MODE,
+                        AvroFile::WRITE_MODE,
+                        $mode
+                    )
+                );
         }
         return $io;
     }

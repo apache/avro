@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -61,8 +62,10 @@ class AvroName
             throw new AvroSchemaParseException('Name must be a non-empty string.');
         }
 
-        if (strpos($name, self::NAME_SEPARATOR)
-            && self::check_namespace_names($name)) {
+        if (
+            strpos($name, self::NAME_SEPARATOR)
+            && self::check_namespace_names($name)
+        ) {
             $this->fullname = $name;
         } elseif (0 == preg_match(self::NAME_REGEXP, $name)) {
             throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $name));

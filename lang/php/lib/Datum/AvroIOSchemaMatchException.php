@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -34,10 +35,14 @@ class AvroIOSchemaMatchException extends AvroException
      * @param AvroSchema $writers_schema
      * @param AvroSchema $readers_schema
      */
-    function __construct($writers_schema, $readers_schema)
+    public function __construct($writers_schema, $readers_schema)
     {
         parent::__construct(
-            sprintf("Writer's schema %s and Reader's schema %s do not match.",
-                $writers_schema, $readers_schema));
+            sprintf(
+                "Writer's schema %s and Reader's schema %s do not match.",
+                $writers_schema,
+                $readers_schema
+            )
+        );
     }
 }

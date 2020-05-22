@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -35,7 +36,10 @@ class AvroIOTypeException extends AvroException
      */
     public function __construct($expected_schema, $datum)
     {
-        parent::__construct(sprintf('The datum %s is not an example of schema %s',
-            var_export($datum, true), $expected_schema));
+        parent::__construct(sprintf(
+            'The datum %s is not an example of schema %s',
+            var_export($datum, true),
+            $expected_schema
+        ));
     }
 }

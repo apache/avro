@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -89,7 +90,8 @@ class AvroDataIOWriter
         if ($writers_schema) {
             if (!AvroDataIO::is_valid_codec($codec)) {
                 throw new AvroDataIOException(
-                    sprintf('codec %s is not supported', $codec));
+                    sprintf('codec %s is not supported', $codec)
+                );
             }
 
             $this->sync_marker = self::generate_sync_marker();
@@ -114,12 +116,17 @@ class AvroDataIOWriter
     private static function generate_sync_marker()
     {
         // From https://php.net/manual/en/function.mt-rand.php comments
-        return pack('S8',
-            random_int(0, 0xffff), random_int(0, 0xffff),
+        return pack(
+            'S8',
+            random_int(0, 0xffff),
+            random_int(0, 0xffff),
             random_int(0, 0xffff),
             random_int(0, 0xffff) | 0x4000,
             random_int(0, 0xffff) | 0x8000,
-            random_int(0, 0xffff), random_int(0, 0xffff), random_int(0, 0xffff));
+            random_int(0, 0xffff),
+            random_int(0, 0xffff),
+            random_int(0, 0xffff)
+        );
     }
 
     /**
@@ -128,8 +135,11 @@ class AvroDataIOWriter
     private function write_header()
     {
         $this->write(AvroDataIO::magic());
-        $this->datum_writer->write_data(AvroDataIO::metadata_schema(),
-            $this->metadata, $this->encoder);
+        $this->datum_writer->write_data(
+            AvroDataIO::metadata_schema(),
+            $this->metadata,
+            $this->encoder
+        );
         $this->write($this->sync_marker);
     }
 

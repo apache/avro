@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -69,8 +70,13 @@ class AvroFile extends AvroIO
                 break;
             default:
                 throw new AvroIOException(
-                    sprintf("Only modes '%s' and '%s' allowed. You provided '%s'.",
-                        self::READ_MODE, self::WRITE_MODE, $mode));
+                    sprintf(
+                        "Only modes '%s' and '%s' allowed. You provided '%s'.",
+                        self::READ_MODE,
+                        self::WRITE_MODE,
+                        $mode
+                    )
+                );
         }
     }
 
@@ -138,7 +144,8 @@ class AvroFile extends AvroIO
     {
         if (0 > $len) {
             throw new AvroIOException(
-                sprintf("Invalid length value passed to read: %d", $len));
+                sprintf("Invalid length value passed to read: %d", $len)
+            );
         }
 
         if (0 == $len) {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -47,7 +48,8 @@ class AvroEnumSchema extends AvroNamedSchema
 
         if (count(array_unique($symbols)) > count($symbols)) {
             throw new AvroSchemaParseException(
-                sprintf('Duplicate symbols: %s', $symbols));
+                sprintf('Duplicate symbols: %s', $symbols)
+            );
         }
 
         foreach ($symbols as $symbol) {

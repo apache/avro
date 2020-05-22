@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -55,7 +56,8 @@ class AvroRecordSchema extends AvroNamedSchema
     ) {
         if (is_null($fields)) {
             throw new AvroSchemaParseException(
-                'Record schema requires a non-empty fields attribute');
+                'Record schema requires a non-empty fields attribute'
+            );
         }
 
         if (AvroSchema::REQUEST_SCHEMA == $schema_type) {
@@ -93,21 +95,31 @@ class AvroRecordSchema extends AvroNamedSchema
 
             if (in_array($name, $field_names)) {
                 throw new AvroSchemaParseException(
-                    sprintf("Field name %s is already in use", $name));
+                    sprintf("Field name %s is already in use", $name)
+                );
             }
 
             $is_schema_from_schemata = false;
             $field_schema = null;
-            if (is_string($type)
+            if (
+                is_string($type)
                 && $field_schema = $schemata->schema_by_name(
-                    new AvroName($type, null, $default_namespace))) {
+                    new AvroName($type, null, $default_namespace)
+                )
+            ) {
                 $is_schema_from_schemata = true;
             } else {
                 $field_schema = self::subparse($type, $default_namespace, $schemata);
             }
 
-            $new_field = new AvroField($name, $field_schema, $is_schema_from_schemata,
-                $has_default, $default, $order);
+            $new_field = new AvroField(
+                $name,
+                $field_schema,
+                $is_schema_from_schemata,
+                $has_default,
+                $default,
+                $order
+            );
             $field_names [] = $name;
             $fields [] = $new_field;
         }

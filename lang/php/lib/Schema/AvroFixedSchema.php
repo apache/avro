@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -40,7 +41,8 @@ class AvroFixedSchema extends AvroNamedSchema
     {
         if (!is_int($size)) {
             throw new AvroSchemaParseException(
-                'Fixed Schema requires a valid integer for "size" attribute');
+                'Fixed Schema requires a valid integer for "size" attribute'
+            );
         }
         parent::__construct(AvroSchema::FIXED_SCHEMA, $name, null, $schemata);
         $this->size = $size;

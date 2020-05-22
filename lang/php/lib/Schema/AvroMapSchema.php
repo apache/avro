@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -50,13 +51,19 @@ class AvroMapSchema extends AvroSchema
 
         $this->is_values_schema_from_schemata = false;
         $values_schema = null;
-        if (is_string($values)
+        if (
+            is_string($values)
             && $values_schema = $schemata->schema_by_name(
-                new AvroName($values, null, $default_namespace))) {
+                new AvroName($values, null, $default_namespace)
+            )
+        ) {
             $this->is_values_schema_from_schemata = true;
         } else {
-            $values_schema = AvroSchema::subparse($values, $default_namespace,
-                $schemata);
+            $values_schema = AvroSchema::subparse(
+                $values,
+                $default_namespace,
+                $schemata
+            );
         }
 
         $this->values = $values_schema;
