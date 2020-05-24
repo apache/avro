@@ -94,7 +94,7 @@ class AvroDebug
     {
         $x = array();
         foreach (str_split($str) as $b) {
-            $x [] = sprintf($format, ord($b));
+            $x[] = sprintf($format, ord($b));
         }
         return $x;
     }

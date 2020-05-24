@@ -62,12 +62,9 @@ class AvroName
             throw new AvroSchemaParseException('Name must be a non-empty string.');
         }
 
-        if (
-            strpos($name, self::NAME_SEPARATOR)
-            && self::checkNamespaceNames($name)
-        ) {
+        if (strpos($name, self::NAME_SEPARATOR) && self::checkNamespaceNames($name)) {
             $this->fullname = $name;
-        } elseif (0 == preg_match(self::NAME_REGEXP, $name)) {
+        } elseif (0 === preg_match(self::NAME_REGEXP, $name)) {
             throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $name));
         } elseif (!is_null($namespace)) {
             $this->fullname = self::parseFullname($name, $namespace);
@@ -78,9 +75,9 @@ class AvroName
         }
 
         [$this->name, $this->namespace] = self::extractNamespace($this->fullname);
-        $this->qualified_name = (is_null($this->namespace)
-            || $this->namespace == $default_namespace)
-            ? $this->name : $this->fullname;
+        $this->qualified_name = (is_null($this->namespace) || $this->namespace === $default_namespace)
+            ? $this->name
+            : $this->fullname;
     }
 
     /**
@@ -92,7 +89,7 @@ class AvroName
     private static function checkNamespaceNames($namespace)
     {
         foreach (explode(self::NAME_SEPARATOR, $namespace) as $n) {
-            if (empty($n) || (0 == preg_match(self::NAME_REGEXP, $n))) {
+            if (empty($n) || (0 === preg_match(self::NAME_REGEXP, $n))) {
                 throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $n));
             }
         }
@@ -124,7 +121,7 @@ class AvroName
             $name = array_pop($parts);
             $namespace = implode(self::NAME_SEPARATOR, $parts);
         }
-        return array($name, $namespace);
+        return [$name, $namespace];
     }
 
     /**
@@ -133,8 +130,7 @@ class AvroName
      */
     public static function isWellFormedName($name)
     {
-        return (is_string($name) && !empty($name)
-            && preg_match(self::NAME_REGEXP, $name));
+        return (is_string($name) && !empty($name) && preg_match(self::NAME_REGEXP, $name));
     }
 
     /**
@@ -142,7 +138,7 @@ class AvroName
      */
     public function nameAndNamespace()
     {
-        return array($this->name, $this->namespace);
+        return [$this->name, $this->namespace];
     }
 
     /**

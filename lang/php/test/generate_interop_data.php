@@ -18,9 +18,9 @@
  * limitations under the License.
  */
 
-use Apache\Avro\DataFile\AvroDataIO;
+require_once __DIR__ . '/test_helper.php';
 
-require_once('test_helper.php');
+use Apache\Avro\DataFile\AvroDataIO;
 
 $datum = [
     'nullField' => null,

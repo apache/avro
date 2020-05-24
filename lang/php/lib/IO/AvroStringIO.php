@@ -150,7 +150,7 @@ class AvroStringIO extends AvroIO
      * @returns boolean true if successful
      * @throws AvroIOException if the seek failed.
      */
-    public function seek($offset, $whence = self::SEEK_SET)
+    public function seek($offset, $whence = self::SEEK_SET): bool
     {
         if (!is_int($offset)) {
             throw new AvroIOException('Seek offset must be an integer.');

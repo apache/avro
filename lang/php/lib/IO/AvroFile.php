@@ -166,7 +166,7 @@ class AvroFile extends AvroIO
      * @throws AvroIOException if seek failed.
      * @see AvroIO::seek()
      */
-    public function seek($offset, $whence = SEEK_SET)
+    public function seek($offset, $whence = SEEK_SET): bool
     {
         $res = fseek($this->file_handle, $offset, $whence);
         // Note: does not catch seeking beyond end of file

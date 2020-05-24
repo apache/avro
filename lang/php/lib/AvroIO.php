@@ -92,7 +92,7 @@ class AvroIO
      *
      * @throws IO\AvroIOException
      */
-    public function seek($offset, $whence = self::SEEK_SET)
+    public function seek($offset, $whence = self::SEEK_SET): bool
     {
         throw new AvroNotImplementedException('Not implemented');
     }

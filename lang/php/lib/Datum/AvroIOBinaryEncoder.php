@@ -133,7 +133,7 @@ class AvroIOBinaryEncoder
      */
     public static function floatToIntBits($float)
     {
-        return pack('f', (float) $float);
+        return pack('g', (float) $float);
     }
 
     /**
@@ -156,7 +156,7 @@ class AvroIOBinaryEncoder
      */
     public static function doubleToLongBits($double)
     {
-        return pack('d', (double) $double);
+        return pack('e', (double) $double);
     }
 
     /**

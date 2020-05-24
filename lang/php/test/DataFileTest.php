@@ -30,16 +30,21 @@ class DataFileTest extends TestCase
     public function test_write_read_nothing_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-wr-nothing-null-%s.avr', $codec));
             $writers_schema = '"null"';
             $dw = AvroDataIO::openFile($data_file, 'w', $writers_schema, $codec);
             $dw->close();
 
             $dr = AvroDataIO::openFile($data_file);
-            $read_data = $dr->data();
-            $datum = array_shift($read_data);
+            $data = $dr->data();
             $dr->close();
-            $this->assertEquals(null, $datum);
+            $this->assertEmpty($data);
         }
     }
 
@@ -62,6 +67,12 @@ class DataFileTest extends TestCase
     public function test_write_read_null_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-wr-null-%s.avr', $codec));
             $writers_schema = '"null"';
             $data = null;
@@ -71,7 +82,7 @@ class DataFileTest extends TestCase
 
             $dr = AvroDataIO::openFile($data_file);
             $read_data = $dr->data();
-            $datum = array_shift($read_data);
+            $datum = reset($read_data);
             $dr->close();
             $this->assertEquals($data, $datum);
         }
@@ -80,6 +91,12 @@ class DataFileTest extends TestCase
     public function test_write_read_string_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-wr-str-%s.avr', $codec));
             $writers_schema = '"string"';
             $data = 'foo';
@@ -98,6 +115,12 @@ class DataFileTest extends TestCase
     public function test_write_read_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-wr-int-%s.avr', $codec));
             $writers_schema = '"int"';
             $data = 1;
@@ -117,6 +140,12 @@ class DataFileTest extends TestCase
     public function test_write_read_true_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-wr-true-%s.avr', $codec));
             $writers_schema = '"boolean"';
             $datum = true;
@@ -135,6 +164,12 @@ class DataFileTest extends TestCase
     public function test_write_read_false_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-wr-false-%s.avr', $codec));
             $writers_schema = '"boolean"';
             $datum = false;
@@ -153,9 +188,15 @@ class DataFileTest extends TestCase
     public function test_write_read_int_array_round_trip()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-wr-int-ary-%s.avr', $codec));
             $writers_schema = '"int"';
-            $data = array(10, 20, 30, 40, 50, 60, 70);
+            $data = array(10, 20, 30, 40, 50, 60, 70, 567, 89012345);
             $dw = AvroDataIO::openFile($data_file, 'w', $writers_schema, $codec);
             foreach ($data as $datum) {
                 $dw->append($datum);
@@ -174,6 +215,12 @@ class DataFileTest extends TestCase
     public function test_differing_schemas_with_primitives()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-prim-%s.avr', $codec));
 
             $writer_schema = <<<JSON
@@ -211,6 +258,12 @@ JSON;
     public function test_differing_schemas_with_complex_objects()
     {
         foreach (AvroDataIO::validCodecs() as $codec) {
+            if (
+                ($codec === AvroDataIO::SNAPPY_CODEC && !extension_loaded('snappy'))
+                || ($codec === AvroDataIO::ZSTANDARD_CODEC && !extension_loaded('zstd'))
+            ) {
+                continue;
+            }
             $data_file = $this->add_data_file(sprintf('data-complex-%s.avr', $codec));
 
             $writers_schema = <<<JSON
@@ -291,8 +344,7 @@ JSON;
 
     protected function remove_data_files()
     {
-        if (self::REMOVE_DATA_FILES
-            && !empty($this->data_files)) {
+        if (self::REMOVE_DATA_FILES && $this->data_files) {
             foreach ($this->data_files as $data_file) {
                 self::remove_data_file($data_file);
             }

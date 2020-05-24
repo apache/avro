@@ -67,30 +67,30 @@ class FloatIntEncodingTest extends TestCase
 
   function test_special_values()
   {
-    $this->assertTrue(is_float(self::$FLOAT_NAN), 'float NaN is a float');
+    $this->assertIsFloat(self::$FLOAT_NAN, 'float NaN is a float');
     $this->assertTrue(is_nan(self::$FLOAT_NAN), 'float NaN is NaN');
     $this->assertFalse(is_infinite(self::$FLOAT_NAN), 'float NaN is not infinite');
 
-    $this->assertTrue(is_float(self::$FLOAT_POS_INF), 'float pos infinity is a float');
+    $this->assertIsFloat(self::$FLOAT_POS_INF, 'float pos infinity is a float');
     $this->assertTrue(is_infinite(self::$FLOAT_POS_INF), 'float pos infinity is infinite');
     $this->assertTrue(0 < self::$FLOAT_POS_INF, 'float pos infinity is greater than 0');
     $this->assertFalse(is_nan(self::$FLOAT_POS_INF), 'float pos infinity is not NaN');
 
-    $this->assertTrue(is_float(self::$FLOAT_NEG_INF), 'float neg infinity is a float');
+    $this->assertIsFloat(self::$FLOAT_NEG_INF, 'float neg infinity is a float');
     $this->assertTrue(is_infinite(self::$FLOAT_NEG_INF), 'float neg infinity is infinite');
     $this->assertTrue(0 > self::$FLOAT_NEG_INF, 'float neg infinity is less than 0');
     $this->assertFalse(is_nan(self::$FLOAT_NEG_INF), 'float neg infinity is not NaN');
 
-    $this->assertTrue(is_double(self::$DOUBLE_NAN), 'double NaN is a double');
+    $this->assertIsFloat(self::$DOUBLE_NAN, 'double NaN is a double');
     $this->assertTrue(is_nan(self::$DOUBLE_NAN), 'double NaN is NaN');
     $this->assertFalse(is_infinite(self::$DOUBLE_NAN), 'double NaN is not infinite');
 
-    $this->assertTrue(is_double(self::$DOUBLE_POS_INF), 'double pos infinity is a double');
+    $this->assertIsFloat(self::$DOUBLE_POS_INF, 'double pos infinity is a double');
     $this->assertTrue(is_infinite(self::$DOUBLE_POS_INF), 'double pos infinity is infinite');
     $this->assertTrue(0 < self::$DOUBLE_POS_INF, 'double pos infinity is greater than 0');
     $this->assertFalse(is_nan(self::$DOUBLE_POS_INF), 'double pos infinity is not NaN');
 
-    $this->assertTrue(is_double(self::$DOUBLE_NEG_INF), 'double neg infinity is a double');
+    $this->assertIsFloat(self::$DOUBLE_NEG_INF, 'double neg infinity is a double');
     $this->assertTrue(is_infinite(self::$DOUBLE_NEG_INF), 'double neg infinity is infinite');
     $this->assertTrue(0 > self::$DOUBLE_NEG_INF, 'double neg infinity is less than 0');
     $this->assertFalse(is_nan(self::$DOUBLE_NEG_INF), 'double neg infinity is not NaN');

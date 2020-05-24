@@ -86,7 +86,7 @@ class AvroDataIOReader
         $this->datum_reader = $datum_reader;
         $this->readHeader();
 
-        $codec = AvroUtil::arrayValue($this->metadata, AvroDataIO::METADATA_CODEC_ATTR);
+        $codec = $this->metadata[AvroDataIO::METADATA_CODEC_ATTR] ?? null;
         if ($codec && !AvroDataIO::isValidCodec($codec)) {
             throw new AvroDataIOException(sprintf('Unknown codec: %s', $codec));
         }
@@ -156,7 +156,8 @@ class AvroDataIOReader
      */
     public function data()
     {
-        $data = array();
+        $data = [];
+        $decoder = $this->decoder;
         while (true) {
             if (0 == $this->block_count) {
                 if ($this->isEof()) {
@@ -170,7 +171,6 @@ class AvroDataIOReader
                 }
 
                 $length = $this->readBlockHeader();
-                $decoder = $this->decoder;
                 if ($this->codec == AvroDataIO::DEFLATE_CODEC) {
                     $compressed = $decoder->read($length);
                     $datum = gzinflate($compressed);

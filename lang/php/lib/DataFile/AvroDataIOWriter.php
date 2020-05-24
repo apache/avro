@@ -50,7 +50,7 @@ class AvroDataIOWriter
      * @var AvroStringIO buffer for writing
      */
     private $buffer;
-/**
+    /**
      * @var AvroIOBinaryEncoder encoder for buffer
      */
     private $buffer_encoder;

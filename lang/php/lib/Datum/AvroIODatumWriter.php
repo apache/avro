@@ -108,7 +108,7 @@ class AvroIODatumWriter
         }
     }
 
-    /**#@+
+    /**
      * @param AvroSchema $writers_schema
      * @param null|boolean|int|float|string|array $datum item to be written
      * @param AvroIOBinaryEncoder $encoder
@@ -126,6 +126,12 @@ class AvroIODatumWriter
         return $encoder->writeLong(0);
     }
 
+    /**
+     * @param $writers_schema
+     * @param $datum
+     * @param $encoder
+     * @throws AvroIOTypeException
+     */
     private function writeMap($writers_schema, $datum, $encoder)
     {
         $datum_count = count($datum);
@@ -180,6 +186,4 @@ class AvroIODatumWriter
         $encoder->writeLong($datum_schema_index);
         $this->writeData($datum_schema, $datum, $encoder);
     }
-
-    /**#@-*/
 }

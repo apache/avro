@@ -92,7 +92,7 @@ class AvroIOBinaryDecoder
     }
 
     /**
-     * @returns long
+     * @returns string|int
      */
     public function readLong()
     {
@@ -147,7 +147,7 @@ class AvroIOBinaryDecoder
      */
     public static function intBitsToFloat($bits)
     {
-        $float = unpack('f', $bits);
+        $float = unpack('g', $bits);
         return (float) $float[1];
     }
 
@@ -170,7 +170,7 @@ class AvroIOBinaryDecoder
      */
     public static function longBitsToDouble($bits)
     {
-        $double = unpack('d', $bits);
+        $double = unpack('e', $bits);
         return (double) $double[1];
     }
 
