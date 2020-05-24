@@ -192,6 +192,8 @@ class SchemaTest extends TestCase
             '{"type":"fixed","name":"_x","namespace":"baz","size":4}');
         $fixed_examples [] = new SchemaExample(
             '{"type":"fixed","name":"baz.3x","size":4}', false);
+        $fixed_examples[] = new SchemaExample(
+            '{"type":"fixed", "name":"Fixed2", "aliases":["Fixed1"], "size": 2}', true);
 
         $enum_examples = array(
             new SchemaExample('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', true),
@@ -426,6 +428,8 @@ class SchemaTest extends TestCase
     {"type":"record", "name":"foo", "doc":"doc string",
      "fields":[{"name":"bar", "type":"int", "order":"bad"}]}
 ', false);
+        $record_examples[] = new SchemaExample(
+            '{"type":"record", "name":"Record2", "aliases":["Record1"]}', false);
 
         self::$examples = array_merge($primitive_examples,
             $fixed_examples,
@@ -474,12 +478,127 @@ class SchemaTest extends TestCase
             $this->assertTrue($example->is_valid,
                 sprintf("schema_string: %s\n",
                     $schema_string));
-            $this->assertEquals($normalized_schema_string, strval($schema));
+            $this->assertEquals($normalized_schema_string, (string) $schema);
         } catch (AvroSchemaParseException $e) {
             $this->assertFalse($example->is_valid,
                 sprintf("schema_string: %s\n%s",
                     $schema_string,
                     $e->getMessage()));
         }
+    }
+
+    public function testToAvroIncludesAliases()
+    {
+        $hash = <<<SCHEMA
+{
+    "type": "record",
+    "name": "test_record",
+    "aliases": ["alt_record"],
+    "fields": [
+        { "name": "f", "type": { "type": "fixed", "size": 2, "name": "test_fixed", "aliases": ["alt_fixed"] } },
+        { "name": "e", "type": { "type": "enum", "symbols": ["A", "B"], "name": "test_enum", "aliases": ["alt_enum"] } }
+    ]
+}
+SCHEMA;
+        $schema = AvroSchema::parse($hash);
+        $this->assertEquals($schema->toAvro(), json_decode($hash, true));
+    }
+
+    public function testValidateFieldAliases()
+    {
+        $this->expectException(AvroSchemaParseException::class);
+        $this->expectExceptionMessage('Invalid aliases value. Must be an array of strings.');
+        AvroSchema::parse(<<<SCHEMA
+{
+    "type": "record",
+    "name": "fruits",
+    "fields": [
+        {
+            "name": "banana",
+            "type": "string",
+            "aliases": "banane"
+        }
+    ]
+}
+SCHEMA);
+    }
+
+    public function testValidateRecordAliases()
+    {
+        $this->expectException(AvroSchemaParseException::class);
+        $this->expectExceptionMessage('Invalid aliases value. Must be an array of strings.');
+        AvroSchema::parse(<<<SCHEMA
+{
+    "type": "record",
+    "name": "fruits",
+    "aliases": ["foods", 2],
+    "fields": []
+}
+SCHEMA);
+    }
+
+    public function testValidateFixedAliases()
+    {
+        $this->expectException(AvroSchemaParseException::class);
+        $this->expectExceptionMessage('Invalid aliases value. Must be an array of strings.');
+        AvroSchema::parse(<<<SCHEMA
+{
+    "type": "fixed",
+    "name": "uuid",
+    "size": 36,
+    "aliases": "unique_id"
+}
+SCHEMA);
+    }
+
+    public function testValidateEnumAliases()
+    {
+        $this->expectException(AvroSchemaParseException::class);
+        $this->expectExceptionMessage('Invalid aliases value. Must be an array of strings.');
+        AvroSchema::parse(<<<SCHEMA
+{
+    "type": "enum",
+    "name": "vowels",
+    "aliases": [1, 2],
+    "symbols": ["A", "E", "I", "O", "U"]
+}
+SCHEMA);
+    }
+
+    public function testValidateSameAliasMultipleFields()
+    {
+        $this->expectException(AvroSchemaParseException::class);
+        $this->expectExceptionMessage('Alias already in use');
+        AvroSchema::parse(<<<SCHEMA
+{
+    "type": "record",
+    "name": "fruits",
+    "fields": [
+        {"name": "banana", "type": "string", "aliases": [ "yellow" ]},
+        {"name": "lemo", "type": "string", "aliases": [ "yellow" ]}
+    ]
+}
+SCHEMA);
+    }
+
+    public function testValidateRepeatedAliases()
+    {
+        AvroSchema::parse(<<<SCHEMA
+{
+    "type": "record",
+    "name": "fruits",
+    "fields": [
+        {
+            "name": "banana",
+            "type": "string",
+            "aliases": [
+                "yellow",
+                "yellow"
+            ]
+        }
+    ]
+}
+SCHEMA);
+        $this->addToAssertionCount(1);
     }
 }

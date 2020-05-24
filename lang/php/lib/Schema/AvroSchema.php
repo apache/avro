@@ -221,6 +221,9 @@ class AvroSchema
      * @var string document string attribute name
      */
     const DOC_ATTR = 'doc';
+    
+    /** @var string aliases string attribute name */
+    const ALIASES_ATTR = 'aliases';
 
     /**
      * @var array list of primitive schema type names
@@ -258,6 +261,10 @@ class AvroSchema
         self::SYMBOLS_ATTR,
         self::VALUES_ATTR
     );
+    /**
+     * @var string|AvroNamedSchema
+     */
+    public $type;
 
     /**
      * @param string $type a schema type name
@@ -294,46 +301,50 @@ class AvroSchema
         }
 
         if (is_array($avro)) {
-            $type = AvroUtil::arrayValue($avro, self::TYPE_ATTR);
+            $type = $avro[self::TYPE_ATTR] ?? null;
 
             if (self::isPrimitiveType($type)) {
                 return new AvroPrimitiveSchema($type);
-            } elseif (self::isNamedType($type)) {
-                $name = AvroUtil::arrayValue($avro, self::NAME_ATTR);
-                $namespace = AvroUtil::arrayValue($avro, self::NAMESPACE_ATTR);
+            }
+
+            if (self::isNamedType($type)) {
+                $name = $avro[self::NAME_ATTR] ?? null;
+                $namespace = $avro[self::NAMESPACE_ATTR] ?? null;
                 $new_name = new AvroName($name, $namespace, $default_namespace);
-                $doc = AvroUtil::arrayValue($avro, self::DOC_ATTR);
+                $doc = $avro[self::DOC_ATTR] ?? null;
+                $aliases = $avro[self::ALIASES_ATTR] ?? null;
                 switch ($type) {
                     case self::FIXED_SCHEMA:
-                        $size = AvroUtil::arrayValue($avro, self::SIZE_ATTR);
+                        $size = $avro[self::SIZE_ATTR] ?? null;
                         return new AvroFixedSchema(
                             $new_name,
                             $doc,
                             $size,
-                            $schemata
+                            $schemata,
+                            $aliases
                         );
                     case self::ENUM_SCHEMA:
-                        $symbols = AvroUtil::arrayValue($avro, self::SYMBOLS_ATTR);
+                        $symbols = $avro[self::SYMBOLS_ATTR] ?? null;
                         return new AvroEnumSchema(
                             $new_name,
                             $doc,
                             $symbols,
-                            $schemata
+                            $schemata,
+                            $aliases
                         );
                     case self::RECORD_SCHEMA:
                     case self::ERROR_SCHEMA:
-                        $fields = AvroUtil::arrayValue($avro, self::FIELDS_ATTR);
+                        $fields = $avro[self::FIELDS_ATTR] ?? null;
                         return new AvroRecordSchema(
                             $new_name,
                             $doc,
                             $fields,
                             $schemata,
-                            $type
+                            $type,
+                            $aliases
                         );
                     default:
-                        throw new AvroSchemaParseException(
-                            sprintf('Unknown named type: %s', $type)
-                        );
+                        throw new AvroSchemaParseException(sprintf('Unknown named type: %s', $type));
                 }
             } elseif (self::isValidType($type)) {
                 switch ($type) {
@@ -413,6 +424,25 @@ class AvroSchema
     public static function isNamedType($type)
     {
         return in_array($type, self::$namedTypes);
+    }
+
+    public static function hasValidAliases($aliases)
+    {
+        if ($aliases === null) {
+            return false;
+        }
+        if (!is_array($aliases)) {
+            throw new AvroSchemaParseException(
+                'Invalid aliases value. Must be an array of strings.'
+            );
+        }
+        foreach ((array) $aliases as $alias) {
+            if (!is_string($alias)) {
+                throw new AvroSchemaParseException(
+                    'Invalid aliases value. Must be an array of strings.'
+                );
+            }
+        }
     }
 
     /**

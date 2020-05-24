@@ -1,0 +1,8 @@
+version: "3"
+services:
+  avro:
+    build:
+      context: .
+      dockerfile: ./share/docker/Dockerfile
+    volumes:
+      - ".:/avro"

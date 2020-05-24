@@ -37,15 +37,20 @@ class AvroNamedSchema extends AvroSchema
      * @var string documentation string
      */
     private $doc;
+    /**
+     * @var array
+     */
+    private $aliases;
 
     /**
      * @param string $type
      * @param AvroName $name
      * @param string $doc documentation string
      * @param AvroNamedSchemata &$schemata
+     * @param array $aliases
      * @throws AvroSchemaParseException
      */
-    public function __construct($type, $name, $doc = null, &$schemata = null)
+    public function __construct($type, $name, $doc = null, &$schemata = null, $aliases = null)
     {
         parent::__construct($type);
         $this->name = $name;
@@ -54,10 +59,19 @@ class AvroNamedSchema extends AvroSchema
             throw new AvroSchemaParseException('Schema doc attribute must be a string');
         }
         $this->doc = $doc;
+        if ($aliases) {
+            self::hasValidAliases($aliases);
+            $this->aliases = $aliases;
+        }
 
         if (!is_null($schemata)) {
             $schemata = $schemata->cloneWithNewSchema($this);
         }
+    }
+
+    public function getAliases()
+    {
+        return $this->aliases;
     }
 
     /**
@@ -73,6 +87,9 @@ class AvroNamedSchema extends AvroSchema
         }
         if (!is_null($this->doc)) {
             $avro[AvroSchema::DOC_ATTR] = $this->doc;
+        }
+        if (!is_null($this->aliases)) {
+            $avro[AvroSchema::ALIASES_ATTR] = $this->aliases;
         }
         return $avro;
     }
