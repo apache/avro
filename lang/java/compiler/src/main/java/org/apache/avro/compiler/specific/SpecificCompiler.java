@@ -326,15 +326,10 @@ public class SpecificCompiler {
       for (Schema s : schema.getTypes())
         getClassNamesOfPrimitiveFields(s, result, seenSchemas);
       break;
-    case ENUM:
-    case FIXED:
-      String convertedLogicalType = getConvertedLogicalType(schema);
-      if (convertedLogicalType != null) {
-        result.add(convertedLogicalType);
-      }
-      break;
     case NULL:
       break;
+    case ENUM:
+    case FIXED:
     case STRING:
     case BYTES:
     case INT:
