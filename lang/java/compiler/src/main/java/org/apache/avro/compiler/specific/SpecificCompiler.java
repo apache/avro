@@ -326,10 +326,10 @@ public class SpecificCompiler {
       for (Schema s : schema.getTypes())
         getClassNamesOfPrimitiveFields(s, result, seenSchemas);
       break;
-    case ENUM:
-    case FIXED:
     case NULL:
       break;
+    case ENUM:
+    case FIXED:
     case STRING:
     case BYTES:
     case INT:
@@ -337,7 +337,7 @@ public class SpecificCompiler {
     case FLOAT:
     case DOUBLE:
     case BOOLEAN:
-      result.add(javaType(schema));
+      result.add(javaType(schema, true));
       break;
     default:
       throw new RuntimeException("Unknown type: " + schema);
