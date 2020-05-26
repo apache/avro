@@ -41,7 +41,7 @@ public class TestNettyTransceiverWhenServerStops {
 
     int serverPort = server.getPort();
 
-    final NettyTransceiver transceiver = new NettyTransceiver(new InetSocketAddress(serverPort), 60000L);
+    final NettyTransceiver transceiver = new NettyTransceiver(new InetSocketAddress(serverPort), 60000);
     final Mail mail = SpecificRequestor.getClient(Mail.class, transceiver);
 
     final AtomicInteger successes = new AtomicInteger();

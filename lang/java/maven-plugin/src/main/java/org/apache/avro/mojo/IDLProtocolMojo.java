@@ -93,6 +93,7 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         compiler.setFieldVisibility(getFieldVisibility());
         compiler.setCreateOptionalGetters(createOptionalGetters);
         compiler.setGettersReturnOptional(gettersReturnOptional);
+        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
         compiler.setCreateSetters(createSetters);
         compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
         compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);

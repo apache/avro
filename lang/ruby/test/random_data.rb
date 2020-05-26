@@ -84,8 +84,10 @@ class RandomData
     case schm.logical_type
     when 'date'
       Avro::LogicalTypes::IntDate.decode(rand_int)
-    when 'timestamp-millis', 'timestamp-micros'
+    when 'timestamp-micros'
       Avro::LogicalTypes::TimestampMicros.decode(rand_long)
+    when 'timestamp-millis'
+      Avro::LogicalTypes::TimestampMillis.decode(rand_long)
     end
   end
 

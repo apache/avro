@@ -52,6 +52,7 @@ namespace Avro.File
         private byte[] _syncBuffer;
         private long _blockStart;
         private Stream _stream;
+        private bool _leaveOpen;
         private Schema _readerSchema;
         private readonly CreateDatumReader _datumReaderFactory;
 
@@ -87,6 +88,17 @@ namespace Avro.File
         }
 
         /// <summary>
+        ///  Open a reader for a stream
+        /// </summary>
+        /// <param name="inStream"></param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
+        /// <returns></returns>
+        public static IFileReader<T> OpenReader(Stream inStream, bool leaveOpen)
+        {
+            return OpenReader(inStream, null, leaveOpen);
+        }
+
+        /// <summary>
         /// Open a reader for a stream using the reader's schema
         /// </summary>
         /// <param name="inStream">Stream containing the file contents</param>
@@ -98,6 +110,18 @@ namespace Avro.File
         }
 
         /// <summary>
+        /// Open a reader for a stream using the reader's schema
+        /// </summary>
+        /// <param name="inStream">Stream containing the file contents</param>
+        /// <param name="readerSchema">Schema used to read the file</param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
+        /// <returns>A new file reader</returns>
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, bool leaveOpen)
+        {
+            return OpenReader(inStream, readerSchema, CreateDefaultReader, leaveOpen);
+        }
+       
+        /// <summary>
         ///  Open a reader for a stream using the reader's schema and a custom DatumReader
         /// </summary>
         /// <param name="inStream">Stream of file contents</param>
@@ -106,13 +130,27 @@ namespace Avro.File
         /// <returns>A new file reader</returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory)
         {
-            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory);         // (not supporting 1.2 or below, format)
+            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, false);         // (not supporting 1.2 or below, format)
         }
 
-        DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory)
+        /// <summary>
+        ///  Open a reader for a stream using the reader's schema and a custom DatumReader
+        /// </summary>
+        /// <param name="inStream">Stream of file contents</param>
+        /// <param name="readerSchema">Schema used to read the file</param>
+        /// <param name="datumReaderFactory">Factory to create datum readers given a reader an writer schema</param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
+        /// <returns>A new file reader</returns>
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
+        {
+            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, leaveOpen);         // (not supporting 1.2 or below, format)
+        }
+
+        DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
         {
             _readerSchema = readerSchema;
             _datumReaderFactory = datumReaderFactory;
+            _leaveOpen = leaveOpen;
             Init(stream);
             BlockFinished();
         }
@@ -305,7 +343,11 @@ namespace Avro.File
         /// </param>
         protected virtual void Dispose(bool disposing)
         {
-            _stream.Close();
+            if (!_leaveOpen)
+                _stream.Close();
+
+            if (disposing && !_leaveOpen)
+                _stream.Dispose();
         }
 
         private void Init(Stream stream)

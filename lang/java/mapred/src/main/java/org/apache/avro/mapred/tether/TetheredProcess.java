@@ -216,7 +216,7 @@ class TetheredProcess {
 
     // start child process
     ProcessBuilder builder = new ProcessBuilder(command);
-    System.out.println(command);
+
     builder.environment().putAll(env);
     return builder.start();
   }

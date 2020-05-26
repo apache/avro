@@ -56,7 +56,7 @@
           <code>idl</code> tool. For example:
         </p>
         <source>
-$ java -jar avroj-tools.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
+$ java -jar avro-tools.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
 $ head /tmp/namespaces.avpr
 {
   "protocol" : "TestNamespace",

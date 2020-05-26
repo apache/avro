@@ -83,12 +83,11 @@ public class TestIdl {
     if (!"run".equals(TEST_MODE))
       return;
 
-    int passed = 0, failed = 0;
+    int failed = 0;
 
     for (GenTest t : tests) {
       try {
         t.run();
-        passed++;
       } catch (Exception e) {
         failed++;
         System.err.println("Failed: " + t.testName());

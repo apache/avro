@@ -111,7 +111,9 @@ namespace Avro.Specific
             {
                 unchecked
                 {
+#pragma warning disable CA1307 // Specify StringComparison
                     return ((name != null ? name.GetHashCode() : 0) * 397) ^ type.GetHashCode();
+#pragma warning restore CA1307 // Specify StringComparison
                 }
             }
             public static bool operator ==(NameCtorKey left, NameCtorKey right)

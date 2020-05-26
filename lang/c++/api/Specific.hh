@@ -247,7 +247,7 @@ template <typename T> struct codec_traits<std::vector<T> > {
             for (size_t i = 0; i < n; ++i) {
                 T t;
                 avro::decode(d, t);
-                s.push_back(t);
+                s.push_back(std::move(t));
             }
         }
     }
@@ -296,9 +296,8 @@ template <typename T> struct codec_traits<std::map<std::string, T> > {
             for (size_t i = 0; i < n; ++i) {
                 std::string k;
                 avro::decode(d, k);
-                T t;
+                T& t = s[std::move(k)];
                 avro::decode(d, t);
-                s[k] = t;
             }
         }
     }

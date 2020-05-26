@@ -57,10 +57,10 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_
  * <p>
  * Since Avro data are Plain Old Java Objects (e.g., <code>Integer</code> for
  * data with schema <i>"int"</i>), they do not implement <i>Writable</i>.
- * Furthermore, a {@link org.apache.hadoop.io.Serialization} implementation
- * cannot determine whether an object instance of type <code>CharSequence</code>
- * that also implements <code>Writable</code> should be serialized using Avro or
- * WritableSerialization.
+ * Furthermore, a {@link org.apache.hadoop.io.serializer.Serialization}
+ * implementation cannot determine whether an object instance of type
+ * <code>CharSequence</code> that also implements <code>Writable</code> should
+ * be serialized using Avro or WritableSerialization.
  * </p>
  *
  * <p>
@@ -693,7 +693,7 @@ public class AvroSequenceFile {
         // Set the key schema if present in the metadata.
         Text keySchemaText = metadata.get(METADATA_FIELD_KEY_SCHEMA);
         if (null != keySchemaText) {
-          LOG.debug("Using key writer schema from SequenceFile metadata: " + keySchemaText.toString());
+          LOG.debug("Using key writer schema from SequenceFile metadata: {}", keySchemaText);
           AvroSerialization.setKeyWriterSchema(confWithAvro, new Schema.Parser().parse(keySchemaText.toString()));
           if (null != mKeyReaderSchema) {
             AvroSerialization.setKeyReaderSchema(confWithAvro, mKeyReaderSchema);
@@ -703,7 +703,7 @@ public class AvroSequenceFile {
         // Set the value schema if present in the metadata.
         Text valueSchemaText = metadata.get(METADATA_FIELD_VALUE_SCHEMA);
         if (null != valueSchemaText) {
-          LOG.debug("Using value writer schema from SequenceFile metadata: " + valueSchemaText.toString());
+          LOG.debug("Using value writer schema from SequenceFile metadata: {}", valueSchemaText);
           AvroSerialization.setValueWriterSchema(confWithAvro, new Schema.Parser().parse(valueSchemaText.toString()));
           if (null != mValueReaderSchema) {
             AvroSerialization.setValueReaderSchema(confWithAvro, mValueReaderSchema);

@@ -17,15 +17,14 @@
  */
 using System;
 using System.Collections;
-using System.IO;
 using System.Collections.Generic;
-using Avro.Generic;
-using NUnit.Framework;
-using Avro.Specific;
-using System.Reflection;
-using Avro.File;
-using System.Linq;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using Avro.File;
+using Avro.Generic;
+using Avro.Specific;
+using NUnit.Framework;
 
 namespace Avro.Test.File
 {
@@ -93,6 +92,72 @@ namespace Avro.Test.File
                 {
                     Assert.AreEqual(records[i].ToString(), readRecords[i].ToString());
                 }
+            }
+        }
+
+        /// <summary>
+        /// Test appending of specific (custom) record objects
+        /// </summary>
+        /// <param name="schemaStr">schema</param>
+        /// <param name="recs">initial records</param>
+        /// <param name="appendRecs">append records</param>
+        /// <param name="codecType">initial compression codec type</param>
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, new object[] { new object[] { "Jane", 21 } }, Codec.Type.Deflate, TestName = "TestAppendSpecificData0")]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, new object[] { new object[] { "Jane", 21 } }, Codec.Type.Null, TestName = "TestAppendSpecificData1")]
+        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
+                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
+                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }},
+                                  new object[] { new object[] { "Hillary", 79 },
+                                                 new object[] { "Grant", 88 } }, Codec.Type.Deflate, TestName = "TestAppendSpecificData2")]
+        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
+                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
+                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }},
+                                  new object[] { new object[] { "Hillary", 79 },
+                                                 new object[] { "Grant", 88 } }, Codec.Type.Null, TestName = "TestAppendSpecificData3")]
+        public void TestAppendSpecificData(string schemaStr, object[] recs, object[] appendRecs, Codec.Type codecType)
+        {
+            IList<Foo> records = MakeRecords(recs);
+            IList<Foo> appendRecords = MakeRecords(appendRecs);
+            IList<Foo> allRecords = records.Concat(appendRecords).ToList();
+
+            foreach (var rwFactory in SpecificOptions<Foo>())
+            {
+                // create and write out
+                MemoryStream dataFileOutputStream = new MemoryStream();
+                Schema schema = Schema.Parse(schemaStr);
+                using (IFileWriter<Foo> dataFileWriter = rwFactory.CreateWriter(dataFileOutputStream, schema, Codec.CreateCodec(codecType)))
+                {
+                    foreach (Foo rec in records)
+                        dataFileWriter.Append(rec);
+                }
+
+                // append records
+                byte[] outputData = dataFileOutputStream.ToArray();
+                MemoryStream dataFileAppendInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+                MemoryStream dataFileAppendStream = new MemoryStream(); // MemoryStream is not expandable
+                dataFileAppendStream.Write(outputData, 0, outputData.Length);
+
+                using (IFileWriter<Foo> appendFileWriter = rwFactory.CreateAppendWriter(dataFileAppendInputStream, dataFileAppendStream, schema))
+                {
+                    foreach (Foo rec in appendRecords)
+                        appendFileWriter.Append(rec);
+                }
+
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileAppendStream.ToArray());
+
+                // read back
+                IList<Foo> readRecords = new List<Foo>();
+
+                using (IFileReader<Foo> reader = rwFactory.CreateReader(dataFileInputStream, null))
+                {
+                    foreach (Foo rec in reader.NextEntries)
+                        readRecords.Add(rec);
+                }
+
+                // compare objects via Json
+                Assert.AreEqual(allRecords.Count, readRecords.Count);
+                for (int i = 0; i < allRecords.Count; i++)
+                    Assert.AreEqual(allRecords[i].ToString(), readRecords[i].ToString());
             }
         }
 
@@ -197,6 +262,82 @@ namespace Avro.Test.File
                 Assert.IsTrue((readFoos != null && readFoos.Count > 0),
                                string.Format(@"Generic object: {0} did not serialise/deserialise correctly", readFoos));
             }
+        }
+
+        /// <summary>
+        /// Test appending of generic record objects
+        /// </summary>
+        /// <param name="schemaStr">schema</param>
+        /// <param name="recs">initial records</param>
+        /// <param name="appendRecs">append records</param>
+        /// <param name="codecType">innitial compression codec type</param>
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
+            new object[] { "f1", true }, new object[] { "f1", false }, Codec.Type.Deflate)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
+            new object[] { "f1", 1 }, new object[] { "f1", 2 }, Codec.Type.Null)]
+        public void TestAppendGenericData(string schemaStr, object[] recs, object[] appendRecs, Codec.Type codecType)
+        {
+            foreach (var rwFactory in GenericOptions<GenericRecord>())
+            {
+                // Create and write out
+                MemoryStream dataFileOutputStream = new MemoryStream();
+                using (var writer = rwFactory.CreateWriter(dataFileOutputStream, Schema.Parse(schemaStr), Codec.CreateCodec(codecType)))
+                {
+                    writer.Append(mkRecord(recs, Schema.Parse(schemaStr) as RecordSchema));
+                }
+
+                // append records
+                byte[] outputData = dataFileOutputStream.ToArray();
+                MemoryStream dataFileAppendInputStream = new MemoryStream(dataFileOutputStream.ToArray());
+                MemoryStream dataFileAppendStream = new MemoryStream(); // MemoryStream is not expandable
+                dataFileAppendStream.Write(outputData, 0, outputData.Length);
+
+                using (var appendFileWriter = rwFactory.CreateAppendWriter(dataFileAppendInputStream, dataFileAppendStream, Schema.Parse(schemaStr)))
+                {
+                    appendFileWriter.Append(mkRecord(appendRecs, Schema.Parse(schemaStr) as RecordSchema));
+                }
+
+                MemoryStream dataFileInputStream = new MemoryStream(dataFileAppendStream.ToArray());
+
+                // Read back
+                IList<GenericRecord> readFoos = new List<GenericRecord>();
+                using (IFileReader<GenericRecord> reader = rwFactory.CreateReader(dataFileInputStream, null))
+                {
+                    foreach (GenericRecord foo in reader.NextEntries)
+                    {
+                        readFoos.Add(foo);
+                    }
+                }
+
+                Assert.NotNull(readFoos);
+                Assert.AreEqual((recs.Length + appendRecs.Length) / 2, readFoos.Count,
+                    $"Generic object: {readFoos} did not serialise/deserialise correctly");
+            }
+        }
+
+        [Test]
+        public void OpenAppendWriter_IncorrectInStream_Throws()
+        {
+            MemoryStream compressedStream = new MemoryStream();
+            // using here a DeflateStream as it is a standard non-seekable stream, so if it works for this one,
+            // it should also works with any standard non-seekable stream (ie: NetworkStreams)
+            DeflateStream dataFileInputStream = new DeflateStream(compressedStream, CompressionMode.Compress);
+
+            var action =  new TestDelegate(() => DataFileWriter<Foo>.OpenAppendWriter(null, dataFileInputStream, null));
+
+            var ex = Assert.Throws(typeof(AvroRuntimeException), action);
+        }
+
+        [Test]
+        public void OpenAppendWriter_IncorrectOutStream_Throws()
+        {
+            MemoryStream inStream = new MemoryStream();
+            MemoryStream outStream = new MemoryStream();
+            outStream.Close();
+
+            var action = new TestDelegate(() => DataFileWriter<Foo>.OpenAppendWriter(null, inStream, outStream));
+
+            Assert.Throws(typeof(AvroRuntimeException), action);
         }
 
         /// <summary>
@@ -491,6 +632,77 @@ namespace Avro.Test.File
             }
         }
 
+        /// <summary>
+        /// Test leaveOpen flag
+        /// </summary>
+        /// <param name="schemaStr"></param>
+        /// <param name="value"></param>
+        /// <param name="codecType"></param>
+        /// <param name="leaveOpen"></param>
+        [TestCase(specificSchema, Codec.Type.Null, true, false)]
+        [TestCase(specificSchema, Codec.Type.Null, true, true)]
+        [TestCase(specificSchema, Codec.Type.Null, false, false)]
+        [TestCase(specificSchema, Codec.Type.Null, false, true)]
+        public void TestLeaveOpen(string schemaStr, Codec.Type codecType, bool leaveWriteOpen, bool leaveReadOpen)
+        {
+            // create and write out
+            IList<Foo> records = MakeRecords(GetTestFooObject());
+
+            byte[] inputBuffer;
+            using (MemoryStream dataFileOutputStream = new MemoryStream())
+            {
+                Schema schema = Schema.Parse(schemaStr);
+                DatumWriter<Foo> writer = new SpecificWriter<Foo>(schema);
+                using (IFileWriter<Foo> dataFileWriter = DataFileWriter<Foo>.OpenWriter(writer, dataFileOutputStream, Codec.CreateCodec(codecType), leaveWriteOpen))
+                {
+                    dataFileWriter.Flush();
+                }
+
+                try
+                {
+                    // Check if stream is still valid and not closed
+                    // If opened with leaveOpen=false, it should throw an exception
+                    Assert.AreNotEqual(dataFileOutputStream.Length, 0);
+                    dataFileOutputStream.Flush();
+
+                    // If we get here we must have used leaveOpen=true
+                    Assert.True(leaveWriteOpen);
+
+                }
+                catch(System.ObjectDisposedException)
+                {
+                    // If we get here we must have used leaveOpen=false
+                    Assert.False(leaveWriteOpen);
+                }
+
+                inputBuffer = dataFileOutputStream.ToArray();
+            }
+
+            using (MemoryStream dataFileInputStream = new MemoryStream(inputBuffer))
+            {
+                // read back
+                using (IFileReader<Foo> reader = DataFileReader<Foo>.OpenReader(dataFileInputStream, leaveReadOpen))
+                {
+                }
+
+                try
+                {
+                    // Check if stream is still valid and not closed
+                    // If opened with leaveOpen=false, it should throw an exception
+                    Assert.AreNotEqual(dataFileInputStream.Length, 0);
+
+                    // If we get here we must have used leaveOpen=true
+                    Assert.True(leaveReadOpen);
+
+                }
+                catch(System.ObjectDisposedException)
+                {
+                    // If we get here we must have used leaveOpen=false
+                    Assert.False(leaveReadOpen);
+                }
+            }
+        }
+
         class SyncLog
         {
             public long Position { get; set; }
@@ -607,7 +819,7 @@ namespace Avro.Test.File
             }
         }
 
-        private bool CheckPrimitive<T>(Stream input, T value, ReaderWriterPair<T>.ReaderFactory createReader)
+        private bool CheckPrimitive<T>(Stream input, T value, ReaderWriterSet<T>.ReaderFactory createReader)
         {
             IFileReader<T> reader = createReader(input, null);
             IList<T> readFoos = new List<T>();
@@ -732,49 +944,59 @@ namespace Avro.Test.File
                                   new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }};
         }
 
-        private static IEnumerable<ReaderWriterPair<T>> SpecificOptions<T>()
+        private static IEnumerable<ReaderWriterSet<T>> SpecificOptions<T>()
         {
-            yield return new ReaderWriterPair<T>
-                             {
-                                 CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema),
-                                 CreateWriter = (stream, schema, codec) =>
-                                     DataFileWriter<T>.OpenWriter(new SpecificWriter<T>(schema), stream, codec )
-                             };
+            yield return new ReaderWriterSet<T>
+            {
+                CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema),
+                CreateWriter = (stream, schema, codec) =>
+                    DataFileWriter<T>.OpenWriter(new SpecificWriter<T>(schema), stream, codec),
+                CreateAppendWriter = (inStream, outStream, schema) =>
+                    DataFileWriter<T>.OpenAppendWriter(new SpecificWriter<T>(schema), inStream, outStream)
+            };
 
-            yield return new ReaderWriterPair<T>
+            yield return new ReaderWriterSet<T>
                              {
                                  CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema,
                                      (ws, rs) => new SpecificDatumReader<T>(ws, rs)),
                                  CreateWriter = (stream, schema, codec) =>
-                                     DataFileWriter<T>.OpenWriter(new SpecificDatumWriter<T>(schema), stream, codec )
-                             };
+                                     DataFileWriter<T>.OpenWriter(new SpecificDatumWriter<T>(schema), stream, codec ),
+                                 CreateAppendWriter = (inStream, outStream, schema) =>
+                                     DataFileWriter<T>.OpenAppendWriter(new SpecificDatumWriter<T>(schema), inStream, outStream)
+            };
         }
 
-        private static IEnumerable<ReaderWriterPair<T>> GenericOptions<T>()
+        private static IEnumerable<ReaderWriterSet<T>> GenericOptions<T>()
         {
-            yield return new ReaderWriterPair<T>
+            yield return new ReaderWriterSet<T>
                              {
                                  CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema),
                                  CreateWriter = (stream, schema, codec) =>
-                                     DataFileWriter<T>.OpenWriter(new GenericWriter<T>(schema), stream, codec )
+                                     DataFileWriter<T>.OpenWriter(new GenericWriter<T>(schema), stream, codec ),
+                                 CreateAppendWriter = (inStream, outStream, schema) =>
+                                     DataFileWriter<T>.OpenAppendWriter(new GenericWriter<T>(schema), inStream, outStream)
                              };
 
-            yield return new ReaderWriterPair<T>
+            yield return new ReaderWriterSet<T>
                              {
                                  CreateReader = (stream, schema) => DataFileReader<T>.OpenReader(stream, schema,
                                      (ws, rs) => new GenericDatumReader<T>(ws, rs)),
                                  CreateWriter = (stream, schema, codec) =>
-                                     DataFileWriter<T>.OpenWriter(new GenericDatumWriter<T>(schema), stream, codec )
+                                     DataFileWriter<T>.OpenWriter(new GenericDatumWriter<T>(schema), stream, codec ),
+                                 CreateAppendWriter = (inStream, outStream, schema) =>
+                                    DataFileWriter<T>.OpenAppendWriter(new GenericDatumWriter<T>(schema), inStream, outStream)
                              };
         }
 
-        class ReaderWriterPair<T>
+        class ReaderWriterSet<T>
         {
             public delegate IFileWriter<T> WriterFactory(Stream stream, Schema writerSchema, Codec codec);
             public delegate IFileReader<T> ReaderFactory(Stream stream, Schema readerSchema);
+            public delegate IFileWriter<T> AppendFactory(Stream inStream, Stream outStream, Schema writerSchema);
 
             public WriterFactory CreateWriter { get; set; }
             public ReaderFactory CreateReader { get; set; }
+            public AppendFactory CreateAppendWriter { get; set; }
         }
     }
 

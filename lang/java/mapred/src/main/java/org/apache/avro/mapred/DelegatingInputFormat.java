@@ -35,14 +35,17 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.MultipleInputs;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An {@link InputFormat} that delegates read behavior of paths based on their
  * associated avro schema.
- * 
+ *
  * @see MultipleInputs#addInputPath(JobConf, Path, Class, Class)
  */
 class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
+  private static final Logger LOG = LoggerFactory.getLogger(DelegatingInputFormat.class);
 
   @Override
   public InputSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
@@ -58,8 +61,8 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
     for (Entry<Path, Schema> entry : schemaMap.entrySet()) {
       if (!schemaPaths.containsKey(entry.getValue())) {
         schemaPaths.put(entry.getValue(), new ArrayList<>());
-        System.out.println(entry.getValue());
-        System.out.println(entry.getKey());
+        LOG.info(entry.getValue().toString());
+        LOG.info(String.valueOf(entry.getKey()));
       }
 
       schemaPaths.get(entry.getValue()).add(entry.getKey());
@@ -67,7 +70,7 @@ class DelegatingInputFormat<K, V> implements InputFormat<K, V> {
 
     for (Entry<Schema, List<Path>> schemaEntry : schemaPaths.entrySet()) {
       Schema schema = schemaEntry.getKey();
-      System.out.println(schema);
+      LOG.info(schema.toString());
       InputFormat format = ReflectionUtils.newInstance(AvroInputFormat.class, conf);
       List<Path> paths = schemaEntry.getValue();
 

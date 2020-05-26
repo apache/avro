@@ -21,10 +21,10 @@ import java.util.Map;
 
 /**
  * Class to make Avro immune from the naming variations of key/value fields
- * among several {@link Map.Entry} implementations. If objects of this class are
- * used instead of the regular ones obtained by {@link Map#entrySet()}, then we
- * need not worry about the actual field-names or any changes to them in the
- * future.<BR>
+ * among several {@link java.util.Map.Entry} implementations. If objects of this
+ * class are used instead of the regular ones obtained by
+ * {@link Map#entrySet()}, then we need not worry about the actual field-names
+ * or any changes to them in the future.<BR>
  * Example: {@code ConcurrentHashMap.MapEntry} does not name the fields as key/
  * value in Java 1.8 while it used to do so in Java 1.7
  *

@@ -103,7 +103,6 @@ public class TetherTool implements Tool {
 
     CommandLineParser parser = new GnuParser();
 
-    String[] genargs = null;
     CommandLine line = null;
     HelpFormatter formatter = new HelpFormatter();
 
@@ -116,8 +115,6 @@ public class TetherTool implements Tool {
         formatter.printHelp("tether", opts);
         return 0;
       }
-
-      genargs = line.getArgs();
 
       FileInputFormat.addInputPaths(job, line.getOptionValue("in"));
       FileOutputFormat.setOutputPath(job, new Path(line.getOptionValue("out")));

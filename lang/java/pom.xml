@@ -40,43 +40,42 @@
     <!-- version properties for dependencies -->
 
     <hadoop.version>2.7.7</hadoop.version>
-    <jackson.version>2.10.0</jackson.version>
-    <jackson.databind.version>2.10.0</jackson.databind.version>
+    <jackson.version>2.10.4</jackson.version>
+    <jackson.databind.version>2.10.4</jackson.databind.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.24.v20191120</jetty.version>
+    <jetty.version>9.4.28.v20200408</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit.version>4.12</junit.version>
-    <netty.version>3.10.6.Final</netty.version>
-    <protobuf.version>3.10.0</protobuf.version>
+    <junit.version>4.13</junit.version>
+    <netty.version>4.1.50.Final</netty.version>
+    <protobuf.version>3.11.1</protobuf.version>
     <thrift.version>0.12.0</thrift.version>
-    <slf4j.version>1.7.25</slf4j.version>
-    <snappy.version>1.1.7.3</snappy.version>
-    <velocity.version>2.1</velocity.version>
-    <maven.version>2.0.11</maven.version>
+    <slf4j.version>1.7.30</slf4j.version>
+    <snappy.version>1.1.7.5</snappy.version>
+    <velocity.version>2.2</velocity.version>
+    <maven.version>3.3.9</maven.version>
     <ant.version>1.10.5</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
-    <commons-compress.version>1.19</commons-compress.version>
+    <commons-compress.version>1.20</commons-compress.version>
     <commons-lang.version>3.9</commons-lang.version>
     <tukaani.version>1.8</tukaani.version>
-    <easymock.version>4.0.2</easymock.version>
+    <easymock.version>4.2</easymock.version>
     <hamcrest.version>2.1</hamcrest.version>
-    <grpc.version>1.24.0</grpc.version>
-    <netty-codec-http2.version>4.1.42.Final</netty-codec-http2.version>
-    <zstd-jni.version>1.4.3-1</zstd-jni.version>
+    <grpc.version>1.29.0</grpc.version>
+    <grpc.version>1.28.0</grpc.version>
+    <zstd-jni.version>1.4.4-11</zstd-jni.version>
     <!-- version properties for plugins -->
-    <archetype-plugin.version>3.0.1</archetype-plugin.version>
+    <archetype-plugin.version>3.1.2</archetype-plugin.version>
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <exec-plugin.version>1.6.0</exec-plugin.version>
-    <file-management.version>1.2.1</file-management.version>
-    <jar-plugin.version>3.1.2</jar-plugin.version>
+    <file-management.version>3.0.0</file-management.version>
+    <jar-plugin.version>3.2.0</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
-    <maven-site-plugin.version>3.7.1</maven-site-plugin.version>
+    <maven-site-plugin.version>3.9.0</maven-site-plugin.version>
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
-    <shade-plugin.version>3.2.1</shade-plugin.version>
-    <source-plugin.version>3.0.1</source-plugin.version>
-    <surefire-plugin.version>3.0.0-M3</surefire-plugin.version>
+    <shade-plugin.version>3.2.3</shade-plugin.version>
+    <surefire-plugin.version>3.0.0-M4</surefire-plugin.version>
   </properties>
 
   <modules>
@@ -103,6 +102,11 @@
       parameters if the plugins are used by child projects -->
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
@@ -314,9 +318,6 @@
               <version>4.10.0</version>
             </eclipse>
             <removeUnusedImports/>
-            <excludes>
-              <exclude>src/test/java/org/apache/avro/protobuf/Test.java</exclude>
-            </excludes>
           </java>
         </configuration>
         <executions>
@@ -480,7 +481,7 @@
     <profile>
       <id>hadoop3</id>
       <properties>
-        <hadoop.version>3.2.0</hadoop.version>
+        <hadoop.version>3.2.1</hadoop.version>
       </properties>
     </profile>
   </profiles>
@@ -525,11 +526,6 @@
           <groupId>javax.servlet</groupId>
           <artifactId>javax.servlet-api</artifactId>
           <version>${servlet-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty</artifactId>
-        <version>${netty.version}</version>
       </dependency>
       <dependency>
         <groupId>net.sf.jopt-simple</groupId>
@@ -582,11 +578,6 @@
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
         <version>${grpc.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.netty</groupId>
-        <artifactId>netty-codec-http2</artifactId>
-        <version>${netty-codec-http2.version}</version>
       </dependency>
       <dependency>
         <groupId>org.tukaani</groupId>

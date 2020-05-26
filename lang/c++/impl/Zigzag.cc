@@ -24,6 +24,7 @@ namespace avro {
 uint64_t
 encodeZigzag64(int64_t input)
 {
+    // cppcheck-suppress shiftTooManyBitsSigned
     return ((input << 1) ^ (input >> 63));
 }
 
@@ -36,6 +37,7 @@ decodeZigzag64(uint64_t input)
 uint32_t
 encodeZigzag32(int32_t input)
 {
+    // cppcheck-suppress shiftTooManyBitsSigned
     return ((input << 1) ^ (input >> 31));
 }
 

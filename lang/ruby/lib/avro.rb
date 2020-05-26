@@ -34,11 +34,23 @@ module Avro
   end
 
   class << self
+    attr_writer :disable_enum_symbol_validation
     attr_writer :disable_field_default_validation
+    attr_writer :disable_schema_name_validation
+
+    def disable_enum_symbol_validation
+      @disable_enum_symbol_validation ||=
+        ENV.fetch('AVRO_DISABLE_ENUM_SYMBOL_VALIDATION', '') != ''
+    end
 
     def disable_field_default_validation
       @disable_field_default_validation ||=
         ENV.fetch('AVRO_DISABLE_FIELD_DEFAULT_VALIDATION', '') != ''
+    end
+
+    def disable_schema_name_validation
+      @disable_schema_name_validation ||=
+        ENV.fetch('AVRO_DISABLE_SCHEMA_NAME_VALIDATION', '') != ''
     end
   end
 end

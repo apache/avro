@@ -118,8 +118,8 @@ module Avro
         when :union
           match_union_schemas(writers_schema, readers_schema)
         when :enum
-          # reader's symbols must contain all writer's symbols
-          (writers_schema.symbols - readers_schema.symbols).empty?
+          # reader's symbols must contain all writer's symbols or reader has default
+          (writers_schema.symbols - readers_schema.symbols).empty? || !readers_schema.default.nil?
         else
           if writers_schema.type_sym == :union && writers_schema.schemas.size == 1
             full_match_schemas(writers_schema.schemas.first, readers_schema)

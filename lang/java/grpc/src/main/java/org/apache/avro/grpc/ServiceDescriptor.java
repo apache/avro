@@ -38,7 +38,6 @@ class ServiceDescriptor {
   private final ConcurrentMap<String, MethodDescriptor<Object[], Object>> methods = new ConcurrentHashMap<>();
 
   private ServiceDescriptor(Class iface, String serviceName) {
-    Class iface1 = iface;
     this.serviceName = serviceName;
     this.protocol = AvroGrpcUtils.getProtocol(iface);
   }

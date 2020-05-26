@@ -156,6 +156,7 @@ public class TestAvroKeyValueRecordWriter {
     assertNotNull(firstRecord.get());
     assertEquals("reflectionData", firstRecord.getKey().toString());
     assertEquals(record.attribute, firstRecord.getValue().attribute);
+    avroFileReader.close();
   }
 
   @Test
