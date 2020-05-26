@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,9 +47,9 @@ enum Type {
     AVRO_FIXED,     /*!< Fixed number of bytes */
 
     AVRO_NUM_TYPES, /*!< Marker */
-    
+
     // The following is a pseudo-type used in implementation
-    
+
     AVRO_SYMBOLIC = AVRO_NUM_TYPES, /*!< User internally to avoid circular references. */
     AVRO_UNKNOWN  = -1 /*!< Used internally. */
 

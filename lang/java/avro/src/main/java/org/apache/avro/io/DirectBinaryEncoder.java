@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 
 /**
  * An {@link Encoder} for Avro's binary encoding that does not buffer output.
@@ -52,8 +53,7 @@ public class DirectBinaryEncoder extends BinaryEncoder {
   }
 
   DirectBinaryEncoder configure(OutputStream out) {
-    if (null == out)
-      throw new NullPointerException("OutputStream cannot be null!");
+    Objects.requireNonNull(out, "OutputStream cannot be null");
     this.out = out;
     return this;
   }

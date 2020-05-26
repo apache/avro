@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,7 +54,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
-   * 
+   *
    * @param writer The schema used by the writer
    * @param reader The schema used by the reader
    * @return The start symbol for the resolving grammar
@@ -91,6 +91,11 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     } else if (action instanceof Resolver.Promote) {
       return Symbol.resolve(simpleGen(action.writer, seen), simpleGen(action.reader, seen));
 
+    } else if (action instanceof Resolver.ReaderUnion) {
+      Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
+      Symbol s = generate(ru.actualAction, seen);
+      return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
+
     } else if (action.writer.getType() == Schema.Type.ARRAY) {
       Symbol es = generate(((Resolver.Container) action).elementAction, seen);
       return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, es), Symbol.ARRAY_START);
@@ -100,8 +105,9 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.seq(Symbol.repeat(Symbol.MAP_END, es, Symbol.STRING), Symbol.MAP_START);
 
     } else if (action.writer.getType() == Schema.Type.UNION) {
-      if (((Resolver.WriterUnion) action).unionEquiv)
+      if (((Resolver.WriterUnion) action).unionEquiv) {
         return simpleGen(action.writer, seen);
+      }
       Resolver.Action[] branches = ((Resolver.WriterUnion) action).actions;
       Symbol[] symbols = new Symbol[branches.length];
       String[] labels = new String[branches.length];
@@ -112,19 +118,13 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         i++;
       }
       return Symbol.seq(Symbol.alt(symbols, labels), Symbol.WRITER_UNION_ACTION);
-
-    }
-    if (action instanceof Resolver.ReaderUnion) {
-      Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
-      Symbol s = generate(ru.actualAction, seen);
-      return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
-
     } else if (action instanceof Resolver.EnumAdjust) {
       Resolver.EnumAdjust e = (Resolver.EnumAdjust) action;
       Object[] adjs = new Object[e.adjustments.length];
-      for (int i = 0; i < adjs.length; i++)
+      for (int i = 0; i < adjs.length; i++) {
         adjs[i] = (0 <= e.adjustments[i] ? new Integer(e.adjustments[i])
             : "No match for " + e.writer.getEnumSymbols().get(i));
+      }
       return Symbol.seq(Symbol.enumAdjustAction(e.reader.getEnumSymbols().size(), adjs), Symbol.ENUM);
 
     } else if (action instanceof Resolver.RecordAdjust) {
@@ -133,14 +133,17 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
         final Resolver.RecordAdjust ra = (Resolver.RecordAdjust) action;
         int defaultCount = ra.readerOrder.length - ra.firstDefault;
         int count = 1 + ra.fieldActions.length + 3 * defaultCount;
-        Symbol[] production = new Symbol[count];
+        final Symbol[] production = new Symbol[count];
         result = Symbol.seq(production);
         seen.put(action, result);
         production[--count] = Symbol.fieldOrderAction(ra.readerOrder);
-        for (Resolver.Action wfa : ra.fieldActions)
+
+        final Resolver.Action[] actions = ra.fieldActions;
+        for (Resolver.Action wfa : actions) {
           production[--count] = generate(wfa, seen);
+        }
         for (int i = ra.firstDefault; i < ra.readerOrder.length; i++) {
-          Schema.Field rf = ra.readerOrder[i];
+          final Schema.Field rf = ra.readerOrder[i];
           byte[] bb = getBinary(rf.schema(), Accessor.defaultValue(rf));
           production[--count] = Symbol.defaultStartAction(bb);
           production[--count] = simpleGen(rf.schema(), seen);
@@ -173,7 +176,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       return Symbol.STRING;
 
     case FIXED:
-      return Symbol.seq(new Symbol.IntCheckAction(s.getFixedSize()), Symbol.FIXED);
+      return Symbol.seq(Symbol.intCheckAction(s.getFixedSize()), Symbol.FIXED);
 
     case ENUM:
       return Symbol.seq(Symbol.enumAdjustAction(s.getEnumSymbols().size(), null), Symbol.ENUM);
@@ -186,9 +189,9 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
           Symbol.MAP_START);
 
     case UNION: {
-      List<Schema> subs = s.getTypes();
-      Symbol[] symbols = new Symbol[subs.size()];
-      String[] labels = new String[subs.size()];
+      final List<Schema> subs = s.getTypes();
+      final Symbol[] symbols = new Symbol[subs.size()];
+      final String[] labels = new String[subs.size()];
       int i = 0;
       for (Schema b : s.getTypes()) {
         symbols[i] = simpleGen(b, seen);
@@ -200,13 +203,14 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
     case RECORD: {
       Symbol result = seen.get(s);
       if (result == null) {
-        Symbol[] production = new Symbol[s.getFields().size() + 1];
+        final Symbol[] production = new Symbol[s.getFields().size() + 1];
         result = Symbol.seq(production);
         seen.put(s, result);
         int i = production.length;
         production[--i] = Symbol.fieldOrderAction(s.getFields().toArray(new Schema.Field[0]));
-        for (Field f : s.getFields())
+        for (Field f : s.getFields()) {
           production[--i] = simpleGen(f.schema(), seen);
+        }
         // FieldOrderAction is needed even though the field-order hasn't changed,
         // because the _reader_ doesn't know the field order hasn't changed, and
         // thus it will probably call {@ ResolvingDecoder.fieldOrder} to find out.
@@ -224,7 +228,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Returns the Avro binary encoded version of <tt>n</tt> according to the schema
    * <tt>s</tt>.
-   * 
+   *
    * @param s The schema for encoding
    * @param n The Json node that has the value to be encoded.
    * @return The binary encoded version of <tt>n</tt>.
@@ -241,13 +245,13 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   /**
    * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt> according
    * to the schema <tt>s</tt>.
-   * 
+   *
    * @param e The encoder to encode into.
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.
    * @throws IOException
    */
-  static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
+  public static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
     switch (s.getType()) {
     case RECORD:
       for (Field f : s.getFields()) {

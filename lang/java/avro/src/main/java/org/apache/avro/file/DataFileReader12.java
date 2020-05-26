@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,11 +39,8 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
   static final byte[] MAGIC = new byte[] { (byte) 'O', (byte) 'b', (byte) 'j', VERSION };
   private static final long FOOTER_BLOCK = -1;
   private static final int SYNC_SIZE = 16;
-  private static final int SYNC_INTERVAL = 1000 * SYNC_SIZE;
-
   private static final String SCHEMA = "schema";
   private static final String SYNC = "sync";
-  private static final String COUNT = "count";
   private static final String CODEC = "codec";
   private static final String NULL_CODEC = "null";
 
@@ -86,8 +83,6 @@ public class DataFileReader12<D> implements FileReader<D>, Closeable {
     }
 
     this.sync = getMeta(SYNC);
-    // # entries in file
-    long count = getMetaLong(COUNT);
     String codec = getMetaString(CODEC);
     if (codec != null && !codec.equals(NULL_CODEC)) {
       throw new UnknownAvroCodecException("Unknown codec: " + codec);

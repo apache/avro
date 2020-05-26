@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -22,19 +22,21 @@ sudo: required
 services:
   - docker
 
-language: generic
+matrix:
+  include:
+  - language: generic
+    env:
+      JAVA=8
 
-env:
-  - JAVA=8
-  - JAVA=11
+  - language: generic
+    env:
+      JAVA=11
 
-before_install:
-  - sudo apt-get -q update
-  - sudo apt-get -q install --no-install-recommends -y curl git gnupg-agent locales pinentry-curses pkg-config rsync software-properties-common
-  - sudo apt-get -q clean
-  - sudo rm -rf /var/lib/apt/lists/*
-  - curl -L https://www-us.apache.org/dist/yetus/0.8.0/yetus-0.8.0-bin.tar.gz | tar xvz -C /tmp/
+  - os: windows
+    language: bash
 
-script:
-  - sed -i.bak 's/openjdk:8/openjdk:'${JAVA}'/' share/docker/Dockerfile
-  - /tmp/yetus-0.8.0/bin/test-patch --plugins=buildtest --java-home=/usr/local/openjdk-${JAVA} --user-plugins=share/precommit/ --run-tests --empty-patch --docker --dockerfile=share/docker/Dockerfile --dirty-workspace --verbose=true
+before_install: "if [ -x ./.travis/before_install.sh   ] ; then ./.travis/before_install.sh ; fi"
+install:        "if [ -x ./.travis/install.sh          ] ; then ./.travis/install.sh        ; fi"
+before_script:  "if [ -x ./.travis/before_script.sh    ] ; then ./.travis/before_script.sh  ; fi"
+script:         "if [ -x ./.travis/script.sh           ] ; then ./.travis/script.sh         ; fi"
+after_script:   "if [ -x ./.travis/after_script.sh     ] ; then ./.travis/after_script.sh   ; fi"

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,15 +59,15 @@ public class SpecificMain {
 
     // Deserialize Users from disk
     DatumReader<User> userDatumReader = new SpecificDatumReader<User>(User.class);
-    DataFileReader<User> dataFileReader = new DataFileReader<User>(file, userDatumReader);
     User user = null;
-    while (dataFileReader.hasNext()) {
-      // Reuse user object by passing it to next(). This saves us from
-      // allocating and garbage collecting many objects for files with
-      // many items.
-      user = dataFileReader.next(user);
-      System.out.println(user);
+    try(DataFileReader<User> dataFileReader = new DataFileReader<User>(file, userDatumReader)){
+      while (dataFileReader.hasNext()) {
+        // Reuse user object by passing it to next(). This saves us from
+        // allocating and garbage collecting many objects for files with
+        // many items.
+        user = dataFileReader.next(user);
+        System.out.println(user);
+      }
     }
-
   }
 }

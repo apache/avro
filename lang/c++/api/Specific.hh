@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,7 +42,7 @@
  * std::vector<T> for aribtrary type T gets encoded as an Avro array of T.
  * Similarly, std::map<std::string, T> for arbitrary type T gets encoded
  * as an Avro map with value type T.
- * 
+ *
  * Users can have their custom types encoded/decoded by specializing
  * avro::codec_traits class for their types.
  */
@@ -247,7 +247,7 @@ template <typename T> struct codec_traits<std::vector<T> > {
             for (size_t i = 0; i < n; ++i) {
                 T t;
                 avro::decode(d, t);
-                s.push_back(t);
+                s.push_back(std::move(t));
             }
         }
     }
@@ -296,9 +296,8 @@ template <typename T> struct codec_traits<std::map<std::string, T> > {
             for (size_t i = 0; i < n; ++i) {
                 std::string k;
                 avro::decode(d, k);
-                T t;
+                T& t = s[std::move(k)];
                 avro::decode(d, t);
-                s[k] = t;
             }
         }
     }

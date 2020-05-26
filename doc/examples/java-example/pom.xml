@@ -7,7 +7,7 @@
   - "License"); you may not use this file except in compliance
   - with the License.  You may obtain a copy of the License at
   -
-  -   http://www.apache.org/licenses/LICENSE-2.0
+  -   https://www.apache.org/licenses/LICENSE-2.0
   -
   - Unless required by applicable law or agreed to in writing,
   - software distributed under the License is distributed on an
@@ -24,7 +24,7 @@
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>java-example</name>
-  <url>http://maven.apache.org</url>
+  <url>https://maven.apache.org</url>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -66,5 +66,33 @@
         </configuration>
       </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro-maven-plugin</artifactId>
+                    <versionRange>[1.7.5,)</versionRange>
+                    <goals>
+                      <goal>schema</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <execute/>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

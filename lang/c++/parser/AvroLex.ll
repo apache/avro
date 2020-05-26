@@ -8,7 +8,7 @@
  "License"); you may not use this file except in compliance
  with the License.  You may obtain a copy of the License at
  
- http://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
  
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,7 @@
  limitations under the License.
 */
 
-// on some systems, won't find an EOF definition 
+// on some systems, won't find an EOF definition
 #ifndef EOF
 #define EOF (-1)
 #endif
@@ -45,7 +45,7 @@ int yylex(int *val, void *ctx)
 {
     avro::CompilerContext *c = static_cast<avro::CompilerContext *>(ctx);
     int ret = c->lexer().yylex();
-    if( ret > AVRO_LEX_OUTPUT_TEXT_BEGIN && ret < AVRO_LEX_OUTPUT_TEXT_END ) { 
+    if( ret > AVRO_LEX_OUTPUT_TEXT_BEGIN && ret < AVRO_LEX_OUTPUT_TEXT_END ) {
         c->setText( c->lexer().YYText()) ;
     }
     return ret;
@@ -94,7 +94,7 @@ anytext .*
 <READTYPE>array                 return AVRO_LEX_ARRAY;
 <READTYPE>fixed                 return AVRO_LEX_FIXED;
 <READTYPE>{avrotext}            return AVRO_LEX_NAMED_TYPE;
-<READTYPE>\"                    yy_pop_state(); 
+<READTYPE>\"                    yy_pop_state();
 
 <READNAME>{avrotext}            return AVRO_LEX_NAME;
 <READNAME>\"                    yy_pop_state();
@@ -105,8 +105,8 @@ anytext .*
 <READFIELDNAME>{avrotext}       return AVRO_LEX_FIELD_NAME;
 <READFIELDNAME>\"               yy_pop_state();
 
-<READFIELD>\"type\"{delim}      yy_push_state(STARTSCHEMA); 
-<READFIELD>\"name\"{delim}\"    yy_push_state(READFIELDNAME); 
+<READFIELD>\"type\"{delim}      yy_push_state(STARTSCHEMA);
+<READFIELD>\"name\"{delim}\"    yy_push_state(READFIELDNAME);
 <READFIELD>\}                   yy_pop_state(); return AVRO_LEX_FIELD_END;
 <READFIELD>,                    return yytext[0];
 <READFIELD>\"{avrotext}\"+{delim}      yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
@@ -117,7 +117,7 @@ anytext .*
 <READFIELDS>,                   return yytext[0];
 <READFIELDS>{ws}                ;
 
-<READSYMBOLS>\"                 yy_push_state(READSYMBOL); 
+<READSYMBOLS>\"                 yy_push_state(READSYMBOL);
 <READSYMBOLS>,                  return yytext[0];
 <READSYMBOLS>\]                 yy_pop_state(); return AVRO_LEX_SYMBOLS_END;
 <READSYMBOLS>{ws}               ;
@@ -142,7 +142,7 @@ anytext .*
 <SKIPJSONARRAY>\]               yy_pop_state();
 <SKIPJSONARRAY>\[               yy_push_state(SKIPJSONARRAY);
 <SKIPJSONARRAY>\"               yy_push_state(SKIPJSONSTRING);
-<SKIPJSONARRAY>[^\[\]\"]+       ;  
+<SKIPJSONARRAY>[^\[\]\"]+       ;
 
 <READMETADATA>\"                yy_pop_state(); yy_push_state(SKIPJSONSTRING);
 <READMETADATA>\{                yy_pop_state(); yy_push_state(SKIPJSONOBJECT);
@@ -150,18 +150,18 @@ anytext .*
 <READMETADATA>[^\"\{\[,\}]+     yy_pop_state();
 
 <INOBJECT>\"type\"{delim}       yy_push_state(STARTTYPE); return AVRO_LEX_TYPE;
-<INOBJECT>\"name\"{delim}\"     yy_push_state(READNAME); 
+<INOBJECT>\"name\"{delim}\"     yy_push_state(READNAME);
 <INOBJECT>\"size\"{delim}       yy_push_state(READSIZE);
 <INOBJECT>\"items\"{delim}      yy_push_state(STARTSCHEMA); return AVRO_LEX_ITEMS;
 <INOBJECT>\"values\"{delim}     yy_push_state(STARTSCHEMA); return AVRO_LEX_VALUES;
-<INOBJECT>\"fields\"{delim}\[   yy_push_state(READFIELDS); return AVRO_LEX_FIELDS; 
+<INOBJECT>\"fields\"{delim}\[   yy_push_state(READFIELDS); return AVRO_LEX_FIELDS;
 <INOBJECT>\"symbols\"{delim}\[  yy_push_state(READSYMBOLS); return AVRO_LEX_SYMBOLS;
 <INOBJECT>,                     return yytext[0];
 <INOBJECT>\}                    yy_pop_state(); return yytext[0];
 <INOBJECT>\"{avrotext}+\"{delim}       yy_push_state(READMETADATA); return AVRO_LEX_METADATA;
 <INOBJECT>{ws}                  ;
 
-<STARTTYPE>\"                   yy_pop_state(); yy_push_state(READTYPE); 
+<STARTTYPE>\"                   yy_pop_state(); yy_push_state(READTYPE);
 <STARTTYPE>{startunion}         yy_pop_state(); yy_push_state(INUNION); return yytext[0];
 <STARTTYPE>{startobject}        yy_pop_state(); yy_push_state(INOBJECT); return yytext[0];
 
@@ -187,7 +187,7 @@ anytext .*
 #warning "Warning:  untested version of flex"
 #endif
 #if YY_FLEX_SUBMINOR_VERSION >= 31 && YY_FLEX_SUBMINOR_VERSION < 34
-// The versions of flex starting 3.5.31 do not free yy_buffer_stack, so do so 
+// The versions of flex starting 3.5.31 do not free yy_buffer_stack, so do so
 // explicitly (first yy_delete_buffer must be called to free pointers stored on the stack, then it is
 // safe to remove the stack).  This was fixed in 3.4.34.
                                     if(yy_buffer_stack) {

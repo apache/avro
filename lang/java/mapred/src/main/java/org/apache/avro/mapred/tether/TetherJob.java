@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,8 +20,8 @@ package org.apache.avro.mapred.tether;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -56,13 +56,13 @@ public class TetherJob extends Configured {
 
   /** Set the URI for the application's executable. Normally this in HDFS. */
   public static void setExecutable(JobConf job, File executable) {
-    setExecutable(job, executable, new ArrayList<>(), false);
+    setExecutable(job, executable, Collections.emptyList(), false);
   }
 
   /**
    * Set the URI for the application's executable (i.e the program to run in a
    * subprocess and provides the mapper/reducer).
-   * 
+   *
    * @param job        - Job
    * @param executable - The URI of the executable
    * @param args       - List of additional arguments; Null if no arguments
@@ -87,9 +87,9 @@ public class TetherJob extends Configured {
   /**
    * Extract from the job configuration file an instance of the TRANSPROTO
    * enumeration to represent the protocol to use for the communication
-   * 
+   *
    * @param job
-   * @return
+   * @return - Get the currently used protocol
    */
   public static TetheredProcess.Protocol getProtocol(JobConf job) {
 

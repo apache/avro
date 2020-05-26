@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,7 +56,7 @@ class Util {
    * Returns stdin if filename is "-", else opens the File in the owning
    * filesystem and returns an InputStream for it. Relative paths will be opened
    * in the default filesystem.
-   * 
+   *
    * @param filename The filename to be opened
    * @throws IOException
    */
@@ -68,7 +68,7 @@ class Util {
    * Returns stdout if filename is "-", else opens the file from the owning
    * filesystem and returns an OutputStream for it. Relative paths will be opened
    * in the default filesystem.
-   * 
+   *
    * @param filename The filename to be opened
    * @throws IOException
    */
@@ -79,7 +79,7 @@ class Util {
   /**
    * Returns an InputStream for the file using the owning filesystem, or the
    * default if none is given.
-   * 
+   *
    * @param filename The filename to be opened
    * @throws IOException
    */
@@ -91,7 +91,7 @@ class Util {
   /**
    * Returns an InputStream for the file using the owning filesystem, or the
    * default if none is given.
-   * 
+   *
    * @param filename The filename to be opened
    * @throws IOException
    */
@@ -102,7 +102,7 @@ class Util {
   /**
    * Returns a seekable FsInput using the owning filesystem, or the default if
    * none is given.
-   * 
+   *
    * @param filename The filename to be opened
    * @throws IOException
    */
@@ -113,7 +113,7 @@ class Util {
   /**
    * Opens the file for writing in the owning filesystem, or the default if none
    * is given.
-   * 
+   *
    * @param filename The filename to be opened.
    * @return An OutputStream to the specified file.
    * @throws IOException
@@ -126,7 +126,7 @@ class Util {
   /**
    * Closes the inputstream created from {@link Util.fileOrStdin} unless it is
    * System.in.
-   * 
+   *
    * @param in The inputstream to be closed.
    */
   static void close(InputStream in) {
@@ -142,7 +142,7 @@ class Util {
   /**
    * Closes the outputstream created from {@link Util.fileOrStdout} unless it is
    * System.out.
-   * 
+   *
    * @param out The outputStream to be closed.
    */
   static void close(OutputStream out) {
@@ -157,7 +157,7 @@ class Util {
 
   /**
    * Parses a schema from the specified file.
-   * 
+   *
    * @param filename The file name to parse
    * @return The parsed schema
    * @throws IOException
@@ -180,7 +180,7 @@ class Util {
    * included.
    *
    * The List is sorted alphabetically.
-   * 
+   *
    * @param fileOrDirName filename, directoryname or a glob pattern
    * @return A Path List
    * @throws IOException
@@ -218,13 +218,13 @@ class Util {
    * subdirectories or files within those.
    *
    * The list is sorted alphabetically.
-   * 
+   *
    * @param fileOrDirNames A list of filenames, directorynames or glob patterns
    * @return A list of Paths, one for each file
    * @throws IOException
    */
   static List<Path> getFiles(List<String> fileOrDirNames) throws IOException {
-    ArrayList<Path> pathList = new ArrayList<>();
+    ArrayList<Path> pathList = new ArrayList<>(fileOrDirNames.size());
     for (String name : fileOrDirNames) {
       pathList.addAll(getFiles(name));
     }
@@ -251,12 +251,17 @@ class Util {
   }
 
   static OptionSpec<String> compressionCodecOption(OptionParser optParser) {
-    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class).defaultsTo("null");
+    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class)
+        .defaultsTo(DEFLATE_CODEC);
+  }
+
+  static OptionSpec<String> compressionCodecOptionWithDefault(OptionParser optParser, String s) {
+    return optParser.accepts("codec", "Compression codec").withRequiredArg().ofType(String.class).defaultsTo(s);
   }
 
   static OptionSpec<Integer> compressionLevelOption(OptionParser optParser) {
-    return optParser.accepts("level", "Compression level (only applies to deflate and xz)").withRequiredArg()
-        .ofType(Integer.class).defaultsTo(Deflater.DEFAULT_COMPRESSION);
+    return optParser.accepts("level", "Compression level (only applies to deflate, xz, and zstandard)")
+        .withRequiredArg().ofType(Integer.class).defaultsTo(Deflater.DEFAULT_COMPRESSION);
   }
 
   static CodecFactory codecFactory(OptionSet opts, OptionSpec<String> codec, OptionSpec<Integer> level) {
@@ -270,6 +275,8 @@ class Util {
       return CodecFactory.deflateCodec(level.value(opts));
     } else if (codecName.equals(DataFileConstants.XZ_CODEC)) {
       return CodecFactory.xzCodec(level.value(opts));
+    } else if (codecName.equals(DataFileConstants.ZSTANDARD_CODEC)) {
+      return CodecFactory.zstandardCodec(level.value(opts));
     } else {
       return CodecFactory.fromString(codec.value(opts));
     }

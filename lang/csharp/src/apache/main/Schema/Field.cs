@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
@@ -34,8 +33,19 @@ namespace Avro
         /// </summary>
         public enum SortOrder
         {
+            /// <summary>
+            /// Ascending order.
+            /// </summary>
             ascending,
+
+            /// <summary>
+            /// Descending order.
+            /// </summary>
             descending,
+
+            /// <summary>
+            /// Ignore sort order.
+            /// </summary>
             ignore
         }
 
@@ -47,7 +57,15 @@ namespace Avro
         /// <summary>
         /// List of aliases for the field name
         /// </summary>
+        [Obsolete("Use Aliases instead. This will be removed from the public API in a future version.")]
         public readonly IList<string> aliases;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        /// <summary>
+        /// List of aliases for the field name.
+        /// </summary>
+        public IList<string> Aliases => aliases;
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// Position of the field within its record.
@@ -102,14 +120,17 @@ namespace Avro
         /// <param name="doc">documentation for the field</param>
         /// <param name="defaultValue">field's default value if it exists</param>
         /// <param name="sortorder">sort order of the field</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         internal Field(Schema schema, string name, IList<string> aliases, int pos, string doc,
                         JToken defaultValue, SortOrder sortorder, PropertyMap props)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
             if (null == schema) throw new ArgumentNullException("type", "type cannot be null.");
             this.Schema = schema;
             this.Name = name;
+#pragma warning disable CS0618 // Type or member is obsolete
             this.aliases = aliases;
+#pragma warning restore CS0618 // Type or member is obsolete
             this.Pos = pos;
             this.Documentation = doc;
             this.DefaultValue = defaultValue;
@@ -143,12 +164,15 @@ namespace Avro
             if (null != this.Props)
                 this.Props.WriteJson(writer);
 
-            if (null != aliases)
+            if (null != Aliases)
             {
                 writer.WritePropertyName("aliases");
                 writer.WriteStartArray();
-                foreach (string name in aliases)
+                foreach (string name in Aliases)
+                {
                     writer.WriteValue(name);
+                }
+
                 writer.WriteEndArray();
             }
 
@@ -167,13 +191,13 @@ namespace Avro
                 return null;
 
             if (jaliases.Type != JTokenType.Array)
-                throw new SchemaParseException("Aliases must be of format JSON array of strings");
+                throw new SchemaParseException($"Aliases must be of format JSON array of strings at '{jtok.Path}'");
 
             var aliases = new List<string>();
             foreach (JToken jalias in jaliases)
             {
                 if (jalias.Type != JTokenType.String)
-                    throw new SchemaParseException("Aliases must be of format JSON array of strings");
+                    throw new SchemaParseException($"Aliases must be of format JSON array of strings at '{jtok.Path}'");
 
                 aliases.Add((string)jalias);
             }
@@ -189,7 +213,7 @@ namespace Avro
         {
             if (null == this.Props) return null;
             string v;
-            return (this.Props.TryGetValue(key, out v)) ? v : null;
+            return this.Props.TryGetValue(key, out v) ? v : null;
         }
 
         /// <summary>
@@ -227,7 +251,9 @@ namespace Avro
         /// <returns></returns>
         public override int GetHashCode()
         {
+#pragma warning disable CA1307 // Specify StringComparison
             return 17 * Name.GetHashCode() + Pos + 19 * getHashCode(Documentation) +
+#pragma warning restore CA1307 // Specify StringComparison
                    23 * getHashCode(Ordering) + 29 * getHashCode(DefaultValue) + 31 * Schema.GetHashCode() +
                    37 * getHashCode(Props);
         }

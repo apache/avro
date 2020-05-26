@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -77,7 +77,7 @@ public:
 
 typedef std::unique_ptr<InputStream> InputStreamPtr;
 
-/** 
+/**
  * An InputStream which also supports seeking to a specific offset.
  */
 class AVRO_DECL SeekableInputStream : public InputStream {
@@ -370,7 +370,7 @@ struct StreamWriter {
      * The next location to write to.
      */
     uint8_t* next_;
-    
+
     /**
      * One past the last location one can write to.
      */

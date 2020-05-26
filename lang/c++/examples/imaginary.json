@@ -1,5 +1,5 @@
 {
-    "type": "record", 
+    "type": "record",
     "name": "cpx",
     "fields" : [
         {"name": "im", "type" : "double"}

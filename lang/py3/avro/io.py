@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -91,6 +91,27 @@ class SchemaResolutionException(schema.AvroException):
 # ------------------------------------------------------------------------------
 # Validate
 
+_valid = {
+  'null': lambda s, d: d is None,
+  'boolean': lambda s, d: isinstance(d, bool),
+  'string': lambda s, d: isinstance(d, str),
+  'bytes': lambda s, d: isinstance(d, bytes),
+  'int': lambda s, d: isinstance(d, int) and (INT_MIN_VALUE <= d <= INT_MAX_VALUE),
+  'long': lambda s, d: isinstance(d, int) and (LONG_MIN_VALUE <= d <= LONG_MAX_VALUE),
+  'float': lambda s, d: isinstance(d, (int, float)),
+  'fixed': lambda s, d: isinstance(d, bytes) and len(d) == s.size,
+  'enum': lambda s, d: d in s.symbols,
+  'array': lambda s, d: isinstance(d, list) and all(Validate(s.items, item) for item in d),
+  'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, str) for key in d)
+                       and all(Validate(s.values, value) for value in d.values())),
+  'union': lambda s, d: any(Validate(branch, d) for branch in s.schemas),
+  'record': lambda s, d: (isinstance(d, dict)
+                          and all(Validate(f.type, d.get(f.name)) for f in s.fields)
+                          and {f.name for f in s.fields}.issuperset(d.keys()))
+}
+_valid['double'] = _valid['float']
+_valid['error_union'] = _valid['union']
+_valid['error'] = _valid['request'] = _valid['record']
 
 def Validate(expected_schema, datum):
   """Determines if a python datum is an instance of a schema.
@@ -101,52 +122,10 @@ def Validate(expected_schema, datum):
   Returns:
     True if the datum is an instance of the schema.
   """
-  schema_type = expected_schema.type
-  if schema_type == 'null':
-    return datum is None
-  elif schema_type == 'boolean':
-    return isinstance(datum, bool)
-  elif schema_type == 'string':
-    return isinstance(datum, str)
-  elif schema_type == 'bytes':
-    return isinstance(datum, bytes)
-  elif schema_type == 'int':
-    return (isinstance(datum, int)
-        and (INT_MIN_VALUE <= datum <= INT_MAX_VALUE))
-  elif schema_type == 'long':
-    return (isinstance(datum, int)
-        and (LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE))
-  elif schema_type in ['float', 'double']:
-    return (isinstance(datum, int) or isinstance(datum, float))
-  elif schema_type == 'fixed':
-    return isinstance(datum, bytes) and (len(datum) == expected_schema.size)
-  elif schema_type == 'enum':
-    return datum in expected_schema.symbols
-  elif schema_type == 'array':
-    return (isinstance(datum, list)
-        and all(Validate(expected_schema.items, item) for item in datum))
-  elif schema_type == 'map':
-    return (isinstance(datum, dict)
-        and all(isinstance(key, str) for key in datum.keys())
-        and all(Validate(expected_schema.values, value)
-                for value in datum.values()))
-  elif schema_type in ['union', 'error_union']:
-    return any(Validate(union_branch, datum)
-               for union_branch in expected_schema.schemas)
-  elif schema_type in ['record', 'error', 'request']:
-    if not isinstance(datum, dict):
-        return False
-    expected_schema_field_names = set()
-    for field in expected_schema.fields:
-        expected_schema_field_names.add(field.name)
-        if not Validate(field.type, datum.get(field.name)):
-            return False
-    for datum_field in datum.keys():
-        if datum_field not in expected_schema_field_names:
-            return False
-    return True
-  else:
-    raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
+  try:
+    return _valid[expected_schema.type](expected_schema, datum)
+  except KeyError:
+    raise AvroTypeException(expected_schema, datum)
 
 
 # ------------------------------------------------------------------------------
@@ -657,7 +636,7 @@ class DatumReader(object):
 
   def read_union(self, writer_schema, reader_schema, decoder):
     """
-    A union is encoded by first writing a long value indicating
+    A union is encoded by first writing an int value indicating
     the zero-based position within the union of the schema of its value.
     The value is then encoded per the indicated schema within the union.
     """
@@ -887,7 +866,7 @@ class DatumWriter(object):
 
   def write_union(self, writer_schema, datum, encoder):
     """
-    A union is encoded by first writing a long value indicating
+    A union is encoded by first writing an int value indicating
     the zero-based position within the union of the schema of its value.
     The value is then encoded per the indicated schema within the union.
     """

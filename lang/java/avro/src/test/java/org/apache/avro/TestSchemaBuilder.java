@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -645,8 +645,7 @@ public class TestSchemaBuilder {
     String strdef = "\u0003";
     HashMap<String, String> mapdef = new HashMap<>();
     mapdef.put("a", "A");
-    ArrayList<String> arrdef = new ArrayList<>();
-    arrdef.add("arr");
+    List<String> arrdef = Collections.singletonList("arr");
 
     Schema rec = SchemaBuilder.record("inner").fields().name("f").type().intType().noDefault().endRecord();
 
@@ -721,7 +720,7 @@ public class TestSchemaBuilder {
     for (CharSequence c : arr) {
       Assert.assertTrue(arrdef.contains(c.toString()));
     }
-    Assert.assertEquals(newRec.get("arrF"), newRec.get("arrU"));
+    Assert.assertEquals(newRec.get("arrayF"), newRec.get("arrayU"));
     Assert.assertEquals(recdef, newRec.get("recordF"));
     Assert.assertEquals(recdef2, newRec.get("recordU"));
     Assert.assertEquals("S", newRec.get("byName").toString());
@@ -776,22 +775,24 @@ public class TestSchemaBuilder {
         .intDefault(3).name("newOptionalInt").type().optional().intType().name("newNullableIntWithDefault").type()
         .nullable().intType().intDefault(5).endRecord();
 
-    DataFileReader<GenericData.Record> reader = new DataFileReader<>(file,
-        new GenericDatumReader<>(writeSchema, readSchema));
+    try (DataFileReader<GenericData.Record> reader = new DataFileReader<>(file,
+        new GenericDatumReader<>(writeSchema, readSchema))) {
 
-    GenericData.Record rec1read = reader.iterator().next();
-    Assert.assertEquals(1, rec1read.get("requiredInt"));
-    Assert.assertNull(rec1read.get("optionalInt"));
-    Assert.assertEquals(3, rec1read.get("nullableIntWithDefault"));
-    Assert.assertNull(rec1read.get("newOptionalInt"));
-    Assert.assertEquals(5, rec1read.get("newNullableIntWithDefault"));
+      GenericData.Record rec1read = reader.iterator().next();
+      Assert.assertEquals(1, rec1read.get("requiredInt"));
+      Assert.assertNull(rec1read.get("optionalInt"));
+      Assert.assertEquals(3, rec1read.get("nullableIntWithDefault"));
+      Assert.assertNull(rec1read.get("newOptionalInt"));
+      Assert.assertEquals(5, rec1read.get("newNullableIntWithDefault"));
 
-    GenericData.Record rec2read = reader.iterator().next();
-    Assert.assertEquals(1, rec2read.get("requiredInt"));
-    Assert.assertEquals(2, rec2read.get("optionalInt"));
-    Assert.assertEquals(13, rec2read.get("nullableIntWithDefault"));
-    Assert.assertNull(rec2read.get("newOptionalInt"));
-    Assert.assertEquals(5, rec2read.get("newNullableIntWithDefault"));
+      GenericData.Record rec2read = reader.iterator().next();
+      Assert.assertEquals(1, rec2read.get("requiredInt"));
+      Assert.assertEquals(2, rec2read.get("optionalInt"));
+      Assert.assertEquals(13, rec2read.get("nullableIntWithDefault"));
+      Assert.assertNull(rec2read.get("newOptionalInt"));
+      Assert.assertEquals(5, rec2read.get("newNullableIntWithDefault"));
+    }
+
   }
 
   @Test

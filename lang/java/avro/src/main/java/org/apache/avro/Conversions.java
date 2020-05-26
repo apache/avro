@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -80,7 +80,7 @@ public class Conversions {
       int scale = ((LogicalTypes.Decimal) type).getScale();
       // always copy the bytes out because BigInteger has no offset/length ctor
       byte[] bytes = new byte[value.remaining()];
-      value.get(bytes);
+      value.duplicate().get(bytes);
       return new BigDecimal(new BigInteger(bytes), scale);
     }
 
@@ -122,7 +122,7 @@ public class Conversions {
   /**
    * Convert a underlying representation of a logical type (such as a ByteBuffer)
    * to a higher level object (such as a BigDecimal).
-   * 
+   *
    * @param datum      The object to be converted.
    * @param schema     The schema of datum. Cannot be null if datum is not null.
    * @param type       The {@link org.apache.avro.LogicalType} of datum. Cannot be
@@ -181,7 +181,7 @@ public class Conversions {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer)
-   * 
+   *
    * @param datum      The object to be converted.
    * @param schema     The schema of datum. Cannot be null if datum is not null.
    * @param type       The {@link org.apache.avro.LogicalType} of datum. Cannot be

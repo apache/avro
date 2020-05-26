@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,8 @@ module Avro
     PRIMITIVE_TYPES_SYM = Set.new(PRIMITIVE_TYPES.map(&:to_sym))
     NAMED_TYPES_SYM     = Set.new(NAMED_TYPES.map(&:to_sym))
     VALID_TYPES_SYM     = Set.new(VALID_TYPES.map(&:to_sym))
+
+    NAME_REGEX = /^([A-Za-z_][A-Za-z0-9_]*)(\.([A-Za-z_][A-Za-z0-9_]*))*$/
 
     INT_MIN_VALUE = -(1 << 31)
     INT_MAX_VALUE = (1 << 31) - 1
@@ -53,10 +55,19 @@ module Avro
 
         type_sym = type.to_sym
         if PRIMITIVE_TYPES_SYM.include?(type_sym)
-          return PrimitiveSchema.new(type_sym, logical_type)
-
+          case type_sym
+          when :bytes
+            precision = json_obj['precision']
+            scale = json_obj['scale']
+            return BytesSchema.new(type_sym, logical_type, precision, scale)
+          else
+            return PrimitiveSchema.new(type_sym, logical_type)
+          end
         elsif NAMED_TYPES_SYM.include? type_sym
           name = json_obj['name']
+          if !Avro.disable_schema_name_validation && name !~ NAME_REGEX
+            raise SchemaParseError, "Name #{name} is invalid for type #{type}!"
+          end
           namespace = json_obj.include?('namespace') ? json_obj['namespace'] : default_namespace
           case type_sym
           when :fixed
@@ -65,7 +76,8 @@ module Avro
           when :enum
             symbols = json_obj['symbols']
             doc     = json_obj['doc']
-            return EnumSchema.new(name, namespace, symbols, names, doc)
+            default = json_obj['default']
+            return EnumSchema.new(name, namespace, symbols, names, doc, default)
           when :record, :error
             fields = json_obj['fields']
             doc    = json_obj['doc']
@@ -131,6 +143,49 @@ module Avro
       Digest::SHA256.hexdigest(parsing_form).to_i(16)
     end
 
+    CRC_EMPTY = 0xc15d213aa4d7a795
+
+    # The java library caches this value after initialized, so this pattern
+    # mimics that.
+    @@fp_table = nil
+    def initFPTable
+      @@fp_table = Array.new(256)
+      256.times do |i|
+        fp = i
+        8.times do
+          fp = (fp >> 1) ^ ( CRC_EMPTY & -( fp & 1 ) )
+        end
+        @@fp_table[i] = fp
+      end
+    end
+
+    def crc_64_avro_fingerprint
+      parsing_form = Avro::SchemaNormalization.to_parsing_form(self)
+      data_bytes = parsing_form.unpack("C*")
+
+      initFPTable unless @@fp_table
+
+      fp = CRC_EMPTY
+      data_bytes.each do |b|
+        fp = (fp >> 8) ^ @@fp_table[ (fp ^ b) & 0xff ]
+      end
+      fp
+    end
+
+    SINGLE_OBJECT_MAGIC_NUMBER = [0xC3, 0x01]
+    def single_object_encoding_header
+      [SINGLE_OBJECT_MAGIC_NUMBER, single_object_schema_fingerprint].flatten
+    end
+    def single_object_schema_fingerprint
+      working = crc_64_avro_fingerprint
+      bytes = Array.new(8)
+      8.times do |i|
+        bytes[7 - i] = (working & 0xff)
+        working = working >> 8
+      end
+      bytes
+    end
+
     def read?(writers_schema)
       SchemaCompatibility.can_read?(writers_schema, self)
     end
@@ -143,11 +198,11 @@ module Avro
       SchemaCompatibility.mutual_read?(other_schema, self)
     end
 
-    def ==(other, seen=nil)
+    def ==(other, _seen=nil)
       other.is_a?(Schema) && type_sym == other.type_sym
     end
 
-    def hash(seen=nil)
+    def hash(_seen=nil)
       type_sym.hash
     end
 
@@ -165,7 +220,7 @@ module Avro
       end
     end
 
-    def to_avro(names=nil)
+    def to_avro(_names=nil)
       props = {'type' => type}
       props['logicalType'] = logical_type if logical_type
       props
@@ -182,7 +237,7 @@ module Avro
         super(type, logical_type)
         @name, @namespace = Name.extract_namespace(name, namespace)
         @doc  = doc
-        names = Name.add_name(names, self)
+        Name.add_name(names, self)
       end
 
       def to_avro(names=Set.new)
@@ -206,7 +261,7 @@ module Avro
 
       def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
-        field_data.each_with_index do |field, i|
+        field_data.each do |field|
           if field.respond_to?(:[]) # TODO(jmhodges) wtffffff
             type = field['type']
             name = field['name']
@@ -313,20 +368,41 @@ module Avro
     end
 
     class EnumSchema < NamedSchema
-      attr_reader :symbols, :doc
+      SYMBOL_REGEX = /^[A-Za-z_][A-Za-z0-9_]*$/
 
-      def initialize(name, space, symbols, names=nil, doc=nil)
+      attr_reader :symbols, :doc, :default
+
+      def initialize(name, space, symbols, names=nil, doc=nil, default=nil)
         if symbols.uniq.length < symbols.length
           fail_msg = "Duplicate symbol: #{symbols}"
           raise Avro::SchemaParseError, fail_msg
         end
+
+        if !Avro.disable_enum_symbol_validation
+          invalid_symbols = symbols.select { |symbol| symbol !~ SYMBOL_REGEX }
+
+          if invalid_symbols.any?
+            raise SchemaParseError,
+              "Invalid symbols for #{name}: #{invalid_symbols.join(', ')} don't match #{SYMBOL_REGEX.inspect}"
+          end
+        end
+
+        if default && !symbols.include?(default)
+          raise Avro::SchemaParseError, "Default '#{default}' is not a valid symbol for enum #{name}"
+        end
+
         super(:enum, name, space, names, doc)
+        @default = default
         @symbols = symbols
       end
 
-      def to_avro(names=Set.new)
+      def to_avro(_names=Set.new)
         avro = super
-        avro.is_a?(Hash) ? avro.merge('symbols' => symbols) : avro
+        if avro.is_a?(Hash)
+          avro['symbols'] = symbols
+          avro['default'] = default if default
+        end
+        avro
       end
     end
 
@@ -345,6 +421,24 @@ module Avro
       def to_avro(names=nil)
         hsh = super
         hsh.size == 1 ? type : hsh
+      end
+    end
+
+    class BytesSchema < PrimitiveSchema
+      attr_reader :precision, :scale
+      def initialize(type, logical_type=nil, precision=nil, scale=nil)
+        super(type.to_sym, logical_type)
+        @precision = precision
+        @scale = scale
+      end
+
+      def to_avro(names=nil)
+        avro = super
+        return avro if avro.is_a?(String)
+
+        avro['precision'] = precision if precision
+        avro['scale'] = scale if scale
+        avro
       end
     end
 

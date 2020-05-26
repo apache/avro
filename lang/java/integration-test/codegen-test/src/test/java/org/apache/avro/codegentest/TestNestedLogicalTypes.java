@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,20 @@
  */
 package org.apache.avro.codegentest;
 
-import java.time.LocalDate;
-
-import org.apache.avro.codegentest.testdata.*;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesArray;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesMap;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesRecord;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesUnion;
+import org.apache.avro.codegentest.testdata.NestedLogicalTypesUnionFixedDecimal;
+import org.apache.avro.codegentest.testdata.NestedRecord;
+import org.apache.avro.codegentest.testdata.NullableLogicalTypesArray;
+import org.apache.avro.codegentest.testdata.RecordInArray;
+import org.apache.avro.codegentest.testdata.RecordInMap;
+import org.apache.avro.codegentest.testdata.RecordInUnion;
 import org.junit.Test;
 
+import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.Collections;
 
 public class TestNestedLogicalTypes extends AbstractSpecificRecordTest {
@@ -64,4 +73,12 @@ public class TestNestedLogicalTypes extends AbstractSpecificRecordTest {
         .build();
     verifySerDeAndStandardMethods(nestedLogicalTypesMap);
   }
+
+  @Test
+  public void testNullableLogicalTypeInRecordInFixedDecimal() {
+    final NestedLogicalTypesUnionFixedDecimal nestedLogicalTypesUnionFixedDecimal = NestedLogicalTypesUnionFixedDecimal
+        .newBuilder().setUnionOfFixedDecimal(new CustomDecimal(BigInteger.TEN, 15)).build();
+    verifySerDeAndStandardMethods(nestedLogicalTypesUnionFixedDecimal);
+  }
+
 }

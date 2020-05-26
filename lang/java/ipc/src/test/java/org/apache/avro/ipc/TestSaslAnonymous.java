@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -68,7 +68,7 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
     SaslSocketTransceiver client = new SaslSocketTransceiver(new InetSocketAddress(s.getPort()));
     ProtoInterface proxy = ReflectRequestor.getClient(ProtoInterface.class, client);
 
-    byte[] result = proxy.test(new byte[64 * 1024]);
+    proxy.test(new byte[64 * 1024]);
 
     client.close();
     s.close();

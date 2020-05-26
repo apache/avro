@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -78,6 +78,7 @@ public class TestAvroTextOutputFormat {
     assertEquals("k3\tv3", asString(fileReader.next()));
     assertEquals("k4\tv4", asString(fileReader.next()));
     assertFalse("End", fileReader.hasNext());
+    fileReader.close();
   }
 
   private String asString(ByteBuffer buf) {

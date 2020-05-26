@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -49,8 +49,8 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * Buffers returned by {@link #encode(D)} are copied and will not be modified by
-   * future calls to {@code encode}.
+   * Buffers returned by {@link RawMessageEncoder#encode} are copied and will not
+   * be modified by future calls to {@code encode}.
    *
    * @param model  the {@link GenericData data model} for datum instances
    * @param schema the {@link Schema} for datum instances
@@ -64,8 +64,9 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * If {@code shouldCopy} is true, then buffers returned by {@link #encode(D)}
-   * are copied and will not be modified by future calls to {@code encode}.
+   * If {@code shouldCopy} is true, then buffers returned by
+   * {@link RawMessageEncoder#encode} are copied and will not be modified by
+   * future calls to {@code encode}.
    * <p>
    * If {@code shouldCopy} is false, then buffers returned by {@code encode} wrap
    * a thread-local buffer that can be reused by future calls to {@code encode},

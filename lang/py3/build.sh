@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,7 @@
 set -e # exit on error
 
 usage() {
-  echo "Usage: $0 {test|dist|clean}"
+  echo "Usage: $0 {isort|lint|test|dist|clean}"
 }
 
 main() {
@@ -29,11 +29,12 @@ main() {
   fi
   for target; do
     case "$target" in
-      clean|dist|test) : ;;
-      *) usage; return 1 ;;
+      lint) set -- isort "$@";;
+      clean|dist|isort|test) :;;
+      *) usage; return 1;;
     esac
+    python3 setup.py "$target"
   done
-  python3 setup.py "$@"
 }
 
 main "$@"

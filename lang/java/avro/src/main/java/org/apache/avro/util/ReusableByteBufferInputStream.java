@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -21,25 +21,30 @@ package org.apache.avro.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 public class ReusableByteBufferInputStream extends InputStream {
 
   private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.allocate(0);
 
-  private ByteBuffer buffer = EMPTY_BUFFER;
+  // work around issues compiling with Java11 but running with 8
+  // due to ByteBuffer overriding several methods
+  private ByteBuffer byteBuffer = EMPTY_BUFFER;
+  private Buffer buffer = byteBuffer;
   private int mark = 0;
 
   public void setByteBuffer(ByteBuffer buf) {
     // do not modify the buffer that is passed in
-    this.buffer = buf.duplicate();
+    this.byteBuffer = buf.duplicate();
+    this.buffer = byteBuffer;
     this.mark = buf.position();
   }
 
   @Override
   public int read() throws IOException {
     if (buffer.hasRemaining()) {
-      return buffer.get() & 0xff;
+      return byteBuffer.get() & 0xff;
     } else {
       return -1;
     }
@@ -52,7 +57,7 @@ public class ReusableByteBufferInputStream extends InputStream {
     }
     // allow IndexOutOfBoundsException to be thrown by ByteBuffer#get
     int bytesToRead = Math.min(len, buffer.remaining());
-    buffer.get(b, off, bytesToRead);
+    byteBuffer.get(b, off, bytesToRead);
     return bytesToRead;
   }
 

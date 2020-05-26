@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,6 +37,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     Assert.assertEquals(0, in.tell());
     Assert.assertEquals(0, in.length());
+    out.close();
   }
 
   @Test
@@ -49,6 +50,7 @@ public class TestIOBuffers {
     Assert.assertEquals(0, bytes[0]);
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     Assert.assertEquals(0, in.readInt());
+    out.close();
   }
 
   @Test
@@ -62,6 +64,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextBoolean(), in.readValue(ValueType.BOOLEAN));
+    out.close();
   }
 
   @Test
@@ -75,6 +78,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextInt(), in.readInt());
+    out.close();
   }
 
   @Test
@@ -88,6 +92,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextLong(), in.readLong());
+    out.close();
   }
 
   @Test
@@ -101,6 +106,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextInt(), in.readFixed32());
+    out.close();
   }
 
   @Test
@@ -114,6 +120,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextLong(), in.readFixed64());
+    out.close();
   }
 
   @Test
@@ -127,6 +134,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextFloat(), in.readFloat(), 0);
+    out.close();
   }
 
   @Test
@@ -138,6 +146,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(Double.MIN_VALUE, in.readDouble(), 0);
+    out.close();
   }
 
   @Test
@@ -151,6 +160,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(TestUtil.randomBytes(random), in.readBytes(null));
+    out.close();
   }
 
   @Test
@@ -164,6 +174,7 @@ public class TestIOBuffers {
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(TestUtil.randomString(random), in.readString());
+    out.close();
   }
 
   @Test
@@ -176,6 +187,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.NULL);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -188,6 +200,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.BOOLEAN);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -200,6 +213,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.INT);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -212,6 +226,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.LONG);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -224,6 +239,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.LONG);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -236,6 +252,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.LONG);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -248,6 +265,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.FLOAT);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -260,6 +278,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.DOUBLE);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -272,6 +291,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.STRING);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -284,6 +304,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     in.skipValue(ValueType.BYTES);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 
   @Test
@@ -297,5 +318,6 @@ public class TestIOBuffers {
     long pos = in.tell();
     in = new InputBuffer(new InputBytes(out.toByteArray()), pos);
     Assert.assertEquals(sentinel, in.readLong());
+    out.close();
   }
 }

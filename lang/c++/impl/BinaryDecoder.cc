@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -204,7 +204,7 @@ size_t BinaryDecoder::skipArray()
     for (; ;) {
         int64_t r = doDecodeLong();
         if (r < 0) {
-            size_t n = static_cast<size_t>(doDecodeLong()); 
+            size_t n = static_cast<size_t>(doDecodeLong());
             in_.skipBytes(n);
         } else {
             return static_cast<size_t>(r);

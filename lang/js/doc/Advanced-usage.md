@@ -7,7 +7,7 @@ to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+https://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -195,7 +195,7 @@ function DecimalType(attrs, opts) {
   var type = this.getUnderlyingType();
   if (type instanceof FixedType) {
     var size = type.getSize();
-    var maxPrecision = Math.log(Math.pow(2, 8 * size - 1) - 1) / Math.log(10);
+    var maxPrecision = Math.log(2) * (8 * size - 1) / Math.log(10);
     if (precision > (maxPrecision | 0)) {
       throw new Error('fixed size too small to hold required precision');
     }

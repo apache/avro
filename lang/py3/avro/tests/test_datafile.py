@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,10 +23,19 @@ import os
 import tempfile
 import unittest
 
-from avro import datafile
-from avro import io
-from avro import schema
+from avro import datafile, io, schema
+from avro.datafile import NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, SNAPPY_CODEC, XZ_CODEC, ZSTANDARD_CODEC
 
+try:
+  import snappy
+  HAS_SNAPPY = True
+except ImportError:
+  HAS_SNAPPY = False
+try:
+  import zstandard
+  HAS_ZSTANDARD = True
+except ImportError:
+  HAS_ZSTANDARD = False
 
 # ------------------------------------------------------------------------------
 
@@ -77,14 +86,20 @@ SCHEMAS_TO_VALIDATE = (
    {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
 )
 
-CODECS_TO_VALIDATE = ('null', 'deflate')
+def get_codecs_to_validate():
+  codecs = (NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, XZ_CODEC)
 
-try:
-  import snappy
-  CODECS_TO_VALIDATE += ('snappy',)
-except ImportError:
-  logging.info('Snappy not present, will skip testing it.')
+  if HAS_SNAPPY:
+    codecs += (SNAPPY_CODEC,)
+  else:
+    logging.warning('Snappy not present, will skip testing it.')
 
+  if HAS_ZSTANDARD:
+    codecs += (ZSTANDARD_CODEC,)
+  else:
+    logging.warning('Zstandard not present, will skip testing it.')
+
+  return codecs
 
 # ------------------------------------------------------------------------------
 
@@ -120,8 +135,9 @@ class TestDataFile(unittest.TestCase):
 
   def testRoundTrip(self):
     correct = 0
+    codecs_to_validate = get_codecs_to_validate()
     for iexample, (writer_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
+      for codec in codecs_to_validate:
         file_path = self.NewTempFile()
 
         # Write the datum this many times in the data file:
@@ -136,7 +152,7 @@ class TestDataFile(unittest.TestCase):
         logging.debug('Creating data file %r', file_path)
         with open(file_path, 'wb') as writer:
           datum_writer = io.DatumWriter()
-          schema_object = schema.Parse(writer_schema)
+          schema_object = schema.parse(writer_schema)
           with datafile.DataFileWriter(
               writer=writer,
               datum_writer=datum_writer,
@@ -168,12 +184,13 @@ class TestDataFile(unittest.TestCase):
 
     self.assertEqual(
         correct,
-        len(CODECS_TO_VALIDATE) * len(SCHEMAS_TO_VALIDATE))
+        len(codecs_to_validate) * len(SCHEMAS_TO_VALIDATE))
 
   def testAppend(self):
     correct = 0
+    codecs_to_validate = get_codecs_to_validate()
     for iexample, (writer_schema, datum) in enumerate(SCHEMAS_TO_VALIDATE):
-      for codec in CODECS_TO_VALIDATE:
+      for codec in codecs_to_validate:
         file_path = self.NewTempFile()
 
         logging.debug(
@@ -185,7 +202,7 @@ class TestDataFile(unittest.TestCase):
         logging.debug('Creating data file %r', file_path)
         with open(file_path, 'wb') as writer:
           datum_writer = io.DatumWriter()
-          schema_object = schema.Parse(writer_schema)
+          schema_object = schema.parse(writer_schema)
           with datafile.DataFileWriter(
               writer=writer,
               datum_writer=datum_writer,
@@ -222,7 +239,7 @@ class TestDataFile(unittest.TestCase):
 
     self.assertEqual(
         correct,
-        len(CODECS_TO_VALIDATE) * len(SCHEMAS_TO_VALIDATE))
+        len(codecs_to_validate) * len(SCHEMAS_TO_VALIDATE))
 
   def testContextManager(self):
     file_path = self.NewTempFile()
@@ -231,7 +248,7 @@ class TestDataFile(unittest.TestCase):
     with open(file_path, 'wb') as writer:
       datum_writer = io.DatumWriter()
       sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
-      schema_object = schema.Parse(sample_schema)
+      schema_object = schema.parse(sample_schema)
       with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
         dfw.append(sample_datum)
       self.assertTrue(writer.closed)
@@ -252,7 +269,7 @@ class TestDataFile(unittest.TestCase):
     with open(file_path, 'wb') as writer:
       datum_writer = io.DatumWriter()
       sample_schema, sample_datum = SCHEMAS_TO_VALIDATE[1]
-      schema_object = schema.Parse(sample_schema)
+      schema_object = schema.parse(sample_schema)
       with datafile.DataFileWriter(writer, datum_writer, schema_object) as dfw:
         dfw.SetMeta('test.string', 'foo')
         dfw.SetMeta('test.number', '1')
@@ -269,6 +286,20 @@ class TestDataFile(unittest.TestCase):
         for datum in dfr:
           datums.append(datum)
       self.assertTrue(reader.closed)
+
+  def test_empty_datafile(self):
+    """A reader should not fail to read a file consisting of a single empty block."""
+    file_path = self.NewTempFile()
+    sample_schema = schema.parse(SCHEMAS_TO_VALIDATE[1][0])
+    with datafile.DataFileWriter(open(file_path, 'wb'), io.DatumWriter(), sample_schema) as dfw:
+      dfw.flush()
+      # Write an empty block
+      dfw.encoder.write_long(0)
+      dfw.encoder.write_long(0)
+      dfw.writer.write(dfw.sync_marker)
+
+    with datafile.DataFileReader(open(file_path, 'rb'), io.DatumReader()) as dfr:
+      self.assertEqual([], list(dfr))
 
 
 # ------------------------------------------------------------------------------

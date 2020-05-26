@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,7 @@
 
 #include "BufferDetail.hh"
 
-/** 
+/**
  * \file BufferDetailIterator.hh
  *
  * \brief The implementation details for the Buffer iterators.
@@ -31,9 +31,9 @@ namespace avro {
 
 namespace detail {
 
-/** 
+/**
  * \brief Implements conversion from a chunk to asio::const_buffer
- * 
+ *
  * Iterators for an InputBuffer will iterate over the avro of chunks, so
  * internally they contain an iterator.  But the iterator needs to be
  * convertable to an asio buffer for use in boost::asio functions.  This class
@@ -42,7 +42,7 @@ namespace detail {
 
 struct InputIteratorHelper
 {
-    /// Construct a helper with an unnassigned iterator. 
+    /// Construct a helper with an unnassigned iterator.
     InputIteratorHelper() :
         iter_()
     {}
@@ -63,7 +63,7 @@ struct InputIteratorHelper
     }
 
     /// Conversion operator.   It doesn't check for null, because the only
-    /// the only time the chunk should be null is when it's the iterator 
+    /// the only time the chunk should be null is when it's the iterator
     /// end(), which should never be dereferenced anyway.
 #ifdef HAVE_BOOST_ASIO
     operator ConstAsioBuffer() const {
@@ -74,9 +74,9 @@ struct InputIteratorHelper
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };
 
-/** 
- * \brief Implements conversion from a chunk to asio::buffer 
- * 
+/**
+ * \brief Implements conversion from a chunk to asio::buffer
+ *
  * Iterators for an OutputBuffer will iterate over the avro of chunks, so
  * internally they contain an iterator.  But the iterator needs to be
  * convertable to an asio buffer for use in boost::asio functions.  This class
@@ -106,7 +106,7 @@ struct OutputIteratorHelper
     }
 
     /// Conversion operator.   It doesn't check for null, because the only
-    /// the only time the chunk should be null is when it's the iterator 
+    /// the only time the chunk should be null is when it's the iterator
     /// end(), which should never be dereferenced anyway.
 #ifdef HAVE_BOOST_ASIO
     operator MutableAsioBuffer() const {
@@ -117,20 +117,20 @@ struct OutputIteratorHelper
     BufferImpl::ChunkList::const_iterator iter_; ///< the current iterator
 };
 
-/** 
+/**
  * \brief Implements the iterator for Buffer, that iterates through the
  * buffer's chunks.
  **/
 
 template<typename Helper>
-class BufferIterator 
+class BufferIterator
 {
 
   public:
 
     typedef BufferIterator<Helper> this_type;
 
-    /** 
+    /**
      * @name Typedefs
      *
      * STL iterators define the following declarations.  According to
@@ -189,9 +189,9 @@ class BufferIterator
     const value_type *operator->() const {
         return &helper_;
     }
-    
+
     /// Increment to next chunk in list, or to end() iterator.
-    this_type& operator++() 
+    this_type& operator++()
     {
         ++helper_.iter_;
         return *this;

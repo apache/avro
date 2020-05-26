@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
+import java.util.Objects;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -49,6 +50,8 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   private static final String LINE_SEPARATOR = System.getProperty("line.separator");
   final Parser parser;
   private JsonGenerator out;
+  private boolean includeNamespace = true;
+
   /**
    * Has anything been written into the collections?
    */
@@ -78,8 +81,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
   // by default, one object per line.
   // with pretty option use default pretty printer with root line separator.
   private static JsonGenerator getJsonGenerator(OutputStream out, boolean pretty) throws IOException {
-    if (null == out)
-      throw new NullPointerException("OutputStream cannot be null");
+    Objects.requireNonNull(out, "OutputStream cannot be null");
     JsonGenerator g = new JsonFactory().createGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       DefaultPrettyPrinter pp = new DefaultPrettyPrinter() {
@@ -97,6 +99,14 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     return g;
   }
 
+  public boolean isIncludeNamespace() {
+    return includeNamespace;
+  }
+
+  public void setIncludeNamespace(final boolean includeNamespace) {
+    this.includeNamespace = includeNamespace;
+  }
+
   /**
    * Reconfigures this JsonEncoder to use the output stream provided.
    * <p/>
@@ -108,6 +118,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    *
    * @param out The OutputStream to direct output to. Cannot be null.
    * @throws IOException
+   * @throws NullPointerException if {@code out} is {@code null}
    * @return this JsonEncoder
    */
   public JsonEncoder configure(OutputStream out) throws IOException {
@@ -125,11 +136,11 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
    *
    * @param generator The JsonGenerator to direct output to. Cannot be null.
    * @throws IOException
+   * @throws NullPointerException if {@code generator} is {@code null}
    * @return this JsonEncoder
    */
   private JsonEncoder configure(JsonGenerator generator) throws IOException {
-    if (null == generator)
-      throw new NullPointerException("JsonGenerator cannot be null");
+    Objects.requireNonNull(generator, "JsonGenerator cannot be null");
     if (null != parser) {
       flush();
     }
@@ -283,7 +294,7 @@ public class JsonEncoder extends ParsingEncoder implements Parser.ActionHandler 
     parser.advance(Symbol.UNION);
     Symbol.Alternative top = (Symbol.Alternative) parser.popSymbol();
     Symbol symbol = top.getSymbol(unionIndex);
-    if (symbol != Symbol.NULL) {
+    if (symbol != Symbol.NULL && includeNamespace) {
       out.writeStartObject();
       out.writeFieldName(top.getLabel(unionIndex));
       parser.pushSymbol(Symbol.UNION_END);

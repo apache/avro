@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -35,9 +35,12 @@ use Avro::DataFile;
 use Avro::BinaryDecoder;
 use Avro::Schema;
 use Carp;
-use IO::String;
+use Compress::Zstd;
+use IO::Uncompress::Bunzip2 qw(bunzip2);
 use IO::Uncompress::RawInflate ;
 use Fcntl();
+
+our $VERSION = '++MODULE_VERSION++';
 
 sub new {
     my $class = shift;
@@ -190,6 +193,7 @@ sub skip {
 sub read_block_header {
     my $datafile = shift;
     my $fh = $datafile->{fh};
+    my $codec = $datafile->codec;
 
     $datafile->header unless $datafile->{_header};
 
@@ -201,7 +205,8 @@ sub read_block_header {
     );
     $datafile->{block_start} = tell $fh;
 
-    return unless $datafile->codec eq 'deflate';
+    return if $codec eq 'null';
+
     ## we need to read the entire block into memory, to inflate it
     my $nread = read $fh, my $block, $datafile->{block_size} + MARKER_SIZE
         or croak "Error reading from file: $!";
@@ -211,7 +216,19 @@ sub read_block_header {
     $datafile->{block_marker} = $marker;
 
     ## this is our new reader
-    $datafile->{reader} = IO::Uncompress::RawInflate->new(\$block);
+    $datafile->{reader} = do {
+        if ($codec eq 'deflate') {
+            IO::Uncompress::RawInflate->new(\$block);
+        }
+        elsif ($codec eq 'bzip2') {
+            my $uncompressed;
+            bunzip2 \$block => \$uncompressed;
+            do { open $fh, '<', \$uncompressed; $fh };
+        }
+        elsif ($codec eq 'zstandard') {
+            do { open $fh, '<', \(decompress(\$block)); $fh };
+        }
+    };
 
     return;
 }

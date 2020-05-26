@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,11 +19,10 @@
 # limitations under the License.
 
 import sys
+from pathlib import Path
 
-from avro import datafile
-from avro import io
-from avro import schema
-
+from avro import datafile, io, schema
+from avro.datafile import NULL_CODEC
 
 DATUM = {
     'intField': 12,
@@ -32,7 +31,7 @@ DATUM = {
     'boolField': True,
     'floatField': 1234.0,
     'doubleField': -1234.0,
-    'bytesField': '12312adf',
+    'bytesField': b'12312adf',
     'nullField': None,
     'arrayField': [5.0, 0.0, 12.0],
     'mapField': {'a': {'label': 'a'}, 'bee': {'label': 'cee'}},
@@ -46,11 +45,17 @@ DATUM = {
 }
 
 
-if __name__ == "__main__":
-  interop_schema = schema.Parse(open(sys.argv[1], 'r').read())
-  writer = open(sys.argv[2], 'wb')
+def generate(schema_file, output_path):
+  interop_schema = schema.parse(open(schema_file, 'r').read())
   datum_writer = io.DatumWriter()
-  # NB: not using compression
-  dfw = datafile.DataFileWriter(writer, datum_writer, interop_schema)
-  dfw.append(DATUM)
-  dfw.close()
+  for codec in datafile.VALID_CODECS:
+    filename = 'py3'
+    if codec != NULL_CODEC:
+      filename += '_' + codec
+    with Path(output_path, filename).with_suffix('.avro').open('wb') as writer, \
+      datafile.DataFileWriter(writer, datum_writer, interop_schema, codec) as dfw:
+      dfw.append(DATUM)
+
+
+if __name__ == "__main__":
+    generate(sys.argv[1], sys.argv[2])

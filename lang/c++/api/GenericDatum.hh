@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -167,7 +167,7 @@ public:
 
     /**
      * Constructs a datum corresponding to the given avro type and set
-     * the value. 
+     * the value.
      * \param schema The schema that defines the avro type.
      * \param v The value for this type.
      */
@@ -285,7 +285,7 @@ public:
     /**
      * Returns index of the field with the given name \p name
      */
-    size_t fieldIndex(const std::string& name) const { 
+    size_t fieldIndex(const std::string& name) const {
         size_t index = 0;
         if (!schema()->nameIndex(name, index)) {
             throw Exception("Invalid field name: " + name);
@@ -336,7 +336,7 @@ public:
      * Replaces the field at the given position \p pos with \p v.
      */
     void setFieldAt(size_t pos, const GenericDatum& v) {
-        // assertSameType(v, schema()->leafAt(pos));    
+        // assertSameType(v, schema()->leafAt(pos));
         fields_[pos] = v;
     }
 };

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,17 +18,19 @@
 
 package org.apache.avro.reflect;
 
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.lessThan;
-import static org.junit.Assert.assertThat;
-
-import java.util.Collections;
-
+import org.apache.avro.AvroTypeException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
+import org.apache.avro.util.internal.JacksonUtils;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class TestReflectData {
   @Test
@@ -89,5 +91,57 @@ public class TestReflectData {
   private static class FooBarReflectiveRecord {
     private String bar;
     private int baz;
+  }
+
+  static class User {
+    public String first = "Avro";
+    public String last = "Apache";
+  }
+
+  static class Meta {
+    public int f1 = 55;
+    public int f4;
+    public String f2 = "a-string";
+    public List<String> f3 = Arrays.asList("one", "two", "three");
+    // public User usr = new User();
+  }
+
+  @Test
+  public void testCreateSchemaDefaultValue() {
+    Meta meta = new Meta();
+    validateSchema(meta);
+
+    meta.f4 = 0x1987;
+    validateSchema(meta);
+  }
+
+  private void validateSchema(Meta meta) {
+    Schema schema = new ReflectData().setDefaultsGenerated(true).setDefaultGeneratedValue(Meta.class, meta)
+        .getSchema(Meta.class);
+
+    final String schemaString = schema.toString(true);
+
+    Schema.Parser parser = new Schema.Parser();
+    Schema cloneSchema = parser.parse(schemaString);
+
+    Map testCases = JacksonUtils.objectToMap(meta);
+
+    for (Schema.Field field : cloneSchema.getFields()) {
+      assertEquals("Invalid field " + field.name(), field.defaultVal(), testCases.get(field.name()));
+    }
+  }
+
+  public class Definition {
+    public Map<String, String> tokens;
+  }
+
+  @Test(expected = AvroTypeException.class)
+  public void testNonStaticInnerClasses() {
+    ReflectData.get().getSchema(Definition.class);
+  }
+
+  @Test
+  public void testStaticInnerClasses() {
+    ReflectData.get().getSchema(Meta.class);
   }
 }

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.avro.message;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import org.apache.avro.generic.GenericData;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -66,12 +66,15 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
    * {@link Schema schema}.
    * <p>
    * The {@code readSchema} is as used the expected schema (read schema). Datum
-   * instances created by this class will are described by the expected schema.
+   * instances created by this class will be described by the expected schema.
+   * <p>
+   * If {@code readSchema} is {@code null}, the write schema of an incoming buffer
+   * is used as read schema for that datum instance.
    * <p>
    * The schema used to decode incoming buffers is determined by the schema
    * fingerprint encoded in the message header. This class can decode messages
-   * that were encoded using the {@code readSchema} and other schemas that are
-   * added using {@link #addSchema(Schema)}.
+   * that were encoded using the {@code readSchema} (if any) and other schemas
+   * that are added using {@link #addSchema(Schema)}.
    *
    * @param model      the {@link GenericData data model} for datum instances
    * @param readSchema the {@link Schema} used to construct datum instances
@@ -86,12 +89,15 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
    * {@link Schema schema}.
    * <p>
    * The {@code readSchema} is used as the expected schema (read schema). Datum
-   * instances created by this class will are described by the expected schema.
+   * instances created by this class will be described by the expected schema.
+   * <p>
+   * If {@code readSchema} is {@code null}, the write schema of an incoming buffer
+   * is used as read schema for that datum instance.
    * <p>
    * The schema used to decode incoming buffers is determined by the schema
    * fingerprint encoded in the message header. This class can decode messages
-   * that were encoded using the {@code readSchema}, other schemas that are added
-   * using {@link #addSchema(Schema)}, or schemas returned by the
+   * that were encoded using the {@code readSchema} (if any), other schemas that
+   * are added using {@link #addSchema(Schema)}, or schemas returned by the
    * {@code resolver}.
    *
    * @param model      the {@link GenericData data model} for datum instances
@@ -102,7 +108,9 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
     this.model = model;
     this.readSchema = readSchema;
     this.resolver = resolver;
-    addSchema(readSchema);
+    if (readSchema != null) {
+      addSchema(readSchema);
+    }
   }
 
   /**
@@ -112,7 +120,8 @@ public class BinaryMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
    */
   public void addSchema(Schema writeSchema) {
     long fp = SchemaNormalization.parsingFingerprint64(writeSchema);
-    codecByFingerprint.put(fp, new RawMessageDecoder<>(model, writeSchema, readSchema));
+    final Schema actualReadSchema = this.readSchema != null ? this.readSchema : writeSchema;
+    codecByFingerprint.put(fp, new RawMessageDecoder<D>(model, writeSchema, actualReadSchema));
   }
 
   private RawMessageDecoder<D> getDecoder(long fp) {

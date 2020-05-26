@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,6 +40,7 @@ class TestSchemaCompatibility < Test::Unit::TestCase
 
       enum1_ab_schema, enum1_ab_schema,
       enum1_abc_schema, enum1_ab_schema,
+      enum1_ab_default_schema, enum1_abc_schema,
 
       string_schema, bytes_schema,
       bytes_schema, string_schema,
@@ -371,6 +372,10 @@ class TestSchemaCompatibility < Test::Unit::TestCase
 
   def enum1_ab_schema
     Avro::Schema.parse('{"type":"enum", "name":"Enum1", "symbols":["A","B"]}')
+  end
+
+  def enum1_ab_default_schema
+    Avro::Schema.parse('{"type":"enum", "name":"Enum1", "symbols":["A","B"], "default":"A"}')
   end
 
   def enum1_abc_schema

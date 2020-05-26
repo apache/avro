@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Iterator;
 
@@ -133,5 +134,12 @@ public class TestCreateRandomFileTool {
       assertEquals(expected, found.next());
 
     reader.close();
+  }
+
+  @Test
+  public void testDefaultCodec() throws Exception {
+    // The default codec for random is deflate
+    run(Collections.emptyList());
+    assertTrue(err.toString().contains("Compression codec (default: deflate)"));
   }
 }

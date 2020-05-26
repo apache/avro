@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,9 @@ import org.apache.avro.Schema;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
 public class TimeConversions {
@@ -173,8 +175,8 @@ public class TimeConversions {
 
     @Override
     public Instant fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
-      long epochSeconds = microsFromEpoch / (1_000_000);
-      long nanoAdjustment = (microsFromEpoch % (1_000_000)) * 1_000;
+      long epochSeconds = microsFromEpoch / (1_000_000L);
+      long nanoAdjustment = (microsFromEpoch % (1_000_000L)) * 1_000L;
 
       return Instant.ofEpochSecond(epochSeconds, nanoAdjustment);
     }
@@ -185,20 +187,82 @@ public class TimeConversions {
       int nanos = instant.getNano();
 
       if (seconds < 0 && nanos > 0) {
-        long micros = Math.multiplyExact(seconds + 1, 1_000_000);
+        long micros = Math.multiplyExact(seconds + 1, 1_000_000L);
         long adjustment = (nanos / 1_000L) - 1_000_000;
 
         return Math.addExact(micros, adjustment);
       } else {
-        long micros = Math.multiplyExact(seconds, 1_000_000);
+        long micros = Math.multiplyExact(seconds, 1_000_000L);
 
-        return Math.addExact(micros, nanos / 1_000);
+        return Math.addExact(micros, nanos / 1_000L);
       }
     }
 
     @Override
     public Schema getRecommendedSchema() {
       return LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
+  public static class LocalTimestampMillisConversion extends Conversion<LocalDateTime> {
+    private final TimestampMillisConversion timestampMillisConversion = new TimestampMillisConversion();
+
+    @Override
+    public Class<LocalDateTime> getConvertedType() {
+      return LocalDateTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "local-timestamp-millis";
+    }
+
+    @Override
+    public LocalDateTime fromLong(Long millisFromEpoch, Schema schema, LogicalType type) {
+      Instant instant = timestampMillisConversion.fromLong(millisFromEpoch, schema, type);
+      return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    @Override
+    public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
+      Instant instant = timestamp.toInstant(ZoneOffset.UTC);
+      return timestampMillisConversion.toLong(instant, schema, type);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    }
+  }
+
+  public static class LocalTimestampMicrosConversion extends Conversion<LocalDateTime> {
+    private final TimestampMicrosConversion timestampMicrosConversion = new TimestampMicrosConversion();
+
+    @Override
+    public Class<LocalDateTime> getConvertedType() {
+      return LocalDateTime.class;
+    }
+
+    @Override
+    public String getLogicalTypeName() {
+      return "local-timestamp-micros";
+    }
+
+    @Override
+    public LocalDateTime fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
+      Instant instant = timestampMicrosConversion.fromLong(microsFromEpoch, schema, type);
+      return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+    }
+
+    @Override
+    public Long toLong(LocalDateTime timestamp, Schema schema, LogicalType type) {
+      Instant instant = timestamp.toInstant(ZoneOffset.UTC);
+      return timestampMicrosConversion.toLong(instant, schema, type);
+    }
+
+    @Override
+    public Schema getRecommendedSchema() {
+      return LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
     }
   }
 }

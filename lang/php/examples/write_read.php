@@ -9,7 +9,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,15 @@
  * limitations under the License.
  */
 
-require_once('../lib/avro.php');
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use Apache\Avro\DataFile\AvroDataIO;
+use Apache\Avro\DataFile\AvroDataIOReader;
+use Apache\Avro\DataFile\AvroDataIOWriter;
+use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\Datum\AvroIODatumWriter;
+use Apache\Avro\IO\AvroStringIO;
+use Apache\Avro\Schema\AvroSchema;
 
 // Write and read a data file
 
@@ -35,7 +43,7 @@ $data = array($jose, $maria);
 
 $file_name = 'data.avr';
 // Open $file_name for writing, using the given writer's schema
-$data_writer = AvroDataIO::open_file($file_name, 'w', $writers_schema_json);
+$data_writer = AvroDataIO::openFile($file_name, 'w', $writers_schema_json);
 
 // Write each datum to the file
 foreach ($data as $datum)
@@ -45,7 +53,7 @@ $data_writer->close();
 
 // Open $file_name (by default for reading) using the writer's schema
 // included in the file
-$data_reader = AvroDataIO::open_file($file_name);
+$data_reader = AvroDataIO::openFile($file_name);
 echo "from file:\n";
 // Read each datum
 foreach ($data_reader->data() as $datum)

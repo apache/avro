@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +36,7 @@ public class Parser {
     /**
      * Handle the action symbol <tt>top</tt> when the <tt>input</tt> is sought to be
      * taken off the stack.
-     * 
+     *
      * @param input The input symbol from the caller of advance
      * @param top   The symbol at the top the stack.
      * @return <tt>null</tt> if advance() is to continue processing the stack. If
@@ -50,7 +50,7 @@ public class Parser {
   protected Symbol[] stack;
   protected int pos;
 
-  public Parser(Symbol root, ActionHandler symbolHandler) throws IOException {
+  public Parser(Symbol root, ActionHandler symbolHandler) {
     this.symbolHandler = symbolHandler;
     this.stack = new Symbol[5]; // Start small to make sure expansion code works
     this.stack[0] = root;
@@ -68,7 +68,7 @@ public class Parser {
    * Recursively replaces the symbol at the top of the stack with its production,
    * until the top is a terminal. Then checks if the top symbol matches the
    * terminal symbol suppled <tt>terminal</tt>.
-   * 
+   *
    * @param input The symbol to match against the terminal at the top of the
    *              stack.
    * @return The terminal symbol at the top of the stack unless an implicit action
@@ -101,7 +101,7 @@ public class Parser {
    * Performs any implicit actions at the top the stack, expanding any production
    * (other than the root) that may be encountered. This method will fail if there
    * are any repeaters on the stack.
-   * 
+   *
    * @throws IOException
    */
   public final void processImplicitActions() throws IOException {
@@ -138,7 +138,7 @@ public class Parser {
    * Pushes the production for the given symbol <tt>sym</tt>. If <tt>sym</tt> is a
    * repeater and <tt>input</tt> is either {@link Symbol#ARRAY_END} or
    * {@link Symbol#MAP_END} pushes nothing.
-   * 
+   *
    * @param sym
    */
   public final void pushProduction(Symbol sym) {

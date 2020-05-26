@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Stack;
 
 import org.apache.avro.AvroTypeException;
@@ -74,9 +75,7 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
   }
 
   private static Symbol getSymbol(Schema schema) {
-    if (null == schema) {
-      throw new NullPointerException("Schema cannot be null!");
-    }
+    Objects.requireNonNull(schema, "Schema cannot be null");
     return new JsonGrammarGenerator().generate(schema);
   }
 
@@ -90,12 +89,11 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * 
    * @param in The InputStream to read from. Cannot be null.
    * @throws IOException
+   * @throws NullPointerException if {@code in} is {@code null}
    * @return this JsonDecoder
    */
   public JsonDecoder configure(InputStream in) throws IOException {
-    if (null == in) {
-      throw new NullPointerException("InputStream to read from cannot be null!");
-    }
+    Objects.requireNonNull(in, "InputStream cannot be null");
     parser.reset();
     reorderBuffers.clear();
     currentReorderBuffer = null;
@@ -114,12 +112,11 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
    * 
    * @param in The String to read from. Cannot be null.
    * @throws IOException
+   * @throws NullPointerException if {@code in} is {@code null}
    * @return this JsonDecoder
    */
   public JsonDecoder configure(String in) throws IOException {
-    if (null == in) {
-      throw new NullPointerException("String to read from cannot be null!");
-    }
+    Objects.requireNonNull(in, "String to read from cannot be null");
     parser.reset();
     reorderBuffers.clear();
     currentReorderBuffer = null;

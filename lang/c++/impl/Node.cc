@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -97,8 +97,7 @@ void Node::setLogicalType(LogicalType logicalType) {
         if (type_ == AVRO_FIXED) {
             // Max precision that can be supported by the current size of
             // the FIXED type.
-            long maxPrecision =
-                floor(log10(pow(2.0, 8.0 * fixedSize() - 1) - 1));
+            long maxPrecision = floor(log10(2.0) * (8.0 * fixedSize() - 1));
             if (logicalType.precision() > maxPrecision) {
                 throw Exception(
                     boost::format(
@@ -146,6 +145,12 @@ void Node::setLogicalType(LogicalType logicalType) {
         if (type_ != AVRO_FIXED || fixedSize() != 12) {
             throw Exception("DURATION logical type can only annotate "
                             "FIXED type of size 12");
+        }
+        break;
+    case LogicalType::UUID:
+        if (type_ != AVRO_STRING) {
+            throw Exception("UUID logical type can only annotate "
+                            "STRING type");
         }
         break;
     }

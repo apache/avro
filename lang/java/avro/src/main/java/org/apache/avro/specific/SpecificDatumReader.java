@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -124,22 +124,22 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
   }
 
   @Override
-  protected void readField(Object r, Schema.Field f, Object oldDatum, ResolvingDecoder in, Object state)
+  protected void readField(Object record, Schema.Field field, Object oldDatum, ResolvingDecoder in, Object state)
       throws IOException {
-    if (r instanceof SpecificRecordBase) {
-      Conversion<?> conversion = ((SpecificRecordBase) r).getConversion(f.pos());
+    if (record instanceof SpecificRecordBase) {
+      Conversion<?> conversion = ((SpecificRecordBase) record).getConversion(field.pos());
 
       Object datum;
       if (conversion != null) {
-        datum = readWithConversion(oldDatum, f.schema(), f.schema().getLogicalType(), conversion, in);
+        datum = readWithConversion(oldDatum, field.schema(), field.schema().getLogicalType(), conversion, in);
       } else {
-        datum = readWithoutConversion(oldDatum, f.schema(), in);
+        datum = readWithoutConversion(oldDatum, field.schema(), in);
       }
 
-      getData().setField(r, f.name(), f.pos(), datum);
+      getData().setField(record, field.name(), field.pos(), datum);
 
     } else {
-      super.readField(r, f, oldDatum, in, state);
+      super.readField(record, field, oldDatum, in, state);
     }
   }
 }

@@ -1,7 +1,7 @@
 
                                  Apache License
                            Version 2.0, January 2004
-                        http://www.apache.org/licenses/
+                        https://www.apache.org/licenses/
 
    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
@@ -193,7 +193,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -235,7 +235,7 @@ Some files include an additional copyright notice:
 ----------------------------------------------------------------------
 License for msinttypes.h and msstdint.h used in the C implementation:
 Source from:
-http://code.google.com/p/msinttypes/downloads/detail?name=msinttypes-r26.zip
+https://code.google.com/p/msinttypes/downloads/detail?name=msinttypes-r26.zip
 
 Copyright (c) 2006-2008 Alexander Chemeris
 
@@ -294,31 +294,6 @@ Copyright (C) 2006 Toni Ronkko
 | OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 | ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 | OTHER DEALINGS IN THE SOFTWARE.
-
-----------------------------------------------------------------------
-License for simplejson used in the python implementation:
-
-Source from: https://github.com/simplejson/simplejson
-
-Copyright (c) 2006 Bob Ippolito
-
-| Permission is hereby granted, free of charge, to any person obtaining a copy of
-| this software and associated documentation files (the "Software"), to deal in
-| the Software without restriction, including without limitation the rights to
-| use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-| of the Software, and to permit persons to whom the Software is furnished to do
-| so, subject to the following conditions:
-|
-| The above copyright notice and this permission notice shall be included in all
-| copies or substantial portions of the Software.
-|
-| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-| IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-| FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-| AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-| LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-| OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-| SOFTWARE.
 
 ----------------------------------------------------------------------
 License for ivy-2.2.0.jar used in the python implementation:
@@ -401,7 +376,7 @@ File: Castle.Core.dll
 Copyright (c) 2004-2015 Castle Project
 
 License: Apache License version 2.0 (see above)
-URL: http://opensource.org/licenses/Apache-2.0
+URL: https://opensource.org/licenses/Apache-2.0
 
 ----------------------------------------------------------------------
 License for the log4net binary included with the C# implementation:
@@ -527,17 +502,17 @@ All rights reserved.
 License for g.Raphael 0.4.1 used by the Java IPC implementation:
 
 Copyright (c) 2009 Dmitry Baranovskiy (http://g.raphaeljs.com)
-Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
+Licensed under the MIT (https://www.opensource.org/licenses/mit-license.php) license.
 
 ----------------------------------------------------------------------
 License for jQuery v1.4.2 used by the Java IPC implementation:
 
 Copyright 2010, John Resig
 Dual licensed under the MIT or GPL Version 2 licenses.
-http://jquery.org/license
+https://jquery.org/license
 
 jQuery includes Sizzle.js
-http://sizzlejs.com/
+https://sizzlejs.com/
 Copyright 2010, The Dojo Foundation
 Released under the MIT, BSD, and GPL Licenses.
 

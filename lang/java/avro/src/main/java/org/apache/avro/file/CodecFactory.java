@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.zip.Deflater;
 
 import org.apache.avro.AvroRuntimeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encapsulates the ability to specify and configure a compression codec.
@@ -38,6 +40,8 @@ import org.apache.avro.AvroRuntimeException;
  * {@link #addCodec(String, CodecFactory)}.
  */
 public abstract class CodecFactory {
+  private static final Logger LOG = LoggerFactory.getLogger(CodecFactory.class);
+
   /** Null codec, for no compression. */
   public static CodecFactory nullCodec() {
     return NullCodec.OPTION;
@@ -64,7 +68,7 @@ public abstract class CodecFactory {
     try {
       return new SnappyCodec.Option();
     } catch (Throwable t) {
-      // snappy not available
+      LOG.debug("Snappy was not available", t);
       return null;
     }
   }

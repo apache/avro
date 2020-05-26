@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,10 +56,24 @@ public class DataFileReadTool implements Tool {
     OptionSpec<Void> prettyOption = optionParser.accepts("pretty", "Turns on pretty printing.");
     String headDesc = String.format("Converts the first X records (default is %d).", DEFAULT_HEAD_COUNT);
     OptionSpec<String> headOption = optionParser.accepts("head", headDesc).withOptionalArg();
+    OptionSpec<String> readerSchemaFileOption = optionParser.accepts("reader-schema-file", "Reader schema file")
+        .withOptionalArg().ofType(String.class);
+    OptionSpec<String> readerSchemaOption = optionParser.accepts("reader-schema", "Reader schema").withOptionalArg()
+        .ofType(String.class);
 
     OptionSet optionSet = optionParser.parse(args.toArray(new String[0]));
     Boolean pretty = optionSet.has(prettyOption);
     List<String> nargs = new ArrayList<>((List<String>) optionSet.nonOptionArguments());
+
+    String readerSchemaStr = readerSchemaOption.value(optionSet);
+    String readerSchemaFile = readerSchemaFileOption.value(optionSet);
+
+    Schema readerSchema = null;
+    if (readerSchemaFile != null) {
+      readerSchema = Util.parseSchemaFromFS(readerSchemaFile);
+    } else if (readerSchemaStr != null) {
+      readerSchema = new Schema.Parser().parse(readerSchemaStr);
+    }
 
     long headCount = getHeadCount(optionSet, headOption, nargs);
 
@@ -73,9 +87,12 @@ public class DataFileReadTool implements Tool {
     BufferedInputStream inStream = Util.fileOrStdin(nargs.get(0), stdin);
 
     GenericDatumReader<Object> reader = new GenericDatumReader<>();
+    if (readerSchema != null) {
+      reader.setExpected(readerSchema);
+    }
     try (DataFileStream<Object> streamReader = new DataFileStream<>(inStream, reader)) {
-      Schema schema = streamReader.getSchema();
-      DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
+      Schema schema = readerSchema != null ? readerSchema : streamReader.getSchema();
+      DatumWriter writer = new GenericDatumWriter<>(schema);
       JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out, pretty);
       for (long recordCount = 0; streamReader.hasNext() && recordCount < headCount; recordCount++) {
         Object datum = streamReader.next();

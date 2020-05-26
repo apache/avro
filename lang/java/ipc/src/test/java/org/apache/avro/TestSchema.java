@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -442,6 +442,16 @@ public class TestSchema {
   @Test
   public void testNestedNullNamespace() {
     Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":[]}");
+    Schema outer = Schema.createRecord("Outer", null, "space", false);
+    outer.setFields(Collections.singletonList(new Field("f", inner, null, null)));
+    assertEquals(outer, new Schema.Parser().parse(outer.toString()));
+  }
+
+  @Test
+  public void testDeeplyNestedNullNamespace() {
+    Schema inner = new Schema.Parser().parse("{\"type\":\"record\",\"name\":\"Inner\",\"fields\":["
+        + "{\"name\":\"x\",\"type\":{\"type\":\"record\",\"name\":\"Deeper\",\"fields\":["
+        + "{\"name\":\"y\",\"type\":\"int\"}]}}]}");
     Schema outer = Schema.createRecord("Outer", null, "space", false);
     outer.setFields(Collections.singletonList(new Field("f", inner, null, null)));
     assertEquals(outer, new Schema.Parser().parse(outer.toString()));

@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,14 +24,19 @@ namespace Avro.Specific
 {
     /// <summary>
     /// PreresolvingDatumWriter for writing data from ISpecificRecord classes.
-    /// <see cref="PreresolvingDatumWriter{T}">For more information about performance considerations for choosing this implementation</see>
     /// </summary>
+    /// <see cref="PreresolvingDatumWriter{T}">For more information about performance considerations for choosing this implementation</see>
     public class SpecificDatumWriter<T> : PreresolvingDatumWriter<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpecificDatumWriter{T}"/> class.
+        /// </summary>
+        /// <param name="schema">Schema to use when writing data.</param>
         public SpecificDatumWriter(Schema schema) : base(schema, new SpecificArrayAccess(), new DictionaryMapAccess())
         {
         }
 
+        /// <inheritdoc/>
         protected override void WriteRecordFields(object recordObj, RecordFieldWriter[] writers, Encoder encoder)
         {
             var record = (ISpecificRecord) recordObj;
@@ -42,17 +47,20 @@ namespace Avro.Specific
             }
         }
 
+        /// <inheritdoc/>
         protected override void EnsureRecordObject(RecordSchema recordSchema, object value)
         {
             if (!(value is ISpecificRecord))
                 throw new AvroTypeException("Record object is not derived from ISpecificRecord");
         }
 
+        /// <inheritdoc/>
         protected override void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder)
         {
             writer(((ISpecificRecord)record).Get(fieldPos), encoder);
         }
 
+        /// <inheritdoc/>
         protected override WriteItem ResolveEnum(EnumSchema es)
         {
             var type = ObjectCreator.Instance.GetType(es);
@@ -94,6 +102,7 @@ namespace Avro.Specific
                        };
         }
 
+        /// <inheritdoc/>
         protected override void WriteFixed(FixedSchema schema, object value, Encoder encoder)
         {
             var fixedrec = value as SpecificFixed;
@@ -103,6 +112,7 @@ namespace Avro.Specific
             encoder.WriteFixed(fixedrec.Value);
         }
 
+        /// <inheritdoc/>
         protected override bool UnionBranchMatches( Schema sc, object obj )
         {
             if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;
@@ -127,7 +137,7 @@ namespace Avro.Specific
                 case Schema.Type.Error:
                 case Schema.Type.Record:
                     return obj is ISpecificRecord &&
-                           (((obj as ISpecificRecord).Schema) as RecordSchema).SchemaName.Equals((sc as RecordSchema).SchemaName);
+                           ((obj as ISpecificRecord).Schema as RecordSchema).SchemaName.Equals((sc as RecordSchema).SchemaName);
                 case Schema.Type.Enumeration:
                     return obj.GetType().IsEnum && (sc as EnumSchema).Symbols.Contains(obj.ToString());
                 case Schema.Type.Array:
@@ -138,7 +148,9 @@ namespace Avro.Specific
                     return false;   // Union directly within another union not allowed!
                 case Schema.Type.Fixed:
                     return obj is SpecificFixed &&
-                           (((obj as SpecificFixed).Schema) as FixedSchema).SchemaName.Equals((sc as FixedSchema).SchemaName);
+                           ((obj as SpecificFixed).Schema as FixedSchema).SchemaName.Equals((sc as FixedSchema).SchemaName);
+                case Schema.Type.Logical:
+                    return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

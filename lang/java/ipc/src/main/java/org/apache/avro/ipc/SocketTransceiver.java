@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.ClosedChannelException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,12 +65,12 @@ public class SocketTransceiver extends Transceiver {
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
     List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
-      header.clear();
+      ((Buffer) header).clear();
       while (header.hasRemaining()) {
         if (channel.read(header) < 0)
           throw new ClosedChannelException();
       }
-      header.flip();
+      ((Buffer) header).flip();
       int length = header.getInt();
       if (length == 0) { // end of buffers
         return buffers;
@@ -79,7 +80,7 @@ public class SocketTransceiver extends Transceiver {
         if (channel.read(buffer) < 0)
           throw new ClosedChannelException();
       }
-      buffer.flip();
+      ((Buffer) buffer).flip();
       buffers.add(buffer);
     }
   }
@@ -98,9 +99,9 @@ public class SocketTransceiver extends Transceiver {
   }
 
   private void writeLength(int length) throws IOException {
-    header.clear();
+    ((Buffer) header).clear();
     header.putInt(length);
-    header.flip();
+    ((Buffer) header).flip();
     channel.write(header);
   }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace Avro
 {
+    /// <summary>
+    /// Represents a message in an Avro protocol.
+    /// </summary>
     public class Message
     {
         /// <summary>
@@ -68,9 +68,14 @@ namespace Avro
         /// <param name="request">list of parameters</param>
         /// <param name="response">response property</param>
         /// <param name="error">error union schema</param>
+        /// <param name="oneway">
+        /// Indicates that this is a one-way message. This may only be true when
+        /// <paramref name="response"/> is <see cref="Schema.Type.Null"/> and there are no errors
+        /// listed.
+        /// </param>
         public Message(string name, string doc, RecordSchema request, Schema response, UnionSchema error, bool? oneway)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
             this.Request = request;
             this.Response = response;
             this.Error = error;
@@ -121,12 +126,18 @@ namespace Avro
             {
                 Schema errorSchema = Schema.ParseJson(jerrors, names, encspace);
                 if (!(errorSchema is UnionSchema))
-                    throw new AvroException("");
+                    throw new AvroException($"Not a UnionSchema at {jerrors.Path}");
 
                 uerrorSchema = errorSchema as UnionSchema;
             }
-
-            return new Message(name, doc, schema, response, uerrorSchema, oneway);
+            try
+            {
+                return new Message(name, doc, schema, response, uerrorSchema, oneway);
+            }
+            catch (Exception e)
+            {
+                throw new ProtocolParseException($"Error creating Message at {jmessage.Path}", e);
+            }
         }
 
         /// <summary>
@@ -175,7 +186,7 @@ namespace Avro
           if (!(obj is Message)) return false;
 
           Message that = obj as Message;
-          return this.Name.Equals(that.Name) &&
+          return this.Name.Equals(that.Name, StringComparison.Ordinal) &&
                  this.Request.Equals(that.Request) &&
                  areEqual(this.Response, that.Response) &&
                  areEqual(this.Error, that.Error);
@@ -187,7 +198,9 @@ namespace Avro
         /// <returns></returns>
         public override int GetHashCode()
         {
+#pragma warning disable CA1307 // Specify StringComparison
             return Name.GetHashCode() +
+#pragma warning restore CA1307 // Specify StringComparison
                    Request.GetHashCode() +
                   (Response == null ? 0 : Response.GetHashCode()) +
                   (Error == null ? 0 : Error.GetHashCode());

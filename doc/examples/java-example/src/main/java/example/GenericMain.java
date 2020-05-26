@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,7 +34,7 @@ import org.apache.avro.io.DatumWriter;
 
 public class GenericMain {
   public static void main(String[] args) throws IOException {
-    Schema schema = new Parser().parse(new File("/home/skye/code/cloudera/avro/doc/examples/user.avsc"));
+    Schema schema = new Parser().parse(new File("./../user.avsc"));
 
     GenericRecord user1 = new GenericData.Record(schema);
     user1.put("name", "Alyssa");
@@ -57,15 +57,17 @@ public class GenericMain {
 
     // Deserialize users from disk
     DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
-    DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(file, datumReader);
     GenericRecord user = null;
-    while (dataFileReader.hasNext()) {
-      // Reuse user object by passing it to next(). This saves us from
-      // allocating and garbage collecting many objects for files with
-      // many items.
-      user = dataFileReader.next(user);
-      System.out.println(user);
+    try(DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(file, datumReader)){
+      while (dataFileReader.hasNext()) {
+        // Reuse user object by passing it to next(). This saves us from
+        // allocating and garbage collecting many objects for files with
+        // many items.
+        user = dataFileReader.next(user);
+        System.out.println(user);
+      }
     }
+
 
   }
 }

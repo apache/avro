@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -87,13 +87,15 @@ public class IDLProtocolMojo extends AbstractAvroMojo {
         Protocol p = parser.CompilationUnit();
         String json = p.toString(true);
         Protocol protocol = Protocol.parse(json);
-        SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
+        final SpecificCompiler compiler = new SpecificCompiler(protocol);
         compiler.setStringType(GenericData.StringType.valueOf(stringType));
         compiler.setTemplateDir(templateDirectory);
         compiler.setFieldVisibility(getFieldVisibility());
         compiler.setCreateOptionalGetters(createOptionalGetters);
         compiler.setGettersReturnOptional(gettersReturnOptional);
+        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
         compiler.setCreateSetters(createSetters);
+        compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
         compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
         for (String customConversion : customConversions) {
           compiler.addCustomConversion(projPathLoader.loadClass(customConversion));

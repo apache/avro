@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -80,6 +80,9 @@ public class TestSchemas {
   static final Schema INT_LONG_FLOAT_DOUBLE_UNION_SCHEMA = Schema
       .createUnion(list(INT_SCHEMA, LONG_SCHEMA, FLOAT_SCHEMA, DOUBLE_SCHEMA));
 
+  static final Schema NULL_INT_ARRAY_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA, INT_ARRAY_SCHEMA));
+  static final Schema NULL_INT_MAP_UNION_SCHEMA = Schema.createUnion(list(NULL_SCHEMA, INT_MAP_SCHEMA));
+
   // Non recursive records:
   static final Schema EMPTY_RECORD1 = Schema.createRecord("Record1", null, null, false);
   static final Schema EMPTY_RECORD2 = Schema.createRecord("Record2", null, null, false);
@@ -99,6 +102,11 @@ public class TestSchemas {
 
   static final Schema FIXED_4_BYTES = Schema.createFixed("Fixed", null, null, 4);
   static final Schema FIXED_8_BYTES = Schema.createFixed("Fixed", null, null, 8);
+
+  static final Schema NS_RECORD1 = Schema.createRecord("Record1", null, null, false);
+  static final Schema NS_RECORD2 = Schema.createRecord("Record1", null, null, false);
+  static final Schema NS_INNER_RECORD1 = Schema.createRecord("InnerRecord1", null, "ns1", false);
+  static final Schema NS_INNER_RECORD2 = Schema.createRecord("InnerRecord1", null, "ns2", false);
 
   static {
     EMPTY_RECORD1.setFields(Collections.emptyList());
@@ -121,6 +129,14 @@ public class TestSchemas {
         .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", ENUM1_AB_SCHEMA, null, null)));
     A_DINT_B_DENUM_2_RECORD1
         .setFields(list(new Field("a", INT_SCHEMA, null, 0), new Field("b", ENUM2_AB_SCHEMA, null, null)));
+
+    NS_INNER_RECORD1.setFields(list(new Schema.Field("a", INT_SCHEMA)));
+    NS_INNER_RECORD2.setFields(list(new Schema.Field("a", INT_SCHEMA)));
+
+    NS_RECORD1
+        .setFields(list(new Schema.Field("f1", Schema.createUnion(NULL_SCHEMA, Schema.createArray(NS_INNER_RECORD1)))));
+    NS_RECORD2
+        .setFields(list(new Schema.Field("f1", Schema.createUnion(NULL_SCHEMA, Schema.createArray(NS_INNER_RECORD2)))));
   }
 
   // Recursive records

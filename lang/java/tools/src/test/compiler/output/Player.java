@@ -108,7 +108,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     case 1: return first_name;
     case 2: return last_name;
     case 3: return position;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -120,7 +120,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     case 1: first_name = (java.lang.CharSequence)value$; break;
     case 2: last_name = (java.lang.CharSequence)value$; break;
     case 3: position = (java.util.List<avro.examples.baseball.Position>)value$; break;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -230,6 +230,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   /**
    * RecordBuilder for Player instances.
    */
+  @org.apache.avro.specific.AvroGenerated
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Player>
     implements org.apache.avro.data.RecordBuilder<Player> {
 

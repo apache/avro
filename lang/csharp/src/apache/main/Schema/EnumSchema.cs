@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -46,6 +46,7 @@ namespace Avro
         /// Static function to return new instance of EnumSchema
         /// </summary>
         /// <param name="jtok">JSON object for enum schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schema already parsed in</param>
         /// <param name="encspace">enclosing namespace for the enum schema</param>
         /// <returns>new instance of enum schema</returns>
@@ -56,7 +57,7 @@ namespace Avro
 
             JArray jsymbols = jtok["symbols"] as JArray;
             if (null == jsymbols)
-                throw new SchemaParseException("Enum has no symbols: " + name);
+                throw new SchemaParseException($"Enum has no symbols: {name} at '{jtok.Path}'");
 
             List<string> symbols = new List<string>();
             IDictionary<string, int> symbolMap = new Dictionary<string, int>();
@@ -65,13 +66,20 @@ namespace Avro
             {
                 string s = (string)jsymbol.Value;
                 if (symbolMap.ContainsKey(s))
-                    throw new SchemaParseException("Duplicate symbol: " + s);
+                    throw new SchemaParseException($"Duplicate symbol: {s} at '{jtok.Path}'");
 
                 symbolMap[s] = i++;
                 symbols.Add(s);
             }
-            return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
-                JsonHelper.GetOptionalString(jtok, "doc"));
+            try
+            {
+                return new EnumSchema(name, aliases, symbols, symbolMap, props, names,
+                    JsonHelper.GetOptionalString(jtok, "doc"));
+            }
+            catch (SchemaParseException e)
+            {
+                throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
+            }
         }
 
         /// <summary>
@@ -170,7 +178,14 @@ namespace Avro
                 EnumSchema that = obj as EnumSchema;
                 if (SchemaName.Equals(that.SchemaName) && Count == that.Count)
                 {
-                    for (int i = 0; i < Count; i++) if (!Symbols[i].Equals(that.Symbols[i])) return false;
+                    for (int i = 0; i < Count; i++)
+                    {
+                        if (!Symbols[i].Equals(that.Symbols[i], StringComparison.Ordinal))
+                        {
+                            return false;
+                        }
+                    }
+
                     return areEqual(that.Props, this.Props);
                 }
             }
@@ -184,7 +199,9 @@ namespace Avro
         public override int GetHashCode()
         {
             int result = SchemaName.GetHashCode() + getHashCode(Props);
+#pragma warning disable CA1307 // Specify StringComparison
             foreach (string s in Symbols) result += 23 * s.GetHashCode();
+#pragma warning restore CA1307 // Specify StringComparison
             return result;
         }
 

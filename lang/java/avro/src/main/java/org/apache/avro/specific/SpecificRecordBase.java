@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ import java.io.Externalizable;
 import java.io.ObjectOutput;
 import java.io.ObjectInput;
 import java.io.IOException;
+import org.apache.avro.AvroRuntimeException;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
@@ -56,12 +57,20 @@ public abstract class SpecificRecordBase
 
   @Override
   public void put(String fieldName, Object value) {
-    put(getSchema().getField(fieldName).pos(), value);
+    Schema.Field field = getSchema().getField(fieldName);
+    if (field == null) {
+      throw new AvroRuntimeException("Not a valid schema field: " + fieldName);
+    }
+    put(field.pos(), value);
   }
 
   @Override
   public Object get(String fieldName) {
-    return get(getSchema().getField(fieldName).pos());
+    Schema.Field field = getSchema().getField(fieldName);
+    if (field == null) {
+      throw new AvroRuntimeException("Not a valid schema field: " + fieldName);
+    }
+    return get(field.pos());
   }
 
   public Conversion<?> getConversion(String fieldName) {

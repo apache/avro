@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,12 +49,13 @@ import unittest
 
 from avro.tests.test_datafile import *
 from avro.tests.test_datafile_interop import *
+from avro.tests.test_enum import *
 from avro.tests.test_io import *
 from avro.tests.test_ipc import *
 from avro.tests.test_protocol import *
 from avro.tests.test_schema import *
 from avro.tests.test_script import *
-from avro.tests.test_enum import *
+from avro.tests.test_init import *
 
 
 def SetupLogging():

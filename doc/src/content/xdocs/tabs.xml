@@ -7,7 +7,7 @@
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+      https://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE tabs PUBLIC "-//APACHE//DTD Cocoon Documentation Tab V1.1//EN" "http://forrest.apache.org/dtd/tab-cocoon-v11.dtd" [
+<!DOCTYPE tabs PUBLIC "-//APACHE//DTD Cocoon Documentation Tab V1.1//EN" "https://forrest.apache.org/dtd/tab-cocoon-v11.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -32,8 +32,8 @@
     directory (ends in '/'), in which case /index.html will be added
   -->
 
-  <tab label="Project" href="http://avro.apache.org/" />
-  <tab label="Wiki" href="http://wiki.apache.org/hadoop/Avro/" />
+  <tab label="Project" href="https://avro.apache.org/" />
+  <tab label="Wiki" href="https://cwiki.apache.org/confluence/display/AVRO/Index" />
   <tab label="Avro &AvroVersion; Documentation" dir="" />
 
 </tabs>

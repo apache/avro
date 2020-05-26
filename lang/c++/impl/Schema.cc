@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,10 +21,10 @@
 
 namespace avro {
 
-Schema::Schema() 
+Schema::Schema()
 { }
 
-Schema::~Schema() 
+Schema::~Schema()
 { }
 
 Schema::Schema(const NodePtr &node) :
@@ -42,7 +42,7 @@ RecordSchema::RecordSchema(const std::string &name) :
 }
 
 void
-RecordSchema::addField(const std::string &name, const Schema &fieldSchema) 
+RecordSchema::addField(const std::string &name, const Schema &fieldSchema)
 {
     // add the name first. it will throw if the name is a duplicate, preventing
     // the leaf from being added
@@ -101,7 +101,7 @@ UnionSchema::UnionSchema() :
 { }
 
 void
-UnionSchema::addType(const Schema &typeSchema) 
+UnionSchema::addType(const Schema &typeSchema)
 {
     if(typeSchema.type() == AVRO_UNION) {
         throw Exception("Cannot add unions to unions");

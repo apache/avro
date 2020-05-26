@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -55,8 +55,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 /** Utilities for serializing Protobuf data in Avro format. */
 public class ProtobufData extends GenericData {
-  private static final String PROTOBUF_TYPE = "protobuf";
-
   private static final ProtobufData INSTANCE = new ProtobufData();
 
   protected ProtobufData() {
@@ -78,8 +76,8 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  public void setField(Object r, String n, int pos, Object o) {
-    setField(r, n, pos, o, getRecordState(r, getSchema(r.getClass())));
+  public void setField(Object r, String n, int pos, Object value) {
+    setField(r, n, pos, value, getRecordState(r, getSchema(r.getClass())));
   }
 
   @Override
@@ -88,17 +86,17 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  protected void setField(Object r, String n, int pos, Object o, Object state) {
-    Builder b = (Builder) r;
-    FieldDescriptor f = ((FieldDescriptor[]) state)[pos];
+  protected void setField(Object record, String name, int position, Object value, Object state) {
+    Builder b = (Builder) record;
+    FieldDescriptor f = ((FieldDescriptor[]) state)[position];
     switch (f.getType()) {
     case MESSAGE:
-      if (o == null) {
+      if (value == null) {
         b.clearField(f);
         break;
       }
     default:
-      b.setField(f, o);
+      b.setField(f, value);
     }
   }
 
@@ -214,7 +212,7 @@ public class ProtobufData extends GenericData {
 
       seen.put(descriptor, result);
 
-      List<Field> fields = new ArrayList<>();
+      List<Field> fields = new ArrayList<>(descriptor.getFields().size());
       for (FieldDescriptor f : descriptor.getFields())
         fields.add(Accessor.createField(f.getName(), getSchema(f), null, getDefault(f)));
       result.setFields(fields);
@@ -226,7 +224,7 @@ public class ProtobufData extends GenericData {
     }
   }
 
-  private String getNamespace(FileDescriptor fd, Descriptor containing) {
+  public String getNamespace(FileDescriptor fd, Descriptor containing) {
     FileOptions o = fd.getOptions();
     String p = o.hasJavaPackage() ? o.getJavaPackage() : fd.getPackage();
     String outer = "";
@@ -255,7 +253,7 @@ public class ProtobufData extends GenericData {
 
   private static String toCamelCase(String s) {
     String[] parts = s.split("_");
-    StringBuilder camelCaseString = new StringBuilder();
+    StringBuilder camelCaseString = new StringBuilder(s.length());
     for (String part : parts) {
       camelCaseString.append(cap(part));
     }
@@ -268,7 +266,7 @@ public class ProtobufData extends GenericData {
 
   private static final Schema NULL = Schema.create(Schema.Type.NULL);
 
-  private Schema getSchema(FieldDescriptor f) {
+  public Schema getSchema(FieldDescriptor f) {
     Schema s = getNonRepeatedSchema(f);
     if (f.isRepeated())
       s = Schema.createArray(s);
@@ -317,7 +315,7 @@ public class ProtobufData extends GenericData {
   }
 
   public Schema getSchema(EnumDescriptor d) {
-    List<String> symbols = new ArrayList<>();
+    List<String> symbols = new ArrayList<>(d.getValues().size());
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
     }
@@ -329,8 +327,11 @@ public class ProtobufData extends GenericData {
   private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
   private JsonNode getDefault(FieldDescriptor f) {
-    if (f.isRequired() || f.isRepeated()) // no default
+    if (f.isRequired()) // no default
       return null;
+
+    if (f.isRepeated()) // empty array as repeated fields' default value
+      return NODES.arrayNode();
 
     if (f.hasDefaultValue()) { // parse spec'd default value
       Object value = f.getDefaultValue();

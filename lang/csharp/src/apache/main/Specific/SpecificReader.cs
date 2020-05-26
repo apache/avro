@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,6 +58,11 @@ namespace Avro.Specific
             reader = new SpecificDefaultReader(writerSchema, readerSchema);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpecificReader{T}"/> class using an
+        /// existing <see cref="SpecificDefaultReader"/>.
+        /// </summary>
+        /// <param name="reader">Default reader to use.</param>
         public SpecificReader(SpecificDefaultReader reader)
         {
             this.reader = reader;
@@ -253,8 +258,7 @@ namespace Avro.Specific
         /// Gets the target type name in the given schema
         /// </summary>
         /// <param name="schema">schema containing the type to be determined</param>
-        /// <param name="nullible">used for union schema</param>
-        /// <returns></returns>
+        /// <returns>Name of the type</returns>
         protected virtual string getTargetType(Schema schema)
         {
             bool nEnum = false;

@@ -9,7 +9,7 @@
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ var protocols = require('./protocols'),
     fs = require('fs'),
     stream = require('stream'),
     util = require('util'),
+    path = require('path'),
     zlib = require('zlib');
 
 // Type of Avro header.
@@ -390,6 +391,7 @@ function BlockEncoder(schema, opts) {
   this._pending = 0;
   this._finished = false;
   this._needPush = false;
+  this._downstream = null;
 
   this.on('finish', function () {
     this._finished = true;
@@ -405,6 +407,10 @@ BlockEncoder.getDefaultCodecs = function () {
     'null': function (buf, cb) { cb(null, buf); },
     'deflate': zlib.deflateRaw
   };
+};
+
+BlockEncoder.prototype.getDownstream = function () {
+  return this._downstream;
 };
 
 BlockEncoder.prototype._write = function (val, encoding, cb) {
@@ -561,7 +567,7 @@ function createFileDecoder(path, opts) {
  */
 function createFileEncoder(path, schema, opts) {
   var encoder = new BlockEncoder(schema, opts);
-  encoder.pipe(fs.createWriteStream(path, {defaultEncoding: 'binary'}));
+  encoder._downstream = encoder.pipe(fs.createWriteStream(path, {defaultEncoding: 'binary'}));
   return encoder;
 }
 
@@ -639,7 +645,7 @@ function loadSchema(schema) {
     try {
       obj = JSON.parse(schema);
     } catch (err) {
-      if (~schema.indexOf('/')) {
+      if (~schema.indexOf(path.sep)) {
         // This can't be a valid name, so we interpret is as a filepath. This
         // makes is always feasible to read a file, independent of its name
         // (i.e. even if its name is valid JSON), by prefixing it with `./`.

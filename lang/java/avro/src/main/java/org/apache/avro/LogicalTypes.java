@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@
 package org.apache.avro;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -38,13 +39,18 @@ public class LogicalTypes {
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES = new ConcurrentHashMap<>();
 
+  /**
+   * Register a logical type.
+   *
+   * @param logicalTypeName The logical type name
+   * @param factory         The logical type factory
+   *
+   * @throws NullPointerException if {@code logicalTypeName} or {@code factory} is
+   *                              {@code null}
+   */
   public static void register(String logicalTypeName, LogicalTypeFactory factory) {
-    if (logicalTypeName == null) {
-      throw new NullPointerException("Invalid logical type name: null");
-    }
-    if (factory == null) {
-      throw new NullPointerException("Invalid logical type factory: null");
-    }
+    Objects.requireNonNull(logicalTypeName, "Logical type name cannot be null");
+    Objects.requireNonNull(factory, "Logical type factory cannot be null");
     REGISTERED_TYPES.put(logicalTypeName, factory);
   }
 
@@ -90,13 +96,15 @@ public class LogicalTypes {
       case TIME_MICROS:
         logicalType = TIME_MICROS_TYPE;
         break;
+      case LOCAL_TIMESTAMP_MICROS:
+        logicalType = LOCAL_TIMESTAMP_MICROS_TYPE;
+        break;
+      case LOCAL_TIMESTAMP_MILLIS:
+        logicalType = LOCAL_TIMESTAMP_MILLIS_TYPE;
+        break;
       default:
         final LogicalTypeFactory typeFactory = REGISTERED_TYPES.get(typeName);
-        if (typeFactory != null) {
-          logicalType = REGISTERED_TYPES.get(typeName).fromSchema(schema);
-        } else {
-          logicalType = null;
-        }
+        logicalType = (typeFactory == null) ? null : typeFactory.fromSchema(schema);
         break;
       }
 
@@ -124,6 +132,8 @@ public class LogicalTypes {
   private static final String TIME_MICROS = "time-micros";
   private static final String TIMESTAMP_MILLIS = "timestamp-millis";
   private static final String TIMESTAMP_MICROS = "timestamp-micros";
+  private static final String LOCAL_TIMESTAMP_MILLIS = "local-timestamp-millis";
+  private static final String LOCAL_TIMESTAMP_MICROS = "local-timestamp-micros";
 
   /** Create a Decimal LogicalType with the given precision and scale 0 */
   public static Decimal decimal(int precision) {
@@ -169,6 +179,18 @@ public class LogicalTypes {
 
   public static TimestampMicros timestampMicros() {
     return TIMESTAMP_MICROS_TYPE;
+  }
+
+  private static final LocalTimestampMillis LOCAL_TIMESTAMP_MILLIS_TYPE = new LocalTimestampMillis();
+
+  public static LocalTimestampMillis localTimestampMillis() {
+    return LOCAL_TIMESTAMP_MILLIS_TYPE;
+  }
+
+  private static final LocalTimestampMicros LOCAL_TIMESTAMP_MICROS_TYPE = new LocalTimestampMicros();
+
+  public static LocalTimestampMicros localTimestampMicros() {
+    return LOCAL_TIMESTAMP_MICROS_TYPE;
   }
 
   /** Decimal represents arbitrary-precision fixed-scale decimal numbers */
@@ -243,10 +265,7 @@ public class LogicalTypes {
         return Integer.MAX_VALUE;
       } else if (schema.getType() == Schema.Type.FIXED) {
         int size = schema.getFixedSize();
-        return Math.round( // convert double to long
-            Math.floor(Math.log10( // number of base-10 digits
-                Math.pow(2, 8 * size - 1) - 1) // max value stored
-            ));
+        return Math.round(Math.floor(Math.log10(2) * (8 * size - 1)));
       } else {
         // not valid for any other type
         return 0;
@@ -359,6 +378,34 @@ public class LogicalTypes {
       super.validate(schema);
       if (schema.getType() != Schema.Type.LONG) {
         throw new IllegalArgumentException("Timestamp (micros) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  public static class LocalTimestampMillis extends LogicalType {
+    private LocalTimestampMillis() {
+      super(LOCAL_TIMESTAMP_MILLIS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException("Local timestamp (millis) can only be used with an underlying long type");
+      }
+    }
+  }
+
+  public static class LocalTimestampMicros extends LogicalType {
+    private LocalTimestampMicros() {
+      super(LOCAL_TIMESTAMP_MICROS);
+    }
+
+    @Override
+    public void validate(Schema schema) {
+      super.validate(schema);
+      if (schema.getType() != Schema.Type.LONG) {
+        throw new IllegalArgumentException("Local timestamp (micros) can only be used with an underlying long type");
       }
     }
   }

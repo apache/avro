@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,82 +48,98 @@ void init_schema(void)
 	}
 }
 
-/* Create a datum to match the person schema and save it */
+/* Create a value to match the person schema and save it */
 void
 add_person(avro_file_writer_t db, const char *first, const char *last,
 	   const char *phone, int32_t age)
 {
-	avro_datum_t person = avro_record(person_schema);
+	avro_value_iface_t  *person_class =
+	    avro_generic_class_from_schema(person_schema);
 
-	avro_datum_t id_datum = avro_int64(++id);
-	avro_datum_t first_datum = avro_string(first);
-	avro_datum_t last_datum = avro_string(last);
-	avro_datum_t age_datum = avro_int32(age);
-	avro_datum_t phone_datum = avro_string(phone);
+	avro_value_t  person;
+	avro_generic_value_new(person_class, &person);
 
-	if (avro_record_set(person, "ID", id_datum)
-	    || avro_record_set(person, "First", first_datum)
-	    || avro_record_set(person, "Last", last_datum)
-	    || avro_record_set(person, "Age", age_datum)
-	    || avro_record_set(person, "Phone", phone_datum)) {
-		fprintf(stderr, "Unable to create Person datum structure\n");
-		exit(EXIT_FAILURE);
+	avro_value_t id_value;
+	avro_value_t first_value;
+	avro_value_t last_value;
+	avro_value_t age_value;
+	avro_value_t phone_value;
+
+	if (avro_value_get_by_name(&person, "ID", &id_value, NULL) == 0) {
+		avro_value_set_long(&id_value, ++id);
+	}
+	if (avro_value_get_by_name(&person, "First", &first_value, NULL) == 0) {
+		avro_value_set_string(&first_value, first);
+	}
+	if (avro_value_get_by_name(&person, "Last", &last_value, NULL) == 0) {
+		avro_value_set_string(&last_value, last);
+	}
+	if (avro_value_get_by_name(&person, "Age", &age_value, NULL) == 0) {
+		avro_value_set_int(&age_value, age);
+	}
+	if (avro_value_get_by_name(&person, "Phone", &phone_value, NULL) == 0) {
+		avro_value_set_string(&phone_value, phone);
 	}
 
-	if (avro_file_writer_append(db, person)) {
+	if (avro_file_writer_append_value(db, &person)) {
 		fprintf(stderr,
-			"Unable to write Person datum to memory buffer\nMessage: %s\n", avro_strerror());
+			"Unable to write Person value to memory buffer\nMessage: %s\n", avro_strerror());
 		exit(EXIT_FAILURE);
 	}
 
 	/* Decrement all our references to prevent memory from leaking */
-	avro_datum_decref(id_datum);
-	avro_datum_decref(first_datum);
-	avro_datum_decref(last_datum);
-	avro_datum_decref(age_datum);
-	avro_datum_decref(phone_datum);
-	avro_datum_decref(person);
-
-	//fprintf(stdout, "Successfully added %s, %s id=%"PRId64"\n", last, first, id);
+	avro_value_decref(&person);
+	avro_value_iface_decref(person_class);
 }
 
 int print_person(avro_file_reader_t db, avro_schema_t reader_schema)
 {
+
+	avro_value_iface_t  *person_class =
+	    avro_generic_class_from_schema(person_schema);
+
+	avro_value_t person;
+	avro_generic_value_new(person_class, &person);
+
 	int rval;
-	avro_datum_t person;
 
-	rval = avro_file_reader_read(db, reader_schema, &person);
+	rval = avro_file_reader_read_value(db, &person);
 	if (rval == 0) {
-		int64_t i64;
-		int32_t i32;
-		char *p;
-		avro_datum_t id_datum, first_datum, last_datum, phone_datum,
-		    age_datum;
+		int64_t id;
+		int32_t age;
+		int32_t *p;
+		size_t size;
+		avro_value_t id_value;
+		avro_value_t first_value;
+		avro_value_t last_value;
+		avro_value_t age_value;
+		avro_value_t phone_value;
 
-		if (avro_record_get(person, "ID", &id_datum) == 0) {
-			avro_int64_get(id_datum, &i64);
-			fprintf(stdout, "%"PRId64" | ", i64);
+		if (avro_value_get_by_name(&person, "ID", &id_value, NULL) == 0) {
+			avro_value_get_long(&id_value, &id);
+			fprintf(stdout, "%"PRId64" | ", id);
 		}
-		if (avro_record_get(person, "First", &first_datum) == 0) {
-			avro_string_get(first_datum, &p);
+		if (avro_value_get_by_name(&person, "First", &first_value, NULL) == 0) {
+			avro_value_get_string(&first_value, &p, &size);
 			fprintf(stdout, "%15s | ", p);
 		}
-		if (avro_record_get(person, "Last", &last_datum) == 0) {
-			avro_string_get(last_datum, &p);
+		if (avro_value_get_by_name(&person, "Last", &last_value, NULL) == 0) {
+			avro_value_get_string(&last_value, &p, &size);
 			fprintf(stdout, "%15s | ", p);
 		}
-		if (avro_record_get(person, "Phone", &phone_datum) == 0) {
-			avro_string_get(phone_datum, &p);
+		if (avro_value_get_by_name(&person, "Phone", &phone_value, NULL) == 0) {
+			avro_value_get_string(&phone_value, &p, &size);
 			fprintf(stdout, "%15s | ", p);
 		}
-		if (avro_record_get(person, "Age", &age_datum) == 0) {
-			avro_int32_get(age_datum, &i32);
-			fprintf(stdout, "%d", i32);
+		if (avro_value_get_by_name(&person, "Age", &age_value, NULL) == 0) {
+			avro_value_get_int(&age_value, &age);
+			fprintf(stdout, "%"PRId32" | ", age);
 		}
 		fprintf(stdout, "\n");
 
 		/* We no longer need this memory */
-		avro_datum_decref(person);
+		avro_value_decref(&person);
+		avro_value_iface_decref(person_class);
 	}
 	return rval;
 }

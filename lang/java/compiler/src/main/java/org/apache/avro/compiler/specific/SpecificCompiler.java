@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -39,7 +41,6 @@ import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.TimeConversions;
-import org.apache.avro.data.JodaTimeConversions;
 import org.apache.avro.specific.SpecificData;
 
 import org.apache.avro.Protocol;
@@ -82,8 +83,8 @@ public class SpecificCompiler {
    * arguments.
    *
    * @see <a href=
-   * "http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">JVM
-   * Spec: Section 4.10</a>
+   * "https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10">
+   * JVM Spec: Section 4.10</a>
    */
   private static final int JVM_METHOD_ARG_LIMIT = 255;
 
@@ -96,29 +97,12 @@ public class SpecificCompiler {
     PUBLIC, PUBLIC_DEPRECATED, PRIVATE
   }
 
-  public enum DateTimeLogicalTypeImplementation {
-    JODA {
-      @Override
-      void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimeConversion());
-        specificData.addLogicalTypeConversion(new JodaTimeConversions.TimestampConversion());
-      }
-    },
-    JSR310 {
-      @Override
-      void addLogicalTypeConversions(SpecificData specificData) {
-        specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
-        specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
-      }
-    };
-
-    public static final DateTimeLogicalTypeImplementation DEFAULT = JSR310;
-
-    abstract void addLogicalTypeConversions(SpecificData specificData);
+  void addLogicalTypeConversions(SpecificData specificData) {
+    specificData.addLogicalTypeConversion(new TimeConversions.DateConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimeMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
   }
 
   private final SpecificData specificData = new SpecificData();
@@ -130,12 +114,13 @@ public class SpecificCompiler {
   private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
+  private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
   private boolean enableDecimalLogicalType = false;
-  private final DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation;
   private String suffix = ".java";
+  private List<Object> additionalVelocityTools = Collections.emptyList();
 
   /*
    * Used in the record.vm template.
@@ -163,11 +148,7 @@ public class SpecificCompiler {
       + " * DO NOT EDIT DIRECTLY\n" + " */\n";
 
   public SpecificCompiler(Protocol protocol) {
-    this(protocol, DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  public SpecificCompiler(Protocol protocol, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this(dateTimeLogicalTypeImplementation);
+    this();
     // enqueue all types
     for (Schema s : protocol.getTypes()) {
       enqueue(s);
@@ -176,40 +157,28 @@ public class SpecificCompiler {
   }
 
   public SpecificCompiler(Schema schema) {
-    this(schema, DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  public SpecificCompiler(Schema schema, DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this(dateTimeLogicalTypeImplementation);
+    this();
     enqueue(schema);
     this.protocol = null;
   }
 
   /**
-   * Creates a specific compiler with the default (JSR310) type for date/time
-   * related logical types.
-   *
-   * @see #SpecificCompiler(DateTimeLogicalTypeImplementation)
+   * Creates a specific compiler with the given type to use for date/time related
+   * logical types.
    */
   SpecificCompiler() {
-    this(DateTimeLogicalTypeImplementation.DEFAULT);
-  }
-
-  /**
-   * Creates a specific compiler with the given type to use for date/time related
-   * logical types. Use {@link DateTimeLogicalTypeImplementation#JODA} to generate
-   * Joda Time classes, use {@link DateTimeLogicalTypeImplementation#JSR310} to
-   * generate {@code java.time.*} classes for the date/time local types.
-   *
-   * @param dateTimeLogicalTypeImplementation the types used for date/time related
-   *                                          logical types
-   */
-  SpecificCompiler(DateTimeLogicalTypeImplementation dateTimeLogicalTypeImplementation) {
-    this.dateTimeLogicalTypeImplementation = dateTimeLogicalTypeImplementation;
     this.templateDir = System.getProperty("org.apache.avro.specific.templates",
         "/org/apache/avro/compiler/specific/templates/java/classic/");
     initializeVelocity();
     initializeSpecificData();
+  }
+
+  /**
+   * Set additional Velocity tools (simple POJOs) to be injected into the Velocity
+   * template context.
+   */
+  public void setAdditionalVelocityTools(List<Object> additionalVelocityTools) {
+    this.additionalVelocityTools = additionalVelocityTools;
   }
 
   /**
@@ -288,16 +257,23 @@ public class SpecificCompiler {
     this.gettersReturnOptional = gettersReturnOptional;
   }
 
+  public boolean isOptionalGettersForNullableFieldsOnly() {
+    return optionalGettersForNullableFieldsOnly;
+  }
+
+  /**
+   * Set to true to create the Optional getters only for nullable fields.
+   */
+  public void setOptionalGettersForNullableFieldsOnly(boolean optionalGettersForNullableFieldsOnly) {
+    this.optionalGettersForNullableFieldsOnly = optionalGettersForNullableFieldsOnly;
+  }
+
   /**
    * Set to true to use {@link java.math.BigDecimal} instead of
    * {@link java.nio.ByteBuffer} for logical type "decimal"
    */
   public void setEnableDecimalLogicalType(boolean enableDecimalLogicalType) {
     this.enableDecimalLogicalType = enableDecimalLogicalType;
-  }
-
-  public DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
-    return dateTimeLogicalTypeImplementation;
   }
 
   public void addCustomConversion(Class<?> conversionClass) {
@@ -350,10 +326,10 @@ public class SpecificCompiler {
       for (Schema s : schema.getTypes())
         getClassNamesOfPrimitiveFields(s, result, seenSchemas);
       break;
-    case ENUM:
-    case FIXED:
     case NULL:
       break;
+    case ENUM:
+    case FIXED:
     case STRING:
     case BYTES:
     case INT:
@@ -361,35 +337,33 @@ public class SpecificCompiler {
     case FLOAT:
     case DOUBLE:
     case BOOLEAN:
-      result.add(javaType(schema));
+      result.add(javaType(schema, true));
       break;
     default:
       throw new RuntimeException("Unknown type: " + schema);
     }
   }
 
-  private static String logChuteName = null;
-
   private void initializeVelocity() {
     this.velocityEngine = new VelocityEngine();
 
     // These properties tell Velocity to use its own classpath-based
     // loader, then drop down to check the root and the current folder
-    velocityEngine.addProperty("resource.loader", "class, file");
-    velocityEngine.addProperty("class.resource.loader.class",
+    velocityEngine.addProperty("resource.loaders", "class, file");
+    velocityEngine.addProperty("resource.loader.class.class",
         "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-    velocityEngine.addProperty("file.resource.loader.class",
+    velocityEngine.addProperty("resource.loader.file.class",
         "org.apache.velocity.runtime.resource.loader.FileResourceLoader");
-    velocityEngine.addProperty("file.resource.loader.path", "/, .");
-    velocityEngine.setProperty("runtime.references.strict", true);
+    velocityEngine.addProperty("resource.loader.file.path", "/, .");
+    velocityEngine.setProperty("runtime.strict_mode.enable", true);
 
     // Set whitespace gobbling to Backward Compatible (BC)
-    // http://velocity.apache.org/engine/2.0/developer-guide.html#space-gobbling
-    velocityEngine.setProperty("space.gobbling", "bc");
+    // https://velocity.apache.org/engine/2.0/developer-guide.html#space-gobbling
+    velocityEngine.setProperty("parser.space_gobbling", "bc");
   }
 
   private void initializeSpecificData() {
-    dateTimeLogicalTypeImplementation.addLogicalTypeConversions(specificData);
+    addLogicalTypeConversions(specificData);
     specificData.addLogicalTypeConversion(new Conversions.DecimalConversion());
   }
 
@@ -466,7 +440,7 @@ public class SpecificCompiler {
 
     for (File src : srcFiles) {
       Schema schema = parser.parse(src);
-      SpecificCompiler compiler = new SpecificCompiler(schema, DateTimeLogicalTypeImplementation.DEFAULT);
+      SpecificCompiler compiler = new SpecificCompiler(schema);
       compiler.compileToDestination(src, dest);
     }
   }
@@ -511,7 +485,7 @@ public class SpecificCompiler {
 
   /** Generate java classes for enqueued schemas. */
   Collection<OutputFile> compile() {
-    List<OutputFile> out = new ArrayList<>();
+    List<OutputFile> out = new ArrayList<>(queue.size() + 1);
     for (Schema schema : queue) {
       out.add(compile(schema));
     }
@@ -549,6 +523,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("protocol", protocol);
     context.put("this", this);
+    for (Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
     String out = renderTemplate(templateDir + "protocol.vm", context);
 
     OutputFile outputFile = new OutputFile();
@@ -600,6 +578,10 @@ public class SpecificCompiler {
     VelocityContext context = new VelocityContext();
     context.put("this", this);
     context.put("schema", schema);
+    for (Object velocityTool : additionalVelocityTools) {
+      String toolName = velocityTool.getClass().getSimpleName().toLowerCase();
+      context.put(toolName, velocityTool);
+    }
 
     switch (schema.getType()) {
     case RECORD:
@@ -665,7 +647,7 @@ public class SpecificCompiler {
   private Schema addStringType(Schema s) {
     if (stringType != StringType.String)
       return s;
-    return addStringType(s, new LinkedHashMap<>());
+    return addStringType(s, new HashMap<>());
   }
 
   // annotate map and string schemas with string type
@@ -676,14 +658,16 @@ public class SpecificCompiler {
     switch (s.getType()) {
     case STRING:
       result = Schema.create(Schema.Type.STRING);
-      GenericData.setStringType(result, stringType);
+      if (s.getLogicalType() == null) {
+        GenericData.setStringType(result, stringType);
+      }
       break;
     case RECORD:
       result = Schema.createRecord(s.getFullName(), s.getDoc(), null, s.isError());
       for (String alias : s.getAliases())
         result.addAlias(alias, null); // copy aliases
       seen.put(s, result);
-      List<Field> newFields = new ArrayList<>();
+      List<Field> newFields = new ArrayList<>(s.getFields().size());
       for (Field f : s.getFields()) {
         Schema fSchema = addStringType(f.schema(), seen);
         Field newF = new Field(f, fSchema);
@@ -701,13 +685,16 @@ public class SpecificCompiler {
       GenericData.setStringType(result, stringType);
       break;
     case UNION:
-      List<Schema> types = new ArrayList<>();
+      List<Schema> types = new ArrayList<>(s.getTypes().size());
       for (Schema branch : s.getTypes())
         types.add(addStringType(branch, seen));
       result = Schema.createUnion(types);
       break;
     }
     result.addAllProps(s);
+    if (s.getLogicalType() != null) {
+      s.getLogicalType().addToSchema(result);
+    }
     seen.put(s, result);
     return result;
   }
@@ -833,9 +820,10 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
-   * @Deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
+   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
    *             of custom templates
    */
+  @Deprecated
   public String javaUnbox(Schema schema) {
     return javaUnbox(schema, false);
   }
@@ -959,16 +947,17 @@ public class SpecificCompiler {
 
   /** Utility for template use. Returns the java annotations for a schema. */
   public String[] javaAnnotations(JsonProperties props) {
-    Object value = props.getObjectProp("javaAnnotation");
+    final Object value = props.getObjectProp("javaAnnotation");
     if (value == null)
       return new String[0];
     if (value instanceof String)
       return new String[] { value.toString() };
     if (value instanceof List) {
-      List<?> list = (List<?>) value;
-      List<String> annots = new ArrayList<>();
-      for (Object o : list)
+      final List<?> list = (List<?>) value;
+      final List<String> annots = new ArrayList<>(list.size());
+      for (Object o : list) {
         annots.add(o.toString());
+      }
       return annots.toArray(new String[0]);
     }
     return new String[0];
@@ -985,7 +974,8 @@ public class SpecificCompiler {
    * @return A sequence of quoted, comma-separated, escaped strings
    */
   public String javaSplit(String s) throws IOException {
-    StringBuilder b = new StringBuilder("\""); // initial quote
+    StringBuilder b = new StringBuilder(s.length());
+    b.append("\""); // initial quote
     for (int i = 0; i < s.length(); i += maxStringChars) {
       if (i != 0)
         b.append("\",\""); // insert quote-comma-quote
@@ -997,8 +987,8 @@ public class SpecificCompiler {
   }
 
   /** Utility for template use. Escapes quotes and backslashes. */
-  public static String javaEscape(Object o) {
-    return o.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+  public static String javaEscape(String o) {
+    return o.replace("\\", "\\\\").replace("\"", "\\\"");
   }
 
   /** Utility for template use. Escapes comment end with HTML entities. */

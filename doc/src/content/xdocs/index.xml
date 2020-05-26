@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+   https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
    limitations under the License.
   -->
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
-   "http://forrest.apache.org/dtd/document-v20.dtd" [
+   "https://forrest.apache.org/dtd/document-v20.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -61,15 +61,15 @@
 	schema, correspondence between same named fields, missing
 	fields, extra fields, etc. can all be easily resolved.</p>
       <p>Avro schemas are defined with
-	<a href="http://www.json.org/">JSON</a> .  This
+	<a href="https://www.json.org/">JSON</a> .  This
 	facilitates implementation in languages that already have
 	JSON libraries.</p>
     </section>
     <section id="compare">
       <title>Comparison with other systems</title>
       <p>Avro provides functionality similar to systems such
-	as <a href="http://thrift.apache.org/">Thrift</a>,
-	<a href="http://code.google.com/p/protobuf/">Protocol
+	as <a href="https://thrift.apache.org/">Thrift</a>,
+	<a href="https://code.google.com/p/protobuf/">Protocol
 	  Buffers</a>, etc.  Avro differs from these systems in the
 	  following fundamental aspects.</p>
       <ul>

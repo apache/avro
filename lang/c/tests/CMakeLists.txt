@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -81,7 +81,6 @@ add_avro_test_checkmem(test_avro_1405)
 add_avro_test_checkmem(test_avro_1572)
 add_avro_test(test_avro_data) # Skip memory check for datum. Deprecated and has a lot of memory issues
 add_avro_test_checkmem(test_refcount)
-add_avro_test_checkmem(test_cpp test_cpp.cpp)
 add_avro_test_checkmem(test_avro_1379)
 add_avro_test_checkmem(test_avro_1691)
 add_avro_test_checkmem(test_avro_1906)

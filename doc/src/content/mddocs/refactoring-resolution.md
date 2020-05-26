@@ -6,7 +6,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -96,7 +96,7 @@ writer's schema into the corresponding subtree of the reader's.
 
    * `RecordAdjust` -- resolution involves recursively resolving the
      schemas for each field, and dealing with reordering and removal
-     of fields.  An `EnumAdjust` object contains the information
+     of fields.  A `RecordAdjust` object contains the information
      needed to do so.
 
    * `SkipAction` -- only generated as a sub-action of a

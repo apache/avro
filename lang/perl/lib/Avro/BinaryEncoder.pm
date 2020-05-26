@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -23,6 +23,8 @@ use Config;
 use Encode();
 use Error::Simple;
 use Regexp::Common qw(number);
+
+our $VERSION = '++MODULE_VERSION++';
 
 our $max64;
 our $complement = ~0x7F;
@@ -232,7 +234,7 @@ sub encode_map {
     $class->encode_long(undef, 0, $cb);
 }
 
-## 1.3.2 A union is encoded by first writing a long value indicating the
+## 1.3.2 A union is encoded by first writing an int value indicating the
 ## zero-based position within the union of the schema of its value. The value
 ## is then encoded per the indicated schema within the union.
 sub encode_union {

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,8 +48,8 @@ public class TestRecodecTool {
     File inputFile = new File(DIR.getRoot(), "input.avro");
 
     Schema schema = Schema.create(Type.STRING);
-    DataFileWriter<String> writer = new DataFileWriter<>(new GenericDatumWriter<String>(schema))
-        .setMeta(metaKey, metaValue).create(schema, inputFile);
+    DataFileWriter<String> writer = new DataFileWriter<>(new GenericDatumWriter<String>(schema));
+    writer.setMeta(metaKey, metaValue).create(schema, inputFile);
     // We write some garbage which should be quite compressible by deflate,
     // but is complicated enough that deflate-9 will work better than deflate-1.
     // These values were plucked from thin air and worked on the first try, so
@@ -77,8 +77,9 @@ public class TestRecodecTool {
 
     // We assume that metadata copying is orthogonal to codec selection, and
     // so only test it for a single file.
-    Assert.assertEquals(metaValue,
-        new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<>()).getMetaString(metaKey));
+    try (DataFileReader<Void> reader = new DataFileReader<Void>(defaultOutputFile, new GenericDatumReader<>())) {
+      Assert.assertEquals(metaValue, reader.getMetaString(metaKey));
+    }
 
     // The "default" codec should be the same as null.
     Assert.assertEquals(defaultOutputFile.length(), nullOutputFile.length());

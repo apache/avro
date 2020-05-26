@@ -8,59 +8,91 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Command line utlity for reading and writing Avro files."""
 
-from avro.io import DatumReader, DatumWriter
-from avro.datafile import DataFileReader, DataFileWriter
+"""Command line utility for reading and writing Avro files."""
+
+from __future__ import absolute_import, division, print_function
+
+import csv
+import itertools
+import json
+import os.path
+import sys
+from functools import partial
+from optparse import OptionGroup, OptionParser
+
+import avro
 import avro.schema
+from avro.datafile import DataFileReader, DataFileWriter
+from avro.io import DatumReader, DatumWriter
+
+_AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
+
+ifilter = getattr(itertools, 'ifilter', filter)
+imap = getattr(itertools, 'imap', map)
 
 try:
-    import json
-except ImportError:
-    import simplejson as json
-import csv
-from sys import stdout, stdin
-from itertools import ifilter, imap
-from functools import partial
-from os.path import splitext
+    unicode
+except NameError:
+    unicode = str
+
+try:
+    long
+except NameError:
+    long = int
+
+
+def _version():
+    with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
+        return v.read()
+
+
+_AVRO_VERSION = _version()
+
 
 class AvroError(Exception):
     pass
 
+
 def print_json(row):
     print(json.dumps(row))
 
-def print_json_pretty(row):
-    print(json.dumps(row, indent=4))
 
-_write_row = csv.writer(stdout).writerow
-_encoding = stdout.encoding or "UTF-8"
-def _encode(v, encoding=_encoding):
-    if not isinstance(v, basestring):
-        return v
-    return v.encode(_encoding)
+def print_json_pretty(row):
+    """Pretty print JSON"""
+    # Need to work around https://bugs.python.org/issue16333
+    # where json.dumps leaves trailing spaces.
+    result = json.dumps(row, sort_keys=True, indent=4).replace(' \n', '\n')
+    print(result)
+
+
+_write_row = csv.writer(sys.stdout).writerow
+
 
 def print_csv(row):
     # We sort the keys to the fields will be in the same place
     # FIXME: Do we want to do it in schema order?
-    _write_row([_encode(row[key]) for key in sorted(row)])
+    _write_row([row[key] for key in sorted(row)])
+
 
 def select_printer(format):
     return {
-        "json" : print_json,
-        "json-pretty" : print_json_pretty,
-        "csv" : print_csv
+        "json": print_json,
+        "json-pretty": print_json_pretty,
+        "csv": print_csv
     }[format]
 
+
 def record_match(expr, record):
-    return eval(expr, None, {"r" : record})
+    return eval(expr, None, {"r": record})
+
 
 def parse_fields(fields):
     fields = fields or ''
@@ -69,11 +101,14 @@ def parse_fields(fields):
 
     return [field.strip() for field in fields.split(',') if field.strip()]
 
+
 def field_selector(fields):
     fields = set(fields)
+
     def keys_filter(obj):
         return dict((k, obj[k]) for k in (set(obj) & fields))
     return keys_filter
+
 
 def print_avro(avro, opts):
     if opts.header and (opts.format != "csv"):
@@ -83,7 +118,7 @@ def print_avro(avro, opts):
     if opts.filter:
         avro = ifilter(partial(record_match, opts.filter), avro)
 
-    for i in xrange(opts.skip):
+    for i in range(opts.skip):
         try:
             next(avro)
         except StopIteration:
@@ -101,40 +136,42 @@ def print_avro(avro, opts):
             break
         printer(record)
 
+
 def print_schema(avro):
-    schema = avro.meta["avro.schema"]
+    schema = avro.schema
     # Pretty print
-    print json.dumps(json.loads(schema), indent=4)
+    print(json.dumps(json.loads(schema), indent=4))
+
 
 def cat(opts, args):
     if not args:
         raise AvroError("No files to show")
-
     for filename in args:
-        try:
-            fo = open(filename, "rb")
-        except (OSError, IOError), e:
-            raise AvroError("Can't open %s - %s" % (filename, e))
+        with DataFileReader(open(filename, 'rb'), DatumReader()) as avro:
+            if opts.print_schema:
+                print_schema(avro)
+                continue
+            print_avro(avro, opts)
 
-        avro = DataFileReader(fo, DatumReader())
-
-        if opts.print_schema:
-            print_schema(avro)
-            continue
-
-        print_avro(avro, opts)
 
 def _open(filename, mode):
     if filename == "-":
         return {
-            "rb" : stdin,
-            "wb" : stdout
+            "rb": sys.stdin,
+            "wb": sys.stdout
         }[mode]
 
     return open(filename, mode)
 
+
 def iter_json(info, _):
-    return imap(json.loads, info)
+    for i in info:
+        try:
+            s = i.decode()
+        except AttributeError:
+            s = i
+        yield json.loads(s)
+
 
 def convert(value, field):
     type = field.type.type
@@ -142,16 +179,17 @@ def convert(value, field):
         return convert_union(value, field)
 
     return  {
-        "int" : int,
-        "long" : long,
-        "float" : float,
-        "double" : float,
-        "string" : str,
-        "bytes" : str,
-        "boolean" : bool,
-        "null" : lambda _: None,
-        "union" : lambda v: convert_union(v, field),
+        "int": int,
+        "long": long,
+        "float": float,
+        "double": float,
+        "string": unicode,
+        "bytes": bytes,
+        "boolean": bool,
+        "null": lambda _: None,
+        "union": lambda v: convert_union(v, field),
     }[type](value)
+
 
 def convert_union(value, field):
     for name in [s.name for s in field.type.schemas]:
@@ -160,23 +198,26 @@ def convert_union(value, field):
         except ValueError:
             continue
 
+
 def iter_csv(info, schema):
     header = [field.name for field in schema.fields]
-    for row in csv.reader(info):
+    for row in csv.reader((getattr(i, "decode", lambda: i)() for i in info)):
         values = [convert(v, f) for v, f in zip(row, schema.fields)]
         yield dict(zip(header, values))
+
 
 def guess_input_type(files):
     if not files:
         return None
 
-    ext = splitext(files[0])[1].lower()
+    ext = os.path.splitext(files[0])[1].lower()
     if ext in (".json", ".js"):
         return "json"
     elif ext in (".csv",):
         return "csv"
 
     return None
+
 
 def write(opts, files):
     if not opts.schema:
@@ -185,16 +226,17 @@ def write(opts, files):
     input_type = opts.input_type or guess_input_type(files)
     if not input_type:
         raise AvroError("Can't guess input file type (not .json or .csv)")
+    iter_records = {"json": iter_json, "csv": iter_csv}[input_type]
 
     try:
-        schema = avro.schema.parse(open(opts.schema, "rb").read())
+        with open(opts.schema) as schema_file:
+            schema = avro.schema.parse(schema_file.read())
         out = _open(opts.output, "wb")
-    except (IOError, OSError), e:
+    except (IOError, OSError) as e:
         raise AvroError("Can't open file - %s" % e)
 
-    writer = DataFileWriter(out, DatumWriter(), schema)
+    writer = DataFileWriter(getattr(out, 'buffer', out), DatumWriter(), schema)
 
-    iter_records = {"json" : iter_json, "csv" : iter_csv}[input_type]
     for filename in (files or ["-"]):
         info = _open(filename, "rb")
         for record in iter_records(info, schema):
@@ -202,33 +244,31 @@ def write(opts, files):
 
     writer.close()
 
-def main(argv=None):
-    import sys
-    from optparse import OptionParser, OptionGroup
 
+def main(argv=None):
     argv = argv or sys.argv
 
     parser = OptionParser(description="Display/write for Avro files",
-                      version="@AVRO_VERSION@",
-                      usage="usage: %prog cat|write [options] FILE [FILE...]")
+                          version=_AVRO_VERSION,
+                          usage="usage: %prog cat|write [options] FILE [FILE...]")
     # cat options
 
     cat_options = OptionGroup(parser, "cat options")
     cat_options.add_option("-n", "--count", default=float("Infinity"),
-                    help="number of records to print", type=int)
+                           help="number of records to print", type=int)
     cat_options.add_option("-s", "--skip", help="number of records to skip",
                            type=int, default=0)
     cat_options.add_option("-f", "--format", help="record format",
                            default="json",
                            choices=["json", "csv", "json-pretty"])
     cat_options.add_option("--header", help="print CSV header", default=False,
-                   action="store_true")
+                           action="store_true")
     cat_options.add_option("--filter", help="filter records (e.g. r['age']>1)",
-                    default=None)
+                           default=None)
     cat_options.add_option("--print-schema", help="print schema",
-                      action="store_true", default=False)
+                           action="store_true", default=False)
     cat_options.add_option('--fields', default=None,
-                help='fields to show, comma separated (show all by default)')
+                           help='fields to show, comma separated (show all by default)')
     parser.add_option_group(cat_options)
 
     # write options
@@ -252,11 +292,9 @@ def main(argv=None):
             write(opts, args)
         else:
             raise AvroError("Unknown command - %s" % command)
-    except AvroError, e:
-        parser.error("%s" % e) # Will exit
-    except Exception, e:
-        raise SystemExit("panic: %s" % e)
+    except AvroError as e:
+        parser.error("%s" % e)  # Will exit
+
 
 if __name__ == "__main__":
     main()
-

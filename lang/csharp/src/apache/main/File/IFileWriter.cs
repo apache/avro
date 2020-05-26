@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,67 +19,75 @@ using System;
 
 namespace Avro.File
 {
+    /// <summary>
+    /// Defines the interface for an object that stores in a file a sequence of data conforming to
+    /// a schema.
+    /// </summary>
+    /// <typeparam name="T">Type that we will serialize to the file.</typeparam>
     public interface IFileWriter<T> : IDisposable
     {
         /// <summary>
-        /// Append datum to a file / stream
+        /// Append datum to a file or stream.
         /// </summary>
-        /// <param name="datum"></param>
+        /// <param name="datum">Datum to append.</param>
         void Append(T datum);
 
         /// <summary>
-        /// Closes the file / stream
+        /// Closes the file or stream.
         /// </summary>
         void Close();
 
         /// <summary>
-        /// Flush out any buffered data
+        /// Flush out any buffered data.
         /// </summary>
         void Flush();
 
-        /// Returns true if parameter is a
-        /// reserved Avro meta data value
+        /// <summary>
+        /// Returns true if parameter is a reserved Avro metadata value.
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        /// <param name="key">Metadata key.</param>
+        /// <returns>
+        /// True if parameter is a reserved Avro metadata value, false otherwise.
+        /// </returns>
         bool IsReservedMeta(string key);
 
         /// <summary>
-        /// Set meta data pair
+        /// Set metadata pair.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        void SetMeta(String key, byte[] value);
+        /// <param name="key">Metadata key.</param>
+        /// <param name="value">Metadata value.</param>
+        void SetMeta(string key, byte[] value);
 
         /// <summary>
-        /// Set meta data pair (long value)
+        /// Set metadata pair (long value).
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        void SetMeta(String key, long value);
+        /// <param name="key">Metadata key.</param>
+        /// <param name="value">Metadata value.</param>
+        void SetMeta(string key, long value);
 
         /// <summary>
-        /// Set meta data pair (string value)
+        /// Set metadata pair (string value).
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        void SetMeta(String key, string value);
+        /// <param name="key">Metadata key.</param>
+        /// <param name="value">Metadata value.</param>
+        void SetMeta(string key, string value);
 
         /// <summary>
-        /// Set the synchronization interval for this
-        /// file / stream, in bytes. Valid values range
-        /// from 32 to 2^30. Suggested values are
-        /// between 2K and 2M
+        /// Set the synchronization interval for this file or stream, in bytes. Valid values range
+        /// from 32 to 2^30. Suggested values are between 2K and 2M.
         /// </summary>
-        /// <param name="syncInterval"></param>
-        /// <returns></returns>
+        /// <param name="syncInterval">
+        /// Approximate number of uncompressed bytes to write in each block.
+        /// </param>
         void SetSyncInterval(int syncInterval);
 
         /// <summary>
-        /// Forces the end of the current block,
-        /// emitting a synchronization marker
+        /// Forces the end of the current block, emitting a synchronization marker.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// Current position as a value that may be passed to
+        /// <see cref="IFileReader{T}.Seek(long)"/>.
+        /// </returns>
         long Sync();
     }
 }

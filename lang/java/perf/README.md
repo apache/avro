@@ -13,20 +13,20 @@ usage: Perf [--help] [--mi <measurementIterations>] [--test <test>] [--wi <warmu
 
 | Test Suite             | Package                        |
 | ---------------------- |:------------------------------:|
-| Native Type Tests      | org.apache.avro.test.basic.*   |
-| Generic Datum Tests    | org.apache.avro.test.generic.* |
-| Record Tests           | org.apache.avro.test.record.*  |
-| Reflection Datum Tests | org.apache.avro.test.reflect.* |
+| Native Type Tests      | org.apache.avro.perf.test.basic.*   |
+| Generic Datum Tests    | org.apache.avro.perf.test.generic.* |
+| Record Tests           | org.apache.avro.perf.test.record.*  |
+| Reflection Datum Tests | org.apache.avro.perf.test.reflect.* |
 
 
 ### Examples
 
 ```
 -- Run all tests in a package
-Perf --test org.apache.avro.test.reflect.* --mi 2 --wi 2
+Perf --test org.apache.avro.perf.test.reflect.* --mi 2 --wi 2
 
 -- Run a specific test
-Perf --test org.apache.avro.test.basic.IntTest --mi 3 --wi 3
+Perf --test org.apache.avro.perf.test.basic.IntTest --mi 3 --wi 3
 
 -- Run all tests (measurementIterations=3, warmupIterations=3)
 Perf

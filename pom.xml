@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>21</version>
+    <version>23</version>
   </parent>
 
   <groupId>org.apache.avro</groupId>
@@ -31,7 +31,7 @@
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
-  <url>http://avro.apache.org</url>
+  <url>https://avro.apache.org</url>
   <description>Avro toplevel pom</description>
 
   <!-- This project is used for top level build tasks and artifact copying.
@@ -49,15 +49,15 @@
 
     <!-- plugin versions -->
     <antrun-plugin.version>1.8</antrun-plugin.version>
-    <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
-    <enforcer-plugin.version>3.0.0-M2</enforcer-plugin.version>
+    <checkstyle-plugin.version>3.1.1</checkstyle-plugin.version>
+    <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.2</extra-enforcer-rules.version>
     <gpg-plugin.version>1.6</gpg-plugin.version>
-    <javadoc-plugin.version>3.1.0</javadoc-plugin.version>
+    <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
-    <source-plugin.version>3.0.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.21.1</spotless-maven-plugin.version>
+    <source-plugin.version>3.2.1</source-plugin.version>
+    <spotless-maven-plugin.version>1.31.0</spotless-maven-plugin.version>
   </properties>
 
   <modules>
@@ -65,14 +65,14 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/avro/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/avro/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/avro/trunk</url>
+    <connection>scm:git:https://github.com/apache/avro</connection>
+    <developerConnection>scm:git:https://github.com/apache/avro</developerConnection>
+    <url>scm:git:https://github.com/apache/avro</url>
   </scm>
 
   <issueManagement>
     <system>jira</system>
-    <url>http://issues.apache.org/jira/browse/AVRO</url>
+    <url>https://issues.apache.org/jira/browse/AVRO</url>
   </issueManagement>
 
   <inceptionYear>2009</inceptionYear>
@@ -83,21 +83,21 @@
       <subscribe>dev-subscribe@avro.apache.org</subscribe>
       <unsubscribe>dev-unsubscribe@avro.apache.org</unsubscribe>
       <post>dev@avro.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/avro-dev/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/avro-dev/</archive>
     </mailingList>
     <mailingList>
       <name>Avro Users List</name>
       <subscribe>users-subscribe@avro.apache.org</subscribe>
       <unsubscribe>users-unsubscribe@avro.apache.org</unsubscribe>
       <post>users@avro.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/avro-users/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/avro-users/</archive>
     </mailingList>
     <mailingList>
       <name>Avro Commits List</name>
       <subscribe>commits-subscribe@avro.apache.org</subscribe>
       <unsubscribe>commits-unsubscribe@avro.apache.org</unsubscribe>
       <post>commits@avro.apache.org</post>
-      <archive>http://mail-archives.apache.org/mod_mbox/avro-commits/</archive>
+      <archive>https://mail-archives.apache.org/mod_mbox/avro-commits/</archive>
     </mailingList>
   </mailingLists>
 
@@ -118,6 +118,19 @@
         <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
+            <id>enforce-maven-version</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[3.3.9,)</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+          <execution>
             <id>enforce</id>
             <goals>
               <goal>enforce</goal>
@@ -135,9 +148,6 @@
                 <requireJavaVersion>
                   <version>[1.8,)</version>
                 </requireJavaVersion>
-                <requireMavenVersion>
-                  <version>[3.3.9,)</version>
-                </requireMavenVersion>
               </rules>
             </configuration>
           </execution>
@@ -151,7 +161,6 @@
                 <bannedDependencies>
                   <excludes>
                     <exclude>com.google.code.findbugs:*</exclude>  <!-- GPL -->
-                    <exclude>com.google.guava:guava</exclude>
                     <exclude>org.hamcrest:hamcrest-all</exclude>
                   </excludes>
                 </bannedDependencies>
@@ -171,7 +180,7 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>${maven-plugin-plugin.version}</version>
         <configuration>
-          <goalPrefix>spotless</goalPrefix>
+          <goalPrefix>avro</goalPrefix>
         </configuration>
       </plugin>
     </plugins>
@@ -269,6 +278,17 @@
               </execution>
             </executions>
             <configuration>
+              <licenses>
+                <!-- TODO (low prio): Remove this simple workaround when Apache Rat 0.14 has been released. -->
+                <!-- See also: https://issues.apache.org/jira/browse/RAT-212 -->
+                <!-- and       https://issues.apache.org/jira/browse/LEGAL-265 -->
+                <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20">
+                  <notes>Also allow the license url to be https.</notes>
+                  <patterns>
+                    <pattern>https://www.apache.org/licenses/LICENSE-2.0</pattern>
+                  </patterns>
+                </license>
+              </licenses>
               <consoleOutput>true</consoleOutput>
               <excludeSubProjects>false</excludeSubProjects>
               <excludes>
@@ -279,6 +299,7 @@
                 <!-- build or test files (some are generated files that we commit as-is for testing purposes) -->
                 <exclude>**/*.log</exclude>
                 <exclude>**/*.rej</exclude>
+                <exclude>**/*.egg-info/**</exclude>
                 <exclude>build/**</exclude>
                 <exclude>doc/build/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
@@ -286,16 +307,14 @@
                 <exclude>lang/js/node_modules/**</exclude>
                 <exclude>lang/c++/doc/html/**</exclude>
                 <exclude>lang/c++/build/**</exclude>
+                <exclude>lang/csharp/build/**</exclude>
                 <exclude>lang/perl/pm_to_blib</exclude>
                 <exclude>lang/perl/blib/**/.exists</exclude>
-                <exclude>lang/py/build/**</exclude>
-                <exclude>lang/py3/avro_python3.egg-info/**</exclude>
                 <exclude>lang/ruby/Gemfile.lock</exclude>
                 <exclude>lang/ruby/avro.gemspec</exclude>
                 <exclude>lang/ruby/.gem/**</exclude>
                 <exclude>lang/ruby/pkg/**</exclude>
                 <exclude>lang/ruby/.bundle/**</exclude>
-                <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithJsr310LogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithLogicalTypes.java</exclude>
                 <exclude>lang/java/avro/src/test/java/org/apache/avro/specific/TestRecordWithoutLogicalTypes.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output-string/avro/examples/baseball/Player.java</exclude>
@@ -304,12 +323,13 @@
                 <exclude>lang/java/tools/src/test/compiler/output-string/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Position.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/FieldVisibilityTest.java</exclude>
                 <exclude>lang/csharp/build/doc/html/**</exclude>
                 <exclude>lang/csharp/src/apache/ipc.test/GeneratedFiles/**/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/perf/com/foo/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/ipc/org/apache/avro/ipc/*.cs</exclude>
                 <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.txt</exclude>
-                <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/_SUCCESS</exclude>
+                <exclude>lang/java/mapred/src/test/resources/org/apache/avro/mapreduce/mapreduce-test-input.avro/*</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/noopt/Test.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/A.java</exclude>
                 <exclude>lang/java/protobuf/src/test/java/org/apache/avro/protobuf/multiplefiles/Foo.java</exclude>
@@ -339,36 +359,44 @@
                 <exclude>lang/csharp/Avro.sln</exclude> <!-- visual studio -->
                 <!-- build-related files -->
                 <exclude>**/README.md</exclude>
-                <exclude>BUILD.md</exclude>
-                <exclude>.travis.yml</exclude>
                 <exclude>**/VERSION.txt</exclude>
                 <exclude>**/dependency-reduced-pom.xml</exclude>
-                <exclude>lang/perl/.shipit</exclude>
-                <exclude>lang/perl/inc/Module/Install/*.pm</exclude>
-                <exclude>lang/perl/inc/Module/Install.pm</exclude>
-                <exclude>lang/perl/Makefile*</exclude>
-                <exclude>lang/perl/META.yml</exclude>
-                <exclude>lang/perl/MYMETA.yml</exclude>
-                <exclude>lang/py/userlogs/**</exclude>
+                <exclude>.travis.yml</exclude>
+                <exclude>BUILD.md</exclude>
                 <exclude>lang/c/src/avro-c.pc.in</exclude>
-                <exclude>lang/ruby/Manifest</exclude>
-                <exclude>lang/java/tools/userlogs/**</exclude>
-                <exclude>lang/java/mapred/userlogs/**</exclude>
-                <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
-                <exclude>lang/js/test/mocha.opts</exclude>
+                <exclude>lang/csharp/**/bin/Debug/**/Avro.xml</exclude>
+                <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
                 <exclude>lang/csharp/TestResult.xml</exclude>
                 <exclude>lang/csharp/src/apache/*/obj/**</exclude>
-                <exclude>lang/csharp/**/bin/Release/**/Avro.xml</exclude>
+                <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/goal.txt</exclude>
+                <exclude>lang/java/mapred/userlogs/**</exclude>
+                <exclude>lang/java/tools/userlogs/**</exclude>
                 <exclude>lang/js/coverage/**</exclude>
+                <exclude>lang/js/test/mocha.opts</exclude>
+                <exclude>lang/perl/.shipit</exclude>
+                <exclude>lang/perl/META.yml</exclude>
+                <exclude>lang/perl/MYMETA.yml</exclude>
+                <exclude>lang/perl/Makefile*</exclude>
+                <exclude>lang/perl/inc/Module/Install.pm</exclude>
+                <exclude>lang/perl/inc/Module/Install/*.pm</exclude>
+                <exclude>lang/py/.eggs/**</exclude>
+                <exclude>lang/py/.tox/**</exclude>
+                <exclude>lang/py/build/**</exclude>
+                <exclude>lang/py/dist/**</exclude>
+                <exclude>lang/py/userlogs/**</exclude>
+                <exclude>lang/py3/.eggs/**</exclude>
+                <exclude>lang/py3/build/**</exclude>
+                <exclude>lang/py3/dist/**</exclude>
+                <exclude>lang/ruby/Manifest</exclude>
                 <!-- text documentation files -->
                 <exclude>CHANGES.txt</exclude>
                 <exclude>DIST_README.txt</exclude>
                 <exclude>lang/perl/Changes</exclude>
                 <exclude>lang/c/README.maintaining_win32.txt</exclude>
                 <exclude>lang/c/docs/index.txt</exclude>
+                <exclude>.github/PULL_REQUEST_TEMPLATE.md</exclude>
                 <exclude>lang/java/archetypes/avro-service-archetype/src/test/integration/projects/basic/archetype.properties</exclude> <!-- used to generate user projects -->
                 <!-- files and directories covered by LICENSE.txt -->
-                <exclude>lang/py/lib/simplejson/**</exclude>
                 <exclude>lang/c/jansson/**</exclude>
                 <exclude>lang/c/src/avro/msinttypes.h</exclude>
                 <exclude>lang/c/src/avro/msstdint.h</exclude>
@@ -416,50 +444,6 @@
                 </copy>
               </target>
             </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>ivy</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <version>${antrun-plugin.version}</version>
-            <executions>
-              <execution>
-                <id>generate-ivy</id>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <phase>package</phase>
-                <configuration>
-                  <target name="generate-ivy" xmlns:ivy="antlib:org.apache.ivy.ant">
-                    <ivy:convertpom pomFile="${project.basedir}/pom.xml" ivyFile="${project.build.directory}/ivy.xml" />
-                    <!-- publish to local ivy cache so downstream modules could find it -->
-                    <!-- (required for them to build their own ivy.xml files, so cannot be one during install phase) -->
-                    <ivy:publish
-                        resolver="local"
-                        organisation="${project.groupId}"
-                        module="${project.artifactId}"
-                        revision="${project.version}"
-                        overwrite="true"
-                    >
-                      <artifacts pattern="${project.build.directory}/ivy.xml" />
-                    </ivy:publish>
-                  </target>
-                </configuration>
-              </execution>
-            </executions>
-            <dependencies>
-              <dependency>
-                <groupId>org.apache.ivy</groupId>
-                <artifactId>ivy</artifactId>
-                <version>2.4.0</version>
-              </dependency>
-            </dependencies>
           </plugin>
         </plugins>
       </build>

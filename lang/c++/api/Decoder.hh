@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,7 +34,7 @@
 /// This class has two types of funtions.  One type of functions support
 /// decoding of leaf values (for example, decodeLong and
 /// decodeString). These functions have analogs in Encoder.
-/// 
+///
 /// The other type of functions support decoding of maps and arrays.
 /// These functions are arrayStart, startItem, and arrayEnd
 /// (and similar functions for maps).
@@ -156,7 +156,7 @@ public:
     /// Drains any additional data at the end of the current entry in a stream.
     /// It also returns any unused bytes back to any underlying input stream.
     /// One situation this happens is when the reader's schema and
-    /// the writer's schema are records but are different and the writer's 
+    /// the writer's schema are records but are different and the writer's
     /// record has more fields at the end of the record.
     /// Leaving such data unread is usually not a problem. If multiple
     /// records are stored consecutively in a stream (e.g. Avro data file)

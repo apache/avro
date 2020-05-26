@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -18,7 +18,13 @@
 use Config;
 use inc::Module::Install;
 
-my $version = `cat ../../share/VERSION.txt`;
+my $version;
+for ('VERSION.txt', '../../share/VERSION.txt') {
+    if (-f) {
+        $version = `cat $_`;
+        last;
+    }
+}
 chomp $version;
 
 license 'apache';
@@ -27,15 +33,18 @@ readme_from 'lib/Avro.pm';
 all_from 'lib/Avro.pm';
 build_requires 'Test::More', 0.88;
 test_requires 'Math::BigInt';
+test_requires 'Perl::Critic';
 test_requires 'Test::Exception';
+requires 'Compress::Zlib';
+requires 'Compress::Zstd';
+requires 'Encode';
+requires 'Error::Simple';
+requires 'IO::String';
 requires 'JSON::XS';
+requires 'Object::Tiny';
+requires 'Regexp::Common';
 requires 'Try::Tiny';
 requires 'parent';
-requires 'Regexp::Common';
-requires 'Encode';
-requires 'IO::String';
-requires 'Object::Tiny';
-requires 'Compress::Zlib';
 unless ($Config{use64bitint}) {
     requires 'Math::BigInt';
 }

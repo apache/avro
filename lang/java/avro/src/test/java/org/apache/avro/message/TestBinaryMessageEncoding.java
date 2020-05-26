@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -136,6 +136,23 @@ public class TestBinaryMessageEncoding {
     Record record = v2Decoder.decode(v1Buffer);
 
     Assert.assertEquals(V2_BUILDER.set("id", 4L).set("message", "m-4").clear("data").build(), record);
+  }
+
+  @Test
+  public void testIdenticalReadWithSchemaFromLookup() throws Exception {
+    MessageEncoder<Record> v1Encoder = new BinaryMessageEncoder<>(GenericData.get(), SCHEMA_V1);
+
+    SchemaStore.Cache schemaCache = new SchemaStore.Cache();
+    schemaCache.addSchema(SCHEMA_V1);
+    // The null readSchema should not throw an NPE, but trigger the
+    // BinaryMessageEncoder to use the write schema as read schema
+    BinaryMessageDecoder<Record> genericDecoder = new BinaryMessageDecoder<>(GenericData.get(), null, schemaCache);
+
+    ByteBuffer v1Buffer = v1Encoder.encode(V1_RECORDS.get(2));
+
+    Record record = genericDecoder.decode(v1Buffer);
+
+    Assert.assertEquals(V1_RECORDS.get(2), record);
   }
 
   @Test

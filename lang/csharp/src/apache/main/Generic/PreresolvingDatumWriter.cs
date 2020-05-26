@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,9 +30,15 @@ namespace Avro.Generic
     /// </summary>
     public abstract class PreresolvingDatumWriter<T> : DatumWriter<T>
     {
+        /// <inheritdoc/>
         public Schema Schema { get; private set; }
 
-        protected delegate void WriteItem(Object value, Encoder encoder);
+        /// <summary>
+        /// Defines the signature for a method that writes a value to an encoder.
+        /// </summary>
+        /// <param name="value">Value to write</param>
+        /// <param name="encoder">Encoder to write to</param>
+        protected delegate void WriteItem(object value, Encoder encoder);
 
         private readonly WriteItem _writer;
         private readonly ArrayAccess _arrayAccess;
@@ -40,11 +46,18 @@ namespace Avro.Generic
 
         private readonly Dictionary<RecordSchema,WriteItem> _recordWriters = new Dictionary<RecordSchema,WriteItem>();
 
+        /// <inheritdoc/>
         public void Write(T datum, Encoder encoder)
         {
-            _writer( datum, encoder );
+            _writer(datum, encoder);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PreresolvingDatumWriter{T}"/> class.
+        /// </summary>
+        /// <param name="schema">Schema used by this writer</param>
+        /// <param name="arrayAccess">Object used to access array properties</param>
+        /// <param name="mapAccess">Object used to access map properties</param>
         protected PreresolvingDatumWriter(Schema schema, ArrayAccess arrayAccess, MapAccess mapAccess)
         {
             Schema = schema;
@@ -86,8 +99,10 @@ namespace Avro.Generic
                     return ResolveMap((MapSchema)schema);
                 case Schema.Type.Union:
                     return ResolveUnion((UnionSchema)schema);
+                case Schema.Type.Logical:
+                    return ResolveLogical((LogicalSchema)schema);
                 default:
-                    return (v, e) => error(schema, v);
+                    return (v, e) => Error(schema, v);
             }
         }
 
@@ -104,22 +119,22 @@ namespace Avro.Generic
         /// <summary>
         /// A generic method to serialize primitive Avro types.
         /// </summary>
-        /// <typeparam name="S">Type of the C# type to be serialized</typeparam>
+        /// <typeparam name="TValue">Type of the C# type to be serialized</typeparam>
         /// <param name="value">The value to be serialized</param>
         /// <param name="tag">The schema type tag</param>
         /// <param name="writer">The writer which should be used to write the given type.</param>
-        protected void Write<S>(object value, Schema.Type tag, Writer<S> writer)
+        protected void Write<TValue>(object value, Schema.Type tag, Writer<TValue> writer)
         {
-            if (!(value is S)) throw TypeMismatch(value, tag.ToString(), typeof(S).ToString());
-            writer((S)value);
+            if (!(value is TValue)) throw TypeMismatch(value, tag.ToString(), typeof(TValue).ToString());
+            writer((TValue)value);
         }
 
 
         /// <summary>
-        /// Serialized a record using the given RecordSchema. It uses GetField method
+        /// Serializes a record using the given RecordSchema. It uses GetField method
         /// to extract the field value from the given object.
         /// </summary>
-        /// <param name="schema">The RecordSchema to use for serialization</param>
+        /// <param name="recordSchema">The RecordSchema to use for serialization</param>
         private WriteItem ResolveRecord(RecordSchema recordSchema)
         {
             WriteItem recordResolver;
@@ -146,24 +161,47 @@ namespace Avro.Generic
             return recordResolver;
         }
 
+        /// <summary>
+        /// Writes each field of a record to the encoder.
+        /// </summary>
+        /// <param name="record">Record to write</param>
+        /// <param name="writers">Writers for each field in the record</param>
+        /// <param name="encoder">Encoder to write to</param>
         protected abstract void WriteRecordFields(object record, RecordFieldWriter[] writers, Encoder encoder);
 
-
+        /// <summary>
+        /// Correlates a record field with the writer used to serialize that field.
+        /// </summary>
         protected class RecordFieldWriter
         {
+            /// <summary>
+            /// Delegate used to write the <see cref="Field"/> to an encoder.
+            /// </summary>
             public WriteItem WriteField { get; set; }
+
+            /// <summary>
+            /// Field this object is associated with.
+            /// </summary>
             public Field Field { get; set; }
         }
 
+        /// <summary>
+        /// Ensures that the given value is a record and that it corresponds to the given schema.
+        /// Throws an exception if either of those assertions are false.
+        /// </summary>
+        /// <param name="recordSchema">Schema associated with the record</param>
+        /// <param name="value">Ensure this object is a record</param>
         protected abstract void EnsureRecordObject(RecordSchema recordSchema, object value);
 
         /// <summary>
-        /// Extracts the field value from the given object.
+        /// Writes a field from the <paramref name="record"/> to the <paramref name="encoder"/>
+        /// using the <paramref name="writer"/>.
         /// </summary>
-        /// <param name="value">The record value from which the field needs to be extracted</param>
+        /// <param name="record">The record value from which the field needs to be extracted</param>
         /// <param name="fieldName">The name of the field in the record</param>
         /// <param name="fieldPos">The position of field in the record</param>
-        /// <returns></returns>
+        /// <param name="writer">Used to write the field value to the encoder</param>
+        /// <param name="encoder">Encoder to write to</param>
         protected abstract void WriteField(object record, string fieldName, int fieldPos, WriteItem writer, Encoder encoder );
 
         /// <summary>
@@ -173,13 +211,13 @@ namespace Avro.Generic
         protected abstract WriteItem ResolveEnum(EnumSchema es);
 
         /// <summary>
-        /// Serialized an array. The default implementation calls EnsureArrayObject() to ascertain that the
+        /// Creates a <see cref="WriteItem"/> delegate that serializes an array.
+        /// The default implementation calls EnsureArrayObject() to ascertain that the
         /// given value is an array. It then calls GetArrayLength() and GetArrayElement()
         /// to access the members of the array and then serialize them.
         /// </summary>
         /// <param name="schema">The ArraySchema for serialization</param>
-        /// <param name="value">The value being serialized</param>
-        /// <param name="encoder">The encoder for serialization</param>
+        /// <returns>A <see cref="WriteItem"/> that serializes an array.</returns>
         protected WriteItem ResolveArray(ArraySchema schema)
         {
             var itemWriter = ResolveWriter(schema.ItemSchema);
@@ -196,6 +234,17 @@ namespace Avro.Generic
             encoder.WriteArrayEnd();
         }
 
+        /// <summary>
+        /// Serializes a logical value object by using the underlying logical type to convert the value
+        /// to its base value.
+        /// </summary>
+        /// <param name="schema">The logical schema.</param>
+        protected WriteItem ResolveLogical(LogicalSchema schema)
+        {
+            var baseWriter = ResolveWriter(schema.BaseSchema);
+            return (d, e) => baseWriter(schema.LogicalType.ConvertToBaseValue(d, schema), e);
+        }
+
         private WriteItem ResolveMap(MapSchema mapSchema)
         {
             var itemWriter = ResolveWriter(mapSchema.ValueSchema);
@@ -203,10 +252,10 @@ namespace Avro.Generic
         }
 
         /// <summary>
-        /// Serialized a map. The default implementation first ensure that the value is indeed a map and then uses
+        /// Serializes a map. The default implementation first ensure that the value is indeed a map and then uses
         /// GetMapSize() and GetMapElements() to access the contents of the map.
         /// </summary>
-        /// <param name="schema">The MapSchema for serialization</param>
+        /// <param name="itemWriter">Delegate used to write each map item.</param>
         /// <param name="value">The value to be serialized</param>
         /// <param name="encoder">The encoder for serialization</param>
         protected void WriteMap(WriteItem itemWriter, object value, Encoder encoder)
@@ -237,7 +286,9 @@ namespace Avro.Generic
         /// Resolves the given value against the given UnionSchema and serializes the object against
         /// the resolved schema member.
         /// </summary>
-        /// <param name="us">The UnionSchema to resolve against</param>
+        /// <param name="unionSchema">The UnionSchema to resolve against</param>
+        /// <param name="branchSchemas">Schemas for each type in the union</param>
+        /// <param name="branchWriters">Writers for each type in the union</param>
         /// <param name="value">The value to be serialized</param>
         /// <param name="encoder">The encoder for serialization</param>
         private void WriteUnion(UnionSchema unionSchema, Schema[] branchSchemas, WriteItem[] branchWriters, object value, Encoder encoder)
@@ -253,8 +304,14 @@ namespace Avro.Generic
         /// an exception.
         /// </summary>
         /// <param name="us">The UnionSchema to resolve against</param>
+        /// <param name="branchSchemas">Schemas for types within the union</param>
         /// <param name="obj">The object that should be used in matching</param>
-        /// <returns></returns>
+        /// <returns>
+        /// Index of the schema in <paramref name="branchSchemas"/> that matches the <paramref name="obj"/>.
+        /// </returns>
+        /// <exception cref="AvroException">
+        /// No match found for the object in the union schema.
+        /// </exception>
         protected int ResolveUnion(UnionSchema us, Schema[] branchSchemas, object obj)
         {
             for (int i = 0; i < branchSchemas.Length; i++)
@@ -273,23 +330,48 @@ namespace Avro.Generic
         /// <param name="encoder">The encoder for serialization</param>
         protected abstract void WriteFixed(FixedSchema es, object value, Encoder encoder);
 
+        /// <summary>
+        /// Creates a new <see cref="AvroException"/> and uses the provided parameters to build an
+        /// exception message indicathing there was a type mismatch.
+        /// </summary>
+        /// <param name="obj">Object whose type does not the expected type</param>
+        /// <param name="schemaType">Schema that we tried to write against</param>
+        /// <param name="type">Type that we expected</param>
+        /// <returns>A new <see cref="AvroException"/> indicating a type mismatch.</returns>
         protected static AvroException TypeMismatch(object obj, string schemaType, string type)
         {
             return new AvroException(type + " required to write against " + schemaType + " schema but found " + (null == obj ? "null" : obj.GetType().ToString()) );
         }
 
-        private void error(Schema schema, Object value)
+        private void Error(Schema schema, Object value)
         {
             throw new AvroTypeException("Not a " + schema + ": " + value);
         }
 
+        /// <summary>
+        /// Tests whether the given schema an object are compatible.
+        /// </summary>
+        /// <param name="sc">Schema to compare</param>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>True if the two parameters are compatible, false otherwise.</returns>
         protected abstract bool UnionBranchMatches(Schema sc, object obj);
 
+        /// <summary>
+        /// Obsolete - This will be removed from the public API in a future version.
+        /// </summary>
+        [Obsolete("This will be removed from the public API in a future version.")]
         protected interface EnumAccess
         {
+            /// <summary>
+            /// Obsolete - This will be removed from the public API in a future version.
+            /// </summary>
+            [Obsolete("This will be removed from the public API in a future version.")]
             void WriteEnum(object value);
         }
 
+        /// <summary>
+        /// Defines the interface for a class that provides access to an array implementation.
+        /// </summary>
         protected interface ArrayAccess
         {
             /// <summary>
@@ -310,60 +392,73 @@ namespace Avro.Generic
             long GetArrayLength(object value);
 
             /// <summary>
-            /// Returns the element at the given index from the given array object. The default implementation
-            /// requires that the value is an object array and returns the element in that array. The defaul implementation
-            /// gurantees that EnsureArrayObject() has been called on the value before this
-            /// function is called.
+            /// Writes each value in the given array to the <paramref name="encoder"/> using the
+            /// <paramref name="valueWriter"/>. The default implementation of this method requires
+            /// that the <paramref name="array"/> is an object array.
             /// </summary>
-            /// <param name="value">The array object</param>
-            /// <param name="index">The index to look for</param>
-            /// <returns>The array element at the index</returns>
+            /// <param name="array">The array object</param>
+            /// <param name="valueWriter">Value writer to send the array to.</param>
+            /// <param name="encoder">Encoder to the write the array values to.</param>
             void WriteArrayValues(object array, WriteItem valueWriter, Encoder encoder);
         }
 
+        /// <summary>
+        /// Defines the interface for a class that provides access to a map implementation.
+        /// </summary>
+        /// <seealso cref="DictionaryMapAccess"/>
         protected interface MapAccess
         {
             /// <summary>
             /// Checks if the given object is a map. If it is a valid map, this function returns normally. Otherwise,
-            /// it throws an exception. The default implementation checks if the value is an IDictionary<string, object>.
+            /// it throws an exception. The default implementation checks if the value is an IDictionary&lt;string, object&gt;.
             /// </summary>
-            /// <param name="value"></param>
+            /// <param name="value">Ensures that this object is a valid map.</param>
             void EnsureMapObject(object value);
 
             /// <summary>
             /// Returns the size of the map object. The default implementation gurantees that EnsureMapObject has been
             /// successfully called with the given value. The default implementation requires the value
-            /// to be an IDictionary<string, object> and returns the number of elements in it.
+            /// to be an IDictionary&lt;string, object&gt; and returns the number of elements in it.
             /// </summary>
             /// <param name="value">The map object whose size is desired</param>
             /// <returns>The size of the given map object</returns>
             long GetMapSize(object value);
 
             /// <summary>
-            /// Returns the contents of the given map object. The default implementation guarantees that EnsureMapObject
-            /// has been called with the given value. The defualt implementation of this method requires that
-            /// the value is an IDictionary<string, object> and returns its contents.
+            /// Writes each value in the given map to the <paramref name="encoder"/> using the
+            /// <paramref name="valueWriter"/>. The default implementation of this method requires
+            /// that the <paramref name="map"/> is an IDictionary&lt;string, object&gt;.
             /// </summary>
-            /// <param name="value">The map object whose size is desired</param>
-            /// <returns>The contents of the given map object</returns>
+            /// <param name="map">Map object to write the contents of.</param>
+            /// <param name="valueWriter">Value writer to send the map to.</param>
+            /// <param name="encoder">Encoder to the write the map values to.</param>
             void WriteMapValues(object map, WriteItem valueWriter, Encoder encoder);
         }
 
+        /// <summary>
+        /// Provides access to map properties from an <see cref="IDictionary"/>.
+        /// </summary>
         protected class DictionaryMapAccess : MapAccess
         {
-            public void EnsureMapObject( object value )
+            /// <inheritdoc/>
+            public void EnsureMapObject(object value)
             {
-                if( value == null || !( value is IDictionary ) ) throw TypeMismatch( value, "map", "IDictionary" );
+                if (value as IDictionary == null)
+                {
+                    throw TypeMismatch( value, "map", "IDictionary" );
+                }
             }
 
-            public long GetMapSize( object value )
+            /// <inheritdoc/>
+            public long GetMapSize(object value)
             {
-                return ( (IDictionary) value ).Count;
+                return ((IDictionary) value).Count;
             }
 
+            /// <inheritdoc/>
             public void WriteMapValues(object map, WriteItem valueWriter, Encoder encoder)
             {
-                foreach (DictionaryEntry entry in ((IDictionary)map))
+                foreach (DictionaryEntry entry in (IDictionary)map)
                 {
                     encoder.StartItem();
                     encoder.WriteString(entry.Key.ToString());

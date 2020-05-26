@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -80,9 +80,12 @@ public class DataFileInteropTest {
     for (File f : Objects.requireNonNull(DATAFILE_DIR.listFiles())) {
       System.out.println("Reading: " + f.getName());
       try (FileReader<? extends Object> reader = DataFileReader.openReader(f, provider.get())) {
+        int i = 0;
         for (Object datum : reader) {
+          i++;
           Assert.assertNotNull(datum);
         }
+        Assert.assertNotEquals(0, i);
       }
     }
   }

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,17 +18,18 @@
 
 package org.apache.avro.ipc.netty;
 
+import static io.netty.buffer.Unpooled.wrappedBuffer;
+
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.avro.AvroRuntimeException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
-import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+import io.netty.handler.codec.MessageToMessageEncoder;
 
 /**
  * Data structure, encoder and decoder classes for the Netty transport.
@@ -71,7 +72,7 @@ public class NettyTransportCodec {
    * Protocol encoder which converts NettyDataPack which contains the Responder's
    * output List&lt;ByteBuffer&gt; to ChannelBuffer needed by Netty.
    */
-  public static class NettyFrameEncoder extends OneToOneEncoder {
+  public static class NettyFrameEncoder extends MessageToMessageEncoder<NettyDataPack> {
 
     /**
      * encode msg to ChannelBuffer
@@ -81,8 +82,7 @@ public class NettyTransportCodec {
      * @return encoded ChannelBuffer
      */
     @Override
-    protected Object encode(ChannelHandlerContext ctx, Channel channel, Object msg) throws Exception {
-      NettyDataPack dataPack = (NettyDataPack) msg;
+    protected void encode(ChannelHandlerContext ctx, NettyDataPack dataPack, List<Object> out) throws Exception {
       List<ByteBuffer> origs = dataPack.getDatas();
       List<ByteBuffer> bbs = new ArrayList<>(origs.size() * 2 + 1);
       bbs.add(getPackHeader(dataPack)); // prepend a pack header including serial number and list size
@@ -90,22 +90,21 @@ public class NettyTransportCodec {
         bbs.add(getLengthHeader(b)); // for each buffer prepend length field
         bbs.add(b);
       }
-
-      return ChannelBuffers.wrappedBuffer(bbs.toArray(new ByteBuffer[0]));
+      out.add(wrappedBuffer(bbs.toArray(new ByteBuffer[0])));
     }
 
     private ByteBuffer getPackHeader(NettyDataPack dataPack) {
       ByteBuffer header = ByteBuffer.allocate(8);
       header.putInt(dataPack.getSerial());
       header.putInt(dataPack.getDatas().size());
-      header.flip();
+      ((Buffer) header).flip();
       return header;
     }
 
     private ByteBuffer getLengthHeader(ByteBuffer buf) {
       ByteBuffer header = ByteBuffer.allocate(4);
       header.putInt(buf.limit());
-      header.flip();
+      ((Buffer) header).flip();
       return header;
     }
   }
@@ -114,7 +113,7 @@ public class NettyTransportCodec {
    * Protocol decoder which converts Netty's ChannelBuffer to NettyDataPack which
    * contains a List&lt;ByteBuffer&gt; needed by Avro Responder.
    */
-  public static class NettyFrameDecoder extends FrameDecoder {
+  public static class NettyFrameDecoder extends ByteToMessageDecoder {
     private boolean packHeaderRead = false;
     private int listSize;
     private NettyDataPack dataPack;
@@ -129,26 +128,23 @@ public class NettyTransportCodec {
      * decode buffer to NettyDataPack
      */
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
-
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+      if (!in.isReadable()) {
+        return;
+      }
       if (!packHeaderRead) {
-        if (decodePackHeader(ctx, channel, buffer)) {
+        if (decodePackHeader(ctx, in)) {
           packHeaderRead = true;
         }
-        return null;
       } else {
-        if (decodePackBody(ctx, channel, buffer)) {
+        if (decodePackBody(ctx, in)) {
           packHeaderRead = false; // reset state
-          return dataPack;
-        } else {
-          return null;
+          out.add(dataPack);
         }
       }
-
     }
 
-    private boolean decodePackHeader(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer)
-        throws Exception {
+    private boolean decodePackHeader(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
       if (buffer.readableBytes() < 8) {
         return false;
       }
@@ -159,7 +155,6 @@ public class NettyTransportCodec {
       // Sanity check to reduce likelihood of invalid requests being honored.
       // Only allow 10% of available memory to go towards this list (too much!)
       if (listSize * SIZEOF_REF > 0.1 * maxMem) {
-        channel.close().await();
         throw new AvroRuntimeException(
             "Excessively large list allocation " + "request detected: " + listSize + " items! Connection closed.");
       }
@@ -170,7 +165,7 @@ public class NettyTransportCodec {
       return true;
     }
 
-    private boolean decodePackBody(ChannelHandlerContext ctx, Channel channel, ChannelBuffer buffer) throws Exception {
+    private boolean decodePackBody(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
       if (buffer.readableBytes() < 4) {
         return false;
       }
@@ -186,7 +181,7 @@ public class NettyTransportCodec {
 
       ByteBuffer bb = ByteBuffer.allocate(length);
       buffer.readBytes(bb);
-      bb.flip();
+      ((Buffer) bb).flip();
       dataPack.getDatas().add(bb);
 
       return dataPack.getDatas().size() == listSize;

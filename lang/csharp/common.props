@@ -6,7 +6,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,9 +36,9 @@
   <PropertyGroup Label="Common NuGet Properties">
     <!-- Reference: https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#pack-target -->
     <Copyright>Copyright © 2019 The Apache Software Foundation.</Copyright>
-    <PackageIconUrl>http://avro.apache.org/images/avro-logo.png</PackageIconUrl>
+    <PackageIconUrl>https://avro.apache.org/images/avro-logo.png</PackageIconUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageProjectUrl>http://avro.apache.org/</PackageProjectUrl>
+    <PackageProjectUrl>https://avro.apache.org/</PackageProjectUrl>
     <PackageTags>Avro;Apache;Serialization;Binary;Json;Schema</PackageTags>
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/apache/avro.git</RepositoryUrl>
   </PropertyGroup>

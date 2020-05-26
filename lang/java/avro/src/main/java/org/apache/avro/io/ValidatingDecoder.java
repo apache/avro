@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -52,9 +53,7 @@ public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHa
   }
 
   private static Symbol getSymbol(Schema schema) {
-    if (null == schema) {
-      throw new NullPointerException("Schema cannot be null");
-    }
+    Objects.requireNonNull(schema, "Schema cannot be null");
     return new ValidatingGrammarGenerator().generate(schema);
   }
 

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,6 +18,7 @@
 package org.apache.avro.util;
 
 import java.io.File;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -155,7 +156,7 @@ public class RandomData implements Iterable<Object> {
 
   private static ByteBuffer randomBytes(Random rand, int maxLength) {
     ByteBuffer bytes = ByteBuffer.allocate(rand.nextInt(maxLength));
-    bytes.limit(bytes.capacity());
+    ((Buffer) bytes).limit(bytes.capacity());
     rand.nextBytes(bytes.array());
     return bytes;
   }

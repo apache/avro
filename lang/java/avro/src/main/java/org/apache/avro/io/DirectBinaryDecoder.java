@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +20,7 @@ package org.apache.avro.io;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.InvalidNumberEncodingException;
@@ -42,12 +43,12 @@ class DirectBinaryDecoder extends BinaryDecoder {
       ByteBuffer result;
       if (old != null && length <= old.capacity()) {
         result = old;
-        result.clear();
+        ((Buffer) result).clear();
       } else {
         result = ByteBuffer.allocate(length);
       }
       doReadBytes(result.array(), result.position(), length);
-      result.limit(length);
+      ((Buffer) result).limit(length);
       return result;
     }
   }

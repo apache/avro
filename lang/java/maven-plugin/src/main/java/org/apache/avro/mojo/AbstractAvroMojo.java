@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.compiler.specific.SpecificCompiler;
-import org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -75,7 +74,7 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * string values of SpecificCompiler.FieldVisibility. The text is case
    * insensitive.
    *
-   * @parameter default-value="PUBLIC_DEPRECATED"
+   * @parameter default-value="PRIVATE"
    */
   private String fieldVisibility;
 
@@ -122,6 +121,15 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected String templateDirectory = "/org/apache/avro/compiler/specific/templates/java/classic/";
 
   /**
+   * The qualified names of classes which the plugin will look up, instantiate
+   * (through an empty constructor that must exist) and set up to be injected into
+   * Velocity templates by Avro compiler.
+   *
+   * @parameter property="velocityToolsClassesNames"
+   */
+  protected String[] velocityToolsClassesNames = new String[0];
+
+  /**
    * The createOptionalGetters parameter enables generating the getOptional...
    * methods that return an Optional of the requested type. This works ONLY on
    * Java 8+
@@ -138,6 +146,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter property="gettersReturnOptional"
    */
   protected boolean gettersReturnOptional = false;
+
+  /**
+   * The optionalGettersForNullableFieldsOnly parameter works in conjunction with
+   * gettersReturnOptional option. If it is set, Optional getters will be
+   * generated only for fields that are nullable. If the field is mandatory,
+   * regular getter will be generated. This works ONLY on Java 8+.
+   *
+   * @parameter property="optionalGettersForNullableFieldsOnly"
+   */
+  protected boolean optionalGettersForNullableFieldsOnly = false;
 
   /**
    * Determines whether or not to create setters for the fields of the record. The
@@ -173,14 +191,6 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
    * @parameter default-value="false"
    */
   protected boolean enableDecimalLogicalType;
-
-  /**
-   * Determines which type of classes to generate for date/time related logical
-   * types. Either 'joda' or 'jsr310'. Defaults to jsr310.
-   *
-   * @parameter default-value="jsr310"
-   */
-  protected String dateTimeLogicalTypeImplementation = DateTimeLogicalTypeImplementation.JSR310.name().toLowerCase();
 
   /**
    * The current Maven project.
@@ -233,8 +243,8 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   }
 
   private String[] getIncludedFiles(String absPath, String[] excludes, String[] includes) {
-    FileSetManager fileSetManager = new FileSetManager();
-    FileSet fs = new FileSet();
+    final FileSetManager fileSetManager = new FileSetManager();
+    final FileSet fs = new FileSet();
     fs.setDirectory(absPath);
     fs.setFollowSymlinks(false);
 
@@ -300,37 +310,35 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
     }
   }
 
-  protected DateTimeLogicalTypeImplementation getDateTimeLogicalTypeImplementation() {
-    try {
-      if (this.dateTimeLogicalTypeImplementation == null || this.dateTimeLogicalTypeImplementation.isEmpty()) {
-        return DateTimeLogicalTypeImplementation.DEFAULT;
-      } else {
-        String upper = String.valueOf(this.dateTimeLogicalTypeImplementation).trim().toUpperCase();
-        return DateTimeLogicalTypeImplementation.valueOf(upper);
+  protected List<Object> instantiateAdditionalVelocityTools() {
+    final List<Object> velocityTools = new ArrayList<>(velocityToolsClassesNames.length);
+    for (String velocityToolClassName : velocityToolsClassesNames) {
+      try {
+        Class klass = Class.forName(velocityToolClassName);
+        velocityTools.add(klass.newInstance());
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
-    } catch (IllegalArgumentException e) {
-      getLog().warn("Unknown value '" + this.dateTimeLogicalTypeImplementation
-          + "' for property dateTimeLogicalTypeImplementation; using '"
-          + DateTimeLogicalTypeImplementation.DEFAULT.name().toLowerCase() + "' instead");
-      return DateTimeLogicalTypeImplementation.DEFAULT;
     }
+    return velocityTools;
   }
 
   protected abstract void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException;
 
   protected URLClassLoader createClassLoader() throws DependencyResolutionRequiredException, MalformedURLException {
-    List<URL> urls = appendElements(project.getRuntimeClasspathElements());
+    final List<URL> urls = appendElements(project.getRuntimeClasspathElements());
     urls.addAll(appendElements(project.getTestClasspathElements()));
     return new URLClassLoader(urls.toArray(new URL[0]), Thread.currentThread().getContextClassLoader());
   }
 
   private List<URL> appendElements(List runtimeClasspathElements) throws MalformedURLException {
-    List<URL> runtimeUrls = new ArrayList<>();
-    if (runtimeClasspathElements != null) {
-      for (Object runtimeClasspathElement : runtimeClasspathElements) {
-        String element = (String) runtimeClasspathElement;
-        runtimeUrls.add(new File(element).toURI().toURL());
-      }
+    if (runtimeClasspathElements == null) {
+      return new ArrayList<>();
+    }
+    List<URL> runtimeUrls = new ArrayList<>(runtimeClasspathElements.size());
+    for (Object runtimeClasspathElement : runtimeClasspathElements) {
+      String element = (String) runtimeClasspathElement;
+      runtimeUrls.add(new File(element).toURI().toURL());
     }
     return runtimeUrls;
   }

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,7 @@
 
 #include "BufferStreambuf.hh"
 
-/** 
+/**
  * \file BufferStream.hh
  *
  * \brief Custom istream and ostream classes for use with buffers
@@ -40,12 +40,12 @@ class AVRO_DECL ostream : public std::ostream {
   public:
 
     /// Default constructor, creates a new OutputBuffer.
-    ostream() : 
-        std::ostream(&obuf_) 
+    ostream() :
+        std::ostream(&obuf_)
     { }
 
     /// Output to a specific buffer.
-    ostream(OutputBuffer &buf) : 
+    ostream(OutputBuffer &buf) :
         std::ostream(&obuf_),
         obuf_(buf)
     { }
@@ -60,7 +60,7 @@ class AVRO_DECL ostream : public std::ostream {
     ostreambuf obuf_;
 };
 
-/** 
+/**
  * \brief Custom istream class for reading from an InputBuffer.
  *
  * If the buffer contains binary data, then it is recommended to only use the
@@ -76,13 +76,13 @@ class AVRO_DECL istream : public std::istream {
   public:
 
     /// Constructor, requires an InputBuffer to read from.
-    explicit istream(const InputBuffer &buf) : 
+    explicit istream(const InputBuffer &buf) :
         std::istream(&ibuf_), ibuf_(buf)
     { }
 
     /// Constructor, takes an OutputBuffer to read from (by making a shallow copy to an InputBuffer).
     /// Writing to the OutputBuffer while an istream is using it may lead to undefined behavior.
-    explicit istream(const OutputBuffer &buf) : 
+    explicit istream(const OutputBuffer &buf) :
         std::istream(&ibuf_), ibuf_(buf)
     { }
 
@@ -98,4 +98,4 @@ class AVRO_DECL istream : public std::istream {
 
 } // namespace avro
 
-#endif 
+#endif

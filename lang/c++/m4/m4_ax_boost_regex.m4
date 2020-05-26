@@ -1,5 +1,5 @@
 # ===========================================================================
-#         http://www.nongnu.org/autoconf-archive/ax_boost_regex.html
+#         https://www.nongnu.org/autoconf-archive/ax_boost_regex.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -10,7 +10,7 @@
 #
 #   Test for Regex library from the Boost C++ libraries. The macro requires
 #   a preceding call to AX_BOOST_BASE. Further documentation is available at
-#   <http://randspringer.de/boost/index.html>.
+#   <https://www.randspringer.de/boost/index.html>.
 #
 #   This macro calls:
 #

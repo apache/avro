@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,48 +18,53 @@
 package org.apache.avro.mojo;
 
 import org.codehaus.plexus.util.FileUtils;
+import org.junit.Test;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Test the Schema Mojo.
- *
- * @author saden
  */
 public class TestSchemaMojo extends AbstractAvroMojoTest {
 
-  protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-joda.xml");
-  protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/schema/pom-jsr310.xml");
+  private File testPom = new File(getBasedir(), "src/test/resources/unit/schema/pom.xml");
+  private File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/schema/pom-injecting-velocity-tools.xml");
 
-  public void testSchemaMojoJoda() throws Exception {
-    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jodaTestPom);
+  @Test
+  public void testSchemaMojo() throws Exception {
+    final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", testPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/schema-joda/test");
-    String[] generatedFiles = new String[] { "PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java",
-        "SchemaUser.java" };
+    final File outputDir = new File(getBasedir(), "target/test-harness/schema/test");
+    final Set<String> generatedFiles = new HashSet<>(
+        Arrays.asList("PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java", "SchemaUser.java"));
 
     assertFilesExist(outputDir, generatedFiles);
 
-    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
-    assertTrue(schemaUserContent.contains("org.joda.time.DateTime"));
+    final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
+    assertTrue(schemaUserContent.contains("java.time.Instant"));
   }
 
-  public void testSchemaMojoJsr310() throws Exception {
-    SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", jsr310TestPom);
+  @Test
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    final SchemaMojo mojo = (SchemaMojo) lookupMojo("schema", injectingVelocityToolsTestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/schema-jsr310/test");
-    String[] generatedFiles = new String[] { "PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java",
-        "SchemaUser.java" };
+    final File outputDir = new File(getBasedir(), "target/test-harness/schema-inject/test");
+    final Set<String> generatedFiles = new HashSet<>(
+        Arrays.asList("PrivacyDirectImport.java", "PrivacyImport.java", "SchemaPrivacy.java", "SchemaUser.java"));
 
     assertFilesExist(outputDir, generatedFiles);
 
-    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
-    assertTrue(schemaUserContent.contains("java.time.Instant"));
+    final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "SchemaUser.java"));
+    assertTrue("Got " + schemaUserContent + " instead", schemaUserContent.contains("It works!"));
   }
 }

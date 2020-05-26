@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +17,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 
 namespace Avro
 {
@@ -53,6 +51,7 @@ namespace Avro
         /// </summary>
         /// <param name="type">type of record schema, either record or error</param>
         /// <param name="jtok">JSON object for the record schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schema already read</param>
         /// <param name="encspace">enclosing namespace of the records schema</param>
         /// <returns>new RecordSchema object</returns>
@@ -66,17 +65,25 @@ namespace Avro
                 if (null != jfields) request = true;
             }
             if (null == jfields)
-                throw new SchemaParseException("'fields' cannot be null for record");
+                throw new SchemaParseException($"'fields' cannot be null for record at '{jtok.Path}'");
             if (jfields.Type != JTokenType.Array)
-                throw new SchemaParseException("'fields' not an array for record");
+                throw new SchemaParseException($"'fields' not an array for record at '{jtok.Path}'");
 
             var name = GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
             var fields = new List<Field>();
             var fieldMap = new Dictionary<string, Field>();
             var fieldAliasMap = new Dictionary<string, Field>();
-            var result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
-                JsonHelper.GetOptionalString(jtok, "doc"));
+            RecordSchema result;
+            try
+            {
+                result = new RecordSchema(type, name, aliases, props, fields, request, fieldMap, fieldAliasMap, names,
+                    JsonHelper.GetOptionalString(jtok, "doc"));
+            }
+            catch (SchemaParseException e)
+            {
+                throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
+            }
 
             int fieldPos = 0;
             foreach (JObject jfield in jfields)
@@ -84,12 +91,19 @@ namespace Avro
                 string fieldName = JsonHelper.GetRequiredString(jfield, "name");
                 Field field = createField(jfield, fieldPos++, names, name.Namespace);  // add record namespace for field look up
                 fields.Add(field);
-                addToFieldMap(fieldMap, fieldName, field);
-                addToFieldMap(fieldAliasMap, fieldName, field);
+                try
+                {
+                    addToFieldMap(fieldMap, fieldName, field);
+                    addToFieldMap(fieldAliasMap, fieldName, field);
 
-                if (null != field.aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
-                    foreach (string alias in field.aliases)
-                        addToFieldMap(fieldAliasMap, alias, field);
+                    if (null != field.Aliases)    // add aliases to field lookup map so reader function will find it when writer field name appears only as an alias on the reader field
+                        foreach (string alias in field.Aliases)
+                            addToFieldMap(fieldAliasMap, alias, field);
+                }
+                catch (SchemaParseException e)
+                {
+                    throw new SchemaParseException($"{e.Message} at '{jfield.Path}'", e);
+                }
             }
             return result;
         }
@@ -143,9 +157,8 @@ namespace Avro
 
             JToken jtype = jfield["type"];
             if (null == jtype)
-                throw new SchemaParseException("'type' was not found for field: " + name);
+                throw new SchemaParseException($"'type' was not found for field: name at '{jfield.Path}'");
             var schema = Schema.ParseJson(jtype, names, encspace);
-
             return new Field(schema, name, aliases, pos, doc, defaultValue, sortorder, props);
         }
 
@@ -165,9 +178,9 @@ namespace Avro
         {
             get
             {
-                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name");
+                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
                 Field field;
-                return (fieldLookup.TryGetValue(name, out field)) ? field : null;
+                return fieldLookup.TryGetValue(name, out field) ? field : null;
             }
         }
 
@@ -181,10 +194,29 @@ namespace Avro
             return fieldLookup.ContainsKey(fieldName);
         }
 
+        /// <summary>
+        /// Gets a field with a specified name.
+        /// </summary>
+        /// <param name="fieldName">Name of the field to get.</param>
+        /// <param name="field">
+        /// When this method returns true, contains the field with the specified name. When this
+        /// method returns false, null.
+        /// </param>
+        /// <returns>True if a field with the specified name exists; false otherwise.</returns>
         public bool TryGetField(string fieldName, out Field field)
         {
             return fieldLookup.TryGetValue(fieldName, out field);
         }
+
+        /// <summary>
+        /// Gets a field with a specified alias.
+        /// </summary>
+        /// <param name="fieldName">Alias of the field to get.</param>
+        /// <param name="field">
+        /// When this method returns true, contains the field with the specified alias. When this
+        /// method returns false, null.
+        /// </param>
+        /// <returns>True if a field with the specified alias exists; false otherwise.</returns>
         public bool TryGetFieldAlias(string fieldName, out Field field)
         {
             return fieldAliasLookup.TryGetValue(fieldName, out field);
@@ -283,8 +315,8 @@ namespace Avro
                 {
                     Field f2 = that[f.Name];
                     if (null == f2) // reader field not in writer field, check aliases of reader field if any match with a writer field
-                        if (null != f.aliases)
-                            foreach (string alias in f.aliases)
+                        if (null != f.Aliases)
+                            foreach (string alias in f.Aliases)
                             {
                                 f2 = that[alias];
                                 if (null != f2) break;

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -80,7 +80,7 @@ DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& 
 
 DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
     const ValidSchema& schema, size_t syncInterval, Codec codec) :
-    filename_(NULL),
+    filename_(),
     schema_(schema),
     encoderPtr_(binaryEncoder()),
     syncInterval_(syncInterval),
@@ -272,7 +272,7 @@ DataFileReaderBase::DataFileReaderBase(const char* filename) :
 }
 
 DataFileReaderBase::DataFileReaderBase(std::unique_ptr<InputStream> inputStream) :
-    filename_(NULL), stream_(std::move(inputStream)),
+    filename_(""), stream_(std::move(inputStream)),
     decoder_(binaryDecoder()), objectCount_(0), eof_(false)
 {
     readHeader();
@@ -450,7 +450,7 @@ void DataFileReaderBase::readDataBlock()
         os_->push(boost::iostreams::zlib_decompressor(get_zlib_params()));
         os_->push(boost::iostreams::basic_array_source<char>(
                                                              compressed_.data(), compressed_.size()));
-        
+
         std::unique_ptr<InputStream> in = nonSeekableIstreamInputStream(*os_);
         dataDecoder_->init(*in);
         dataStream_ = std::move(in);

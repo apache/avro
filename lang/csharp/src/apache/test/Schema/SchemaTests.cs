@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -261,6 +261,27 @@ namespace Avro.Test
             testToString(sc);
         }
 
+        [TestCase("{\"type\": \"int\", \"logicalType\": \"date\"}", "int", "date")]
+        public void TestLogicalPrimitive(string s, string baseType, string logicalType)
+        {
+            Schema sc = Schema.Parse(s);
+            Assert.AreEqual(Schema.Type.Logical, sc.Tag);
+            LogicalSchema logsc = sc as LogicalSchema;
+            Assert.AreEqual(baseType, logsc.BaseSchema.Name);
+            Assert.AreEqual(logicalType, logsc.LogicalType.Name);
+
+            testEquality(s, sc);
+            testToString(sc);
+        }
+
+        [TestCase("{\"type\": \"int\", \"logicalType\": \"unknown\"}", "unknown")]
+        public void TestUnknownLogical(string s, string unknownType)
+        {
+            var err = Assert.Throws<AvroTypeException>(() => Schema.Parse(s));
+
+            Assert.AreEqual("Logical type '" + unknownType + "' is not supported.", err.Message);
+        }
+
         [TestCase("{\"type\": \"map\", \"values\": \"long\"}", "long")]
         public void TestMap(string s, string value)
         {
@@ -317,5 +338,13 @@ namespace Avro.Test
             return name.Fullname;
         }
 
+        [TestCase("{ \"type\": \"int\" }", "int")]
+        [SetCulture("tr-TR")]
+        public void TestSchemaNameInTurkishCulture(string schemaJson, string expectedName)
+        {
+            var schema = Schema.Parse(schemaJson);
+
+            Assert.AreEqual(expectedName, schema.Name);
+        }
     }
 }

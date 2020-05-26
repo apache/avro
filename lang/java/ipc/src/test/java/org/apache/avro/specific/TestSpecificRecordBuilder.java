@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -214,12 +214,12 @@ public class TestSpecificRecordBuilder {
     long startTimeNanos = System.nanoTime();
     for (int ii = 0; ii < count; ii++) {
       Person person = new Person();
-      person.name = "James Gosling";
-      person.year_of_birth = 1955;
-      person.state = "CA";
-      person.country = "US";
-      person.friends = friends;
-      person.languages = languages;
+      person.setName("James Gosling");
+      person.setYearOfBirth(1955);
+      person.setState("CA");
+      person.setCountry("US");
+      person.setFriends(friends);
+      person.setLanguages(languages);
     }
     long durationNanos = System.nanoTime() - startTimeNanos;
     double durationMillis = durationNanos / 1e6d;

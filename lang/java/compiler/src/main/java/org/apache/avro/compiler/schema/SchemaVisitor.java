@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,31 +25,28 @@ public interface SchemaVisitor<T> {
    * Invoked for schemas that do not have "child" schemas (like string, int ...)
    * or for a previously encountered schema with children, which will be treated
    * as a terminal. (to avoid circular recursion)
-   * 
+   *
    * @param terminal
-   * @return
    */
   SchemaVisitorAction visitTerminal(Schema terminal);
 
   /**
    * Invoked for schema with children before proceeding to visit the children.
-   * 
+   *
    * @param nonTerminal
-   * @return
    */
   SchemaVisitorAction visitNonTerminal(Schema nonTerminal);
 
   /**
    * Invoked for schemas with children after its children have been visited.
-   * 
+   *
    * @param nonTerminal
-   * @return
    */
   SchemaVisitorAction afterVisitNonTerminal(Schema nonTerminal);
 
   /**
    * Invoked when visiting is complete.
-   * 
+   *
    * @return a value which will be returned by the visit method.
    */
   T get();

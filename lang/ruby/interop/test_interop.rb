@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 # 
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 # 
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,12 +19,22 @@ require 'rubygems'
 require 'test/unit'
 require 'avro'
 
+CODECS_TO_VALIDATE = ['deflate', 'snappy', 'zstandard']  # The 'null' codec is implicitly included
+
 class TestInterop < Test::Unit::TestCase
   HERE = File.expand_path(File.dirname(__FILE__))
   SHARE = HERE + '/../../../share'
   SCHEMAS = SHARE + '/test/schemas'
-  Dir[HERE + '/../../../build/interop/data/*'].each do |fn|
-    define_method("test_read_#{File.basename(fn, 'avro')}") do
+
+  files = Dir[HERE + '/../../../build/interop/data/*.avro'].select do |fn|
+    sep, codec = File.basename(fn, '.avro').rpartition('_')[1, 2]
+    sep.empty? || CODECS_TO_VALIDATE.include?(codec)
+  end
+  puts "The following files will be tested:"
+  puts files
+
+  files.each do |fn|
+    define_method("test_read_#{File.basename(fn, '.avro')}") do
       projection = Avro::Schema.parse(File.read(SCHEMAS+'/interop.avsc'))
 
       File.open(fn) do |f|

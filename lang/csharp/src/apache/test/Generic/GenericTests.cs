@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -106,6 +106,50 @@ namespace Avro.Test.Generic
         public void TestMap(string schema, object[] values)
         {
             test(schema, mkMap(values));
+        }
+
+        [TestCase()]
+        public void TestLogical_Date()
+        {
+            test("{\"type\": \"int\", \"logicalType\": \"date\"}", DateTime.UtcNow.Date);
+        }
+
+        [TestCase()]
+        public void TestLogical_TimeMillisecond()
+        {
+            test("{\"type\": \"int\", \"logicalType\": \"time-millis\"}", new TimeSpan(3, 0, 0));
+        }
+
+        [TestCase()]
+        public void TestLogical_TimeMicrosecond()
+        {
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(3, 0, 0));
+        }
+
+        [TestCase()]
+        public void TestLogical_TimestampMillisecond()
+        {
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}", new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc));
+        }
+
+        [TestCase()]
+        public void TestLogical_TimestampMicrosecond()
+        {
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc));
+        }
+
+        [TestCase()]
+        public void TestLogical_Decimal_Bytes()
+        {
+            test("{\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 30, \"scale\": 2}",
+                (AvroDecimal)12345678912345.55M);
+        }
+
+        [TestCase()]
+        public void TestLogical_Decimal_Fixed()
+        {
+            test("{\"type\": {\"type\": \"fixed\", \"size\": 16, \"name\": \"n\"}, \"logicalType\": \"decimal\", \"precision\": 30, \"scale\": 2}",
+                (AvroDecimal)12345678912345.55M);
         }
 
         [TestCase("[{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}, \"string\"]",
@@ -513,7 +557,7 @@ namespace Avro.Test.Generic
                     gf.Value = (byte[])fieldValue;
                     fieldValue = gf;
                 }
-                input.Add(fieldName, fieldValue);
+                input.Add(s[fieldName].Pos, fieldValue);
             }
             return input;
         }

@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -163,6 +163,42 @@ class TestSchema < Test::Unit::TestCase
     assert_equal '"MissingType" is not a schema we know about.', error.message
   end
 
+  def test_invalid_name
+    error = assert_raise Avro::SchemaParseError do
+      Avro::Schema.parse <<-SCHEMA
+        {"type": "record", "name": "my-invalid-name", "fields": [
+          {"name": "id", "type": "int"}
+        ]}
+      SCHEMA
+    end
+
+    assert_equal "Name my-invalid-name is invalid for type record!", error.message
+  end
+
+  def test_invalid_name_with_two_periods
+    error = assert_raise Avro::SchemaParseError do
+      Avro::Schema.parse <<-SCHEMA
+        {"type": "record", "name": "my..invalid.name", "fields": [
+          {"name": "id", "type": "int"}
+        ]}
+      SCHEMA
+    end
+
+    assert_equal "Name my..invalid.name is invalid for type record!", error.message
+  end
+
+  def test_invalid_name_with_validation_disabled
+    Avro.disable_schema_name_validation = true
+    assert_nothing_raised do
+      Avro::Schema.parse <<-SCHEMA
+        {"type": "record", "name": "my-invalid-name", "fields": [
+          {"name": "id", "type": "int"}
+        ]}
+      SCHEMA
+    end
+    Avro.disable_schema_name_validation = false
+  end
+
   def test_to_avro_handles_falsey_defaults
     schema = Avro::Schema.parse <<-SCHEMA
       {"type": "record", "name": "Record", "namespace": "my.name.space",
@@ -276,6 +312,40 @@ class TestSchema < Test::Unit::TestCase
         ]
       }
     assert_equal enum_schema_hash, enum_schema_json.to_avro
+  end
+
+  def test_enum_default_attribute
+    enum_schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "enum",
+        "name": "fruit",
+        "default": "apples",
+        "symbols": ["apples", "oranges"]
+      }
+    SCHEMA
+
+    enum_schema_hash = {
+      'type' => 'enum',
+      'name' => 'fruit',
+      'default' => 'apples',
+      'symbols' => %w(apples oranges)
+    }
+
+    assert_equal(enum_schema.default, "apples")
+    assert_equal(enum_schema_hash, enum_schema.to_avro)
+  end
+
+  def test_validate_enum_default
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'enum',
+        name: 'fruit',
+        default: 'bananas',
+        symbols: %w(apples oranges)
+      )
+    end
+    assert_equal("Default 'bananas' is not a valid symbol for enum fruit",
+                 exception.to_s)
   end
 
   def test_empty_record
@@ -455,5 +525,109 @@ class TestSchema < Test::Unit::TestCase
     end
     assert_equal('Error validating default for veggies: at . expected type null, got string with value "apple"',
                  exception.to_s)
+  end
+
+  def test_bytes_decimal_to_include_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal",
+        "precision": 9,
+        "scale": 2
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'bytes',
+        'logicalType' => 'decimal',
+        'precision' => 9,
+        'scale' => 2
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_bytes_decimal_to_without_precision_scale
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes",
+        "logicalType": "decimal"
+      }
+    SCHEMA
+
+    schema_hash =
+      {
+        'type' => 'bytes',
+        'logicalType' => 'decimal'
+      }
+
+    assert_equal schema_hash, schema.to_avro
+  end
+
+  def test_bytes_schema
+    schema = Avro::Schema.parse <<-SCHEMA
+      {
+        "type": "bytes"
+      }
+    SCHEMA
+
+    schema_str = 'bytes'
+    assert_equal schema_str, schema.to_avro
+  end
+
+  def test_validate_duplicate_symbols
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'enum',
+        name: 'name',
+        symbols: ['erica', 'erica']
+      )
     end
+    assert_equal(
+      'Duplicate symbol: ["erica", "erica"]',
+      exception.to_s
+    )
+  end
+
+  def test_validate_enum_symbols
+    exception = assert_raise(Avro::SchemaParseError) do
+      hash_to_schema(
+        type: 'enum',
+        name: 'things',
+        symbols: ['good_symbol', '_GOOD_SYMBOL_2', '8ad_symbol', 'also-bad-symbol', '>=', '$']
+      )
+    end
+
+    assert_equal(
+      "Invalid symbols for things: 8ad_symbol, also-bad-symbol, >=, $ don't match #{Avro::Schema::EnumSchema::SYMBOL_REGEX.inspect}",
+      exception.to_s
+    )
+  end
+
+  def test_enum_symbol_validation_disabled_via_env
+    Avro.disable_enum_symbol_validation = nil
+    ENV['AVRO_DISABLE_ENUM_SYMBOL_VALIDATION'] = '1'
+
+    hash_to_schema(
+      type: 'enum',
+      name: 'things',
+      symbols: ['good_symbol', '_GOOD_SYMBOL_2', '8ad_symbol', 'also-bad-symbol', '>=', '$'],
+    )
+  ensure
+    ENV.delete('AVRO_DISABLE_ENUM_SYMBOL_VALIDATION')
+    Avro.disable_enum_symbol_validation = nil
+  end
+
+  def test_enum_symbol_validation_disabled_via_class_method
+    Avro.disable_enum_symbol_validation = true
+
+    hash_to_schema(
+      type: 'enum',
+      name: 'things',
+      symbols: ['good_symbol', '_GOOD_SYMBOL_2', '8ad_symbol', 'also-bad-symbol', '>=', '$'],
+    )
+  ensure
+    Avro.disable_enum_symbol_validation = nil
+  end
 end

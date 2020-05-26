@@ -8,7 +8,7 @@
  "License"); you may not use this file except in compliance
  with the License.  You may obtain a copy of the License at
  
- http://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
  
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,23 +28,23 @@ void yyerror(const char *str)
 {
     throw avro::Exception(boost::format("Parser error: %1%") % str);
 }
- 
-extern void *lexer; 
+
+extern void *lexer;
 extern int yylex(int *, void *);
-  
-avro::CompilerContext &context(void *ctx) { 
+
+avro::CompilerContext &context(void *ctx) {
     return *static_cast<avro::CompilerContext *>(ctx);
 };
-  
+
 %}
 
 %pure-parser
 %error-verbose
 
-%token AVRO_LEX_INT AVRO_LEX_LONG 
+%token AVRO_LEX_INT AVRO_LEX_LONG
 %token AVRO_LEX_FLOAT AVRO_LEX_DOUBLE
-%token AVRO_LEX_BOOL AVRO_LEX_NULL 
-%token AVRO_LEX_BYTES AVRO_LEX_STRING 
+%token AVRO_LEX_BOOL AVRO_LEX_NULL
+%token AVRO_LEX_BYTES AVRO_LEX_STRING
 %token AVRO_LEX_RECORD AVRO_LEX_ENUM AVRO_LEX_ARRAY AVRO_LEX_MAP AVRO_LEX_UNION AVRO_LEX_FIXED
 
 %token AVRO_LEX_METADATA
@@ -52,7 +52,7 @@ avro::CompilerContext &context(void *ctx) {
 %token AVRO_LEX_SYMBOLS AVRO_LEX_SYMBOLS_END
 %token AVRO_LEX_FIELDS AVRO_LEX_FIELDS_END AVRO_LEX_FIELD AVRO_LEX_FIELD_END
 
-%token AVRO_LEX_TYPE AVRO_LEX_ITEMS AVRO_LEX_VALUES 
+%token AVRO_LEX_TYPE AVRO_LEX_ITEMS AVRO_LEX_VALUES
 
 // Tokens that output text:
 %token AVRO_LEX_OUTPUT_TEXT_BEGIN
@@ -67,10 +67,10 @@ avro::CompilerContext &context(void *ctx) {
 
 %%
 
-avroschema: 
+avroschema:
         simpleprimitive | object | union_t
         ;
- 
+
 primitive:
         AVRO_LEX_INT    { context(ctx).addType(avro::AVRO_INT); }
         |
@@ -103,7 +103,7 @@ array_t:
         AVRO_LEX_TYPE AVRO_LEX_ARRAY { context(ctx).addType(avro::AVRO_ARRAY); }
         ;
 
-enum_t: 
+enum_t:
         AVRO_LEX_TYPE AVRO_LEX_ENUM { context(ctx).addType(avro::AVRO_ENUM); }
         ;
 
@@ -111,11 +111,11 @@ fixed_t:
         AVRO_LEX_TYPE AVRO_LEX_FIXED { context(ctx).addType(avro::AVRO_FIXED); }
         ;
 
-map_t: 
+map_t:
         AVRO_LEX_TYPE AVRO_LEX_MAP { context(ctx).addType(avro::AVRO_MAP); }
         ;
 
-record_t: 
+record_t:
         AVRO_LEX_TYPE AVRO_LEX_RECORD { context(ctx).addType(avro::AVRO_RECORD); }
         ;
 
@@ -124,17 +124,17 @@ type_attribute:
         ;
 
 union_t:
-        '[' { context(ctx).startType(); context(ctx).addType(avro::AVRO_UNION); context(ctx).setTypesAttribute(); } 
+        '[' { context(ctx).startType(); context(ctx).addType(avro::AVRO_UNION); context(ctx).setTypesAttribute(); }
         unionlist
         ']' { context(ctx).stopType(); }
         ;
 
-object: 
-        '{' { context(ctx).startType(); } 
+object:
+        '{' { context(ctx).startType(); }
          attributelist
         '}' { context(ctx).stopType(); }
         ;
-        
+
 name_attribute:
         AVRO_LEX_NAME { context(ctx).setNameAttribute(); }
         ;
@@ -144,7 +144,7 @@ size_attribute:
         ;
 
 values_attribute:
-        AVRO_LEX_VALUES { context(ctx).setValuesAttribute(); } avroschema 
+        AVRO_LEX_VALUES { context(ctx).setValuesAttribute(); } avroschema
         ;
 
 fields_attribute:
@@ -163,7 +163,7 @@ attribute:
         type_attribute | name_attribute | fields_attribute | items_attribute | size_attribute | values_attribute | symbols_attribute | AVRO_LEX_METADATA
         ;
 
-attributelist: 
+attributelist:
         attribute | attributelist ',' attribute
         ;
 
@@ -180,12 +180,12 @@ fieldsetting:
         ;
 
 fieldsettinglist:
-        fieldsetting | fieldsettinglist ',' fieldsetting 
+        fieldsetting | fieldsettinglist ',' fieldsetting
         ;
 
 fields:
         AVRO_LEX_FIELD fieldsettinglist AVRO_LEX_FIELD_END
-        ;   
+        ;
 
 fieldname:
         AVRO_LEX_FIELD_NAME { context(ctx).textContainsFieldName(); }
@@ -195,6 +195,6 @@ fieldslist:
         fields | fieldslist ',' fields
         ;
 
-unionlist: 
+unionlist:
         avroschema | unionlist ',' avroschema
         ;

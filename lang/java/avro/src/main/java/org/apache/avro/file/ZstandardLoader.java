@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,9 +35,10 @@ final class ZstandardLoader {
   }
 
   static OutputStream output(OutputStream compressed, int level, boolean checksum) throws IOException {
-
     int bounded = Math.max(Math.min(level, Zstd.maxCompressionLevel()), Zstd.minCompressionLevel());
-
-    return new ZstdOutputStream(compressed, bounded, false, checksum);
+    ZstdOutputStream zstdOutputStream = new ZstdOutputStream(compressed, bounded);
+    zstdOutputStream.setCloseFrameOnFlush(false);
+    zstdOutputStream.setChecksum(checksum);
+    return zstdOutputStream;
   }
 }

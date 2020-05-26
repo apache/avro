@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -90,7 +90,7 @@ Entity readEntity(JsonParser& p)
     default:
         throw std::domain_error(JsonParser::toString(p.peek()));
     }
-    
+
 }
 
 Entity loadEntity(const char* text)
@@ -162,7 +162,7 @@ void Entity::ensureType(EntityType type) const
         throw Exception(msg);
     }
 }
-    
+
 String Entity::stringValue() const {
     ensureType(etString);
     return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String> >(&value_));

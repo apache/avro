@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@
  */
 package org.apache.trevni;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.zip.CRC32;
 
@@ -36,7 +37,7 @@ final class Crc32Checksum extends Checksum {
 
     ByteBuffer result = ByteBuffer.allocate(size());
     result.putInt((int) crc32.getValue());
-    result.flip();
+    ((Buffer) result).flip();
     return result;
   }
 

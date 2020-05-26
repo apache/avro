@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.avro.TestSchemas.*;
 import org.apache.avro.reflect.ReflectData;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -77,6 +76,9 @@ public class TestSchemaValidation {
       new ReaderWriter(BYTES_UNION_SCHEMA, STRING_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_UNION_SCHEMA, INT_FLOAT_UNION_SCHEMA),
 
+      new ReaderWriter(NULL_INT_ARRAY_UNION_SCHEMA, INT_ARRAY_SCHEMA),
+      new ReaderWriter(NULL_INT_MAP_UNION_SCHEMA, INT_MAP_SCHEMA),
+
       // Readers capable of reading all branches of a union are compatible
       new ReaderWriter(FLOAT_SCHEMA, INT_FLOAT_UNION_SCHEMA), new ReaderWriter(LONG_SCHEMA, INT_LONG_UNION_SCHEMA),
       new ReaderWriter(DOUBLE_SCHEMA, INT_FLOAT_UNION_SCHEMA),
@@ -107,7 +109,11 @@ public class TestSchemaValidation {
       // new ReaderWriter(LONG_LIST_RECORD, LONG_LIST_RECORD),
       // new ReaderWriter(LONG_LIST_RECORD, INT_LIST_RECORD),
 
-      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA));
+      new ReaderWriter(NULL_SCHEMA, NULL_SCHEMA),
+
+      // This is comparing two records that have an inner array of records with
+      // different namespaces.
+      new ReaderWriter(NS_RECORD1, NS_RECORD2));
 
   /** Collection of reader/writer schema pair that are incompatible. */
   public static final List<ReaderWriter> INCOMPATIBLE_READER_WRITER_TEST_CASES = list(

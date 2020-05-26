@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.avro.AvroRemoteException;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.ipc.CallFuture;
 import org.apache.avro.ipc.Callback;
@@ -212,9 +211,6 @@ public class TestNettyServerWithCallbacks {
       Assert.fail("Expected " + TestError.class.getCanonicalName());
     } catch (TestError e) {
       // Expected
-    } catch (AvroRemoteException e) {
-      e.printStackTrace();
-      Assert.fail("Unexpected error: " + e.toString());
     }
 
     // Test asynchronous RPC (future):
@@ -404,6 +400,7 @@ public class TestNettyServerWithCallbacks {
           simpleClient2.add(3, 4);
           Assert.fail("Expected an exception");
         } catch (Exception e) {
+          e.printStackTrace();
           // expected
         }
       });

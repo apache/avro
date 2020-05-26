@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,16 +35,16 @@ public class BZip2Codec extends Codec {
     ByteArrayOutputStream baos = getOutputBuffer(uncompressedData.remaining());
 
     try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos)) {
-      outputStream.write(uncompressedData.array());
+      outputStream.write(uncompressedData.array(), computeOffset(uncompressedData), uncompressedData.remaining());
     }
 
-    ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
-    return result;
+    return ByteBuffer.wrap(baos.toByteArray());
   }
 
   @Override
   ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-    ByteArrayInputStream bais = new ByteArrayInputStream(compressedData.array());
+    ByteArrayInputStream bais = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
+        compressedData.remaining());
     try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais)) {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -56,8 +56,7 @@ public class BZip2Codec extends Codec {
         baos.write(buffer, 0, readCount);
       }
 
-      ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
-      return result;
+      return ByteBuffer.wrap(baos.toByteArray());
     }
   }
 

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -239,7 +239,7 @@ public class DecoderFactory {
   }
 
   /**
-   * Creates a {@link JsonDecoder} using the InputStrim provided for reading data
+   * Creates a {@link JsonDecoder} using the InputStream provided for reading data
    * that conforms to the Schema provided.
    * <p/>
    *

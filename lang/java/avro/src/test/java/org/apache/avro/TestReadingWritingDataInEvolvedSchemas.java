@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,6 +34,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.*;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -342,7 +343,12 @@ public class TestReadingWritingDataInEvolvedSchemas {
     byte[] encoded = encodeGenericBlob(record);
     Record decoded = decodeGenericBlob(INT_RECORD, writer, encoded);
     assertEquals(42, decoded.get(FIELD_A));
-    assertNull(decoded.get("newTopField"));
+    try {
+      decoded.get("newTopField");
+      Assert.fail("get should throw a exception");
+    } catch (AvroRuntimeException ex) {
+      Assert.assertEquals("Not a valid schema field: newTopField", ex.getMessage());
+    }
   }
 
   @Test

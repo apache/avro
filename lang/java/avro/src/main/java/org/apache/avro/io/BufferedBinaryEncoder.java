@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
+import java.util.Objects;
 
 import org.apache.avro.AvroRuntimeException;
 
@@ -57,8 +58,7 @@ public class BufferedBinaryEncoder extends BinaryEncoder {
   }
 
   BufferedBinaryEncoder configure(OutputStream out, int bufferSize) {
-    if (null == out)
-      throw new NullPointerException("OutputStream cannot be null!");
+    Objects.requireNonNull(out, "OutputStream cannot be null");
     if (null != this.sink) {
       if (pos > 0) {
         try {

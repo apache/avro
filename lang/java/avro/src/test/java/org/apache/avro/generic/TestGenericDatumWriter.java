@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,13 +23,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ConcurrentModificationException;
+import java.util.List;
+import java.util.Collections;
 import java.util.concurrent.*;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
@@ -38,6 +41,21 @@ import org.apache.avro.util.Utf8;
 import org.junit.Test;
 
 public class TestGenericDatumWriter {
+  @Test
+  public void testUnionUnresolvedExceptionExplicitWhichField() throws IOException {
+    Schema s = schemaWithExplicitNullDefault();
+    GenericRecord r = new GenericData.Record(s);
+    r.put("f", 100);
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    EncoderFactory.get().jsonEncoder(s, bao);
+    try {
+      new GenericDatumWriter<>(s).write(r, EncoderFactory.get().jsonEncoder(s, bao));
+      fail();
+    } catch (final UnresolvedUnionException uue) {
+      assertEquals("Not in union [\"null\",\"string\"]: 100 (field=f)", uue.getMessage());
+    }
+  }
+
   @Test
   public void testWrite() throws IOException {
     String json = "{\"type\": \"record\", \"name\": \"r\", \"fields\": [" + "{ \"name\": \"f1\", \"type\": \"long\" }"
@@ -120,6 +138,25 @@ public class TestGenericDatumWriter {
     } catch (ExecutionException ex) {
       assertTrue(ex.getCause() instanceof ConcurrentModificationException);
     }
+  }
+
+  @Test
+  public void testAllowWritingPrimitives() throws IOException {
+    Schema doubleType = Schema.create(Schema.Type.DOUBLE);
+    Schema.Field field = new Schema.Field("double", doubleType);
+    List<Schema.Field> fields = Collections.singletonList(field);
+    Schema schema = Schema.createRecord("test", "doc", "", false, fields);
+
+    GenericRecord record = new GenericData.Record(schema);
+    record.put("double", 456.4);
+    record.put("double", 100000L);
+    record.put("double", 444);
+
+    ByteArrayOutputStream bao = new ByteArrayOutputStream();
+    GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
+    Encoder encoder = EncoderFactory.get().jsonEncoder(schema, bao);
+
+    writer.write(record, encoder);
   }
 
   static class TestEncoder extends Encoder {

@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,22 +19,33 @@ set -e
 
 cd `dirname "$0"`
 
-case "$1" in
-  test)
-    npm install
-    npm run cover
-    ;;
-  dist)
-    npm pack
-    mkdir -p ../../dist/js
-    mv avro-js-*.tgz ../../dist/js
-    ;;
-  clean)
-    rm -rf coverage
-    ;;
-  *)
-    echo "Usage: $0 {test|dist|clean}" >&2
-    exit 1
-esac
-
-exit 0
+for target in "$@"
+do
+  case "$target" in
+    lint)
+      npm install
+      npm run lint
+      ;;
+    test)
+      npm install
+      npm run cover
+      ;;
+    dist)
+      npm pack
+      mkdir -p ../../dist/js
+      mv avro-js-*.tgz ../../dist/js
+      ;;
+    clean)
+      rm -rf coverage
+      ;;
+    interop-data-generate)
+      npm run interop-data-generate
+      ;;
+    interop-data-test)
+      npm run interop-data-test
+      ;;
+    *)
+      echo "Usage: $0 {lint|test|dist|clean}" >&2
+      exit 1
+  esac
+done

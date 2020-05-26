@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,7 +17,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Avro
 {
@@ -64,7 +63,9 @@ namespace Avro
                 this.Name = this.Space = null;
                 this.EncSpace = encspace;   // need to save enclosing namespace for anonymous types, so named types within the anonymous type can be resolved
             }
-            else if (!name.Contains("."))
+#pragma warning disable CA1307 // Specify StringComparison
+            else if (name.IndexOf('.') == -1)
+#pragma warning restore CA1307 // Specify StringComparison
             {                          // unqualified name
                 this.Space = space;    // use default space
                 this.Name = name;
@@ -133,9 +134,12 @@ namespace Avro
             return obj1 == null ? obj2 == null : obj1.Equals(obj2);
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
+#pragma warning disable CA1307 // Specify StringComparison
             return string.IsNullOrEmpty(Fullname) ? 0 : 29 * Fullname.GetHashCode();
+#pragma warning restore CA1307 // Specify StringComparison
         }
     }
 

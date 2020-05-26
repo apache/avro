@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,7 @@ class AVRO_DECL InputStream;
 /// compiler.  In order for the lexer to be reentrant, this class provides a
 /// lexer object for each parse.  The bison parser also uses this class to
 /// build up an avro parse tree as the avro spec is parsed.
-    
+
 class AVRO_DECL ValidSchema;
 
 /// Given a stream comtaining a JSON schema, compiles the schema to a
@@ -40,7 +40,7 @@ class AVRO_DECL ValidSchema;
 
 AVRO_DECL void compileJsonSchema(std::istream &is, ValidSchema &schema);
 
-/// Non-throwing version of compileJsonSchema.  
+/// Non-throwing version of compileJsonSchema.
 ///
 /// \return True if no error, false if error (with the error string set)
 ///

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,7 +29,6 @@ import java.util.Arrays;
 
 /** Abstract base class for RecordBuilder implementations. Not thread-safe. */
 public abstract class RecordBuilderBase<T extends IndexedRecord> implements RecordBuilder<T> {
-  private static final Field[] EMPTY_FIELDS = new Field[0];
   private final Schema schema;
   private final Field[] fields;
   private final boolean[] fieldSetFlags;
@@ -59,7 +58,7 @@ public abstract class RecordBuilderBase<T extends IndexedRecord> implements Reco
   protected RecordBuilderBase(Schema schema, GenericData data) {
     this.schema = schema;
     this.data = data;
-    fields = schema.getFields().toArray(EMPTY_FIELDS);
+    fields = schema.getFields().toArray(new Field[0]);
     fieldSetFlags = new boolean[fields.length];
   }
 
@@ -72,9 +71,8 @@ public abstract class RecordBuilderBase<T extends IndexedRecord> implements Reco
   protected RecordBuilderBase(RecordBuilderBase<T> other, GenericData data) {
     this.schema = other.schema;
     this.data = data;
-    fields = schema.getFields().toArray(EMPTY_FIELDS);
-    fieldSetFlags = new boolean[other.fieldSetFlags.length];
-    System.arraycopy(other.fieldSetFlags, 0, fieldSetFlags, 0, fieldSetFlags.length);
+    fields = schema.getFields().toArray(new Field[0]);
+    fieldSetFlags = Arrays.copyOf(other.fieldSetFlags, other.fieldSetFlags.length);
   }
 
   /**
@@ -85,13 +83,11 @@ public abstract class RecordBuilderBase<T extends IndexedRecord> implements Reco
    * 
    * @param field the field to validate.
    * @param value the value to validate.
-   * @throws NullPointerException if value is null and the given field does not
+   * @throws AvroRuntimeException if value is null and the given field does not
    *                              accept null values.
    */
   protected void validate(Field field, Object value) {
-    if (isValidValue(field, value)) {
-    } else if (field.defaultVal() != null) {
-    } else {
+    if (!isValidValue(field, value) && field.defaultVal() == null) {
       throw new AvroRuntimeException("Field " + field + " does not accept null values");
     }
   }

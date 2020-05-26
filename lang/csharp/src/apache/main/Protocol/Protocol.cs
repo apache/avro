@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,13 +17,14 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
+    /// <summary>
+    /// A set of messages forming an application protocol.
+    /// </summary>
     public class Protocol
     {
         /// <summary>
@@ -52,6 +53,10 @@ namespace Avro
         public IDictionary<string,Message> Messages { get; set; }
 
         private byte[] md5;
+
+        /// <summary>
+        /// MD5 hash of the text of this protocol.
+        /// </summary>
         public byte[] MD5
         {
             get
@@ -81,9 +86,9 @@ namespace Avro
                         string doc, IEnumerable<Schema> types,
                         IDictionary<string,Message> messages)
         {
-            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException("name", "name cannot be null.");
-            if (null == types) throw new ArgumentNullException("types", "types cannot be null.");
-            if (null == messages) throw new ArgumentNullException("messages", "messages cannot be null.");
+            if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name), "name cannot be null.");
+            if (null == types) throw new ArgumentNullException(nameof(types), "types cannot be null.");
+            if (null == messages) throw new ArgumentNullException(nameof(messages), "messages cannot be null.");
 
             this.Name = name;
             this.Namespace = space;
@@ -108,7 +113,7 @@ namespace Avro
             }
             catch (Exception ex)
             {
-                throw new ProtocolParseException("Invalid JSON format: " + jstring, ex);
+                throw new ProtocolParseException($"Invalid JSON format: {jstring} at '{jtok.Path}'", ex);
             }
             return Parse(jtok);
         }
@@ -147,7 +152,6 @@ namespace Avro
                     messages.Add(message.Name, message);
                 }
             }
-
             return new Protocol(name, space, doc, types, messages);
         }
 
@@ -161,9 +165,9 @@ namespace Avro
             {
                 using (Newtonsoft.Json.JsonTextWriter writer = new Newtonsoft.Json.JsonTextWriter(sw))
                 {
-                    #if(DEBUG)
+#if DEBUG
                     writer.Formatting = Newtonsoft.Json.Formatting.Indented;
-                    #endif
+#endif
 
                     WriteJson(writer, new SchemaNames());
                     writer.Flush();
@@ -218,8 +222,10 @@ namespace Avro
 
             Protocol that = obj as Protocol;
 
-            return this.Name.Equals(that.Name) && this.Namespace.Equals(that.Namespace) &&
-                    TypesEquals(that.Types) && MessagesEquals(that.Messages);
+            return this.Name.Equals(that.Name, StringComparison.Ordinal)
+                && this.Namespace.Equals(that.Namespace, StringComparison.Ordinal)
+                && TypesEquals(that.Types)
+                && MessagesEquals(that.Messages);
         }
 
         /// <summary>
@@ -263,7 +269,9 @@ namespace Avro
         /// <returns></returns>
         public override int GetHashCode()
         {
+#pragma warning disable CA1307 // Specify StringComparison
             return Name.GetHashCode() + Namespace.GetHashCode() +
+#pragma warning restore CA1307 // Specify StringComparison
                    GetTypesHashCode() + GetMessagesHashCode();
         }
 
@@ -287,7 +295,9 @@ namespace Avro
         {
             int hash = Messages.Count;
             foreach (KeyValuePair<string, Message> pair in Messages)
-                hash += (pair.Key.GetHashCode() + pair.Value.GetHashCode());
+#pragma warning disable CA1307 // Specify StringComparison
+                hash += pair.Key.GetHashCode() + pair.Value.GetHashCode();
+#pragma warning restore CA1307 // Specify StringComparison
             return hash;
         }
     }

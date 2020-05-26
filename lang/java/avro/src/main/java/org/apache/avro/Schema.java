@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +84,27 @@ import org.apache.avro.util.internal.JacksonUtils;
  * property.
  * </ul>
  */
-public abstract class Schema extends JsonProperties {
+public abstract class Schema extends JsonProperties implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
+  protected Object writeReplace() {
+    SerializableSchema ss = new SerializableSchema();
+    ss.schemaString = toString();
+    return ss;
+  }
+
+  private static final class SerializableSchema implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String schemaString;
+
+    private Object readResolve() {
+      return new Schema.Parser().parse(schemaString);
+    }
+  }
+
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
 
@@ -170,7 +191,16 @@ public abstract class Schema extends JsonProperties {
     this.logicalType = logicalType;
   }
 
-  /** Create an anonymous record schema. */
+  /**
+   * Create an anonymous record schema.
+   *
+   * @deprecated This method allows to create Schema objects that cannot be parsed
+   *             by {@link Schema.Parser#parse(String)}. It will be removed in a
+   *             future version of Avro. Better use
+   *             i{@link #createRecord(String, String, String, boolean, List)} to
+   *             produce a fully qualified Schema.
+   */
+  @Deprecated
   public static Schema createRecord(List<Field> fields) {
     Schema result = createRecord(null, null, null, false);
     result.setFields(fields);
@@ -217,7 +247,7 @@ public abstract class Schema extends JsonProperties {
     return createUnion(new LockableArrayList<>(types));
   }
 
-  /** Create a union schema. */
+  /** Create a fixed schema. */
   public static Schema createFixed(String name, String doc, String space, int size) {
     return new FixedSchema(new Name(name, space), doc, size);
   }
@@ -346,24 +376,45 @@ public abstract class Schema extends JsonProperties {
     throw new AvroRuntimeException("Not fixed: " + this);
   }
 
-  /** Render this as <a href="http://json.org/">JSON</a>. */
+  /** Render this as <a href="https://json.org/">JSON</a>. */
   @Override
   public String toString() {
     return toString(false);
   }
 
   /**
-   * Render this as <a href="http://json.org/">JSON</a>.
+   * Render this as <a href="https://json.org/">JSON</a>.
    *
    * @param pretty if true, pretty-print JSON.
    */
   public String toString(boolean pretty) {
+    return toString(new Names(), pretty);
+  }
+
+  /**
+   * Render this as <a href="https://json.org/">JSON</a>, but without inlining the
+   * referenced schemas.
+   *
+   * @param referencedSchemas referenced schemas
+   * @param pretty            if true, pretty-print JSON.
+   */
+  public String toString(Collection<Schema> referencedSchemas, boolean pretty) {
+    Schema.Names names = new Schema.Names();
+    if (referencedSchemas != null) {
+      for (Schema s : referencedSchemas) {
+        names.add(s);
+      }
+    }
+    return toString(names, pretty);
+  }
+
+  String toString(Names names, boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
       JsonGenerator gen = FACTORY.createGenerator(writer);
       if (pretty)
         gen.useDefaultPrettyPrinter();
-      toJson(new Names(), gen);
+      toJson(names, gen);
       gen.flush();
       return writer.toString();
     } catch (IOException e) {
@@ -849,11 +900,12 @@ public abstract class Schema extends JsonProperties {
         throw new AvroRuntimeException("Fields are already set");
       }
       int i = 0;
-      fieldMap = new HashMap<>();
-      LockableArrayList ff = new LockableArrayList();
+      fieldMap = new HashMap<>(Math.multiplyExact(2, fields.size()));
+      LockableArrayList<Field> ff = new LockableArrayList<>(fields.size());
       for (Field f : fields) {
-        if (f.position != -1)
+        if (f.position != -1) {
           throw new AvroRuntimeException("Field already used: " + f);
+        }
         f.position = i++;
         final Field existingField = fieldMap.put(f.name(), f);
         if (existingField != null) {
@@ -969,15 +1021,18 @@ public abstract class Schema extends JsonProperties {
     public EnumSchema(Name name, String doc, LockableArrayList<String> symbols, String enumDefault) {
       super(Type.ENUM, name, doc);
       this.symbols = symbols.lock();
-      this.ordinals = new HashMap<>();
+      this.ordinals = new HashMap<>(Math.multiplyExact(2, symbols.size()));
       this.enumDefault = enumDefault;
       int i = 0;
-      for (String symbol : symbols)
-        if (ordinals.put(validateName(symbol), i++) != null)
+      for (String symbol : symbols) {
+        if (ordinals.put(validateName(symbol), i++) != null) {
           throw new SchemaParseException("Duplicate enum symbol: " + symbol);
-      if (enumDefault != null && !symbols.contains(enumDefault))
+        }
+      }
+      if (enumDefault != null && !symbols.contains(enumDefault)) {
         throw new SchemaParseException(
             "The Enum Default: " + enumDefault + " is not in the enum symbol set: " + symbols);
+      }
     }
 
     @Override
@@ -1116,20 +1171,24 @@ public abstract class Schema extends JsonProperties {
 
   private static class UnionSchema extends Schema {
     private final List<Schema> types;
-    private final Map<String, Integer> indexByName = new HashMap<>();
+    private final Map<String, Integer> indexByName;
 
     public UnionSchema(LockableArrayList<Schema> types) {
       super(Type.UNION);
+      this.indexByName = new HashMap<>(Math.multiplyExact(2, types.size()));
       this.types = types.lock();
       int index = 0;
       for (Schema type : types) {
-        if (type.getType() == Type.UNION)
+        if (type.getType() == Type.UNION) {
           throw new AvroRuntimeException("Nested union: " + this);
+        }
         String name = type.getFullName();
-        if (name == null)
+        if (name == null) {
           throw new AvroRuntimeException("Nameless in union:" + this);
-        if (indexByName.put(name, index++) != null)
+        }
+        if (indexByName.put(name, index++) != null) {
           throw new AvroRuntimeException("Duplicate in union:" + name);
+        }
       }
     }
 
@@ -1403,7 +1462,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   /**
-   * Construct a schema from <a href="http://json.org/">JSON</a> text.
+   * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
    * @deprecated use {@link Schema.Parser} instead.
    */
@@ -1413,7 +1472,7 @@ public abstract class Schema extends JsonProperties {
   }
 
   /**
-   * Construct a schema from <a href="http://json.org/">JSON</a> text.
+   * Construct a schema from <a href="https://json.org/">JSON</a> text.
    *
    * @param validate true if names should be validated, false if not.
    * @deprecated use {@link Schema.Parser} instead.
@@ -1522,7 +1581,9 @@ public abstract class Schema extends JsonProperties {
     case FIXED:
       return defaultValue.isTextual();
     case INT:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToInt();
     case LONG:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToLong();
     case FLOAT:
     case DOUBLE:
       return defaultValue.isNumber();
@@ -1581,9 +1642,7 @@ public abstract class Schema extends JsonProperties {
         if (space == null)
           space = names.space();
         name = new Name(getRequiredText(schema, "name", "No name in schema"), space);
-        if (name.space != null) { // set default namespace
-          names.space(name.space);
-        }
+        names.space(name.space); // set default namespace
       }
       if (PRIMITIVES.containsKey(type)) { // primitive
         result = create(PRIMITIVES.get(type));

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -119,7 +119,7 @@ public class Protocol extends JsonProperties {
 
     /** Errors that might be thrown. */
     public Schema getErrors() {
-      return Schema.createUnion(new ArrayList<>());
+      return Schema.createUnion(Collections.emptyList());
     }
 
     /** Returns true if this is a one-way message, with no response or errors. */
@@ -247,19 +247,14 @@ public class Protocol extends JsonProperties {
   private String doc;
 
   private Schema.Names types = new Schema.Names();
-  private Map<String, Message> messages = new LinkedHashMap<>();
+  private final Map<String, Message> messages = new LinkedHashMap<>();
   private byte[] md5;
 
   /** An error that can be thrown by any message. */
   public static final Schema SYSTEM_ERROR = Schema.create(Schema.Type.STRING);
 
   /** Union type for generating system errors. */
-  public static final Schema SYSTEM_ERRORS;
-  static {
-    List<Schema> errors = new ArrayList<>();
-    errors.add(SYSTEM_ERROR);
-    SYSTEM_ERRORS = Schema.createUnion(errors);
-  }
+  public static final Schema SYSTEM_ERRORS = Schema.createUnion(Collections.singletonList(SYSTEM_ERROR));
 
   private static final Set<String> PROTOCOL_RESERVED = Collections
       .unmodifiableSet(new HashSet<>(Arrays.asList("namespace", "protocol", "doc", "messages", "types", "errors")));
@@ -329,7 +324,7 @@ public class Protocol extends JsonProperties {
   /** Create a one-way message. */
   @Deprecated
   public Message createMessage(String name, String doc, Schema request) {
-    return new Message(name, doc, new LinkedHashMap<String, String>(), request);
+    return new Message(name, doc, Collections.emptyMap(), request);
   }
 
   /**
@@ -392,14 +387,14 @@ public class Protocol extends JsonProperties {
     return name.hashCode() + namespace.hashCode() + types.hashCode() + messages.hashCode() + propsHashCode();
   }
 
-  /** Render this as <a href="http://json.org/">JSON</a>. */
+  /** Render this as <a href="https://json.org/">JSON</a>. */
   @Override
   public String toString() {
     return toString(false);
   }
 
   /**
-   * Render this as <a href="http://json.org/">JSON</a>.
+   * Render this as <a href="https://json.org/">JSON</a>.
    *
    * @param pretty if true, pretty-print JSON.
    */

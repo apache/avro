@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -68,7 +68,7 @@ public class TestGenericData {
   @Test(expected = AvroRuntimeException.class)
   public void testRecordCreateEmptySchema() throws Exception {
     Schema s = Schema.createRecord("schemaName", "schemaDoc", "namespace", false);
-    Record r = new GenericData.Record(s);
+    new GenericData.Record(s);
   }
 
   @Test(expected = AvroRuntimeException.class)
@@ -160,12 +160,11 @@ public class TestGenericData {
     assertFalse(record1.equals(record2));
   }
 
-  @Test
+  @Test(expected = AvroRuntimeException.class)
   public void testRecordGetFieldDoesntExist() throws Exception {
-    List<Field> fields = new ArrayList<>();
-    Schema schema = Schema.createRecord(fields);
+    Schema schema = Schema.createRecord("test", "doc", "test", false, Collections.EMPTY_LIST);
     GenericData.Record record = new GenericData.Record(schema);
-    assertNull(record.get("does not exist"));
+    record.get("does not exist");
   }
 
   @Test

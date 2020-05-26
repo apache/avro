@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,44 +18,52 @@
 package org.apache.avro.mojo;
 
 import org.codehaus.plexus.util.FileUtils;
+import org.junit.Test;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Test the IDL Protocol Mojo.
- *
- * @author saden
  */
 public class TestIDLProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-joda.xml");
-  protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/idl/pom-jsr310.xml");
+  private File testPom = new File(getBasedir(), "src/test/resources/unit/idl/pom.xml");
+  private File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/idl/pom-injecting-velocity-tools.xml");
 
-  public void testIdlProtocolMojoJoda() throws Exception {
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jodaTestPom);
+  @Test
+  public void testIdlProtocolMojo() throws Exception {
+    final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", testPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/idl-joda/test");
-    String[] generatedFileNames = new String[] { "IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
-        "IdlUserWrapper.java" };
+    final File outputDir = new File(getBasedir(), "target/test-harness/idl/test/");
+    final Set<String> generatedFiles = new HashSet<>(Arrays.asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
+        "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
+    assertFilesExist(outputDir, generatedFiles);
 
-    String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
-    assertTrue(idlUserContent.contains("org.joda.time.DateTime"));
+    final String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
+    assertTrue(idlUserContent.contains("java.time.Instant"));
   }
 
-  public void testIdlProtocolMojoJsr310() throws Exception {
-    IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", jsr310TestPom);
+  @Test
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    final IDLProtocolMojo mojo = (IDLProtocolMojo) lookupMojo("idl-protocol", injectingVelocityToolsTestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/idl-jsr310/test");
-    String[] generatedFileNames = new String[] { "IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
-        "IdlUserWrapper.java" };
+    final File outputDir = new File(getBasedir(), "target/test-harness/idl-inject/test");
+    final Set<String> generatedFiles = new HashSet<>(Arrays.asList("IdlPrivacy.java", "IdlTest.java", "IdlUser.java",
+        "IdlUserWrapper.java", "IdlClasspathImportTest.java"));
 
-    String idlUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
-    assertTrue(idlUserContent.contains("java.time.Instant"));
+    assertFilesExist(outputDir, generatedFiles);
+
+    final String schemaUserContent = FileUtils.fileRead(new File(outputDir, "IdlUser.java"));
+    assertTrue(schemaUserContent.contains("It works!"));
   }
 }

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,6 +32,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -86,7 +87,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer).
-   * 
+   *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
    *                                  Please be noticed that the exception type
@@ -156,13 +157,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
         out.writeInt(((Number) datum).intValue());
         break;
       case LONG:
-        out.writeLong((Long) datum);
+        out.writeLong(((Number) datum).longValue());
         break;
       case FLOAT:
-        out.writeFloat((Float) datum);
+        out.writeFloat(((Number) datum).floatValue());
         break;
       case DOUBLE:
-        out.writeDouble((Double) datum);
+        out.writeDouble(((Number) datum).doubleValue());
         break;
       case BOOLEAN:
         out.writeBoolean((Boolean) datum);
@@ -204,6 +205,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     Object value = data.getField(datum, f.name(), f.pos(), state);
     try {
       write(f.schema(), value, out);
+    } catch (final UnresolvedUnionException uue) { // recreate it with the right field info
+      final UnresolvedUnionException unresolvedUnionException = new UnresolvedUnionException(f.schema(), f, value);
+      unresolvedUnionException.addSuppressed(uue);
+      throw unresolvedUnionException;
     } catch (NullPointerException e) {
       throw npe(e, " in field " + f.name());
     }

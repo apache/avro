@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -57,15 +57,17 @@ public class ProtocolMojo extends AbstractAvroMojo {
 
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
-    File src = new File(sourceDirectory, filename);
-    Protocol protocol = Protocol.parse(src);
-    SpecificCompiler compiler = new SpecificCompiler(protocol, getDateTimeLogicalTypeImplementation());
+    final File src = new File(sourceDirectory, filename);
+    final Protocol protocol = Protocol.parse(src);
+    final SpecificCompiler compiler = new SpecificCompiler(protocol);
     compiler.setTemplateDir(templateDirectory);
     compiler.setStringType(StringType.valueOf(stringType));
     compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateOptionalGetters(createOptionalGetters);
     compiler.setGettersReturnOptional(gettersReturnOptional);
+    compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly);
     compiler.setCreateSetters(createSetters);
+    compiler.setAdditionalVelocityTools(instantiateAdditionalVelocityTools());
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     final URLClassLoader classLoader;
     try {

@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,11 +21,11 @@
 Protocol implementation.
 """
 
-from types import MappingProxyType
-
 import hashlib
 import json
 import logging
+import warnings
+from types import MappingProxyType
 
 from avro import schema
 
@@ -376,7 +376,7 @@ def ProtocolFromJSONData(json_data):
   )
 
 
-def Parse(json_string):
+def parse(json_string):
   """Constructs a Protocol from its JSON descriptor in text form.
 
   Args:
@@ -396,3 +396,10 @@ def Parse(json_string):
         % (json_string, exn))
 
   return ProtocolFromJSONData(json_data)
+
+def Parse(json_string):
+  """Deprecated implementation of parse."""
+  warnings.warn("`Parse` is deprecated in avro 1.10. "
+                "Please use `parse` (lowercase) instead.",
+                DeprecationWarning)
+  return parse(json_string)

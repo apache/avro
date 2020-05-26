@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -24,6 +24,7 @@ import java.io.EOFException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +66,7 @@ public class SaslSocketTransceiver extends Transceiver {
 
   /**
    * Create using SASL's anonymous
-   * (<a href="http://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism.
+   * (<a href="https://www.ietf.org/rfc/rfc2245.txt">RFC 2245) mechanism.
    */
   public SaslSocketTransceiver(SocketAddress address) throws IOException {
     this(address, new AnonymousClient());
@@ -187,7 +188,7 @@ public class SaslSocketTransceiver extends Transceiver {
     List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       ByteBuffer buffer = readFrameAndUnwrap();
-      if (buffer.remaining() == 0)
+      if (((Buffer) buffer).remaining() == 0)
         return buffers;
       buffers.add(buffer);
     }
@@ -220,11 +221,11 @@ public class SaslSocketTransceiver extends Transceiver {
   }
 
   private void read(ByteBuffer buffer) throws IOException {
-    buffer.clear();
+    ((Buffer) buffer).clear();
     while (buffer.hasRemaining())
       if (channel.read(buffer) == -1)
         throw new EOFException();
-    buffer.flip();
+    ((Buffer) buffer).flip();
   }
 
   @Override
@@ -247,7 +248,7 @@ public class SaslSocketTransceiver extends Transceiver {
         if (currentLength == 0)
           writes.add(currentHeader);
         currentLength += length;
-        currentHeader.clear();
+        ((Buffer) currentHeader).clear();
         currentHeader.putInt(currentLength);
         LOG.debug("adding {} to write, total now {}", length, currentLength);
       } else {
@@ -256,10 +257,10 @@ public class SaslSocketTransceiver extends Transceiver {
         writes.add(currentHeader);
         LOG.debug("planning write of {}", length);
       }
-      currentHeader.flip();
+      ((Buffer) currentHeader).flip();
       writes.add(buffer);
     }
-    zeroHeader.flip(); // zero-terminate
+    ((Buffer) zeroHeader).flip(); // zero-terminate
     writes.add(zeroHeader);
 
     writeFully(writes.toArray(new ByteBuffer[0]));
@@ -278,16 +279,16 @@ public class SaslSocketTransceiver extends Transceiver {
   private void write(Status status, ByteBuffer response) throws IOException {
     LOG.debug("write status: {}", status);
     ByteBuffer statusBuffer = ByteBuffer.allocate(1);
-    statusBuffer.clear();
-    statusBuffer.put((byte) (status.ordinal())).flip();
+    ((Buffer) statusBuffer).clear();
+    ((Buffer) statusBuffer.put((byte) (status.ordinal()))).flip();
     writeFully(statusBuffer);
     write(response);
   }
 
   private void write(ByteBuffer response) throws IOException {
     LOG.debug("writing: {}", response.remaining());
-    writeHeader.clear();
-    writeHeader.putInt(response.remaining()).flip();
+    ((Buffer) writeHeader).clear();
+    ((Buffer) writeHeader.putInt(response.remaining())).flip();
     writeFully(writeHeader, response);
   }
 
@@ -357,10 +358,6 @@ public class SaslSocketTransceiver extends Transceiver {
         return client.unwrap(buf, 0, buf.length);
       else
         return server.unwrap(buf, 0, buf.length);
-    }
-
-    public byte[] wrap(byte[] buf) throws SaslException {
-      return wrap(buf, 0, buf.length);
     }
 
     public byte[] wrap(byte[] buf, int start, int len) throws SaslException {

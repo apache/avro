@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,13 +27,16 @@ https://pypi.org/project/avro-python3/
 """
 
 import distutils.command.clean
-import distutils.file_util
 import distutils.dir_util
+import distutils.errors
+import distutils.file_util
 import distutils.log
 import fnmatch
+import glob
 import os
+import subprocess
 
-from setuptools import setup
+import setuptools
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
@@ -110,11 +113,59 @@ class CleanCommand(distutils.command.clean.clean):
                 os.remove(name)
 
 
+class GenerateInteropDataCommand(setuptools.Command):
+    """A command to generate Avro files for data interop test."""
+
+    user_options = [
+      ('schema-file=', None, 'path to input Avro schema file'),
+      ('output-path=', None, 'path to output Avro data files'),
+    ]
+
+    def initialize_options(self):
+        self.schema_file = os.path.join(os.getcwd(), 'interop.avsc')
+        self.output_path = os.getcwd()
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        from avro.tests import gen_interop_data
+        gen_interop_data.generate(self.schema_file, self.output_path)
+
+
+class LintCommand(setuptools.Command):
+    """Run pycodestyle on all your modules"""
+    description = __doc__
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # setuptools does not seem to make pycodestyle available
+        # in the pythonpath, so we do it ourselves.
+        try:
+            env = {'PYTHONPATH': next(glob.iglob('.eggs/pycodestyle-*.egg'))}
+        except StopIteration:
+            env = None  # pycodestyle is already installed
+        try:
+            subprocess.run(['python3', '-m', 'pycodestyle', '.'], env=env, check=True)
+        except subprocess.CalledProcessError:
+            raise distutils.errors.DistutilsError("pycodestyle exited with a nonzero exit code.")
+
+
 def main():
     if not _is_distribution():
         _generate_package_data()
 
-    setup(cmdclass={"clean": CleanCommand})
+    setuptools.setup(cmdclass={
+        "clean": CleanCommand,
+        "generate_interop_data": GenerateInteropDataCommand,
+        "lint": LintCommand,
+    })
 
 
 if __name__ == '__main__':

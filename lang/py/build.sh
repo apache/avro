@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,46 +15,62 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e # exit on error
+set -e
 
-function usage {
-  echo "Usage: $0 {test|dist|clean}"
+usage() {
+  echo "Usage: $0 {clean|dist|interop-data-generate|interop-data-test|lint|test}"
   exit 1
 }
 
-if [ $# -eq 0 ]
-then
-  usage
-fi
+clean() {
+  git clean -xdf '*.avpr' \
+                 '*.avsc' \
+                 '*.egg-info' \
+                 '*.py[co]' \
+                 'VERSION.txt' \
+                 '__pycache__' \
+                 '.tox' \
+                 'avro/test/interop' \
+                 'dist' \
+                 'userlogs'
+}
 
-if [ -f VERSION.txt ]
-then
-  VERSION=`cat VERSION.txt`
-else
-  VERSION=`cat ../../share/VERSION.txt`
-fi
+dist() {
+  ./setup.py dist
+}
 
-for target in "$@"
-do
+interop-data-generate() {
+  ./setup.py generate_interop_data
+  cp -r avro/test/interop/data ../../build/interop
+}
 
-case "$target" in
-  test)
-    ant test
-    ;;
+interop-data-test() {
+  mkdir -p avro/test/interop ../../build/interop/data
+  cp -r ../../build/interop/data avro/test/interop
+  python -m unittest avro.test.test_datafile_interop
+}
 
-  dist)
-     ant dist
-    ;;
+lint() {
+  tox -e lint
+}
 
-  clean)
-    ant clean
-    rm -rf userlogs/
-    ;;
+test_() {
+  TOX_SKIP_ENV=lint tox --skip-missing-interpreters
+}
 
-  *)
-    usage
-esac
+main() {
+  (( $# )) || usage
+  for target; do
+    case "$target" in
+      clean) clean;;
+      dist) dist;;
+      interop-data-generate) interop-data-generate;;
+      interop-data-test) interop-data-test;;
+      lint) lint;;
+      test) test_;;
+      *) usage;;
+    esac
+  done
+}
 
-done
-
-exit 0
+main "$@"

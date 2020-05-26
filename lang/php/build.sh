@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,30 +44,39 @@ function dist {
     cp "$tarball" "../$dist_dir"
 }
 
-case "$1" in
-     interop-data-generate)
-       php test/generate_interop_data.php
-       ;;
+for target in "$@"
+do
+  case "$target" in
+    interop-data-generate)
+      php test/generate_interop_data.php
+      ;;
 
-     test-interop)
-       phpunit test/InterOpTest.php
-       ;;
+    test-interop)
+      composer install -d "../.."
+      vendor/bin/phpunit test/InterOpTest.php
+      ;;
 
-     test)
-       phpunit test/AllTests.php
-       ;;
+    lint)
+      find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
+      vendor/bin/phpcs --standard=PSR12 lib
+      ;;
 
-     dist)
-        dist
-       ;;
+    test)
+      composer install -d "../.."
+      vendor/bin/phpunit -v
+      ;;
 
-     clean)
-       clean
-       ;;
+    dist)
+      dist
+      ;;
 
-     *)
-       echo "Usage: $0 {interop-data-generate|test-interop|test|dist|clean}"
-esac
+    clean)
+      clean
+      ;;
 
+    *)
+      echo "Usage: $0 {interop-data-generate|test-interop|lint|test|dist|clean}"
+  esac
+done
 
 exit 0

@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -35,8 +35,12 @@ use Avro::BinaryDecoder;
 use Avro::DataFile;
 use Avro::Schema;
 use Carp;
+use Compress::Zstd;
 use Error::Simple;
+use IO::Compress::Bzip2 qw(bzip2 $Bzip2Error);
 use IO::Compress::RawDeflate qw(rawdeflate $RawDeflateError);
+
+our $VERSION = '++MODULE_VERSION++';
 
 sub new {
     my $class = shift;
@@ -92,16 +96,30 @@ sub print {
 sub buffer_or_print {
     my $datafile = shift;
     my $string_ref = shift;
+    my $codec = $datafile->codec;
 
     my $ser_objects = $datafile->{_serialized_objects};
     push @$ser_objects, $string_ref;
 
-    if ($datafile->codec eq 'deflate') {
+    if ($codec eq 'deflate') {
         my $uncompressed = join('', map { $$_ } @$ser_objects);
         rawdeflate \$uncompressed => \$datafile->{_compressed_block}
             or croak "rawdeflate failed: $RawDeflateError";
         $datafile->{_current_size} =
             bytes::length($datafile->{_compressed_block});
+    }
+    elsif ($codec eq 'bzip2') {
+        my $uncompressed = join('', map { $$_ } @$ser_objects);
+        my $compressed;
+        bzip2 \$uncompressed => \$compressed
+            or croak "bzip2 failed: $Bzip2Error";
+        $datafile->{_compressed_block} = $compressed;
+        $datafile->{_current_size} = bytes::length($datafile->{_compressed_block});
+    }
+    elsif ($codec eq 'zstandard') {
+        my $uncompressed = join('', map { $$_ } @$ser_objects);
+        $datafile->{_compressed_block} = compress(\$uncompressed);
+        $datafile->{_current_size} = bytes::length($datafile->{_compressed_block});
     }
     else {
       $datafile->{_current_size} += bytes::length($$string_ref);
@@ -172,7 +190,7 @@ sub _print_block {
     ## alternatively here, we could do n calls to print
     ## but we'll say that this all write block thing is here to overcome
     ## any memory issues we could have with deferencing the ser_objects
-    if ($datafile->codec eq 'deflate') {
+    if ($datafile->codec ne 'null') {
         print $fh $prefix, $datafile->{_compressed_block}, $sync_marker;
     }
     else {

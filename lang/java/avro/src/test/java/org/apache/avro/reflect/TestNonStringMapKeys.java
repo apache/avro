@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -241,17 +241,18 @@ public class TestNonStringMapKeys {
 
     GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
-    DataFileReader<GenericRecord> fileReader = new DataFileReader<>(avroInputStream, datumReader);
-
-    Schema schema = fileReader.getSchema();
-    assertNotNull("Unable to get schema for " + testType, schema);
-    GenericRecord record = null;
     List<GenericRecord> records = new ArrayList<>();
-    while (fileReader.hasNext()) {
-      try {
-        records.add(fileReader.next(record));
-      } catch (Exception e) {
-        fail("Fail with schema: " + schema);
+    try (DataFileReader<GenericRecord> fileReader = new DataFileReader<>(avroInputStream, datumReader)) {
+
+      Schema schema = fileReader.getSchema();
+      assertNotNull("Unable to get schema for " + testType, schema);
+      GenericRecord record = null;
+      while (fileReader.hasNext()) {
+        try {
+          records.add(fileReader.next(record));
+        } catch (Exception e) {
+          fail("Fail with schema: " + schema);
+        }
       }
     }
     return records;
@@ -266,13 +267,14 @@ public class TestNonStringMapKeys {
 
     ReflectDatumReader<T> datumReader = new ReflectDatumReader<>();
     SeekableByteArrayInput avroInputStream = new SeekableByteArrayInput(bytes);
-    DataFileReader<T> fileReader = new DataFileReader<>(avroInputStream, datumReader);
-
-    Schema schema = fileReader.getSchema();
-    T record = null;
     List<T> records = new ArrayList<>();
-    while (fileReader.hasNext()) {
-      records.add(fileReader.next(record));
+    try (DataFileReader<T> fileReader = new DataFileReader<>(avroInputStream, datumReader)) {
+
+      Schema schema = fileReader.getSchema();
+      T record = null;
+      while (fileReader.hasNext()) {
+        records.add(fileReader.next(record));
+      }
     }
     return records;
   }

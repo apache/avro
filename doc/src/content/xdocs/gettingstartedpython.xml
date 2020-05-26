@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+   https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
    limitations under the License.
   -->
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
-   "http://forrest.apache.org/dtd/document-v20.dtd" [
+   "https://forrest.apache.org/dtd/document-v20.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -33,12 +33,34 @@
       RPC Quick Start</a> for a good introduction to using Avro for RPC.
     </p>
 
+    <section id="notice_python3">
+      <title>Notice for Python 3 users</title>
+      <p>
+        A package called "avro-python3" had been provided to support
+        Python 3 previously, but the codebase was consolidated into
+        the "avro" package and that supports both Python 2 and 3 now.
+
+        The avro-python3 package will be removed in the near future,
+        so users should use the "avro" package instead.
+        They are mostly API compatible, but there's a few minor difference
+        (e.g., function name capitalization,
+        such as avro.schema.Parse vs avro.schema.parse).
+      </p>
+    </section>
+
     <section id="download_install">
       <title>Download</title>
       <p>
-        Avro implementations for C, C++, C#, Java, PHP, Python, and Ruby can be
-        downloaded from the <a
-        href="http://avro.apache.org/releases.html">Apache Avro&#153;
+        For Python, the easiest way to get started is to install it from PyPI.
+        Python's Avro API is available over <a href="https://pypi.org/project/avro/">PyPi</a>.
+      </p>
+      <source>
+$ python3 -m pip install avro
+      </source>
+      <p>
+        The official releases of the Avro implementations for C, C++, C#, Java,
+        PHP, Python, and Ruby can be downloaded from the <a
+        href="https://avro.apache.org/releases.html">Apache Avro&#153;
         Releases</a> page.  This guide uses Avro &AvroVersion;, the latest
         version at the time of writing.  Download and unzip
         <em>avro-&AvroVersion;.tar.gz</em>, and install via <code>python
@@ -48,7 +70,7 @@
       <source>
 $ tar xvf avro-&AvroVersion;.tar.gz
 $ cd avro-&AvroVersion;
-$ sudo python setup.py install
+$ python setup.py install
 $ python
 >>> import avro # should not raise ImportError
       </source>
@@ -58,10 +80,8 @@ $ python
       </p>
       <source>
 $ cd lang/py/
-$ ant
-$ sudo python setup.py install
+$ python3 -m pip install -e .
 $ python
->>> import avro # should not raise ImportError
       </source>
     </section>
 
@@ -157,7 +177,7 @@ reader.close()
         Do make sure that you open your files in binary mode (i.e. using the modes
         <code>wb</code> or <code>rb</code> respectively). Otherwise you might
         generate corrupt files due to
-        <a href="http://docs.python.org/library/functions.html#open">
+        <a href="https://docs.python.org/library/functions.html#open">
         automatic replacement</a> of newline characters with the
         platform-specific representations.
       </p>
@@ -187,8 +207,7 @@ writer = DataFileWriter(open("users.avro", "wb"), DatumWriter(), schema)
           <li>A <code>DatumWriter</code>, which is responsible for actually
           serializing the items to Avro's binary format
           (<code>DatumWriter</code>s can be used separately from
-          <code>DataFileWriter</code>s, e.g., to perform IPC with Avro
-          <strong>TODO: is this true??</strong>).</li>
+          <code>DataFileWriter</code>s, e.g., to perform IPC with Avro).</li>
           <li>The schema we're using.  The <code>DataFileWriter</code> needs the
           schema both to write the schema to the data file, and to verify that
           the items we write are valid items and write the appropriate

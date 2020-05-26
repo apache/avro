@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +18,6 @@
 package org.apache.avro.file;
 
 import java.io.IOException;
-import java.io.EOFException;
 import java.io.InputStream;
 import java.io.File;
 import java.util.Arrays;
@@ -32,12 +31,13 @@ import static org.apache.avro.file.DataFileConstants.MAGIC;
 
 /**
  * Random access to files written with {@link DataFileWriter}.
- * 
+ *
  * @see DataFileWriter
  */
 public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D> {
   private SeekableInputStream sin;
   private long blockStart;
+  private int[] partialMatchTable;
 
   /** Open a reader for a file. */
   public static <D> FileReader<D> openReader(File file, DatumReader<D> reader) throws IOException {
@@ -73,7 +73,7 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
   /**
    * Construct a reader for a file at the current position of the input, without
    * reading the header.
-   * 
+   *
    * @param sync True to read forward to the next sync point after opening, false
    *             to assume that the input is already at a valid sync point.
    */
@@ -88,17 +88,41 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
     return dreader;
   }
 
-  /** Construct a reader for a file. */
+  /**
+   * Construct a reader for a file. For example,if you want to read a file
+   * record,you need to close the resource. You can use try-with-resource as
+   * follows:
+   * 
+   * <pre>
+   * try (FileReader<User> dataFileReader =
+   * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
+   * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
+   * file: %s", file); }
+   * 
+   * <pre/>
+   */
   public DataFileReader(File file, DatumReader<D> reader) throws IOException {
     this(new SeekableFileInput(file), reader, true);
   }
 
-  /** Construct a reader for a file. */
+  /**
+   * Construct a reader for a file. For example,if you want to read a file
+   * record,you need to close the resource. You can use try-with-resource as
+   * follows:
+   * 
+   * <pre>
+   * try (FileReader<User> dataFileReader =
+   * DataFileReader.openReader(file,datumReader)) { //Consume the reader } catch
+   * (IOException e) { throw new RunTimeIOException(e,"Failed to read metadata for
+   * file: %s", file); }
+   * 
+   * <pre/>
+   */
   public DataFileReader(SeekableInput sin, DatumReader<D> reader) throws IOException {
     this(sin, reader, false);
   }
 
-  /** Construct a reader for a file. */
+  /** Construct a reader for a file. Please close resource files yourself. */
   protected DataFileReader(SeekableInput sin, DatumReader<D> reader, boolean closeOnError) throws IOException {
     super(reader);
     try {
@@ -143,36 +167,64 @@ public class DataFileReader<D> extends DataFileStream<D> implements FileReader<D
    * {@link #next()}.
    */
   @Override
-  public void sync(long position) throws IOException {
+  public void sync(final long position) throws IOException {
     seek(position);
     // work around an issue where 1.5.4 C stored sync in metadata
-    if ((position == 0) && (getMeta("avro.sync") != null)) {
+    if ((position == 0L) && (getMeta("avro.sync") != null)) {
       initialize(sin); // re-init to skip header
       return;
     }
-    try {
-      int i = 0, b;
-      InputStream in = vin.inputStream();
-      vin.readFixed(syncBuffer);
-      do {
-        int j = 0;
-        for (; j < SYNC_SIZE; j++) {
-          if (getHeader().sync[j] != syncBuffer[(i + j) % SYNC_SIZE])
-            break;
-        }
-        if (j == SYNC_SIZE) { // matched a complete sync
-          blockStart = position + i + SYNC_SIZE;
-          return;
-        }
-        b = in.read();
-        syncBuffer[i++ % SYNC_SIZE] = (byte) b;
-      } while (b != -1);
-    } catch (EOFException e) {
-      // fall through
+
+    if (this.partialMatchTable == null) {
+      this.partialMatchTable = computePartialMatchTable(getHeader().sync);
     }
-    // if no match or EOF set start to the end position
+
+    final byte[] sync = getHeader().sync;
+    final InputStream in = vin.inputStream();
+    final int[] pm = this.partialMatchTable;
+
+    // Search for the sequence of bytes in the stream using Knuth-Morris-Pratt
+    long i = 0L;
+    for (int b = in.read(), j = 0; b != -1; b = in.read(), i++) {
+      final byte cb = (byte) b;
+      while (j > 0 && sync[j] != cb) {
+        j = pm[j - 1];
+      }
+      if (sync[j] == cb) {
+        j++;
+      }
+      if (j == SYNC_SIZE) {
+        this.blockStart = position + i + 1L;
+        return;
+      }
+    }
+    // if no match set start to the end position
     blockStart = sin.tell();
-    // System.out.println("block start location after EOF: " + blockStart );
+  }
+
+  /**
+   * Compute that Knuth-Morris-Pratt partial match table.
+   *
+   * @param pattern The pattern being searched
+   * @return the pre-computed partial match table
+   *
+   * @see <a href= "https://github.com/williamfiset/Algorithms">William Fiset
+   *      Algorithms</a>
+   */
+  private int[] computePartialMatchTable(final byte[] pattern) {
+    final int[] pm = new int[pattern.length];
+    for (int i = 1, len = 0; i < pattern.length;) {
+      if (pattern[i] == pattern[len]) {
+        pm[i++] = ++len;
+      } else {
+        if (len > 0) {
+          len = pm[len - 1];
+        } else {
+          i++;
+        }
+      }
+    }
+    return pm;
   }
 
   @Override

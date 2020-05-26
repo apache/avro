@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,46 +18,53 @@
 package org.apache.avro.mojo;
 
 import org.codehaus.plexus.util.FileUtils;
+import org.junit.Test;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Test the Protocol Mojo.
- *
- * @author saden
  */
 public class TestProtocolMojo extends AbstractAvroMojoTest {
 
-  protected File jodaTestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-joda.xml");
-  protected File jsr310TestPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom-jsr310.xml");
+  private File testPom = new File(getBasedir(), "src/test/resources/unit/protocol/pom.xml");
+  private File injectingVelocityToolsTestPom = new File(getBasedir(),
+      "src/test/resources/unit/protocol/pom-injecting-velocity-tools.xml");
 
-  public void testProtocolMojoJoda() throws Exception {
-    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jodaTestPom);
+  @Test
+  public void testProtocolMojo() throws Exception {
+    final ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", testPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/protocol-joda/test");
-    String[] generatedFiles = new String[] { "ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java" };
+    final File outputDir = new File(getBasedir(), "target/test-harness/protocol/test");
+    final Set<String> generatedFiles = new HashSet<>(
+        Arrays.asList("ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java"));
 
     assertFilesExist(outputDir, generatedFiles);
 
-    String protocolUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
-    assertTrue(protocolUserContent.contains("org.joda.time.DateTime"));
+    final String protocolUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
+    assertTrue("Got " + protocolUserContent + " instead", protocolUserContent.contains("java.time.Instant"));
   }
 
-  public void testProtocolMojoJsr310() throws Exception {
-    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", jsr310TestPom);
+  @Test
+  public void testSetCompilerVelocityAdditionalTools() throws Exception {
+    ProtocolMojo mojo = (ProtocolMojo) lookupMojo("protocol", injectingVelocityToolsTestPom);
 
     assertNotNull(mojo);
     mojo.execute();
 
-    File outputDir = new File(getBasedir(), "target/test-harness/protocol-jsr310/test");
-    String[] generatedFiles = new String[] { "ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java" };
+    File outputDir = new File(getBasedir(), "target/test-harness/protocol-inject/test");
+    final Set<String> generatedFiles = new HashSet<>(
+        Arrays.asList("ProtocolPrivacy.java", "ProtocolTest.java", "ProtocolUser.java"));
 
     assertFilesExist(outputDir, generatedFiles);
 
-    String protocolUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
-    assertTrue(protocolUserContent.contains("java.time.Instant"));
+    String schemaUserContent = FileUtils.fileRead(new File(outputDir, "ProtocolUser.java"));
+    assertTrue(schemaUserContent.contains("It works!"));
   }
 }

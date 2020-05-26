@@ -8,7 +8,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,20 +17,23 @@
  * limitations under the License.
  */
 
-require_once('test_helper.php');
+namespace Apache\Avro\Tests;
 
-class IODatumReaderTest extends PHPUnit_Framework_TestCase
+use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\Schema\AvroSchema;
+use PHPUnit\Framework\TestCase;
+
+class IODatumReaderTest extends TestCase
 {
-
-  public function testSchemaMatching()
-  {
-    $writers_schema = <<<JSON
+    public function testSchemaMatching()
+    {
+        $writers_schema = <<<JSON
       { "type": "map",
         "values": "bytes" }
 JSON;
-    $readers_schema = $writers_schema;
-    $this->assertTrue(AvroIODatumReader::schemas_match(
-                        AvroSchema::parse($writers_schema),
-                        AvroSchema::parse($readers_schema)));
-  }
+        $readers_schema = $writers_schema;
+        $this->assertTrue(AvroIODatumReader::schemasMatch(
+            AvroSchema::parse($writers_schema),
+            AvroSchema::parse($readers_schema)));
+    }
 }

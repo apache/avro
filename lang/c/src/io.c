@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -345,7 +345,7 @@ avro_write_file(struct _avro_writer_file_t *writer, void *buf, int64_t len)
 	if (len > 0) {
 		rval = fwrite(buf, len, 1, writer->fp);
 		if (rval == 0) {
-			return feof(writer->fp) ? EOF : 0;
+			return EIO;
 		}
 	}
 	return 0;
