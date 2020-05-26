@@ -165,19 +165,19 @@ Now let's see how we can use the code generated to encode data into avro and dec
 
 \includelineno generated.cc
 
-In line 9, we construct a memory output stream. By this we indicate that we
-want to send the encoded Avro data into memory. In line 10, we construct a
+In line 27, we construct a memory output stream. By this we indicate that we
+want to send the encoded Avro data into memory. In line 28, we construct a
 binary encoder, whereby we mean the output should be encoded using the Avro
-binary standard. In line 11, we attach the output stream to the encoder. At any given time an encoder can write to only one output stream.
+binary standard. In line 29, we attach the output stream to the encoder. At any given time an encoder can write to only one output stream.
 <p>
-In line 14, we write the contents of c1 into the output stream using the
+In line 32, we write the contents of c1 into the output stream using the
 encoder. Now the output stream contains the binary representation of
 the object. The rest of the code verifies that the data is indeed in the stream.
 <p>
-In line 17, we construct a memory input stream from the contents of the
+In line 35, we construct a memory input stream from the contents of the
 output stream. Thus the input stream has the binary representation of the
-object. In line 18 and 19, we construct a binary decoder and attach the
-input stream to it. Line 22 decodes the contents of the stream into another
+object. In line 36 and 37, we construct a binary decoder and attach the
+input stream to it. Line 40 decodes the contents of the stream into another
 object c2. Now c1 and c2 should have identical contents, which one can readily
 verify from the output of the program, which should be:
 
@@ -186,14 +186,14 @@ verify from the output of the program, which should be:
 </pre>
 
 Now, if you want to encode the data using Avro JSON encoding, you should use
-avro::jsonEncoder() instead of avro::binaryEncoder() in line 10
-and avro::jsonDecoder() instead of avro::binaryDecoder() in line 18.
+avro::jsonEncoder() instead of avro::binaryEncoder() in line 28
+and avro::jsonDecoder() instead of avro::binaryDecoder() in line 36.
 <p>
 
 On the other hand, if you want to write the contents to a file instead of
 memory, you should use avro::fileOutputStream() instead of
-avro::memoryOutputStream() in line 9 and avro::fileInputStream()
-instead of avro::memoryInputStream() in line 17.
+avro::memoryOutputStream() in line 27 and avro::fileInputStream()
+instead of avro::memoryInputStream() in line 35.
 <p>
 
 <h2>Reading a JSON schema</h2>
@@ -315,7 +315,7 @@ the reader's has just one. We generated code for writer's schema in a namespace
 <tt>c</tt> and the reader's in <tt>i</tt>.
 
 <p>
-Please notice how the reading part of the example at line 42 reads as if
+Please notice how the reading part of the example at line 60 reads as if
 the stream contains the data corresponding to its schema. The schema resolution
 is automatically done by the resolving decoder.
 

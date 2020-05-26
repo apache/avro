@@ -291,8 +291,7 @@ class TestDataFile(unittest.TestCase):
     """A reader should not fail to read a file consisting of a single empty block."""
     file_path = self.NewTempFile()
     sample_schema = schema.parse(SCHEMAS_TO_VALIDATE[1][0])
-    with datafile.DataFileWriter(open(file_path, 'wb'), io.DatumWriter(),
-        sample_schema) as dfw:
+    with datafile.DataFileWriter(open(file_path, 'wb'), io.DatumWriter(), sample_schema) as dfw:
       dfw.flush()
       # Write an empty block
       dfw.encoder.write_long(0)

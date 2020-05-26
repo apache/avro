@@ -300,12 +300,12 @@ module Avro
         index_of_symbol = decoder.read_int
         read_symbol = writers_schema.symbols[index_of_symbol]
 
-        # TODO(jmhodges): figure out what unset means for resolution
-        # schema resolution
-        unless readers_schema.symbols.include?(read_symbol)
-          # 'unset' here
+        if !readers_schema.symbols.include?(read_symbol) && readers_schema.default
+          read_symbol = readers_schema.default
         end
 
+        # This implementation deviates from the spec by always returning
+        # a symbol.
         read_symbol
       end
 
@@ -591,7 +591,7 @@ module Avro
       def write_record(writers_schema, datum, encoder)
         raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
         writers_schema.fields.each do |field|
-          write_data(field.type, datum[field.name], encoder)
+          write_data(field.type, datum.key?(field.name) ? datum[field.name] : datum[field.name.to_sym], encoder)
         end
       end
     end # DatumWriter

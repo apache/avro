@@ -19,7 +19,7 @@
 package org.apache.avro.mapred;
 
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.nio.ByteBuffer;
@@ -92,9 +92,8 @@ public class Pair<K, V> implements IndexedRecord, Comparable<Pair>, SchemaConstr
 
   private static Schema makePairSchema(Schema key, Schema value) {
     Schema pair = Schema.createRecord(PAIR, null, null, false);
-    List<Field> fields = new ArrayList<>();
-    fields.add(new Field(KEY, key, "", null));
-    fields.add(new Field(VALUE, value, "", null, Field.Order.IGNORE));
+    List<Field> fields = Arrays.asList(new Field(KEY, key, "", null),
+        new Field(VALUE, value, "", null, Field.Order.IGNORE));
     pair.setFields(fields);
     return pair;
   }

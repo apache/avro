@@ -119,7 +119,7 @@ public class Protocol extends JsonProperties {
 
     /** Errors that might be thrown. */
     public Schema getErrors() {
-      return Schema.createUnion(new ArrayList<>());
+      return Schema.createUnion(Collections.emptyList());
     }
 
     /** Returns true if this is a one-way message, with no response or errors. */
@@ -247,19 +247,14 @@ public class Protocol extends JsonProperties {
   private String doc;
 
   private Schema.Names types = new Schema.Names();
-  private Map<String, Message> messages = new LinkedHashMap<>();
+  private final Map<String, Message> messages = new LinkedHashMap<>();
   private byte[] md5;
 
   /** An error that can be thrown by any message. */
   public static final Schema SYSTEM_ERROR = Schema.create(Schema.Type.STRING);
 
   /** Union type for generating system errors. */
-  public static final Schema SYSTEM_ERRORS;
-  static {
-    List<Schema> errors = new ArrayList<>();
-    errors.add(SYSTEM_ERROR);
-    SYSTEM_ERRORS = Schema.createUnion(errors);
-  }
+  public static final Schema SYSTEM_ERRORS = Schema.createUnion(Collections.singletonList(SYSTEM_ERROR));
 
   private static final Set<String> PROTOCOL_RESERVED = Collections
       .unmodifiableSet(new HashSet<>(Arrays.asList("namespace", "protocol", "doc", "messages", "types", "errors")));
@@ -329,7 +324,7 @@ public class Protocol extends JsonProperties {
   /** Create a one-way message. */
   @Deprecated
   public Message createMessage(String name, String doc, Schema request) {
-    return new Message(name, doc, new LinkedHashMap<String, String>(), request);
+    return new Message(name, doc, Collections.emptyMap(), request);
   }
 
   /**

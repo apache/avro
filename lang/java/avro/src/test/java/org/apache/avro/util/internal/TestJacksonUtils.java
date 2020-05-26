@@ -22,6 +22,8 @@ import static org.apache.avro.util.internal.JacksonUtils.toObject;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Collections;
 
 import com.fasterxml.jackson.databind.node.*;
@@ -48,6 +50,8 @@ public class TestJacksonUtils {
     assertEquals(TextNode.valueOf("\u0001\u0002"), toJsonNode(new byte[] { 1, 2 }));
     assertEquals(TextNode.valueOf("a"), toJsonNode("a"));
     assertEquals(TextNode.valueOf("UP"), toJsonNode(Direction.UP));
+    assertEquals(BigIntegerNode.valueOf(BigInteger.ONE), toJsonNode(BigInteger.ONE));
+    assertEquals(DecimalNode.valueOf(BigDecimal.ONE), toJsonNode(BigDecimal.ONE));
 
     ArrayNode an = JsonNodeFactory.instance.arrayNode();
     an.add(1);

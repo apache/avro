@@ -175,8 +175,8 @@ public class TimeConversions {
 
     @Override
     public Instant fromLong(Long microsFromEpoch, Schema schema, LogicalType type) {
-      long epochSeconds = microsFromEpoch / (1_000_000);
-      long nanoAdjustment = (microsFromEpoch % (1_000_000)) * 1_000;
+      long epochSeconds = microsFromEpoch / (1_000_000L);
+      long nanoAdjustment = (microsFromEpoch % (1_000_000L)) * 1_000L;
 
       return Instant.ofEpochSecond(epochSeconds, nanoAdjustment);
     }
@@ -187,14 +187,14 @@ public class TimeConversions {
       int nanos = instant.getNano();
 
       if (seconds < 0 && nanos > 0) {
-        long micros = Math.multiplyExact(seconds + 1, 1_000_000);
+        long micros = Math.multiplyExact(seconds + 1, 1_000_000L);
         long adjustment = (nanos / 1_000L) - 1_000_000;
 
         return Math.addExact(micros, adjustment);
       } else {
-        long micros = Math.multiplyExact(seconds, 1_000_000);
+        long micros = Math.multiplyExact(seconds, 1_000_000L);
 
-        return Math.addExact(micros, nanos / 1_000);
+        return Math.addExact(micros, nanos / 1_000L);
       }
     }
 

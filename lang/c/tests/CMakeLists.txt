@@ -81,7 +81,6 @@ add_avro_test_checkmem(test_avro_1405)
 add_avro_test_checkmem(test_avro_1572)
 add_avro_test(test_avro_data) # Skip memory check for datum. Deprecated and has a lot of memory issues
 add_avro_test_checkmem(test_refcount)
-add_avro_test_checkmem(test_cpp test_cpp.cpp)
 add_avro_test_checkmem(test_avro_1379)
 add_avro_test_checkmem(test_avro_1691)
 add_avro_test_checkmem(test_avro_1906)

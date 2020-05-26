@@ -86,6 +86,7 @@ public class RecodecTool implements Tool {
     if (outputNeedsClosing) {
       output.close();
     }
+    writer.close();
     return 0;
   }
 

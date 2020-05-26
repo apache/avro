@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -52,9 +53,7 @@ public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHa
   }
 
   private static Symbol getSymbol(Schema schema) {
-    if (null == schema) {
-      throw new NullPointerException("Schema cannot be null");
-    }
+    Objects.requireNonNull(schema, "Schema cannot be null");
     return new ValidatingGrammarGenerator().generate(schema);
   }
 

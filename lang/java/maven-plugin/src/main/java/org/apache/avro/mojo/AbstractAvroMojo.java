@@ -146,6 +146,16 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   protected boolean gettersReturnOptional = false;
 
   /**
+   * The optionalGettersForNullableFieldsOnly parameter works in conjunction with
+   * gettersReturnOptional option. If it is set, Optional getters will be
+   * generated only for fields that are nullable. If the field is mandatory,
+   * regular getter will be generated. This works ONLY on Java 8+.
+   *
+   * @parameter property="optionalGettersForNullableFieldsOnly"
+   */
+  protected boolean optionalGettersForNullableFieldsOnly = false;
+
+  /**
    * Determines whether or not to create setters for the fields of the record. The
    * default is to create setters.
    *
@@ -292,12 +302,13 @@ public abstract class AbstractAvroMojo extends AbstractMojo {
   }
 
   private List<URL> appendElements(List runtimeClasspathElements) throws MalformedURLException {
-    List<URL> runtimeUrls = new ArrayList<>();
-    if (runtimeClasspathElements != null) {
-      for (Object runtimeClasspathElement : runtimeClasspathElements) {
-        String element = (String) runtimeClasspathElement;
-        runtimeUrls.add(new File(element).toURI().toURL());
-      }
+    if (runtimeClasspathElements == null) {
+      return new ArrayList<>();
+    }
+    List<URL> runtimeUrls = new ArrayList<>(runtimeClasspathElements.size());
+    for (Object runtimeClasspathElement : runtimeClasspathElements) {
+      String element = (String) runtimeClasspathElement;
+      runtimeUrls.add(new File(element).toURI().toURL());
     }
     return runtimeUrls;
   }

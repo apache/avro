@@ -52,6 +52,7 @@ namespace Avro.File
         private byte[] _syncBuffer;
         private long _blockStart;
         private Stream _stream;
+        private bool _leaveOpen;
         private Schema _readerSchema;
         private readonly CreateDatumReader _datumReaderFactory;
 
@@ -87,6 +88,17 @@ namespace Avro.File
         }
 
         /// <summary>
+        ///  Open a reader for a stream
+        /// </summary>
+        /// <param name="inStream"></param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
+        /// <returns></returns>
+        public static IFileReader<T> OpenReader(Stream inStream, bool leaveOpen)
+        {
+            return OpenReader(inStream, null, leaveOpen);
+        }
+
+        /// <summary>
         /// Open a reader for a stream using the reader's schema
         /// </summary>
         /// <param name="inStream">Stream containing the file contents</param>
@@ -98,6 +110,18 @@ namespace Avro.File
         }
 
         /// <summary>
+        /// Open a reader for a stream using the reader's schema
+        /// </summary>
+        /// <param name="inStream">Stream containing the file contents</param>
+        /// <param name="readerSchema">Schema used to read the file</param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
+        /// <returns>A new file reader</returns>
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, bool leaveOpen)
+        {
+            return OpenReader(inStream, readerSchema, CreateDefaultReader, leaveOpen);
+        }
+       
+        /// <summary>
         ///  Open a reader for a stream using the reader's schema and a custom DatumReader
         /// </summary>
         /// <param name="inStream">Stream of file contents</param>
@@ -106,28 +130,27 @@ namespace Avro.File
         /// <returns>A new file reader</returns>
         public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory)
         {
-            if (!inStream.CanSeek)
-                throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
-
-            if (inStream.Length < DataFileConstants.Magic.Length)
-                throw new AvroRuntimeException("Not an Avro data file");
-
-            // verify magic header
-            byte[] magic = new byte[DataFileConstants.Magic.Length];
-            inStream.Seek(0, SeekOrigin.Begin);
-            for (int c = 0; c < magic.Length; c = inStream.Read(magic, c, magic.Length - c)) { }
-            inStream.Seek(0, SeekOrigin.Begin);
-
-            if (magic.SequenceEqual(DataFileConstants.Magic))   // current format
-                return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory);         // (not supporting 1.2 or below, format)
-
-            throw new AvroRuntimeException("Not an Avro data file");
+            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, false);         // (not supporting 1.2 or below, format)
         }
 
-        DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory)
+        /// <summary>
+        ///  Open a reader for a stream using the reader's schema and a custom DatumReader
+        /// </summary>
+        /// <param name="inStream">Stream of file contents</param>
+        /// <param name="readerSchema">Schema used to read the file</param>
+        /// <param name="datumReaderFactory">Factory to create datum readers given a reader an writer schema</param>
+        /// <param name="leaveOpen">Leave the stream open after disposing the object</param>
+        /// <returns>A new file reader</returns>
+        public static IFileReader<T> OpenReader(Stream inStream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
+        {
+            return new DataFileReader<T>(inStream, readerSchema, datumReaderFactory, leaveOpen);         // (not supporting 1.2 or below, format)
+        }
+
+        DataFileReader(Stream stream, Schema readerSchema, CreateDatumReader datumReaderFactory, bool leaveOpen)
         {
             _readerSchema = readerSchema;
             _datumReaderFactory = datumReaderFactory;
+            _leaveOpen = leaveOpen;
             Init(stream);
             BlockFinished();
         }
@@ -191,6 +214,9 @@ namespace Avro.File
         /// <inheritdoc/>
         public void Seek(long position)
         {
+            if (!_stream.CanSeek)
+                throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
+
             _stream.Position = position;
             _decoder = new BinaryDecoder(_stream);
             _datumDecoder = null;
@@ -245,6 +271,8 @@ namespace Avro.File
         /// <inheritdoc/>
         public long PreviousSync()
         {
+            if (!_stream.CanSeek)
+                throw new AvroRuntimeException("Not a valid input stream - must be seekable!");
             return _blockStart;
         }
 
@@ -315,7 +343,11 @@ namespace Avro.File
         /// </param>
         protected virtual void Dispose(bool disposing)
         {
-            _stream.Close();
+            if (!_leaveOpen)
+                _stream.Close();
+
+            if (disposing && !_leaveOpen)
+                _stream.Dispose();
         }
 
         private void Init(Stream stream)
@@ -412,7 +444,8 @@ namespace Avro.File
 
         private void BlockFinished()
         {
-            _blockStart = _stream.Position;
+            if (_stream.CanSeek)
+                _blockStart = _stream.Position;
         }
 
         private DataBlock NextRawBlock(DataBlock reuse)
@@ -460,10 +493,27 @@ namespace Avro.File
                     return true;
 
                 // check to ensure still data to read
-                if (!DataLeft())
-                    return false;
+                if (_stream.CanSeek)
+                {
+                    if (!DataLeft())
+                        return false;
 
-                _blockRemaining = _decoder.ReadLong();      // read block count
+                    _blockRemaining = _decoder.ReadLong();      // read block count
+                }
+                else
+                {
+                    // when the stream is not seekable, the only way to know if there is still
+                    // some data to read is to reach the end and raise an AvroException here.
+                    try
+                    {
+                        _blockRemaining = _decoder.ReadLong();      // read block count
+                    }
+                    catch(AvroException)
+                    {
+                        return false;
+                    }
+                }
+
                 _blockSize = _decoder.ReadLong();           // read block size
                 if (_blockSize > System.Int32.MaxValue || _blockSize < 0)
                 {

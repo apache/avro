@@ -20,6 +20,7 @@ package org.apache.avro.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import java.util.ArrayList;
@@ -42,14 +43,15 @@ public class ByteBufferOutputStream extends OutputStream {
   public List<ByteBuffer> getBufferList() {
     List<ByteBuffer> result = buffers;
     reset();
-    for (ByteBuffer buffer : result)
+    for (Buffer buffer : result) {
       buffer.flip();
+    }
     return result;
   }
 
   /** Prepend a list of ByteBuffers to this stream. */
   public void prepend(List<ByteBuffer> lists) {
-    for (ByteBuffer buffer : lists) {
+    for (Buffer buffer : lists) {
       buffer.position(buffer.limit());
     }
     buffers.addAll(0, lists);
@@ -57,7 +59,7 @@ public class ByteBufferOutputStream extends OutputStream {
 
   /** Append a list of ByteBuffers to this stream. */
   public void append(List<ByteBuffer> lists) {
-    for (ByteBuffer buffer : lists) {
+    for (Buffer buffer : lists) {
       buffer.position(buffer.limit());
     }
     buffers.addAll(lists);

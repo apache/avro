@@ -97,6 +97,7 @@ public class TestTextFileTools {
       i++;
     }
     assertEquals(COUNT, i);
+    file.close();
   }
 
   @Test

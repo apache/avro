@@ -52,7 +52,7 @@ public class Ipc {
       if (!warned) {
         LoggerFactory.getLogger(Ipc.class)
             .error("Using Ipc.createServer to create http instances is deprecated.  Create "
-                + " an instace of org.apache.avro.ipc.jetty.HttpServer directly.");
+                + " an instance of org.apache.avro.ipc.jetty.HttpServer directly.");
         warned = true;
       }
       try {
