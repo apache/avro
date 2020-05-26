@@ -44,7 +44,7 @@ public class TestNettyTransceiverWhenFailsToConnect {
         Assert.fail("should have thrown an exception");
       }
     } finally {
-      Assert.assertTrue("Channel not shut down", channel.isShutdown());
+      Assert.assertTrue("Channel not shut down", channel == null || channel.isShutdown());
     }
   }
 }
