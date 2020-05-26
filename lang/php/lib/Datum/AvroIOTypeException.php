@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,23 +18,28 @@
  * limitations under the License.
  */
 
-namespace Apache\Avro\Tests;
+namespace Apache\Avro\Datum;
 
-use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\AvroException;
 use Apache\Avro\Schema\AvroSchema;
-use PHPUnit\Framework\TestCase;
 
-class IODatumReaderTest extends TestCase
+/**
+ * Exceptions arising from writing or reading Avro data.
+ *
+ * @package Avro
+ */
+class AvroIOTypeException extends AvroException
 {
-    public function testSchemaMatching()
+    /**
+     * @param AvroSchema $expectedSchema
+     * @param mixed $datum
+     */
+    public function __construct($expectedSchema, $datum)
     {
-        $writers_schema = <<<JSON
-      { "type": "map",
-        "values": "bytes" }
-JSON;
-        $readers_schema = $writers_schema;
-        $this->assertTrue(AvroIODatumReader::schemasMatch(
-            AvroSchema::parse($writers_schema),
-            AvroSchema::parse($readers_schema)));
+        parent::__construct(sprintf(
+            'The datum %s is not an example of schema %s',
+            var_export($datum, true),
+            $expectedSchema
+        ));
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,23 +18,14 @@
  * limitations under the License.
  */
 
-namespace Apache\Avro\Tests;
+namespace Apache\Avro\IO;
 
-use Apache\Avro\Datum\AvroIODatumReader;
-use Apache\Avro\Schema\AvroSchema;
-use PHPUnit\Framework\TestCase;
+use Apache\Avro\AvroException;
 
-class IODatumReaderTest extends TestCase
+/**
+ * Exceptions associated with AvroIO instances.
+ * @package Avro
+ */
+class AvroIOException extends AvroException
 {
-    public function testSchemaMatching()
-    {
-        $writers_schema = <<<JSON
-      { "type": "map",
-        "values": "bytes" }
-JSON;
-        $readers_schema = $writers_schema;
-        $this->assertTrue(AvroIODatumReader::schemasMatch(
-            AvroSchema::parse($writers_schema),
-            AvroSchema::parse($readers_schema)));
-    }
 }

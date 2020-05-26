@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,23 +18,31 @@
  * limitations under the License.
  */
 
-namespace Apache\Avro\Tests;
+namespace Apache\Avro\Datum;
 
-use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\AvroException;
 use Apache\Avro\Schema\AvroSchema;
-use PHPUnit\Framework\TestCase;
 
-class IODatumReaderTest extends TestCase
+/**
+ * Exceptions arising from incompatibility between
+ * reader and writer schemas.
+ *
+ * @package Avro
+ */
+class AvroIOSchemaMatchException extends AvroException
 {
-    public function testSchemaMatching()
+    /**
+     * @param AvroSchema $writers_schema
+     * @param AvroSchema $readers_schema
+     */
+    public function __construct($writers_schema, $readers_schema)
     {
-        $writers_schema = <<<JSON
-      { "type": "map",
-        "values": "bytes" }
-JSON;
-        $readers_schema = $writers_schema;
-        $this->assertTrue(AvroIODatumReader::schemasMatch(
-            AvroSchema::parse($writers_schema),
-            AvroSchema::parse($readers_schema)));
+        parent::__construct(
+            sprintf(
+                "Writer's schema %s and Reader's schema %s do not match.",
+                $writers_schema,
+                $readers_schema
+            )
+        );
     }
 }

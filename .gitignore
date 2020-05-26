@@ -26,3 +26,4 @@ test-output
 .coverage
 vendor
 composer.lock
+.phpunit.result.cache

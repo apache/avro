@@ -17,13 +17,17 @@
  * limitations under the License.
  */
 
-include __DIR__ . '/../vendor/autoload.php';
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    include __DIR__ . '/../vendor/autoload.php';
+} else {
+    include __DIR__ . '/../lib/autoload.php';
+}
 
 define('AVRO_TEST_HELPER_DIR', __DIR__);
 
 define('TEST_TEMP_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_TEST_HELPER_DIR, 'tmp']));
 
-define('AVRO_BASE_DIR', dirname(dirname(dirname(AVRO_TEST_HELPER_DIR))));
+define('AVRO_BASE_DIR', dirname(AVRO_TEST_HELPER_DIR, 3));
 define('AVRO_SHARE_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_BASE_DIR, 'share']));
 define('AVRO_BUILD_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_BASE_DIR, 'build']));
 define('AVRO_BUILD_DATA_DIR', implode(DIRECTORY_SEPARATOR, [AVRO_BUILD_DIR, 'interop', 'data']));
