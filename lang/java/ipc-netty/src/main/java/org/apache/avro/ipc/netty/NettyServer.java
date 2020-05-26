@@ -55,9 +55,9 @@ public class NettyServer implements Server {
   private final Responder responder;
 
   private final Channel serverChannel;
-  private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-  private final EventLoopGroup workerGroup = new NioEventLoopGroup(10);
-  private final EventLoopGroup callerGroup = new DefaultEventLoopGroup(16);
+  private final EventLoopGroup bossGroup;
+  private final EventLoopGroup workerGroup;
+  private final EventLoopGroup callerGroup;
   private final CountDownLatch closed = new CountDownLatch(1);
   private final AtomicInteger activeCount = new AtomicInteger(0);
 
@@ -67,8 +67,16 @@ public class NettyServer implements Server {
 
   public NettyServer(Responder responder, InetSocketAddress addr, final Consumer<SocketChannel> initializer)
       throws InterruptedException {
+    this(responder, addr, initializer, null, null, null);
+  }
+
+  public NettyServer(Responder responder, InetSocketAddress addr, final Consumer<SocketChannel> initializer,
+      EventLoopGroup bossGroup, EventLoopGroup workerGroup, EventLoopGroup callerGroup) throws InterruptedException {
+    this.bossGroup = bossGroup == null ? new NioEventLoopGroup(1) : bossGroup;
+    this.workerGroup = workerGroup == null ? new NioEventLoopGroup(10) : workerGroup;
+    this.callerGroup = callerGroup == null ? new DefaultEventLoopGroup(16) : callerGroup;
     this.responder = responder;
-    ServerBootstrap bootstrap = new ServerBootstrap().group(bossGroup, workerGroup)
+    ServerBootstrap bootstrap = new ServerBootstrap().group(this.bossGroup, this.workerGroup)
         .channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
           @Override
           public void initChannel(SocketChannel ch) throws Exception {
@@ -78,7 +86,8 @@ public class NettyServer implements Server {
             ch.pipeline().addLast("frameDecoder", new NettyFrameDecoder())
                 .addLast("frameEncoder", new NettyFrameEncoder()).addLast("handler", new NettyServerAvroHandler());
           }
-        }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
+        }).option(ChannelOption.SO_BACKLOG, 1024).childOption(ChannelOption.TCP_NODELAY, true)
+        .childOption(ChannelOption.SO_KEEPALIVE, true);
 
     serverChannel = bootstrap.bind(addr).sync().channel();
   }
