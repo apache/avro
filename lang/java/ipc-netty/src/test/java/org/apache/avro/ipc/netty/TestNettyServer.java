@@ -95,7 +95,7 @@ public class TestNettyServer {
     System.out.println("server port : " + serverPort);
 
     transceiver = new NettyTransceiver(new InetSocketAddress(serverPort), CONNECT_TIMEOUT_MILLIS,
-        transceiverInitializer);
+        transceiverInitializer, null);
     proxy = SpecificRequestor.getClient(Mail.class, transceiver);
   }
 

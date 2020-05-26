@@ -116,7 +116,7 @@ public class NettyTransceiver extends Transceiver {
    * @throws IOException if an error occurs connecting to the given address.
    */
   public NettyTransceiver(InetSocketAddress addr, Integer connectTimeoutMillis) throws IOException {
-    this(addr, connectTimeoutMillis, null);
+    this(addr, connectTimeoutMillis, null, null);
   }
 
   /**
@@ -129,7 +129,7 @@ public class NettyTransceiver extends Transceiver {
    * @throws IOException if an error occurs connecting to the given address.
    */
   public NettyTransceiver(InetSocketAddress addr, final Consumer<SocketChannel> initializer) throws IOException {
-    this(addr, DEFAULT_CONNECTION_TIMEOUT_MILLIS, initializer);
+    this(addr, DEFAULT_CONNECTION_TIMEOUT_MILLIS, initializer, null);
   }
 
   /**
@@ -140,12 +140,32 @@ public class NettyTransceiver extends Transceiver {
    *                             establishment in milliseconds, or null to use
    *                             {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
    * @param initializer          Consumer function to apply initial setup to the
-   *                             SocketChannel. Useablet to set things like SSL
+   *                             SocketChannel. Usable to set things like SSL
    *                             requirements, compression, etc...
    * @throws IOException if an error occurs connecting to the given address.
    */
   public NettyTransceiver(InetSocketAddress addr, Integer connectTimeoutMillis,
       final Consumer<SocketChannel> initializer) throws IOException {
+    this(addr, connectTimeoutMillis, initializer, null);
+  }
+
+  /**
+   * Creates a NettyTransceiver, and attempts to connect to the given address.
+   * 
+   * @param addr                 the address to connect to.
+   * @param connectTimeoutMillis maximum amount of time to wait for connection
+   *                             establishment in milliseconds, or null to use
+   *                             {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
+   * @param initializer          Consumer function to apply initial setup to the
+   *                             SocketChannel. Usable to set things like SSL
+   *                             requirements, compression, etc...
+   * @param bootStrapInitialzier Consumer function to apply initial setup to the
+   *                             Bootstrap. Usable to set things like tcp
+   *                             connection properties, nagle algorithm, etc...
+   * @throws IOException if an error occurs connecting to the given address.
+   */
+  public NettyTransceiver(InetSocketAddress addr, Integer connectTimeoutMillis,
+      final Consumer<SocketChannel> initializer, final Consumer<Bootstrap> bootStrapInitialzier) throws IOException {
     // Set up.
     if (connectTimeoutMillis == null) {
       connectTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT_MILLIS;
@@ -163,6 +183,9 @@ public class NettyTransceiver extends Transceiver {
                 .addLast("frameEncoder", new NettyFrameEncoder()).addLast("handler", createNettyClientAvroHandler());
           }
         });
+    if (bootStrapInitialzier != null) {
+      bootStrapInitialzier.accept(bootstrap);
+    }
 
     remoteAddr = addr;
 

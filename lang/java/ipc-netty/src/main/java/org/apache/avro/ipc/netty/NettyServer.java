@@ -67,11 +67,17 @@ public class NettyServer implements Server {
 
   public NettyServer(Responder responder, InetSocketAddress addr, final Consumer<SocketChannel> initializer)
       throws InterruptedException {
-    this(responder, addr, initializer, null, null, null);
+    this(responder, addr, initializer, null, null, null, null);
   }
 
   public NettyServer(Responder responder, InetSocketAddress addr, final Consumer<SocketChannel> initializer,
-      EventLoopGroup bossGroup, EventLoopGroup workerGroup, EventLoopGroup callerGroup) throws InterruptedException {
+      final Consumer<ServerBootstrap> bootStrapInitialzier) throws InterruptedException {
+    this(responder, addr, initializer, bootStrapInitialzier, null, null, null);
+  }
+
+  public NettyServer(Responder responder, InetSocketAddress addr, final Consumer<SocketChannel> initializer,
+      final Consumer<ServerBootstrap> bootStrapInitialzier, EventLoopGroup bossGroup, EventLoopGroup workerGroup,
+      EventLoopGroup callerGroup) throws InterruptedException {
     this.bossGroup = bossGroup == null ? new NioEventLoopGroup(1) : bossGroup;
     this.workerGroup = workerGroup == null ? new NioEventLoopGroup(10) : workerGroup;
     this.callerGroup = callerGroup == null ? new DefaultEventLoopGroup(16) : callerGroup;
@@ -89,6 +95,9 @@ public class NettyServer implements Server {
         }).option(ChannelOption.SO_BACKLOG, 1024).childOption(ChannelOption.TCP_NODELAY, true)
         .childOption(ChannelOption.SO_KEEPALIVE, true);
 
+    if (bootStrapInitialzier != null) {
+      bootStrapInitialzier.accept(bootstrap);
+    }
     serverChannel = bootstrap.bind(addr).sync().channel();
   }
 
