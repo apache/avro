@@ -31,6 +31,10 @@ public class LogicalTypes {
 
   public interface LogicalTypeFactory {
     LogicalType fromSchema(Schema schema);
+
+    default String getTypeName() {
+      throw new UnsupportedOperationException();
+    }
   }
 
   private static final Map<String, LogicalTypeFactory> REGISTERED_TYPES = new ConcurrentHashMap<>();
