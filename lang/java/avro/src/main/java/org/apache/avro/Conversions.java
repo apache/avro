@@ -116,20 +116,31 @@ public class Conversions {
       return new GenericData.Fixed(schema, bytes);
     }
 
-    private static BigDecimal validate(LogicalTypes.Decimal decimal, BigDecimal value) {
-      int scale = decimal.getScale();
-      int valueScale = value.scale();
-      if (valueScale > scale) {
-        throw new AvroTypeException("Cannot encode decimal with scale " + valueScale + " as scale " + scale);
-      } else if (valueScale < scale) {
-        value = value.setScale(scale, ROUND_UNNECESSARY);
+    private static BigDecimal validate(final LogicalTypes.Decimal decimal, BigDecimal value) {
+      final int scale = decimal.getScale();
+      final int valueScale = value.scale();
+
+      boolean scaleAdjusted = false;
+      if (valueScale != scale) {
+        try {
+          value = value.setScale(scale, ROUND_UNNECESSARY);
+          scaleAdjusted = true;
+        } catch (ArithmeticException aex) {
+          throw new AvroTypeException(
+              "Cannot encode decimal with scale " + valueScale + " as scale " + scale + " without rounding");
+        }
       }
 
       int precision = decimal.getPrecision();
       int valuePrecision = value.precision();
       if (valuePrecision > precision) {
-        throw new AvroTypeException(
-            "Cannot encode decimal with precision " + valuePrecision + " as max precision " + precision);
+        if (scaleAdjusted) {
+          throw new AvroTypeException("Cannot encode decimal with precision " + valuePrecision + " as max precision "
+              + precision + ". This is after safely adjusting scale from " + valueScale + " to required " + scale);
+        } else {
+          throw new AvroTypeException(
+              "Cannot encode decimal with precision " + valuePrecision + " as max precision " + precision);
+        }
       }
 
       return value;
