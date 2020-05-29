@@ -708,10 +708,7 @@ mod tests {
 
         assert_eq!(to_value(test.clone()).unwrap(), expected);
 
-        let test_inner = TestInner {
-            a: test.clone(),
-            b: 35,
-        };
+        let test_inner = TestInner { a: test, b: 35 };
 
         let expected_inner = Value::Record(vec![
             (

@@ -170,19 +170,19 @@ mod tests {
     #[test]
     fn test_zig_i64() {
         let mut s = Vec::new();
-        zig_i64(2147483647i64, &mut s);
+        zig_i64(std::i32::MAX as i64, &mut s);
         assert_eq!(s, [254, 255, 255, 255, 15]);
 
         s.clear();
-        zig_i64(2147483648i64, &mut s);
+        zig_i64(std::i32::MAX as i64 + 1, &mut s);
         assert_eq!(s, [128, 128, 128, 128, 16]);
 
         s.clear();
-        zig_i64(-2147483648i64, &mut s);
+        zig_i64(std::i32::MIN as i64, &mut s);
         assert_eq!(s, [255, 255, 255, 255, 15]);
 
         s.clear();
-        zig_i64(-2147483649i64, &mut s);
+        zig_i64(std::i32::MIN as i64 - 1, &mut s);
         assert_eq!(s, [129, 128, 128, 128, 16]);
 
         s.clear();
@@ -197,27 +197,27 @@ mod tests {
     #[test]
     fn test_zig_i32() {
         let mut s = Vec::new();
-        zig_i32(1073741823i32, &mut s);
+        zig_i32(std::i32::MAX / 2, &mut s);
         assert_eq!(s, [254, 255, 255, 255, 7]);
 
         s.clear();
-        zig_i32(-1073741824i32, &mut s);
+        zig_i32(std::i32::MIN / 2, &mut s);
         assert_eq!(s, [255, 255, 255, 255, 7]);
 
         s.clear();
-        zig_i32(1073741824i32, &mut s);
+        zig_i32(-(std::i32::MIN / 2), &mut s);
         assert_eq!(s, [128, 128, 128, 128, 8]);
 
         s.clear();
-        zig_i32(-1073741825i32, &mut s);
+        zig_i32(std::i32::MIN / 2 - 1, &mut s);
         assert_eq!(s, [129, 128, 128, 128, 8]);
 
         s.clear();
-        zig_i32(2147483647i32, &mut s);
+        zig_i32(std::i32::MAX, &mut s);
         assert_eq!(s, [254, 255, 255, 255, 15]);
 
         s.clear();
-        zig_i32(-2147483648i32, &mut s);
+        zig_i32(std::i32::MIN, &mut s);
         assert_eq!(s, [255, 255, 255, 255, 15]);
     }
 

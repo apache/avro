@@ -986,7 +986,6 @@ mod tests {
     fn resolve_decimal_invalid_scale() {
         let value = Value::Decimal(Decimal::from(vec![1]));
         assert!(value
-            .clone()
             .resolve(&Schema::Decimal {
                 precision: 2,
                 scale: 3,
@@ -999,7 +998,6 @@ mod tests {
     fn resolve_decimal_invalid_precision_for_length() {
         let value = Value::Decimal(Decimal::from((1u8..=8u8).rev().collect::<Vec<_>>()));
         assert!(value
-            .clone()
             .resolve(&Schema::Decimal {
                 precision: 1,
                 scale: 0,

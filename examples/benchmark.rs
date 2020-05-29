@@ -109,14 +109,14 @@ fn main() {
     big_record.put("address", address);
     let big_record = big_record.avro();
 
-    benchmark(&small_schema, &small_record, "S", 10000, 1);
-    benchmark(&big_schema, &big_record, "B", 10000, 1);
+    benchmark(&small_schema, &small_record, "S", 10_000, 1);
+    benchmark(&big_schema, &big_record, "B", 10_000, 1);
 
-    benchmark(&small_schema, &small_record, "S", 1, 100000);
+    benchmark(&small_schema, &small_record, "S", 1, 100_000);
     benchmark(&small_schema, &small_record, "S", 100, 1000);
-    benchmark(&small_schema, &small_record, "S", 10000, 10);
+    benchmark(&small_schema, &small_record, "S", 10_000, 10);
 
-    benchmark(&big_schema, &big_record, "B", 1, 100000);
+    benchmark(&big_schema, &big_record, "B", 1, 100_000);
     benchmark(&big_schema, &big_record, "B", 100, 1000);
-    benchmark(&big_schema, &big_record, "B", 10000, 10);
+    benchmark(&big_schema, &big_record, "B", 10_000, 10);
 }

@@ -709,10 +709,7 @@ mod tests {
             ("b".to_owned(), Value::Int(35)),
         ]);
 
-        let expected_inner = TestInner {
-            a: expected.clone(),
-            b: 35,
-        };
+        let expected_inner = TestInner { a: expected, b: 35 };
         let final_value: TestInner = from_value(&test_inner).unwrap();
         assert_eq!(final_value, expected_inner)
     }

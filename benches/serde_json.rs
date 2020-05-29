@@ -38,7 +38,7 @@ fn bench_read_json(
     c: &mut Criterion,
     make_record: impl Fn() -> Value,
     n_records: usize,
-    name: &'static str,
+    name: &str,
 ) {
     let records = std::iter::repeat(make_record())
         .take(n_records)
@@ -47,11 +47,11 @@ fn bench_read_json(
     c.bench_function(name, |b| b.iter(|| read_json(&bytes)));
 }
 
-fn bench_big_schema_json_read_10000_record(c: &mut Criterion) {
+fn bench_big_schema_json_read_10_000_record(c: &mut Criterion) {
     bench_read_json(
         c,
         &make_big_json_record,
-        10000,
+        10_000,
         "big schema, read 10k JSON records",
     );
 }
@@ -59,6 +59,6 @@ fn bench_big_schema_json_read_10000_record(c: &mut Criterion) {
 criterion_group!(
     name = benches;
     config = Criterion::default().sample_size(10);
-    targets = bench_big_schema_json_read_10000_record,
+    targets = bench_big_schema_json_read_10_000_record,
 );
 criterion_main!(benches);

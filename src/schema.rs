@@ -1105,7 +1105,7 @@ mod tests {
 
         let doc = match schema {
             Schema::Enum { doc, .. } => doc,
-            _ => return assert!(false),
+            _ => return,
         };
 
         assert!(doc.is_none());

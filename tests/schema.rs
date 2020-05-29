@@ -682,13 +682,10 @@ fn test_doc_attributes() {
     for (raw_schema, _) in DOC_EXAMPLES.iter() {
         let original_schema = Schema::parse_str(raw_schema).unwrap();
         assert_doc(&original_schema);
-        match original_schema {
-            Schema::Record { fields, .. } => {
-                for f in fields {
-                    assert_doc(&f.schema)
-                }
+        if let Schema::Record { fields, .. } = original_schema {
+            for f in fields {
+                assert_doc(&f.schema)
             }
-            _ => (),
         }
     }
 }

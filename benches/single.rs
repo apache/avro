@@ -6,7 +6,7 @@ use avro_rs::{
     types::{Record, ToAvro, Value},
 };
 
-static RAW_SMALL_SCHEMA: &'static str = r#"
+const RAW_SMALL_SCHEMA: &str = r#"
 {
   "namespace": "test",
   "type": "record",
@@ -22,7 +22,7 @@ static RAW_SMALL_SCHEMA: &'static str = r#"
 }
 "#;
 
-static RAW_BIG_SCHEMA: &'static str = r#"
+const RAW_BIG_SCHEMA: &str = r#"
 {
   "namespace": "my.example",
   "type": "record",
@@ -87,7 +87,7 @@ static RAW_BIG_SCHEMA: &'static str = r#"
 }
 "#;
 
-static RAW_ADDRESS_SCHEMA: &'static str = r#"
+const RAW_ADDRESS_SCHEMA: &str = r#"
 {
   "fields": [
     {
