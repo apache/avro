@@ -39,7 +39,7 @@
 
     <!-- version properties for dependencies -->
 
-    <hadoop.version>2.7.7</hadoop.version>
+    <hadoop.version>3.2.1</hadoop.version>
     <jackson.version>2.10.4</jackson.version>
     <jackson.databind.version>2.10.4</jackson.databind.version>
     <servlet-api.version>4.0.1</servlet-api.version>
