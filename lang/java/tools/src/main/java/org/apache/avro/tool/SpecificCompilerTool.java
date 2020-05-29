@@ -68,17 +68,16 @@ public class SpecificCompilerTool implements Tool {
     Optional<FieldVisibility> fieldVisibility = Optional.empty();
 
     int arg = 0;
-    int counter = 0;
 
-    if (args.contains("-encoding")) {
-      arg = args.indexOf("-encoding") + 1;
+    if ("-encoding".equals(args.get(arg))) {
+      arg++;
       encoding = Optional.of(args.get(arg));
-      counter = counter + 2;
+      arg++;
     }
 
-    if (args.contains("-string")) {
+    if ("-string".equals(args.get(arg))) {
       stringType = StringType.String;
-      counter = counter + 1;
+      arg++;
     }
 
     if ("-fieldVisibility".equals(args.get(arg))) {
@@ -94,15 +93,15 @@ public class SpecificCompilerTool implements Tool {
 
     if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
       useLogicalDecimal = true;
-      counter = counter + 1;
+      arg++;
     }
 
-    if (args.contains("-templateDir")) {
-      arg = args.indexOf("-templateDir") + 1;
+    if ("-templateDir".equals(args.get(arg))) {
+      arg++;
       templateDir = Optional.of(args.get(arg));
-      counter = counter + 2;
+      arg++;
     }
-    arg = counter;
+
     String method = args.get(arg);
     List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
