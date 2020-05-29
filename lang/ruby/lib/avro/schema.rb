@@ -81,7 +81,8 @@ module Avro
           when :record, :error
             fields = json_obj['fields']
             doc    = json_obj['doc']
-            return RecordSchema.new(name, namespace, fields, names, type_sym, doc)
+            non_spec_metadata = RecordSchema.extract_non_spec_metadata(json_obj)
+            return RecordSchema.new(name, namespace, fields, names, type_sym, doc, non_spec_metadata)
           else
             raise SchemaParseError.new("Unknown named type: #{type}")
           end
@@ -257,7 +258,7 @@ module Avro
     end
 
     class RecordSchema < NamedSchema
-      attr_reader :fields, :doc
+      attr_reader :fields, :doc, :non_spec_metadata
 
       def self.make_field_objects(field_data, names, namespace=nil)
         field_objects, field_names = [], Set.new
@@ -268,7 +269,8 @@ module Avro
             default = field.key?('default') ? field['default'] : :no_default
             order = field['order']
             doc = field['doc']
-            new_field = Field.new(type, name, default, order, names, namespace, doc)
+            non_spec_metadata = Field.extract_non_spec_metadata(field)
+            new_field = Field.new(type, name, default, order, names, namespace, doc, non_spec_metadata)
             # make sure field name has not been used yet
             if field_names.include?(new_field.name)
               raise SchemaParseError, "Field name #{new_field.name.inspect} is already in use"
@@ -282,7 +284,16 @@ module Avro
         field_objects
       end
 
-      def initialize(name, namespace, fields, names=nil, schema_type=:record, doc=nil)
+      RESERVED_WORDS = %w(aliases doc fields name namespace)
+
+      def self.extract_non_spec_metadata(record_specification)
+        (record_specification.keys - RESERVED_WORDS).reduce({}) do |metadata, key|
+          metadata[key] = record_specification[key]
+          metadata
+        end
+      end
+
+      def initialize(name, namespace, fields, names=nil, schema_type=:record, doc=nil, non_spec_metadata={})
         if schema_type == :request || schema_type == 'request'
           @type_sym = schema_type.to_sym
           @namespace = namespace
@@ -296,6 +307,7 @@ module Avro
                   else
                     {}
                   end
+        @non_spec_metadata = non_spec_metadata
       end
 
       def fields_hash
@@ -309,7 +321,7 @@ module Avro
         if type_sym == :request
           hsh['fields']
         else
-          hsh
+          non_spec_metadata.merge(hsh)
         end
       end
     end
@@ -460,14 +472,24 @@ module Avro
     end
 
     class Field < Schema
-      attr_reader :type, :name, :default, :order, :doc
+      RESERVED_WORDS = %w(aliases default doc items logicalType name namespace order precision scale size symbols type values)
 
-      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil)
+      def self.extract_non_spec_metadata(field_specification)
+        (field_specification.keys - RESERVED_WORDS).reduce({}) do |metadata, key|
+          metadata[key] = field_specification[key]
+          metadata
+        end
+      end
+
+      attr_reader :type, :name, :default, :order, :doc, :non_spec_metadata
+
+      def initialize(type, name, default=:no_default, order=nil, names=nil, namespace=nil, doc=nil, non_spec_metadata={})
         @type = subparse(type, names, namespace)
         @name = name
         @default = default
         @order = order
         @doc = doc
+        @non_spec_metadata = non_spec_metadata
         validate_default! if default? && !Avro.disable_field_default_validation
       end
 
@@ -476,7 +498,7 @@ module Avro
       end
 
       def to_avro(names=Set.new)
-        {'name' => name, 'type' => type.to_avro(names)}.tap do |avro|
+        non_spec_metadata.merge('name' => name, 'type' => type.to_avro(names)).tap do |avro|
           avro['default'] = default if default?
           avro['order'] = order if order
           avro['doc'] = doc if doc
