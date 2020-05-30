@@ -39,8 +39,12 @@ class TestSchemaCompatibility < Test::Unit::TestCase
       long_map_schema, int_map_schema,
 
       enum1_ab_schema, enum1_ab_schema,
+      enum1_ab_aliased_schema, enum1_ab_schema,
       enum1_abc_schema, enum1_ab_schema,
       enum1_ab_default_schema, enum1_abc_schema,
+
+      fixed1_schema, fixed1_schema,
+      fixed1_aliased_schema, fixed1_schema,
 
       string_schema, bytes_schema,
       bytes_schema, string_schema,
@@ -56,6 +60,7 @@ class TestSchemaCompatibility < Test::Unit::TestCase
 
       empty_record1_schema, empty_record1_schema,
       empty_record1_schema, a_int_record1_schema,
+      empty_record1_aliased_schema, empty_record1_schema,
 
       a_int_record1_schema, a_int_record1_schema,
       a_dint_record1_schema, a_int_record1_schema,
@@ -118,16 +123,22 @@ class TestSchemaCompatibility < Test::Unit::TestCase
       int_map_schema, long_map_schema,
 
       enum1_ab_schema, enum1_abc_schema,
+      enum1_ab_schema, enum1_ab_aliased_schema,
       enum1_bc_schema, enum1_abc_schema,
 
       enum1_ab_schema, enum2_ab_schema,
       int_schema, enum2_ab_schema,
       enum2_ab_schema, int_schema,
 
+      fixed1_schema, fixed2_schema,
+      fixed1_schema, fixed1_size3_schema,
+      fixed1_schema, fixed1_aliased_schema,
+
       int_union_schema, int_string_union_schema,
       string_union_schema, int_string_union_schema,
 
       empty_record2_schema, empty_record1_schema,
+      empty_record1_schema, empty_record1_aliased_schema,
       a_int_record1_schema, empty_record1_schema,
       a_int_b_dint_record1_schema, empty_record1_schema,
 
@@ -163,6 +174,17 @@ class TestSchemaCompatibility < Test::Unit::TestCase
   def test_missing_second_field
     reader_schema = Avro::Schema.parse <<-SCHEMA
       {"type":"record", "name":"Record", "fields":[
+        {"name":"oldfield2", "type":"string"}
+      ]}
+    SCHEMA
+    assert_true(can_read?(writer_schema, reader_schema))
+    assert_false(can_read?(reader_schema, writer_schema))
+  end
+
+  def test_aliased_field
+    reader_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Record", "fields":[
+        {"name":"newname1", "aliases":["oldfield1"], "type":"int"},
         {"name":"oldfield2", "type":"string"}
       ]}
     SCHEMA
@@ -249,6 +271,23 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     SCHEMA
     assert_false(can_read?(enum_schema2, enum_schema1))
     assert_true(can_read?(enum_schema1, enum_schema2))
+  end
+
+  def test_crossed_aliases
+    writer_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Record", "fields":[
+        {"name":"field1", "type": "int"},
+        {"name":"field2", "type": "string"}
+      ]}
+    SCHEMA
+    reader_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Record", "fields":[
+        {"name":"field1", "aliases":["field2"], "type":"string"},
+        {"name":"field2", "aliases":["field1"], "type":"int"}
+      ]}
+    SCHEMA
+    # Not supported; alias is not used if there is a redirect match
+    assert_false(can_read?(writer_schema, reader_schema))
   end
 
   # Tests from lang/java/avro/src/test/java/org/apache/avro/io/parsing/TestResolvingGrammarGenerator2.java
@@ -378,6 +417,10 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     Avro::Schema.parse('{"type":"enum", "name":"Enum1", "symbols":["A","B"], "default":"A"}')
   end
 
+  def enum1_ab_aliased_schema
+    Avro::Schema.parse('{"type":"enum", "name":"Enum2", "aliases":["Enum1"], "symbols":["A","B"]}')
+  end
+
   def enum1_abc_schema
     Avro::Schema.parse('{"type":"enum", "name":"Enum1", "symbols":["A","B","C"]}')
   end
@@ -390,8 +433,28 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     Avro::Schema.parse('{"type":"enum", "name":"Enum2", "symbols":["A","B"]}')
   end
 
+  def fixed1_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed1", "size": 2}')
+  end
+
+  def fixed1_aliased_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed2", "aliases":["Fixed1"], "size": 2}')
+  end
+
+  def fixed2_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed2", "size": 2}')
+  end
+
+  def fixed1_size3_schema
+    Avro::Schema.parse('{"type":"fixed", "name":"Fixed1", "size": 3}')
+  end
+
   def empty_record1_schema
     Avro::Schema.parse('{"type":"record", "name":"Record1"}')
+  end
+
+  def empty_record1_aliased_schema
+    Avro::Schema.parse('{"type":"record", "name":"Record2", "aliases":["Record1"]}')
   end
 
   def empty_record2_schema
