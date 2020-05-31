@@ -39,7 +39,7 @@ fn benchmark(schema: &Schema, record: &Value, s: &str, count: usize, runs: usize
         let duration = Instant::now().duration_since(start);
         durations.push(duration);
 
-        bytes = Some(writer.into_inner());
+        bytes = Some(writer.into_inner().unwrap());
     }
 
     let total_duration_write = durations.into_iter().fold(0u64, |a, b| a + nanos(b));

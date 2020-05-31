@@ -258,10 +258,11 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Return what the `Writer` is writing to, consuming the `Writer` itself.
     ///
-    /// **NOTE** This function doesn't guarantee that everything gets written before consuming the
-    /// buffer. Please call [`flush`](struct.Writer.html#method.flush) before.
-    pub fn into_inner(self) -> W {
-        self.writer
+    /// **NOTE** This function forces the written data to be flushed (an implicit
+    /// call to [`flush`](struct.Writer.html#method.flush) is performed).
+    pub fn into_inner(mut self) -> Result<W, Error> {
+        self.flush()?;
+        Ok(self.writer)
     }
 
     /// Generate and append synchronization marker to the payload.
@@ -559,7 +560,7 @@ mod tests {
         let n1 = writer.append(record.clone()).unwrap();
         let n2 = writer.append(record.clone()).unwrap();
         let n3 = writer.flush().unwrap();
-        let result = writer.into_inner();
+        let result = writer.into_inner().unwrap();
 
         assert_eq!(n1 + n2 + n3, result.len());
 
@@ -592,7 +593,7 @@ mod tests {
 
         let n1 = writer.extend(records.into_iter()).unwrap();
         let n2 = writer.flush().unwrap();
-        let result = writer.into_inner();
+        let result = writer.into_inner().unwrap();
 
         assert_eq!(n1 + n2, result.len());
 
@@ -630,7 +631,7 @@ mod tests {
 
         let n1 = writer.append_ser(record).unwrap();
         let n2 = writer.flush().unwrap();
-        let result = writer.into_inner();
+        let result = writer.into_inner().unwrap();
 
         assert_eq!(n1 + n2, result.len());
 
@@ -663,7 +664,7 @@ mod tests {
 
         let n1 = writer.extend_ser(records.into_iter()).unwrap();
         let n2 = writer.flush().unwrap();
-        let result = writer.into_inner();
+        let result = writer.into_inner().unwrap();
 
         assert_eq!(n1 + n2, result.len());
 
@@ -704,7 +705,7 @@ mod tests {
         let n1 = writer.append(record.clone()).unwrap();
         let n2 = writer.append(record.clone()).unwrap();
         let n3 = writer.flush().unwrap();
-        let result = writer.into_inner();
+        let result = writer.into_inner().unwrap();
 
         assert_eq!(n1 + n2 + n3, result.len());
 
@@ -779,7 +780,7 @@ mod tests {
         let n1 = writer.append(record1).unwrap();
         let n2 = writer.append(record2).unwrap();
         let n3 = writer.flush().unwrap();
-        let result = writer.into_inner();
+        let result = writer.into_inner().unwrap();
 
         assert_eq!(n1 + n2 + n3, result.len());
 

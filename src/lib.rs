@@ -129,11 +129,10 @@
 //! // schema validation happens here
 //! writer.append(record).unwrap();
 //!
-//! // flushing makes sure that all data gets encoded
-//! writer.flush().unwrap();
-//!
 //! // this is how to get back the resulting avro bytecode
-//! let encoded = writer.into_inner();
+//! // this performs a flush operation to make sure data has been written, so it can fail
+//! // you can also call `writer.flush()` yourself without consuming the writer
+//! let encoded = writer.into_inner().unwrap();
 //! ```
 //!
 //! The vast majority of the times, schemas tend to define a record as a top-level container
@@ -186,10 +185,9 @@
 //! // schema validation happens here
 //! writer.append_ser(test).unwrap();
 //!
-//! // flushing makes sure that all data gets encoded
-//! writer.flush().unwrap();
-//!
 //! // this is how to get back the resulting avro bytecode
+//! // this performs a flush operation to make sure data is written, so it can fail
+//! // you can also call `writer.flush()` yourself without consuming the writer
 //! let encoded = writer.into_inner();
 //! ```
 //!
@@ -261,8 +259,7 @@
 //! # record.put("a", 27i64);
 //! # record.put("b", "foo");
 //! # writer.append(record).unwrap();
-//! # writer.flush().unwrap();
-//! # let input = writer.into_inner();
+//! # let input = writer.into_inner().unwrap();
 //! // reader creation can fail in case the input to read from is not Avro-compatible or malformed
 //! let reader = Reader::new(&input[..]).unwrap();
 //! ```
@@ -291,8 +288,7 @@
 //! # record.put("a", 27i64);
 //! # record.put("b", "foo");
 //! # writer.append(record).unwrap();
-//! # writer.flush().unwrap();
-//! # let input = writer.into_inner();
+//! # let input = writer.into_inner().unwrap();
 //!
 //! let reader_raw_schema = r#"
 //!     {
@@ -352,8 +348,7 @@
 //! # record.put("a", 27i64);
 //! # record.put("b", "foo");
 //! # writer.append(record).unwrap();
-//! # writer.flush().unwrap();
-//! # let input = writer.into_inner();
+//! # let input = writer.into_inner().unwrap();
 //! let reader = Reader::new(&input[..]).unwrap();
 //!
 //! // value is a Result  of an Avro Value in case the read operation fails
@@ -399,8 +394,7 @@
 //! #     b: "foo".to_owned(),
 //! # };
 //! # writer.append_ser(test).unwrap();
-//! # writer.flush().unwrap();
-//! # let input = writer.into_inner();
+//! # let input = writer.into_inner().unwrap();
 //! let reader = Reader::new(&input[..]).unwrap();
 //!
 //! // value is a Result in case the read operation fails
@@ -456,9 +450,7 @@
 //!
 //!     writer.append_ser(test)?;
 //!
-//!     writer.flush()?;
-//!
-//!     let input = writer.into_inner();
+//!     let input = writer.into_inner()?;
 //!     let reader = Reader::with_schema(&schema, &input[..])?;
 //!
 //!     for record in reader {
@@ -573,9 +565,8 @@
 //!     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
 //!
 //!     writer.append(record)?;
-//!     writer.flush()?;
 //!
-//!     let input = writer.into_inner();
+//!     let input = writer.into_inner()?;
 //!     let reader = Reader::with_schema(&schema, &input[..])?;
 //!
 //!     for record in reader {
@@ -756,8 +747,7 @@ mod tests {
         record.put("a", 27i64);
         record.put("b", "foo");
         writer.append(record).unwrap();
-        writer.flush().unwrap();
-        let input = writer.into_inner();
+        let input = writer.into_inner().unwrap();
         let mut reader = Reader::with_schema(&reader_schema, &input[..]).unwrap();
         assert_eq!(
             reader.next().unwrap().unwrap(),
@@ -799,8 +789,7 @@ mod tests {
         record.put("b", "foo");
         record.put("c", "clubs");
         writer.append(record).unwrap();
-        writer.flush().unwrap();
-        let input = writer.into_inner();
+        let input = writer.into_inner().unwrap();
         let mut reader = Reader::with_schema(&schema, &input[..]).unwrap();
         assert_eq!(
             reader.next().unwrap().unwrap(),
@@ -862,8 +851,7 @@ mod tests {
         record.put("b", "foo");
         record.put("c", "clubs");
         writer.append(record).unwrap();
-        writer.flush().unwrap();
-        let input = writer.into_inner();
+        let input = writer.into_inner().unwrap();
         let mut reader = Reader::with_schema(&reader_schema, &input[..]).unwrap();
         assert!(reader.next().unwrap().is_err());
         assert!(reader.next().is_none());
@@ -898,8 +886,7 @@ mod tests {
         record.put("b", "foo");
         record.put("c", "clubs");
         writer.append(record).unwrap();
-        writer.flush().unwrap();
-        let input = writer.into_inner();
+        let input = writer.into_inner().unwrap();
         let mut reader = Reader::new(&input[..]).unwrap();
         assert_eq!(
             reader.next().unwrap().unwrap(),

@@ -124,11 +124,10 @@ record.put("b", "foo");
 // schema validation happens here
 writer.append(record).unwrap();
 
-// flushing makes sure that all data gets encoded
-writer.flush().unwrap();
-
 // this is how to get back the resulting avro bytecode
-let encoded = writer.into_inner();
+// this performs a flush operation to make sure data has been written, so it can fail
+// you can also call `writer.flush()` yourself without consuming the writer
+let encoded = writer.into_inner().unwrap();
 ```
 
 The vast majority of the times, schemas tend to define a record as a top-level container
@@ -168,10 +167,9 @@ let test = Test {
 // schema validation happens here
 writer.append_ser(test).unwrap();
 
-// flushing makes sure that all data gets encoded
-writer.flush().unwrap();
-
 // this is how to get back the resulting avro bytecode
+// this performs a flush operation to make sure data is written, so it can fail
+// you can also call `writer.flush()` yourself without consuming the writer
 let encoded = writer.into_inner();
 ```
 
@@ -340,9 +338,7 @@ fn main() -> Result<(), Error> {
 
     writer.append_ser(test)?;
 
-    writer.flush()?;
-
-    let input = writer.into_inner();
+    let input = writer.into_inner()?;
     let reader = Reader::with_schema(&schema, &input[..])?;
 
     for record in reader {
@@ -457,9 +453,8 @@ fn main() -> Result<(), Error> {
     record.put("duration", Duration::new(Months::new(6), Days::new(7), Millis::new(8)));
 
     writer.append(record)?;
-    writer.flush()?;
 
-    let input = writer.into_inner();
+    let input = writer.into_inner()?;
     let reader = Reader::with_schema(&schema, &input[..])?;
 
     for record in reader {
