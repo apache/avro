@@ -140,6 +140,22 @@ impl PartialEq for Schema {
     }
 }
 
+impl SchemaKind {
+    pub fn is_primitive(self) -> bool {
+        match self {
+            SchemaKind::Null
+            | SchemaKind::Boolean
+            | SchemaKind::Int
+            | SchemaKind::Long
+            | SchemaKind::Double
+            | SchemaKind::Float
+            | SchemaKind::Bytes
+            | SchemaKind::String => true,
+            _ => false,
+        }
+    }
+}
+
 impl<'a> From<&'a types::Value> for SchemaKind {
     fn from(value: &'a types::Value) -> Self {
         use crate::types::Value;
@@ -314,7 +330,7 @@ impl RecordField {
 
 #[derive(Debug, Clone)]
 pub struct UnionSchema {
-    schemas: Vec<Schema>,
+    pub(crate) schemas: Vec<Schema>,
     // Used to ensure uniqueness of schema inputs, and provide constant time finding of the
     // schema index given a value.
     // **NOTE** that this approach does not work for named types, and will have to be modified

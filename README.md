@@ -533,6 +533,41 @@ max_allocation_bytes(2 * 1024 * 1024 * 1024);  // 2GB
 
 ```
 
+### Check schemas compatibility
+
+This library supports checking for schemas compatibility.
+
+Note: It does not yet support named schemas (more on
+https://github.com/flavray/avro-rs/pull/76).
+
+Examples of checking for compatibility:
+
+1. Compatible schemas
+
+Explanation: an int array schema can be read by a long array schema- an int
+(32bit signed integer) fits into a long (64bit signed integer)
+
+```rust
+use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+
+let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
+let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
+assert_eq!(true, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+```
+
+2. Incompatible schemas (a long array schema cannot be read by an int array schema)
+
+Explanation: a long array schema cannot be read by an int array schema- a
+long (64bit signed integer) does not fit into an int (32bit signed integer)
+
+```rust
+use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+
+let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
+let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
+assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+```
+
 ## License
 This project is licensed under [MIT License](https://github.com/flavray/avro-rs/blob/master/LICENSE).
 Please note that this is not an official project maintained by [Apache Avro](https://avro.apache.org/).

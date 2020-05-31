@@ -648,6 +648,41 @@
 //! // ... happily decode large data
 //!
 //! ```
+//!
+//! ## Check schemas compatibility
+//!
+//! This library supports checking for schemas compatibility.
+//!
+//! Note: It does not yet support named schemas (more on
+//! https://github.com/flavray/avro-rs/pull/76).
+//!
+//! Examples of checking for compatibility:
+//!
+//! 1. Compatible schemas
+//!
+//! Explanation: an int array schema can be read by a long array schema- an int
+//! (32bit signed integer) fits into a long (64bit signed integer)
+//!
+//! ```rust
+//! use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+//!
+//! let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
+//! let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
+//! assert_eq!(true, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+//! ```
+//!
+//! 2. Incompatible schemas (a long array schema cannot be read by an int array schema)
+//!
+//! Explanation: a long array schema cannot be read by an int array schema- a
+//! long (64bit signed integer) does not fit into an int (32bit signed integer)
+//!
+//! ```rust
+//! use avro_rs::{Schema, schema_compatibility::SchemaCompatibility};
+//!
+//! let writers_schema = Schema::parse_str(r#"{"type": "array", "items":"long"}"#).unwrap();
+//! let readers_schema = Schema::parse_str(r#"{"type": "array", "items":"int"}"#).unwrap();
+//! assert_eq!(false, SchemaCompatibility::can_read(&writers_schema, &readers_schema));
+//! ```
 
 mod codec;
 mod de;
@@ -661,6 +696,7 @@ mod util;
 mod writer;
 
 pub mod schema;
+pub mod schema_compatibility;
 pub mod types;
 
 pub use crate::codec::Codec;
