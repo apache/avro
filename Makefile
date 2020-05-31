@@ -18,6 +18,7 @@ $(HOOKS): $(VENV) .pre-commit-config.yaml
 	$(VENV)/bin/pre-commit install -f --install-hooks
 	cargo fmt --help > /dev/null || rustup component add rustfmt
 	cargo clippy --help > /dev/null || rustup component add clippy
+	cargo readme --help > /dev/null || cargo install cargo-readme
 
 .PHONY: install-hooks
 install-hooks: $(HOOKS)
@@ -62,6 +63,11 @@ doc:
 .PHONY: doc-local
 doc-local:
 	cargo doc --no-deps --all-features --open
+
+.PHONY: readme
+readme:
+	cargo readme > README.md
+
 
 # BUILDING
 
