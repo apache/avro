@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.EOFException;
 import java.net.Proxy;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -106,9 +107,9 @@ public class HttpTransceiver extends Transceiver {
         int i = in.read(buffer.array(), p, buffer.remaining());
         if (i < 0)
           throw new EOFException("Unexpected EOF");
-        buffer.position(p + i);
+        ((Buffer) buffer).position(p + i);
       }
-      buffer.flip();
+      ((Buffer) buffer).flip();
       buffers.add(buffer);
     }
   }
@@ -117,7 +118,7 @@ public class HttpTransceiver extends Transceiver {
     for (ByteBuffer buffer : buffers) {
       writeLength(buffer.limit(), out); // length-prefix
       out.write(buffer.array(), buffer.position(), buffer.remaining());
-      buffer.position(buffer.limit());
+      ((Buffer) buffer).position(buffer.limit());
     }
     writeLength(0, out); // null-terminate
   }

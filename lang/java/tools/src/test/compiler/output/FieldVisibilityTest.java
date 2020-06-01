@@ -103,7 +103,7 @@ public class FieldVisibilityTest extends org.apache.avro.specific.SpecificRecord
     case 0: return name;
     case 1: return favorite_number;
     case 2: return favorite_color;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -114,7 +114,7 @@ public class FieldVisibilityTest extends org.apache.avro.specific.SpecificRecord
     case 0: name = (java.lang.CharSequence)value$; break;
     case 1: favorite_number = (java.lang.Integer)value$; break;
     case 2: favorite_color = (java.lang.CharSequence)value$; break;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 

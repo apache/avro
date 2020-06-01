@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
@@ -71,7 +72,7 @@ public class TestAllCodecs {
     ByteBuffer decompressedBuffer = codecInstance.decompress(compressedBuffer);
 
     // Validate the the input and output are equal.
-    inputByteBuffer.rewind();
+    ((Buffer) inputByteBuffer).rewind();
     assertEquals(decompressedBuffer, inputByteBuffer);
   }
 
@@ -82,7 +83,7 @@ public class TestAllCodecs {
 
     Codec codecInstance = getCodec(codec);
     ByteBuffer partialBuffer = ByteBuffer.wrap(input);
-    partialBuffer.position(17);
+    ((Buffer) partialBuffer).position(17);
 
     ByteBuffer inputByteBuffer = partialBuffer.slice();
     ByteBuffer compressedBuffer = codecInstance.compress(inputByteBuffer);
@@ -94,16 +95,16 @@ public class TestAllCodecs {
 
     // Create a slice from the compressed buffer
     ByteBuffer sliceBuffer = ByteBuffer.allocate(compressedSize + 100);
-    sliceBuffer.position(50);
+    ((Buffer) sliceBuffer).position(50);
     sliceBuffer.put(compressedBuffer);
-    sliceBuffer.limit(compressedSize + 50);
-    sliceBuffer.position(50);
+    ((Buffer) sliceBuffer).limit(compressedSize + 50);
+    ((Buffer) sliceBuffer).position(50);
 
     // Decompress the data
     ByteBuffer decompressedBuffer = codecInstance.decompress(sliceBuffer.slice());
 
     // Validate the the input and output are equal.
-    inputByteBuffer.rewind();
+    ((Buffer) inputByteBuffer).rewind();
     assertEquals(decompressedBuffer, inputByteBuffer);
   }
 

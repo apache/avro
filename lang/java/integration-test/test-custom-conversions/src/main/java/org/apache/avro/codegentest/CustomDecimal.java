@@ -45,6 +45,10 @@ public class CustomDecimal implements Comparable<CustomDecimal> {
 
   }
 
+  int signum() {
+    return internalValue.signum();
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)

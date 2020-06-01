@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,31 +16,23 @@
  * limitations under the License.
  */
 
-package org.apache.avro.ipc.netty;
+package org.apache.avro.codegentest;
 
-import java.net.InetSocketAddress;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
+import org.apache.avro.Schema;
 
-import org.apache.avro.TestProtocolSpecific;
-import org.apache.avro.ipc.Responder;
-import org.apache.avro.ipc.Server;
-import org.apache.avro.ipc.Transceiver;
+public class FixedSizeStringFactory implements LogicalTypes.LogicalTypeFactory {
 
-/**
- * Protocol test with Netty server and transceiver
- */
-public class TestProtocolNetty extends TestProtocolSpecific {
+  public static final String NAME = "fixed-size-string";
+
   @Override
-  public Server createServer(Responder testResponder) throws Exception {
-    return new NettyServer(responder, new InetSocketAddress(0));
+  public LogicalType fromSchema(Schema schema) {
+    return new FixedSizeStringLogicalType(schema);
   }
 
   @Override
-  public Transceiver createTransceiver() throws Exception {
-    return new NettyTransceiver(new InetSocketAddress(server.getPort()), 2000);
-  }
-
-  @Override
-  protected int getExpectedHandshakeCount() {
-    return REPEATING;
+  public String getTypeName() {
+    return NAME;
   }
 }

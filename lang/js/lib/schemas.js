@@ -1713,7 +1713,7 @@ RecordType.prototype._copy = function (val, opts) {
   var i, l, field, value;
   for (i = 0, l = this._fields.length; i < l; i++) {
     field = this._fields[i];
-    value = field._type._copy(val[field._name], opts);
+    value = field._type._copy(typeof val[field._name] == 'undefined' ? field.getDefault() : val[field._name], opts);
     if (hook) {
       value = hook(field, value, this);
     }

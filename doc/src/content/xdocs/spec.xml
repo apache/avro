@@ -1523,6 +1523,13 @@ void initFPTable() {
         <p>
           A <code>date</code> logical type annotates an Avro <code>int</code>, where the int stores the number of days from the unix epoch, 1 January 1970 (ISO calendar).
         </p>
+        <p>The following schema represents a date:</p>
+        <source>
+{
+  "type": "int",
+  "logicalType": "date"
+}
+        </source>
       </section>
 
       <section>

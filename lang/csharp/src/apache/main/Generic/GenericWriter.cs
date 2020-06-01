@@ -242,7 +242,7 @@ namespace Avro.Generic
         protected virtual object GetField(object value, string fieldName, int fieldPos)
         {
             GenericRecord d = value as GenericRecord;
-            return d[fieldName];
+            return d.GetValue(fieldPos);
         }
 
         /// <summary>

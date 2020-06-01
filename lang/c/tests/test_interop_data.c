@@ -94,12 +94,6 @@ int main(int argc, char *argv[])
         size_t size = strlen(argv[1]) + d_name_len + 2;
         char* path = malloc(sizeof(char) * size);
         sprintf(path, "%s/%s", argv[1], d_name);
-        if (avro_file_reader(path, &reader))
-        {
-            fprintf(stderr, "Failed to read from a file: %s\n", path);
-            free(path);
-            return EXIT_FAILURE;
-        }
 
         if (!should_test(d_name))
         {
@@ -109,6 +103,12 @@ int main(int argc, char *argv[])
         }
         printf("Checking file: %s\n", path);
 
+        if (avro_file_reader(path, &reader))
+        {
+            fprintf(stderr, "Failed to read from a file: %s\n", path);
+            free(path);
+            return EXIT_FAILURE;
+        }
         avro_schema_t schema = avro_file_reader_get_writer_schema(reader);
         avro_value_iface_t *iface = avro_generic_class_from_schema(schema);
         avro_generic_value_new(iface, &value);

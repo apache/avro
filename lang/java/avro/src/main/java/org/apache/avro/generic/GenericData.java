@@ -19,6 +19,7 @@ package org.apache.avro.generic;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractList;
@@ -1252,7 +1253,7 @@ public class GenericData {
       int length = byteBufferValue.limit() - start;
       byte[] bytesCopy = new byte[length];
       byteBufferValue.get(bytesCopy, 0, length);
-      byteBufferValue.position(start);
+      ((Buffer) byteBufferValue).position(start);
       return ByteBuffer.wrap(bytesCopy, 0, length);
     case DOUBLE:
       return value; // immutable
@@ -1267,9 +1268,9 @@ public class GenericData {
     case LONG:
       return value; // immutable
     case MAP:
-      Map<CharSequence, Object> mapValue = (Map) value;
-      Map<CharSequence, Object> mapCopy = new HashMap<>(mapValue.size());
-      for (Map.Entry<CharSequence, Object> entry : mapValue.entrySet()) {
+      Map<Object, Object> mapValue = (Map) value;
+      Map<Object, Object> mapCopy = new HashMap<>(mapValue.size());
+      for (Map.Entry<Object, Object> entry : mapValue.entrySet()) {
         mapCopy.put(deepCopy(STRINGS, entry.getKey()), deepCopy(schema.getValueType(), entry.getValue()));
       }
       return mapCopy;
@@ -1287,19 +1288,7 @@ public class GenericData {
       }
       return newRecord;
     case STRING:
-      // Strings are immutable
-      if (value instanceof String) {
-        return value;
-      }
-
-      // Some CharSequence subclasses are mutable, so we still need to make
-      // a copy
-      else if (value instanceof Utf8) {
-        // Utf8 copy constructor is more efficient than converting
-        // to string and then back to Utf8
-        return new Utf8((Utf8) value);
-      }
-      return new Utf8(value.toString());
+      return createString(value);
     case UNION:
       return deepCopy(schema.getTypes().get(resolveUnion(schema, value)), value);
     default:
@@ -1353,6 +1342,27 @@ public class GenericData {
   }
 
   /**
+   * Called to create an string value. May be overridden for alternate string
+   * representations.
+   */
+  public Object createString(Object value) {
+    // Strings are immutable
+    if (value instanceof String) {
+      return value;
+    }
+
+    // Some CharSequence subclasses are mutable, so we still need to make
+    // a copy
+    else if (value instanceof Utf8) {
+      // Utf8 copy constructor is more efficient than converting
+      // to string and then back to Utf8
+      return new Utf8((Utf8) value);
+    }
+    return new Utf8(value.toString());
+
+  }
+
+  /*
    * Called to create new array instances. Subclasses may override to use a
    * different array implementation. By default, this returns a
    * {@link GenericData.Array}.

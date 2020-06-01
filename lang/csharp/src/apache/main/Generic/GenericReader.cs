@@ -337,7 +337,7 @@ namespace Avro.Generic
         /// <returns>True if and only if a field with the given name is found.</returns>
         protected virtual bool TryGetField(object record, string fieldName, int fieldPos, out object value)
         {
-            return (record as GenericRecord).TryGetValue(fieldName, out value);
+            return (record as GenericRecord).TryGetValue(fieldPos, out value);
         }
 
         /// <summary>
@@ -351,7 +351,7 @@ namespace Avro.Generic
         /// <param name="fieldValue">The value to be added for the field</param>
         protected virtual void AddField(object record, string fieldName, int fieldPos, object fieldValue)
         {
-            (record as GenericRecord).Add(fieldName, fieldValue);
+            (record as GenericRecord).Add(fieldPos, fieldValue);
         }
 
         /// <summary>

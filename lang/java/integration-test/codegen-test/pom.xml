@@ -57,8 +57,12 @@
               <testSourceDirectory>${project.basedir}/src/test/resources/avro</testSourceDirectory>
               <testOutputDirectory>${project.build.directory}/generated-test-sources/java</testOutputDirectory>
               <enableDecimalLogicalType>true</enableDecimalLogicalType>
+              <customLogicalTypeFactories>
+                <logicalTypeFactory>org.apache.avro.codegentest.FixedSizeStringFactory</logicalTypeFactory>
+              </customLogicalTypeFactories>
               <customConversions>
                 <conversion>org.apache.avro.codegentest.CustomDecimalConversion</conversion>
+                <conversion>org.apache.avro.codegentest.FixedSizeStringConversion</conversion>
                 <conversion>org.apache.avro.Conversions$UUIDConversion</conversion>
               </customConversions>
             </configuration>
