@@ -45,14 +45,14 @@ class MockParentResponder(ipc.Responder):
 
     def invoke(self, message, request):
         if message.name == 'configure':
-            print("MockParentResponder: Recieved 'configure': inputPort={0}".format(request["port"]))
+            print("MockParentResponder: Received 'configure': inputPort={0}".format(request["port"]))
 
         elif message.name == 'status':
-            print("MockParentResponder: Recieved 'status': message={0}".format(request["message"]))
+            print("MockParentResponder: Received 'status': message={0}".format(request["message"]))
         elif message.name == 'fail':
-            print("MockParentResponder: Recieved 'fail': message={0}".format(request["message"]))
+            print("MockParentResponder: Received 'fail': message={0}".format(request["message"]))
         else:
-            print("MockParentResponder: Recieved {0}".format(message.name))
+            print("MockParentResponder: Received {0}".format(message.name))
 
         # flush the output so it shows up in the parent process
         sys.stdout.flush()

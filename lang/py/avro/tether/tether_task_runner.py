@@ -64,28 +64,28 @@ class TaskRunnerResponder(ipc.Responder):
     def invoke(self, message, request):
         try:
             if message.name == 'configure':
-                self.log.info("TetherTaskRunner: Recieved configure")
+                self.log.info("TetherTaskRunner: Received configure")
                 self.task.configure(request["taskType"], request["inSchema"], request["outSchema"])
             elif message.name == 'partitions':
-                self.log.info("TetherTaskRunner: Recieved partitions")
+                self.log.info("TetherTaskRunner: Received partitions")
                 try:
                     self.task.partitions = request["partitions"]
                 except Exception as e:
                     self.log.error("Exception occured while processing the partitions message: Message:\n" + traceback.format_exc())
                     raise
             elif message.name == 'input':
-                self.log.info("TetherTaskRunner: Recieved input")
+                self.log.info("TetherTaskRunner: Received input")
                 self.task.input(request["data"], request["count"])
             elif message.name == 'abort':
-                self.log.info("TetherTaskRunner: Recieved abort")
+                self.log.info("TetherTaskRunner: Received abort")
                 self.runner.close()
             elif message.name == 'complete':
-                self.log.info("TetherTaskRunner: Recieved complete")
+                self.log.info("TetherTaskRunner: Received complete")
                 self.task.complete()
                 self.task.close()
                 self.runner.close()
             else:
-                self.log.warning("TetherTaskRunner: recieved unknown message {0}".format(message.name))
+                self.log.warning("TetherTaskRunner: Received unknown message {0}".format(message.name))
 
         except Exception as e:
             self.log.error("Error occured while processing message: {0}".format(message.name))
