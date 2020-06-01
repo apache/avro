@@ -48,7 +48,7 @@
     <apache-rat-tasks.version>0.7</apache-rat-tasks.version>
 
     <!-- plugin versions -->
-    <antrun-plugin.version>1.8</antrun-plugin.version>
+    <antrun-plugin.version>3.0.0</antrun-plugin.version>
     <checkstyle-plugin.version>3.1.1</checkstyle-plugin.version>
     <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.2</extra-enforcer-rules.version>
@@ -57,7 +57,7 @@
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
     <source-plugin.version>3.2.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.31.0</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>1.31.1</spotless-maven-plugin.version>
   </properties>
 
   <modules>
