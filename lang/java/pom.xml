@@ -478,10 +478,11 @@
         </plugins>
       </build>
     </profile>
+    <!-- This profile is used on tests to validate backwards compatibility with Hadoop 2 -->
     <profile>
-      <id>hadoop3</id>
+      <id>hadoop2</id>
       <properties>
-        <hadoop.version>3.2.1</hadoop.version>
+        <hadoop.version>2.7.7</hadoop.version>
       </properties>
     </profile>
   </profiles>
