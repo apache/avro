@@ -21,16 +21,14 @@ package org.apache.avro.ipc.netty;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.ipc.CallFuture;
@@ -39,22 +37,20 @@ import org.apache.avro.ipc.Transceiver;
 import org.apache.avro.ipc.netty.NettyTransportCodec.NettyDataPack;
 import org.apache.avro.ipc.netty.NettyTransportCodec.NettyFrameDecoder;
 import org.apache.avro.ipc.netty.NettyTransportCodec.NettyFrameEncoder;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelState;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +59,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NettyTransceiver extends Transceiver {
   /** If not specified, the default connection timeout will be used (60 sec). */
-  public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60 * 1000L;
+  public static final int DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60 * 1000;
   public static final String NETTY_CONNECT_TIMEOUT_OPTION = "connectTimeoutMillis";
   public static final String NETTY_TCP_NODELAY_OPTION = "tcpNoDelay";
   public static final String NETTY_KEEPALIVE_OPTION = "keepAlive";
@@ -74,10 +70,10 @@ public class NettyTransceiver extends Transceiver {
   private final AtomicInteger serialGenerator = new AtomicInteger(0);
   private final Map<Integer, Callback<List<ByteBuffer>>> requests = new ConcurrentHashMap<>();
 
-  private final ChannelFactory channelFactory;
-  private final long connectTimeoutMillis;
-  private final ClientBootstrap bootstrap;
+  private final Integer connectTimeoutMillis;
+  private final Bootstrap bootstrap;
   private final InetSocketAddress remoteAddr;
+  private final EventLoopGroup workerGroup = new NioEventLoopGroup(new NettyTransceiverThreadFactory("avro"));
 
   volatile ChannelFuture channelFuture;
   volatile boolean stopping;
@@ -92,8 +88,7 @@ public class NettyTransceiver extends Transceiver {
   private Protocol remote; // Synchronized on stateLock
 
   NettyTransceiver() {
-    channelFactory = null;
-    connectTimeoutMillis = 0L;
+    connectTimeoutMillis = 0;
     bootstrap = null;
     remoteAddr = null;
     channelFuture = null;
@@ -120,84 +115,79 @@ public class NettyTransceiver extends Transceiver {
    *                             {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
    * @throws IOException if an error occurs connecting to the given address.
    */
-  public NettyTransceiver(InetSocketAddress addr, Long connectTimeoutMillis) throws IOException {
-    this(addr,
-        new NioClientSocketChannelFactory(
-            Executors.newCachedThreadPool(
-                new NettyTransceiverThreadFactory("Avro " + NettyTransceiver.class.getSimpleName() + " Boss")),
-            Executors.newCachedThreadPool(
-                new NettyTransceiverThreadFactory("Avro " + NettyTransceiver.class.getSimpleName() + " I/O Worker"))),
-        connectTimeoutMillis);
+  public NettyTransceiver(InetSocketAddress addr, Integer connectTimeoutMillis) throws IOException {
+    this(addr, connectTimeoutMillis, null, null);
   }
 
   /**
    * Creates a NettyTransceiver, and attempts to connect to the given address.
-   * {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS} is used for the connection
-   * timeout.
    * 
-   * @param addr           the address to connect to.
-   * @param channelFactory the factory to use to create a new Netty Channel.
+   * @param addr        the address to connect to.
+   * @param initializer Consumer function to apply initial setup to the
+   *                    SocketChannel. Useablet to set things like SSL
+   *                    requirements, compression, etc...
    * @throws IOException if an error occurs connecting to the given address.
    */
-  public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory) throws IOException {
-    this(addr, channelFactory, buildDefaultBootstrapOptions(null));
+  public NettyTransceiver(InetSocketAddress addr, final Consumer<SocketChannel> initializer) throws IOException {
+    this(addr, DEFAULT_CONNECTION_TIMEOUT_MILLIS, initializer, null);
   }
 
   /**
    * Creates a NettyTransceiver, and attempts to connect to the given address.
    * 
    * @param addr                 the address to connect to.
-   * @param channelFactory       the factory to use to create a new Netty Channel.
    * @param connectTimeoutMillis maximum amount of time to wait for connection
    *                             establishment in milliseconds, or null to use
    *                             {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
+   * @param initializer          Consumer function to apply initial setup to the
+   *                             SocketChannel. Usable to set things like SSL
+   *                             requirements, compression, etc...
    * @throws IOException if an error occurs connecting to the given address.
    */
-  public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory, Long connectTimeoutMillis)
-      throws IOException {
-    this(addr, channelFactory, buildDefaultBootstrapOptions(connectTimeoutMillis));
+  public NettyTransceiver(InetSocketAddress addr, Integer connectTimeoutMillis,
+      final Consumer<SocketChannel> initializer) throws IOException {
+    this(addr, connectTimeoutMillis, initializer, null);
   }
 
   /**
-   * Creates a NettyTransceiver, and attempts to connect to the given address. It
-   * is strongly recommended that the {@link #NETTY_CONNECT_TIMEOUT_OPTION} option
-   * be set to a reasonable timeout value (a Long value in milliseconds) to
-   * prevent connect/disconnect attempts from hanging indefinitely. It is also
-   * recommended that the {@link #NETTY_TCP_NODELAY_OPTION} option be set to true
-   * to minimize RPC latency.
+   * Creates a NettyTransceiver, and attempts to connect to the given address.
    * 
-   * @param addr                        the address to connect to.
-   * @param channelFactory              the factory to use to create a new Netty
-   *                                    Channel.
-   * @param nettyClientBootstrapOptions map of Netty ClientBootstrap options to
-   *                                    use.
-   * @throws IOException          if an error occurs connecting to the given
-   *                              address.
-   * @throws NullPointerException if {@code channelFactory} is {@code null}
+   * @param addr                 the address to connect to.
+   * @param connectTimeoutMillis maximum amount of time to wait for connection
+   *                             establishment in milliseconds, or null to use
+   *                             {@link #DEFAULT_CONNECTION_TIMEOUT_MILLIS}.
+   * @param initializer          Consumer function to apply initial setup to the
+   *                             SocketChannel. Usable to set things like SSL
+   *                             requirements, compression, etc...
+   * @param bootStrapInitialzier Consumer function to apply initial setup to the
+   *                             Bootstrap. Usable to set things like tcp
+   *                             connection properties, nagle algorithm, etc...
+   * @throws IOException if an error occurs connecting to the given address.
    */
-  public NettyTransceiver(InetSocketAddress addr, ChannelFactory channelFactory,
-      Map<String, Object> nettyClientBootstrapOptions) throws IOException {
-    Objects.requireNonNull(channelFactory, "channelFactory cannot be null");
-
+  public NettyTransceiver(InetSocketAddress addr, Integer connectTimeoutMillis,
+      final Consumer<SocketChannel> initializer, final Consumer<Bootstrap> bootStrapInitialzier) throws IOException {
     // Set up.
-    this.channelFactory = channelFactory;
-    this.connectTimeoutMillis = (Long) nettyClientBootstrapOptions.get(NETTY_CONNECT_TIMEOUT_OPTION);
-    bootstrap = new ClientBootstrap(channelFactory);
-    remoteAddr = addr;
-
-    // Configure the event pipeline factory.
-    bootstrap.setPipelineFactory(() -> {
-      ChannelPipeline p = Channels.pipeline();
-      p.addLast("frameDecoder", new NettyFrameDecoder());
-      p.addLast("frameEncoder", new NettyFrameEncoder());
-      p.addLast("handler", createNettyClientAvroHandler());
-      return p;
-    });
-
-    if (nettyClientBootstrapOptions != null) {
-      LOG.debug("Using Netty bootstrap options: " + nettyClientBootstrapOptions);
-      bootstrap.setOptions(nettyClientBootstrapOptions);
+    if (connectTimeoutMillis == null) {
+      connectTimeoutMillis = DEFAULT_CONNECTION_TIMEOUT_MILLIS;
     }
+    this.connectTimeoutMillis = connectTimeoutMillis;
+    bootstrap = new Bootstrap().group(workerGroup).channel(NioSocketChannel.class)
+        .option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutMillis)
+        .option(ChannelOption.TCP_NODELAY, DEFAULT_TCP_NODELAY_VALUE).handler(new ChannelInitializer<SocketChannel>() {
+          @Override
+          public void initChannel(SocketChannel ch) throws Exception {
+            if (initializer != null) {
+              initializer.accept(ch);
+            }
+            ch.pipeline().addLast("frameDecoder", new NettyFrameDecoder())
+                .addLast("frameEncoder", new NettyFrameEncoder()).addLast("handler", createNettyClientAvroHandler());
+          }
+        });
+    if (bootStrapInitialzier != null) {
+      bootStrapInitialzier.accept(bootstrap);
+    }
+
+    remoteAddr = addr;
 
     // Make a new connection.
     stateLock.readLock().lock();
@@ -206,7 +196,7 @@ public class NettyTransceiver extends Transceiver {
     } catch (Throwable e) {
       // must attempt to clean up any allocated channel future
       if (channelFuture != null) {
-        channelFuture.getChannel().close();
+        channelFuture.channel().close();
       }
 
       if (e instanceof IOException)
@@ -226,24 +216,8 @@ public class NettyTransceiver extends Transceiver {
    * 
    * @return the ChannelUpstreamHandler to use.
    */
-  protected ChannelUpstreamHandler createNettyClientAvroHandler() {
+  protected ChannelInboundHandler createNettyClientAvroHandler() {
     return new NettyClientAvroHandler();
-  }
-
-  /**
-   * Creates the default options map for the Netty ClientBootstrap.
-   * 
-   * @param connectTimeoutMillis connection timeout in milliseconds, or null if no
-   *                             timeout is desired.
-   * @return the map of Netty bootstrap options.
-   */
-  protected static Map<String, Object> buildDefaultBootstrapOptions(Long connectTimeoutMillis) {
-    Map<String, Object> options = new HashMap<>(3);
-    options.put(NETTY_TCP_NODELAY_OPTION, DEFAULT_TCP_NODELAY_VALUE);
-    options.put(NETTY_KEEPALIVE_OPTION, true);
-    options.put(NETTY_CONNECT_TIMEOUT_OPTION,
-        connectTimeoutMillis == null ? DEFAULT_CONNECTION_TIMEOUT_MILLIS : connectTimeoutMillis);
-    return options;
   }
 
   /**
@@ -252,7 +226,7 @@ public class NettyTransceiver extends Transceiver {
    * @return true if the channel is open and ready; false otherwise.
    */
   private static boolean isChannelReady(Channel channel) {
-    return (channel != null) && channel.isOpen() && channel.isBound() && channel.isConnected();
+    return (channel != null) && channel.isOpen() && channel.isActive();
   }
 
   /**
@@ -273,7 +247,7 @@ public class NettyTransceiver extends Transceiver {
         if (!isChannelReady(channel)) {
           synchronized (channelFutureLock) {
             if (!stopping) {
-              LOG.debug("Connecting to " + remoteAddr);
+              LOG.debug("Connecting to {}", remoteAddr);
               channelFuture = bootstrap.connect(remoteAddr);
             }
           }
@@ -287,9 +261,10 @@ public class NettyTransceiver extends Transceiver {
 
             synchronized (channelFutureLock) {
               if (!channelFuture.isSuccess()) {
-                throw new IOException("Error connecting to " + remoteAddr, channelFuture.getCause());
+                remote = null;
+                throw new IOException("Error connecting to " + remoteAddr, channelFuture.cause());
               }
-              channel = channelFuture.getChannel();
+              channel = channelFuture.channel();
               channelFuture = null;
             }
           }
@@ -301,13 +276,6 @@ public class NettyTransceiver extends Transceiver {
       }
     }
     return channel;
-  }
-
-  /**
-   * Closes the connection to the remote peer if connected.
-   */
-  private void disconnect() {
-    disconnect(false, false, null);
   }
 
   /**
@@ -333,7 +301,7 @@ public class NettyTransceiver extends Transceiver {
       }
     }
     if (channelFutureToCancel != null) {
-      channelFutureToCancel.cancel();
+      channelFutureToCancel.cancel(true);
     }
 
     if (stateReadLockHeld) {
@@ -343,9 +311,9 @@ public class NettyTransceiver extends Transceiver {
     try {
       if (channel != null) {
         if (cause != null) {
-          LOG.debug("Disconnecting from " + remoteAddr, cause);
+          LOG.debug("Disconnecting from {}", remoteAddr, cause);
         } else {
-          LOG.debug("Disconnecting from " + remoteAddr);
+          LOG.debug("Disconnecting from {}", remoteAddr);
         }
         channelToClose = channel;
         channel = null;
@@ -366,7 +334,7 @@ public class NettyTransceiver extends Transceiver {
 
     // Cancel any pending requests by sending errors to the callbacks:
     if ((requestsToCancel != null) && !requestsToCancel.isEmpty()) {
-      LOG.debug("Removing " + requestsToCancel.size() + " pending request(s).");
+      LOG.debug("Removing {} pending request(s)", requestsToCancel.size());
       for (Callback<List<ByteBuffer>> request : requestsToCancel.values()) {
         request.handleError(cause != null ? cause : new IOException(getClass().getSimpleName() + " closed"));
       }
@@ -427,7 +395,7 @@ public class NettyTransceiver extends Transceiver {
       disconnect(awaitCompletion, true, null);
     } finally {
       // Shut down all thread pools to exit.
-      channelFactory.releaseExternalResources();
+      workerGroup.shutdownGracefully();
     }
   }
 
@@ -435,7 +403,7 @@ public class NettyTransceiver extends Transceiver {
   public String getRemoteName() throws IOException {
     stateLock.readLock().lock();
     try {
-      return getChannel().getRemoteAddress().toString();
+      return getChannel().remoteAddress().toString();
     } finally {
       stateLock.readLock().unlock();
     }
@@ -488,7 +456,7 @@ public class NettyTransceiver extends Transceiver {
       }
     }
     if (!writeFuture.isSuccess()) {
-      throw new IOException("Error writing buffers", writeFuture.getCause());
+      throw new IOException("Error writing buffers", writeFuture.cause());
     }
   }
 
@@ -501,7 +469,7 @@ public class NettyTransceiver extends Transceiver {
    * @throws IOException if an error occurs connecting to the remote peer.
    */
   private ChannelFuture writeDataPack(NettyDataPack dataPack) throws IOException {
-    return getChannel().write(dataPack);
+    return getChannel().writeAndFlush(dataPack);
   }
 
   @Override
@@ -559,7 +527,7 @@ public class NettyTransceiver extends Transceiver {
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
       if (!future.isSuccess() && (callback != null)) {
-        callback.handleError(new IOException("Error writing buffers", future.getCause()));
+        callback.handleError(new IOException("Error writing buffers", future.cause()));
       }
     }
   }
@@ -567,31 +535,10 @@ public class NettyTransceiver extends Transceiver {
   /**
    * Avro client handler for the Netty transport
    */
-  protected class NettyClientAvroHandler extends SimpleChannelUpstreamHandler {
+  protected class NettyClientAvroHandler extends SimpleChannelInboundHandler<NettyDataPack> {
 
     @Override
-    public void handleUpstream(ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
-      if (e instanceof ChannelStateEvent) {
-        LOG.debug(e.toString());
-        ChannelStateEvent cse = (ChannelStateEvent) e;
-        if ((cse.getState() == ChannelState.OPEN) && (Boolean.FALSE.equals(cse.getValue()))) {
-          // Server closed connection; disconnect client side
-          LOG.debug("Remote peer " + remoteAddr + " closed connection.");
-          disconnect(false, true, null);
-        }
-      }
-      super.handleUpstream(ctx, e);
-    }
-
-    @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-      // channel = e.getChannel();
-      super.channelOpen(ctx, e);
-    }
-
-    @Override
-    public void messageReceived(ChannelHandlerContext ctx, final MessageEvent e) {
-      NettyDataPack dataPack = (NettyDataPack) e.getMessage();
+    protected void channelRead0(ChannelHandlerContext ctx, NettyDataPack dataPack) throws Exception {
       Callback<List<ByteBuffer>> callback = requests.get(dataPack.getSerial());
       if (callback == null) {
         throw new RuntimeException("Missing previous call info");
@@ -604,8 +551,17 @@ public class NettyTransceiver extends Transceiver {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-      disconnect(false, true, e.getCause());
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) {
+      disconnect(false, true, e);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+      if (!ctx.channel().isOpen()) {
+        LOG.info("Connection to {} disconnected.", ctx.channel().remoteAddress());
+        disconnect(false, true, null);
+      }
+      super.channelInactive(ctx);
     }
 
   }

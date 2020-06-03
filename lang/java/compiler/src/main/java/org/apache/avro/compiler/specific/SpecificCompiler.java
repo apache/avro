@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -113,6 +114,7 @@ public class SpecificCompiler {
   private FieldVisibility fieldVisibility = FieldVisibility.PRIVATE;
   private boolean createOptionalGetters = false;
   private boolean gettersReturnOptional = false;
+  private boolean optionalGettersForNullableFieldsOnly = false;
   private boolean createSetters = true;
   private boolean createAllArgsConstructor = true;
   private String outputCharacterEncoding;
@@ -255,6 +257,17 @@ public class SpecificCompiler {
     this.gettersReturnOptional = gettersReturnOptional;
   }
 
+  public boolean isOptionalGettersForNullableFieldsOnly() {
+    return optionalGettersForNullableFieldsOnly;
+  }
+
+  /**
+   * Set to true to create the Optional getters only for nullable fields.
+   */
+  public void setOptionalGettersForNullableFieldsOnly(boolean optionalGettersForNullableFieldsOnly) {
+    this.optionalGettersForNullableFieldsOnly = optionalGettersForNullableFieldsOnly;
+  }
+
   /**
    * Set to true to use {@link java.math.BigDecimal} instead of
    * {@link java.nio.ByteBuffer} for logical type "decimal"
@@ -313,10 +326,10 @@ public class SpecificCompiler {
       for (Schema s : schema.getTypes())
         getClassNamesOfPrimitiveFields(s, result, seenSchemas);
       break;
-    case ENUM:
-    case FIXED:
     case NULL:
       break;
+    case ENUM:
+    case FIXED:
     case STRING:
     case BYTES:
     case INT:
@@ -324,14 +337,12 @@ public class SpecificCompiler {
     case FLOAT:
     case DOUBLE:
     case BOOLEAN:
-      result.add(javaType(schema));
+      result.add(javaType(schema, true));
       break;
     default:
       throw new RuntimeException("Unknown type: " + schema);
     }
   }
-
-  private static String logChuteName = null;
 
   private void initializeVelocity() {
     this.velocityEngine = new VelocityEngine();
@@ -474,7 +485,7 @@ public class SpecificCompiler {
 
   /** Generate java classes for enqueued schemas. */
   Collection<OutputFile> compile() {
-    List<OutputFile> out = new ArrayList<>();
+    List<OutputFile> out = new ArrayList<>(queue.size() + 1);
     for (Schema schema : queue) {
       out.add(compile(schema));
     }
@@ -636,7 +647,7 @@ public class SpecificCompiler {
   private Schema addStringType(Schema s) {
     if (stringType != StringType.String)
       return s;
-    return addStringType(s, new LinkedHashMap<>());
+    return addStringType(s, new HashMap<>());
   }
 
   // annotate map and string schemas with string type
@@ -656,7 +667,7 @@ public class SpecificCompiler {
       for (String alias : s.getAliases())
         result.addAlias(alias, null); // copy aliases
       seen.put(s, result);
-      List<Field> newFields = new ArrayList<>();
+      List<Field> newFields = new ArrayList<>(s.getFields().size());
       for (Field f : s.getFields()) {
         Schema fSchema = addStringType(f.schema(), seen);
         Field newF = new Field(f, fSchema);
@@ -674,7 +685,7 @@ public class SpecificCompiler {
       GenericData.setStringType(result, stringType);
       break;
     case UNION:
-      List<Schema> types = new ArrayList<>();
+      List<Schema> types = new ArrayList<>(s.getTypes().size());
       for (Schema branch : s.getTypes())
         types.add(addStringType(branch, seen));
       result = Schema.createUnion(types);
@@ -809,9 +820,10 @@ public class SpecificCompiler {
   /**
    * Utility for template use. Returns the unboxed java type for a Schema.
    *
-   * @Deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
+   * @deprecated use javaUnbox(Schema, boolean), kept for backward compatibiliby
    *             of custom templates
    */
+  @Deprecated
   public String javaUnbox(Schema schema) {
     return javaUnbox(schema, false);
   }
@@ -942,7 +954,7 @@ public class SpecificCompiler {
       return new String[] { value.toString() };
     if (value instanceof List) {
       final List<?> list = (List<?>) value;
-      final List<String> annots = new ArrayList<>();
+      final List<String> annots = new ArrayList<>(list.size());
       for (Object o : list) {
         annots.add(o.toString());
       }
@@ -962,7 +974,8 @@ public class SpecificCompiler {
    * @return A sequence of quoted, comma-separated, escaped strings
    */
   public String javaSplit(String s) throws IOException {
-    StringBuilder b = new StringBuilder("\""); // initial quote
+    StringBuilder b = new StringBuilder(s.length());
+    b.append("\""); // initial quote
     for (int i = 0; i < s.length(); i += maxStringChars) {
       if (i != 0)
         b.append("\",\""); // insert quote-comma-quote
@@ -974,8 +987,8 @@ public class SpecificCompiler {
   }
 
   /** Utility for template use. Escapes quotes and backslashes. */
-  public static String javaEscape(Object o) {
-    return o.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+  public static String javaEscape(String o) {
+    return o.replace("\\", "\\\\").replace("\"", "\\\"");
   }
 
   /** Utility for template use. Escapes comment end with HTML entities. */

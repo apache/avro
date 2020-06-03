@@ -184,6 +184,7 @@ public class TestDataFileRepairTool {
       assertEquals(line, r.next().toString());
     }
     assertFalse(r.hasNext());
+    r.close();
   }
 
 }

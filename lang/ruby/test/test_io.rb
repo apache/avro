@@ -90,7 +90,10 @@ EOS
        "name": "Test",
        "fields": [{"name": "ts",
                    "type": {"type": "long",
-                            "logicalType": "timestamp-micros"}}]}
+                            "logicalType": "timestamp-micros"}},
+                  {"name": "ts2",
+                   "type": {"type": "long",
+                            "logicalType": "timestamp-millis"}}]}
 EOS
     check(record_schema)
   end
@@ -109,6 +112,13 @@ EOS
   def test_enum
     enum_schema = '{"type": "enum", "name": "Test","symbols": ["A", "B"]}'
     check(enum_schema)
+    check_default(enum_schema, '"B"', "B")
+  end
+
+  def test_enum_with_default
+    enum_schema = '{"type": "enum", "name": "Test", "symbols": ["A", "B"], "default": "A"}'
+    check(enum_schema)
+    # Field default is used for missing field.
     check_default(enum_schema, '"B"', "B")
   end
 
@@ -156,6 +166,17 @@ EOS
     fixed_schema = '{"type": "fixed", "name": "Test", "size": 1}'
     check(fixed_schema)
     check_default(fixed_schema, '"a"', "a")
+  end
+
+  def test_record_variable_key_types
+    datum = { sym: "foo", "str"=>"bar"}
+    ret_val = { "sym"=> "foo", "str"=>"bar"}
+    schema = Schema.parse('{"type":"record", "name":"rec", "fields":[{"name":"sym", "type":"string"}, {"name":"str", "type":"string"}]}')
+
+    writer, _encoder, _datum_writer = write_datum(datum, schema)
+
+    ret_datum = read_datum(writer, schema)
+    assert_equal ret_datum, ret_val
   end
 
   def test_record_with_nil
@@ -390,6 +411,50 @@ EOS
     assert_equal(incorrect, 0)
   end
 
+  def test_unknown_enum_symbol
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["B", "C"]
+      }
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["A", "B"]
+      }
+    SCHEMA
+    datum_to_write = "C"
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    # Ruby implementation did not follow the spec and returns the writer's symbol here
+    assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_unknown_enum_symbol_with_enum_default
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["B", "C"]
+      }
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {
+        "type": "enum",
+        "name": "test",
+        "symbols": ["A", "B", "UNKNOWN"],
+        "default": "UNKNOWN"
+      }
+    SCHEMA
+    datum_to_write = "C"
+    writer, * = write_datum(datum_to_write, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, "UNKNOWN")
+  end
+
   def test_array_schema_promotion
     writers_schema = Avro::Schema.parse('{"type":"array", "items":"int"}')
     readers_schema = Avro::Schema.parse('{"type":"array", "items":"long"}')
@@ -406,6 +471,22 @@ EOS
     writer, * = write_datum(datum_to_write, writers_schema)
     datum_read = read_datum(writer, writers_schema, readers_schema)
     assert_equal(datum_read, datum_to_write)
+  end
+
+  def test_aliased
+    writers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Rec1", "fields":[
+        {"name":"field1", "type":"int"}
+      ]}
+    SCHEMA
+    readers_schema = Avro::Schema.parse(<<-SCHEMA)
+      {"type":"record", "name":"Rec2", "aliases":["Rec1"], "fields":[
+        {"name":"field2", "aliases":["field1"], "type":"int"}
+      ]}
+    SCHEMA
+    writer, * = write_datum({ 'field1' => 1 }, writers_schema)
+    datum_read = read_datum(writer, writers_schema, readers_schema)
+    assert_equal(datum_read, { 'field2' => 1 })
   end
 
   def test_snappy_backward_compat

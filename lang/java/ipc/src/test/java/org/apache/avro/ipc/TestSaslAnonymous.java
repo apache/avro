@@ -68,7 +68,7 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
     SaslSocketTransceiver client = new SaslSocketTransceiver(new InetSocketAddress(s.getPort()));
     ProtoInterface proxy = ReflectRequestor.getClient(ProtoInterface.class, client);
 
-    byte[] result = proxy.test(new byte[64 * 1024]);
+    proxy.test(new byte[64 * 1024]);
 
     client.close();
     s.close();

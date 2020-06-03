@@ -35,7 +35,8 @@ class AVRO_DECL LogicalType {
         TIME_MICROS,
         TIMESTAMP_MILLIS,
         TIMESTAMP_MICROS,
-        DURATION
+        DURATION,
+        UUID
     };
 
     explicit LogicalType(Type type);

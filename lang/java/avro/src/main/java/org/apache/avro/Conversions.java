@@ -18,6 +18,11 @@
 
 package org.apache.avro;
 
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericEnumSymbol;
+import org.apache.avro.generic.GenericFixed;
+import org.apache.avro.generic.IndexedRecord;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -25,10 +30,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericEnumSymbol;
-import org.apache.avro.generic.GenericFixed;
-import org.apache.avro.generic.IndexedRecord;
+
+import static java.math.BigDecimal.ROUND_UNNECESSARY;
 
 public class Conversions {
 
@@ -80,16 +83,14 @@ public class Conversions {
       int scale = ((LogicalTypes.Decimal) type).getScale();
       // always copy the bytes out because BigInteger has no offset/length ctor
       byte[] bytes = new byte[value.remaining()];
-      value.get(bytes);
+      value.duplicate().get(bytes);
       return new BigDecimal(new BigInteger(bytes), scale);
     }
 
     @Override
     public ByteBuffer toBytes(BigDecimal value, Schema schema, LogicalType type) {
-      int scale = ((LogicalTypes.Decimal) type).getScale();
-      if (scale != value.scale()) {
-        throw new AvroTypeException("Cannot encode decimal with scale " + value.scale() + " as scale " + scale);
-      }
+      value = validate((LogicalTypes.Decimal) type, value);
+
       return ByteBuffer.wrap(value.unscaledValue().toByteArray());
     }
 
@@ -101,10 +102,7 @@ public class Conversions {
 
     @Override
     public GenericFixed toFixed(BigDecimal value, Schema schema, LogicalType type) {
-      int scale = ((LogicalTypes.Decimal) type).getScale();
-      if (scale != value.scale()) {
-        throw new AvroTypeException("Cannot encode decimal with scale " + value.scale() + " as scale " + scale);
-      }
+      value = validate((LogicalTypes.Decimal) type, value);
 
       byte fillByte = (byte) (value.signum() < 0 ? 0xFF : 0x00);
       byte[] unscaled = value.unscaledValue().toByteArray();
@@ -117,12 +115,42 @@ public class Conversions {
 
       return new GenericData.Fixed(schema, bytes);
     }
+
+    private static BigDecimal validate(final LogicalTypes.Decimal decimal, BigDecimal value) {
+      final int scale = decimal.getScale();
+      final int valueScale = value.scale();
+
+      boolean scaleAdjusted = false;
+      if (valueScale != scale) {
+        try {
+          value = value.setScale(scale, ROUND_UNNECESSARY);
+          scaleAdjusted = true;
+        } catch (ArithmeticException aex) {
+          throw new AvroTypeException(
+              "Cannot encode decimal with scale " + valueScale + " as scale " + scale + " without rounding");
+        }
+      }
+
+      int precision = decimal.getPrecision();
+      int valuePrecision = value.precision();
+      if (valuePrecision > precision) {
+        if (scaleAdjusted) {
+          throw new AvroTypeException("Cannot encode decimal with precision " + valuePrecision + " as max precision "
+              + precision + ". This is after safely adjusting scale from " + valueScale + " to required " + scale);
+        } else {
+          throw new AvroTypeException(
+              "Cannot encode decimal with precision " + valuePrecision + " as max precision " + precision);
+        }
+      }
+
+      return value;
+    }
   }
 
   /**
    * Convert a underlying representation of a logical type (such as a ByteBuffer)
    * to a higher level object (such as a BigDecimal).
-   * 
+   *
    * @param datum      The object to be converted.
    * @param schema     The schema of datum. Cannot be null if datum is not null.
    * @param type       The {@link org.apache.avro.LogicalType} of datum. Cannot be
@@ -181,7 +209,7 @@ public class Conversions {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer)
-   * 
+   *
    * @param datum      The object to be converted.
    * @param schema     The schema of datum. Cannot be null if datum is not null.
    * @param type       The {@link org.apache.avro.LogicalType} of datum. Cannot be

@@ -24,6 +24,8 @@ extern "C" {
 #define CLOSE_EXTERN
 #endif
 
+#include <sys/types.h>
+
 #include "avro/generic.h"
 #include "avro/schema.h"
 #include "avro/value.h"

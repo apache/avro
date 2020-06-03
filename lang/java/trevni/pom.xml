@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -57,10 +57,6 @@
             <reuseForks>false</reuseForks>
             <parallel>none</parallel>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
         </plugin>
       </plugins>
     </pluginManagement>

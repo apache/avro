@@ -21,6 +21,7 @@ package org.apache.avro.mapred;
 import static org.apache.avro.mapred.AvroOutputFormat.EXT;
 
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
@@ -123,7 +124,7 @@ public class AvroTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
       buf.put(keyBytes, 0, keyLength);
       buf.put(sep);
       buf.put(valBytes, 0, valLength);
-      buf.rewind();
+      ((Buffer) buf).rewind();
       return buf;
     }
 

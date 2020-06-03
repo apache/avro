@@ -63,7 +63,9 @@ namespace Avro
                 this.Name = this.Space = null;
                 this.EncSpace = encspace;   // need to save enclosing namespace for anonymous types, so named types within the anonymous type can be resolved
             }
-            else if (!name.Contains("."))
+#pragma warning disable CA1307 // Specify StringComparison
+            else if (name.IndexOf('.') == -1)
+#pragma warning restore CA1307 // Specify StringComparison
             {                          // unqualified name
                 this.Space = space;    // use default space
                 this.Name = name;
@@ -135,7 +137,9 @@ namespace Avro
         /// <inheritdoc/>
         public override int GetHashCode()
         {
+#pragma warning disable CA1307 // Specify StringComparison
             return string.IsNullOrEmpty(Fullname) ? 0 : 29 * Fullname.GetHashCode();
+#pragma warning restore CA1307 // Specify StringComparison
         }
     }
 

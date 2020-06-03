@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,15 +94,15 @@ public class TestWordCountTether {
 
     // validate the output
     DatumReader<Pair<Utf8, Long>> reader = new SpecificDatumReader<>();
-    InputStream cin = new BufferedInputStream(new FileInputStream(outputPath + "/part-00000.avro"));
-    DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(cin, reader);
+    DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(
+        new BufferedInputStream(new FileInputStream(outputPath + "/part-00000.avro")), reader);
     int numWords = 0;
     for (Pair<Utf8, Long> wc : counts) {
       assertEquals(wc.key().toString(), WordCountUtil.COUNTS.get(wc.key().toString()), wc.value());
       numWords++;
     }
 
-    cin.close();
+    counts.close();
     assertEquals(WordCountUtil.COUNTS.size(), numWords);
 
   }

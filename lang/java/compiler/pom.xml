@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -131,7 +131,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>3.0.0</version>
         <executions>
           <execution>
             <!--
@@ -140,7 +139,7 @@
               Here since general-purpose exec plugin is used for generating code, we need to manually
               add the sources.
             -->
-            <id>add-source</id>
+            <id>add-test-source</id>
             <phase>generate-test-sources</phase>
             <goals>
               <goal>add-test-source</goal>
@@ -148,6 +147,24 @@
             <configuration>
               <sources>
                 <source>${project.basedir}/target/generated-test-sources</source>
+              </sources>
+            </configuration>
+          </execution>
+          <execution>
+            <!--
+              Usually code is generated using a special-purpose maven plugin and the plugin
+              automatically adds the generated sources into project.
+              Here since general-purpose exec plugin is used for generating code, we need to manually
+              add the sources.
+            -->
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/target/generated-sources/javacc</source>
               </sources>
             </configuration>
           </execution>

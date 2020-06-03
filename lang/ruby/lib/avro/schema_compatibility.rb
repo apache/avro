@@ -28,10 +28,8 @@ module Avro
     end
 
     # Perform a basic check that a datum written with the writers_schema could
-    # be read using the readers_schema. This check only includes matching the types,
-    # including schema promotion, and matching the full name for named types.
-    # Aliases for named types are not supported here, and the ruby implementation
-    # of Avro in general does not include support for aliases.
+    # be read using the readers_schema. This check includes matching the types,
+    # including schema promotion, and matching the full name (including aliases) for named types.
     def self.match_schemas(writers_schema, readers_schema)
       w_type = writers_schema.type_sym
       r_type = readers_schema.type_sym
@@ -46,16 +44,16 @@ module Avro
 
         case r_type
         when :record
-          return writers_schema.fullname == readers_schema.fullname
+          return readers_schema.match_fullname?(writers_schema.fullname)
         when :error
-          return writers_schema.fullname == readers_schema.fullname
+          return readers_schema.match_fullname?(writers_schema.fullname)
         when :request
           return true
         when :fixed
-          return writers_schema.fullname == readers_schema.fullname &&
+          return readers_schema.match_fullname?(writers_schema.fullname) &&
             writers_schema.size == readers_schema.size
         when :enum
-          return writers_schema.fullname == readers_schema.fullname
+          return readers_schema.match_fullname?(writers_schema.fullname)
         when :map
           return match_schemas(writers_schema.values, readers_schema.values)
         when :array
@@ -118,8 +116,8 @@ module Avro
         when :union
           match_union_schemas(writers_schema, readers_schema)
         when :enum
-          # reader's symbols must contain all writer's symbols
-          (writers_schema.symbols - readers_schema.symbols).empty?
+          # reader's symbols must contain all writer's symbols or reader has default
+          (writers_schema.symbols - readers_schema.symbols).empty? || !readers_schema.default.nil?
         else
           if writers_schema.type_sym == :union && writers_schema.schemas.size == 1
             full_match_schemas(writers_schema.schemas.first, readers_schema)
@@ -148,7 +146,14 @@ module Avro
           if writer_fields_hash.key?(field.name)
             return false unless full_match_schemas(writer_fields_hash[field.name].type, field.type)
           else
-            return false unless field.default?
+            names = writer_fields_hash.keys & field.alias_names
+            if names.size > 1
+              return false
+            elsif names.size == 1
+              return false unless full_match_schemas(writer_fields_hash[names.first].type, field.type)
+            else
+              return false unless field.default?
+            end
           end
         end
 

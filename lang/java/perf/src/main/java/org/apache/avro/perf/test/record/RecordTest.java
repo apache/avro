@@ -33,6 +33,7 @@ import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.infra.Blackhole;
 
 public class RecordTest {
 
@@ -43,16 +44,23 @@ public class RecordTest {
 
   @Benchmark
   @OperationsPerInvocation(BasicState.BATCH_SIZE)
-  public void decode(final TestStateDecode state) throws Exception {
+  public void decode(final TestStateDecode state, final Blackhole blackHole) throws Exception {
     final Decoder d = state.decoder;
+    double sd = 0.0;
+    int si = 0;
+
     for (int i = 0; i < state.getBatchSize(); i++) {
-      d.readDouble();
-      d.readDouble();
-      d.readDouble();
-      d.readInt();
-      d.readInt();
-      d.readInt();
+      sd += d.readDouble();
+      sd += d.readDouble();
+      sd += d.readDouble();
+
+      si += d.readInt();
+      si += d.readInt();
+      si += d.readInt();
     }
+
+    blackHole.consume(sd);
+    blackHole.consume(si);
   }
 
   @State(Scope.Thread)

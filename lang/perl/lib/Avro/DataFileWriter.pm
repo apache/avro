@@ -37,7 +37,10 @@ use Avro::Schema;
 use Carp;
 use Compress::Zstd;
 use Error::Simple;
+use IO::Compress::Bzip2 qw(bzip2 $Bzip2Error);
 use IO::Compress::RawDeflate qw(rawdeflate $RawDeflateError);
+
+our $VERSION = '++MODULE_VERSION++';
 
 sub new {
     my $class = shift;
@@ -104,6 +107,14 @@ sub buffer_or_print {
             or croak "rawdeflate failed: $RawDeflateError";
         $datafile->{_current_size} =
             bytes::length($datafile->{_compressed_block});
+    }
+    elsif ($codec eq 'bzip2') {
+        my $uncompressed = join('', map { $$_ } @$ser_objects);
+        my $compressed;
+        bzip2 \$uncompressed => \$compressed
+            or croak "bzip2 failed: $Bzip2Error";
+        $datafile->{_compressed_block} = $compressed;
+        $datafile->{_current_size} = bytes::length($datafile->{_compressed_block});
     }
     elsif ($codec eq 'zstandard') {
         my $uncompressed = join('', map { $$_ } @$ser_objects);

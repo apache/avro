@@ -27,13 +27,6 @@ then
   usage
 fi
 
-if [ -f VERSION.txt ]
-then
-  VERSION=`cat VERSION.txt`
-else
-  VERSION=`cat ../../share/VERSION.txt`
-fi
-
 for target in "$@"
 do
 
@@ -65,6 +58,7 @@ case "$target" in
     ;;
 
   dist)
+    cp ../../share/VERSION.txt .
     perl ./Makefile.PL && make dist
     ;;
 
