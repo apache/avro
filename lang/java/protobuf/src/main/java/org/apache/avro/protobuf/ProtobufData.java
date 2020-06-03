@@ -138,7 +138,7 @@ public class ProtobufData extends GenericData {
     try {
       Class c = SpecificData.get().getClass(schema);
       if (c == null)
-        return newRecord(old, schema); // punt to generic
+        return super.newRecord(old, schema); // punt to generic
       if (c.isInstance(old))
         return old; // reuse instance
       return c.getMethod("newBuilder").invoke(null);
