@@ -34,12 +34,9 @@
   <description>Avro parent Java project</description>
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
     <main.basedir>${project.parent.basedir}</main.basedir>
 
     <!-- version properties for dependencies -->
-
     <hadoop.version>3.2.1</hadoop.version>
     <jackson.version>2.11.0</jackson.version>
     <jackson.databind.version>2.11.0</jackson.databind.version>
@@ -69,7 +66,6 @@
     <exec-plugin.version>1.6.0</exec-plugin.version>
     <file-management.version>3.0.0</file-management.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
-    <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
   </properties>
 
   <modules>
