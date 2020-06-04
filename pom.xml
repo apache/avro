@@ -40,24 +40,17 @@
        Java artifacts are copied to the final build destination with a custom profile.
        -->
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <main.basedir>${project.basedir}</main.basedir>
     <avro.distDir>dist</avro.distDir>
     <avro.docDir>build/avro-doc-${project.version}/api</avro.docDir>
-    <!-- dependency plugin versions -->
-    <apache-rat-tasks.version>0.7</apache-rat-tasks.version>
-
     <!-- plugin versions -->
     <antrun-plugin.version>3.0.0</antrun-plugin.version>
     <checkstyle-plugin.version>3.1.1</checkstyle-plugin.version>
-    <enforcer-plugin.version>3.0.0-M3</enforcer-plugin.version>
     <extra-enforcer-rules.version>1.2</extra-enforcer-rules.version>
-    <gpg-plugin.version>1.6</gpg-plugin.version>
-    <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
-    <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
-    <rat.version>0.13</rat.version>
-    <source-plugin.version>3.2.1</source-plugin.version>
     <spotless-maven-plugin.version>1.31.1</spotless-maven-plugin.version>
+    <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
   </properties>
 
   <modules>
@@ -115,7 +108,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>${enforcer-plugin.version}</version>
         <executions>
           <execution>
             <id>enforce-maven-version</id>
@@ -178,7 +170,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>${maven-plugin-plugin.version}</version>
         <configuration>
           <goalPrefix>avro</goalPrefix>
         </configuration>
@@ -195,7 +186,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
-            <version>${javadoc-plugin.version}</version>
             <executions>
               <execution>
                 <!-- build javadoc jars per jar for publishing to maven -->
@@ -221,7 +211,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>${source-plugin.version}</version>
             <executions>
               <execution>
                 <!-- builds source jars and attaches them to the project for publishing -->
@@ -243,7 +232,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-gpg-plugin</artifactId>
-            <version>${gpg-plugin.version}</version>
             <executions>
               <execution>
                 <id>sign-artifacts</id>
@@ -267,7 +255,6 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
-            <version>${rat.version}</version>
             <inherited>false</inherited>
             <executions>
               <execution>
@@ -424,7 +411,6 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>${antrun-plugin.version}</version>
             <configuration>
               <target name="copy-java-artifacts">
                 <mkdir dir="${avro.distDir}/java"/>
