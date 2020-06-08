@@ -163,7 +163,7 @@ class AvroIODatumWriter
     private function writeRecord($writers_schema, $datum, $encoder)
     {
         foreach ($writers_schema->fields() as $field) {
-            $this->writeData($field->type(), $datum[$field->name()], $encoder);
+            $this->writeData($field->type(), $datum[$field->name()] ?? null, $encoder);
         }
     }
 
