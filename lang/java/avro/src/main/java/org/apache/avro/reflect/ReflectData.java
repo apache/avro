@@ -703,7 +703,7 @@ public class ReflectData extends SpecificData {
         String name = c.getSimpleName();
         String space = c.getPackage() == null ? "" : c.getPackage().getName();
         if (c.getEnclosingClass() != null) // nested class
-          space = c.getEnclosingClass().getName();
+          space = c.getEnclosingClass().getName().replace('$', '.');
         Union union = c.getAnnotation(Union.class);
         if (union != null) { // union annotated
           return getAnnotatedUnion(union, names);
