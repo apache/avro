@@ -398,6 +398,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @param referencedSchemas referenced schemas
    * @param pretty            if true, pretty-print JSON.
    */
+  // Use at your own risk. This method should be removed with AVRO-2832.
+  @Deprecated
   public String toString(Collection<Schema> referencedSchemas, boolean pretty) {
     Schema.Names names = new Schema.Names();
     if (referencedSchemas != null) {

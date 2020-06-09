@@ -1364,8 +1364,8 @@ public class GenericData {
 
   /*
    * Called to create new array instances. Subclasses may override to use a
-   * different array implementation. By default, this returns a
-   * {@link GenericData.Array}.
+   * different array implementation. By default, this returns a {@link
+   * GenericData.Array}.
    */
   public Object newArray(Object old, int size, Schema schema) {
     if (old instanceof GenericArray) {

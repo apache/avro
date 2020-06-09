@@ -46,8 +46,8 @@ import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 
 public class SpecificCompilerTool implements Tool {
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
-    if (args.size() < 3) {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> origArgs) throws Exception {
+    if (origArgs.size() < 3) {
       System.err.println(
           "Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-fieldVisibility <visibilityType>] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
       System.err.println(" input - input files or directories");
@@ -68,41 +68,44 @@ public class SpecificCompilerTool implements Tool {
     Optional<FieldVisibility> fieldVisibility = Optional.empty();
 
     int arg = 0;
-    int counter = 0;
+    List<String> args = new ArrayList<>(origArgs);
 
     if (args.contains("-encoding")) {
       arg = args.indexOf("-encoding") + 1;
       encoding = Optional.of(args.get(arg));
-      counter = counter + 2;
+      args.remove(arg);
+      args.remove(arg - 1);
     }
 
     if (args.contains("-string")) {
       stringType = StringType.String;
-      counter = counter + 1;
+      args.remove(args.indexOf("-string"));
     }
 
-    if ("-fieldVisibility".equals(args.get(arg))) {
-      arg++;
+    if (args.contains("-fieldVisibility")) {
+      arg = args.indexOf("-fieldVisibility") + 1;
       try {
         fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase(Locale.ENGLISH)));
       } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
         System.err.println("Expected one of" + Arrays.toString(FieldVisibility.values()));
         return 1;
       }
-      arg++;
+      args.remove(arg);
+      args.remove(arg - 1);
     }
-
-    if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
-      useLogicalDecimal = true;
-      counter = counter + 1;
-    }
-
     if (args.contains("-templateDir")) {
       arg = args.indexOf("-templateDir") + 1;
       templateDir = Optional.of(args.get(arg));
-      counter = counter + 2;
+      args.remove(arg);
+      args.remove(arg - 1);
     }
-    arg = counter;
+
+    arg = 0;
+    if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
+      useLogicalDecimal = true;
+      arg++;
+    }
+
     String method = args.get(arg);
     List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));

@@ -179,9 +179,23 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     }
   }
 
-  /** Helper method for adding a message to an NPE. */
+  /** Helper method for adding a message to an NPE . */
   protected NullPointerException npe(NullPointerException e, String s) {
     NullPointerException result = new NullPointerException(e.getMessage() + s);
+    result.initCause(e.getCause() == null ? e : e.getCause());
+    return result;
+  }
+
+  /** Helper method for adding a message to an Class Cast Exception . */
+  protected ClassCastException addClassCastMsg(ClassCastException e, String s) {
+    ClassCastException result = new ClassCastException(e.getMessage() + s);
+    result.initCause(e.getCause() == null ? e : e.getCause());
+    return result;
+  }
+
+  /** Helper method for adding a message to an Avro Type Exception . */
+  protected AvroTypeException addAvroTypeMsg(AvroTypeException e, String s) {
+    AvroTypeException result = new AvroTypeException(e.getMessage() + s);
     result.initCause(e.getCause() == null ? e : e.getCause());
     return result;
   }
@@ -211,6 +225,10 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
       throw unresolvedUnionException;
     } catch (NullPointerException e) {
       throw npe(e, " in field " + f.name());
+    } catch (ClassCastException cce) {
+      throw addClassCastMsg(cce, " in field " + f.name());
+    } catch (AvroTypeException ate) {
+      throw addAvroTypeMsg(ate, " in field " + f.name());
     }
   }
 

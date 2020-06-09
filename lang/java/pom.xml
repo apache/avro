@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.avro</groupId>
     <artifactId>avro-toplevel</artifactId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
     <relativePath>../../</relativePath>
   </parent>
 
@@ -39,30 +39,29 @@
 
     <!-- version properties for dependencies -->
 
-    <hadoop.version>2.7.7</hadoop.version>
-    <jackson.version>2.10.4</jackson.version>
-    <jackson.databind.version>2.10.4</jackson.databind.version>
+    <hadoop.version>3.2.1</hadoop.version>
+    <jackson.version>2.11.0</jackson.version>
+    <jackson.databind.version>2.11.0</jackson.databind.version>
     <servlet-api.version>4.0.1</servlet-api.version>
     <jetty.version>9.4.28.v20200408</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
     <junit.version>4.13</junit.version>
     <netty.version>4.1.50.Final</netty.version>
     <protobuf.version>3.11.1</protobuf.version>
-    <thrift.version>0.12.0</thrift.version>
+    <thrift.version>0.13.0</thrift.version>
     <slf4j.version>1.7.30</slf4j.version>
     <snappy.version>1.1.7.5</snappy.version>
     <velocity.version>2.2</velocity.version>
     <maven.version>3.3.9</maven.version>
-    <ant.version>1.10.5</ant.version>
+    <ant.version>1.10.8</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
     <commons-compress.version>1.20</commons-compress.version>
     <commons-lang.version>3.9</commons-lang.version>
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.2</easymock.version>
-    <hamcrest.version>2.1</hamcrest.version>
+    <hamcrest.version>2.2</hamcrest.version>
     <grpc.version>1.29.0</grpc.version>
-    <grpc.version>1.28.0</grpc.version>
-    <zstd-jni.version>1.4.4-11</zstd-jni.version>
+    <zstd-jni.version>1.4.5-2</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.1.2</archetype-plugin.version>
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
@@ -249,6 +248,11 @@
           <artifactId>maven-antrun-plugin</artifactId>
           <version>${antrun-plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless-maven-plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -357,7 +361,6 @@
                       <pluginExecutionFilter>
                         <groupId>com.diffplug.spotless</groupId>
                         <artifactId>spotless-maven-plugin</artifactId>
-                        <versionRange>[1.20.0,)</versionRange>
                         <goals>
                           <goal>check</goal>
                         </goals>
@@ -478,10 +481,11 @@
         </plugins>
       </build>
     </profile>
+    <!-- This profile is used on tests to validate backwards compatibility with Hadoop 2 -->
     <profile>
-      <id>hadoop3</id>
+      <id>hadoop2</id>
       <properties>
-        <hadoop.version>3.2.1</hadoop.version>
+        <hadoop.version>2.7.7</hadoop.version>
       </properties>
     </profile>
   </profiles>

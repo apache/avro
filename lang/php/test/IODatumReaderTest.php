@@ -68,4 +68,26 @@ SCHEMA);
 
         $this->assertEquals(['field2' => 1], $record);
     }
+
+    public function testRecordNullField()
+    {
+        $schema_json = <<<_JSON
+{"name":"member",
+ "type":"record",
+ "fields":[{"name":"one", "type":"int"},
+           {"name":"two", "type":["null", "string"]}
+           ]}
+_JSON;
+
+        $schema = AvroSchema::parse($schema_json);
+        $datum = array("one" => 1);
+
+        $io = new AvroStringIO();
+        $writer = new AvroIODatumWriter($schema);
+        $encoder = new AvroIOBinaryEncoder($io);
+        $writer->write($datum, $encoder);
+        $bin = $io->string();
+
+        $this->assertSame('0200', bin2hex($bin));
+    }
 }

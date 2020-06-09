@@ -34,7 +34,7 @@ py3_tool() {
 }
 
 ruby_tool() {
-  ruby -rubygems -Ilang/ruby/lib lang/ruby/test/tool.rb "$@"
+  ruby -Ilang/ruby/lib lang/ruby/test/tool.rb "$@"
 }
 
 proto=share/test/schemas/simple.avpr

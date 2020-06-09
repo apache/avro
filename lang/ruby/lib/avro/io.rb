@@ -359,26 +359,28 @@ module Avro
         readers_fields_hash = readers_schema.fields_hash
         read_record = {}
         writers_schema.fields.each do |field|
-          if (readers_field = readers_fields_hash[field.name])
+          readers_field = readers_fields_hash[field.name]
+          if readers_field
             field_val = read_data(field.type, readers_field.type, decoder)
             read_record[field.name] = field_val
+          elsif readers_schema.fields_by_alias.key?(field.name)
+            readers_field = readers_schema.fields_by_alias[field.name]
+            field_val = read_data(field.type, readers_field.type, decoder)
+            read_record[readers_field.name] = field_val
           else
             skip_data(field.type, decoder)
           end
         end
 
         # fill in the default values
-        if readers_fields_hash.size > read_record.size
-          writers_fields_hash = writers_schema.fields_hash
-          readers_fields_hash.each do |field_name, field|
-            unless writers_fields_hash.has_key? field_name
-              if field.default?
-                field_val = read_default_value(field.type, field.default)
-                read_record[field.name] = field_val
-              else
-                raise AvroError, "Missing data for #{field.type} with no default"
-              end
-            end
+        readers_fields_hash.each do |field_name, field|
+          next if read_record.key?(field_name)
+
+          if field.default?
+            field_val = read_default_value(field.type, field.default)
+            read_record[field.name] = field_val
+          else
+            raise AvroError, "Missing data for #{field.type} with no default"
           end
         end
 
