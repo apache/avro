@@ -20,6 +20,8 @@ gem 'multi_json'
 gem 'snappy'
 gem 'zstd-ruby'
 gem 'test-unit'
+# memory_profiler 0.9.13 requires Ruby 2.3.8+
+gem 'memory_profiler', '<= 0.9.12'
 # rubocop 0.82 requires Ruby 2.4+
 gem 'rubocop', '<= 0.81'
 
