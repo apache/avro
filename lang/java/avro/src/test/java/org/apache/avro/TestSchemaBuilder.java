@@ -812,4 +812,15 @@ public class TestSchemaBuilder {
         schema.getField("double").defaultVal());
   }
 
+  @Test
+  public void testNanDefaultValuesForFloatAndDouble() {
+    Double doubleNan = Double.NaN;
+    Float floatNan = Float.NaN;
+    Schema schema = SchemaBuilder.record("r").fields().name("doubleNan").type().doubleType().doubleDefault(doubleNan)
+      .name("floatNan").type().floatType().floatDefault(floatNan).endRecord();
+
+    Assert.assertEquals(floatNan, schema.getField("floatNan").defaultVal());
+    Assert.assertEquals(doubleNan, schema.getField("doubleNan").defaultVal());
+  }
+
 }

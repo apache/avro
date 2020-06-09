@@ -2228,7 +2228,7 @@ public class SchemaBuilder {
     }
 
     private FieldAssembler<R> completeField(Schema schema, Object defaultVal) {
-      JsonNode defaultNode = defaultVal == null ? NullNode.getInstance() : toJsonNode(defaultVal);
+      JsonNode defaultNode = defaultVal == null ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultVal);
       return completeField(schema, defaultNode);
     }
 
@@ -2694,31 +2694,4 @@ public class SchemaBuilder {
     }
   }
 
-  // create default value JsonNodes from objects
-  private static JsonNode toJsonNode(Object o) {
-    try {
-      String s;
-      if (o instanceof ByteBuffer) {
-        // special case since GenericData.toString() is incorrect for bytes
-        // note that this does not handle the case of a default value with nested bytes
-        ByteBuffer bytes = ((ByteBuffer) o);
-        ((Buffer) bytes).mark();
-        byte[] data = new byte[bytes.remaining()];
-        bytes.get(data);
-        ((Buffer) bytes).reset(); // put the buffer back the way we got it
-        s = new String(data, StandardCharsets.ISO_8859_1);
-        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
-        s = "\"" + new String(quoted) + "\"";
-      } else if (o instanceof byte[]) {
-        s = new String((byte[]) o, StandardCharsets.ISO_8859_1);
-        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
-        s = '\"' + new String(quoted) + '\"';
-      } else {
-        s = GenericData.get().toString(o);
-      }
-      return new ObjectMapper().readTree(s);
-    } catch (IOException e) {
-      throw new SchemaBuilderException(e);
-    }
-  }
 }
