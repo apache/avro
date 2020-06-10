@@ -17,7 +17,10 @@
  */
 package org.apache.avro;
 
+import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,11 +31,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.internal.JacksonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
@@ -2222,7 +2228,7 @@ public class SchemaBuilder {
     }
 
     private FieldAssembler<R> completeField(Schema schema, Object defaultVal) {
-      JsonNode defaultNode = defaultVal == null ? NullNode.getInstance() : JacksonUtils.toJsonNode(defaultVal);
+      JsonNode defaultNode = defaultVal == null ? NullNode.getInstance() : toJsonNode(defaultVal);
       return completeField(schema, defaultNode);
     }
 
@@ -2685,6 +2691,36 @@ public class SchemaBuilder {
     public R endUnion() {
       Schema schema = Schema.createUnion(schemas);
       return context.complete(schema);
+    }
+  }
+
+  // create default value JsonNodes from objects
+  private static JsonNode toJsonNode(Object o) {
+    try {
+      String s;
+      if (o instanceof ByteBuffer) {
+        // special case since GenericData.toString() is incorrect for bytes
+        // note that this does not handle the case of a default value with nested bytes
+        ByteBuffer bytes = ((ByteBuffer) o);
+        ((Buffer) bytes).mark();
+        byte[] data = new byte[bytes.remaining()];
+        bytes.get(data);
+        ((Buffer) bytes).reset(); // put the buffer back the way we got it
+        s = new String(data, StandardCharsets.ISO_8859_1);
+        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
+        s = "\"" + new String(quoted) + "\"";
+      } else if (o instanceof byte[]) {
+        s = new String((byte[]) o, StandardCharsets.ISO_8859_1);
+        char[] quoted = JsonStringEncoder.getInstance().quoteAsString(s);
+        s = '\"' + new String(quoted) + '\"';
+      } else if (o instanceof Double || o instanceof Float) {
+        return JacksonUtils.toJsonNode(o);
+      } else {
+        s = GenericData.get().toString(o);
+      }
+      return new ObjectMapper().readTree(s);
+    } catch (IOException | AvroRuntimeException e) {
+      throw new SchemaBuilderException(e);
     }
   }
 
