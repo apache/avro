@@ -33,7 +33,7 @@ class SchemaResolver {
         }
         Set<FileState> failedFiles = processingState.getFailedFiles();
         if (!failedFiles.isEmpty()) {
-            StringBuilder errorMessage = new StringBuilder("Could not compile schema definition files:");
+            StringBuilder errorMessage = new StringBuilder("Could not resolve schema definition files:");
             for (FileState fileState : failedFiles) {
                 String path = fileState.getPath();
                 String fileErrorMessage = fileState.getErrorMessage();
@@ -72,7 +72,7 @@ class SchemaResolver {
                 String typeName = duplicateTypeMatcher.group(1);
                 if (fileState.containsDuplicateTypeName(typeName)) {
                     throw new GradleException(
-                        String.format("Failed to compile schema definition file %s; contains duplicate type definition %s", path, typeName),
+                        String.format("Failed to resolve schema definition file %s; contains duplicate type definition %s", path, typeName),
                         ex);
                 } else {
                     fileState.setError(ex);
@@ -81,10 +81,10 @@ class SchemaResolver {
                     logger.debug("Identified duplicate type {} in {}; will re-process excluding it", typeName, path);
                 }
             } else {
-                throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
+                throw new GradleException(String.format("Failed to resolve schema definition file %s", path), ex);
             }
         } catch (IOException ex) {
-            throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
+            throw new GradleException(String.format("Failed to resolve schema definition file %s", path), ex);
         }
     }
 }

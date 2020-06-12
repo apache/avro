@@ -379,7 +379,22 @@ avro {
 }
 ```
 
-# Generating schema files
+# Resolving schema dependencies
+
+If desired, you can generate JSON schema with dependencies resolved.
+
+Example build:
+
+```groovy
+apply plugin: "com.commercehub.gradle.plugin.avro-base"
+
+tasks.register("resolveAvroDependencies", com.commercehub.gradle.plugin.avro.ResolveAvroDependenciesTask) {
+    source file("src/avro/normalized")
+    outputDir = file("build/avro/resolved")
+}
+```
+
+# Generating schema files from protocol/IDL
 
 If desired, you can generate JSON schema files.
 To do this, apply the plugin (either `avro` or `avro-base`), and define custom tasks as needed for the schema generation.

@@ -130,7 +130,7 @@ class DuplicateHandlingFunctionalSpec extends FunctionalSpec {
 
         then:
         result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Failed to compile schema definition file $errorFilePath; " +
+        result.output.contains("Failed to resolve schema definition file $errorFilePath; " +
             "contains duplicate type definition example.avro.date")
     }
 

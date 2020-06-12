@@ -195,6 +195,6 @@ class SchemaResolverSpec extends Specification {
 
         then:
         def ex = thrown(GradleException)
-        ex.message == "Failed to compile schema definition file ${file.path}; contains duplicate type definition example.avro.date"
+        ex.message == "Failed to resolve schema definition file ${file.path}; contains duplicate type definition example.avro.date"
     }
 }

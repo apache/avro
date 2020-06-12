@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Add `ResolveAvroDependenciesTask` (#115)
 
 ## 0.19.1
 * Fix schema dependency resolution when types are referenced with a `{ "type": NAME }` block rather than just `NAME` (#107)

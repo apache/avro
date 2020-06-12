@@ -103,4 +103,8 @@ class ProcessingState {
     Iterable<? extends Schema> getSchemasForLocation(String path) {
         return typeStates.values().stream().filter(it -> it.hasLocation(path)).map(TypeState::getSchema).collect(Collectors.toList());
     }
+
+    Iterable<? extends Schema> getSchemas() {
+        return typeStates.values().stream().map(TypeState::getSchema).collect(Collectors.toSet());
+    }
 }
