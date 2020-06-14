@@ -164,3 +164,15 @@ INPUT
    "fields":[{"name":"value", "type":["null", "int", "long", "PigValue"]}]}
 INPUT
 <<canonical {"name":"PigValue","type":"record","fields":[{"name":"value","type":["null","int","long","PigValue"],"order":"ASCENDING"}]}
+
+// 034
+<<INPUT {"namespace":"x.y.z", "type":"enum", "name":"foo", "doc":"foo bar", "symbols":["SPADES", "HEARTS", "DIAMONDS", "CLUBS"], "default": "HEARTS"}
+<<canonical {"name":"x.y.z.foo","type":"enum","symbols":["SPADES","HEARTS","DIAMONDS","CLUBS"],"doc":"foo bar","default":"HEARTS"}
+
+// 035
+<<INPUT {"type":"bytes", "logicalType":"decimal", "precision": 4, "scale": 2}
+<<canonical {"type":"bytes","logicalType":"decimal","precision":4,"scale":2}
+
+// 036
+<<INPUT {"type": "fixed", "size": 16, "name": "x", "logicalType": "decimal", "precision": 4, "scale": 2}
+<<canonical {"name":"x","type":"fixed","size":16,"logicalType":"decimal","precision":4,"scale":2}

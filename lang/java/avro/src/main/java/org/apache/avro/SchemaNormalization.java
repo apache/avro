@@ -188,6 +188,9 @@ public class SchemaNormalization {
         o.append("]");
       } else if (st == Schema.Type.FIXED) {
         o.append(",\"size\":").append(Integer.toString(s.getFixedSize()));
+        lt = s.getLogicalType();
+        // adding the logical property
+        if (!ps && lt != null) setLogicalProps(o, lt);
       } else { // st == Schema.Type.RECORD
         o.append(",\"fields\":[");
         for (Schema.Field f : s.getFields()) {
@@ -214,16 +217,22 @@ public class SchemaNormalization {
   private static Appendable writeLogicalType(Schema s, LogicalType lt, Appendable o, LinkedHashSet<String> aps)
       throws IOException {
     o.append("{\"type\":\"").append(s.getType().getName()).append("\"");
-    o.append("\"").append(LogicalType.LOGICAL_TYPE_PROP).append("\":\"").append(lt.getName()).append("\"");
+    // adding the logical property
+    setLogicalProps(o, lt);
+    // adding the reserved property
+    setSimpleProps(o, s.getObjectProps(), aps);
+    return o.append("}");
+  }
+
+  private static void setLogicalProps(Appendable o, LogicalType lt)
+    throws IOException {
+    o.append(",\"").append(LogicalType.LOGICAL_TYPE_PROP).append("\":\"").append(lt.getName()).append("\"");
     if (lt.getName().equals("decimal")) {
       LogicalTypes.Decimal dlt = (LogicalTypes.Decimal) lt;
       o.append(",\"precision\":").append(Integer.toString(dlt.getPrecision()));
       if (dlt.getScale() != 0)
         o.append(",\"scale\":").append(Integer.toString(dlt.getScale()));
     }
-    // adding the reserved property
-    setSimpleProps(o, s.getObjectProps(), aps);
-    return o.append("}");
   }
 
   private static void setSimpleProps(Appendable o, Map<String, Object> schemaProps, LinkedHashSet<String> aps)
@@ -241,6 +250,9 @@ public class SchemaNormalization {
       o.append(",\"doc\":\"").append(s.getDoc()).append("\"");
     if (s.getAliases() != null && !s.getAliases().isEmpty())
       o.append(",\"aliases\":").append(JacksonUtils.toJsonNode(new TreeSet<String>(s.getAliases())).toString());
+    if (s.getType() == Schema.Type.ENUM && s.getEnumDefault() != null) {
+      o.append(",\"default\":").append(JacksonUtils.toJsonNode(s.getEnumDefault()).toString());
+    }
   }
 
   private static void setFieldProps(Appendable o, Schema.Field f, LinkedHashSet<String> aps) throws IOException {
