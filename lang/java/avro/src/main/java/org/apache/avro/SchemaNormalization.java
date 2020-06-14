@@ -190,7 +190,8 @@ public class SchemaNormalization {
         o.append(",\"size\":").append(Integer.toString(s.getFixedSize()));
         lt = s.getLogicalType();
         // adding the logical property
-        if (!ps && lt != null) setLogicalProps(o, lt);
+        if (!ps && lt != null)
+          setLogicalProps(o, lt);
       } else { // st == Schema.Type.RECORD
         o.append(",\"fields\":[");
         for (Schema.Field f : s.getFields()) {
@@ -224,8 +225,7 @@ public class SchemaNormalization {
     return o.append("}");
   }
 
-  private static void setLogicalProps(Appendable o, LogicalType lt)
-    throws IOException {
+  private static void setLogicalProps(Appendable o, LogicalType lt) throws IOException {
     o.append(",\"").append(LogicalType.LOGICAL_TYPE_PROP).append("\":\"").append(lt.getName()).append("\"");
     if (lt.getName().equals("decimal")) {
       LogicalTypes.Decimal dlt = (LogicalTypes.Decimal) lt;
