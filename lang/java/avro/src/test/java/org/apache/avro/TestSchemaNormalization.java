@@ -113,47 +113,6 @@ public class TestSchemaNormalization {
   }
 
   @RunWith(Parameterized.class)
-  public static class TestStandardCanonicalSchema {
-    String input, expectedOutput;
-
-    public TestStandardCanonicalSchema(String i, String o) {
-      input = i;
-      expectedOutput = o;
-    }
-
-    @Parameters
-    public static List<Object[]> cases() throws IOException {
-      return CaseFinder.find(data(STANDARD_CANONICAL_DATA_FILE), "canonical", new ArrayList<>());
-    }
-
-    @Test
-    public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input)), expectedOutput);
-    }
-  }
-
-  @RunWith(Parameterized.class)
-  public static class TestCustomCanonicalSchema {
-    String input, expectedOutput;
-    LinkedHashSet<String> properties = new LinkedHashSet<>(Arrays.asList("format"));
-
-    public TestCustomCanonicalSchema(String i, String o) {
-      input = i;
-      expectedOutput = o;
-    }
-
-    @Parameters
-    public static List<Object[]> cases() throws IOException {
-      return CaseFinder.find(data(CUSTOM_CANONICAL_DATA_FILE), "canonical", new ArrayList<>());
-    }
-
-    @Test
-    public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toCanonicalForm(new Schema.Parser().parse(input), properties), expectedOutput);
-    }
-  }
-
-  @RunWith(Parameterized.class)
   public static class TestFingerprint {
     String input, expectedOutput;
 
