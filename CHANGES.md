@@ -1,6 +1,9 @@
 # Change Log
 
 ## Unreleased
+* Built using Gradle 6.5
+* Updated compatibility testing to include Java 14
+* Updated compatibility testing through Gradle 6.5
 * Add `ResolveAvroDependenciesTask` (#115)
 
 ## 0.19.1

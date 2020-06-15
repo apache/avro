@@ -243,12 +243,12 @@ if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_13)) {
     firstSupportedGradleVersion = gradleVersions.first()
 }
 if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_14)) {
-    // Java 14 support will be added in Gradle 6.3
+    // Java 14 support was added in Gradle 6.3
     gradleVersions.addAll("6.0", "6.0.1", "6.1", "6.1.1", "6.2", "6.2.1", "6.2.2")
-    keyGradleVersions.addAll("6.0", "6.2.2") // First and last for the 6.x line
+    keyGradleVersions.addAll("6.0", "6.2.2") // First and last for the 6.x line before Java 14 support
 }
-gradleVersions.addAll("6.3-20200309143235+0000")
-keyGradleVersions.addAll("6.3-20200309143235+0000")
+gradleVersions.addAll("6.3", "6.4", "6.4.1", "6.5")
+keyGradleVersions.addAll("6.3", "6.5") // First and last for the 6.x line after Java 14 support
 
 def latestAvroVersion = avroVersions.last()
 def latestGradleVersion = gradleVersions.last()
