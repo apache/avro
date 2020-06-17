@@ -19,7 +19,10 @@
 
 namespace Apache\Avro\Tests;
 
+use Apache\Avro\Datum\AvroIOBinaryEncoder;
 use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\Datum\AvroIODatumWriter;
+use Apache\Avro\IO\AvroStringIO;
 use Apache\Avro\Schema\AvroSchema;
 use PHPUnit\Framework\TestCase;
 
@@ -35,5 +38,27 @@ JSON;
         $this->assertTrue(AvroIODatumReader::schemasMatch(
             AvroSchema::parse($writers_schema),
             AvroSchema::parse($readers_schema)));
+    }
+
+    public function testRecordNullField()
+    {
+        $schema_json = <<<_JSON
+{"name":"member",
+ "type":"record",
+ "fields":[{"name":"one", "type":"int"},
+           {"name":"two", "type":["null", "string"]}
+           ]}
+_JSON;
+
+        $schema = AvroSchema::parse($schema_json);
+        $datum = array("one" => 1);
+
+        $io = new AvroStringIO();
+        $writer = new AvroIODatumWriter($schema);
+        $encoder = new AvroIOBinaryEncoder($io);
+        $writer->write($datum, $encoder);
+        $bin = $io->string();
+
+        $this->assertSame('0200', bin2hex($bin));
     }
 }

@@ -132,7 +132,7 @@
 		  impacts sort ordering of this record (optional).
 		  Valid values are "ascending" (the default),
 		  "descending", or "ignore".  For more details on how
-		  this is used, see the the <a href="#order">sort
+		  this is used, see the <a href="#order">sort
 		  order</a> section below.</li>
 		<li><code>aliases:</code> a JSON array of strings, providing
 		  alternate names for this field (optional).</li>
@@ -284,6 +284,10 @@
         null namespace.
         Equality of names (including field names and enum symbols)
         as well as fullnames is case-sensitive.</p>
+        <p> The null namespace may not be used in a dot-separated
+        sequence of names.  So the grammar for a namespace
+        is:</p>
+        <p>&nbsp;&nbsp;<code>&lt;empty&gt; | &lt;name&gt;[(&lt;dot&gt;&lt;name&gt;)*]</code></p>
         <p>In record, enum and fixed definitions, the fullname is
         determined in one of the following ways:</p>
 	<ul>
