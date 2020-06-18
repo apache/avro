@@ -6,6 +6,22 @@ plugins {
     id "maven-publish"
     id "java-gradle-plugin"
     id "com.jfrog.bintray" version "1.8.1"
+    id "org.nosphere.gradle.github.actions" version "1.2.0"
+    id "com.gradle.enterprise" version "3.3.4"
+}
+
+gradleEnterprise {
+    buildScan {
+        if (System.getenv("CI")) {
+            termsOfServiceUrl = "https://gradle.com/terms-of-service"
+            termsOfServiceAgree = "yes"
+            publishAlways()
+            uploadInBackground = false
+            tag "CI"
+        } else {
+            tag "Local"
+        }
+    }
 }
 
 repositories {
