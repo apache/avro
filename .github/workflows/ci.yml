@@ -1,6 +1,9 @@
 name: CI Build
 on: [push, pull_request]
 jobs:
+  # Run the main project first to get rapid feedback about anything broken
+  # on the most important supported versions (latest supported Avro/Gradle,
+  # earliest supported Java major version)
   build:
     name: Java ${{ matrix.java }}/${{ matrix.os }} baseline build
     runs-on: ${{ matrix.os }}
@@ -19,13 +22,19 @@ jobs:
     - name: Output Java version
       run: java -version
     - name: Output Gradle version
-      run: ./gradlew --version
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --version
     - name: Build with Gradle
-      run: ./gradlew build --info
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --info build
+    - name: Stop Gradle Daemon
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --stop
+  # Run further compatibility tests to ensure that key versions of Gradle/Avro
+  # work on a variety of OS/Java version combinations
   recent-compatibility-tests:
     name: Java ${{ matrix.java }}/${{ matrix.os }} recent version compatibility
     needs: [build]
@@ -48,13 +57,19 @@ jobs:
     - name: Output Java version
       run: java -version
     - name: Output Gradle version
-      run: ./gradlew --version
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --version
     - name: Run recent version compatibility tests
-      run: ./gradlew testRecentVersionCompatibility --info
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --info testRecentVersionCompatibility
+    - name: Stop Gradle Daemon
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --stop
+  # Run exhaustive compatibility testing of further Gradle/Avro versions on a
+  # smaller set of OS/Java versions
   full-compatibility-tests:
     name: Java ${{ matrix.java }}/${{ matrix.os }} full compatibility
     needs: [build]
@@ -75,14 +90,22 @@ jobs:
     - name: Output Java version
       run: java -version
     - name: Output Gradle version
-      run: ./gradlew --version
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --version
     - name: Run full version compatibility tests
-      run: ./gradlew testVersionCompatibility --info
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --info testVersionCompatibility
+    - name: Stop Gradle Daemon
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --stop
+  # Early visibility to whether the project works on upcoming Java versions
   unsupported-java-versions:
+    # Most Java version compatibility failures will manifest directly in the
+    # test suite with any Avro version; no need to run compatibity test
+    # target.
     name: Java ${{ matrix.java }}/${{ matrix.os }} compatibility
     needs: [build]
     runs-on: ${{ matrix.os }}
@@ -104,13 +127,18 @@ jobs:
     - name: Output Java version
       run: java -version
     - name: Output Gradle version
-      run: ./gradlew --version
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --version
     - name: Build with Gradle
       continue-on-error: true
-      # Most Java version compatibility failures will manifest directly in the
-      # test suite with any Avro version
-      run: ./gradlew build --info
-      env:
-        GRADLE_OPTS: -Dorg.gradle.daemon=false
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --info build
+    - name: Build with Gradle
+      continue-on-error: true
+      run: ./gradlew --no-daemon --info build
+    - name: Stop Gradle Daemon
+      uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: --stop
