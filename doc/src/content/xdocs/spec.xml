@@ -132,7 +132,7 @@
 		  impacts sort ordering of this record (optional).
 		  Valid values are "ascending" (the default),
 		  "descending", or "ignore".  For more details on how
-		  this is used, see the the <a href="#order">sort
+		  this is used, see the <a href="#order">sort
 		  order</a> section below.</li>
 		<li><code>aliases:</code> a JSON array of strings, providing
 		  alternate names for this field (optional).</li>
@@ -284,6 +284,10 @@
         null namespace.
         Equality of names (including field names and enum symbols)
         as well as fullnames is case-sensitive.</p>
+        <p> The null namespace may not be used in a dot-separated
+        sequence of names.  So the grammar for a namespace
+        is:</p>
+        <p>&nbsp;&nbsp;<code>&lt;empty&gt; | &lt;name&gt;[(&lt;dot&gt;&lt;name&gt;)*]</code></p>
         <p>In record, enum and fixed definitions, the fullname is
         determined in one of the following ways:</p>
 	<ul>
@@ -546,7 +550,7 @@
 
           <section id="union_encoding">
             <title>Unions</title>
-            <p>A union is encoded by first writing a <code>long</code>
+            <p>A union is encoded by first writing an <code>int</code>
               value indicating the zero-based position within the
               union of the schema of its value.  The value is then
               encoded per the indicated schema within the union.</p>
@@ -560,6 +564,8 @@
                 followed by the serialized string:
                 <source>02 02 61</source></li>
             </ul>
+            <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long. 
+            In reality, we don't expect unions with 215M members </p>
           </section>
 
           <section id="fixed_encoding">
@@ -786,12 +792,31 @@
       <section>
 	<title>Optional Codecs</title>
         <section>
+          <title>bzip2</title>
+          <p>The "bzip2" codec uses the <a href="https://sourceware.org/bzip2/">bzip2</a>
+            compression library.</p>
+        </section>
+
+        <section>
           <title>snappy</title>
           <p>The "snappy" codec uses
             Google's <a href="https://code.google.com/p/snappy/">Snappy</a>
             compression library.  Each compressed block is followed
             by the 4-byte, big-endian CRC32 checksum of the
             uncompressed data in the block.</p>
+        </section>
+
+        <section>
+          <title>xz</title>
+          <p>The "xz" codec uses the <a href="https://tukaani.org/xz/">XZ</a>
+            compression library.</p>
+        </section>
+
+        <section>
+          <title>zstandard</title>
+          <p>The "zstandard" codec uses
+            Facebook's <a href="https://facebook.github.io/zstd/">Zstandard</a>
+            compression library.</p>
         </section>
       </section>
     </section>
@@ -1502,6 +1527,13 @@ void initFPTable() {
         <p>
           A <code>date</code> logical type annotates an Avro <code>int</code>, where the int stores the number of days from the unix epoch, 1 January 1970 (ISO calendar).
         </p>
+        <p>The following schema represents a date:</p>
+        <source>
+{
+  "type": "int",
+  "logicalType": "date"
+}
+        </source>
       </section>
 
       <section>

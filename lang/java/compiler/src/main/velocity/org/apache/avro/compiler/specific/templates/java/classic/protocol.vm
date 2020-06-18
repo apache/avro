@@ -47,7 +47,7 @@ public interface $this.mangle($protocol.getName()) {
   #if ($message.isOneWay())void#else${this.javaUnbox($response, true)}#end
  ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
-#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
+#*      *#${this.javaUnbox($p.schema(), false)} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
 #end
 )#if (! $message.isOneWay() && $message.getErrors().getTypes().size() > 1)
  throws ##
@@ -85,7 +85,7 @@ ${this.mangle($error.getFullName())}##
      */
     void ${this.mangle($name)}(##
 #foreach ($p in $message.getRequest().getFields())##
-#*      *#${this.javaUnbox($p.schema())} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
+#*      *#${this.javaUnbox($p.schema(), false)} ${this.mangle($p.name())}#if ($foreach.hasNext), #end
 #end
 #if ($message.getRequest().getFields().size() > 0), #end
 org.apache.avro.ipc.Callback<${this.javaType($response)}> callback) throws java.io.IOException;

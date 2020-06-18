@@ -160,12 +160,11 @@ public class TestGenericData {
     assertFalse(record1.equals(record2));
   }
 
-  @Test
+  @Test(expected = AvroRuntimeException.class)
   public void testRecordGetFieldDoesntExist() throws Exception {
-    List<Field> fields = new ArrayList<>();
-    Schema schema = Schema.createRecord(fields);
+    Schema schema = Schema.createRecord("test", "doc", "test", false, Collections.EMPTY_LIST);
     GenericData.Record record = new GenericData.Record(schema);
-    assertNull(record.get("does not exist"));
+    record.get("does not exist");
   }
 
   @Test

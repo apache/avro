@@ -388,12 +388,35 @@ public abstract class Schema extends JsonProperties implements Serializable {
    * @param pretty if true, pretty-print JSON.
    */
   public String toString(boolean pretty) {
+    return toString(new Names(), pretty);
+  }
+
+  /**
+   * Render this as <a href="https://json.org/">JSON</a>, but without inlining the
+   * referenced schemas.
+   *
+   * @param referencedSchemas referenced schemas
+   * @param pretty            if true, pretty-print JSON.
+   */
+  // Use at your own risk. This method should be removed with AVRO-2832.
+  @Deprecated
+  public String toString(Collection<Schema> referencedSchemas, boolean pretty) {
+    Schema.Names names = new Schema.Names();
+    if (referencedSchemas != null) {
+      for (Schema s : referencedSchemas) {
+        names.add(s);
+      }
+    }
+    return toString(names, pretty);
+  }
+
+  String toString(Names names, boolean pretty) {
     try {
       StringWriter writer = new StringWriter();
       JsonGenerator gen = FACTORY.createGenerator(writer);
       if (pretty)
         gen.useDefaultPrettyPrinter();
-      toJson(new Names(), gen);
+      toJson(names, gen);
       gen.flush();
       return writer.toString();
     } catch (IOException e) {
@@ -879,11 +902,12 @@ public abstract class Schema extends JsonProperties implements Serializable {
         throw new AvroRuntimeException("Fields are already set");
       }
       int i = 0;
-      fieldMap = new HashMap<>();
-      LockableArrayList ff = new LockableArrayList();
+      fieldMap = new HashMap<>(Math.multiplyExact(2, fields.size()));
+      LockableArrayList<Field> ff = new LockableArrayList<>(fields.size());
       for (Field f : fields) {
-        if (f.position != -1)
+        if (f.position != -1) {
           throw new AvroRuntimeException("Field already used: " + f);
+        }
         f.position = i++;
         final Field existingField = fieldMap.put(f.name(), f);
         if (existingField != null) {
@@ -999,15 +1023,18 @@ public abstract class Schema extends JsonProperties implements Serializable {
     public EnumSchema(Name name, String doc, LockableArrayList<String> symbols, String enumDefault) {
       super(Type.ENUM, name, doc);
       this.symbols = symbols.lock();
-      this.ordinals = new HashMap<>();
+      this.ordinals = new HashMap<>(Math.multiplyExact(2, symbols.size()));
       this.enumDefault = enumDefault;
       int i = 0;
-      for (String symbol : symbols)
-        if (ordinals.put(validateName(symbol), i++) != null)
+      for (String symbol : symbols) {
+        if (ordinals.put(validateName(symbol), i++) != null) {
           throw new SchemaParseException("Duplicate enum symbol: " + symbol);
-      if (enumDefault != null && !symbols.contains(enumDefault))
+        }
+      }
+      if (enumDefault != null && !symbols.contains(enumDefault)) {
         throw new SchemaParseException(
             "The Enum Default: " + enumDefault + " is not in the enum symbol set: " + symbols);
+      }
     }
 
     @Override
@@ -1146,20 +1173,24 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   private static class UnionSchema extends Schema {
     private final List<Schema> types;
-    private final Map<String, Integer> indexByName = new HashMap<>();
+    private final Map<String, Integer> indexByName;
 
     public UnionSchema(LockableArrayList<Schema> types) {
       super(Type.UNION);
+      this.indexByName = new HashMap<>(Math.multiplyExact(2, types.size()));
       this.types = types.lock();
       int index = 0;
       for (Schema type : types) {
-        if (type.getType() == Type.UNION)
+        if (type.getType() == Type.UNION) {
           throw new AvroRuntimeException("Nested union: " + this);
+        }
         String name = type.getFullName();
-        if (name == null)
+        if (name == null) {
           throw new AvroRuntimeException("Nameless in union:" + this);
-        if (indexByName.put(name, index++) != null)
+        }
+        if (indexByName.put(name, index++) != null) {
           throw new AvroRuntimeException("Duplicate in union:" + name);
+        }
       }
     }
 
@@ -1552,7 +1583,9 @@ public abstract class Schema extends JsonProperties implements Serializable {
     case FIXED:
       return defaultValue.isTextual();
     case INT:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToInt();
     case LONG:
+      return defaultValue.isIntegralNumber() && defaultValue.canConvertToLong();
     case FLOAT:
     case DOUBLE:
       return defaultValue.isNumber();

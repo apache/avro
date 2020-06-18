@@ -43,6 +43,8 @@ public class TestSpecificCompilerTool {
   private static final File TEST_EXPECTED_OUTPUT_DIR = new File(TEST_DIR, "output");
   private static final File TEST_EXPECTED_POSITION = new File(TEST_EXPECTED_OUTPUT_DIR, "Position.java");
   private static final File TEST_EXPECTED_PLAYER = new File(TEST_EXPECTED_OUTPUT_DIR, "Player.java");
+  private static final File TEST_EXPECTED_FIELDVISIBILITYTEST = new File(TEST_EXPECTED_OUTPUT_DIR,
+      "FieldVisibilityTest.java");
 
   private static final File TEST_EXPECTED_STRING_OUTPUT_DIR = new File(TEST_DIR, "output-string");
   private static final File TEST_EXPECTED_STRING_POSITION = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
@@ -56,6 +58,8 @@ public class TestSpecificCompilerTool {
   private static final File TEST_OUTPUT_DIR = new File("target/compiler/output");
   private static final File TEST_OUTPUT_PLAYER = new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Player.java");
   private static final File TEST_OUTPUT_POSITION = new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Position.java");
+  private static final File TEST_OUTPUT_FIELDVISIBILITYTEST = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/FieldVisibilityTest.java");
 
   private static final File TEST_OUTPUT_STRING_DIR = new File("target/compiler/output-string");
   private static final File TEST_OUTPUT_STRING_PLAYER = new File(TEST_OUTPUT_STRING_DIR,
@@ -68,6 +72,15 @@ public class TestSpecificCompilerTool {
   @Before
   public void setUp() {
     TEST_OUTPUT_DIR.delete();
+  }
+
+  @Test
+  public void testCompileSchemaWithFieldVisibility() throws Exception {
+
+    TEST_OUTPUT_FIELDVISIBILITYTEST.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-fieldVisibility", "public_deprecated", "schema",
+        TEST_INPUT_DIR.toString() + "/fieldvisibilitytest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_FIELDVISIBILITYTEST, TEST_OUTPUT_FIELDVISIBILITYTEST);
   }
 
   @Test
@@ -113,6 +126,34 @@ public class TestSpecificCompilerTool {
     assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
   }
 
+  @Test
+  public void testOrderingOfFlags() throws Exception {
+
+    // Order of Flags as per initial implementation
+    doCompile(new String[] { "-encoding", "UTF-8", "-string", "-bigDecimal", "schema",
+        TEST_INPUT_DIR.toString() + "/fieldtest.avsc", TEST_INPUT_DIR.toString() + "/fieldtest.avsc",
+        TEST_OUTPUT_STRING_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
+
+    // Change order of encoding and string
+    doCompile(new String[] { "-string", "-encoding", "UTF-8", "-bigDecimal", "schema",
+        TEST_INPUT_DIR.toString() + "/fieldtest.avsc", TEST_INPUT_DIR.toString() + "/fieldtest.avsc",
+        TEST_OUTPUT_STRING_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
+
+    // Change order of -string and -bigDecimal
+    doCompile(new String[] { "-bigDecimal", "-encoding", "UTF-8", "-string", "schema",
+        TEST_INPUT_DIR.toString() + "/fieldtest.avsc", TEST_INPUT_DIR.toString() + "/fieldtest.avsc",
+        TEST_OUTPUT_STRING_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
+
+    // Keep encoding at the end
+    doCompile(new String[] { "-bigDecimal", "-string", "-encoding", "UTF-8", "schema",
+        TEST_INPUT_DIR.toString() + "/fieldtest.avsc", TEST_INPUT_DIR.toString() + "/fieldtest.avsc",
+        TEST_OUTPUT_STRING_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_STRING_FIELDTEST, TEST_OUTPUT_STRING_FIELDTEST);
+  }
+
   // Runs the actual compiler tool with the given input args
   private void doCompile(String[] args) throws Exception {
     SpecificCompilerTool tool = new SpecificCompilerTool();
@@ -150,6 +191,7 @@ public class TestSpecificCompilerTool {
       }
       sb.append(line);
     }
+    reader.close();
     return sb.toString();
   }
 }

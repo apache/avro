@@ -34,6 +34,7 @@ RUN apt-get -qqy update \
                                                  bzip2 \
                                                  bundler \
                                                  cmake \
+                                                 cppcheck \
                                                  curl \
                                                  doxygen \
                                                  flex \
@@ -49,6 +50,7 @@ RUN apt-get -qqy update \
                                                  libsnappy1v5 \
                                                  make \
                                                  maven \
+                                                 mypy \
                                                  openjdk-8-jdk \
                                                  perl \
                                                  python \
@@ -79,24 +81,41 @@ RUN curl -sSL https://deb.nodesource.com/setup_10.x \
  && npm cache clean --force
 
 # Install PHP
-# TODO: Remove php5-related packages when we drop PHP 5.6 support in the future
-# TODO: Consolidate the php versions into a single one (7.x) when we drop PHP 5.6 support in the future
-ENV PHP5_VERSION=5.6 \
-    PHP7_VERSION=7.1
+ENV PHP7_VERSION=7.3
 RUN curl -sSL https://packages.sury.org/php/apt.gpg \
   | apt-key add --no-tty - \
  && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
  && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends php${PHP5_VERSION} \
-                                                 php${PHP5_VERSION}-gmp \
+ && apt-get -qqy install --no-install-recommends libzstd-dev \
+                                                 libbz2-dev \
                                                  php${PHP7_VERSION} \
+                                                 php${PHP7_VERSION}-bz2 \
                                                  php${PHP7_VERSION}-gmp \
+                                                 php${PHP7_VERSION}-xml \
+                                                 php${PHP7_VERSION}-mbstring \
+                                                 php${PHP7_VERSION}-dev \
+ && mkdir tmp && cd tmp \
+ && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-zstd.git \
+ && cd php-ext-zstd \
+ && phpize \
+ && ./configure \
+ && make \
+ && make install \
+ && echo "extension=zstd.so" > /etc/php/7.3/cli/conf.d/10-zstd.ini \
+ && cd .. && rm -rf php-ext-zstd \
+ && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-snappy.git \
+ && cd php-ext-snappy \
+ && phpize \
+ && ./configure \
+ && make \
+ && make install \
+ && echo "extension=snappy.so" > /etc/php/7.3/cli/conf.d/10-snappy.ini \
+ && cd .. && rm -rf php-ext-snappy \
+ && php -m \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
-# Install PHPUnit 5.7, which is the only version that supports both PHP 5.6 and 7.x
-# TODO: use PHPUnit 7.x instead of 5.7 when we drop PHP 5.6 support in the future
-RUN curl -sSL https://phar.phpunit.de/phpunit-5.7.phar > /usr/local/bin/phpunit \
- && chmod +x /usr/local/bin/phpunit
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
 RUN apt-get -qqy update \
@@ -118,7 +137,6 @@ RUN curl -sSL https://cpanmin.us \
   | perl - --self-upgrade \
  && cpanm --mirror https://www.cpan.org/ install Compress::Zstd \
                                                  Module::Install::Repository \
-                                                 Test::Pod \
  && rm -rf .cpanm
 
 # Install Python packages

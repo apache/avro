@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 
@@ -57,10 +58,10 @@ public class DatagramTransceiver extends Transceiver {
 
   @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
-    buffer.clear();
+    ((Buffer) buffer).clear();
     remote = channel.receive(buffer);
     LOG.info("received from " + remote);
-    buffer.flip();
+    ((Buffer) buffer).flip();
     List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
       int length = buffer.getInt();
@@ -68,21 +69,21 @@ public class DatagramTransceiver extends Transceiver {
         return buffers;
       }
       ByteBuffer chunk = buffer.slice(); // use data without copying
-      chunk.limit(length);
-      buffer.position(buffer.position() + length);
+      ((Buffer) chunk).limit(length);
+      ((Buffer) buffer).position(buffer.position() + length);
       buffers.add(chunk);
     }
   }
 
   @Override
   public synchronized void writeBuffers(List<ByteBuffer> buffers) throws IOException {
-    buffer.clear();
+    ((Buffer) buffer).clear();
     for (ByteBuffer b : buffers) {
       buffer.putInt(b.remaining());
       buffer.put(b); // copy data. sigh.
     }
     buffer.putInt(0);
-    buffer.flip();
+    ((Buffer) buffer).flip();
     channel.send(buffer, remote);
     LOG.info("sent to " + remote);
   }

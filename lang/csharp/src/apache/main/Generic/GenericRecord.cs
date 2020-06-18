@@ -32,7 +32,7 @@ namespace Avro.Generic
         /// </summary>
         public RecordSchema Schema { get; private set; }
 
-        private readonly Dictionary<string, object> contents = new Dictionary<string, object>();
+        private readonly object[] contents;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenericRecord"/> class.
@@ -41,6 +41,7 @@ namespace Avro.Generic
         public GenericRecord(RecordSchema schema)
         {
             this.Schema = schema;
+            contents = new object[schema.Fields.Count];
         }
 
         /// <summary>
@@ -56,13 +57,19 @@ namespace Avro.Generic
         /// </exception>
         public object this[string fieldName]
         {
-            get { return contents[fieldName]; }
+            get
+            {
+                if (Schema.TryGetField(fieldName, out Field field))
+                {
+                    return contents[field.Pos];
+                }
+                throw new KeyNotFoundException("Key name: " + fieldName);
+            }
         }
 
         /// <summary>
         /// Sets the value for a field. You may call this method multiple times with the same
-        /// field name to change its value. The given field name must exist in the schema. This
-        /// method does not ensure that the given field value is compatible with the field's schema.
+        /// field name to change its value. The given field name must exist in the schema.
         /// </summary>
         /// <param name="fieldName">Name of the field.</param>
         /// <param name="fieldValue">Value of the field.</param>
@@ -71,13 +78,14 @@ namespace Avro.Generic
         /// </exception>
         public void Add(string fieldName, object fieldValue)
         {
-            if (Schema.Contains(fieldName))
+            if (Schema.TryGetField(fieldName, out Field field))
             {
                 // TODO: Use a matcher to verify that object has the right type for the field.
                 //contents.Add(fieldName, fieldValue);
-                contents[fieldName] = fieldValue;
+                contents[field.Pos] = fieldValue;
                 return;
             }
+
             throw new AvroException("No such field: " + fieldName);
         }
 
@@ -91,12 +99,65 @@ namespace Avro.Generic
         /// </param>
         /// <returns>
         /// True if the field was found in the record. This method will only return true if
-        /// <see cref="Add(string, object)"/> has been called for the given field name. This method
-        /// cannot be used to determine whether or not the schema has a field with a given name.
+        /// <see cref="Add(string, object)"/> has been called for the given field name.
         /// </returns>
         public bool TryGetValue(string fieldName, out object result)
         {
-            return contents.TryGetValue(fieldName, out result);
+            if (!Schema.TryGetField(fieldName, out Field field))
+            {
+                result = null;
+                return false;
+            }
+
+            result = contents[field.Pos];
+            return true;
+        }
+
+        /// <summary>
+        /// Returns the value of the field with the given position.
+        /// </summary>
+        /// <param name="fieldPos">The position of the field.</param>
+        /// <returns>Value of the field with the given position.</returns>
+        /// <exception cref="IndexOutOfRangeException">
+        /// <paramref name="fieldPos"/>
+        /// </exception>
+        public object GetValue(int fieldPos)
+        {
+            return contents[fieldPos];
+        }
+
+
+        /// <summary>
+        /// Adds the value in the specified field position.
+        /// </summary>
+        /// <param name="fieldPos">Position of the field.</param>
+        /// <param name="fieldValue">The value to add.</param>
+        /// <exception cref="IndexOutOfRangeException">
+        /// <paramref name="fieldPos"/>.
+        /// </exception>
+        public void Add(int fieldPos, object fieldValue) => contents[fieldPos] = fieldValue;
+
+        /// <summary>
+        /// Gets the value in the specified field position.
+        /// </summary>
+        /// <param name="fieldPos">Position of the field.</param>
+        /// <param name="result">
+        /// When this method returns true, contains the value of the specified field;
+        /// otherwise, null.
+        /// </param>
+        /// <returns>
+        /// True if the field position is valid.
+        /// </returns>
+        public bool TryGetValue(int fieldPos, out object result)
+        {
+            if (fieldPos < contents.Length)
+            {
+                result = contents[fieldPos];
+                return true;
+            }
+
+            result = null;
+            return false;
         }
 
         /// <inheritdoc/>
@@ -111,7 +172,7 @@ namespace Avro.Generic
         public bool Equals(GenericRecord other)
         {
             return Schema.Equals(other.Schema)
-                && mapsEqual(contents, other.contents);
+                && arraysEqual(contents, other.contents);
         }
 
         private static bool mapsEqual(IDictionary d1, IDictionary d2)
@@ -171,11 +232,11 @@ namespace Avro.Generic
             sb.Append(Schema);
             sb.Append(", contents: ");
             sb.Append("{ ");
-            foreach (KeyValuePair<string, object> kv in contents)
+            foreach (var field in Schema.Fields)
             {
-                sb.Append(kv.Key);
+                sb.Append(field.Name);
                 sb.Append(": ");
-                sb.Append(kv.Value);
+                sb.Append(contents[field.Pos]);
                 sb.Append(", ");
             }
             sb.Append("}");

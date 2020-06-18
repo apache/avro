@@ -251,6 +251,11 @@ public class TestReflectLogicalTypes {
       public LogicalType fromSchema(Schema schema) {
         return PAIR;
       }
+
+      @Override
+      public String getTypeName() {
+        return "pair";
+      }
     });
 
     Schema schema = model.getSchema(PairRecord.class);

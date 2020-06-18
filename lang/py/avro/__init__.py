@@ -19,4 +19,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import pkgutil
+
 __all__ = ['schema', 'io', 'datafile', 'protocol', 'ipc', 'constants', 'timezones', 'codecs']
+
+__version__ = (pkgutil.get_data(__name__, 'VERSION.txt') or b'0.0.1+unknown').decode().strip()

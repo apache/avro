@@ -27,4 +27,9 @@ public interface GenericRecord extends IndexedRecord {
 
   /** Return the value of a field given its name. */
   Object get(String key);
+
+  /** Return true if record has field with name: key */
+  default boolean hasField(String key) {
+    return getSchema().getField(key) != null;
+  }
 }

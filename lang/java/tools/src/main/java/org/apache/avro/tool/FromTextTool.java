@@ -21,6 +21,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -86,21 +87,21 @@ public class FromTextTool implements Tool {
         if (b == '\n') { // newline
           if (!returnSeen) {
             System.out.println("Writing line = " + line.position());
-            line.flip();
+            ((Buffer) line).flip();
             writer.append(line);
-            line.clear();
+            ((Buffer) line).clear();
           } else {
             returnSeen = false;
           }
         } else if (b == '\r') { // return
-          line.flip();
+          ((Buffer) line).flip();
           writer.append(line);
-          line.clear();
+          ((Buffer) line).clear();
           returnSeen = true;
         } else {
           if (line.position() == line.limit()) { // reallocate longer line
             ByteBuffer tempLine = ByteBuffer.allocate(line.limit() * 2);
-            line.flip();
+            ((Buffer) line).flip();
             tempLine.put(line);
             line = tempLine;
           }

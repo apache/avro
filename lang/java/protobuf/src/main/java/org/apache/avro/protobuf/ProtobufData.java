@@ -138,7 +138,7 @@ public class ProtobufData extends GenericData {
     try {
       Class c = SpecificData.get().getClass(schema);
       if (c == null)
-        return newRecord(old, schema); // punt to generic
+        return super.newRecord(old, schema); // punt to generic
       if (c.isInstance(old))
         return old; // reuse instance
       return c.getMethod("newBuilder").invoke(null);
@@ -212,7 +212,7 @@ public class ProtobufData extends GenericData {
 
       seen.put(descriptor, result);
 
-      List<Field> fields = new ArrayList<>();
+      List<Field> fields = new ArrayList<>(descriptor.getFields().size());
       for (FieldDescriptor f : descriptor.getFields())
         fields.add(Accessor.createField(f.getName(), getSchema(f), null, getDefault(f)));
       result.setFields(fields);
@@ -253,7 +253,7 @@ public class ProtobufData extends GenericData {
 
   private static String toCamelCase(String s) {
     String[] parts = s.split("_");
-    StringBuilder camelCaseString = new StringBuilder();
+    StringBuilder camelCaseString = new StringBuilder(s.length());
     for (String part : parts) {
       camelCaseString.append(cap(part));
     }
@@ -315,7 +315,7 @@ public class ProtobufData extends GenericData {
   }
 
   public Schema getSchema(EnumDescriptor d) {
-    List<String> symbols = new ArrayList<>();
+    List<String> symbols = new ArrayList<>(d.getValues().size());
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
     }
@@ -327,8 +327,11 @@ public class ProtobufData extends GenericData {
   private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
   private JsonNode getDefault(FieldDescriptor f) {
-    if (f.isRequired() || f.isRepeated()) // no default
+    if (f.isRequired()) // no default
       return null;
+
+    if (f.isRepeated()) // empty array as repeated fields' default value
+      return NODES.arrayNode();
 
     if (f.hasDefaultValue()) { // parse spec'd default value
       Object value = f.getDefaultValue();

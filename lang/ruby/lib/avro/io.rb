@@ -300,12 +300,12 @@ module Avro
         index_of_symbol = decoder.read_int
         read_symbol = writers_schema.symbols[index_of_symbol]
 
-        # TODO(jmhodges): figure out what unset means for resolution
-        # schema resolution
-        unless readers_schema.symbols.include?(read_symbol)
-          # 'unset' here
+        if !readers_schema.symbols.include?(read_symbol) && readers_schema.default
+          read_symbol = readers_schema.default
         end
 
+        # This implementation deviates from the spec by always returning
+        # a symbol.
         read_symbol
       end
 
@@ -359,26 +359,28 @@ module Avro
         readers_fields_hash = readers_schema.fields_hash
         read_record = {}
         writers_schema.fields.each do |field|
-          if (readers_field = readers_fields_hash[field.name])
+          readers_field = readers_fields_hash[field.name]
+          if readers_field
             field_val = read_data(field.type, readers_field.type, decoder)
             read_record[field.name] = field_val
+          elsif readers_schema.fields_by_alias.key?(field.name)
+            readers_field = readers_schema.fields_by_alias[field.name]
+            field_val = read_data(field.type, readers_field.type, decoder)
+            read_record[readers_field.name] = field_val
           else
             skip_data(field.type, decoder)
           end
         end
 
         # fill in the default values
-        if readers_fields_hash.size > read_record.size
-          writers_fields_hash = writers_schema.fields_hash
-          readers_fields_hash.each do |field_name, field|
-            unless writers_fields_hash.has_key? field_name
-              if field.default?
-                field_val = read_default_value(field.type, field.default)
-                read_record[field.name] = field_val
-              else
-                raise AvroError, "Missing data for #{field.type} with no default"
-              end
-            end
+        readers_fields_hash.each do |field_name, field|
+          next if read_record.key?(field_name)
+
+          if field.default?
+            field_val = read_default_value(field.type, field.default)
+            read_record[field.name] = field_val
+          else
+            raise AvroError, "Missing data for #{field.type} with no default"
           end
         end
 
@@ -591,7 +593,7 @@ module Avro
       def write_record(writers_schema, datum, encoder)
         raise AvroTypeError.new(writers_schema, datum) unless datum.is_a?(Hash)
         writers_schema.fields.each do |field|
-          write_data(field.type, datum[field.name], encoder)
+          write_data(field.type, datum.key?(field.name) ? datum[field.name] : datum[field.name.to_sym], encoder)
         end
       end
     end # DatumWriter

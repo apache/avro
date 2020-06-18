@@ -46,6 +46,7 @@ public class DataFileGetSchemaTool implements Tool {
     DataFileReader<Void> reader = new DataFileReader<>(Util.openSeekableFromFS(args.get(0)),
         new GenericDatumReader<>());
     out.println(reader.getSchema().toString(true));
+    reader.close();
     return 0;
   }
 }

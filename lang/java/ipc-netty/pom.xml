@@ -23,7 +23,7 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.10.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
@@ -39,11 +39,10 @@
     <osgi.import>
       !org.apache.avro.ipc.netty*,
       org.apache.avro*;version="${project.version}",
-      org.jboss.netty*,
-      org.apache.velocity*;resolution:=optional,
+      io.netty*,
       *
     </osgi.import>
-    <osgi.export>org.apache.avro.ipc*;version="${project.version}"</osgi.export>
+    <osgi.export>org.apache.avro.ipc.netty*;version="${project.version}"</osgi.export>
   </properties>
 
   <build>
@@ -72,6 +71,17 @@
     </plugins>
   </build>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>${netty.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -105,7 +115,11 @@
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
-      <artifactId>netty</artifactId>
+      <artifactId>netty-buffer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler</artifactId>
     </dependency>
 
 

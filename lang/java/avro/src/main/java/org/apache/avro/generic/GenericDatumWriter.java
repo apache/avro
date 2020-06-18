@@ -32,6 +32,7 @@ import org.apache.avro.Conversions;
 import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.UnresolvedUnionException;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 
@@ -86,7 +87,7 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
   /**
    * Convert a high level representation of a logical type (such as a BigDecimal)
    * to the its underlying representation object (such as a ByteBuffer).
-   * 
+   *
    * @throws IllegalArgumentException if a null schema or logicalType is passed in
    *                                  while datum and conversion are not null.
    *                                  Please be noticed that the exception type
@@ -156,13 +157,13 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
         out.writeInt(((Number) datum).intValue());
         break;
       case LONG:
-        out.writeLong((Long) datum);
+        out.writeLong(((Number) datum).longValue());
         break;
       case FLOAT:
-        out.writeFloat((Float) datum);
+        out.writeFloat(((Number) datum).floatValue());
         break;
       case DOUBLE:
-        out.writeDouble((Double) datum);
+        out.writeDouble(((Number) datum).doubleValue());
         break;
       case BOOLEAN:
         out.writeBoolean((Boolean) datum);
@@ -178,9 +179,23 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     }
   }
 
-  /** Helper method for adding a message to an NPE. */
+  /** Helper method for adding a message to an NPE . */
   protected NullPointerException npe(NullPointerException e, String s) {
     NullPointerException result = new NullPointerException(e.getMessage() + s);
+    result.initCause(e.getCause() == null ? e : e.getCause());
+    return result;
+  }
+
+  /** Helper method for adding a message to an Class Cast Exception . */
+  protected ClassCastException addClassCastMsg(ClassCastException e, String s) {
+    ClassCastException result = new ClassCastException(e.getMessage() + s);
+    result.initCause(e.getCause() == null ? e : e.getCause());
+    return result;
+  }
+
+  /** Helper method for adding a message to an Avro Type Exception . */
+  protected AvroTypeException addAvroTypeMsg(AvroTypeException e, String s) {
+    AvroTypeException result = new AvroTypeException(e.getMessage() + s);
     result.initCause(e.getCause() == null ? e : e.getCause());
     return result;
   }
@@ -204,8 +219,16 @@ public class GenericDatumWriter<D> implements DatumWriter<D> {
     Object value = data.getField(datum, f.name(), f.pos(), state);
     try {
       write(f.schema(), value, out);
+    } catch (final UnresolvedUnionException uue) { // recreate it with the right field info
+      final UnresolvedUnionException unresolvedUnionException = new UnresolvedUnionException(f.schema(), f, value);
+      unresolvedUnionException.addSuppressed(uue);
+      throw unresolvedUnionException;
     } catch (NullPointerException e) {
       throw npe(e, " in field " + f.name());
+    } catch (ClassCastException cce) {
+      throw addClassCastMsg(cce, " in field " + f.name());
+    } catch (AvroTypeException ate) {
+      throw addAvroTypeMsg(ate, " in field " + f.name());
     }
   }
 

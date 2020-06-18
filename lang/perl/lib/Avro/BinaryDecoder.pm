@@ -328,7 +328,7 @@ sub skip_union {
     $class->skip($union_schema, $reader);
 }
 
-## 1.3.2 A union is encoded by first writing a long value indicating the
+## 1.3.2 A union is encoded by first writing an int value indicating the
 ## zero-based position within the union of the schema of its value. The value
 ## is then encoded per the indicated schema within the union.
 sub decode_union {

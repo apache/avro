@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required(VERSION 2.4)
+cmake_minimum_required(VERSION 3.1)
 project(AvroC)
 enable_testing()
 

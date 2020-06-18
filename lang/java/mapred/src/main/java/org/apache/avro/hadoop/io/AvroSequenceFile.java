@@ -57,10 +57,10 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_
  * <p>
  * Since Avro data are Plain Old Java Objects (e.g., <code>Integer</code> for
  * data with schema <i>"int"</i>), they do not implement <i>Writable</i>.
- * Furthermore, a {@link org.apache.hadoop.io.Serialization} implementation
- * cannot determine whether an object instance of type <code>CharSequence</code>
- * that also implements <code>Writable</code> should be serialized using Avro or
- * WritableSerialization.
+ * Furthermore, a {@link org.apache.hadoop.io.serializer.Serialization}
+ * implementation cannot determine whether an object instance of type
+ * <code>CharSequence</code> that also implements <code>Writable</code> should
+ * be serialized using Avro or WritableSerialization.
  * </p>
  *
  * <p>

@@ -26,16 +26,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.LinkedHashSet;
-import java.util.List;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 
 /**
  * A Tool for compiling avro protocols or schemas to Java classes using the Avro
@@ -44,14 +46,15 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
 
 public class SpecificCompilerTool implements Tool {
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
-    if (args.size() < 3) {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> origArgs) throws Exception {
+    if (origArgs.size() < 3) {
       System.err.println(
-          "Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
+          "Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-fieldVisibility <visibilityType>] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
       System.err.println(" input - input files or directories");
       System.err.println(" outputdir - directory to write generated java");
       System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
+      System.err.println(" -fieldVisibility [private|public|public_deprecated]- use either and default private");
       System.err
           .println(" -bigDecimal - use java.math.BigDecimal for " + "decimal type instead of java.nio.ByteBuffer");
       System.err.println(" -templateDir - directory with custom Velocity templates");
@@ -62,28 +65,44 @@ public class SpecificCompilerTool implements Tool {
     boolean useLogicalDecimal = false;
     Optional<String> encoding = Optional.empty();
     Optional<String> templateDir = Optional.empty();
+    Optional<FieldVisibility> fieldVisibility = Optional.empty();
 
     int arg = 0;
+    List<String> args = new ArrayList<>(origArgs);
 
-    if ("-encoding".equals(args.get(arg))) {
-      arg++;
+    if (args.contains("-encoding")) {
+      arg = args.indexOf("-encoding") + 1;
       encoding = Optional.of(args.get(arg));
-      arg++;
+      args.remove(arg);
+      args.remove(arg - 1);
     }
 
-    if ("-string".equals(args.get(arg))) {
+    if (args.contains("-string")) {
       stringType = StringType.String;
-      arg++;
+      args.remove(args.indexOf("-string"));
     }
 
+    if (args.contains("-fieldVisibility")) {
+      arg = args.indexOf("-fieldVisibility") + 1;
+      try {
+        fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase(Locale.ENGLISH)));
+      } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+        System.err.println("Expected one of" + Arrays.toString(FieldVisibility.values()));
+        return 1;
+      }
+      args.remove(arg);
+      args.remove(arg - 1);
+    }
+    if (args.contains("-templateDir")) {
+      arg = args.indexOf("-templateDir") + 1;
+      templateDir = Optional.of(args.get(arg));
+      args.remove(arg);
+      args.remove(arg - 1);
+    }
+
+    arg = 0;
     if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
       useLogicalDecimal = true;
-      arg++;
-    }
-
-    if ("-templateDir".equals(args.get(arg))) {
-      arg++;
-      templateDir = Optional.of(args.get(arg));
       arg++;
     }
 
@@ -100,13 +119,13 @@ public class SpecificCompilerTool implements Tool {
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
         final SpecificCompiler compiler = new SpecificCompiler(schema);
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
+        executeCompiler(compiler, encoding, stringType, fieldVisibility, useLogicalDecimal, templateDir, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
         final SpecificCompiler compiler = new SpecificCompiler(protocol);
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, templateDir, src, output);
+        executeCompiler(compiler, encoding, stringType, fieldVisibility, useLogicalDecimal, templateDir, src, output);
       }
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
@@ -116,11 +135,13 @@ public class SpecificCompilerTool implements Tool {
   }
 
   private void executeCompiler(SpecificCompiler compiler, Optional<String> encoding, StringType stringType,
-      boolean enableDecimalLogicalType, Optional<String> templateDir, File src, File output) throws IOException {
+      Optional<FieldVisibility> fieldVisibility, boolean enableDecimalLogicalType, Optional<String> templateDir,
+      File src, File output) throws IOException {
     compiler.setStringType(stringType);
     templateDir.ifPresent(compiler::setTemplateDir);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
     encoding.ifPresent(compiler::setOutputCharacterEncoding);
+    fieldVisibility.ifPresent(compiler::setFieldVisibility);
     compiler.compileToDestination(src, output);
   }
 

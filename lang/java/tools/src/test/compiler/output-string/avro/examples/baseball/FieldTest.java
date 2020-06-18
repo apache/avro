@@ -120,7 +120,7 @@ static {
     case 3: return timestampMicros;
     case 4: return timeMillis;
     case 5: return timeMicros;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -150,7 +150,7 @@ static {
     case 3: timestampMicros = (java.time.Instant)value$; break;
     case 4: timeMillis = (java.time.LocalTime)value$; break;
     case 5: timeMicros = (java.time.LocalTime)value$; break;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 

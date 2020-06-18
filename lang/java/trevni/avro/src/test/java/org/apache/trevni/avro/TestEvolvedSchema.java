@@ -81,10 +81,11 @@ public class TestEvolvedSchema {
 
     AvroColumnReader.Params params = new Params(serializedTrevni);
     params.setSchema(evolved);
-    AvroColumnReader<GenericRecord> acr = new AvroColumnReader<>(params);
-    GenericRecord readRecord = acr.next();
-    Assert.assertEquals(evolvedRecord, readRecord);
-    Assert.assertFalse(acr.hasNext());
+    try (AvroColumnReader<GenericRecord> acr = new AvroColumnReader<>(params)) {
+      GenericRecord readRecord = acr.next();
+      Assert.assertEquals(evolvedRecord, readRecord);
+      Assert.assertFalse(acr.hasNext());
+    }
   }
 
   @Test
@@ -99,10 +100,11 @@ public class TestEvolvedSchema {
 
     GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(writer);
     reader.setExpected(evolved);
-    DataFileReader<GenericRecord> dfr = new DataFileReader<>(serializedAvro, reader);
-    GenericRecord readRecord = dfr.next();
-    Assert.assertEquals(evolvedRecord, readRecord);
-    Assert.assertFalse(dfr.hasNext());
+    try (DataFileReader<GenericRecord> dfr = new DataFileReader<>(serializedAvro, reader)) {
+      GenericRecord readRecord = dfr.next();
+      Assert.assertEquals(evolvedRecord, readRecord);
+      Assert.assertFalse(dfr.hasNext());
+    }
   }
 
 }

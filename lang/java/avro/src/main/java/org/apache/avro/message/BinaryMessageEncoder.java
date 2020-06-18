@@ -45,8 +45,8 @@ public class BinaryMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * Buffers returned by {@link #encode(D)} are copied and will not be modified by
-   * future calls to {@code encode}.
+   * Buffers returned by {@link BinaryMessageEncoder#encode} are copied and will
+   * not be modified by future calls to {@code encode}.
    *
    * @param model  the {@link GenericData data model} for datum instances
    * @param schema the {@link Schema} for datum instances
@@ -60,8 +60,9 @@ public class BinaryMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * If {@code shouldCopy} is true, then buffers returned by {@link #encode(D)}
-   * are copied and will not be modified by future calls to {@code encode}.
+   * If {@code shouldCopy} is true, then buffers returned by
+   * {@link BinaryMessageEncoder#encode} are copied and will not be modified by
+   * future calls to {@code encode}.
    * <p>
    * If {@code shouldCopy} is false, then buffers returned by {@code encode} wrap
    * a thread-local buffer that can be reused by future calls to {@code encode},

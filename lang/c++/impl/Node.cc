@@ -147,6 +147,12 @@ void Node::setLogicalType(LogicalType logicalType) {
                             "FIXED type of size 12");
         }
         break;
+    case LogicalType::UUID:
+        if (type_ != AVRO_STRING) {
+            throw Exception("UUID logical type can only annotate "
+                            "STRING type");
+        }
+        break;
     }
 
     logicalType_ = logicalType;
