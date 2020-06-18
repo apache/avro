@@ -7,7 +7,7 @@ plugins {
     id "java-gradle-plugin"
     id "com.jfrog.bintray" version "1.8.1"
     // TODO: try to get this working
-    //id "org.nosphere.gradle.github.actions" version "1.2.0"
+    id "org.nosphere.gradle.github.actions" version "1.2.0"
 }
 
 repositories {
