@@ -57,10 +57,8 @@
 
   <dependencies>
     <dependency>
-      <!-- Maven2 classes maintained as compatibility layer -->
-      <!-- Remove once avro-maven-plugin code is upgrade to Maven3 -->
       <groupId>org.apache.maven</groupId>
-      <artifactId>maven-compat</artifactId>
+      <artifactId>maven-core</artifactId>
       <version>${maven.version}</version>
     </dependency>
     <dependency>
@@ -68,10 +66,6 @@
       <artifactId>file-management</artifactId>
       <version>${file-management.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>org.apache.maven</groupId>
-          <artifactId>maven-plugin-api</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
           <artifactId>jsr305</artifactId>
@@ -84,6 +78,12 @@
       <version>${project.version}</version>
     </dependency>
     <!-- test-->
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-compat</artifactId>
+      <version>${maven.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.apache.maven.plugin-testing</groupId>
       <artifactId>maven-plugin-testing-tools</artifactId>
