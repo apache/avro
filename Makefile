@@ -38,7 +38,7 @@ clean-lint:
 	find . -type f -name *.rs.bk -delete
 
 .PHONY: clippy
-clippy:
+clippy: install-hooks
 	cargo clippy --all-targets --all-features -- -Dclippy::all
 
 # TESTING
