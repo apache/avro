@@ -122,7 +122,9 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
 DataFileWriterBase::~DataFileWriterBase()
 {
     if (stream_.get()) {
-        close();
+        try {
+            close();
+        } catch(...) {}
     }
 }
 
