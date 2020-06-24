@@ -25,7 +25,7 @@ uint64_t
 encodeZigzag64(int64_t input)
 {
     // cppcheck-suppress shiftTooManyBitsSigned
-    return ((input << 1) ^ (input >> 63));
+    return ((static_cast<uint64_t>(input) << 1) ^ (input >> 63));
 }
 
 int64_t
@@ -38,7 +38,7 @@ uint32_t
 encodeZigzag32(int32_t input)
 {
     // cppcheck-suppress shiftTooManyBitsSigned
-    return ((input << 1) ^ (input >> 31));
+    return ((static_cast<uint32_t>(input) << 1) ^ (input >> 31));
 }
 
 int32_t
