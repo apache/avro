@@ -28,21 +28,18 @@ import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.specs.NotSpec;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.TaskAction;
 
 import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
-import static org.gradle.api.tasks.PathSensitivity.RELATIVE;
 
 /**
  * Task to convert Avro IDL files into Avro protocol files using {@link Idl}.
  */
 @CacheableTask
 public class GenerateAvroProtocolTask extends OutputDirTask {
-    @InputFiles
-    @PathSensitive(value = RELATIVE)
+
     private FileCollection classpath;
 
     public GenerateAvroProtocolTask() {
@@ -58,6 +55,7 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
         this.classpath.plus(getProject().files(paths));
     }
 
+    @Classpath
     public FileCollection getClasspath() {
         return this.classpath;
     }
