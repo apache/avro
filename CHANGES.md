@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Apply @Classpath annotation to classpath on `GenerateAvroProtocolTask`
 
 ## 0.20.0
 * Built using Gradle 6.5
