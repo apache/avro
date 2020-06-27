@@ -15,6 +15,7 @@ class KotlinDSLCompatibilityFunctionalSpec extends FunctionalSpec {
         |}
         |repositories {
         |    jcenter()
+        |    maven("https://repository.apache.org/content/repositories/staging/")
         |}
         |dependencies {
         |    implementation("org.apache.avro:avro:${avroVersion}")
@@ -43,12 +44,12 @@ class KotlinDSLCompatibilityFunctionalSpec extends FunctionalSpec {
         |    isCreateSetters.set(true)
         |    isCreateOptionalGetters.set(false)
         |    isGettersReturnOptional.set(false)
+        |    isOptionalGettersForNullableFieldsOnly.set(false)
         |    fieldVisibility.set("PUBLIC_DEPRECATED")
         |    outputCharacterEncoding.set("UTF-8")
         |    stringType.set("String")
         |    templateDirectory.set(null as String?)
         |    isEnableDecimalLogicalType.set(true)
-        |    dateTimeLogicalType.set("JSR310")
         |}
         |""".stripMargin()
 

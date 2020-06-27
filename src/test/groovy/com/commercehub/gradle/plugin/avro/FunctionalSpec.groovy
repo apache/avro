@@ -72,7 +72,7 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected void addDefaultRepository() {
-        buildFile << "repositories { jcenter() }\n"
+        buildFile << "repositories { jcenter()\n maven {\nurl 'https://repository.apache.org/content/repositories/staging/'}\n}\n"
     }
 
     protected void addImplementationDependency(String dependencySpec) {

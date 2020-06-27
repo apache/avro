@@ -21,15 +21,13 @@ import spock.lang.Unroll
 
 import java.nio.ByteBuffer
 
-import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.*
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 /**
- * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}.
+ * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}
  */
 class OptionsFunctionalSpec extends FunctionalSpec {
-    static actualDateTimeImplementationDefault = DEFAULT == JSR310 ? "java.time.LocalDate" : "org.joda.time.LocalDate"
 
     def "works with default options"() {
         given:
@@ -63,9 +61,6 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "enableDecimalLogicalType is enabled"
         content.contains("public void setSalary(${BigDecimal.name} value)")
-
-        and: "getDateTimeLogicalType is ?"
-        content.contains("public void setBirthDate(${actualDateTimeImplementationDefault} value)")
     }
 
     @Unroll
@@ -221,6 +216,45 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "'false'"             | false
     }
 
+    @Unroll
+    def "supports configuring optionalGettersForNullableFieldsOnly to #optionalGettersForNullableFieldsOnly"() {
+        given:
+        copyResource("user.avsc", avroDir)
+        applyAvroPlugin()
+        buildFile << """
+        |avro {
+        |    gettersReturnOptional = ${gettersReturnOptional}
+        |    optionalGettersForNullableFieldsOnly = ${optionalGettersForNullableFieldsOnly}
+        |}
+        |""".stripMargin()
+
+        when:
+        def result = run("generateAvroJava")
+
+        then: "the task succeeds"
+        result.task(":generateAvroJava").outcome == SUCCESS
+        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+
+        and: "the specified optionalGettersForNullableFieldsOnly is used"
+        content.contains("public Optional<java.lang.String> getFavoriteColor()") == expectedNullableOptionalGetter
+        content.contains("public Optional<java.lang.String> getName()") == expectedRequiredOptionalGetter
+
+        where:
+        gettersReturnOptional | optionalGettersForNullableFieldsOnly | expectedNullableOptionalGetter | expectedRequiredOptionalGetter
+        "Boolean.TRUE"        | "Boolean.TRUE"                       | true                           | false
+        "Boolean.TRUE"        | "Boolean.FALSE"                      | true                           | true
+        "Boolean.FALSE"       | "Boolean.TRUE"                       | false                          | false
+        "Boolean.FALSE"       | "Boolean.FALSE"                      | false                          | false
+        "true"                | "true"                               | true                           | false
+        "true"                | "false"                              | true                           | true
+        "false"               | "true"                               | false                          | false
+        "false"               | "false"                              | false                          | false
+        "'true'"              | "'true'"                             | true                           | false
+        "'true'"              | "'false'"                            | true                           | true
+        "'false'"             | "'true'"                             | false                          | false
+        "'false'"             | "'false'"                            | false                          | false
+    }
+
     def "supports configuring templateDirectory"() {
         given:
         def templatesDir = testProjectDir.newFolder("templates", "alternateTemplates")
@@ -317,51 +351,5 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "false"                  | ByteBuffer
         "'true'"                 | BigDecimal
         "'false'"                | ByteBuffer
-    }
-
-    @Unroll
-    def "supports configuration of dateTimeLogicalType to #dateTimeLogicalType"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        applyAvroPlugin()
-        buildFile << """
-        |avro {
-        |    dateTimeLogicalType = "${dateTimeLogicalType}"
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
-
-        and: "the specified dateTimeLogicalType is used"
-        content.contains("public void setBirthDate(${fieldClz} value)")
-
-        where:
-        dateTimeLogicalType       | fieldClz
-        JODA.name()               | "org.joda.time.LocalDate"
-        JODA.name().toLowerCase() | "org.joda.time.LocalDate"
-        JSR310.name()             | "java.time.LocalDate"
-    }
-
-    def "rejects unsupported dateTimeLogicalType values"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        applyAvroPlugin()
-        buildFile << """
-        |avro {
-        |    dateTimeLogicalType = "badValue"
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = runAndFail("generateAvroJava")
-
-        then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Invalid dateTimeLogicalType 'badValue'.  Value values are: [JODA, JSR310]")
     }
 }
