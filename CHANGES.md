@@ -5,6 +5,7 @@
 * Drop support for Avro 1.9.X
 * Removed support for `dateTimeLogicalType`; The behavior is now as if it  were always `JSR-310` due to an upstream change
 * Add support for `optionalGettersForNullableFieldsOnly`
+* Apply @Classpath annotation to classpath on `GenerateAvroProtocolTask`
 
 ## 0.20.0
 * Built using Gradle 6.5
