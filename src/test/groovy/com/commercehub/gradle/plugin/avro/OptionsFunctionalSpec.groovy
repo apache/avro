@@ -186,10 +186,8 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     }
 
     @Unroll
-    def """
-        supports configuring gettersReturnOptional to #gettersReturnOptional in conjunction with
-        setting optionalGettersForNullableFieldsOnly to #optionalGettersForNullableFieldsOnly
-        """() {
+    def "supports configuring gettersReturnOptional to #gettersReturnOptional in conjunction with \
+setting optionalGettersForNullableFieldsOnly to #optionalGettersForNullableFieldsOnly"() {
         given:
         copyResource("user.avsc", avroDir)
         applyAvroPlugin()
