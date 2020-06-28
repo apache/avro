@@ -186,38 +186,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
     }
 
     @Unroll
-    def "supports configuring gettersReturnOptional to #gettersReturnOptional"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        applyAvroPlugin()
-        buildFile << """
-        |avro {
-        |    gettersReturnOptional = ${gettersReturnOptional}
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
-
-        and: "the specified createOptionalGetters is used"
-        content.contains("public Optional<java.lang.String> getFavoriteColor()") == expectedPresent
-
-        where:
-        gettersReturnOptional | expectedPresent
-        "Boolean.TRUE"        | true
-        "Boolean.FALSE"       | false
-        "true"                | true
-        "false"               | false
-        "'true'"              | true
-        "'false'"             | false
-    }
-
-    @Unroll
-    def "supports configuring optionalGettersForNullableFieldsOnly to #optionalGettersForNullableFieldsOnly"() {
+    def """
+        supports configuring gettersReturnOptional to #gettersReturnOptional in conjunction with
+        setting optionalGettersForNullableFieldsOnly to #optionalGettersForNullableFieldsOnly
+        """() {
         given:
         copyResource("user.avsc", avroDir)
         applyAvroPlugin()
