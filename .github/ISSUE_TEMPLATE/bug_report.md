@@ -14,7 +14,7 @@ assignees: ''
 * [ ] Are you running a supported version of Apache Avro? (Check the [README](https://github.com/davidmc24/gradle-avro-plugin/blob/master/README.md))
 * [ ] Are you running a supported version of Java? (Check the [README](https://github.com/davidmc24/gradle-avro-plugin/blob/master/README.md))
 * [ ] Did you check to see if an [issue](https://github.com/davidmc24/gradle-avro-plugin/issues) has already been submitted?
-* [ ] Are you reporting to the correct repository?
+* [ ] Are you reporting to the correct repository?  If your schema doesn't work with the Apache Avro CLI tool either, it's not a problem with this plugin.  Running your file through the `CLIComparisonTest` in the sample project under the `test-project` directory can help diagnose this.
 * [ ] Did you perform a cursory search?
 
 For more information, see the [CONTRIBUTING](https://github.com/davidmc24/gradle-avro-plugin/blob/master/CONTRIBUTING.md) guide.
@@ -31,6 +31,9 @@ Steps to reproduce the behavior:
 2. Source files like this...
 3. Ran this task...
 4. See error
+
+Please provide complete input files that reproduce the problem, not fragments.
+When possible, please express this using `test-project`.
 
 **Expected behavior**
 
