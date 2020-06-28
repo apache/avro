@@ -302,8 +302,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private void processProtoFile(File sourceFile) {
         getLogger().info("Processing {}", sourceFile);
         try {
-            SpecificCompiler compiler = new SpecificCompiler(Protocol.parse(sourceFile));
-            compile(compiler, sourceFile);
+            compile(new SpecificCompiler(Protocol.parse(sourceFile)), sourceFile);
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile protocol definition file %s", sourceFile), ex);
         }
@@ -316,8 +315,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             String path = getProject().relativePath(file);
             for (Schema schema : processingState.getSchemasForLocation(path)) {
                 try {
-                    SpecificCompiler compiler = new SpecificCompiler(schema);
-                    compile(compiler, file);
+                    compile(new SpecificCompiler(schema), file);
                 } catch (IOException ex) {
                     throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
                 }

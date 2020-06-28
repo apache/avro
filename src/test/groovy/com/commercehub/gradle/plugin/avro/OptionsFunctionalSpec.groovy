@@ -185,9 +185,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "'false'"             | false
     }
 
+    @SuppressWarnings("LineLength")
     @Unroll
-    def "supports configuring gettersReturnOptional to #gettersReturnOptional in conjunction with \
-setting optionalGettersForNullableFieldsOnly to #optionalGettersForNullableFieldsOnly"() {
+    def "supports configuring gettersReturnOptional to #gettersReturnOptional in conjunction with setting optionalGettersForNullableFieldsOnly to #optionalGettersForNullableFieldsOnly"() {
         given:
         copyResource("user.avsc", avroDir)
         applyAvroPlugin()
@@ -206,8 +206,9 @@ setting optionalGettersForNullableFieldsOnly to #optionalGettersForNullableField
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
 
         and: "the specified optionalGettersForNullableFieldsOnly is used"
-        content.contains("public Optional<java.lang.String> getFavoriteColor()") == expectedNullableOptionalGetter
-        content.contains("public Optional<java.lang.String> getName()") == expectedRequiredOptionalGetter
+        expectedNullableOptionalGetter ? content.contains("public Optional<java.lang.String> getFavoriteColor()") : content.contains("public java.lang.String getFavoriteColor()")
+        expectedRequiredOptionalGetter ? content.contains("public Optional<java.lang.String> getName()") : content.contains("public java.lang.String getName()")
+
 
         where:
         gettersReturnOptional | optionalGettersForNullableFieldsOnly | expectedNullableOptionalGetter | expectedRequiredOptionalGetter
