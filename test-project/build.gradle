@@ -1,0 +1,33 @@
+plugins {
+    id "application"
+    id "idea"
+    id "com.commercehub.gradle.plugin.avro" version "0.20.0"
+}
+
+repositories {
+    jcenter()
+}
+
+ext {
+    avroVersion = "1.9.2"
+}
+
+dependencies {
+    implementation "org.apache.avro:avro:${avroVersion}"
+    implementation "org.apache.avro:avro-tools:${avroVersion}"
+    implementation "joda-time:joda-time:2.10.6"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.6.2"
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+avro {
+    stringType = "CharSequence"
+    fieldVisibility = "private"
+    dateTimeLogicalType = "JODA"
+}

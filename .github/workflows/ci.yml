@@ -29,6 +29,7 @@ jobs:
       uses: eskatos/gradle-command-action@v1
       with:
         arguments: --info build
+        dependencies-cache-enabled: true
     - name: Stop Gradle Daemon
       uses: eskatos/gradle-command-action@v1
       with:
@@ -64,6 +65,7 @@ jobs:
       uses: eskatos/gradle-command-action@v1
       with:
         arguments: --info testRecentVersionCompatibility
+        dependencies-cache-enabled: true
     - name: Stop Gradle Daemon
       uses: eskatos/gradle-command-action@v1
       with:
@@ -97,6 +99,7 @@ jobs:
       uses: eskatos/gradle-command-action@v1
       with:
         arguments: --info testVersionCompatibility
+        dependencies-cache-enabled: true
     - name: Stop Gradle Daemon
       uses: eskatos/gradle-command-action@v1
       with:
@@ -135,6 +138,7 @@ jobs:
       uses: eskatos/gradle-command-action@v1
       with:
         arguments: --info build
+        dependencies-cache-enabled: true
     - name: Build with Gradle
       continue-on-error: true
       run: ./gradlew --no-daemon --info build
