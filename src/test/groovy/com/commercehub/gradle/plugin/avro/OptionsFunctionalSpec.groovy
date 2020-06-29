@@ -80,9 +80,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified stringType is used"
-        content.contains(expectedContent)
+        mainClassContent.contains(expectedContent)
 
         where:
         stringType                                     | expectedContent
@@ -111,9 +112,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified fieldVisibility is used"
-        content.contains(expectedContent)
+        mainClassContent.contains(expectedContent)
 
         where:
         fieldVisibility                              | expectedContent
@@ -140,9 +142,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified createSetters is used"
-        content.contains("public void setName(java.lang.String value)") == expectedPresent
+        mainClassContent.contains("public void setName(java.lang.String value)") == expectedPresent
 
         where:
         createSetters   | expectedPresent
@@ -171,9 +174,11 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified createOptionalGetters is used"
-        content.contains("public Optional<java.lang.String> getOptionalFavoriteColor()") == expectedPresent
+        mainClassContent.contains("public Optional<java.lang.String> getOptionalFavoriteColor()") == expectedPresent
+        mainClassContent.contains("public java.lang.String getFavoriteColor()")
 
         where:
         createOptionalGetters | expectedPresent
@@ -204,10 +209,14 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified optionalGettersForNullableFieldsOnly is used"
-        content.contains("public java.lang.String getFavoriteColor()")
-        content.contains("public java.lang.String getName()")
+        mainClassContent.contains("public Optional<java.lang.String> getFavoriteColor()") == expectedNullableOptionalGetter
+        mainClassContent.contains("public java.lang.String getFavoriteColor()") != expectedNullableOptionalGetter
+        mainClassContent.contains("public Optional<java.lang.String> getName()") == expectedRequiredOptionalGetter
+        mainClassContent.contains("public java.lang.String getName()") != expectedRequiredOptionalGetter
+
 
         where:
         gettersReturnOptional | optionalGettersForNullableFieldsOnly | expectedNullableOptionalGetter | expectedRequiredOptionalGetter
@@ -309,9 +318,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified enableDecimalLogicalType is used"
-        content.contains("public void setSalary(${fieldClz.name} value)")
+        mainClassContent.contains("public void setSalary(${fieldClz.name} value)")
 
         where:
         enableDecimalLogicalType | fieldClz
@@ -321,5 +331,20 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "false"                  | ByteBuffer
         "'true'"                 | BigDecimal
         "'false'"                | ByteBuffer
+    }
+
+    /**
+     * Returns just the portion of a file that relates to the main class.
+     * This is used in order to allow assertions on the getters/setters/fields of the generated class itself, as opposed to a Builder.
+     *
+     * @param content the file content for which to get the main content
+     * @return the content of the class, from the start of the class body to the first inner class definition
+     */
+    @SuppressWarnings("LineLength")
+    private static String getMainClassContent(String content) {
+        def className = "User"
+        def matcher = content =~ /(?s)public class ${className} extends org\.apache\.avro\.specific\.\SpecificRecordBase implements org\.apache\.avro\.specific\.SpecificRecord \{(?<mainClassContent>.*)public static class Builder/
+        assert matcher.find()
+        return matcher.group("mainClassContent")
     }
 }
