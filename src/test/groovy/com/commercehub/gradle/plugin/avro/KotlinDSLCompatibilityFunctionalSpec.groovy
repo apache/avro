@@ -43,12 +43,12 @@ class KotlinDSLCompatibilityFunctionalSpec extends FunctionalSpec {
         |    isCreateSetters.set(true)
         |    isCreateOptionalGetters.set(false)
         |    isGettersReturnOptional.set(false)
+        |    isOptionalGettersForNullableFieldsOnly.set(false)
         |    fieldVisibility.set("PUBLIC_DEPRECATED")
         |    outputCharacterEncoding.set("UTF-8")
         |    stringType.set("String")
         |    templateDirectory.set(null as String?)
         |    isEnableDecimalLogicalType.set(true)
-        |    dateTimeLogicalType.set("JSR310")
         |}
         |""".stripMargin()
 

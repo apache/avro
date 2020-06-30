@@ -21,15 +21,13 @@ import spock.lang.Unroll
 
 import java.nio.ByteBuffer
 
-import static org.apache.avro.compiler.specific.SpecificCompiler.DateTimeLogicalTypeImplementation.*
 import static org.gradle.testkit.runner.TaskOutcome.FAILED
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 /**
- * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}.
+ * Functional tests for most functions.  Encoding tests have been pulled out into {@link EncodingFunctionalSpec}
  */
 class OptionsFunctionalSpec extends FunctionalSpec {
-    static actualDateTimeImplementationDefault = DEFAULT == JSR310 ? "java.time.LocalDate" : "org.joda.time.LocalDate"
 
     def "works with default options"() {
         given:
@@ -63,9 +61,6 @@ class OptionsFunctionalSpec extends FunctionalSpec {
 
         and: "enableDecimalLogicalType is enabled"
         content.contains("public void setSalary(${BigDecimal.name} value)")
-
-        and: "getDateTimeLogicalType is ?"
-        content.contains("public void setBirthDate(${actualDateTimeImplementationDefault} value)")
     }
 
     @Unroll
@@ -85,9 +80,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified stringType is used"
-        content.contains(expectedContent)
+        mainClassContent.contains(expectedContent)
 
         where:
         stringType                                     | expectedContent
@@ -116,9 +112,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified fieldVisibility is used"
-        content.contains(expectedContent)
+        mainClassContent.contains(expectedContent)
 
         where:
         fieldVisibility                              | expectedContent
@@ -145,9 +142,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified createSetters is used"
-        content.contains("public void setName(java.lang.String value)") == expectedPresent
+        mainClassContent.contains("public void setName(java.lang.String value)") == expectedPresent
 
         where:
         createSetters   | expectedPresent
@@ -176,12 +174,13 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the nullable getter is generated"
-        content.contains("public java.lang.String getFavoriteColor()")
-        
+        mainClassContent.contains("public java.lang.String getFavoriteColor()")
+
         and: "the specified createOptionalGetters is used"
-        content.contains("public Optional<java.lang.String> getOptionalFavoriteColor()") == expectedPresent
+        mainClassContent.contains("public Optional<java.lang.String> getOptionalFavoriteColor()") == expectedPresent
 
         where:
         createOptionalGetters | expectedPresent
@@ -193,14 +192,16 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "'false'"             | false
     }
 
+    @SuppressWarnings("LineLength")
     @Unroll
-    def "supports configuring gettersReturnOptional to #gettersReturnOptional"() {
+    def "supports configuring gettersReturnOptional/optionalGettersForNullableFieldsOnly to #gettersReturnOptional/#optionalGettersForNullableFieldsOnly"() {
         given:
         copyResource("user.avsc", avroDir)
         applyAvroPlugin()
         buildFile << """
         |avro {
         |    gettersReturnOptional = ${gettersReturnOptional}
+        |    optionalGettersForNullableFieldsOnly = ${optionalGettersForNullableFieldsOnly}
         |}
         |""".stripMargin()
 
@@ -210,18 +211,29 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
-        and: "the specified createOptionalGetters is used"
-        content.contains("public Optional<java.lang.String> getFavoriteColor()") == expectedPresent
+        and: "the specified optionalGettersForNullableFieldsOnly is used"
+        mainClassContent.contains("public Optional<java.lang.String> getFavoriteColor()") == expectedNullableOptionalGetter
+        mainClassContent.contains("public java.lang.String getFavoriteColor()") != expectedNullableOptionalGetter
+        mainClassContent.contains("public Optional<java.lang.String> getName()") == expectedRequiredOptionalGetter
+        mainClassContent.contains("public java.lang.String getName()") != expectedRequiredOptionalGetter
+
 
         where:
-        gettersReturnOptional | expectedPresent
-        "Boolean.TRUE"        | true
-        "Boolean.FALSE"       | false
-        "true"                | true
-        "false"               | false
-        "'true'"              | true
-        "'false'"             | false
+        gettersReturnOptional | optionalGettersForNullableFieldsOnly | expectedNullableOptionalGetter | expectedRequiredOptionalGetter
+        "Boolean.TRUE"        | "Boolean.TRUE"                       | true                           | false
+        "Boolean.TRUE"        | "Boolean.FALSE"                      | true                           | true
+        "Boolean.FALSE"       | "Boolean.TRUE"                       | false                          | false
+        "Boolean.FALSE"       | "Boolean.FALSE"                      | false                          | false
+        "true"                | "true"                               | true                           | false
+        "true"                | "false"                              | true                           | true
+        "false"               | "true"                               | false                          | false
+        "false"               | "false"                              | false                          | false
+        "'true'"              | "'true'"                             | true                           | false
+        "'true'"              | "'false'"                            | true                           | true
+        "'false'"             | "'true'"                             | false                          | false
+        "'false'"             | "'false'"                            | false                          | false
     }
 
     def "supports configuring templateDirectory"() {
@@ -308,9 +320,10 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         then: "the task succeeds"
         result.task(":generateAvroJava").outcome == SUCCESS
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
+        def mainClassContent = getMainClassContent(content)
 
         and: "the specified enableDecimalLogicalType is used"
-        content.contains("public void setSalary(${fieldClz.name} value)")
+        mainClassContent.contains("public void setSalary(${fieldClz.name} value)")
 
         where:
         enableDecimalLogicalType | fieldClz
@@ -322,49 +335,18 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         "'false'"                | ByteBuffer
     }
 
-    @Unroll
-    def "supports configuration of dateTimeLogicalType to #dateTimeLogicalType"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        applyAvroPlugin()
-        buildFile << """
-        |avro {
-        |    dateTimeLogicalType = "${dateTimeLogicalType}"
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = run("generateAvroJava")
-
-        then: "the task succeeds"
-        result.task(":generateAvroJava").outcome == SUCCESS
-        def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
-
-        and: "the specified dateTimeLogicalType is used"
-        content.contains("public void setBirthDate(${fieldClz} value)")
-
-        where:
-        dateTimeLogicalType       | fieldClz
-        JODA.name()               | "org.joda.time.LocalDate"
-        JODA.name().toLowerCase() | "org.joda.time.LocalDate"
-        JSR310.name()             | "java.time.LocalDate"
-    }
-
-    def "rejects unsupported dateTimeLogicalType values"() {
-        given:
-        copyResource("user.avsc", avroDir)
-        applyAvroPlugin()
-        buildFile << """
-        |avro {
-        |    dateTimeLogicalType = "badValue"
-        |}
-        |""".stripMargin()
-
-        when:
-        def result = runAndFail("generateAvroJava")
-
-        then:
-        result.task(":generateAvroJava").outcome == FAILED
-        result.output.contains("Invalid dateTimeLogicalType 'badValue'.  Value values are: [JODA, JSR310]")
+    /**
+     * Returns just the portion of a file that relates to the main class.
+     * This is used in order to allow assertions on the getters/setters/fields of the generated class itself, as opposed to a Builder.
+     *
+     * @param content the file content for which to get the main content
+     * @return the content of the class, from the start of the class body to the first inner class definition
+     */
+    @SuppressWarnings("LineLength")
+    private static String getMainClassContent(String content) {
+        def className = "User"
+        def matcher = content =~ /(?s)public class ${className} extends org\.apache\.avro\.specific\.\SpecificRecordBase implements org\.apache\.avro\.specific\.SpecificRecord \{(?<mainClassContent>.*)public static class Builder/
+        assert matcher.find()
+        return matcher.group("mainClassContent")
     }
 }

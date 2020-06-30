@@ -46,13 +46,12 @@ import org.gradle.api.tasks.TaskAction;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_OPTIONAL_GETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CUSTOM_CONVERSIONS;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETURN_OPTIONAL;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_LOGICAL_TYPE_FACTORIES;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
-import static com.commercehub.gradle.plugin.avro.Constants.OPTION_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_FIELD_VISIBILITY;
 import static com.commercehub.gradle.plugin.avro.Constants.OPTION_STRING_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
@@ -73,15 +72,14 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Property<String> templateDirectory;
     private final Property<Boolean> createOptionalGetters;
     private final Property<Boolean> gettersReturnOptional;
+    private final Property<Boolean> optionalGettersForNullableFieldsOnly;
     private final Property<Boolean> createSetters;
     private final Property<Boolean> enableDecimalLogicalType;
-    private final Property<String> dateTimeLogicalType;
     private final MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories;
     private final ListProperty<Class<? extends Conversion<?>>> customConversions;
 
     private final Provider<StringType> stringTypeProvider;
     private final Provider<FieldVisibility> fieldVisibilityProvider;
-    private final Provider<SpecificCompiler.DateTimeLogicalTypeImplementation> dateTimeLogicalTypeImplementationProvider;
 
     private final SchemaResolver resolver;
 
@@ -94,16 +92,14 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.templateDirectory = objects.property(String.class);
         this.createOptionalGetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_OPTIONAL_GETTERS);
         this.gettersReturnOptional = objects.property(Boolean.class).convention(DEFAULT_GETTERS_RETURN_OPTIONAL);
+        this.optionalGettersForNullableFieldsOnly = objects.property(Boolean.class)
+            .convention(DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY);
         this.createSetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_SETTERS);
         this.enableDecimalLogicalType = objects.property(Boolean.class).convention(DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
-        this.dateTimeLogicalType = objects.property(String.class).convention(DEFAULT_DATE_TIME_LOGICAL_TYPE);
         this.stringTypeProvider = getStringType()
             .map(input -> Enums.parseCaseInsensitive(OPTION_STRING_TYPE, StringType.values(), input));
         this.fieldVisibilityProvider = getFieldVisibility()
             .map(input -> Enums.parseCaseInsensitive(OPTION_FIELD_VISIBILITY, FieldVisibility.values(), input));
-        this.dateTimeLogicalTypeImplementationProvider = getDateTimeLogicalType()
-            .map(input -> Enums.parseCaseInsensitive(OPTION_DATE_TIME_LOGICAL_TYPE,
-                SpecificCompiler.DateTimeLogicalTypeImplementation.values(), input));
         this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
             .convention(DEFAULT_LOGICAL_TYPE_FACTORIES);
         this.customConversions = objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(DEFAULT_CUSTOM_CONVERSIONS);
@@ -199,6 +195,19 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.gettersReturnOptional.set(Boolean.parseBoolean(gettersReturnOptional));
     }
 
+    public Property<Boolean> isOptionalGettersForNullableFieldsOnly() {
+        return optionalGettersForNullableFieldsOnly;
+    }
+
+    @Input
+    public Property<Boolean> getOptionalGettersForNullableFieldsOnly() {
+        return optionalGettersForNullableFieldsOnly;
+    }
+
+    public void setOptionalGettersForNullableFieldsOnly(String optionalGettersForNullableFieldsOnly) {
+        this.optionalGettersForNullableFieldsOnly.set(Boolean.parseBoolean(optionalGettersForNullableFieldsOnly));
+    }
+
     public Property<Boolean> isEnableDecimalLogicalType() {
         return enableDecimalLogicalType;
     }
@@ -210,20 +219,6 @@ public class GenerateAvroJavaTask extends OutputDirTask {
 
     public void setEnableDecimalLogicalType(String enableDecimalLogicalType) {
         this.enableDecimalLogicalType.set(Boolean.parseBoolean(enableDecimalLogicalType));
-    }
-
-    @Optional
-    @Input
-    public Property<String> getDateTimeLogicalType() {
-        return dateTimeLogicalType;
-    }
-
-    public void setDateTimeLogicalType(String dateTimeLogicalType) {
-        this.dateTimeLogicalType.set(dateTimeLogicalType);
-    }
-
-    public void setDateTimeLogicalType(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalType) {
-        setDateTimeLogicalType(dateTimeLogicalType.name());
     }
 
     @Optional
@@ -265,8 +260,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         getLogger().debug("Using createSetters {}", isCreateSetters().get());
         getLogger().debug("Using createOptionalGetters {}", isCreateOptionalGetters().get());
         getLogger().debug("Using gettersReturnOptional {}", isGettersReturnOptional().get());
+        getLogger().debug("Using optionalGettersForNullableFieldsOnly {}", isOptionalGettersForNullableFieldsOnly().get());
         getLogger().debug("Using enableDecimalLogicalType {}", isEnableDecimalLogicalType().get());
-        getLogger().debug("Using dateTimeLogicalType {}", dateTimeLogicalTypeImplementationProvider.get().name());
         getLogger().debug("Using logicalTypeFactories {}",
             logicalTypeFactories.get().entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey,
@@ -307,7 +302,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private void processProtoFile(File sourceFile) {
         getLogger().info("Processing {}", sourceFile);
         try {
-            compile(Protocol.parse(sourceFile), sourceFile);
+            compile(new SpecificCompiler(Protocol.parse(sourceFile)), sourceFile);
         } catch (IOException ex) {
             throw new GradleException(String.format("Failed to compile protocol definition file %s", sourceFile), ex);
         }
@@ -320,21 +315,13 @@ public class GenerateAvroJavaTask extends OutputDirTask {
             String path = getProject().relativePath(file);
             for (Schema schema : processingState.getSchemasForLocation(path)) {
                 try {
-                    compile(schema, file);
+                    compile(new SpecificCompiler(schema), file);
                 } catch (IOException ex) {
                     throw new GradleException(String.format("Failed to compile schema definition file %s", path), ex);
                 }
             }
         }
         return processingState.getProcessedTotal();
-    }
-
-    private void compile(Protocol protocol, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(protocol, dateTimeLogicalTypeImplementationProvider.get()), sourceFile);
-    }
-
-    private void compile(Schema schema, File sourceFile) throws IOException {
-        compile(new SpecificCompiler(schema, dateTimeLogicalTypeImplementationProvider.get()), sourceFile);
     }
 
     private void compile(SpecificCompiler compiler, File sourceFile) throws IOException {
@@ -346,6 +333,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         }
         compiler.setCreateOptionalGetters(createOptionalGetters.get());
         compiler.setGettersReturnOptional(gettersReturnOptional.get());
+        compiler.setOptionalGettersForNullableFieldsOnly(optionalGettersForNullableFieldsOnly.get());
         compiler.setCreateSetters(isCreateSetters().get());
         compiler.setEnableDecimalLogicalType(isEnableDecimalLogicalType().get());
         registerCustomConversions(compiler);

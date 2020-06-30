@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.avro.Conversion;
 import org.apache.avro.LogicalTypes;
-import org.apache.avro.compiler.specific.SpecificCompiler;
 import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.reflect.TypeOf;
@@ -39,8 +38,8 @@ class Constants {
     static final boolean DEFAULT_CREATE_SETTERS = true;
     static final boolean DEFAULT_CREATE_OPTIONAL_GETTERS = false;
     static final boolean DEFAULT_GETTERS_RETURN_OPTIONAL = false;
+    static final boolean DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY = false;
     static final boolean DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE = true;
-    static final String DEFAULT_DATE_TIME_LOGICAL_TYPE = SpecificCompiler.DateTimeLogicalTypeImplementation.DEFAULT.name();
     static final Map<String, Class<? extends LogicalTypes.LogicalTypeFactory>> DEFAULT_LOGICAL_TYPE_FACTORIES = Collections.emptyMap();
     static final List<Class<? extends Conversion<?>>> DEFAULT_CUSTOM_CONVERSIONS = Collections.emptyList();
 
@@ -55,7 +54,6 @@ class Constants {
 
     static final String OPTION_FIELD_VISIBILITY = "fieldVisibility";
     static final String OPTION_STRING_TYPE = "stringType";
-    static final String OPTION_DATE_TIME_LOGICAL_TYPE = "dateTimeLogicalType";
 
     static final TypeOf<Class<? extends LogicalTypes.LogicalTypeFactory>> LOGICAL_TYPE_FACTORY_TYPE =
         new TypeOf<Class<? extends LogicalTypes.LogicalTypeFactory>>() { };

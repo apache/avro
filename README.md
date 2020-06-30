@@ -19,8 +19,9 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * If you need support for Gradle 4.4-5.0, version 0.18.0 was the last version tested for compatibility
     * If you need support for Gradle 3.0-3.5.1 or 4.0-4.3, version 0.17.0 was the last version tested for compatibility
     * If you need support for Gradle 2.0-2.14.1, version 0.9.1 was the last version tested for compatibility; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
-* Currently built against Avro 1.9.2
-    * Currently tested against Avro 1.9.0-1.9.2
+* Currently built against Avro 1.10.0
+    * Currently tested against Avro 1.10.0
+    * If you need support for Avro 1.9.0-1.9.2 try plugin version 0.20.0
     * If you need support for Avro 1.8.2, try plugin version 0.16.0
     * If you need support for Avro 1.8.0-1.8.1, try plugin version 0.10.0
     * If you need support for Avro 1.7.7, try plugin version 0.8.1 (updated for Gradle 5.6)
@@ -55,7 +56,7 @@ repositories {
     jcenter()
 }
 dependencies {
-    compile "org.apache.avro:avro:1.9.2"
+    compile "org.apache.avro:avro:1.10.0"
 }
 ```
 
@@ -89,17 +90,17 @@ plugins {
 
 There are a number of configuration options supported in the `avro` block.
 
-| option                    | default               | description                                           |
-| --------------------------| --------------------- | -------------------------------------------------     |
-| createSetters             | `true`                | `createSetters` passed to Avro compiler               |
-| createOptionalGetters     | `false`               | `createOptionalGetters` passed to Avro compiler       |
-| gettersReturnOptional     | `false`               | `gettersReturnOptional` passed to Avro compiler
-| fieldVisibility           | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler             |
-| outputCharacterEncoding   | see below             | `outputCharacterEncoding` passed to Avro compiler     |
-| stringType                | `"String"`            | `stringType` passed to Avro compiler                  |
-| templateDirectory         | see below             | `templateDir` passed to Avro compiler                 |
-| enableDecimalLogicalType  | `true`                | `enableDecimalLogicalType` passed to Avro compiler    |
-| dateTimeLogicalType       | see below             | `dateTimeLogicalType` passed to Avro compiler         |
+| option                               | default               | description                                                    |
+| -------------------------------------| --------------------- | ---------------------------------------------------------------|
+| createSetters                        | `true`                | `createSetters` passed to Avro compiler                        |
+| createOptionalGetters                | `false`               | `createOptionalGetters` passed to Avro compiler                |
+| gettersReturnOptional                | `false`               | `gettersReturnOptional` passed to Avro compiler                |
+| optionalGettersForNullableFieldsOnly | `false`               | `optionalGettersForNullableFieldsOnly` passed to Avro compiler |
+| fieldVisibility                      | `"PUBLIC_DEPRECATED"` | `fieldVisibility` passed to Avro compiler                      |
+| outputCharacterEncoding              | see below             | `outputCharacterEncoding` passed to Avro compiler              |
+| stringType                           | `"String"`            | `stringType` passed to Avro compiler                           |
+| templateDirectory                    | see below             | `templateDir` passed to Avro compiler                          |
+| enableDecimalLogicalType             | `true`                | `enableDecimalLogicalType` passed to Avro compiler             |
 
 ## createSetters
 
@@ -146,6 +147,24 @@ Example:
 ```groovy
 avro {
     gettersReturnOptional = false
+}
+```
+
+## optionalGettersForNullableFieldsOnly
+
+Valid values: `false` (default), `true`; supports equivalent `String` values
+
+Set to `true` in conjuction with `gettersReturnOptional` to `true` to return
+[Optional](https://docs.oracle.com/javase/8/docs/api/java/util/Optional.html) wrappers of the
+underlying type. Where [`gettersReturnOptional`](#gettersReturnOptional) alone changes all getters to
+return `Optional`, this one only returns Optional for nullable (null union) field definitions.
+Setting this to `true` without setting `gettersReturnOptional` to `true` will result in this flag having no effect.
+
+Example:
+```groovy
+avro {
+    gettersReturnOptional = true
+    optionalGettersForNullableFieldsOnly = true
 }
 ```
 
@@ -225,21 +244,6 @@ avro {
 }
 ```
 
-## dateTimeLogicalType
-
-Valid values: `JSR310`, `JODA`
-
-By default, generated Java files will use the upstream Avro default date/time types. At time of writing this is JSR310.
-See `DateTimeLogicalTypeImplementation.DEFAULT` in the upstream code.
-
-Example:
-
-```groovy
-avro {
-    dateTimeLogicalType = 'JSR310'
-}
-```
-
 # IntelliJ Integration
 
 The plugin attempts to make IntelliJ play more smoothly with generated sources when using Gradle-generated project files.
@@ -258,7 +262,7 @@ apply plugin: "java"
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
 dependencies {
-    implementation "org.apache.avro:avro:1.9.2"
+    implementation "org.apache.avro:avro:1.10.0"
 }
 
 def generateAvro = tasks.register("generateAvro", com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
@@ -371,12 +375,12 @@ avro {
     isCreateSetters.set(true)
     isCreateOptionalGetters.set(false)
     isGettersReturnOptional.set(false)
+    isOptionalGettersForNullableFieldsOnly(false)
     fieldVisibility.set("PUBLIC_DEPRECATED")
     outputCharacterEncoding.set("UTF-8")
     stringType.set("String")
     templateDirectory.set(null as String?)
     isEnableDecimalLogicalType.set(true)
-    dateTimeLogicalType.set("JSR310")
 }
 ```
 

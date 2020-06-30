@@ -31,11 +31,11 @@ import org.gradle.api.provider.Provider;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_OPTIONAL_GETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CREATE_SETTERS;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_CUSTOM_CONVERSIONS;
-import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_DATE_TIME_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_FIELD_VISIBILITY;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_GETTERS_RETURN_OPTIONAL;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_LOGICAL_TYPE_FACTORIES;
+import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY;
 import static com.commercehub.gradle.plugin.avro.Constants.DEFAULT_STRING_TYPE;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -47,8 +47,8 @@ public class DefaultAvroExtension implements AvroExtension {
     private final Property<Boolean> createSetters;
     private final Property<Boolean> createOptionalGetters;
     private final Property<Boolean> gettersReturnOptional;
+    private final Property<Boolean> optionalGettersForNullableFieldsOnly;
     private final Property<Boolean> enableDecimalLogicalType;
-    private final Property<String> dateTimeLogicalType;
     private final MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> logicalTypeFactories;
     private final ListProperty<Class<? extends Conversion<?>>> customConversions;
 
@@ -61,8 +61,9 @@ public class DefaultAvroExtension implements AvroExtension {
         this.createSetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_SETTERS);
         this.createOptionalGetters = objects.property(Boolean.class).convention(DEFAULT_CREATE_OPTIONAL_GETTERS);
         this.gettersReturnOptional = objects.property(Boolean.class).convention(DEFAULT_GETTERS_RETURN_OPTIONAL);
+        this.optionalGettersForNullableFieldsOnly = objects.property(Boolean.class)
+            .convention(DEFAULT_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS_ONLY);
         this.enableDecimalLogicalType = objects.property(Boolean.class).convention(DEFAULT_ENABLE_DECIMAL_LOGICAL_TYPE);
-        this.dateTimeLogicalType = objects.property(String.class).convention(DEFAULT_DATE_TIME_LOGICAL_TYPE);
         this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
             .convention(DEFAULT_LOGICAL_TYPE_FACTORIES);
         this.customConversions = objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(DEFAULT_CUSTOM_CONVERSIONS);
@@ -156,6 +157,19 @@ public class DefaultAvroExtension implements AvroExtension {
     }
 
     @Override
+    public Property<Boolean> isOptionalGettersForNullableFieldsOnly() {
+        return optionalGettersForNullableFieldsOnly;
+    }
+
+    public void setOptionalGettersForNullableFieldsOnly(String optionalGettersForNullableFieldsOnly) {
+        setOptionalGettersForNullableFieldsOnly(Boolean.parseBoolean(optionalGettersForNullableFieldsOnly));
+    }
+
+    public void setOptionalGettersForNullableFieldsOnly(boolean optionalGettersForNullableFieldsOnly) {
+        this.optionalGettersForNullableFieldsOnly.set(optionalGettersForNullableFieldsOnly);
+    }
+
+    @Override
     public Property<Boolean> isEnableDecimalLogicalType() {
         return enableDecimalLogicalType;
     }
@@ -166,19 +180,6 @@ public class DefaultAvroExtension implements AvroExtension {
 
     public void setEnableDecimalLogicalType(boolean enableDecimalLogicalType) {
         this.enableDecimalLogicalType.set(enableDecimalLogicalType);
-    }
-
-    @Override
-    public Property<String> getDateTimeLogicalType() {
-        return dateTimeLogicalType;
-    }
-
-    public void setDateTimeLogicalType(String dateTimeLogicalType) {
-        this.dateTimeLogicalType.set(dateTimeLogicalType);
-    }
-
-    public void setDateTimeLogicalType(SpecificCompiler.DateTimeLogicalTypeImplementation dateTimeLogicalType) {
-        setDateTimeLogicalType(dateTimeLogicalType.name());
     }
 
     @Override

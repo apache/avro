@@ -30,8 +30,8 @@ public interface AvroExtension {
     Property<Boolean> isCreateSetters();
     Property<Boolean> isCreateOptionalGetters();
     Property<Boolean> isGettersReturnOptional();
+    Property<Boolean> isOptionalGettersForNullableFieldsOnly();
     Property<Boolean> isEnableDecimalLogicalType();
-    Property<String> getDateTimeLogicalType();
     MapProperty<String, Class<? extends LogicalTypes.LogicalTypeFactory>> getLogicalTypeFactories();
     ListProperty<Class<? extends Conversion<?>>> getCustomConversions();
     AvroExtension logicalTypeFactory(String typeName, Class<? extends LogicalTypes.LogicalTypeFactory> typeFactoryClass);

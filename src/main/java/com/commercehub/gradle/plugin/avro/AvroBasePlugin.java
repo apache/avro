@@ -37,8 +37,8 @@ public class AvroBasePlugin implements Plugin<Project> {
             task.isCreateSetters().convention(avroExtension.isCreateSetters());
             task.isCreateOptionalGetters().convention(avroExtension.isCreateOptionalGetters());
             task.isGettersReturnOptional().convention(avroExtension.isGettersReturnOptional());
+            task.isOptionalGettersForNullableFieldsOnly().convention(avroExtension.isOptionalGettersForNullableFieldsOnly());
             task.isEnableDecimalLogicalType().convention(avroExtension.isEnableDecimalLogicalType());
-            task.getDateTimeLogicalType().convention(avroExtension.getDateTimeLogicalType());
             task.getLogicalTypeFactories().convention(avroExtension.getLogicalTypeFactories());
             task.getCustomConversions().convention(avroExtension.getCustomConversions());
         });
