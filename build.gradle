@@ -12,9 +12,6 @@ plugins {
 
 repositories {
     jcenter()
-    maven {
-      url 'https://repository.apache.org/content/repositories/staging/'
-    }
 }
 
 def compileAvroVersion = "1.10.0"

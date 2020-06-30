@@ -15,7 +15,6 @@ class KotlinDSLCompatibilityFunctionalSpec extends FunctionalSpec {
         |}
         |repositories {
         |    jcenter()
-        |    maven("https://repository.apache.org/content/repositories/staging/")
         |}
         |dependencies {
         |    implementation("org.apache.avro:avro:${avroVersion}")
