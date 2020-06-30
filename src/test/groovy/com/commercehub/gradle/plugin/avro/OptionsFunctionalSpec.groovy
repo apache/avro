@@ -176,6 +176,9 @@ class OptionsFunctionalSpec extends FunctionalSpec {
         def content = projectFile("build/generated-main-avro-java/example/avro/User.java").text
         def mainClassContent = getMainClassContent(content)
 
+        and: "the nullable getter is generated"
+        content.contains("public java.lang.String getFavoriteColor()")
+        
         and: "the specified createOptionalGetters is used"
         mainClassContent.contains("public Optional<java.lang.String> getOptionalFavoriteColor()") == expectedPresent
         mainClassContent.contains("public java.lang.String getFavoriteColor()")
