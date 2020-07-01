@@ -1,7 +1,7 @@
 plugins {
     id "application"
     id "idea"
-    id "com.commercehub.gradle.plugin.avro" version "0.20.0"
+    id "com.commercehub.gradle.plugin.avro" version "0.21.0"
 }
 
 repositories {
@@ -9,7 +9,7 @@ repositories {
 }
 
 ext {
-    avroVersion = "1.9.2"
+    avroVersion = "1.10.0"
 }
 
 dependencies {

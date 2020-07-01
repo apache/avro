@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.21.0
 * Built using Avro 1.10.0
 * Drop support for Avro 1.9.X
 * Removed support for `dateTimeLogicalType`; The behavior is now as if it were always `JSR-310` due to an upstream change
