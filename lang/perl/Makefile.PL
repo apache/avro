@@ -50,4 +50,18 @@ unless ($Config{use64bitint}) {
 }
 auto_set_repository();
 
+my %packages = (
+    'Avro'                    => 'lib/Avro.pm',
+    'Avro::BinaryDecoder'     => 'lib/Avro/BinaryDecoder.pm',
+    'Avro::BinaryEncoder'     => 'lib/Avro/BinaryEncoder.pm',
+    'Avro::DataFile'          => 'lib/Avro/DataFile.pm',
+    'Avro::DataFileReader'    => 'lib/Avro/DataFileReader.pm',
+    'Avro::DataFileWriter'    => 'lib/Avro/DataFileWriter.pm',
+    'Avro::Protocol'          => 'lib/Avro/Protocol.pm',
+    'Avro::Protocol::Message' => 'lib/Avro/Protocol/Message.pm',
+    'Avro::Schema'            => 'lib/Avro/Schema.pm',
+);
+my %provides = map { $_ => { file => $packages{$_}, version => $version } } keys %packages;
+provides(%provides);
+
 WriteMakefile(PM_FILTER => "sed -e 's/\+\+MODULE_VERSION\+\+/$version/'");
