@@ -18,7 +18,11 @@
 package org.apache.avro.reflect;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -1211,10 +1215,20 @@ public class TestReflect {
   @Test
   public void testDollarTerminatedNamespaceCompatibility() {
     ReflectData data = ReflectData.get();
-    Schema s = new Schema.Parser().parse(
+    Schema s = new Schema.Parser().setValidate(false).parse(
         "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect$\",\"fields\":[]}");
     assertEquals(data.getSchema(data.getClass(s)).toString(),
         "{\"type\":\"record\",\"name\":\"Z\",\"namespace\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[]}");
+  }
+
+  @Test
+  public void testDollarTerminatedNestedStaticClassNamespaceCompatibility() {
+    ReflectData data = ReflectData.get();
+    // Older versions of Avro generated this namespace on nested records.
+    Schema s = new Schema.Parser().setValidate(false).parse(
+        "{\"type\":\"record\",\"name\":\"AnotherSampleRecord\",\"namespace\":\"org.apache.avro.reflect.TestReflect$SampleRecord\",\"fields\":[]}");
+    assertThat(data.getSchema(data.getClass(s)).getFullName(),
+        is("org.apache.avro.reflect.TestReflect.SampleRecord.AnotherSampleRecord"));
   }
 
   private static class ClassWithAliasOnField {
