@@ -27,7 +27,7 @@
 
   <groupId>org.apache.avro</groupId>
   <artifactId>avro-toplevel</artifactId>
-  <version>1.10.0</version>
+  <version>1.10.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Apache Avro Toplevel</name>
