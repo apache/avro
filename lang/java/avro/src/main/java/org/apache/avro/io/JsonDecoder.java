@@ -197,6 +197,8 @@ public class JsonDecoder extends ParsingDecoder implements Parser.ActionHandler 
       double result = in.getDoubleValue();
       in.nextToken();
       return result;
+    } else if (in.currentToken() == JsonToken.VALUE_STRING) {
+      return Double.parseDouble(in.getText());
     } else {
       throw error("double");
     }

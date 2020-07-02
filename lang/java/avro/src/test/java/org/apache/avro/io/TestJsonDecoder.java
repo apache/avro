@@ -18,10 +18,17 @@
 package org.apache.avro.io;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class TestJsonDecoder {
 
@@ -43,6 +50,17 @@ public class TestJsonDecoder {
   @Test
   public void testDouble() throws Exception {
     checkNumeric("double", 1.0);
+  }
+
+  @Test
+  public void testNaN() throws Exception {
+    Assert.assertEquals(Double.NaN, serializeDeserializeDouble(Double.NaN), 0.0);
+  }
+
+  @Test
+  public void testInfinity() throws Exception {
+    Assert.assertEquals(Double.POSITIVE_INFINITY, serializeDeserializeDouble(Double.POSITIVE_INFINITY), 0.0);
+    Assert.assertEquals(Double.NEGATIVE_INFINITY, serializeDeserializeDouble(Double.NEGATIVE_INFINITY), 0.0);
   }
 
   private void checkNumeric(String type, Object value) throws Exception {
@@ -75,4 +93,31 @@ public class TestJsonDecoder {
     Assert.assertEquals(200, in.readLong());
     in.skipArray();
   }
+
+  private double serializeDeserializeDouble(Double value) throws Exception {
+    Schema schema = SchemaBuilder.record("Record").fields().name("doubleValue").type(Schema.create(Schema.Type.DOUBLE))
+        .noDefault().endRecord();
+
+    GenericData.Record record = new GenericData.Record(schema);
+    record.put("doubleValue", value);
+    final GenericRecord deserialized = serializeDeserialize(record);
+    return (double) deserialized.get("doubleValue");
+  }
+
+  private GenericRecord serializeDeserialize(GenericData.Record record) throws IOException {
+    Schema schema = record.getSchema();
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, outputStream);
+
+    GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
+    writer.write(record, encoder);
+    encoder.flush();
+
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    JsonDecoder decoder = DecoderFactory.get().jsonDecoder(schema, inputStream);
+
+    GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(schema, schema);
+    return reader.read(null, decoder);
+  }
+
 }
