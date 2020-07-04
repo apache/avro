@@ -25,13 +25,13 @@ use PHPUnit\Framework\TestCase;
 
 class SchemaExample
 {
-    var $schema_string;
-    var $is_valid;
-    var $name;
-    var $comment;
-    var $normalized_schema_string;
+    public $schema_string;
+    public $is_valid;
+    public $name;
+    public $comment;
+    public $normalized_schema_string;
 
-    function __construct(
+    public function __construct(
         $schema_string,
         $is_valid,
         $normalized_schema_string = null,
@@ -52,7 +52,7 @@ class SchemaTest extends TestCase
     static $examples = array();
     static $valid_examples = array();
 
-    function test_json_decode()
+    public function test_json_decode()
     {
         $this->assertEquals(json_decode('null', true), null);
         $this->assertEquals(json_decode('32', true), 32);
@@ -72,15 +72,14 @@ class SchemaTest extends TestCase
         $this->assertEquals(json_decode('"boolean"'), 'boolean');
     }
 
-    function schema_examples_provider()
+    public function schema_examples_provider()
     {
         self::make_examples();
         $ary = array();
         foreach (self::$examples as $example) {
-            $ary [] = array($example);
+            $ary[] = array($example);
         }
         return $ary;
-        return array(array(1), array(2), array(3));
     }
 
     protected static function make_examples()
@@ -154,7 +153,7 @@ class SchemaTest extends TestCase
                 '[{"type":"record","name":"subtract","namespace":"com.example","fields":[{"name":"minuend","type":"int"},{"name":"subtrahend","type":"int"}]},{"type":"record","name":"divide","namespace":"com.example","fields":[{"name":"quotient","type":"int"},{"name":"dividend","type":"int"}]},{"type":"array","items":"string"}]'),
         );
 
-        $fixed_examples = array(
+        $fixed_examples = [
             new SchemaExample('{"type": "fixed", "name": "Test", "size": 1}', true),
             new SchemaExample('
     {"type": "fixed",
@@ -182,7 +181,7 @@ class SchemaTest extends TestCase
                           "type": "fixed",
                           "size": 32 }', true,
                 '{"type":"fixed","name":"bar","namespace":"com.example","size":32}')
-        );
+        ];
 
         $fixed_examples [] = new SchemaExample(
             '{"type":"fixed","name":"_x.bar","size":4}', true,
@@ -449,7 +448,7 @@ class SchemaTest extends TestCase
     protected static function make_primitive_examples()
     {
         $examples = array();
-        foreach (array(
+        foreach ([
                      'null',
                      'boolean',
                      'int',
@@ -458,7 +457,7 @@ class SchemaTest extends TestCase
                      'double',
                      'bytes',
                      'string'
-                 )
+                 ]
                  as $type) {
             $examples [] = new SchemaExample(sprintf('"%s"', $type), true);
             $examples [] = new SchemaExample(sprintf('{"type": "%s"}', $type), true, sprintf('"%s"', $type));
@@ -583,6 +582,7 @@ SCHEMA);
 
     public function testValidateRepeatedAliases()
     {
+        $this->expectNotToPerformAssertions();
         AvroSchema::parse(<<<SCHEMA
 {
     "type": "record",
@@ -599,6 +599,5 @@ SCHEMA);
     ]
 }
 SCHEMA);
-        $this->addToAssertionCount(1);
     }
 }
