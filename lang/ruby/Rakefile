@@ -17,6 +17,7 @@
 require 'rubygems'
 require 'echoe'
 VERSION = File.open('../../share/VERSION.txt').read.sub('-SNAPSHOT', '.pre1').chomp
+File.write("lib/avro/VERSION.txt", VERSION)
 Echoe.new('avro', VERSION) do |p|
   p.author = "Apache Software Foundation"
   p.email = "dev@avro.apache.org"
