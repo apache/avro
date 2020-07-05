@@ -2,7 +2,7 @@ use std::time::{Duration, Instant};
 
 use avro_rs::{
     schema::Schema,
-    types::{Record, ToAvro, Value},
+    types::{Record, Value},
     Reader, Writer,
 };
 
@@ -90,7 +90,7 @@ fn main() {
 
     let mut small_record = Record::new(&small_schema).unwrap();
     small_record.put("field", "foo");
-    let small_record = small_record.avro();
+    let small_record = small_record.into();
 
     let raw_address_schema = r#"{"fields": [{"default": "NONE", "type": "string", "name": "street"}, {"default": "NONE", "type": "string", "name": "city"}, {"default": "NONE", "type": "string", "name": "state_prov"}, {"default": "NONE", "type": "string", "name": "country"}, {"default": "NONE", "type": "string", "name": "zip"}], "type": "record", "name": "mailing_address"}"#;
     let address_schema = Schema::parse_str(raw_address_schema).unwrap();
@@ -107,7 +107,7 @@ fn main() {
     big_record.put("phone", "000000000");
     big_record.put("housenum", "0000");
     big_record.put("address", address);
-    let big_record = big_record.avro();
+    let big_record = big_record.into();
 
     benchmark(&small_schema, &small_record, "S", 10_000, 1);
     benchmark(&big_schema, &big_record, "B", 10_000, 1);

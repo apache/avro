@@ -5,7 +5,7 @@ use std::str::FromStr;
 use failure::Error;
 use libflate::deflate::{Decoder, Encoder};
 
-use crate::types::{ToAvro, Value};
+use crate::types::Value;
 use crate::util::DecodeError;
 
 /// The compression codec used to compress blocks.
@@ -24,10 +24,10 @@ pub enum Codec {
     Snappy,
 }
 
-impl ToAvro for Codec {
-    fn avro(self) -> Value {
-        Value::Bytes(
-            match self {
+impl From<Codec> for Value {
+    fn from(value: Codec) -> Self {
+        Self::Bytes(
+            match value {
                 Codec::Null => "null",
                 Codec::Deflate => "deflate",
                 #[cfg(feature = "snappy")]

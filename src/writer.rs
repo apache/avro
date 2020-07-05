@@ -9,7 +9,7 @@ use serde::Serialize;
 use crate::encode::{encode, encode_ref, encode_to_vec};
 use crate::schema::Schema;
 use crate::ser::Serializer;
-use crate::types::{ToAvro, Value};
+use crate::types::Value;
 use crate::Codec;
 
 const DEFAULT_BLOCK_SIZE: usize = 16000;
@@ -81,7 +81,7 @@ impl<'a, W: Write> Writer<'a, W> {
     /// **NOTE** This function is not guaranteed to perform any actual write, since it relies on
     /// internal buffering for performance reasons. If you want to be sure the value has been
     /// written, then call [`flush`](struct.Writer.html#method.flush).
-    pub fn append<T: ToAvro>(&mut self, value: T) -> Result<usize, Error> {
+    pub fn append<T: Into<Value>>(&mut self, value: T) -> Result<usize, Error> {
         let n = if !self.has_header {
             let header = self.header()?;
             let n = self.append_bytes(header.as_ref())?;
@@ -91,7 +91,7 @@ impl<'a, W: Write> Writer<'a, W> {
             0
         };
 
-        let avro = value.avro();
+        let avro = value.into();
         write_value_ref(self.schema, &avro, &mut self.buffer)?;
 
         self.num_values += 1;
@@ -152,7 +152,7 @@ impl<'a, W: Write> Writer<'a, W> {
     ///
     /// **NOTE** This function forces the written data to be flushed (an implicit
     /// call to [`flush`](struct.Writer.html#method.flush) is performed).
-    pub fn extend<I, T: ToAvro>(&mut self, values: I) -> Result<usize, Error>
+    pub fn extend<I, T: Into<Value>>(&mut self, values: I) -> Result<usize, Error>
     where
         I: IntoIterator<Item = T>,
     {
@@ -245,8 +245,8 @@ impl<'a, W: Write> Writer<'a, W> {
         let num_values = self.num_values;
         let stream_len = self.buffer.len();
 
-        let num_bytes = self.append_raw(&num_values.avro(), &Schema::Long)?
-            + self.append_raw(&stream_len.avro(), &Schema::Long)?
+        let num_bytes = self.append_raw(&num_values.into(), &Schema::Long)?
+            + self.append_raw(&stream_len.into(), &Schema::Long)?
             + self.writer.write(self.buffer.as_ref())?
             + self.append_marker()?;
 
@@ -288,12 +288,12 @@ impl<'a, W: Write> Writer<'a, W> {
 
         let mut metadata = HashMap::with_capacity(2);
         metadata.insert("avro.schema", Value::Bytes(schema_bytes));
-        metadata.insert("avro.codec", self.codec.avro());
+        metadata.insert("avro.codec", self.codec.into());
 
         let mut header = Vec::new();
         header.extend_from_slice(AVRO_OBJECT_HEADER);
         encode(
-            &metadata.avro(),
+            &metadata.into(),
             &Schema::Map(Box::new(Schema::Bytes)),
             &mut header,
         );
@@ -308,12 +308,12 @@ impl<'a, W: Write> Writer<'a, W> {
 ///
 /// This is an internal function which gets the bytes buffer where to write as parameter instead of
 /// creating a new one like `to_avro_datum`.
-fn write_avro_datum<T: ToAvro>(
+fn write_avro_datum<T: Into<Value>>(
     schema: &Schema,
     value: T,
     buffer: &mut Vec<u8>,
 ) -> Result<(), Error> {
-    let avro = value.avro();
+    let avro = value.into();
     if !avro.validate(schema) {
         return Err(ValidationError::new("value does not match schema").into());
     }
@@ -335,7 +335,7 @@ fn write_value_ref(schema: &Schema, value: &Value, buffer: &mut Vec<u8>) -> Resu
 /// **NOTE** This function has a quite small niche of usage and does NOT generate headers and sync
 /// markers; use [`Writer`](struct.Writer.html) to be fully Avro-compatible if you don't know what
 /// you are doing, instead.
-pub fn to_avro_datum<T: ToAvro>(schema: &Schema, value: T) -> Result<Vec<u8>, Error> {
+pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> Result<Vec<u8>, Error> {
     let mut buffer = Vec::new();
     write_avro_datum(schema, value, &mut buffer)?;
     Ok(buffer)
@@ -412,7 +412,7 @@ mod tests {
 
     type TestResult<T> = Result<T, Box<dyn std::error::Error>>;
 
-    fn logical_type_test<T: ToAvro + Clone>(
+    fn logical_type_test<T: Into<Value> + Clone>(
         schema_str: &'static str,
 
         expected_schema: &Schema,

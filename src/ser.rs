@@ -9,7 +9,7 @@ use serde::{
     Serialize,
 };
 
-use crate::types::{ToAvro, Value};
+use crate::types::Value;
 
 #[derive(Clone, Default)]
 pub struct Serializer {}
@@ -195,7 +195,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
     }
 
     fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-        Ok(ToAvro::avro(None::<Self::Ok>))
+        Ok(Value::from(None::<Self::Ok>))
     }
 
     fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error>
@@ -203,7 +203,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
         T: Serialize,
     {
         let v = value.serialize(&mut Serializer::default())?;
-        Ok(ToAvro::avro(Some(v)))
+        Ok(Value::from(Some(v)))
     }
 
     fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {

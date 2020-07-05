@@ -3,7 +3,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use avro_rs::{
     schema::Schema,
     to_avro_datum,
-    types::{Record, ToAvro, Value},
+    types::{Record, Value},
 };
 
 const RAW_SMALL_SCHEMA: &str = r#"
@@ -126,7 +126,7 @@ fn make_small_record() -> (Schema, Value) {
     let small_record = {
         let mut small_record = Record::new(&small_schema).unwrap();
         small_record.put("field", "foo");
-        small_record.avro()
+        small_record.into()
     };
 
     (small_schema, small_record)
@@ -149,7 +149,7 @@ fn make_big_record() -> (Schema, Value) {
         big_record.put("phone", "000000000");
         big_record.put("housenum", "0000");
         big_record.put("address", address);
-        big_record.avro()
+        big_record.into()
     };
 
     (big_schema, big_record)

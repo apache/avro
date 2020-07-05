@@ -295,7 +295,7 @@ pub fn from_avro_datum<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{Record, ToAvro};
+    use crate::types::Record;
     use crate::Reader;
     use std::io::Cursor;
 
@@ -342,7 +342,7 @@ mod tests {
         let mut record = Record::new(&schema).unwrap();
         record.put("a", 27i64);
         record.put("b", "foo");
-        let expected = record.avro();
+        let expected = record.into();
 
         assert_eq!(
             from_avro_datum(&schema, &mut encoded, None).unwrap(),
@@ -374,7 +374,7 @@ mod tests {
         record2.put("a", 42i64);
         record2.put("b", "bar");
 
-        let expected = vec![record1.avro(), record2.avro()];
+        let expected = vec![record1.into(), record2.into()];
 
         for (i, value) in reader.enumerate() {
             assert_eq!(value.unwrap(), expected[i]);

@@ -102,94 +102,91 @@ pub enum Value {
 }
 /// Any structure implementing the [ToAvro](trait.ToAvro.html) trait will be usable
 /// from a [Writer](../writer/struct.Writer.html).
+#[deprecated(
+    since = "0.11.0",
+    note = "Please use Value::from, Into::into or value.into() instead"
+)]
 pub trait ToAvro {
     /// Transforms this value into an Avro-compatible [Value](enum.Value.html).
     fn avro(self) -> Value;
 }
 
-macro_rules! to_avro(
-    ($t:ty, $v:expr) => (
-        impl ToAvro for $t {
-            fn avro(self) -> Value {
-                $v(self)
+#[allow(deprecated)]
+impl<T: Into<Value>> ToAvro for T {
+    fn avro(self) -> Value {
+        self.into()
+    }
+}
+
+macro_rules! to_value(
+    ($type:ty, $variant_constructor:expr) => (
+        impl From<$type> for Value {
+            fn from(value: $type) -> Self {
+                $variant_constructor(value)
             }
         }
     );
 );
 
-to_avro!(bool, Value::Boolean);
-to_avro!(i32, Value::Int);
-to_avro!(i64, Value::Long);
-to_avro!(f32, Value::Float);
-to_avro!(f64, Value::Double);
-to_avro!(String, Value::String);
-to_avro!(Vec<u8>, Value::Bytes);
-to_avro!(uuid::Uuid, Value::Uuid);
-to_avro!(Decimal, Value::Decimal);
-to_avro!(Duration, Value::Duration);
+to_value!(bool, Value::Boolean);
+to_value!(i32, Value::Int);
+to_value!(i64, Value::Long);
+to_value!(f32, Value::Float);
+to_value!(f64, Value::Double);
+to_value!(String, Value::String);
+to_value!(Vec<u8>, Value::Bytes);
+to_value!(uuid::Uuid, Value::Uuid);
+to_value!(Decimal, Value::Decimal);
+to_value!(Duration, Value::Duration);
 
-impl ToAvro for () {
-    fn avro(self) -> Value {
-        Value::Null
+impl From<()> for Value {
+    fn from(_: ()) -> Self {
+        Self::Null
     }
 }
 
-impl ToAvro for usize {
-    fn avro(self) -> Value {
-        (self as i64).avro()
+impl From<usize> for Value {
+    fn from(value: usize) -> Self {
+        i64::try_from(value)
+            .expect("cannot convert usize to i64")
+            .into()
     }
 }
 
-impl<'a> ToAvro for &'a str {
-    fn avro(self) -> Value {
-        Value::String(self.to_owned())
+impl From<&str> for Value {
+    fn from(value: &str) -> Self {
+        Self::String(value.to_owned())
     }
 }
 
-impl<'a> ToAvro for &'a [u8] {
-    fn avro(self) -> Value {
-        Value::Bytes(self.to_owned())
+impl From<&[u8]> for Value {
+    fn from(value: &[u8]) -> Self {
+        Self::Bytes(value.to_owned())
     }
 }
 
-impl<T> ToAvro for Option<T>
+impl<T> From<Option<T>> for Value
 where
-    T: ToAvro,
+    T: Into<Self>,
 {
-    fn avro(self) -> Value {
-        Value::Union(Box::new(self.map_or_else(|| Value::Null, T::avro)))
+    fn from(value: Option<T>) -> Self {
+        Self::Union(Box::new(value.map_or_else(|| Self::Null, Into::into)))
     }
 }
 
-impl<T, S: BuildHasher> ToAvro for HashMap<String, T, S>
+impl<K, V, S> From<HashMap<K, V, S>> for Value
 where
-    T: ToAvro,
+    K: Into<String>,
+    V: Into<Self>,
+    S: BuildHasher,
 {
-    fn avro(self) -> Value {
-        Value::Map(
-            self.into_iter()
-                .map(|(key, value)| (key, value.avro()))
+    fn from(value: HashMap<K, V, S>) -> Self {
+        Self::Map(
+            value
+                .into_iter()
+                .map(|(key, value)| (key.into(), value.into()))
                 .collect(),
         )
-    }
-}
-
-impl<'a, T, S: BuildHasher> ToAvro for HashMap<&'a str, T, S>
-where
-    T: ToAvro,
-{
-    fn avro(self) -> Value {
-        Value::Map(
-            self.into_iter()
-                .map(|(key, value)| (key.to_owned(), value.avro()))
-                .collect::<_>(),
-        )
-    }
-}
-
-impl ToAvro for Value {
-    fn avro(self) -> Value {
-        self
     }
 }
 
@@ -235,37 +232,35 @@ impl<'a> Record<'a> {
     /// this `Record`. Does not perform any schema validation.
     pub fn put<V>(&mut self, field: &str, value: V)
     where
-        V: ToAvro,
+        V: Into<Value>,
     {
         if let Some(&position) = self.schema_lookup.get(field) {
-            self.fields[position].1 = value.avro()
+            self.fields[position].1 = value.into()
         }
     }
 }
 
-impl<'a> ToAvro for Record<'a> {
-    fn avro(self) -> Value {
-        Value::Record(self.fields)
+impl<'a> From<Record<'a>> for Value {
+    fn from(value: Record<'a>) -> Self {
+        Self::Record(value.fields)
     }
 }
 
-impl ToAvro for JsonValue {
-    fn avro(self) -> Value {
-        match self {
-            JsonValue::Null => Value::Null,
-            JsonValue::Bool(b) => Value::Boolean(b),
+impl From<JsonValue> for Value {
+    fn from(value: JsonValue) -> Self {
+        match value {
+            JsonValue::Null => Self::Null,
+            JsonValue::Bool(b) => b.into(),
             JsonValue::Number(ref n) if n.is_i64() => Value::Long(n.as_i64().unwrap()),
             JsonValue::Number(ref n) if n.is_f64() => Value::Double(n.as_f64().unwrap()),
             JsonValue::Number(n) => Value::Long(n.as_u64().unwrap() as i64), // TODO: Not so great
-            JsonValue::String(s) => Value::String(s),
-            JsonValue::Array(items) => {
-                Value::Array(items.into_iter().map(|item| item.avro()).collect::<_>())
-            }
+            JsonValue::String(s) => s.into(),
+            JsonValue::Array(items) => Value::Array(items.into_iter().map(Value::from).collect()),
             JsonValue::Object(items) => Value::Map(
                 items
                     .into_iter()
-                    .map(|(key, value)| (key, value.avro()))
-                    .collect::<_>(),
+                    .map(|(key, value)| (key, value.into()))
+                    .collect(),
             ),
         }
     }
@@ -739,7 +734,7 @@ impl Value {
                     None => match field.default {
                         Some(ref value) => match field.schema {
                             Schema::Enum { ref symbols, .. } => {
-                                value.clone().avro().resolve_enum(symbols)?
+                                Value::from(value.clone()).resolve_enum(symbols)?
                             }
                             Schema::Union(ref union_schema) => {
                                 let first = &union_schema.variants()[0];
@@ -747,12 +742,12 @@ impl Value {
                                 // backward-compatible schemas with many nullable fields
                                 match first {
                                     Schema::Null => Value::Union(Box::new(Value::Null)),
-                                    _ => {
-                                        Value::Union(Box::new(value.clone().avro().resolve(first)?))
-                                    }
+                                    _ => Value::Union(Box::new(
+                                        Value::from(value.clone()).resolve(first)?,
+                                    )),
                                 }
                             }
-                            _ => value.clone().avro(),
+                            _ => Value::from(value.clone()),
                         },
                         None => {
                             return Err(SchemaResolutionError::new(format!(
