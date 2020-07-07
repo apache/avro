@@ -1,9 +1,6 @@
 //! Logic for parsing and interacting with schemas in Avro format.
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::convert::TryInto;
-use std::fmt;
-
+use crate::types;
+use crate::util::MapHelper;
 use digest::Digest;
 use failure::{Error, Fail};
 use serde::{
@@ -11,9 +8,12 @@ use serde::{
     Deserialize, Serialize, Serializer,
 };
 use serde_json::{Map, Value};
-
-use crate::types;
-use crate::util::MapHelper;
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::convert::TryInto;
+use std::fmt;
+use std::str::FromStr;
+use strum_macros::EnumString;
 
 /// Describes errors happened while parsing Avro schemas.
 #[derive(Fail, Debug)]
@@ -287,7 +287,8 @@ pub struct RecordField {
 }
 
 /// Represents any valid order for a `field` in a `record` Avro schema.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, EnumString)]
+#[strum(serialize_all = "kebab_case")]
 pub enum RecordFieldOrder {
     Ascending,
     Descending,
@@ -309,12 +310,7 @@ impl RecordField {
         let order = field
             .get("order")
             .and_then(|order| order.as_str())
-            .and_then(|order| match order {
-                "ascending" => Some(RecordFieldOrder::Ascending),
-                "descending" => Some(RecordFieldOrder::Descending),
-                "ignore" => Some(RecordFieldOrder::Ignore),
-                _ => None,
-            })
+            .and_then(|order| RecordFieldOrder::from_str(order).ok())
             .unwrap_or_else(|| RecordFieldOrder::Ascending);
 
         Ok(RecordField {
@@ -1209,5 +1205,24 @@ mod tests {
             schema,
             Schema::Union(UnionSchema::new(vec![Schema::Null, Schema::TimestampMicros]).unwrap())
         );
+    }
+
+    #[test]
+    fn record_field_order_from_str() {
+        use std::str::FromStr;
+
+        assert_eq!(
+            RecordFieldOrder::from_str("ascending").unwrap(),
+            RecordFieldOrder::Ascending
+        );
+        assert_eq!(
+            RecordFieldOrder::from_str("descending").unwrap(),
+            RecordFieldOrder::Descending
+        );
+        assert_eq!(
+            RecordFieldOrder::from_str("ignore").unwrap(),
+            RecordFieldOrder::Ignore
+        );
+        assert!(RecordFieldOrder::from_str("not an ordering").is_err());
     }
 }

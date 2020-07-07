@@ -1,15 +1,13 @@
 //! Logic for all supported compression codecs in Avro.
-use std::io::{Read, Write};
-use std::str::FromStr;
-
+use crate::types::Value;
 use failure::Error;
 use libflate::deflate::{Decoder, Encoder};
-
-use crate::types::Value;
-use crate::util::DecodeError;
+use std::io::{Read, Write};
+use strum_macros::{EnumString, IntoStaticStr};
 
 /// The compression codec used to compress blocks.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, EnumString, IntoStaticStr)]
+#[strum(serialize_all = "kebab_case")]
 pub enum Codec {
     /// The `Null` codec simply passes through data uncompressed.
     Null,
@@ -26,30 +24,7 @@ pub enum Codec {
 
 impl From<Codec> for Value {
     fn from(value: Codec) -> Self {
-        Self::Bytes(
-            match value {
-                Codec::Null => "null",
-                Codec::Deflate => "deflate",
-                #[cfg(feature = "snappy")]
-                Codec::Snappy => "snappy",
-            }
-            .to_owned()
-            .into_bytes(),
-        )
-    }
-}
-
-impl FromStr for Codec {
-    type Err = DecodeError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "null" => Ok(Codec::Null),
-            "deflate" => Ok(Codec::Deflate),
-            #[cfg(feature = "snappy")]
-            "snappy" => Ok(Codec::Snappy),
-            _ => Err(DecodeError::new("unrecognized codec")),
-        }
+        Self::Bytes(<&str>::from(value).as_bytes().to_vec())
     }
 }
 
@@ -94,6 +69,7 @@ impl Codec {
             }
             #[cfg(feature = "snappy")]
             Codec::Snappy => {
+                use crate::util::DecodeError;
                 use byteorder::ByteOrder;
 
                 let decompressed_size = snap::decompress_len(&stream[..stream.len() - 4])?;
@@ -154,5 +130,27 @@ mod tests {
         assert!(INPUT.len() > stream.len());
         codec.decompress(&mut stream).unwrap();
         assert_eq!(INPUT, stream.as_slice());
+    }
+
+    #[test]
+    fn codec_to_str() {
+        assert_eq!(<&str>::from(Codec::Null), "null");
+        assert_eq!(<&str>::from(Codec::Deflate), "deflate");
+
+        #[cfg(feature = "snappy")]
+        assert_eq!(<&str>::from(Codec::Snappy), "snappy");
+    }
+
+    #[test]
+    fn codec_from_str() {
+        use std::str::FromStr;
+
+        assert_eq!(Codec::from_str("null").unwrap(), Codec::Null);
+        assert_eq!(Codec::from_str("deflate").unwrap(), Codec::Deflate);
+
+        #[cfg(feature = "snappy")]
+        assert_eq!(Codec::from_str("snappy").unwrap(), Codec::Snappy);
+
+        assert!(Codec::from_str("not a codec").is_err());
     }
 }
