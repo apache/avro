@@ -22,7 +22,7 @@ require 'stringio'
 require 'zlib'
 
 module Avro
-  VERSION = "FIXME"
+  VERSION = File.read("#{__dir__}/avro/VERSION.txt").freeze
 
   class AvroError < StandardError; end
 
