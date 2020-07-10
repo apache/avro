@@ -30,7 +30,7 @@ module Avro
       attr_reader :schema
 
       ##
-      # Build a new isntance of a logical type using the provided schema
+      # Build a new instance of a logical type using the provided schema
       #
       # @param schema [Avro::Schema]
       #     The schema to use with this instance
