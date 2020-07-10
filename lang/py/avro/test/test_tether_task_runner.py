@@ -42,7 +42,7 @@ except NameError:
 
 class TestTetherTaskRunner(unittest.TestCase):
     """unit test for a tethered task runner."""
-
+    @unittest.skip("AVRO-2889: Temporarily disable flaky test")
     def test1(self):
         # set the logging level to debug so that debug messages are printed
         logging.basicConfig(level=logging.DEBUG)
