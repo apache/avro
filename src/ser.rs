@@ -1,15 +1,18 @@
 //! Logic for serde-compatible serialization.
 use std::collections::HashMap;
-use std::error;
 use std::fmt;
 use std::iter::once;
 
-use serde::{
-    ser::{self, Error as SerdeError},
-    Serialize,
-};
+use serde::{ser, Serialize};
 
+use crate::errors::Error;
 use crate::types::Value;
+
+impl ser::Error for Error {
+    fn custom<T: fmt::Display>(msg: T) -> Self {
+        Error::Ser(msg.to_string())
+    }
+}
 
 #[derive(Clone, Default)]
 pub struct Serializer {}
@@ -37,32 +40,6 @@ pub struct StructVariantSerializer<'a> {
     index: u32,
     variant: &'a str,
     fields: Vec<(String, Value)>,
-}
-
-/// Represents errors that could be encountered while serializing data
-#[derive(Clone, Debug, PartialEq)]
-pub struct Error {
-    message: String,
-}
-
-impl ser::Error for Error {
-    fn custom<T: fmt::Display>(msg: T) -> Self {
-        Error {
-            message: msg.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str(&self.to_string())
-    }
-}
-
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        &self.message
-    }
 }
 
 impl SeqSerializer {
@@ -170,7 +147,7 @@ impl<'b> ser::Serializer for &'b mut Serializer {
         if v <= i64::max_value() as u64 {
             self.serialize_i64(v as i64)
         } else {
-            Err(Error::custom("u64 is too large"))
+            Err(ser::Error::custom("u64 is too large"))
         }
     }
 
@@ -410,7 +387,7 @@ impl ser::SerializeMap for MapSerializer {
             self.indices.insert(key, self.values.len());
             Ok(())
         } else {
-            Err(Error::custom("map key is not a string"))
+            Err(ser::Error::custom("map key is not a string"))
         }
     }
 

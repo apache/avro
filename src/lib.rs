@@ -49,6 +49,11 @@
 //! features = ["snappy"]
 //! ```
 //!
+//! # Upgrading to a newer minor version
+//!
+//! The library is still in beta, so there might be backward-incompatible changes between minor
+//! versions. If you have troubles upgrading, check the [version upgrade guide](migration_guide.md).
+//!
 //! # Defining a schema
 //!
 //! An Avro data cannot exist without an Avro schema. Schemas **must** be used while writing and
@@ -409,8 +414,7 @@
 //! quick reference of the library interface:
 //!
 //! ```
-//! use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record};
-//! use failure::Error;
+//! use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
 //! use serde::{Deserialize, Serialize};
 //!
 //! #[derive(Debug, Deserialize, Serialize)]
@@ -475,10 +479,9 @@
 //! ```rust
 //! use avro_rs::{
 //!     types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
-//!     Writer,
+//!     Writer, Error,
 //! };
 //! use num_bigint::ToBigInt;
-//! use failure::Error;
 //!
 //! fn main() -> Result<(), Error> {
 //!     let raw_schema = r#"
@@ -588,8 +591,7 @@
 //! An example of fingerprinting for the supported fingerprints:
 //!
 //! ```rust
-//! use avro_rs::Schema;
-//! use failure::Error;
+//! use avro_rs::{Schema, Error};
 //! use md5::Md5;
 //! use sha2::Sha256;
 //!
@@ -681,6 +683,7 @@ mod decimal;
 mod decode;
 mod duration;
 mod encode;
+mod errors;
 mod reader;
 mod ser;
 mod util;
@@ -691,15 +694,15 @@ pub mod schema_compatibility;
 pub mod types;
 
 pub use crate::codec::Codec;
-pub use crate::de::{from_value, Error as DeError};
+pub use crate::de::from_value;
 pub use crate::decimal::Decimal;
 pub use crate::duration::{Days, Duration, Millis, Months};
+pub use crate::errors::Error;
 pub use crate::reader::{from_avro_datum, Reader};
-pub use crate::schema::{ParseSchemaError, Schema};
-pub use crate::ser::{to_value, Error as SerError};
-pub use crate::types::SchemaResolutionError;
-pub use crate::util::{max_allocation_bytes, DecodeError};
-pub use crate::writer::{to_avro_datum, ValidationError, Writer};
+pub use crate::schema::Schema;
+pub use crate::ser::to_value;
+pub use crate::util::max_allocation_bytes;
+pub use crate::writer::{to_avro_datum, Writer};
 
 #[cfg(test)]
 mod tests {

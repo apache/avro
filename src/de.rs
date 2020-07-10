@@ -3,40 +3,20 @@ use std::collections::{
     hash_map::{Keys, Values},
     HashMap,
 };
-use std::error;
 use std::fmt;
 use std::slice::Iter;
 
 use serde::{
-    de::{self, DeserializeSeed, Error as SerdeError, Visitor},
+    de::{self, DeserializeSeed, Visitor},
     forward_to_deserialize_any, Deserialize,
 };
 
+use crate::errors::Error;
 use crate::types::Value;
-
-/// Represents errors that could be encountered while deserializing data
-#[derive(Clone, Debug, PartialEq)]
-pub struct Error {
-    message: String,
-}
 
 impl de::Error for Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {
-        Error {
-            message: msg.to_string(),
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str(&self.to_string())
-    }
-}
-
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        &self.message
+        Error::De(msg.to_string())
     }
 }
 
@@ -140,14 +120,14 @@ impl<'de> de::VariantAccess<'de> for EnumUnitDeserializer<'de> {
     where
         T: DeserializeSeed<'de>,
     {
-        Err(Error::custom("Unexpected Newtype variant"))
+        Err(de::Error::custom("Unexpected Newtype variant"))
     }
 
     fn tuple_variant<V>(self, _len: usize, _visitor: V) -> Result<V::Value, Error>
     where
         V: Visitor<'de>,
     {
-        Err(Error::custom("Unexpected tuple variant"))
+        Err(de::Error::custom("Unexpected tuple variant"))
     }
 
     fn struct_variant<V>(
@@ -158,7 +138,7 @@ impl<'de> de::VariantAccess<'de> for EnumUnitDeserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        Err(Error::custom("Unexpected struct variant"))
+        Err(de::Error::custom("Unexpected struct variant"))
     }
 }
 
@@ -171,7 +151,7 @@ impl<'de> de::EnumAccess<'de> for EnumDeserializer<'de> {
         V: DeserializeSeed<'de>,
     {
         self.input.first().map_or(
-            Err(Error::custom("A record must have a least one field")),
+            Err(de::Error::custom("A record must have a least one field")),
             |item| match (item.0.as_ref(), &item.1) {
                 ("type", Value::String(x)) => Ok((
                     seed.deserialize(StringDeserializer {
@@ -179,11 +159,11 @@ impl<'de> de::EnumAccess<'de> for EnumDeserializer<'de> {
                     })?,
                     self,
                 )),
-                (field, Value::String(_)) => Err(Error::custom(format!(
+                (field, Value::String(_)) => Err(de::Error::custom(format!(
                     "Expected first field named 'type': got '{}' instead",
                     field
                 ))),
-                (_, _) => Err(Error::custom(
+                (_, _) => Err(de::Error::custom(
                     "Expected first field of type String for the type name".to_string(),
                 )),
             },
@@ -203,7 +183,7 @@ impl<'de> de::VariantAccess<'de> for EnumDeserializer<'de> {
         T: DeserializeSeed<'de>,
     {
         self.input.get(1).map_or(
-            Err(Error::custom(
+            Err(de::Error::custom(
                 "Expected a newtype variant, got nothing instead.",
             )),
             |item| seed.deserialize(&Deserializer::new(&item.1)),
@@ -215,7 +195,7 @@ impl<'de> de::VariantAccess<'de> for EnumDeserializer<'de> {
         V: Visitor<'de>,
     {
         self.input.get(1).map_or(
-            Err(Error::custom(
+            Err(de::Error::custom(
                 "Expected a tuple variant, got nothing instead.",
             )),
             |item| de::Deserializer::deserialize_seq(&Deserializer::new(&item.1), visitor),
@@ -231,7 +211,7 @@ impl<'de> de::VariantAccess<'de> for EnumDeserializer<'de> {
         V: Visitor<'de>,
     {
         self.input.get(1).map_or(
-            Err(Error::custom("Expected a struct variant, got nothing")),
+            Err(de::Error::custom("Expected a struct variant, got nothing")),
             |item| {
                 de::Deserializer::deserialize_struct(
                     &Deserializer::new(&item.1),
@@ -268,11 +248,11 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
                 Value::Long(i) => visitor.visit_i64(i),
                 Value::Float(f) => visitor.visit_f32(f),
                 Value::Double(d) => visitor.visit_f64(d),
-                _ => Err(Error::custom("Unsupported union")),
+                _ => Err(de::Error::custom("Unsupported union")),
             },
             Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
             Value::Array(ref fields) => visitor.visit_seq(SeqDeserializer::new(fields)),
-            value => Err(Error::custom(format!(
+            value => Err(de::Error::custom(format!(
                 "incorrect value of type: {:?}",
                 crate::schema::SchemaKind::from(value)
             ))),
@@ -287,7 +267,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        Err(Error::custom("avro does not support char"))
+        Err(de::Error::custom("avro does not support char"))
     }
 
     fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -297,9 +277,9 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         match *self.input {
             Value::String(ref s) => visitor.visit_str(s),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => ::std::str::from_utf8(bytes)
-                .map_err(|e| Error::custom(e.to_string()))
+                .map_err(|e| de::Error::custom(e.to_string()))
                 .and_then(|s| visitor.visit_str(s)),
-            _ => Err(Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom("not a string|bytes|fixed")),
         }
     }
 
@@ -311,14 +291,14 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::String(ref s) => visitor.visit_string(s.to_owned()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 String::from_utf8(bytes.to_owned())
-                    .map_err(|e| Error::custom(e.to_string()))
+                    .map_err(|e| de::Error::custom(e.to_string()))
                     .and_then(|s| visitor.visit_string(s))
             }
             Value::Union(ref x) => match **x {
                 Value::String(ref s) => visitor.visit_string(s.to_owned()),
-                _ => Err(Error::custom("not a string|bytes|fixed")),
+                _ => Err(de::Error::custom("not a string|bytes|fixed")),
             },
-            _ => Err(Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom("not a string|bytes|fixed")),
         }
     }
 
@@ -329,7 +309,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         match *self.input {
             Value::String(ref s) => visitor.visit_bytes(s.as_bytes()),
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => visitor.visit_bytes(bytes),
-            _ => Err(Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom("not a string|bytes|fixed")),
         }
     }
 
@@ -342,7 +322,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Bytes(ref bytes) | Value::Fixed(_, ref bytes) => {
                 visitor.visit_byte_buf(bytes.to_owned())
             }
-            _ => Err(Error::custom("not a string|bytes|fixed")),
+            _ => Err(de::Error::custom("not a string|bytes|fixed")),
         }
     }
 
@@ -353,7 +333,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
         match *self.input {
             Value::Union(ref inner) if inner.as_ref() == &Value::Null => visitor.visit_none(),
             Value::Union(ref inner) => visitor.visit_some(&Deserializer::new(inner)),
-            _ => Err(Error::custom("not a union")),
+            _ => Err(de::Error::custom("not a union")),
         }
     }
 
@@ -363,7 +343,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Null => visitor.visit_unit(),
-            _ => Err(Error::custom("not a null")),
+            _ => Err(de::Error::custom("not a null")),
         }
     }
 
@@ -397,9 +377,9 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
             Value::Union(ref inner) => match **inner {
                 Value::Array(ref items) => visitor.visit_seq(SeqDeserializer::new(items)),
-                _ => Err(Error::custom("not an array")),
+                _ => Err(de::Error::custom("not an array")),
             },
-            _ => Err(Error::custom("not an array")),
+            _ => Err(de::Error::custom("not an array")),
         }
     }
 
@@ -428,7 +408,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
     {
         match *self.input {
             Value::Map(ref items) => visitor.visit_map(MapDeserializer::new(items)),
-            _ => Err(Error::custom("not a map")),
+            _ => Err(de::Error::custom("not a map")),
         }
     }
 
@@ -445,9 +425,9 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
             Value::Union(ref inner) => match **inner {
                 Value::Record(ref fields) => visitor.visit_map(StructDeserializer::new(fields)),
-                _ => Err(Error::custom("not a record")),
+                _ => Err(de::Error::custom("not a record")),
             },
-            _ => Err(Error::custom("not a record")),
+            _ => Err(de::Error::custom("not a record")),
         }
     }
 
@@ -465,7 +445,7 @@ impl<'a, 'de> de::Deserializer<'de> for &'a Deserializer<'de> {
             Value::Record(ref fields) => visitor.visit_enum(EnumDeserializer::new(&fields)),
             // This has to be a unit Enum
             Value::Enum(_index, ref field) => visitor.visit_enum(EnumUnitDeserializer::new(&field)),
-            _ => Err(Error::custom("not an enum")),
+            _ => Err(de::Error::custom("not an enum")),
         }
     }
 
@@ -521,7 +501,7 @@ impl<'de> de::MapAccess<'de> for MapDeserializer<'de> {
     {
         match self.input_values.next() {
             Some(ref value) => seed.deserialize(&Deserializer::new(value)),
-            None => Err(Error::custom("should not happen - too many values")),
+            None => Err(de::Error::custom("should not happen - too many values")),
         }
     }
 }
@@ -552,7 +532,7 @@ impl<'de> de::MapAccess<'de> for StructDeserializer<'de> {
     {
         match self.value.take() {
             Some(value) => seed.deserialize(&Deserializer::new(value)),
-            None => Err(Error::custom("should not happen - too many values")),
+            None => Err(de::Error::custom("should not happen - too many values")),
         }
     }
 }

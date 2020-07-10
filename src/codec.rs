@@ -1,6 +1,6 @@
 //! Logic for all supported compression codecs in Avro.
+use crate::errors::{AvroResult, Error};
 use crate::types::Value;
-use failure::Error;
 use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
 use strum_macros::{EnumString, IntoStaticStr};
@@ -30,12 +30,13 @@ impl From<Codec> for Value {
 
 impl Codec {
     /// Compress a stream of bytes in-place.
-    pub fn compress(self, stream: &mut Vec<u8>) -> Result<(), Error> {
+    pub fn compress(self, stream: &mut Vec<u8>) -> AvroResult<()> {
         match self {
             Codec::Null => (),
             Codec::Deflate => {
                 let mut encoder = Encoder::new(Vec::new());
                 encoder.write_all(stream)?;
+                // Deflate errors seem to just be io::Error
                 *stream = encoder.finish().into_result()?;
             }
             #[cfg(feature = "snappy")]
@@ -58,7 +59,7 @@ impl Codec {
     }
 
     /// Decompress a stream of bytes in-place.
-    pub fn decompress(self, stream: &mut Vec<u8>) -> Result<(), Error> {
+    pub fn decompress(self, stream: &mut Vec<u8>) -> AvroResult<()> {
         *stream = match self {
             Codec::Null => return Ok(()),
             Codec::Deflate => {
@@ -69,7 +70,6 @@ impl Codec {
             }
             #[cfg(feature = "snappy")]
             Codec::Snappy => {
-                use crate::util::DecodeError;
                 use byteorder::ByteOrder;
 
                 let decompressed_size = snap::decompress_len(&stream[..stream.len() - 4])?;
@@ -80,11 +80,10 @@ impl Codec {
                 let actual_crc = crc::crc32::checksum_ieee(&decoded);
 
                 if expected_crc != actual_crc {
-                    return Err(DecodeError::new(format!(
-                        "bad Snappy CRC32; expected {:x} but got {:x}",
-                        expected_crc, actual_crc
-                    ))
-                    .into());
+                    return Err(Error::SnappyCrcError {
+                        expected: expected_crc,
+                        found: actual_crc,
+                    });
                 }
                 decoded
             }

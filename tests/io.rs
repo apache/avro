@@ -1,9 +1,7 @@
 //! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_io.py
 use std::io::Cursor;
 
-use avro_rs::{
-    from_avro_datum, to_avro_datum, types::Value, Schema, SchemaResolutionError, ValidationError,
-};
+use avro_rs::{from_avro_datum, to_avro_datum, types::Value, Error, Schema};
 use lazy_static::lazy_static;
 
 lazy_static! {
@@ -220,10 +218,8 @@ fn test_no_default_value() -> Result<(), String> {
     );
     match decoded {
         Ok(_) => Err(String::from("Expected SchemaResolutionError, got Ok")),
-        Err(ref e) => match e.downcast_ref::<SchemaResolutionError>() {
-            Some(_) => Ok(()),
-            None => Err(format!("Expected SchemaResolutionError, got {}", e)),
-        },
+        Err(Error::SchemaResolution(_)) => Ok(()),
+        Err(ref e) => Err(format!("Expected SchemaResolutionError, got {}", e)),
     }
 }
 
@@ -307,9 +303,7 @@ fn test_type_exception() -> Result<(), String> {
     let encoded = to_avro_datum(&writer_schema, datum_to_write);
     match encoded {
         Ok(_) => Err(String::from("Expected ValidationError, got Ok")),
-        Err(ref e) => match e.downcast_ref::<ValidationError>() {
-            Some(_) => Ok(()),
-            None => Err(format!("Expected ValidationError, got {}", e)),
-        },
+        Err(Error::Validation(_)) => Ok(()),
+        Err(ref e) => Err(format!("Expected ValidationError, got {}", e)),
     }
 }

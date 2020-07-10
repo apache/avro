@@ -16,4 +16,5 @@ Everyone is encouraged to contribute! You can contribute by forking the GitHub r
 All contributions will be licensed under [MIT License](https://github.com/flavray/avro-rs/blob/master/LICENSE).
 
 Please consider adding documentation, tests and a line for your change under the Unreleased section in the [CHANGELOG](https://github.com/flavray/avro-rs/blob/master/CHANGELOG.md).
+If you introduce a backward-incompatible change, please consider adding instruction to migrate in the [Migration Guide](migration_guide.md)
 If you modify the crate documentation in `lib.rs`, run `make readme` to sync the README file.

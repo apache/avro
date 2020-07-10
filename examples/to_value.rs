@@ -1,5 +1,4 @@
-use avro_rs::to_value;
-use failure::Error;
+use avro_rs::{to_value, Error};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]

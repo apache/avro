@@ -1,5 +1,6 @@
 //! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_schema.py
 use avro_rs::schema::Name;
+use avro_rs::Error;
 use avro_rs::Schema;
 use lazy_static::lazy_static;
 
@@ -729,16 +730,17 @@ fn test_root_error_is_not_swallowed_on_parse_error() -> Result<(), String> {
     let raw_schema = r#"/not/a/real/file"#;
     let error = Schema::parse_str(raw_schema).unwrap_err();
 
-    // TODO: (#82) this should be a ParseSchemaError wrapping the JSON error
-    match error.downcast::<serde_json::error::Error>() {
-        Ok(e) => {
-            assert!(
-                e.to_string().contains("expected value at line 1 column 1"),
-                e.to_string()
-            );
-            Ok(())
-        }
-        Err(e) => Err(format!("Expected serde_json::error::Error, got {:?}", e)),
+    if let Error::JSON(e) = error {
+        assert!(
+            e.to_string().contains("expected value at line 1 column 1"),
+            e.to_string()
+        );
+        Ok(())
+    } else {
+        Err(format!(
+            "Expected serde_json::error::Error, got {:?}",
+            error
+        ))
     }
 }
 

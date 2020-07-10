@@ -56,6 +56,11 @@ version = "x.y"
 features = ["snappy"]
 ```
 
+## Upgrading to a newer minor version
+
+The library is still in beta, so there might be backward-incompatible changes between minor
+versions. If you have troubles upgrading, check the [version upgrade guide](migration_guide.md).
+
 ## Defining a schema
 
 An Avro data cannot exist without an Avro schema. Schemas **must** be used while writing and
@@ -297,8 +302,7 @@ The following is an example of how to combine everything showed so far and it is
 quick reference of the library interface:
 
 ```rust
-use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record};
-use failure::Error;
+use avro_rs::{Codec, Reader, Schema, Writer, from_value, types::Record, Error};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -363,10 +367,9 @@ Note that the on-disk representation is identical to the underlying primitive/co
 ```rust
 use avro_rs::{
     types::Record, types::Value, Codec, Days, Decimal, Duration, Millis, Months, Reader, Schema,
-    Writer,
+    Writer, Error,
 };
 use num_bigint::ToBigInt;
-use failure::Error;
 
 fn main() -> Result<(), Error> {
     let raw_schema = r#"
@@ -476,8 +479,7 @@ Note: Rabin fingerprinting is NOT SUPPORTED yet.
 An example of fingerprinting for the supported fingerprints:
 
 ```rust
-use avro_rs::Schema;
-use failure::Error;
+use avro_rs::{Schema, Error};
 use md5::Md5;
 use sha2::Sha256;
 
@@ -572,4 +574,5 @@ Everyone is encouraged to contribute! You can contribute by forking the GitHub r
 All contributions will be licensed under [MIT License](https://github.com/flavray/avro-rs/blob/master/LICENSE).
 
 Please consider adding documentation, tests and a line for your change under the Unreleased section in the [CHANGELOG](https://github.com/flavray/avro-rs/blob/master/CHANGELOG.md).
+If you introduce a backward-incompatible change, please consider adding instruction to migrate in the [Migration Guide](migration_guide.md)
 If you modify the crate documentation in `lib.rs`, run `make readme` to sync the README file.
