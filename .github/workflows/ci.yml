@@ -41,12 +41,6 @@ jobs:
           command: build
           args: --all-features --all-targets
 
-      - name: Build Benchmarks
-        uses: actions-rs/cargo@v1
-        with:
-          command: bench
-          args: --no-run --all-features --all-targets
-
       - name: Test
         uses: actions-rs/cargo@v1
         with:
