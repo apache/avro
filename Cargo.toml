@@ -8,9 +8,6 @@ readme = "README.md"
 repository = "https://github.com/flavray/avro-rs"
 edition = "2018"
 
-[badges]
-travis-ci = { repository = "flavray/avro-rs" }
-
 [features]
 snappy = ["crc", "snap"]
 
