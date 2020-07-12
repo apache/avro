@@ -1,15 +1,16 @@
 //! Logic handling reading from Avro format at user level.
-use std::io::{ErrorKind, Read};
-use std::str::{from_utf8, FromStr};
-
+use crate::{
+    decode::decode,
+    errors::{AvroResult, Error},
+    schema::Schema,
+    types::Value,
+    util, Codec,
+};
 use serde_json::from_slice;
-
-use crate::decode::decode;
-use crate::errors::{AvroResult, Error};
-use crate::schema::Schema;
-use crate::types::Value;
-use crate::util;
-use crate::Codec;
+use std::{
+    io::{ErrorKind, Read},
+    str::{from_utf8, FromStr},
+};
 
 // Internal Block reader.
 #[derive(Debug, Clone)]
@@ -296,8 +297,7 @@ pub fn from_avro_datum<R: Read>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Record;
-    use crate::Reader;
+    use crate::{types::Record, Reader};
     use std::io::Cursor;
 
     const SCHEMA: &str = r#"

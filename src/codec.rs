@@ -1,6 +1,8 @@
 //! Logic for all supported compression codecs in Avro.
-use crate::errors::{AvroResult, Error};
-use crate::types::Value;
+use crate::{
+    errors::{AvroResult, Error},
+    types::Value,
+};
 use libflate::deflate::{Decoder, Encoder};
 use std::io::{Read, Write};
 use strum_macros::{EnumString, IntoStaticStr};

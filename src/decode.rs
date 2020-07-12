@@ -1,15 +1,13 @@
-use std::collections::HashMap;
-use std::io::Read;
-use std::str::FromStr;
-
+use crate::{
+    decimal::Decimal,
+    duration::Duration,
+    errors::{AvroResult, Error},
+    schema::Schema,
+    types::Value,
+    util::{safe_len, zag_i32, zag_i64},
+};
+use std::{collections::HashMap, io::Read, str::FromStr};
 use uuid::Uuid;
-
-use crate::decimal::Decimal;
-use crate::duration::Duration;
-use crate::errors::{AvroResult, Error};
-use crate::schema::Schema;
-use crate::types::Value;
-use crate::util::{safe_len, zag_i32, zag_i64};
 
 #[inline]
 fn decode_long<R: Read>(reader: &mut R) -> AvroResult<Value> {

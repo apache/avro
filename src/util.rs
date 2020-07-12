@@ -1,10 +1,6 @@
-use std::i64;
-use std::io::Read;
-use std::sync::Once;
-
-use serde_json::{Map, Value};
-
 use crate::errors::{AvroResult, Error};
+use serde_json::{Map, Value};
+use std::{i64, io::Read, sync::Once};
 
 /// Maximum number of bytes that can be allocated when decoding
 /// Avro-encoded values. This is a protection against ill-formed

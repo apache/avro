@@ -1,17 +1,13 @@
 //! Logic handling the intermediate representation of Avro values.
-use std::collections::HashMap;
-use std::convert::TryFrom;
-use std::hash::BuildHasher;
-use std::str::FromStr;
-use std::u8;
-
+use crate::{
+    decimal::Decimal,
+    duration::Duration,
+    errors::{AvroResult, Error},
+    schema::{Precision, RecordField, Scale, Schema, SchemaKind, UnionSchema},
+};
 use serde_json::Value as JsonValue;
+use std::{collections::HashMap, convert::TryFrom, hash::BuildHasher, str::FromStr, u8};
 use uuid::Uuid;
-
-use crate::decimal::Decimal;
-use crate::duration::Duration;
-use crate::errors::{AvroResult, Error};
-use crate::schema::{Precision, RecordField, Scale, Schema, SchemaKind, UnionSchema};
 
 /// Compute the maximum decimal value precision of a byte array of length `len` could hold.
 fn max_prec_for_len(len: usize) -> Result<usize, std::num::TryFromIntError> {
@@ -766,10 +762,12 @@ impl Value {
 
 #[cfg(test)]
 mod tests {
-    use crate::decimal::Decimal;
-    use crate::duration::{Days, Duration, Millis, Months};
-    use crate::schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema};
-    use crate::types::Value;
+    use crate::{
+        decimal::Decimal,
+        duration::{Days, Duration, Millis, Months},
+        schema::{Name, RecordField, RecordFieldOrder, Schema, UnionSchema},
+        types::Value,
+    };
     use uuid::Uuid;
 
     #[test]

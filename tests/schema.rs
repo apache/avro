@@ -1,7 +1,5 @@
 //! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_schema.py
-use avro_rs::schema::Name;
-use avro_rs::Error;
-use avro_rs::Schema;
+use avro_rs::{schema::Name, Error, Schema};
 use lazy_static::lazy_static;
 
 lazy_static! {

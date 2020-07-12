@@ -1,10 +1,9 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-
 use avro_rs::{
     schema::Schema,
     to_avro_datum,
     types::{Record, Value},
 };
+use criterion::{criterion_group, criterion_main, Criterion};
 
 const RAW_SMALL_SCHEMA: &str = r#"
 {

@@ -1,16 +1,15 @@
 //! Logic handling writing in Avro format at user level.
-use std::collections::HashMap;
-use std::io::Write;
-
+use crate::{
+    encode::{encode, encode_ref, encode_to_vec},
+    errors::{AvroResult, Error},
+    schema::Schema,
+    ser::Serializer,
+    types::Value,
+    Codec,
+};
 use rand::random;
 use serde::Serialize;
-
-use crate::encode::{encode, encode_ref, encode_to_vec};
-use crate::errors::{AvroResult, Error};
-use crate::schema::Schema;
-use crate::ser::Serializer;
-use crate::types::Value;
-use crate::Codec;
+use std::{collections::HashMap, io::Write};
 
 const DEFAULT_BLOCK_SIZE: usize = 16000;
 const AVRO_OBJECT_HEADER: &[u8] = b"Obj\x01";
@@ -330,11 +329,13 @@ pub fn to_avro_datum<T: Into<Value>>(schema: &Schema, value: T) -> AvroResult<Ve
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::decimal::Decimal;
-    use crate::duration::{Days, Duration, Millis, Months};
-    use crate::schema::Name;
-    use crate::types::Record;
-    use crate::util::zig_i64;
+    use crate::{
+        decimal::Decimal,
+        duration::{Days, Duration, Millis, Months},
+        schema::Name,
+        types::Record,
+        util::zig_i64,
+    };
     use serde::{Deserialize, Serialize};
 
     const AVRO_OBJECT_HEADER_LEN: usize = AVRO_OBJECT_HEADER.len();

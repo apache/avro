@@ -1,8 +1,7 @@
 //! Port of https://github.com/apache/avro/blob/release-1.9.1/lang/py/test/test_io.py
-use std::io::Cursor;
-
 use avro_rs::{from_avro_datum, to_avro_datum, types::Value, Error, Schema};
 use lazy_static::lazy_static;
+use std::io::Cursor;
 
 lazy_static! {
     static ref SCHEMAS_TO_VALIDATE: Vec<(&'static str, Value)> = vec![

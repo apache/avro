@@ -1,18 +1,16 @@
 //! Logic for parsing and interacting with schemas in Avro format.
-use crate::errors::{AvroResult, Error};
-use crate::types;
-use crate::util::MapHelper;
+use crate::{
+    errors::{AvroResult, Error},
+    types,
+    util::MapHelper,
+};
 use digest::Digest;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
 };
 use serde_json::{Map, Value};
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::convert::TryInto;
-use std::fmt;
-use std::str::FromStr;
+use std::{borrow::Cow, collections::HashMap, convert::TryInto, fmt, str::FromStr};
 use strum_macros::EnumString;
 
 /// Represents an Avro schema fingerprint

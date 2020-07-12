@@ -693,23 +693,26 @@ pub mod schema;
 pub mod schema_compatibility;
 pub mod types;
 
-pub use crate::codec::Codec;
-pub use crate::de::from_value;
-pub use crate::decimal::Decimal;
-pub use crate::duration::{Days, Duration, Millis, Months};
-pub use crate::errors::Error;
-pub use crate::reader::{from_avro_datum, Reader};
-pub use crate::schema::Schema;
-pub use crate::ser::to_value;
-pub use crate::util::max_allocation_bytes;
-pub use crate::writer::{to_avro_datum, Writer};
+pub use crate::{
+    codec::Codec,
+    de::from_value,
+    decimal::Decimal,
+    duration::{Days, Duration, Millis, Months},
+    errors::Error,
+    reader::{from_avro_datum, Reader},
+    schema::Schema,
+    ser::to_value,
+    util::max_allocation_bytes,
+    writer::{to_avro_datum, Writer},
+};
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::reader::Reader;
-    use crate::schema::Schema;
-    use crate::types::{Record, Value};
+    use crate::{
+        from_avro_datum,
+        types::{Record, Value},
+        Codec, Reader, Schema, Writer,
+    };
 
     //TODO: move where it fits better
     #[test]

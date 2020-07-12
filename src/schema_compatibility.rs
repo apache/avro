@@ -1,10 +1,10 @@
 //! Logic for checking schema compatibility
-use std::collections::hash_map::DefaultHasher;
-use std::collections::HashSet;
-use std::hash::Hasher;
-use std::ptr;
-
 use crate::schema::{Schema, SchemaKind};
+use std::{
+    collections::{hash_map::DefaultHasher, HashSet},
+    hash::Hasher,
+    ptr,
+};
 
 pub struct SchemaCompatibility;
 

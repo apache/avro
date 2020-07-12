@@ -1,10 +1,9 @@
-use std::time::{Duration, Instant};
-
 use avro_rs::{
     schema::Schema,
     types::{Record, Value},
     Reader, Writer,
 };
+use std::time::{Duration, Instant};
 
 fn nanos(duration: Duration) -> u64 {
     duration.as_secs() * 1_000_000_000 + duration.subsec_nanos() as u64

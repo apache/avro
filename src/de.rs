@@ -1,18 +1,17 @@
 //! Logic for serde-compatible deserialization.
-use std::collections::{
-    hash_map::{Keys, Values},
-    HashMap,
-};
-use std::fmt;
-use std::slice::Iter;
-
+use crate::{errors::Error, types::Value};
 use serde::{
     de::{self, DeserializeSeed, Visitor},
     forward_to_deserialize_any, Deserialize,
 };
-
-use crate::errors::Error;
-use crate::types::Value;
+use std::{
+    collections::{
+        hash_map::{Keys, Values},
+        HashMap,
+    },
+    fmt,
+    slice::Iter,
+};
 
 impl de::Error for Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {

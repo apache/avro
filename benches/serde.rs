@@ -1,11 +1,10 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use std::time::Duration;
-
 use avro_rs::{
     schema::Schema,
     types::{Record, Value},
     Reader, Writer,
 };
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::time::Duration;
 
 const RAW_SMALL_SCHEMA: &str = r#"
 {

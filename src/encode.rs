@@ -1,6 +1,8 @@
-use crate::schema::Schema;
-use crate::types::Value;
-use crate::util::{zig_i32, zig_i64};
+use crate::{
+    schema::Schema,
+    types::Value,
+    util::{zig_i32, zig_i64},
+};
 use std::convert::TryInto;
 
 /// Encode a `Value` into avro format.

@@ -1,13 +1,7 @@
 //! Logic for serde-compatible serialization.
-use std::collections::HashMap;
-use std::fmt;
-use std::iter::once;
-
+use crate::{errors::Error, types::Value};
 use serde::{ser, Serialize};
-
-use crate::errors::Error;
-use crate::types::Value;
-
+use std::{collections::HashMap, fmt, iter::once};
 impl ser::Error for Error {
     fn custom<T: fmt::Display>(msg: T) -> Self {
         Error::Ser(msg.to_string())
