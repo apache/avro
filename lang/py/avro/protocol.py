@@ -24,6 +24,7 @@ from __future__ import absolute_import, division, print_function
 import hashlib
 import json
 
+import avro.errors
 import avro.schema
 
 try:
@@ -44,14 +45,6 @@ except NameError:
 VALID_TYPE_SCHEMA_TYPES = ('enum', 'record', 'error', 'fixed')
 
 #
-# Exceptions
-#
-
-
-class ProtocolParseException(avro.schema.AvroException):
-    pass
-
-#
 # Base Classes
 #
 
@@ -65,7 +58,7 @@ class Protocol(object):
             type_object = avro.schema.make_avsc_object(type, type_names)
             if type_object.type not in VALID_TYPE_SCHEMA_TYPES:
                 fail_msg = 'Type %s not an enum, fixed, record, or error.' % type
-                raise ProtocolParseException(fail_msg)
+                raise avro.errors.ProtocolParseException(fail_msg)
             type_objects.append(type_object)
         return type_objects
 
@@ -74,14 +67,14 @@ class Protocol(object):
         for name, body in messages.items():
             if name in message_objects:
                 fail_msg = 'Message name "%s" repeated.' % name
-                raise ProtocolParseException(fail_msg)
+                raise avro.errors.ProtocolParseException(fail_msg)
             try:
                 request = body.get('request')
                 response = body.get('response')
                 errors = body.get('errors')
             except AttributeError:
                 fail_msg = 'Message name "%s" has non-object body %s.' % (name, body)
-                raise ProtocolParseException(fail_msg)
+                raise avro.errors.ProtocolParseException(fail_msg)
             message_objects[name] = Message(name, request, response, errors, names)
         return message_objects
 
@@ -89,19 +82,19 @@ class Protocol(object):
         # Ensure valid ctor args
         if not name:
             fail_msg = 'Protocols must have a non-empty name.'
-            raise ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException(fail_msg)
         elif not isinstance(name, basestring):
             fail_msg = 'The name property must be a string.'
-            raise ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException(fail_msg)
         elif not (namespace is None or isinstance(namespace, basestring)):
             fail_msg = 'The namespace property must be a string.'
-            raise ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException(fail_msg)
         elif not (types is None or isinstance(types, list)):
             fail_msg = 'The types property must be a list.'
-            raise ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException(fail_msg)
         elif not (messages is None or callable(getattr(messages, 'get', None))):
             fail_msg = 'The messages property must be a JSON object.'
-            raise ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException(fail_msg)
 
         self._props = {}
         self.set_prop('name', name)
@@ -184,7 +177,7 @@ class Message(object):
     def _parse_request(self, request, names):
         if not isinstance(request, list):
             fail_msg = 'Request property not a list: %s' % request
-            raise ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException(fail_msg)
         return avro.schema.RecordSchema(None, None, request, names, 'request')
 
     def _parse_response(self, response, names):
@@ -196,7 +189,7 @@ class Message(object):
     def _parse_errors(self, errors, names):
         if not isinstance(errors, list):
             fail_msg = 'Errors property not a list: %s' % errors
-            raise ProtocolParseException(fail_msg)
+            raise avro.errors.ProtocolParseException(fail_msg)
         errors_for_parsing = {'type': 'error_union', 'declared_errors': errors}
         return avro.schema.make_avsc_object(errors_for_parsing, names)
 
@@ -247,7 +240,7 @@ def make_avpr_object(json_data):
         types = json_data.get('types')
         messages = json_data.get('messages')
     except AttributeError:
-        raise ProtocolParseException('Not a JSON object: %s' % json_data)
+        raise avro.errors.ProtocolParseException('Not a JSON object: %s' % json_data)
     return Protocol(name, namespace, types, messages)
 
 
@@ -256,7 +249,7 @@ def parse(json_string):
     try:
         json_data = json.loads(json_string)
     except ValueError:
-        raise ProtocolParseException('Error parsing JSON: %s' % json_string)
+        raise avro.errors.ProtocolParseException('Error parsing JSON: %s' % json_string)
 
     # construct the Avro Protocol object
     return make_avpr_object(json_data)

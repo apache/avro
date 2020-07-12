@@ -25,6 +25,7 @@ import threading
 import traceback
 import weakref
 
+import avro.errors
 import avro.tether.tether_task
 import avro.tether.util
 from avro import ipc
@@ -32,7 +33,7 @@ from avro import ipc
 try:
     import BaseHTTPServer as http_server  # type: ignore
 except ImportError:
-    import http.server as http_server  # type: ignore
+    from http import server as http_server  # type: ignore
 
 __all__ = ["TaskRunner"]
 
@@ -89,8 +90,8 @@ class TaskRunnerResponder(ipc.Responder):
 
         except Exception as e:
             self.log.error("Error occured while processing message: {0}".format(message.name))
-            emsg = traceback.format_exc()
-            self.task.fail(emsg)
+            e = traceback.format_exc()
+            self.task.fail(e)
 
         return None
 
@@ -153,10 +154,9 @@ class TaskRunner(object):
         task - An instance of tether task
         """
         self.log = logging.getLogger("TaskRunner:")
-        self.task = task
-
         if not isinstance(task, avro.tether.tether_task.TetherTask):
-            raise ValueError("task must be an instance of tether task")
+            raise avro.errors.AvroException("task must be an instance of tether task")
+        self.task = task
 
     def start(self, outputport=None, join=True):
         """
@@ -213,11 +213,11 @@ if __name__ == '__main__':
     # logging.basicConfig(level=logging.INFO,filename='/tmp/log',filemode='w')
     logging.basicConfig(level=logging.INFO)
 
-    if (len(sys.argv) <= 1):
-        print("Error: tether_task_runner.__main__: Usage: tether_task_runner task_package.task_module.TaskClass")
-        raise ValueError("Usage: tether_task_runner task_package.task_module.TaskClass")
+    try:
+        fullcls = sys.argv[1]
+    except IndexError:
+        raise avro.errors.UsageError("Usage: tether_task_runner task_package.task_module.TaskClass")
 
-    fullcls = sys.argv[1]
     mod, cname = fullcls.rsplit(".", 1)
 
     logging.info("tether_task_runner.__main__: Task: {0}".format(fullcls))
@@ -227,5 +227,9 @@ if __name__ == '__main__':
     taskcls = getattr(modobj, cname)
     task = taskcls()
 
-    runner = TaskRunner(task=task)
+    try:
+        runner = TaskRunner(task=task)
+    except avro.errors.AvroException as e:
+        raise avro.errors.UsageError(e)
+
     runner.start()

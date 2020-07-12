@@ -25,13 +25,14 @@ import io
 import os
 from struct import Struct
 
+import avro.errors
 import avro.io
 from avro import protocol, schema
 
 try:
     import httplib  # type: ignore
 except ImportError:
-    import http.client as httplib  # type: ignore
+    from http import client as httplib  # type: ignore
 
 try:
     unicode
@@ -69,23 +70,6 @@ REMOTE_PROTOCOLS = {}
 BIG_ENDIAN_INT_STRUCT = Struct('!I')
 BUFFER_HEADER_LENGTH = 4
 BUFFER_SIZE = 8192
-
-#
-# Exceptions
-#
-
-
-class AvroRemoteException(schema.AvroException):
-    """
-    Raised when an error message is sent by an Avro requestor or responder.
-    """
-
-    def __init__(self, fail_msg=None):
-        schema.AvroException.__init__(self, fail_msg)
-
-
-class ConnectionClosedException(schema.AvroException):
-    pass
 
 #
 # Base IPC Classes (Requestor/Responder)
@@ -165,7 +149,7 @@ class BaseRequestor(object):
         # message name
         message = self.local_protocol.messages.get(message_name)
         if message is None:
-            raise schema.AvroException('Unknown message: %s' % message_name)
+            raise avro.errors.AvroException('Unknown message: %s' % message_name)
         encoder.write_utf8(message.name)
 
         # message parameters
@@ -183,7 +167,7 @@ class BaseRequestor(object):
             return True
         elif match == 'CLIENT':
             if self.send_protocol:
-                raise schema.AvroException('Handshake failure.')
+                raise avro.errors.AvroException('Handshake failure.')
             self.remote_protocol = protocol.parse(
                 handshake_response.get('serverProtocol'))
             self.remote_hash = handshake_response.get('serverHash')
@@ -191,14 +175,14 @@ class BaseRequestor(object):
             return True
         elif match == 'NONE':
             if self.send_protocol:
-                raise schema.AvroException('Handshake failure.')
+                raise avro.errors.AvroException('Handshake failure.')
             self.remote_protocol = protocol.parse(
                 handshake_response.get('serverProtocol'))
             self.remote_hash = handshake_response.get('serverHash')
             self.send_protocol = True
             return False
         else:
-            raise schema.AvroException('Unexpected match: %s' % match)
+            raise avro.errors.AvroException('Unexpected match: %s' % match)
 
     def read_call_response(self, message_name, decoder):
         """
@@ -216,12 +200,12 @@ class BaseRequestor(object):
         # remote response schema
         remote_message_schema = self.remote_protocol.messages.get(message_name)
         if remote_message_schema is None:
-            raise schema.AvroException('Unknown remote message: %s' % message_name)
+            raise avro.errors.AvroException('Unknown remote message: %s' % message_name)
 
         # local response schema
         local_message_schema = self.local_protocol.messages.get(message_name)
         if local_message_schema is None:
-            raise schema.AvroException('Unknown local message: %s' % message_name)
+            raise avro.errors.AvroException('Unknown local message: %s' % message_name)
 
         # error flag
         if not decoder.read_boolean():
@@ -231,16 +215,13 @@ class BaseRequestor(object):
         else:
             writers_schema = remote_message_schema.errors
             readers_schema = local_message_schema.errors
-            raise self.read_error(writers_schema, readers_schema, decoder)
+            datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
+            raise avro.errors.AvroRemoteException(datum_reader.read(decoder))
 
     def read_response(self, writers_schema, readers_schema, decoder):
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
         result = datum_reader.read(decoder)
         return result
-
-    def read_error(self, writers_schema, readers_schema, decoder):
-        datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
-        return AvroRemoteException(datum_reader.read(decoder))
 
 
 class Requestor(BaseRequestor):
@@ -304,11 +285,11 @@ class Responder(object):
             remote_message = remote_protocol.messages.get(remote_message_name)
             if remote_message is None:
                 fail_msg = 'Unknown remote message: %s' % remote_message_name
-                raise schema.AvroException(fail_msg)
+                raise avro.errors.AvroException(fail_msg)
             local_message = self.local_protocol.messages.get(remote_message_name)
             if local_message is None:
                 fail_msg = 'Unknown local message: %s' % remote_message_name
-                raise schema.AvroException(fail_msg)
+                raise avro.errors.AvroException(fail_msg)
             writers_schema = remote_message.request
             readers_schema = local_message.request
             request = self.read_request(writers_schema, readers_schema,
@@ -413,14 +394,14 @@ class FramedReader(object):
             while buffer.tell() < buffer_length:
                 chunk = self.reader.read(buffer_length - buffer.tell())
                 if chunk == '':
-                    raise ConnectionClosedException("Reader read 0 bytes.")
+                    raise avro.errors.ConnectionClosedException("Reader read 0 bytes.")
                 buffer.write(chunk)
             message.append(buffer.getvalue())
 
     def _read_buffer_length(self):
         read = self.reader.read(BUFFER_HEADER_LENGTH)
         if read == '':
-            raise ConnectionClosedException("Reader read 0 bytes.")
+            raise avro.errors.ConnectionClosedException("Reader read 0 bytes.")
         return BIG_ENDIAN_INT_STRUCT.unpack(read)[0]
 
 

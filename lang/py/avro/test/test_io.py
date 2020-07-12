@@ -244,7 +244,7 @@ class TestIO(unittest.TestCase):
             print('Valid: %s' % validated)
             if validated:
                 passed += 1
-        self.assertEquals(passed, len(SCHEMAS_TO_VALIDATE))
+        self.assertEqual(passed, len(SCHEMAS_TO_VALIDATE))
 
     def test_round_trip(self):
         print_test_name('TEST ROUND TRIP')
@@ -265,7 +265,7 @@ class TestIO(unittest.TestCase):
                 datum = datum.astimezone(tz=timezones.utc)
             if datum == round_trip_datum:
                 correct += 1
-        self.assertEquals(correct, len(SCHEMAS_TO_VALIDATE))
+        self.assertEqual(correct, len(SCHEMAS_TO_VALIDATE))
 
     #
     # BINARY ENCODING OF INT AND LONG
@@ -273,19 +273,19 @@ class TestIO(unittest.TestCase):
 
     def test_binary_int_encoding(self):
         correct = check_binary_encoding('int')
-        self.assertEquals(correct, len(BINARY_ENCODINGS))
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
     def test_binary_long_encoding(self):
         correct = check_binary_encoding('long')
-        self.assertEquals(correct, len(BINARY_ENCODINGS))
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
     def test_skip_int(self):
         correct = check_skip_number('int')
-        self.assertEquals(correct, len(BINARY_ENCODINGS))
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
     def test_skip_long(self):
         correct = check_skip_number('long')
-        self.assertEquals(correct, len(BINARY_ENCODINGS))
+        self.assertEqual(correct, len(BINARY_ENCODINGS))
 
     #
     # SCHEMA RESOLUTION
@@ -308,7 +308,7 @@ class TestIO(unittest.TestCase):
                 print('Datum Read: %s' % datum_read)
                 if datum_read != datum_to_write:
                     incorrect += 1
-        self.assertEquals(incorrect, 0)
+        self.assertEqual(incorrect, 0)
 
     def test_unknown_symbol(self):
         print_test_name('TEST UNKNOWN SYMBOL')
@@ -325,7 +325,7 @@ class TestIO(unittest.TestCase):
         reader = io.BytesIO(writer.getvalue())
         decoder = avro.io.BinaryDecoder(reader)
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
-        self.assertRaises(avro.io.SchemaResolutionException, datum_reader.read, decoder)
+        self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
     def test_default_value(self):
         print_test_name('TEST DEFAULT VALUE')
@@ -345,7 +345,7 @@ class TestIO(unittest.TestCase):
             print('Datum Read: %s' % datum_read)
             if datum_to_read == datum_read:
                 correct += 1
-        self.assertEquals(correct, len(DEFAULT_VALUE_EXAMPLES))
+        self.assertEqual(correct, len(DEFAULT_VALUE_EXAMPLES))
 
     def test_no_default_value(self):
         print_test_name('TEST NO DEFAULT VALUE')
@@ -360,7 +360,7 @@ class TestIO(unittest.TestCase):
         reader = io.BytesIO(writer.getvalue())
         decoder = avro.io.BinaryDecoder(reader)
         datum_reader = avro.io.DatumReader(writers_schema, readers_schema)
-        self.assertRaises(avro.io.SchemaResolutionException, datum_reader.read, decoder)
+        self.assertRaises(avro.errors.SchemaResolutionException, datum_reader.read, decoder)
 
     def test_projection(self):
         print_test_name('TEST PROJECTION')
@@ -376,7 +376,7 @@ class TestIO(unittest.TestCase):
         writer, encoder, datum_writer = write_datum(datum_to_write, writers_schema)
         datum_read = read_datum(writer, writers_schema, readers_schema)
         print('Datum Read: %s' % datum_read)
-        self.assertEquals(datum_to_read, datum_read)
+        self.assertEqual(datum_to_read, datum_read)
 
     def test_field_order(self):
         print_test_name('TEST FIELD ORDER')
@@ -392,7 +392,7 @@ class TestIO(unittest.TestCase):
         writer, encoder, datum_writer = write_datum(datum_to_write, writers_schema)
         datum_read = read_datum(writer, writers_schema, readers_schema)
         print('Datum Read: %s' % datum_read)
-        self.assertEquals(datum_to_read, datum_read)
+        self.assertEqual(datum_to_read, datum_read)
 
     def test_type_exception(self):
         print_test_name('TEST TYPE EXCEPTION')
@@ -401,7 +401,7 @@ class TestIO(unittest.TestCase):
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")
         datum_to_write = {'E': 5, 'F': 'Bad'}
-        self.assertRaises(avro.io.AvroTypeException, write_datum, datum_to_write, writers_schema)
+        self.assertRaises(avro.errors.AvroTypeException, write_datum, datum_to_write, writers_schema)
 
 
 if __name__ == '__main__':
