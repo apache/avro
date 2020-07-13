@@ -2,181 +2,189 @@
 use avro_rs::{schema::Name, Error, Schema};
 use lazy_static::lazy_static;
 
-lazy_static! {
-    static ref PRIMITIVE_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (r#""null""#, true),
-        (r#"{"type": "null"}"#, true),
-        (r#""boolean""#, true),
-        (r#"{"type": "boolean"}"#, true),
-        (r#""string""#, true),
-        (r#"{"type": "string"}"#, true),
-        (r#""bytes""#, true),
-        (r#"{"type": "bytes"}"#, true),
-        (r#""int""#, true),
-        (r#"{"type": "int"}"#, true),
-        (r#""long""#, true),
-        (r#"{"type": "long"}"#, true),
-        (r#""float""#, true),
-        (r#"{"type": "float"}"#, true),
-        (r#""double""#, true),
-        (r#"{"type": "double"}"#, true),
-        (r#""true""#, false),
-        (r#"true"#, false),
-        (r#"{"no_type": "test"}"#, false),
-        (r#"{"type": "panther"}"#, false),
-    ];
-    static ref FIXED_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (r#"{"type": "fixed", "name": "Test", "size": 1}"#, true),
-        (
-            r#"{
+const PRIMITIVE_EXAMPLES: &[(&str, bool)] = &[
+    (r#""null""#, true),
+    (r#"{"type": "null"}"#, true),
+    (r#""boolean""#, true),
+    (r#"{"type": "boolean"}"#, true),
+    (r#""string""#, true),
+    (r#"{"type": "string"}"#, true),
+    (r#""bytes""#, true),
+    (r#"{"type": "bytes"}"#, true),
+    (r#""int""#, true),
+    (r#"{"type": "int"}"#, true),
+    (r#""long""#, true),
+    (r#"{"type": "long"}"#, true),
+    (r#""float""#, true),
+    (r#"{"type": "float"}"#, true),
+    (r#""double""#, true),
+    (r#"{"type": "double"}"#, true),
+    (r#""true""#, false),
+    (r#"true"#, false),
+    (r#"{"no_type": "test"}"#, false),
+    (r#"{"type": "panther"}"#, false),
+];
+
+const FIXED_EXAMPLES: &[(&str, bool)] = &[
+    (r#"{"type": "fixed", "name": "Test", "size": 1}"#, true),
+    (
+        r#"{
                 "type": "fixed",
                 "name": "MyFixed",
                 "namespace": "org.apache.hadoop.avro",
                 "size": 1
             }"#,
-            true
-        ),
-        (r#"{"type": "fixed", "name": "Missing size"}"#, false),
-        (r#"{"type": "fixed", "size": 314}"#, false),
-    ];
-    static ref ENUM_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"]}"#, true),
-        (
-            r#"{
+        true,
+    ),
+    (r#"{"type": "fixed", "name": "Missing size"}"#, false),
+    (r#"{"type": "fixed", "size": 314}"#, false),
+];
+
+const ENUM_EXAMPLES: &[(&str, bool)] = &[
+    (
+        r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"]}"#,
+        true,
+    ),
+    (
+        r#"{
                 "type": "enum",
                 "name": "Status",
                 "symbols": "Normal Caution Critical"
             }"#,
-            false
-        ),
-        (
-            r#"{
+        false,
+    ),
+    (
+        r#"{
                 "type": "enum",
                 "name": [ 0, 1, 1, 2, 3, 5, 8 ],
                 "symbols": ["Golden", "Mean"]
             }"#,
-            false
-        ),
-        (
-            r#"{
+        false,
+    ),
+    (
+        r#"{
                 "type": "enum",
                 "symbols" : ["I", "will", "fail", "no", "name"]
             }"#,
-            false
-        ),
-        (
-            r#"{
+        false,
+    ),
+    (
+        r#"{
                 "type": "enum",
                  "name": "Test"
                  "symbols" : ["AA", "AA"]
             }"#,
-            false
-        ),
-    ];
-    static ref ARRAY_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (r#"{"type": "array", "items": "long"}"#, true),
-        (
-            r#"{
+        false,
+    ),
+];
+
+const ARRAY_EXAMPLES: &[(&str, bool)] = &[
+    (r#"{"type": "array", "items": "long"}"#, true),
+    (
+        r#"{
                 "type": "array",
                  "items": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}
             }"#,
-            true
-        ),
-    ];
-    static ref MAP_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (r#"{"type": "map", "values": "long"}"#, true),
-        (
-            r#"{
+        true,
+    ),
+];
+
+const MAP_EXAMPLES: &[(&str, bool)] = &[
+    (r#"{"type": "map", "values": "long"}"#, true),
+    (
+        r#"{
                 "type": "map",
                 "values": {"type": "enum", "name": "Test", "symbols": ["A", "B"]}
             }"#,
-            true
-        ),
-    ];
-    static ref UNION_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (r#"["string", "null", "long"]"#, true),
-        (r#"["null", "null"]"#, false),
-        (r#"["long", "long"]"#, false),
-        (
-            r#"[
+        true,
+    ),
+];
+
+const UNION_EXAMPLES: &[(&str, bool)] = &[
+    (r#"["string", "null", "long"]"#, true),
+    (r#"["null", "null"]"#, false),
+    (r#"["long", "long"]"#, false),
+    (
+        r#"[
                 {"type": "array", "items": "long"}
                 {"type": "array", "items": "string"}
             ]"#,
-            false
-        ),
-    ];
-    static ref RECORD_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (
-            r#"{
+        false,
+    ),
+];
+
+const RECORD_EXAMPLES: &[(&str, bool)] = &[
+    (
+        r#"{
                 "type": "record",
                 "name": "Test",
                 "fields": [{"name": "f", "type": "long"}]
             }"#,
-            true
-        ),
-        /*
-        // TODO: (#91) figure out why "type": "error" seems to be valid (search in spec) and uncomment
-        (
-            r#"{
-                "type": "error",
-                "name": "Test",
-                "fields": [{"name": "f", "type": "long"}]
-            }"#,
-            true
-        ),
-        */
-        /*
-        // TODO: (#92) properly support recursive types and uncomment
-        (
-            r#"{
-                "type": "record",
-                "name": "Node",
-                "fields": [
-                    {"name": "label", "type": "string"},
-                    {"name": "children", "type": {"type": "array", "items": "Node"}}
-                ]
-            }"#,
-            true
-        ),
-        (
-            r#"{
-                "type": "record",
-                "name": "Lisp",
-                "fields": [
-                    {
-                        "name": "value",
-                        "type": [
-                            "null", "string",
-                            {
-                                "type": "record",
-                                "name": "Cons",
-                                "fields": [
-                                    {"name": "car", "type": "Lisp"},
-                                    {"name": "cdr", "type": "Lisp"}
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }"#,
-            true
-        ),
-        (
-            r#"{
-                "type": "record",
-                "name": "HandshakeRequest",
-                "namespace": "org.apache.avro.ipc",
-                "fields": [
-                    {"name": "clientHash", "type": {"type": "fixed", "name": "MD5", "size": 16}},
-                    {"name": "clientProtocol", "type": ["null", "string"]},
-                    {"name": "serverHash", "type": "MD5"},
-                    {"name": "meta", "type": ["null", {"type": "map", "values": "bytes"}]}
-                ]
-            }"#, true
-        ),
-        */
-        (
-            r#"{
+        true,
+    ),
+    /*
+    // TODO: (#91) figure out why "type": "error" seems to be valid (search in spec) and uncomment
+    (
+        r#"{
+            "type": "error",
+            "name": "Test",
+            "fields": [{"name": "f", "type": "long"}]
+        }"#,
+        true
+    ),
+    */
+    /*
+    // TODO: (#92) properly support recursive types and uncomment
+    (
+        r#"{
+            "type": "record",
+            "name": "Node",
+            "fields": [
+                {"name": "label", "type": "string"},
+                {"name": "children", "type": {"type": "array", "items": "Node"}}
+            ]
+        }"#,
+        true
+    ),
+    (
+        r#"{
+            "type": "record",
+            "name": "Lisp",
+            "fields": [
+                {
+                    "name": "value",
+                    "type": [
+                        "null", "string",
+                        {
+                            "type": "record",
+                            "name": "Cons",
+                            "fields": [
+                                {"name": "car", "type": "Lisp"},
+                                {"name": "cdr", "type": "Lisp"}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }"#,
+        true
+    ),
+    (
+        r#"{
+            "type": "record",
+            "name": "HandshakeRequest",
+            "namespace": "org.apache.avro.ipc",
+            "fields": [
+                {"name": "clientHash", "type": {"type": "fixed", "name": "MD5", "size": 16}},
+                {"name": "clientProtocol", "type": ["null", "string"]},
+                {"name": "serverHash", "type": "MD5"},
+                {"name": "meta", "type": ["null", {"type": "map", "values": "bytes"}]}
+            ]
+        }"#, true
+    ),
+    */
+    (
+        r#"{
                 "type":"record",
                 "name":"HandshakeResponse",
                 "namespace":"org.apache.avro.ipc",
@@ -200,10 +208,10 @@ lazy_static! {
                     }
                 ]
             }"#,
-            true
-        ),
-        (
-            r#"{
+        true,
+    ),
+    (
+        r#"{
                 "type":"record",
                 "name":"HandshakeResponse",
                 "namespace":"org.apache.avro.ipc",
@@ -224,34 +232,34 @@ lazy_static! {
                     {"name":"meta", "type":["null", { "type":"map", "values":"bytes"}]}
                 ]
             }"#,
-            true
-        ),
-        /*
-        // TODO: (#95) support same types but with different names in unions and uncomment (below the explanation)
+        true,
+    ),
+    /*
+    // TODO: (#95) support same types but with different names in unions and uncomment (below the explanation)
 
-        // Unions may not contain more than one schema with the same type, except for the named
-        // types record, fixed and enum. For example, unions containing two array types or two map
-        // types are not permitted, but two types with different names are permitted.
-        // (Names permit efficient resolution when reading and writing unions.)
-        (
-            r#"{
-                "type": "record",
-                "name": "ipAddr",
-                "fields": [
-                    {
-                        "name": "addr",
-                        "type": [
-                            {"name": "IPv6", "type": "fixed", "size": 16},
-                            {"name": "IPv4", "type": "fixed", "size": 4}
-                        ]
-                    }
-                ]
-            }"#,
-            true
-        ),
-        */
-        (
-            r#"{
+    // Unions may not contain more than one schema with the same type, except for the named
+    // types record, fixed and enum. For example, unions containing two array types or two map
+    // types are not permitted, but two types with different names are permitted.
+    // (Names permit efficient resolution when reading and writing unions.)
+    (
+        r#"{
+            "type": "record",
+            "name": "ipAddr",
+            "fields": [
+                {
+                    "name": "addr",
+                    "type": [
+                        {"name": "IPv6", "type": "fixed", "size": 16},
+                        {"name": "IPv4", "type": "fixed", "size": 4}
+                    ]
+                }
+            ]
+        }"#,
+        true
+    ),
+    */
+    (
+        r#"{
                 "type": "record",
                 "name": "Address",
                 "fields": [
@@ -259,52 +267,54 @@ lazy_static! {
                     {"type": "string", "name": "City"}
                 ]
             }"#,
-            false
-        ),
-        (
-            r#"{
+        false,
+    ),
+    (
+        r#"{
                 "type": "record",
                 "name": "Event",
                 "fields": [{"name": "Sponsor"}, {"name": "City", "type": "string"}]
             }"#,
-            false
-        ),
-        (
-            r#"{
+        false,
+    ),
+    (
+        r#"{
                 "type": "record",
                 "fields": "His vision, from the constantly passing bars,"
                 "name",
                 "Rainer"
             }"#,
-            false
-        ),
-        (
-            r#"{
+        false,
+    ),
+    (
+        r#"{
                 "name": ["Tom", "Jerry"],
                 "type": "record",
                 "fields": [{"name": "name", "type": "string"}]
             }"#,
-            false
-        ),
-    ];
-    static ref DOC_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (
-            r#"{
+        false,
+    ),
+];
+
+const DOC_EXAMPLES: &[(&str, bool)] = &[
+    (
+        r#"{
                 "type": "record",
                 "name": "TestDoc",
                 "doc":  "Doc string",
                 "fields": [{"name": "name", "type": "string", "doc" : "Doc String"}]
             }"#,
-            true
-        ),
-        (
-            r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"], "doc": "Doc String"}"#,
-            true
-        ),
-    ];
-    static ref OTHER_ATTRIBUTES_EXAMPLES: Vec<(&'static str, bool)> = vec![
-        (
-            r#"{
+        true,
+    ),
+    (
+        r#"{"type": "enum", "name": "Test", "symbols": ["A", "B"], "doc": "Doc String"}"#,
+        true,
+    ),
+];
+
+const OTHER_ATTRIBUTES_EXAMPLES: &[(&str, bool)] = &[
+    (
+        r#"{
                 "type": "record",
                 "name": "TestRecord",
                 "cp_string": "string",
@@ -315,194 +325,216 @@ lazy_static! {
                     {"name": "f2", "type": "long", "cp_null": null}
                 ]
             }"#,
-            true
-        ),
-        (
-            r#"{"type": "map", "values": "long", "cp_boolean": true}"#,
-            true
-        ),
-        (
-            r#"{
+        true,
+    ),
+    (
+        r#"{"type": "map", "values": "long", "cp_boolean": true}"#,
+        true,
+    ),
+    (
+        r#"{
                 "type": "enum",
                  "name": "TestEnum",
                  "symbols": [ "one", "two", "three" ],
                  "cp_float" : 1.0
             }"#,
-            true
-        ),
-        (r#"{"type": "long", "date": "true"}"#, true),
-    ];
-    static ref DECIMAL_LOGICAL_TYPE: Vec<(&'static str, bool)> = vec![
-        /*
-        // TODO: (#93) support logical types and uncomment
-        (
-            r#"{
-                "type": "fixed",
-                "logicalType": "decimal",
-                "name": "TestDecimal",
-                "precision": 4,
-                "size": 10,
-                "scale": 2
-            }"#,
-            true
-        ),
-        (
-            r#"{
-                "type": "bytes",
-                "logicalType": "decimal",
-                "precision": 4,
-                "scale": 2
-            }"#,
-            true
-        ),
-        (
-            r#"{
-                "type": "bytes",
-                "logicalType": "decimal",
-                "precision": 2,
-                "scale": -2
-            }"#,
-            false
-        ),
-        (
-            r#"{
-                "type": "bytes",
-                "logicalType": "decimal",
-                "precision": -2,
-                "scale": 2
-            }"#,
-            false
-        ),
-        (
-            r#"{
-                "type": "bytes",
-                "logicalType": "decimal",
-                "precision": 2,
-                "scale": 3
-            }"#,
-            false
-        ),
-        (
-            r#"{
-                "type": "fixed",
-                "logicalType": "decimal",
-                "name": "TestDecimal",
-                "precision": -10,
-                "scale": 2,
-                "size": 5
-            }"#,
-            false
-        ),
-        (
-            r#"{
-                "type": "fixed",
-                "logicalType": "decimal",
-                "name": "TestDecimal",
-                "precision": 2,
-                "scale": 3,
-                "size": 2
-            }"#,
-            false
-        ),
-        (
-            r#"{
-                "type": "fixed",
-                "logicalType": "decimal",
-                "name": "TestDecimal",
-                "precision": 2,
-                "scale": 2,
-                "size": -2
-            }"#,
-            false
-        ),
-        */
-    ];
-    static ref DECIMAL_LOGICAL_TYPE_ATTRIBUTES: Vec<(&'static str, bool)> = vec![
-        /*
-        // TODO: (#93) support logical types and attributes and uncomment
-        (
-            r#"{
-                "type": "fixed",
-                "logicalType": "decimal",
-                "name": "TestDecimal",
-                "precision": 4,
-                "scale": 2,
-                "size": 2
-            }"#,
-            true
-        ),
-        (
-            r#"{
-                "type": "bytes",
-                "logicalType": "decimal",
-                "precision": 4
-            }"#,
-            true
-        ),
-        */
-    ];
-    static ref DATE_LOGICAL_TYPE: Vec<(&'static str, bool)> = vec![
+        true,
+    ),
+    (r#"{"type": "long", "date": "true"}"#, true),
+];
+
+const DECIMAL_LOGICAL_TYPE: &[(&str, bool)] = &[
     /*
-        // TODO: (#93) support logical types and uncomment
-        (r#"{"type": "int", "logicalType": "date"}"#, true),
-        (r#"{"type": "int", "logicalType": "date1"}"#, false),
-        (r#"{"type": "long", "logicalType": "date"}"#, false),
+    // TODO: (#93) support logical types and uncomment
+    (
+        r#"{
+            "type": "fixed",
+            "logicalType": "decimal",
+            "name": "TestDecimal",
+            "precision": 4,
+            "size": 10,
+            "scale": 2
+        }"#,
+        true
+    ),
+    (
+        r#"{
+            "type": "bytes",
+            "logicalType": "decimal",
+            "precision": 4,
+            "scale": 2
+        }"#,
+        true
+    ),
+    (
+        r#"{
+            "type": "bytes",
+            "logicalType": "decimal",
+            "precision": 2,
+            "scale": -2
+        }"#,
+        false
+    ),
+    (
+        r#"{
+            "type": "bytes",
+            "logicalType": "decimal",
+            "precision": -2,
+            "scale": 2
+        }"#,
+        false
+    ),
+    (
+        r#"{
+            "type": "bytes",
+            "logicalType": "decimal",
+            "precision": 2,
+            "scale": 3
+        }"#,
+        false
+    ),
+    (
+        r#"{
+            "type": "fixed",
+            "logicalType": "decimal",
+            "name": "TestDecimal",
+            "precision": -10,
+            "scale": 2,
+            "size": 5
+        }"#,
+        false
+    ),
+    (
+        r#"{
+            "type": "fixed",
+            "logicalType": "decimal",
+            "name": "TestDecimal",
+            "precision": 2,
+            "scale": 3,
+            "size": 2
+        }"#,
+        false
+    ),
+    (
+        r#"{
+            "type": "fixed",
+            "logicalType": "decimal",
+            "name": "TestDecimal",
+            "precision": 2,
+            "scale": 2,
+            "size": -2
+        }"#,
+        false
+    ),
     */
-    ];
-    static ref TIMEMILLIS_LOGICAL_TYPE: Vec<(&'static str, bool)> = vec![
+];
+
+const DECIMAL_LOGICAL_TYPE_ATTRIBUTES: &[(&str, bool)] = &[
     /*
-        // TODO: (#93) support logical types and uncomment
-        (r#"{"type": "int", "logicalType": "time-millis"}"#, true),
-        (r#"{"type": "int", "logicalType": "time-milis"}"#, false),
-        (r#"{"type": "long", "logicalType": "time-millis"}"#, false),
+    // TODO: (#93) support logical types and attributes and uncomment
+    (
+        r#"{
+            "type": "fixed",
+            "logicalType": "decimal",
+            "name": "TestDecimal",
+            "precision": 4,
+            "scale": 2,
+            "size": 2
+        }"#,
+        true
+    ),
+    (
+        r#"{
+            "type": "bytes",
+            "logicalType": "decimal",
+            "precision": 4
+        }"#,
+        true
+    ),
     */
-    ];
-    static ref TIMEMICROS_LOGICAL_TYPE: Vec<(&'static str, bool)> = vec![
-        /*
-        // TODO: (#93) support logical types and uncomment
-        (r#"{"type": "long", "logicalType": "time-micros"}"#, true),
-        (r#"{"type": "long", "logicalType": "time-micro"}"#, false),
-        (r#"{"type": "int", "logicalType": "time-micros"}"#, false),
-        */
-    ];
-    static ref TIMESTAMPMILLIS_LOGICAL_TYPE: Vec<(&'static str, bool)> = vec![
-        /*
-        // TODO: (#93) support logical types and uncomment
-        (r#"{"type": "long", "logicalType": "timestamp-millis"}"#, true),
-        (r#"{"type": "long", "logicalType": "timestamp-milis"}"#, false),
-        (r#"{"type": "int", "logicalType": "timestamp-millis"}"#, false),
-        */
-    ];
-    static ref TIMESTAMPMICROS_LOGICAL_TYPE: Vec<(&'static str, bool)> = vec![
-        /*
-        // TODO: (#93) support logical types and uncomment
-        (r#"{"type": "long", "logicalType": "timestamp-micros"}"#, true),
-        (r#"{"type": "long", "logicalType": "timestamp-micro"}"#, false),
-        (r#"{"type": "int", "logicalType": "timestamp-micros"}"#, false),
-        */
-    ];
+];
+
+const DATE_LOGICAL_TYPE: &[(&str, bool)] = &[
+    (r#"{"type": "int", "logicalType": "date"}"#, true),
+    // this is valid even though its logical type is "date1", because unknown logical types are
+    // ignored
+    (r#"{"type": "int", "logicalType": "date1"}"#, true),
+    (r#"{"type": "long", "logicalType": "date"}"#, false),
+];
+
+const TIMEMILLIS_LOGICAL_TYPE: &[(&str, bool)] = &[
+    (r#"{"type": "int", "logicalType": "time-millis"}"#, true),
+    // this is valid even though its logical type is "time-milis" (missing the second "l"),
+    // because unknown logical types are ignored
+    (r#"{"type": "int", "logicalType": "time-milis"}"#, true),
+    (r#"{"type": "long", "logicalType": "time-millis"}"#, false),
+];
+
+const TIMEMICROS_LOGICAL_TYPE: &[(&str, bool)] = &[
+    (r#"{"type": "long", "logicalType": "time-micros"}"#, true),
+    // this is valid even though its logical type is "time-micro" (missing the last "s"), because
+    // unknown logical types are ignored
+    (r#"{"type": "long", "logicalType": "time-micro"}"#, true),
+    (r#"{"type": "int", "logicalType": "time-micros"}"#, false),
+];
+
+const TIMESTAMPMILLIS_LOGICAL_TYPE: &[(&str, bool)] = &[
+    (
+        r#"{"type": "long", "logicalType": "timestamp-millis"}"#,
+        true,
+    ),
+    // this is valid even though its logical type is "timestamp-milis" (missing the second "l"), because
+    // unknown logical types are ignored
+    (
+        r#"{"type": "long", "logicalType": "timestamp-milis"}"#,
+        true,
+    ),
+    (
+        r#"{"type": "int", "logicalType": "timestamp-millis"}"#,
+        false,
+    ),
+];
+
+const TIMESTAMPMICROS_LOGICAL_TYPE: &[(&str, bool)] = &[
+    (
+        r#"{"type": "long", "logicalType": "timestamp-micros"}"#,
+        true,
+    ),
+    // this is valid even though its logical type is "timestamp-micro" (missing the last "s"), because
+    // unknown logical types are ignored
+    (
+        r#"{"type": "long", "logicalType": "timestamp-micro"}"#,
+        true,
+    ),
+    (
+        r#"{"type": "int", "logicalType": "timestamp-micros"}"#,
+        false,
+    ),
+];
+
+lazy_static! {
     static ref EXAMPLES: Vec<(&'static str, bool)> = Vec::new()
         .iter()
-        .cloned()
-        .chain(PRIMITIVE_EXAMPLES.iter().cloned())
-        .chain(FIXED_EXAMPLES.iter().cloned())
-        .chain(ENUM_EXAMPLES.iter().cloned())
-        .chain(ARRAY_EXAMPLES.iter().cloned())
-        .chain(MAP_EXAMPLES.iter().cloned())
-        .chain(UNION_EXAMPLES.iter().cloned())
-        .chain(RECORD_EXAMPLES.iter().cloned())
-        .chain(DOC_EXAMPLES.iter().cloned())
-        .chain(OTHER_ATTRIBUTES_EXAMPLES.iter().cloned())
-        .chain(DECIMAL_LOGICAL_TYPE.iter().cloned())
-        .chain(DECIMAL_LOGICAL_TYPE_ATTRIBUTES.iter().cloned())
-        .chain(DATE_LOGICAL_TYPE.iter().cloned())
-        .chain(TIMEMILLIS_LOGICAL_TYPE.iter().cloned())
-        .chain(TIMEMICROS_LOGICAL_TYPE.iter().cloned())
-        .chain(TIMESTAMPMILLIS_LOGICAL_TYPE.iter().cloned())
-        .chain(TIMESTAMPMICROS_LOGICAL_TYPE.iter().cloned())
+        .copied()
+        .chain(PRIMITIVE_EXAMPLES.iter().copied())
+        .chain(FIXED_EXAMPLES.iter().copied())
+        .chain(ENUM_EXAMPLES.iter().copied())
+        .chain(ARRAY_EXAMPLES.iter().copied())
+        .chain(MAP_EXAMPLES.iter().copied())
+        .chain(UNION_EXAMPLES.iter().copied())
+        .chain(RECORD_EXAMPLES.iter().copied())
+        .chain(DOC_EXAMPLES.iter().copied())
+        .chain(OTHER_ATTRIBUTES_EXAMPLES.iter().copied())
+        .chain(DECIMAL_LOGICAL_TYPE.iter().copied())
+        .chain(DECIMAL_LOGICAL_TYPE_ATTRIBUTES.iter().copied())
+        .chain(DATE_LOGICAL_TYPE.iter().copied())
+        .chain(TIMEMILLIS_LOGICAL_TYPE.iter().copied())
+        .chain(TIMEMICROS_LOGICAL_TYPE.iter().copied())
+        .chain(TIMESTAMPMILLIS_LOGICAL_TYPE.iter().copied())
+        .chain(TIMESTAMPMICROS_LOGICAL_TYPE.iter().copied())
         .collect();
     static ref VALID_EXAMPLES: Vec<(&'static str, bool)> =
-        EXAMPLES.iter().cloned().filter(|s| s.1).collect();
+        EXAMPLES.iter().copied().filter(|s| s.1).collect();
 }
 
 /*
@@ -551,7 +583,6 @@ fn test_correct_recursive_extraction() {
 
 #[test]
 fn test_parse() {
-    //assert_eq!(EXAMPLES.len(), 10);
     for (raw_schema, valid) in EXAMPLES.iter() {
         let schema = Schema::parse_str(raw_schema);
         if *valid {

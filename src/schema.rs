@@ -353,9 +353,10 @@ impl UnionSchema {
     /// Optionally returns a reference to the schema matched by this value, as well as its position
     /// within this union.
     pub fn find_schema(&self, value: &types::Value) -> Option<(usize, &Schema)> {
+        let type_index = &SchemaKind::from(value);
         self.variant_index
-            .get(&SchemaKind::from(value))
-            .cloned()
+            .get(type_index)
+            .copied()
             .map(|i| (i, &self.schemas[i]))
     }
 }
@@ -426,7 +427,8 @@ impl Schema {
     /// [Parsing Canonical Form]:
     /// https://avro.apache.org/docs/1.8.2/spec.html#Parsing+Canonical+Form+for+Schemas
     pub fn canonical_form(&self) -> String {
-        let json = serde_json::to_value(self).unwrap();
+        let json = serde_json::to_value(self)
+            .unwrap_or_else(|e| panic!("cannot parse Schema from JSON: {0}", e));
         parsing_canonical_form(&json)
     }
 
@@ -847,8 +849,16 @@ fn parsing_canonical_form(schema: &serde_json::Value) -> String {
         serde_json::Value::Object(map) => pcf_map(map),
         serde_json::Value::String(s) => pcf_string(s),
         serde_json::Value::Array(v) => pcf_array(v),
-        _ => unreachable!(),
+        serde_json::Value::Number(n) => pcf_number(n),
+        json => panic!(
+            "got invalid JSON value for canonical form of schema: {0}",
+            json
+        ),
     }
+}
+
+fn pcf_number(number: &serde_json::Number) -> String {
+    number.to_string()
 }
 
 fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
@@ -924,20 +934,27 @@ fn pcf_string(s: &str) -> String {
     format!("\"{}\"", s)
 }
 
+const RESERVED_FIELDS: &[&str] = &[
+    "name",
+    "type",
+    "fields",
+    "symbols",
+    "items",
+    "values",
+    "logicalType",
+    "size",
+    "order",
+    "doc",
+    "aliases",
+    "default",
+];
+
 // Used to define the ordering and inclusion of fields.
 fn field_ordering_position(field: &str) -> Option<usize> {
-    let v = match field {
-        "name" => 1,
-        "type" => 2,
-        "fields" => 3,
-        "symbols" => 4,
-        "items" => 5,
-        "values" => 6,
-        "size" => 7,
-        _ => return None,
-    };
-
-    Some(v)
+    RESERVED_FIELDS
+        .iter()
+        .position(|&f| f == field)
+        .map(|pos| pos + 1)
 }
 
 #[cfg(test)]
@@ -1157,12 +1174,12 @@ mod tests {
 
         let schema = Schema::parse_str(raw_schema).unwrap();
         assert_eq!(
-            "7eb3b28d73dfc99bdd9af1848298b40804a2f8ad5d2642be2ecc2ad34842b987",
+            "1ceb6cefd5961f5744751a950b44cb28bac0315f89563870bf4b88cb00b00805",
             format!("{}", schema.fingerprint::<Sha256>())
         );
 
         assert_eq!(
-            "cb11615e412ee5d872620d8df78ff6ae",
+            "660ecfda702dfcf7512961d232e94dbe",
             format!("{}", schema.fingerprint::<Md5>())
         );
     }

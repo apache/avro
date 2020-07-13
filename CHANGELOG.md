@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Swapped failure for thiserror (backward-incompatible) (#135)
 - Update digest crate and digest::Digest trait to 0.9 (backward-incompatible with digest::Digest 0.8) (#133)
 - Replace some manual from_str implementations with strum (#136)
+- Handle logical types in canonical form schemas (#144)
 
 ## Deprecated
 - Deprecate ToAvro in favor of From<T> for Value implementations (#137)
