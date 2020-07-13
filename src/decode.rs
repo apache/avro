@@ -6,7 +6,7 @@ use crate::{
     types::Value,
     util::{safe_len, zag_i32, zag_i64},
 };
-use std::{collections::HashMap, io::Read, str::FromStr};
+use std::{collections::HashMap, convert::TryFrom, io::Read, str::FromStr};
 use uuid::Uuid;
 
 #[inline]
@@ -21,7 +21,23 @@ fn decode_int<R: Read>(reader: &mut R) -> AvroResult<Value> {
 
 #[inline]
 fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
-    zag_i64(reader).and_then(|len| safe_len(len as usize))
+    safe_len(usize::try_from(zag_i64(reader)?)?)
+}
+
+/// Decode the length of a sequence.
+///
+/// Maps and arrays are 0-terminated, 0i64 is also encoded as 0 in Avro reading a length of 0 means
+/// the end of the map or array.
+fn decode_seq_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
+    let raw_len = zag_i64(reader)?;
+    safe_len(usize::try_from(match raw_len.cmp(&0) {
+        std::cmp::Ordering::Equal => return Ok(0),
+        std::cmp::Ordering::Less => {
+            let _size = zag_i64(reader)?;
+            -raw_len
+        }
+        std::cmp::Ordering::Greater => raw_len,
+    })?)
 }
 
 /// Decode a `Value` from avro format given its `Schema`.
@@ -103,7 +119,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
                 .map_err(|_| Error::Decode("not a valid utf-8 string".to_string()))
         }
         Schema::Fixed { size, .. } => {
-            let mut buf = vec![0u8; size as usize];
+            let mut buf = vec![0u8; size];
             reader.read_exact(&mut buf)?;
             Ok(Value::Fixed(size, buf))
         }
@@ -111,19 +127,12 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             let mut items = Vec::new();
 
             loop {
-                let raw_len = zag_i64(reader)?;
-                // arrays are 0-terminated, 0i64 is also encoded as 0 in Avro
-                // reading a length of 0 means the end of the array
-                let len = safe_len(match raw_len.cmp(&0) {
-                    std::cmp::Ordering::Equal => break,
-                    std::cmp::Ordering::Less => {
-                        let _size = zag_i64(reader)?;
-                        -raw_len
-                    }
-                    std::cmp::Ordering::Greater => raw_len,
-                } as usize)?;
+                let len = decode_seq_len(reader)?;
+                if len == 0 {
+                    break;
+                }
 
-                items.reserve(len as usize);
+                items.reserve(len);
                 for _ in 0..len {
                     items.push(decode(inner, reader)?);
                 }
@@ -135,17 +144,10 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             let mut items = HashMap::new();
 
             loop {
-                let raw_len = zag_i64(reader)?;
-                // maps are 0-terminated, 0i64 is also encoded as 0 in Avro
-                // reading a length of 0 means the end of the map
-                let len = safe_len(match raw_len.cmp(&0) {
-                    std::cmp::Ordering::Equal => break,
-                    std::cmp::Ordering::Less => {
-                        let _size = zag_i64(reader)?;
-                        -raw_len
-                    }
-                    std::cmp::Ordering::Greater => raw_len,
-                } as usize)?;
+                let len = decode_seq_len(reader)?;
+                if len == 0 {
+                    break;
+                }
 
                 items.reserve(len);
                 for _ in 0..len {
@@ -164,7 +166,7 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             let index = zag_i64(reader)?;
             let variants = inner.variants();
             let variant = variants
-                .get(index as usize)
+                .get(usize::try_from(index)?)
                 .ok_or_else(|| Error::Decode("Union index out of bounds".to_string()))?;
             let value = decode(variant, reader)?;
             Ok(Value::Union(Box::new(value)))
@@ -173,16 +175,17 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             // Benchmarks indicate ~10% improvement using this method.
             let mut items = Vec::with_capacity(fields.len());
             for field in fields {
-                // This clone is also expensive. See if we can do away with it...
+                // TODO: This clone is also expensive. See if we can do away with it...
                 items.push((field.name.clone(), decode(&field.schema, reader)?));
             }
             Ok(Value::Record(items))
         }
         Schema::Enum { ref symbols, .. } => {
-            if let Value::Int(index) = decode_int(reader)? {
-                if index >= 0 && (index as usize) <= symbols.len() {
-                    let symbol = symbols[index as usize].clone();
-                    Ok(Value::Enum(index, symbol))
+            if let Value::Int(raw_index) = decode_int(reader)? {
+                let index = usize::try_from(raw_index)?;
+                if (0..=symbols.len()).contains(&index) {
+                    let symbol = symbols[index].clone();
+                    Ok(Value::Enum(raw_index, symbol))
                 } else {
                     Err(Error::Decode("enum symbol index out of bounds".to_string()))
                 }
@@ -195,8 +198,9 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{decode, Decimal, Schema, Value};
     use crate::types::Value::{Array, Int, Map};
+    use std::collections::HashMap;
 
     #[test]
     fn test_decode_array_without_size() {
