@@ -141,6 +141,9 @@ class TaskRunner(object):
     implements the logic for the mapper and reducer phases
     """
 
+    server = None
+    sthread = None
+
     def __init__(self, task):
         """
         Construct the runner
@@ -149,15 +152,11 @@ class TaskRunner(object):
         ---------------------------------------------------------------
         task - An instance of tether task
         """
-
         self.log = logging.getLogger("TaskRunner:")
-
-        if not(isinstance(task, avro.tether.tether_task.TetherTask)):
-            raise ValueError("task must be an instance of tether task")
         self.task = task
 
-        self.server = None
-        self.sthread = None
+        if not isinstance(task, avro.tether.tether_task.TetherTask):
+            raise ValueError("task must be an instance of tether task")
 
     def start(self, outputport=None, join=True):
         """
@@ -175,7 +174,6 @@ class TaskRunner(object):
                     we can resume execution in this thread so that we can do additional
                     testing
         """
-
         port = avro.tether.util.find_port()
         address = ("localhost", port)
 
@@ -189,7 +187,7 @@ class TaskRunner(object):
         sthread.start()
 
         self.sthread = sthread
-        # This needs to run in a separat thread b\c serve_forever() blocks
+        # This needs to run in a separate thread because serve_forever() blocks.
         self.task.open(port, clientPort=outputport)
 
         # wait for the other thread to finish
