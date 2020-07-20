@@ -1,6 +1,5 @@
 # avro-rs
 
-
 [![Latest Version](https://img.shields.io/crates/v/avro-rs.svg)](https://crates.io/crates/avro-rs)
 [![Continuous Integration](https://github.com/flavray/avro-rs/workflows/Continuous%20Integration/badge.svg)](https://github.com/flavray/avro-rs/actions)
 [![Latest Documentation](https://docs.rs/avro-rs/badge.svg)](https://docs.rs/avro-rs)
@@ -34,10 +33,6 @@ There are basically two ways of handling Avro data in Rust:
 
 **avro-rs** provides a way to read and write both these data representations easily and
 efficiently.
-
-We also support:
-* C bindings for the crate at [avro-rs-ffi](https://github.com/flavray/avro-rs-ffi)
-* A Python wrapper for the library at [pyavro-rs](https://github.com/flavray/pyavro-rs)
 
 ## Installing the library
 
