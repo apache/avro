@@ -606,6 +606,14 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testPackageNameScape() throws Exception {
+    Schema unionTypesWithMultipleFields = new Schema.Parser()
+        .parse(new File("src/test/resources/simple_record_for_scape.avsc"));
+    assertCompilesWithJavaCompiler(new File(this.outputFile, name.getMethodName()),
+        new SpecificCompiler(unionTypesWithMultipleFields).compile());
+  }
+
+  @Test
   public void testLogicalTypesWithMultipleFields() throws Exception {
     Schema logicalTypesWithMultipleFields = new Schema.Parser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));
