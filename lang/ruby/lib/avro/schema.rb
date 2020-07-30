@@ -181,7 +181,7 @@ module Avro
       working = crc_64_avro_fingerprint
       bytes = Array.new(8)
       8.times do |i|
-        bytes[7 - i] = (working & 0xff)
+        bytes[i] = (working & 0xff)
         working = working >> 8
       end
       bytes
