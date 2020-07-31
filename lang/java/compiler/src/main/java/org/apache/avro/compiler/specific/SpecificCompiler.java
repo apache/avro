@@ -281,15 +281,52 @@ public class SpecificCompiler {
   }
 
   public Collection<String> getUsedConversionClasses(Schema schema) {
-    LinkedHashMap<String, Conversion<?>> classnameToConversion = new LinkedHashMap<>();
-    for (Conversion<?> conversion : specificData.getConversions()) {
-      classnameToConversion.put(conversion.getConvertedType().getCanonicalName(), conversion);
-    }
     Collection<String> result = new HashSet<>();
-    for (String className : getClassNamesOfPrimitiveFields(schema)) {
-      if (classnameToConversion.containsKey(className)) {
-        result.add(classnameToConversion.get(className).getClass().getCanonicalName());
+    for (Conversion<?> conversion : getUsedConversions(schema, new HashSet<>(), new HashSet<>())) {
+      result.add(conversion.getClass().getCanonicalName());
+    }
+    return result;
+  }
+
+  private Set<Conversion<?>> getUsedConversions(Schema schema, Set<Conversion<?>> result, Set<Schema> seenSchemas) {
+    if (seenSchemas.contains(schema)) {
+      return result;
+    }
+
+    Conversion<?> conversion = specificData.getConversionFor(LogicalTypes.fromSchemaIgnoreInvalid(schema));
+    if (conversion != null)
+      result.add(conversion);
+
+    seenSchemas.add(schema);
+    switch (schema.getType()) {
+    case RECORD:
+      for (Schema.Field field : schema.getFields()) {
+        getUsedConversions(field.schema(), result, seenSchemas);
       }
+      break;
+    case MAP:
+      getUsedConversions(schema.getValueType(), result, seenSchemas);
+      break;
+    case ARRAY:
+      getUsedConversions(schema.getElementType(), result, seenSchemas);
+      break;
+    case UNION:
+      for (Schema s : schema.getTypes())
+        getUsedConversions(s, result, seenSchemas);
+      break;
+    case NULL:
+    case ENUM:
+    case FIXED:
+    case STRING:
+    case BYTES:
+    case INT:
+    case LONG:
+    case FLOAT:
+    case DOUBLE:
+    case BOOLEAN:
+      break;
+    default:
+      throw new RuntimeException("Unknown type: " + schema);
     }
     return result;
   }

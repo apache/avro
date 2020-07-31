@@ -22,6 +22,8 @@ public class FieldTest extends org.apache.avro.specific.SpecificRecordBase imple
   private static SpecificData MODEL$ = new SpecificData();
 static {
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMillisConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMicrosConversion());
+    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimestampMicrosConversion());
     MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.TimeMillisConversion());
   }
 
