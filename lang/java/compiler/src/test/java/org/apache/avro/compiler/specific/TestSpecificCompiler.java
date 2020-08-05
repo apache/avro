@@ -533,8 +533,7 @@ public class TestSpecificCompiler {
     SpecificCompiler compiler = createCompiler();
 
     // timestamp-millis and timestamp-micros used to cause collisions when both were
-    // present or
-    // added as converters (AVRO-2481).
+    // present or added as converters (AVRO-2481).
     final Schema tsMillis = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     final Schema tsMicros = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
 
