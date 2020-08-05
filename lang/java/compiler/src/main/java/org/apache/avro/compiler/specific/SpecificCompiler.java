@@ -339,51 +339,6 @@ public class SpecificCompiler {
     return result;
   }
 
-  private Set<String> getClassNamesOfPrimitiveFields(Schema schema) {
-    Set<String> result = new HashSet<>();
-    getClassNamesOfPrimitiveFields(schema, result, new HashSet<>());
-    return result;
-  }
-
-  private void getClassNamesOfPrimitiveFields(Schema schema, Set<String> result, Set<Schema> seenSchemas) {
-    if (seenSchemas.contains(schema)) {
-      return;
-    }
-    seenSchemas.add(schema);
-    switch (schema.getType()) {
-    case RECORD:
-      for (Schema.Field field : schema.getFields()) {
-        getClassNamesOfPrimitiveFields(field.schema(), result, seenSchemas);
-      }
-      break;
-    case MAP:
-      getClassNamesOfPrimitiveFields(schema.getValueType(), result, seenSchemas);
-      break;
-    case ARRAY:
-      getClassNamesOfPrimitiveFields(schema.getElementType(), result, seenSchemas);
-      break;
-    case UNION:
-      for (Schema s : schema.getTypes())
-        getClassNamesOfPrimitiveFields(s, result, seenSchemas);
-      break;
-    case NULL:
-      break;
-    case ENUM:
-    case FIXED:
-    case STRING:
-    case BYTES:
-    case INT:
-    case LONG:
-    case FLOAT:
-    case DOUBLE:
-    case BOOLEAN:
-      result.add(javaType(schema, true));
-      break;
-    default:
-      throw new RuntimeException("Unknown type: " + schema);
-    }
-  }
-
   private void initializeVelocity() {
     this.velocityEngine = new VelocityEngine();
 
