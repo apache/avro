@@ -9,6 +9,9 @@ import org.apache.avro.Schema;
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
 
+/**
+ * Utility method for working with Avro objects.
+ */
 class AvroUtils {
     /**
      * The namespace separator.
@@ -24,6 +27,11 @@ class AvroUtils {
      * The Unix separator.
      */
     private static final String UNIX_SEPARATOR = "/";
+
+    /**
+     * Not intended for instantiation.
+     */
+    private AvroUtils() { }
 
     /**
      * Assembles a file path based on the namespace and name of the provided {@link Schema}.
@@ -45,9 +53,18 @@ class AvroUtils {
         return assemblePath(protocol.getNamespace(), protocol.getName(), PROTOCOL_EXTENSION);
     }
 
+    /**
+     * Assembles a file path based on the provided arguments.
+     *
+     * @param namespace the namespace for the path; may be null
+     * @param name the name for the path; will result in an exception if null or empty
+     * @param extension the extension for the path
+     * @return the assembled path
+     */
     private static String assemblePath(String namespace, String name, String extension) {
+        Strings.requireNotEmpty(name, "Path cannot be assembled for nameless objects");
         List<String> parts = new ArrayList<>();
-        if (namespace != null && !namespace.isEmpty()) {
+        if (Strings.isNotEmpty(namespace)) {
             parts.add(namespace.replaceAll(Pattern.quote(NAMESPACE_SEPARATOR), UNIX_SEPARATOR));
         }
         parts.add(name + EXTENSION_SEPARATOR + extension);
