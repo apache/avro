@@ -39,7 +39,7 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         |    outputDir = file("build/protocol")
         |}
         |""".stripMargin()
-        
+
         copyResource("shared.avdl", testProjectDir.newFolder("src", "shared"))
         copyResource("dependent.avdl", testProjectDir.newFolder("src", "dependent"))
 
@@ -49,7 +49,7 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         then: "running the generate protocol task occurs after running the producing task"
         result.tasks*.path == [":sharedIdlJar", ":generateProtocol"]
         result.task(":generateProtocol").outcome == SUCCESS
-        projectFile("build/protocol/dependent.avpr").file
+        projectFile("build/protocol/com/example/dependent/DependentProtocol.avpr").file
     }
 
     def "With avro plugin, declares input on classpath (runtime configuration by default)"() {
@@ -73,6 +73,22 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         then: "running the generate protocol task occurs after running the producing task"
         result.tasks*.path == [":sharedIdlJar", ":generateAvroProtocol"]
         result.task(":generateAvroProtocol").outcome == SUCCESS
-        projectFile("build/generated-main-avro-avpr/dependent.avpr").file
+        projectFile("build/generated-main-avro-avpr/com/example/dependent/DependentProtocol.avpr").file
+    }
+
+    def "supports files with the same name in different directories"() {
+        given: "a project with two IDL files with the same name, but in different directories"
+        applyAvroPlugin()
+
+        copyResource("namespaced-idl/v1/test.avdl", testProjectDir.newFolder("src", "main", "avro", "v1"))
+        copyResource("namespaced-idl/v2/test.avdl", testProjectDir.newFolder("src", "main", "avro", "v2"))
+
+        when: "running the task"
+        def result = run("generateAvroProtocol")
+
+        then: "avpr files are generated for each IDL file"
+        result.task(":generateAvroProtocol").outcome == SUCCESS
+        projectFile("build/generated-main-avro-avpr/org/example/v1/TestProtocol.avpr").file
+        projectFile("build/generated-main-avro-avpr/org/example/v1/TestProtocol.avpr").file
     }
 }

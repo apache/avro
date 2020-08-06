@@ -22,6 +22,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.avro.Protocol;
 import org.apache.avro.compiler.idl.Idl;
 import org.apache.avro.compiler.idl.ParseException;
 import org.gradle.api.GradleException;
@@ -32,7 +33,6 @@ import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.TaskAction;
 
 import static com.commercehub.gradle.plugin.avro.Constants.IDL_EXTENSION;
-import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
 
 /**
  * Task to convert Avro IDL files into Avro protocol files using {@link Idl}.
@@ -87,10 +87,10 @@ public class GenerateAvroProtocolTask extends OutputDirTask {
 
     private void processIDLFile(File idlFile, ClassLoader loader) {
         getLogger().info("Processing {}", idlFile);
-        File protoFile = new File(getOutputDir().get().getAsFile(),
-                FilenameUtils.getBaseName(idlFile.getName()) + "." + PROTOCOL_EXTENSION);
         try (Idl idl = new Idl(idlFile, loader)) {
-            String protoJson = idl.CompilationUnit().toString(true);
+            Protocol protocol = idl.CompilationUnit();
+            File protoFile = new File(getOutputDir().get().getAsFile(), AvroUtils.assemblePath(protocol));
+            String protoJson = protocol.toString(true);
             FileUtils.writeJsonFile(protoFile, protoJson);
             getLogger().debug("Wrote {}", protoFile.getPath());
         } catch (IOException | ParseException ex) {

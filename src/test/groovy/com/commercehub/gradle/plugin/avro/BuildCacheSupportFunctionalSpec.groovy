@@ -71,7 +71,7 @@ class BuildCacheSupportFunctionalSpec extends FunctionalSpec {
         result.task(":generateAvroProtocol").outcome == FROM_CACHE
         result.task(":generateAvroJava").outcome == FROM_CACHE
         result.task(":compileJava").outcome == FROM_CACHE
-        projectFile("build/generated-main-avro-avpr/interop.avpr").file
+        projectFile("build/generated-main-avro-avpr/org/apache/avro/InteropProtocol.avpr").file
         projectFile("build/generated-main-avro-java/org/apache/avro/Interop.java").file
         projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
     }

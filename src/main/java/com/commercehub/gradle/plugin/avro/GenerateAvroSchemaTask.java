@@ -17,7 +17,6 @@ package com.commercehub.gradle.plugin.avro;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.regex.Pattern;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.gradle.api.GradleException;
@@ -27,7 +26,6 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.TaskAction;
 
 import static com.commercehub.gradle.plugin.avro.Constants.PROTOCOL_EXTENSION;
-import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
 
 @CacheableTask
 public class GenerateAvroSchemaTask extends OutputDirTask {
@@ -60,8 +58,7 @@ public class GenerateAvroSchemaTask extends OutputDirTask {
         try {
             Protocol protocol = Protocol.parse(sourceFile);
             for (Schema schema : protocol.getTypes()) {
-                String path = schema.getNamespace().replaceAll(Pattern.quote("."), "/");
-                File schemaFile = new File(getOutputDir().get().getAsFile(), path + "/" + schema.getName() + "." + SCHEMA_EXTENSION);
+                File schemaFile = new File(getOutputDir().get().getAsFile(), AvroUtils.assemblePath(schema));
                 String schemaJson = schema.toString(true);
                 FileUtils.writeJsonFile(schemaFile, schemaJson);
                 getLogger().debug("Wrote {}", schemaFile.getPath());

@@ -3,7 +3,6 @@ package com.commercehub.gradle.plugin.avro;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
-import java.util.regex.Pattern;
 import org.apache.avro.Schema;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
@@ -45,9 +44,7 @@ public class ResolveAvroDependenciesTask extends OutputDirTask {
         ProcessingState processingState = resolver.resolve(inputFiles);
         for (Schema schema : processingState.getSchemas()) {
             try {
-                String outputPath = schema.getNamespace().replaceAll(Pattern.quote("."), "/")
-                    + "/" + schema.getName() + "." + SCHEMA_EXTENSION;
-                File outputFile = new File(getOutputDir().get().getAsFile(), outputPath);
+                File outputFile = new File(getOutputDir().get().getAsFile(), AvroUtils.assemblePath(schema));
                 String schemaJson = schema.toString(true);
                 FileUtils.writeJsonFile(outputFile, schemaJson);
                 getLogger().debug("Wrote {}", outputFile.getPath());
