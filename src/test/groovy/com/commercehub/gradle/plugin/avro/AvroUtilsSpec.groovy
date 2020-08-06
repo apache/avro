@@ -18,6 +18,7 @@ class AvroUtilsSpec extends Specification {
     private static final String SCHEMA_NAME = "SchemaName"
     private static final String PROTOCOL_NAME = "ProtocolName"
 
+    @SuppressWarnings("ParameterName")
     @Unroll
     def "assemblePath rejects unnamed arguments (#arg)"(def arg, def _) {
         when:
@@ -65,6 +66,6 @@ class AvroUtilsSpec extends Specification {
     }
 
     Protocol createProtocol(String namespace, String name) {
-        return new Protocol(name, null, namespace);
+        return new Protocol(name, null, namespace)
     }
 }
