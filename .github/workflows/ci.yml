@@ -38,6 +38,7 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         file: ./build/reports/jacoco/test/jacocoTestReport.xml
+        flags: baseline,${{ matrix.os }}
         fail_ci_if_error: true
   # Run further compatibility tests to ensure that key versions of Gradle/Avro
   # work on a variety of OS/Java version combinations
