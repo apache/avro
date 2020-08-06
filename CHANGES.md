@@ -1,6 +1,7 @@
 # Change Log
 
 ## Unreleased
+* Add coverage reporting via JaCoco/Codecov to the plugin's build pipeline
 
 ## 0.21.0
 * Built using Avro 1.10.0

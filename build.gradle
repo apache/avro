@@ -3,10 +3,10 @@ plugins {
     id "checkstyle"
     id "codenarc"
     id "idea"
+    id "jacoco"
     id "maven-publish"
     id "java-gradle-plugin"
     id "com.jfrog.bintray" version "1.8.1"
-    // TODO: try to get this working
     id "org.nosphere.gradle.github.actions" version "1.2.0"
 }
 
@@ -262,6 +262,14 @@ test {
         gradleVersion: gradle.gradleVersion,
         kotlinVersion: latestKotlinVersion,
     ]
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+jacocoTestReport {
+    reports {
+        html.enabled true
+        xml.enabled true
+    }
 }
 
 avroVersions.each { def avroVersion ->

@@ -34,6 +34,11 @@ jobs:
       uses: eskatos/gradle-command-action@v1
       with:
         arguments: --stop
+    - name: Upload coverage report to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./build/reports/jacoco/test/jacocoTestReport.xml
+        fail_ci_if_error: true
   # Run further compatibility tests to ensure that key versions of Gradle/Avro
   # work on a variety of OS/Java version combinations
   recent-compatibility-tests:
