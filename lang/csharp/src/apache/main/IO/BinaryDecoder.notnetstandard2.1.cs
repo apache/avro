@@ -20,7 +20,7 @@ using System;
 namespace Avro.IO
 {
     /// <content>
-    /// Contains the netstandard2.0 specific functionality for BinaryDecoder.
+    /// Contains the functionality for BinaryDecoder for .NET framework 4.5.2 and netstandard2.0.
     /// </content>
     public partial class BinaryDecoder
     {

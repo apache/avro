@@ -1,4 +1,4 @@
-/*
+/*  
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -26,21 +26,27 @@ namespace Avro.Reflect
     public partial class DateTimeOffsetToLongConverter : IAvroFieldConverter
     {
         /// <summary>
-        /// Avro type
+        /// Convert from DateTimeOffset to Unix long
         /// </summary>
+        /// <param name="o">DateTimeOffset</param>
+        /// <param name="s">Schema</param>
         /// <returns></returns>
-        public Type GetAvroType()
+        public object ToAvroType(object o, Schema s)
         {
-            return typeof(long);
+            var dt = (DateTimeOffset)o;
+            return dt.ToUnixTimeMilliseconds();
         }
 
         /// <summary>
-        /// Property type
+        /// Convert from Unix long to DateTimeOffset
         /// </summary>
+        /// <param name="o">long</param>
+        /// <param name="s">Schema</param>
         /// <returns></returns>
-        public Type GetPropertyType()
+        public object FromAvroType(object o, Schema s)
         {
-            return typeof(DateTimeOffset);
+            var dt = DateTimeOffset.FromUnixTimeMilliseconds((long)o);
+            return dt;
         }
     }
 }

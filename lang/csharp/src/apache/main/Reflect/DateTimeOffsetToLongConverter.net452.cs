@@ -26,21 +26,31 @@ namespace Avro.Reflect
     public partial class DateTimeOffsetToLongConverter : IAvroFieldConverter
     {
         /// <summary>
-        /// Avro type
+        /// Convert from DateTimeOffset to Unix long
         /// </summary>
+        /// <param name="o">DateTimeOffset</param>
+        /// <param name="s">Schema</param>
         /// <returns></returns>
-        public Type GetAvroType()
+        public object ToAvroType(object o, Schema s)
         {
-            return typeof(long);
+            var dt = (DateTimeOffset)o;
+            long milliseconds = dt.UtcDateTime.Ticks / TimeSpan.TicksPerMillisecond;
+            const long unixEpochMilliseconds = 62_135_596_800_000; // Milliseconds to 1.1.1970
+            return milliseconds - unixEpochMilliseconds;
         }
 
         /// <summary>
-        /// Property type
+        /// Convert from Unix long to DateTimeOffset
         /// </summary>
+        /// <param name="o">long</param>
+        /// <param name="s">Schema</param>
         /// <returns></returns>
-        public Type GetPropertyType()
+        public object FromAvroType(object o, Schema s)
         {
-            return typeof(DateTimeOffset);
+            const long unixEpochTicks = 621_355_968_000_000_000;// Ticks to 1.1.1970
+            long milliseconds = (long)o;
+            long ticks = milliseconds * TimeSpan.TicksPerMillisecond + unixEpochTicks;
+            return new DateTimeOffset(ticks, TimeSpan.Zero);
         }
     }
 }
