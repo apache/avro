@@ -11,7 +11,11 @@
   ```rust
   match decoded {
       Ok(msg) => Ok(msg.to_string()),
-      Err(Error::Decode(_)) => Ok("default".to_string()),
+      // assuming you were reading a Duration 
+      Err(ref e) => match e.downcast_ref::<SchemaResolutionError>() {
+          Some(_) => Ok("default".to_string()),
+          None => Err(format!("Unexpected error: {}", e)),
+      },
   }
   ```
   now becomes:
