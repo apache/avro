@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,6 @@
 #include <stdexcept>
 
 #include <string.h>
-#include <boost/make_shared.hpp>
 
 #include "Stream.hh"
 #include "JsonIO.hh"
@@ -31,7 +30,7 @@ using boost::format;
 
 namespace avro {
 namespace json {
-static const char* typeToString(EntityType t)
+const char* typeToString(EntityType t)
 {
     switch (t) {
     case etNull: return "null";
@@ -50,33 +49,35 @@ Entity readEntity(JsonParser& p)
     switch (p.peek()) {
     case JsonParser::tkNull:
         p.advance();
-        return Entity();
+        return Entity(p.line());
     case JsonParser::tkBool:
         p.advance();
-        return Entity(p.boolValue());
+        return Entity(p.boolValue(), p.line());
     case JsonParser::tkLong:
         p.advance();
-        return Entity(p.longValue());
+        return Entity(p.longValue(), p.line());
     case JsonParser::tkDouble:
         p.advance();
-        return Entity(p.doubleValue());
+        return Entity(p.doubleValue(), p.line());
     case JsonParser::tkString:
         p.advance();
-        return Entity(boost::make_shared<String>(p.stringValue()));
+        return Entity(std::make_shared<String>(p.rawString()), p.line());
     case JsonParser::tkArrayStart:
         {
+            size_t l = p.line();
             p.advance();
-            boost::shared_ptr<Array> v = boost::make_shared<Array>();
+            std::shared_ptr<Array> v = std::make_shared<Array>();
             while (p.peek() != JsonParser::tkArrayEnd) {
                 v->push_back(readEntity(p));
             }
             p.advance();
-            return Entity(v);
+            return Entity(v, l);
         }
     case JsonParser::tkObjectStart:
         {
+            size_t l = p.line();
             p.advance();
-            boost::shared_ptr<Object> v = boost::make_shared<Object>();
+            std::shared_ptr<Object> v = std::make_shared<Object>();
             while (p.peek() != JsonParser::tkObjectEnd) {
                 p.advance();
                 std::string k = p.stringValue();
@@ -84,12 +85,12 @@ Entity readEntity(JsonParser& p)
                 v->insert(std::make_pair(k, n));
             }
             p.advance();
-            return Entity(v);
+            return Entity(v, l);
         }
     default:
         throw std::domain_error(JsonParser::toString(p.peek()));
     }
-    
+
 }
 
 Entity loadEntity(const char* text)
@@ -106,7 +107,7 @@ Entity loadEntity(InputStream& in)
 
 Entity loadEntity(const uint8_t* text, size_t len)
 {
-    std::auto_ptr<InputStream> in = memoryInputStream(text, len);
+    std::unique_ptr<InputStream> in = memoryInputStream(text, len);
     return loadEntity(*in);
 }
 
@@ -161,16 +162,25 @@ void Entity::ensureType(EntityType type) const
         throw Exception(msg);
     }
 }
-    
+
+String Entity::stringValue() const {
+    ensureType(etString);
+    return JsonParser::toStringValue(**boost::any_cast<std::shared_ptr<String> >(&value_));
+}
+
+String Entity::bytesValue() const {
+    ensureType(etString);
+    return JsonParser::toBytesValue(**boost::any_cast<std::shared_ptr<String> >(&value_));
+}
 
 std::string Entity::toString() const
 {
-    std::auto_ptr<OutputStream> out = memoryOutputStream();
+    std::unique_ptr<OutputStream> out = memoryOutputStream();
     JsonGenerator<JsonNullFormatter> g;
     g.init(*out);
     writeEntity(g, *this);
     g.flush();
-    std::auto_ptr<InputStream> in = memoryInputStream(*out);
+    std::unique_ptr<InputStream> in = memoryInputStream(*out);
     const uint8_t *p = 0;
     size_t n = 0;
     size_t c = 0;
@@ -180,7 +190,7 @@ std::string Entity::toString() const
     std::string result;
     result.resize(c);
     c = 0;
-    std::auto_ptr<InputStream> in2 = memoryInputStream(*out);
+    std::unique_ptr<InputStream> in2 = memoryInputStream(*out);
     while (in2->next(&p, &n)) {
         ::memcpy(&result[c], p, n);
         c += n;

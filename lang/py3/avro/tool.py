@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,24 +25,21 @@ NOTE: The API for the command-line tool is experimental.
 
 import sys
 import urllib
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from avro import datafile, io, ipc, protocol
 
-from avro import io
-from avro import datafile
-from avro import protocol
-from avro import ipc
 
 class GenericResponder(ipc.Responder):
   def __init__(self, proto, msg, datum):
-    proto_json = file(proto, 'r').read()
-    ipc.Responder.__init__(self, protocol.Parse(proto_json))
+    proto_json = open(proto, 'r').read()
+    ipc.Responder.__init__(self, protocol.parse(proto_json))
     self.msg = msg
     self.datum = datum
 
-  def invoke(self, message, request):
+  def Invoke(self, message, request):
     if message.name == self.msg:
-      print >> sys.stderr, "Message: %s Datum: %s" % (message.name, self.datum)
+      print("Message: %s Datum: %s" % (message.name, self.datum), sys.stderr)
       # server will shut down after processing a single Avro request
       global server_should_shutdown
       server_should_shutdown = True
@@ -52,15 +49,15 @@ class GenericHandler(BaseHTTPRequestHandler):
   def do_POST(self):
     self.responder = responder
     call_request_reader = ipc.FramedReader(self.rfile)
-    call_request = call_request_reader.read_framed_message()
-    resp_body = self.responder.respond(call_request)
+    call_request = call_request_reader.Read()
+    resp_body = self.responder.Respond(call_request)
     self.send_response(200)
     self.send_header('Content-Type', 'avro/binary')
     self.end_headers()
     resp_writer = ipc.FramedWriter(self.wfile)
-    resp_writer.write_framed_message(resp_body)
+    resp_writer.Write(resp_body)
     if server_should_shutdown:
-      print >> sys.stderr, "Shutting down server."
+      print("Shutting down server.", sys.stderr)
       self.server.force_stop()
 
 class StoppableHTTPServer(HTTPServer):
@@ -91,21 +88,20 @@ def run_server(uri, proto, msg, datum):
   print("Port: %s" % server.server_port)
   sys.stdout.flush()
   server.allow_reuse_address = True
-  print >> sys.stderr, "Starting server."
+  print("Starting server.", sys.stderr)
   server.serve_forever()
 
 def send_message(uri, proto, msg, datum):
   url_obj = urllib.parse.urlparse(uri)
   client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
-  proto_json = file(proto, 'r').read()
-  requestor = ipc.Requestor(protocol.Parse(proto_json), client)
-  print(requestor.request(msg, datum))
+  proto_json = open(proto, 'r').read()
+  requestor = ipc.Requestor(protocol.parse(proto_json), client)
+  print(requestor.Request(msg, datum))
 
+##
+# TODO: Replace this with fileinput()
 def file_or_stdin(f):
-  if f == "-":
-    return sys.stdin
-  else:
-    return file(f)
+  return sys.stdin if f == '-' else open(f, 'rb')
 
 def main(args=sys.argv):
   if len(args) == 1:
@@ -128,10 +124,9 @@ def main(args=sys.argv):
     datum = None
     if len(args) > 5:
       if args[5] == "-file":
-        reader = open(args[6], 'rb')
-        datum_reader = io.DatumReader()
-        dfr = datafile.DataFileReader(reader, datum_reader)
-        datum = dfr.next()
+        with open(args[6], 'rb') as reader:
+          with datafile.DataFileReader(reader, io.DatumReader()) as dfr:
+            datum = next(dfr)
       elif args[5] == "-data":
         print("JSON Decoder not yet implemented.")
         return 1
@@ -149,10 +144,9 @@ def main(args=sys.argv):
     datum = None
     if len(args) > 5:
       if args[5] == "-file":
-        reader = open(args[6], 'rb')
-        datum_reader = io.DatumReader()
-        dfr = datafile.DataFileReader(reader, datum_reader)
-        datum = dfr.next()
+        with open(args[6], 'rb') as reader:
+          with datafile.DataFileReader(reader, io.DatumReader()) as dfr:
+            datum = next(dfr)
       elif args[5] == "-data":
         print("JSON Decoder not yet implemented.")
         return 1

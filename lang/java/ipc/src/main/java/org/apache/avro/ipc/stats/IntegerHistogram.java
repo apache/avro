@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +18,9 @@
 package org.apache.avro.ipc.stats;
 
 /**
- * Specific implementation of histogram for integers,
- * which also keeps track of basic summary statistics.
+ * Specific implementation of histogram for integers, which also keeps track of
+ * basic summary statistics.
+ * 
  * @param <B>
  */
 class IntegerHistogram<B> extends Histogram<B, Integer> {
@@ -34,7 +35,7 @@ class IntegerHistogram<B> extends Histogram<B, Integer> {
   public void add(Integer value) {
     super.add(value);
     runningSum += value;
-    runningSumOfSquares += value*value;
+    runningSumOfSquares += value * value;
   }
 
   public float getMean() {
@@ -49,7 +50,6 @@ class IntegerHistogram<B> extends Histogram<B, Integer> {
       return -1;
     }
     float mean = getMean();
-    return (float)Math.sqrt((runningSumOfSquares - totalCount*mean*mean)/
-        (float)(totalCount - 1));
+    return (float) Math.sqrt((runningSumOfSquares - totalCount * mean * mean) / (float) (totalCount - 1));
   }
 }

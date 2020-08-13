@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,14 +31,14 @@ class FieldAccessReflect extends FieldAccess {
     AvroEncode enc = field.getAnnotation(AvroEncode.class);
     if (enc != null)
       try {
-        return new ReflectionBasesAccessorCustomEncoded(field, enc.using().newInstance());
+        return new ReflectionBasesAccessorCustomEncoded(field, enc.using().getDeclaredConstructor().newInstance());
       } catch (Exception e) {
         throw new AvroRuntimeException("Could not instantiate custom Encoding");
       }
     return new ReflectionBasedAccessor(field);
   }
 
-  private class ReflectionBasedAccessor extends FieldAccessor {
+  private static class ReflectionBasedAccessor extends FieldAccessor {
     protected final Field field;
     private boolean isStringable;
     private boolean isCustomEncoded;
@@ -61,8 +61,7 @@ class FieldAccessReflect extends FieldAccess {
     }
 
     @Override
-    public void set(Object object, Object value) throws IllegalAccessException,
-        IOException {
+    public void set(Object object, Object value) throws IllegalAccessException, IOException {
       field.set(object, value);
     }
 
@@ -82,14 +81,14 @@ class FieldAccessReflect extends FieldAccess {
     }
   }
 
-  private final class ReflectionBasesAccessorCustomEncoded extends ReflectionBasedAccessor {
+  private static final class ReflectionBasesAccessorCustomEncoded extends ReflectionBasedAccessor {
 
     private CustomEncoding<?> encoding;
 
     public ReflectionBasesAccessorCustomEncoded(Field f, CustomEncoding<?> encoding) {
       super(f);
       this.encoding = encoding;
-  }
+    }
 
     @Override
     protected void read(Object object, Decoder in) throws IOException {
@@ -97,7 +96,7 @@ class FieldAccessReflect extends FieldAccess {
         field.set(object, encoding.read(in));
       } catch (IllegalAccessException e) {
         throw new AvroRuntimeException(e);
-}
+      }
     }
 
     @Override
@@ -109,6 +108,7 @@ class FieldAccessReflect extends FieldAccess {
       }
     }
 
+    @Override
     protected boolean isCustomEncoded() {
       return true;
     }

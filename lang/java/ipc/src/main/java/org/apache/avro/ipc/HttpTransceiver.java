@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.EOFException;
 import java.net.Proxy;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,9 @@ public class HttpTransceiver extends Transceiver {
   private HttpURLConnection connection;
   private int timeout;
 
-  public HttpTransceiver(URL url) { this.url = url; }
+  public HttpTransceiver(URL url) {
+    this.url = url;
+  }
 
   public HttpTransceiver(URL url, Proxy proxy) {
     this(url);
@@ -46,39 +49,38 @@ public class HttpTransceiver extends Transceiver {
   }
 
   /** Set the connect and read timeouts, in milliseconds. */
-  public void setTimeout(int timeout) { this.timeout = timeout; }
+  public void setTimeout(int timeout) {
+    this.timeout = timeout;
+  }
 
-  public String getRemoteName() { return this.url.toString(); }
+  @Override
+  public String getRemoteName() {
+    return this.url.toString();
+  }
 
+  @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
-    InputStream in = connection.getInputStream();
-    try {
+    try (InputStream in = connection.getInputStream()) {
       return readBuffers(in);
-    } finally {
-      in.close();
     }
   }
 
-  public synchronized void writeBuffers(List<ByteBuffer> buffers)
-    throws IOException {
+  @Override
+  public synchronized void writeBuffers(List<ByteBuffer> buffers) throws IOException {
     if (proxy == null)
-      connection = (HttpURLConnection)url.openConnection();
+      connection = (HttpURLConnection) url.openConnection();
     else
-      connection = (HttpURLConnection)url.openConnection(proxy);
+      connection = (HttpURLConnection) url.openConnection(proxy);
 
     connection.setRequestMethod("POST");
     connection.setRequestProperty("Content-Type", CONTENT_TYPE);
-    connection.setRequestProperty("Content-Length",
-                                  Integer.toString(getLength(buffers)));
+    connection.setRequestProperty("Content-Length", Integer.toString(getLength(buffers)));
     connection.setDoOutput(true);
     connection.setReadTimeout(timeout);
     connection.setConnectTimeout(timeout);
 
-    OutputStream out = connection.getOutputStream();
-    try {
+    try (OutputStream out = connection.getOutputStream()) {
       writeBuffers(buffers, out);
-    } finally {
-      out.close();
     }
   }
 
@@ -92,12 +94,11 @@ public class HttpTransceiver extends Transceiver {
     return length;
   }
 
-  static List<ByteBuffer> readBuffers(InputStream in)
-    throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+  static List<ByteBuffer> readBuffers(InputStream in) throws IOException {
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
-      int length = (in.read()<<24)+(in.read()<<16)+(in.read()<<8)+in.read();
-      if (length == 0) {                       // end of buffers
+      int length = (in.read() << 24) + (in.read() << 16) + (in.read() << 8) + in.read();
+      if (length == 0) { // end of buffers
         return buffers;
       }
       ByteBuffer buffer = ByteBuffer.allocate(length);
@@ -106,29 +107,26 @@ public class HttpTransceiver extends Transceiver {
         int i = in.read(buffer.array(), p, buffer.remaining());
         if (i < 0)
           throw new EOFException("Unexpected EOF");
-        buffer.position(p+i);
+        ((Buffer) buffer).position(p + i);
       }
-      buffer.flip();
+      ((Buffer) buffer).flip();
       buffers.add(buffer);
     }
   }
 
-  static void writeBuffers(List<ByteBuffer> buffers, OutputStream out)
-    throws IOException {
+  static void writeBuffers(List<ByteBuffer> buffers, OutputStream out) throws IOException {
     for (ByteBuffer buffer : buffers) {
-      writeLength(buffer.limit(), out);           // length-prefix
+      writeLength(buffer.limit(), out); // length-prefix
       out.write(buffer.array(), buffer.position(), buffer.remaining());
-      buffer.position(buffer.limit());
+      ((Buffer) buffer).position(buffer.limit());
     }
-    writeLength(0, out);                          // null-terminate
+    writeLength(0, out); // null-terminate
   }
 
-  private static void writeLength(int length, OutputStream out)
-    throws IOException {
+  private static void writeLength(int length, OutputStream out) throws IOException {
     out.write(0xff & (length >>> 24));
     out.write(0xff & (length >>> 16));
     out.write(0xff & (length >>> 8));
     out.write(0xff & length);
   }
 }
-

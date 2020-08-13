@@ -1,4 +1,3 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
@@ -7,7 +6,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,94 +14,24 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3B05043A-DC6C-49B6-85BF-9AB055D0B414}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Avro.ipc</RootNamespace>
+    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
     <AssemblyName>Avro.ipc</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\build\ipc\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\build\ipc\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup>
+    <RootNamespace>Avro.ipc</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Castle.Core">
-      <HintPath>..\..\..\lib\main\Castle.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net">
-      <HintPath>..\..\..\lib\main\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <PackageReference Include="castle.core" Version="4.2.1" />
+    <PackageReference Include="log4net" Version="2.0.8" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="CallFuture.cs" />
-    <Compile Include="CountdownLatch.cs" />
-    <Compile Include="Generic\GenericRequestor.cs" />
-    <Compile Include="Generic\GenericResponder.cs" />
-    <Compile Include="HttpListenerServer.cs" />
-    <Compile Include="HttpTransceiver.cs" />
-    <Compile Include="OutputStream.cs" />
-    <Compile Include="RpcRequest.cs" />
-    <Compile Include="SocketServer.cs" />
-    <Compile Include="Specific\SpecificResponder.cs" />
-    <Compile Include="Specific\SpecificRequestor.cs" />
-    <Compile Include="Transceiver.cs" />
-    <Compile Include="LocalTransceiver.cs" />
-    <Compile Include="org\apache\avro\ipc\HandshakeMatch.cs" />
-    <Compile Include="org\apache\avro\ipc\HandshakeRequest.cs" />
-    <Compile Include="org\apache\avro\ipc\HandshakeResponse.cs" />
-    <Compile Include="org\apache\avro\ipc\MD5.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Requestor.cs" />
-    <Compile Include="Responder.cs" />
-    <Compile Include="RpcContext.cs" />
-    <Compile Include="SocketTransceiver.cs" />
+    <ProjectReference Include="..\main\Avro.main.csproj" />
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <ProjectReference Include="..\main\Avro.main.csproj">
-      <Project>{a0a5ca3c-f58c-4d07-98b0-2c7b62ab20f0}</Project>
-      <Name>Avro.main</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!--<UsingTask AssemblyFile="..\..\..\build\msbuild\$(Configuration)\Avro.msbuild.dll" TaskName="Avro.msbuild.AvroBuildTask" />-->
-  <Target Name="BeforeBuild">
-    <!--<AvroBuildTask OutDir="..\ipc\" SchemaFiles="..\..\..\..\..\share\schemas\org\apache\avro\ipc\HandshakeRequest.avsc;..\..\..\..\..\share\schemas\org\apache\avro\ipc\HandshakeResponse.avsc">
-    </AvroBuildTask>-->
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

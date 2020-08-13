@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@
 #ifndef avro_Serializer_hh__
 #define avro_Serializer_hh__
 
+#include <array>
 #include <boost/noncopyable.hpp>
 
 #include "Config.hh"
@@ -79,7 +80,7 @@ class Serializer : private boost::noncopyable
     }
 
     template <size_t N>
-    void writeFixed(const boost::array<uint8_t, N> &val) {
+    void writeFixed(const std::array<uint8_t, N> &val) {
         writer_.writeFixed(val);
     }
 

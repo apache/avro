@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,7 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Abstract base class for <code>RecordReader</code>s that read Avro container files.
+ * Abstract base class for <code>RecordReader</code>s that read Avro container
+ * files.
  *
  * @param <K> The type of key the record reader should generate.
  * @param <V> The type of value the record reader should generate.
@@ -61,13 +62,17 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
    */
   private long mStartPosition;
 
-  /** The byte offset into the Avro container file where the current input split ends. */
+  /**
+   * The byte offset into the Avro container file where the current input split
+   * ends.
+   */
   private long mEndPosition;
 
   /**
    * Constructor.
    *
-   * @param readerSchema The reader schema for the records of the Avro container file.
+   * @param readerSchema The reader schema for the records of the Avro container
+   *                     file.
    */
   protected AvroRecordReaderBase(Schema readerSchema) {
     mReaderSchema = readerSchema;
@@ -76,16 +81,14 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
 
   /** {@inheritDoc} */
   @Override
-  public void initialize(InputSplit inputSplit, TaskAttemptContext context)
-      throws IOException, InterruptedException {
+  public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
     if (!(inputSplit instanceof FileSplit)) {
       throw new IllegalArgumentException("Only compatible with FileSplits.");
     }
     FileSplit fileSplit = (FileSplit) inputSplit;
 
     // Open a seekable input stream to the Avro container file.
-    SeekableInput seekableFileInput
-        = createSeekableInput(context.getConfiguration(), fileSplit.getPath());
+    SeekableInput seekableFileInput = createSeekableInput(context.getConfiguration(), fileSplit.getPath());
 
     // Wrap the seekable input stream in an Avro DataFileReader.
     Configuration conf = context.getConfiguration();
@@ -93,18 +96,23 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
     DatumReader<T> datumReader = dataModel.createDatumReader(mReaderSchema);
     mAvroFileReader = createAvroFileReader(seekableFileInput, datumReader);
 
-    // Initialize the start and end offsets into the file based on the boundaries of the
-    // input split we're responsible for.  We will read the first block that begins
-    // after the input split start boundary.  We will read up to but not including the
+    // Initialize the start and end offsets into the file based on the boundaries of
+    // the
+    // input split we're responsible for. We will read the first block that begins
+    // after the input split start boundary. We will read up to but not including
+    // the
     // first block that starts after input split end boundary.
 
-    // Sync to the closest block/record boundary just after beginning of our input split.
+    // Sync to the closest block/record boundary just after beginning of our input
+    // split.
     mAvroFileReader.sync(fileSplit.getStart());
 
-    // Initialize the start position to the beginning of the first block of the input split.
+    // Initialize the start position to the beginning of the first block of the
+    // input split.
     mStartPosition = mAvroFileReader.previousSync();
 
-    // Initialize the end position to the end of the input split (this isn't necessarily
+    // Initialize the end position to the end of the input split (this isn't
+    // necessarily
     // on a block boundary so using this for reporting progress will be approximate.
     mEndPosition = fileSplit.getStart() + fileSplit.getLength();
   }
@@ -151,7 +159,9 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
   /**
    * Gets the current record read from the Avro container file.
    *
-   * <p>Calling <code>nextKeyValue()</code> moves this to the next record.</p>
+   * <p>
+   * Calling <code>nextKeyValue()</code> moves this to the next record.
+   * </p>
    *
    * @return The current Avro record (may be null if no record has been read).
    */
@@ -166,20 +176,19 @@ public abstract class AvroRecordReaderBase<K, V, T> extends RecordReader<K, V> {
    * @param path The path to the avro container file.
    * @throws IOException If there is an error reading from the path.
    */
-  protected SeekableInput createSeekableInput(Configuration conf, Path path)
-      throws IOException {
+  protected SeekableInput createSeekableInput(Configuration conf, Path path) throws IOException {
     return new FsInput(path, conf);
   }
 
   /**
    * Creates an Avro container file reader from a seekable input stream.
    *
-   * @param input The input containing the Avro container file.
-   * @param datumReader The reader to use for the individual records in the Avro container file.
+   * @param input       The input containing the Avro container file.
+   * @param datumReader The reader to use for the individual records in the Avro
+   *                    container file.
    * @throws IOException If there is an error reading from the input stream.
    */
-  protected DataFileReader<T> createAvroFileReader(
-      SeekableInput input, DatumReader<T> datumReader) throws IOException {
-    return new DataFileReader<T>(input, datumReader);
+  protected DataFileReader<T> createAvroFileReader(SeekableInput input, DatumReader<T> datumReader) throws IOException {
+    return new DataFileReader<>(input, datumReader);
   }
 }

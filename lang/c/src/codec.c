@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,9 @@
 #  elif defined(__FreeBSD__)
 #    include <sys/endian.h>
 #    define __bswap_32 bswap32
+#  elif defined(_WIN32)
+#    include <stdlib.h>
+#    define __bswap_32 _byteswap_ulong
 #  else
 #    include <byteswap.h>
 #  endif
@@ -118,14 +121,14 @@ static int encode_snappy(avro_codec_t c, void * data, int64_t len)
 		return 1;
 	}
 
-        if (snappy_compress(data, len, c->block_data, &outlen) != SNAPPY_OK)
+        if (snappy_compress((const char *)data, len, (char*)c->block_data, &outlen) != SNAPPY_OK)
         {
                 avro_set_error("Error compressing block with Snappy");
 		return 1;
 	}
 
-        crc = __bswap_32(crc32(0, data, len));
-        memcpy(c->block_data+outlen, &crc, 4);
+        crc = __bswap_32(crc32(0, (const Bytef *)data, len));
+        memcpy((char*)c->block_data+outlen, &crc, 4);
         c->used_size = outlen+4;
 
 	return 0;
@@ -136,7 +139,7 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
         uint32_t crc;
         size_t outlen;
 
-        if (snappy_uncompressed_length(data, len-4, &outlen) != SNAPPY_OK) {
+        if (snappy_uncompressed_length((const char*)data, len-4, &outlen) != SNAPPY_OK) {
 		avro_set_error("Uncompressed length error in snappy");
 		return 1;
         }
@@ -155,13 +158,13 @@ static int decode_snappy(avro_codec_t c, void * data, int64_t len)
 		return 1;
 	}
 
-        if (snappy_uncompress(data, len-4, c->block_data, &outlen) != SNAPPY_OK)
+        if (snappy_uncompress((const char*)data, len-4, (char*)c->block_data, &outlen) != SNAPPY_OK)
         {
                 avro_set_error("Error uncompressing block with Snappy");
 		return 1;
 	}
 
-        crc = __bswap_32(crc32(0, c->block_data, outlen));
+        crc = __bswap_32(crc32(0, (const Bytef *)c->block_data, outlen));
         if (memcmp(&crc, (char*)data+len-4, 4))
         {
                 avro_set_error("CRC32 check failure uncompressing block with Snappy");

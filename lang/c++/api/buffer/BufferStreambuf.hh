@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,7 +44,7 @@ class AVRO_DECL ostreambuf : public std::streambuf {
   public:
 
     /// Default constructor creates a new OutputBuffer.
-    ostreambuf() : 
+    ostreambuf() :
         std::streambuf(),
         buffer_()
     { }
@@ -61,16 +61,16 @@ class AVRO_DECL ostreambuf : public std::streambuf {
     }
 
   protected:
-    
+
     /// Write a single character to the stream.
-    virtual int_type overflow(int_type c) 
+    virtual int_type overflow(int_type c)
     {
         buffer_.writeTo(static_cast<OutputBuffer::data_type>(c));
         return c;
     }
 
     /// Write a block of characters to the stream.
-    virtual std::streamsize xsputn(const char_type *s, std::streamsize n) 
+    virtual std::streamsize xsputn(const char_type *s, std::streamsize n)
     {
         return buffer_.writeTo(s, static_cast<size_t>(n));
     }
@@ -80,7 +80,7 @@ class AVRO_DECL ostreambuf : public std::streambuf {
     OutputBuffer buffer_;
 };
 
-/** 
+/**
  * \brief Implementation of streambuf for use by the Buffer's istream.
  *
  * This class derives from std::streambuf and implements the virtual functions
@@ -103,17 +103,17 @@ class AVRO_DECL istreambuf : public std::streambuf {
         buffer_( buffer ),
         basePos_(0),
         iter_(buffer_.begin())
-    { 
+    {
         setBuffer();
     }
 
-    /// Default constructor converts an OutputBuffer to an InputBuffer 
+    /// Default constructor converts an OutputBuffer to an InputBuffer
     explicit istreambuf(const OutputBuffer &buffer) :
         std::streambuf(),
         buffer_( buffer, InputBuffer::ShallowCopy()),
         basePos_(0),
         iter_(buffer_.begin())
-    { 
+    {
         setBuffer();
     }
 
@@ -135,7 +135,7 @@ class AVRO_DECL istreambuf : public std::streambuf {
 
     /// Get a block of data from the stream.  Overrides default behavior
     /// to ignore eof characters that may reside in the stream.
-    virtual std::streamsize xsgetn(char_type *c, std::streamsize len) 
+    virtual std::streamsize xsgetn(char_type *c, std::streamsize len)
     {
         std::streamsize bytesCopied = 0;
 
@@ -166,7 +166,7 @@ class AVRO_DECL istreambuf : public std::streambuf {
     /// Special seek override to navigate InputBuffer chunks.
     virtual pos_type seekoff(off_type off, std::ios::seekdir dir, std::ios_base::openmode) {
 
-        off_type curpos = basePos_ + (gptr() - eback()); 
+        off_type curpos = basePos_ + (gptr() - eback());
         off_type newpos = off;
 
         if(dir == std::ios::cur) {
@@ -175,7 +175,7 @@ class AVRO_DECL istreambuf : public std::streambuf {
         else if (dir == std::ios::end) {
             newpos += buffer_.size();
         }
-        // short circuit for tell()  
+        // short circuit for tell()
         if(newpos == curpos) {
             return curpos;
         }
@@ -200,7 +200,7 @@ class AVRO_DECL istreambuf : public std::streambuf {
         // increase the buffer until it is not
         while (newpos > endpos) {
             istreambuf::underflow();
-            endpos = basePos_ + (egptr() - eback()); 
+            endpos = basePos_ + (egptr() - eback());
         }
 
         setg(eback(), eback() + (newpos - basePos_), egptr());
@@ -211,7 +211,7 @@ class AVRO_DECL istreambuf : public std::streambuf {
     virtual pos_type seekpos(pos_type pos, std::ios_base::openmode) {
         return istreambuf::seekoff(pos, std::ios::beg, std::ios_base::openmode(0));
     }
-    
+
     /// Shows the number of bytes buffered in the current chunk, or next chunk if
     /// current is exhausted.
     virtual std::streamsize showmanyc() {
@@ -227,7 +227,7 @@ class AVRO_DECL istreambuf : public std::streambuf {
     }
 
   private:
-    
+
     /// Setup the streambuf buffer pointers after updating
     /// the value of the iterator.  Returns the first character
     /// in the new buffer, or eof if there is no buffer.
@@ -252,4 +252,4 @@ class AVRO_DECL istreambuf : public std::streambuf {
 
 } // namespace
 
-#endif 
+#endif

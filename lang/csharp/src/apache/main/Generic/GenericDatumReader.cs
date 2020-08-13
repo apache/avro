@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,14 +21,25 @@ using Avro.IO;
 
 namespace Avro.Generic
 {
-    /// PreresolvingDatumReader for reading data to GenericRecord classes or primitives.
-    /// <see cref="PreresolvingDatumReader{T}">For more information about performance considerations for choosing this implementation</see>
+    /// <summary>
+    /// <see cref="PreresolvingDatumReader{T}"/> for reading data to <see cref="GenericRecord"/>
+    /// classes or primitives.
+    /// <see cref="PreresolvingDatumReader{T}">For more information about performance considerations
+    /// for choosing this implementation</see>.
+    /// </summary>
+    /// <typeparam name="T">Type to deserialize data into.</typeparam>
     public class GenericDatumReader<T> : PreresolvingDatumReader<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericDatumReader{T}"/> class.
+        /// </summary>
+        /// <param name="writerSchema">Schema that was used to write the data.</param>
+        /// <param name="readerSchema">Schema to use to read the data.</param>
         public GenericDatumReader(Schema writerSchema, Schema readerSchema) : base(writerSchema, readerSchema)
         {
         }
 
+        /// <inheritdoc/>
         protected override bool IsReusable(Schema.Type tag)
         {
             switch (tag)
@@ -46,26 +57,31 @@ namespace Avro.Generic
             return true;
         }
 
+        /// <inheritdoc/>
         protected override ArrayAccess GetArrayAccess(ArraySchema readerSchema)
         {
             return new GenericArrayAccess();
         }
 
+        /// <inheritdoc/>
         protected override EnumAccess GetEnumAccess(EnumSchema readerSchema)
         {
             return new GenericEnumAccess(readerSchema);
         }
 
+        /// <inheritdoc/>
         protected override MapAccess GetMapAccess(MapSchema readerSchema)
         {
             return new GenericMapAccess();
         }
 
+        /// <inheritdoc/>
         protected override RecordAccess GetRecordAccess(RecordSchema readerSchema)
         {
             return new GenericRecordAccess(readerSchema);
         }
 
+        /// <inheritdoc/>
         protected override FixedAccess GetFixedAccess(FixedSchema readerSchema)
         {
             return new GenericFixedAccess(readerSchema);
@@ -115,7 +131,7 @@ namespace Avro.Generic
             public object GetField(object record, string fieldName, int fieldPos)
             {
                 object result;
-                if(!((GenericRecord)record).TryGetValue(fieldName, out result))
+                if(!((GenericRecord)record).TryGetValue(fieldPos, out result))
                 {
                     return null;
                 }
@@ -199,7 +215,7 @@ namespace Avro.Generic
 
             public void AddElements(object mapObj, int elements, ReadItem itemReader, Decoder decoder, bool reuse)
             {
-                var map = ((IDictionary<string, object>)mapObj);
+                var map = (IDictionary<string, object>)mapObj;
                 for (int i = 0; i < elements; i++)
                 {
                     var key = decoder.ReadString();

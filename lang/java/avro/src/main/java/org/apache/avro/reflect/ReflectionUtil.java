@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,19 @@ package org.apache.avro.reflect;
 
 import org.apache.avro.AvroRuntimeException;
 
+import java.lang.invoke.CallSite;
+import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 /**
  * A few utility methods for using @link{java.misc.Unsafe}, mostly for private
  * use.
@@ -26,9 +39,9 @@ import org.apache.avro.AvroRuntimeException;
  * Use of Unsafe on Android is forbidden, as Android provides only a very
  * limited functionality for this class compared to the JDK version.
  *
+ * InterfaceAudience.Private
  */
-
-class ReflectionUtil {
+public class ReflectionUtil {
 
   private ReflectionUtil() {
   }
@@ -37,14 +50,14 @@ class ReflectionUtil {
   static {
     resetFieldAccess();
   }
+
   static void resetFieldAccess() {
     // load only one implementation of FieldAccess
     // so it is monomorphic and the JIT can inline
     FieldAccess access = null;
     try {
       if (null == System.getProperty("avro.disable.unsafe")) {
-        FieldAccess unsafeAccess = load(
-            "org.apache.avro.reflect.FieldAccessUnsafe", FieldAccess.class);
+        FieldAccess unsafeAccess = load("org.apache.avro.reflect.FieldAccessUnsafe", FieldAccess.class);
         if (validate(unsafeAccess)) {
           access = unsafeAccess;
         }
@@ -53,22 +66,20 @@ class ReflectionUtil {
     }
     if (access == null) {
       try {
-        FieldAccess reflectAccess = load(
-            "org.apache.avro.reflect.FieldAccessReflect", FieldAccess.class);
+        FieldAccess reflectAccess = load("org.apache.avro.reflect.FieldAccessReflect", FieldAccess.class);
         if (validate(reflectAccess)) {
           access = reflectAccess;
         }
       } catch (Throwable oops) {
-        throw new AvroRuntimeException(
-            "Unable to load a functional FieldAccess class!");
+        throw new AvroRuntimeException("Unable to load a functional FieldAccess class!");
       }
     }
     fieldAccess = access;
   }
 
   private static <T> T load(String name, Class<T> type) throws Exception {
-    return ReflectionUtil.class.getClassLoader().loadClass(name)
-        .asSubclass(type).newInstance();
+    return ReflectionUtil.class.getClassLoader().loadClass(name).asSubclass(type).getDeclaredConstructor()
+        .newInstance();
   }
 
   public static FieldAccess getFieldAccess() {
@@ -106,8 +117,7 @@ class ReflectionUtil {
       return valid;
     }
 
-    private boolean validField(FieldAccess access, String name,
-        Object original, Object toSet) throws Exception {
+    private boolean validField(FieldAccess access, String name, Object original, Object toSet) throws Exception {
       FieldAccessor a;
       boolean valid = true;
       a = accessor(access, name);
@@ -117,9 +127,78 @@ class ReflectionUtil {
       return valid;
     }
 
-    private FieldAccessor accessor(FieldAccess access, String name)
-        throws Exception {
+    private FieldAccessor accessor(FieldAccess access, String name) throws Exception {
       return access.getAccessor(this.getClass().getDeclaredField(name));
+    }
+  }
+
+  /**
+   * For an interface, get a map of any {@link TypeVariable}s to their actual
+   * types.
+   *
+   * @param iface interface to resolve types for.
+   * @return a map of {@link TypeVariable}s to actual types.
+   */
+  protected static Map<TypeVariable<?>, Type> resolveTypeVariables(Class<?> iface) {
+    return resolveTypeVariables(iface, new IdentityHashMap<>());
+  }
+
+  private static Map<TypeVariable<?>, Type> resolveTypeVariables(Class<?> iface, Map<TypeVariable<?>, Type> reuse) {
+
+    for (Type type : iface.getGenericInterfaces()) {
+      if (type instanceof ParameterizedType) {
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        Type rawType = parameterizedType.getRawType();
+        if (rawType instanceof Class<?>) {
+          Class<?> classType = (Class<?>) rawType;
+          TypeVariable<? extends Class<?>>[] typeParameters = classType.getTypeParameters();
+          Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+          for (int i = 0; i < typeParameters.length; i++) {
+            reuse.putIfAbsent(typeParameters[i], reuse.getOrDefault(actualTypeArguments[i], actualTypeArguments[i]));
+          }
+          resolveTypeVariables(classType, reuse);
+        }
+      }
+    }
+    return reuse;
+  }
+
+  private static <D> Supplier<D> getConstructorAsSupplier(Class<D> clazz) {
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle constructorHandle = lookup.findConstructor(clazz, MethodType.methodType(void.class));
+
+      CallSite site = LambdaMetafactory.metafactory(lookup, "get", MethodType.methodType(Supplier.class),
+          constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
+
+      return (Supplier<D>) site.getTarget().invokeExact();
+    } catch (Throwable t) {
+      // if anything goes wrong, don't provide a Supplier
+      return null;
+    }
+  }
+
+  private static <V, R> Supplier<R> getOneArgConstructorAsSupplier(Class<R> clazz, Class<V> argumentClass, V argument) {
+    Function<V, R> supplierFunction = getConstructorAsFunction(argumentClass, clazz);
+    if (supplierFunction != null) {
+      return () -> supplierFunction.apply(argument);
+    } else {
+      return null;
+    }
+  }
+
+  public static <V, R> Function<V, R> getConstructorAsFunction(Class<V> parameterClass, Class<R> clazz) {
+    try {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle constructorHandle = lookup.findConstructor(clazz, MethodType.methodType(void.class, parameterClass));
+
+      CallSite site = LambdaMetafactory.metafactory(lookup, "apply", MethodType.methodType(Function.class),
+          constructorHandle.type().generic(), constructorHandle, constructorHandle.type());
+
+      return (Function<V, R>) site.getTarget().invokeExact();
+    } catch (Throwable t) {
+      // if something goes wrong, do not provide a Function instance
+      return null;
     }
   }
 

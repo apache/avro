@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -105,18 +105,18 @@ struct Verify2 {
 
 template <typename V>
 void testEmpty_memoryStream() {
-    std::auto_ptr<OutputStream> os = memoryOutputStream();
-    std::auto_ptr<InputStream> is = memoryInputStream(*os);
+    std::unique_ptr<OutputStream> os = memoryOutputStream();
+    std::unique_ptr<InputStream> is = memoryInputStream(*os);
     V()(*is);
 }
 
 template <typename F, typename V>
 void testNonEmpty_memoryStream(const TestData& td)
 {
-    std::auto_ptr<OutputStream> os = memoryOutputStream(td.chunkSize);
+    std::unique_ptr<OutputStream> os = memoryOutputStream(td.chunkSize);
     F()(*os, td.dataSize);
 
-    std::auto_ptr<InputStream> is = memoryInputStream(*os);
+    std::unique_ptr<InputStream> is = memoryInputStream(*os);
     V()(*is, td.dataSize);
 }
 
@@ -127,7 +127,7 @@ void testNonEmpty2(const TestData& td) {
     }
 
     uint8_t v2 = 0;
-    std::auto_ptr<InputStream> is = memoryInputStream(v.empty() ? &v2 : &v[0], v.size());
+    std::unique_ptr<InputStream> is = memoryInputStream(v.empty() ? &v2 : &v[0], v.size());
     Verify1()(*is, td.dataSize);
 }
 
@@ -143,9 +143,9 @@ template <typename V>
 void testEmpty_fileStream() {
     FileRemover fr(filename);
     {
-        std::auto_ptr<OutputStream> os = fileOutputStream(filename);
+        std::unique_ptr<OutputStream> os = fileOutputStream(filename);
     }
-    std::auto_ptr<InputStream> is = fileInputStream(filename);
+    std::unique_ptr<InputStream> is = fileInputStream(filename);
     V()(*is);
 }
 
@@ -154,12 +154,12 @@ void testNonEmpty_fileStream(const TestData& td)
 {
     FileRemover fr(filename);
     {
-        std::auto_ptr<OutputStream> os = fileOutputStream(filename,
+        std::unique_ptr<OutputStream> os = fileOutputStream(filename,
             td.chunkSize);
         F()(*os, td.dataSize);
     }
 
-    std::auto_ptr<InputStream> is = fileInputStream(filename, td.chunkSize);
+    std::unique_ptr<InputStream> is = fileInputStream(filename, td.chunkSize);
     V()(*is, td.dataSize);
 }
 
@@ -176,9 +176,9 @@ TestData data[] = {
 }   // namespace stream
 
 }   // namespace
-    
+
 boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite( int argc, char* argv[] )
 {
     boost::unit_test::test_suite* ts =
         BOOST_TEST_SUITE("Avro C++ unit test suite for streams");

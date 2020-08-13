@@ -17,7 +17,7 @@ namespace com.foo
 	{
 		public static Schema _SCHEMA = Avro.Schema.Parse("{\"type\":\"fixed\",\"name\":\"MyFixed\",\"namespace\":\"com.foo\",\"size\":16}");
 		private static uint fixedSize = 16;
-		public MyFixed() : 
+		public MyFixed() :
 				base(fixedSize)
 		{
 		}

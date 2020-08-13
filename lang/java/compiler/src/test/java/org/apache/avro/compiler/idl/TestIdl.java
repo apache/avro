@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,35 +34,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.avro.Protocol;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Simple test harness for Idl.
- * This relies on an input/ and output/ directory. Inside
- * the input/ directory are .avdl files. Each file should have
- * a corresponding .avpr file in output/. When the test is run,
- * it generates and stringifies each .avdl file and compares
- * it to the expected output, failing if the two differ.
+ * Simple test harness for Idl. This relies on an input/ and output/ directory.
+ * Inside the input/ directory are .avdl files. Each file should have a
+ * corresponding .avpr file in output/. When the test is run, it generates and
+ * stringifies each .avdl file and compares it to the expected output, failing
+ * if the two differ.
  *
- * To make it simpler to write these tests, you can run
- *   ant -Dtestcase=TestIdl -Dtest.idl.mode=write
- * which will *replace* all expected output.
+ * To make it simpler to write these tests, you can run ant -Dtestcase=TestIdl
+ * -Dtest.idl.mode=write which will *replace* all expected output.
  */
 public class TestIdl {
-  private static final File TEST_DIR =
-    new File(System.getProperty("test.idl.dir", "src/test/idl"));
+  private static final File TEST_DIR = new File(System.getProperty("test.idl.dir", "src/test/idl"));
 
-  private static final File TEST_INPUT_DIR =
-    new File(TEST_DIR, "input");
+  private static final File TEST_INPUT_DIR = new File(TEST_DIR, "input");
 
-  private static final File TEST_OUTPUT_DIR =
-    new File(TEST_DIR, "output");
+  private static final File TEST_OUTPUT_DIR = new File(TEST_DIR, "output");
 
-  private static final String TEST_MODE =
-    System.getProperty("test.idl.mode", "run");
+  private static final String TEST_MODE = System.getProperty("test.idl.mode", "run");
 
   private List<GenTest> tests;
 
@@ -72,28 +66,28 @@ public class TestIdl {
     assertTrue(TEST_INPUT_DIR.exists());
     assertTrue(TEST_OUTPUT_DIR.exists());
 
-    tests = new ArrayList<GenTest>();
+    tests = new ArrayList<>();
     for (File inF : TEST_INPUT_DIR.listFiles()) {
-      if (!inF.getName().endsWith(".avdl")) continue;
-      if (inF.getName().startsWith(".")) continue;
+      if (!inF.getName().endsWith(".avdl"))
+        continue;
+      if (inF.getName().startsWith("."))
+        continue;
 
-      File outF = new File(
-        TEST_OUTPUT_DIR,
-        inF.getName().replaceFirst("\\.avdl$", ".avpr"));
+      File outF = new File(TEST_OUTPUT_DIR, inF.getName().replaceFirst("\\.avdl$", ".avpr"));
       tests.add(new GenTest(inF, outF));
     }
   }
 
   @Test
   public void runTests() throws Exception {
-    if (! "run".equals(TEST_MODE)) return;
+    if (!"run".equals(TEST_MODE))
+      return;
 
-    int passed = 0, failed = 0;
+    int failed = 0;
 
     for (GenTest t : tests) {
       try {
         t.run();
-        passed++;
       } catch (Exception e) {
         failed++;
         System.err.println("Failed: " + t.testName());
@@ -108,16 +102,16 @@ public class TestIdl {
 
   @Test
   public void writeTests() throws Exception {
-    if (! "write".equals(TEST_MODE)) return;
+    if (!"write".equals(TEST_MODE))
+      return;
 
     for (GenTest t : tests) {
       t.write();
     }
   }
 
-
   /**
-   * An invididual comparison test
+   * An individual comparison test
    */
   private static class GenTest {
     private final File in, expectedOut;
@@ -133,10 +127,9 @@ public class TestIdl {
       // Calculate the absolute path to src/test/resources/putOnClassPath/
       File file = new File(".");
       String currentWorkPath = file.toURI().toURL().toString();
-      String newPath = currentWorkPath + "src" + File.separator + "test"
-        + File.separator + "idl" + File.separator
-        + "putOnClassPath" + File.separator;
-      URL[] newPathURL = new URL[]{new URL(newPath)};
+      String newPath = currentWorkPath + "src" + File.separator + "test" + File.separator + "idl" + File.separator
+          + "putOnClassPath" + File.separator;
+      URL[] newPathURL = new URL[] { new URL(newPath) };
       URLClassLoader ucl = new URLClassLoader(newPathURL, cl);
 
       Idl parser = new Idl(in, ucl);
@@ -146,13 +139,13 @@ public class TestIdl {
     }
 
     public String testName() {
-        return this.in.getName();
+      return this.in.getName();
     }
 
     public void run() throws Exception {
       String output = generate();
       String slurped = slurp(expectedOut);
-      assertEquals(slurped.trim(), output.replace("\r", "").trim());
+      assertEquals(slurped.trim(), output.replace("\\r", "").trim());
     }
 
     public void write() throws Exception {
@@ -160,8 +153,7 @@ public class TestIdl {
     }
 
     private static String slurp(File f) throws IOException {
-      BufferedReader in = new BufferedReader(
-          new InputStreamReader(new FileInputStream(f), "UTF-8"));
+      BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
 
       String line = null;
       StringBuilder builder = new StringBuilder();

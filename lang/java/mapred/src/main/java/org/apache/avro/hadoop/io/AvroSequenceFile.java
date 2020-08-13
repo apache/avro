@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,70 +35,79 @@ import org.apache.hadoop.util.Progressable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT;
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY;
+
 /**
- * A wrapper around a Hadoop {@link org.apache.hadoop.io.SequenceFile} that
- * also supports reading and writing Avro data.
+ * A wrapper around a Hadoop {@link org.apache.hadoop.io.SequenceFile} that also
+ * supports reading and writing Avro data.
  *
- * <p>The vanilla Hadoop <code>SequenceFile</code> contains a <i>header</i>
- * followed by a sequence of <i>records</i>.  A <i>record</i> consists of a
- * <i>key</i> and a <i>value</i>.  The <i>key</i> and <i>value</i> must
- * either:</p>
+ * <p>
+ * The vanilla Hadoop <code>SequenceFile</code> contains a <i>header</i>
+ * followed by a sequence of <i>records</i>. A <i>record</i> consists of a
+ * <i>key</i> and a <i>value</i>. The <i>key</i> and <i>value</i> must either:
+ * </p>
  *
  * <ul>
- *   <li>implement the <code>Writable</code> interface, or</li>
- *   <li>be accepted by a <code>Serialization</code> registered with the
- *       <code>SerializationFactory</code>.</li>
+ * <li>implement the <code>Writable</code> interface, or</li>
+ * <li>be accepted by a <code>Serialization</code> registered with the
+ * <code>SerializationFactory</code>.</li>
  * </ul>
  *
- * <p>Since Avro data are Plain Old Java Objects (e.g., <code>Integer</code>
- * for data with schema <i>"int"</i>), they do not implement <i>Writable</i>.
- * Furthermore, a {@link org.apache.hadoop.io.Serialization} implementation
- * cannot determine whether an object instance of type
+ * <p>
+ * Since Avro data are Plain Old Java Objects (e.g., <code>Integer</code> for
+ * data with schema <i>"int"</i>), they do not implement <i>Writable</i>.
+ * Furthermore, a {@link org.apache.hadoop.io.serializer.Serialization}
+ * implementation cannot determine whether an object instance of type
  * <code>CharSequence</code> that also implements <code>Writable</code> should
- * be serialized using Avro or WritableSerialization.</p>
+ * be serialized using Avro or WritableSerialization.
+ * </p>
  *
- * <p>The solution implemented in <code>AvroSequenceFile</code> is to:</p>
+ * <p>
+ * The solution implemented in <code>AvroSequenceFile</code> is to:
+ * </p>
  *
  * <ul>
- *   <li>wrap Avro key data in an <code>AvroKey</code> object,</li>
- *   <li>wrap Avro value data in an <code>AvroValue</code> object,</li>
- *   <li>configure and register <code>AvroSerialization</code> with the
- *       <code>SerializationFactory</code>, which will accept only objects that are instances
- *       of either <code>AvroKey</code> or <code>AvroValue</code>, and</li>
- *   <li>store the Avro key and value schemas in the SequenceFile <i>header</i>.</li>
+ * <li>wrap Avro key data in an <code>AvroKey</code> object,</li>
+ * <li>wrap Avro value data in an <code>AvroValue</code> object,</li>
+ * <li>configure and register <code>AvroSerialization</code> with the
+ * <code>SerializationFactory</code>, which will accept only objects that are
+ * instances of either <code>AvroKey</code> or <code>AvroValue</code>, and</li>
+ * <li>store the Avro key and value schemas in the SequenceFile
+ * <i>header</i>.</li>
  * </ul>
  */
 public class AvroSequenceFile {
   private static final Logger LOG = LoggerFactory.getLogger(AvroSequenceFile.class);
 
-  /** The SequencFile.Metadata field for the Avro key writer schema. */
+  /** The SequenceFile.Metadata field for the Avro key writer schema. */
   public static final Text METADATA_FIELD_KEY_SCHEMA = new Text("avro.key.schema");
 
-  /** The SequencFile.Metadata field for the Avro value writer schema. */
+  /** The SequenceFile.Metadata field for the Avro value writer schema. */
   public static final Text METADATA_FIELD_VALUE_SCHEMA = new Text("avro.value.schema");
 
   /** Constructor disabled for this container class. */
-  private AvroSequenceFile() {}
+  private AvroSequenceFile() {
+  }
 
   /**
    * Creates a writer from a set of options.
    *
-   * <p>Since there are different implementations of <code>Writer</code> depending on the
-   * compression type, this method constructs the appropriate subclass depending on the
-   * compression type given in the <code>options</code>.</p>
+   * <p>
+   * Since there are different implementations of <code>Writer</code> depending on
+   * the compression type, this method constructs the appropriate subclass
+   * depending on the compression type given in the <code>options</code>.
+   * </p>
    *
    * @param options The options for the writer.
    * @return A new writer instance.
    * @throws IOException If the writer cannot be created.
    */
   public static SequenceFile.Writer createWriter(Writer.Options options) throws IOException {
-    return SequenceFile.createWriter(
-        options.getFileSystem(), options.getConfigurationWithAvroSerialization(),
-        options.getOutputPath(), options.getKeyClass(), options.getValueClass(),
-        options.getBufferSizeBytes(), options.getReplicationFactor(),
-        options.getBlockSizeBytes(),
-        options.getCompressionType(), options.getCompressionCodec(),
-        options.getProgressable(), options.getMetadataWithAvroSchemas());
+    return SequenceFile.createWriter(options.getFileSystem(), options.getConfigurationWithAvroSerialization(),
+        options.getOutputPath(), options.getKeyClass(), options.getValueClass(), options.getBufferSizeBytes(),
+        options.getReplicationFactor(), options.getBlockSizeBytes(), options.getCompressionType(),
+        options.getCompressionCodec(), options.getProgressable(), options.getMetadataWithAvroSchemas());
   }
 
   /**
@@ -106,12 +115,10 @@ public class AvroSequenceFile {
    */
   public static class Writer extends SequenceFile.Writer {
     /**
-     * A helper class to encapsulate the options that can be used to construct a Writer.
+     * A helper class to encapsulate the options that can be used to construct a
+     * Writer.
      */
     public static class Options {
-      /** The default write buffer size in bytes. */
-      public static final int DEFAULT_BUFFER_SIZE_BYTES = 4096;
-
       /**
        * A magic value representing the default for buffer size, block size, and
        * replication factor.
@@ -189,9 +196,12 @@ public class AvroSequenceFile {
       /**
        * Sets the class of the key records to be written.
        *
-       * <p>If the keys will be Avro data, use {@link
-       * #withKeySchema(org.apache.avro.Schema)} to specify the writer schema.  The key
-       * class will be automatically set to {@link org.apache.avro.mapred.AvroKey}.</p>
+       * <p>
+       * If the keys will be Avro data, use
+       * {@link #withKeySchema(org.apache.avro.Schema)} to specify the writer schema.
+       * The key class will be automatically set to
+       * {@link org.apache.avro.mapred.AvroKey}.
+       * </p>
        *
        * @param keyClass The key class.
        * @return This options instance.
@@ -207,9 +217,11 @@ public class AvroSequenceFile {
       /**
        * Sets the writer schema of the key records when using Avro data.
        *
-       * <p>The key class will automatically be set to {@link
-       * org.apache.avro.mapred.AvroKey}, so there is no need to call {@link
-       * #withKeyClass(Class)} when using this method.</p>
+       * <p>
+       * The key class will automatically be set to
+       * {@link org.apache.avro.mapred.AvroKey}, so there is no need to call
+       * {@link #withKeyClass(Class)} when using this method.
+       * </p>
        *
        * @param keyWriterSchema The writer schema for the keys.
        * @return This options instance.
@@ -226,9 +238,12 @@ public class AvroSequenceFile {
       /**
        * Sets the class of the value records to be written.
        *
-       * <p>If the values will be Avro data, use {@link
-       * #withValueSchema(org.apache.avro.Schema)} to specify the writer schema.  The value
-       * class will be automatically set to {@link org.apache.avro.mapred.AvroValue}.</p>
+       * <p>
+       * If the values will be Avro data, use
+       * {@link #withValueSchema(org.apache.avro.Schema)} to specify the writer
+       * schema. The value class will be automatically set to
+       * {@link org.apache.avro.mapred.AvroValue}.
+       * </p>
        *
        * @param valueClass The value class.
        * @return This options instance.
@@ -244,9 +259,11 @@ public class AvroSequenceFile {
       /**
        * Sets the writer schema of the value records when using Avro data.
        *
-       * <p>The value class will automatically be set to {@link
-       * org.apache.avro.mapred.AvroValue}, so there is no need to call {@link
-       * #withValueClass(Class)} when using this method.</p>
+       * <p>
+       * The value class will automatically be set to
+       * {@link org.apache.avro.mapred.AvroValue}, so there is no need to call
+       * {@link #withValueClass(Class)} when using this method.
+       * </p>
        *
        * @param valueWriterSchema The writer schema for the values.
        * @return This options instance.
@@ -411,8 +428,7 @@ public class AvroSequenceFile {
        */
       public Class<?> getKeyClass() {
         if (null == mKeyClass) {
-          throw new RuntimeException(
-              "Must call Options.withKeyClass() or Options.withKeySchema()");
+          throw new RuntimeException("Must call Options.withKeyClass() or Options.withKeySchema()");
         }
         return mKeyClass;
       }
@@ -424,8 +440,7 @@ public class AvroSequenceFile {
        */
       public Class<?> getValueClass() {
         if (null == mValueClass) {
-          throw new RuntimeException(
-              "Must call Options.withValueClass() or Options.withValueSchema()");
+          throw new RuntimeException("Must call Options.withValueClass() or Options.withValueSchema()");
         }
         return mValueClass;
       }
@@ -437,7 +452,7 @@ public class AvroSequenceFile {
        */
       public int getBufferSizeBytes() {
         if (DEFAULT == mBufferSizeBytes) {
-          return getConfiguration().getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE_BYTES);
+          return getConfiguration().getInt(IO_FILE_BUFFER_SIZE_KEY, IO_FILE_BUFFER_SIZE_DEFAULT);
         }
         return mBufferSizeBytes;
       }
@@ -445,7 +460,7 @@ public class AvroSequenceFile {
       /**
        * Gets the desired number of replicas to store for each block of the file.
        *
-       * @return The replciation factor for the blocks of the file.
+       * @return The replication factor for the blocks of the file.
        */
       public short getReplicationFactor() {
         if (DEFAULT == mReplicationFactor) {
@@ -503,10 +518,11 @@ public class AvroSequenceFile {
       }
 
       /**
-       * Gets the metadata to store in the file header, which includes
-       * any necessary Avro writer schemas.
+       * Gets the metadata to store in the file header, which includes any necessary
+       * Avro writer schemas.
        *
-       * @return The metadata header with Avro writer schemas if Avro data is being written.
+       * @return The metadata header with Avro writer schemas if Avro data is being
+       *         written.
        */
       private Metadata getMetadataWithAvroSchemas() {
         // mMetadata was intialized in the constructor, and cannot be set to null.
@@ -529,11 +545,9 @@ public class AvroSequenceFile {
      * @throws IOException If the writer cannot be initialized.
      */
     public Writer(Options options) throws IOException {
-      super(options.getFileSystem(), options.getConfigurationWithAvroSerialization(),
-          options.getOutputPath(), options.getKeyClass(), options.getValueClass(),
-          options.getBufferSizeBytes(), options.getReplicationFactor(),
-          options.getBlockSizeBytes(), options.getProgressable(),
-          options.getMetadataWithAvroSchemas());
+      super(options.getFileSystem(), options.getConfigurationWithAvroSerialization(), options.getOutputPath(),
+          options.getKeyClass(), options.getValueClass(), options.getBufferSizeBytes(), options.getReplicationFactor(),
+          options.getBlockSizeBytes(), options.getProgressable(), options.getMetadataWithAvroSchemas());
     }
   }
 
@@ -542,7 +556,8 @@ public class AvroSequenceFile {
    */
   public static class Reader extends SequenceFile.Reader {
     /**
-     * A helper class to encapsulate the options that can be used to construct a Reader.
+     * A helper class to encapsulate the options that can be used to construct a
+     * Reader.
      */
     public static class Options {
       private FileSystem mFileSystem;
@@ -596,7 +611,9 @@ public class AvroSequenceFile {
       /**
        * Sets the reader schema of the key records when using Avro data.
        *
-       * <p>If not set, the writer schema will be used as the reader schema.</p>
+       * <p>
+       * If not set, the writer schema will be used as the reader schema.
+       * </p>
        *
        * @param keyReaderSchema The reader schema for the keys.
        * @return This options instance.
@@ -609,7 +626,9 @@ public class AvroSequenceFile {
       /**
        * Sets the reader schema of the value records when using Avro data.
        *
-       * <p>If not set, the writer schema will be used as the reader schema.</p>
+       * <p>
+       * If not set, the writer schema will be used as the reader schema.
+       * </p>
        *
        * @param valueReaderSchema The reader schema for the values.
        * @return This options instance.
@@ -669,16 +688,13 @@ public class AvroSequenceFile {
         AvroSerialization.addToConfiguration(confWithAvro);
 
         // Read the metadata header from the SequenceFile to get the writer schemas.
-        Metadata metadata = AvroSequenceFile.getMetadata(
-            getFileSystem(), getInputPath(), confWithAvro);
+        Metadata metadata = AvroSequenceFile.getMetadata(getFileSystem(), getInputPath(), confWithAvro);
 
         // Set the key schema if present in the metadata.
         Text keySchemaText = metadata.get(METADATA_FIELD_KEY_SCHEMA);
         if (null != keySchemaText) {
-          LOG.debug("Using key writer schema from SequenceFile metadata: "
-              + keySchemaText.toString());
-          AvroSerialization.setKeyWriterSchema(
-              confWithAvro, Schema.parse(keySchemaText.toString()));
+          LOG.debug("Using key writer schema from SequenceFile metadata: {}", keySchemaText);
+          AvroSerialization.setKeyWriterSchema(confWithAvro, new Schema.Parser().parse(keySchemaText.toString()));
           if (null != mKeyReaderSchema) {
             AvroSerialization.setKeyReaderSchema(confWithAvro, mKeyReaderSchema);
           }
@@ -687,10 +703,8 @@ public class AvroSequenceFile {
         // Set the value schema if present in the metadata.
         Text valueSchemaText = metadata.get(METADATA_FIELD_VALUE_SCHEMA);
         if (null != valueSchemaText) {
-          LOG.debug("Using value writer schema from SequenceFile metadata: "
-              + valueSchemaText.toString());
-          AvroSerialization.setValueWriterSchema(
-              confWithAvro, Schema.parse(valueSchemaText.toString()));
+          LOG.debug("Using value writer schema from SequenceFile metadata: {}", valueSchemaText);
+          AvroSerialization.setValueWriterSchema(confWithAvro, new Schema.Parser().parse(valueSchemaText.toString()));
           if (null != mValueReaderSchema) {
             AvroSerialization.setValueReaderSchema(confWithAvro, mValueReaderSchema);
           }
@@ -700,36 +714,29 @@ public class AvroSequenceFile {
     }
 
     /**
-     * Creates a new <code>Reader</code> from a SequenceFile that supports Avro data.
+     * Creates a new <code>Reader</code> from a SequenceFile that supports Avro
+     * data.
      *
      * @param options The reader options.
      * @throws IOException If the reader cannot be initialized.
      */
     public Reader(Options options) throws IOException {
-      super(options.getFileSystem(), options.getInputPath(),
-          options.getConfigurationWithAvroSerialization());
+      super(options.getFileSystem(), options.getInputPath(), options.getConfigurationWithAvroSerialization());
     }
   }
 
   /**
    * Open and read just the metadata header from a SequenceFile.
    *
-   * @param fs The FileSystem the SequenceFile is on.
+   * @param fs   The FileSystem the SequenceFile is on.
    * @param path The path to the file.
    * @param conf The Hadoop configuration.
    * @return The metadata header.
    * @throws IOException If the metadata cannot be read from the file.
    */
-  private static Metadata getMetadata(FileSystem fs, Path path, Configuration conf)
-      throws IOException {
-    SequenceFile.Reader metadataReader = null;
-    try {
-      metadataReader = new SequenceFile.Reader(fs, path, conf);
+  private static Metadata getMetadata(FileSystem fs, Path path, Configuration conf) throws IOException {
+    try (SequenceFile.Reader metadataReader = new SequenceFile.Reader(fs, path, conf)) {
       return metadataReader.getMetadata();
-    } finally {
-      if (null != metadataReader) {
-        metadataReader.close();
-      }
     }
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,20 +18,22 @@
 package org.apache.avro.reflect;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Adds the given name and space as an alias to the schema.
- * Avro files of this schema can be read into classes
- * named by the alias.
+ * Adds the given name and space as an alias to the schema. Avro files of this
+ * schema can be read into classes named by the alias.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target({ ElementType.TYPE, ElementType.FIELD })
+@Repeatable(AvroAliases.class)
 public @interface AvroAlias {
   String NULL = "NOT A VALID NAMESPACE";
 
   String alias();
+
   String space() default NULL;
 }

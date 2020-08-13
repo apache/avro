@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,10 +60,10 @@ public class TestAvroKeyRecordWriter {
     replay(context);
 
     // Write an avro container file with two records: 1 and 2.
-    AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<Integer>(
-        writerSchema, dataModel, compressionCodec, outputStream);
-    recordWriter.write(new AvroKey<Integer>(1), NullWritable.get());
-    recordWriter.write(new AvroKey<Integer>(2), NullWritable.get());
+    AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<>(writerSchema, dataModel, compressionCodec,
+        outputStream);
+    recordWriter.write(new AvroKey<>(1), NullWritable.get());
+    recordWriter.write(new AvroKey<>(2), NullWritable.get());
     recordWriter.close(context);
 
     verify(context);
@@ -71,14 +71,14 @@ public class TestAvroKeyRecordWriter {
     // Verify that the file was written as expected.
     InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
     Schema readerSchema = Schema.create(Schema.Type.INT);
-    DatumReader<Integer> datumReader = new SpecificDatumReader<Integer>(readerSchema);
-    DataFileStream<Integer> dataFileReader = new DataFileStream<Integer>(inputStream, datumReader);
+    DatumReader<Integer> datumReader = new SpecificDatumReader<>(readerSchema);
+    DataFileStream<Integer> dataFileReader = new DataFileStream<>(inputStream, datumReader);
 
-    assertTrue(dataFileReader.hasNext());  // Record 1.
+    assertTrue(dataFileReader.hasNext()); // Record 1.
     assertEquals(1, dataFileReader.next().intValue());
-    assertTrue(dataFileReader.hasNext());  // Record 2.
+    assertTrue(dataFileReader.hasNext()); // Record 2.
     assertEquals(2, dataFileReader.next().intValue());
-    assertFalse(dataFileReader.hasNext());  // No more records.
+    assertFalse(dataFileReader.hasNext()); // No more records.
 
     dataFileReader.close();
   }
@@ -94,12 +94,12 @@ public class TestAvroKeyRecordWriter {
     replay(context);
 
     // Write an avro container file with two records: 1 and 2.
-    AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<Integer>(
-        writerSchema, dataModel, compressionCodec, outputStream);
+    AvroKeyRecordWriter<Integer> recordWriter = new AvroKeyRecordWriter<>(writerSchema, dataModel, compressionCodec,
+        outputStream);
     long positionOne = recordWriter.sync();
-    recordWriter.write(new AvroKey<Integer>(1), NullWritable.get());
+    recordWriter.write(new AvroKey<>(1), NullWritable.get());
     long positionTwo = recordWriter.sync();
-    recordWriter.write(new AvroKey<Integer>(2), NullWritable.get());
+    recordWriter.write(new AvroKey<>(2), NullWritable.get());
     recordWriter.close(context);
 
     verify(context);
@@ -108,15 +108,15 @@ public class TestAvroKeyRecordWriter {
     Configuration conf = new Configuration();
     conf.set("fs.default.name", "file:///");
     Path avroFile = new Path("target/temp.avro");
-    DataFileReader<GenericData.Record> dataFileReader = new DataFileReader<GenericData.Record>(new FsInput(avroFile,
-      conf), new SpecificDatumReader<GenericData.Record>());
+    DataFileReader<GenericData.Record> dataFileReader = new DataFileReader<>(new FsInput(avroFile, conf),
+        new SpecificDatumReader<>());
 
     dataFileReader.seek(positionTwo);
-    assertTrue(dataFileReader.hasNext());  // Record 2.
+    assertTrue(dataFileReader.hasNext()); // Record 2.
     assertEquals(2, dataFileReader.next());
 
     dataFileReader.seek(positionOne);
-    assertTrue(dataFileReader.hasNext());  // Record 1.
+    assertTrue(dataFileReader.hasNext()); // Record 1.
     assertEquals(1, dataFileReader.next());
 
     dataFileReader.close();

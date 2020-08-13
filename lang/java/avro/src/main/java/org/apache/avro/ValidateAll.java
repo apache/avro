@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,8 +17,6 @@
  */
 
 package org.apache.avro;
-
-import java.util.Iterator;
 
 /**
  * <p>
@@ -35,19 +33,15 @@ public final class ValidateAll implements SchemaValidator {
   private final SchemaValidationStrategy strategy;
 
   /**
-   * @param strategy
-   *          The strategy to use for validation of pairwise schemas.
+   * @param strategy The strategy to use for validation of pairwise schemas.
    */
   public ValidateAll(SchemaValidationStrategy strategy) {
     this.strategy = strategy;
   }
 
   @Override
-  public void validate(Schema toValidate, Iterable<Schema> schemasInOrder)
-      throws SchemaValidationException {
-    Iterator<Schema> schemas = schemasInOrder.iterator();
-    while (schemas.hasNext()) {
-      Schema existing = schemas.next();
+  public void validate(Schema toValidate, Iterable<Schema> schemasInOrder) throws SchemaValidationException {
+    for (Schema existing : schemasInOrder) {
       strategy.validate(toValidate, existing);
     }
   }

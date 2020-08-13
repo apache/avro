@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,8 +28,10 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.util.ClassUtils;
 
-/** {@link org.apache.avro.io.DatumReader DatumReader} for generated Thrift
- * classes. */
+/**
+ * {@link org.apache.avro.io.DatumReader DatumReader} for generated Thrift
+ * classes.
+ */
 public class ThriftDatumReader<T> extends GenericDatumReader<T> {
   public ThriftDatumReader() {
     this(null, null, ThriftData.get());
@@ -57,7 +59,8 @@ public class ThriftDatumReader<T> extends GenericDatumReader<T> {
   protected Object createEnum(String symbol, Schema schema) {
     try {
       Class c = ClassUtils.forName(SpecificData.getClassName(schema));
-      if (c == null) return super.createEnum(symbol, schema); // punt to generic
+      if (c == null)
+        return super.createEnum(symbol, schema); // punt to generic
       return Enum.valueOf(c, symbol);
     } catch (Exception e) {
       throw new AvroRuntimeException(e);
@@ -65,13 +68,14 @@ public class ThriftDatumReader<T> extends GenericDatumReader<T> {
   }
 
   @Override
-  protected Object readInt(Object old, Schema s, Decoder in)
-    throws IOException {
+  protected Object readInt(Object old, Schema s, Decoder in) throws IOException {
     String type = s.getProp(ThriftData.THRIFT_PROP);
     int value = in.readInt();
     if (type != null) {
-      if ("byte".equals(type)) return (byte)value;
-      if ("short".equals(type)) return (short)value;
+      if ("byte".equals(type))
+        return (byte) value;
+      if ("short".equals(type))
+        return (short) value;
     }
     return value;
   }

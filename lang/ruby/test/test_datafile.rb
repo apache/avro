@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,13 +20,13 @@ require 'test_help'
 class TestDataFile < Test::Unit::TestCase
   HERE = File.expand_path File.dirname(__FILE__)
   def setup
-    if File.exists?(HERE + '/data.avr')
+    if File.exist?(HERE + '/data.avr')
       File.unlink(HERE + '/data.avr')
     end
   end
 
   def teardown
-    if File.exists?(HERE + '/data.avr')
+    if File.exist?(HERE + '/data.avr')
       File.unlink(HERE + '/data.avr')
     end
   end
@@ -38,7 +38,7 @@ class TestDataFile < Test::Unit::TestCase
   "fields" : [
     {"name": "username", "type": "string"},
     {"name": "age", "type": "int"},
-    {"name": "verified", "type": "boolean", "default": "false"}
+    {"name": "verified", "type": "boolean", "default": false}
   ]}
 JSON
 
@@ -169,6 +169,19 @@ JSON
 
   def test_snappy
     Avro::DataFile.open('data.avr', 'w', '"string"', :snappy) do |writer|
+      writer << 'a' * 10_000
+    end
+    assert(File.size('data.avr') < 600)
+
+    records = []
+    Avro::DataFile.open('data.avr') do |reader|
+      reader.each {|record| records << record }
+    end
+    assert_equal records, ['a' * 10_000]
+  end
+
+  def test_zstandard
+    Avro::DataFile.open('data.avr', 'w', '"string"', :zstandard) do |writer|
       writer << 'a' * 10_000
     end
     assert(File.size('data.avr') < 600)

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,8 +41,8 @@ public final class SchemaValidatorBuilder {
   }
 
   /**
-   * Use a strategy that validates that a schema can be read by existing
-   * schema(s) according to the Avro default schema resolution.
+   * Use a strategy that validates that a schema can be read by existing schema(s)
+   * according to the Avro default schema resolution.
    */
   public SchemaValidatorBuilder canBeReadStrategy() {
     this.strategy = new ValidateCanBeRead();
@@ -50,8 +50,8 @@ public final class SchemaValidatorBuilder {
   }
 
   /**
-   * Use a strategy that validates that a schema can read existing schema(s),
-   * and vice-versa, according to the Avro default schema resolution.
+   * Use a strategy that validates that a schema can read existing schema(s), and
+   * vice-versa, according to the Avro default schema resolution.
    */
   public SchemaValidatorBuilder mutualReadStrategy() {
     this.strategy = new ValidateMutualRead();
@@ -69,7 +69,7 @@ public final class SchemaValidatorBuilder {
   }
 
   private void valid() {
-    if(null == strategy) {
+    if (null == strategy) {
       throw new AvroRuntimeException("SchemaValidationStrategy not specified in builder");
     }
   }

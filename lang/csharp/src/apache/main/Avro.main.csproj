@@ -1,4 +1,3 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
    Licensed to the Apache Software Foundation (ASF) under one or more
    contributor license agreements.  See the NOTICE file distributed with
@@ -7,7 +6,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,166 +14,64 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="../../../common.props" />
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A0A5CA3C-F58C-4D07-98B0-2C7B62AB20F0}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Avro</RootNamespace>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp2.1</TargetFrameworks>
     <AssemblyName>Avro</AssemblyName>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\build\main\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\build\main\Release\</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-  </PropertyGroup>
-  <PropertyGroup>
+    <RootNamespace>Avro</RootNamespace>
     <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <CodeAnalysisRuleSet>..\..\..\Avro.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- NuGet Package Settings -->
+    <PackageId>Apache.Avro</PackageId>
+    <Description>
+      Avro provides:
+
+      Rich data structures.
+      A compact, fast, binary data format.
+      A container file, to store persistent data.
+      Remote procedure call (RPC).
+      Simple integration with dynamic languages. Code generation is not required to read or write data files nor to use or implement RPC protocols. Code generation as an optional optimization, only worth implementing for statically typed languages.
+    </Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>..\..\..\lib\main\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\lib\main\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
+    <AdditionalFiles Include="..\..\..\stylecop.json" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="CodeGen\AvroRuntimeException.cs" />
-    <Compile Include="CodeGen\CodeGen.cs" />
-    <Compile Include="CodeGen\CodeGenException.cs" />
-    <Compile Include="CodeGen\CodeGenUtil.cs" />
-    <Compile Include="File\Codec.cs" />
-    <Compile Include="File\DataBlock.cs" />
-    <Compile Include="File\DataFileConstants.cs" />
-    <Compile Include="File\DataFileReader.cs" />
-    <Compile Include="File\DataFileWriter.cs" />
-    <Compile Include="File\DeflateCodec.cs" />
-    <Compile Include="File\Header.cs" />
-    <Compile Include="File\IFileReader.cs" />
-    <Compile Include="File\IFileWriter.cs" />
-    <Compile Include="File\NullCodec.cs" />
-    <Compile Include="Generic\DatumReader.cs" />
-    <Compile Include="Generic\DatumWriter.cs" />
-    <Compile Include="Generic\GenericDatumReader.cs" />
-    <Compile Include="Generic\GenericDatumWriter.cs" />
-    <Compile Include="Generic\GenericEnum.cs" />
-    <Compile Include="Generic\GenericFixed.cs" />
-    <Compile Include="Generic\GenericReader.cs" />
-    <Compile Include="Generic\GenericRecord.cs" />
-    <Compile Include="Generic\GenericWriter.cs" />
-    <Compile Include="Generic\PreresolvingDatumReader.cs" />
-    <Compile Include="Generic\PreresolvingDatumWriter.cs" />
-    <Compile Include="IO\BinaryDecoder.cs" />
-    <Compile Include="IO\BinaryEncoder.cs" />
-    <Compile Include="IO\ByteBufferInputStream.cs" />
-    <Compile Include="IO\ByteBufferOutputStream.cs" />
-    <Compile Include="IO\Decoder.cs" />
-    <Compile Include="IO\Encoder.cs" />
-    <Compile Include="IO\ICallback.cs" />
-    <Compile Include="IO\InputStream.cs" />
-    <Compile Include="IO\OutputStream.cs" />
-    <Compile Include="IO\Resolver.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Protocol\Message.cs" />
-    <Compile Include="Protocol\Protocol.cs" />
-    <Compile Include="Protocol\ProtocolParseException.cs" />
-    <Compile Include="Schema\ArraySchema.cs" />
-    <Compile Include="Schema\AvroException.cs" />
-    <Compile Include="Schema\AvroTypeException.cs" />
-    <Compile Include="Schema\EnumSchema.cs" />
-    <Compile Include="Schema\Field.cs" />
-    <Compile Include="Schema\FixedSchema.cs" />
-    <Compile Include="Schema\JsonHelper.cs" />
-    <Compile Include="Schema\MapSchema.cs" />
-    <Compile Include="Schema\NamedSchema.cs" />
-    <Compile Include="Schema\PrimitiveSchema.cs" />
-    <Compile Include="Schema\Property.cs" />
-    <Compile Include="Schema\RecordSchema.cs" />
-    <Compile Include="Schema\Schema.cs" />
-    <Compile Include="Schema\SchemaName.cs" />
-    <Compile Include="Schema\SchemaNormalization.cs" />
-    <Compile Include="Schema\SchemaParseException.cs" />
-    <Compile Include="Schema\UnionSchema.cs" />
-    <Compile Include="Schema\UnnamedSchema.cs" />
-    <Compile Include="Specific\SpecificDatumWriter.cs" />
-    <Compile Include="Specific\SpecificException.cs" />
-    <Compile Include="Specific\SpecificProtocol.cs" />
-    <Compile Include="Specific\ObjectCreator.cs" />
-    <Compile Include="Specific\SpecificDatumReader.cs" />
-    <Compile Include="Specific\SpecificFixed.cs" />
-    <Compile Include="Specific\SpecificReader.cs" />
-    <Compile Include="Specific\SpecificWriter.cs" />
-    <Compile Include="Specific\SpecificRecord.cs" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.CodeDom" Version="4.4.0" />
+    <PackageReference Include="System.Reflection" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v3.5">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <Compile Remove="**/*.notnetstandard2.0.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
+    <Compile Remove="**/*.netstandard2.0.cs" />
+  </ItemGroup>
+
 </Project>

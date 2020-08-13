@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,7 +45,7 @@
 #endif
 
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::map;
 using std::string;
 using std::vector;
@@ -80,7 +80,7 @@ void setRecord(testgen::RootRecord &myRecord)
     myRecord.myarray.push_back(3434.9);
     myRecord.myarray.push_back(7343.9);
     myRecord.myarray.push_back(-63445.9);
-    myRecord.myenum = testgen::one;
+    myRecord.myenum = testgen::ExampleEnum::one;
 
     map<string, int32_t> m;
     m["one"] = 1;
@@ -136,9 +136,14 @@ void checkRecord(const T1& r1, const T2& r2)
 
 void checkDefaultValues(const testgen_r::RootRecord& r)
 {
-    BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "sval");
+    BOOST_CHECK_EQUAL(r.withDefaultValue.s1, "\"sval\\u8352\"");
     BOOST_CHECK_EQUAL(r.withDefaultValue.i1, 99);
     BOOST_CHECK_CLOSE(r.withDefaultValue.d1, 5.67, 1e-10);
+    BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[0], 2);
+    BOOST_CHECK_EQUAL(r.myarraywithDefaultValue[1], 3);
+    BOOST_CHECK_EQUAL(r.myfixedwithDefaultValue.get_val()[0], 0x01);
+    BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[0], 0xff);
+    BOOST_CHECK_EQUAL(r.byteswithDefaultValue.get_bytes()[1], 0xaa);
 }
 
 
@@ -147,7 +152,7 @@ void testEncoding()
     ValidSchema s;
     ifstream ifs("jsonschemas/bigrecord");
     compileJsonSchema(ifs, s);
-    auto_ptr<OutputStream> os = memoryOutputStream();
+    unique_ptr<OutputStream> os = memoryOutputStream();
     EncoderPtr e = validatingEncoder(s, binaryEncoder());
     e->init(*os);
     testgen::RootRecord t1;
@@ -156,7 +161,7 @@ void testEncoding()
     e->flush();
 
     DecoderPtr d = validatingDecoder(s, binaryDecoder());
-    auto_ptr<InputStream> is = memoryInputStream(*os);
+    unique_ptr<InputStream> is = memoryInputStream(*os);
     d->init(*is);
     testgen::RootRecord t2;
     avro::decode(*d, t2);
@@ -169,7 +174,7 @@ void testResolution()
     ValidSchema s_w;
     ifstream ifs_w("jsonschemas/bigrecord");
     compileJsonSchema(ifs_w, s_w);
-    auto_ptr<OutputStream> os = memoryOutputStream();
+    unique_ptr<OutputStream> os = memoryOutputStream();
     EncoderPtr e = validatingEncoder(s_w, binaryEncoder());
     e->init(*os);
     testgen::RootRecord t1;
@@ -181,7 +186,7 @@ void testResolution()
     ifstream ifs_r("jsonschemas/bigrecord_r");
     compileJsonSchema(ifs_r, s_r);
     DecoderPtr dd = binaryDecoder();
-    auto_ptr<InputStream> is = memoryInputStream(*os);
+    unique_ptr<InputStream> is = memoryInputStream(*os);
     dd->init(*is);
     DecoderPtr rd = resolvingDecoder(s_w, s_r, dd);
     testgen_r::RootRecord t2;
@@ -191,13 +196,31 @@ void testResolution()
     checkDefaultValues(t2);
 
     //Re-use the resolving decoder to decode again.
-    auto_ptr<InputStream> is1 = memoryInputStream(*os);
+    unique_ptr<InputStream> is1 = memoryInputStream(*os);
     rd->init(*is1);
     testgen_r::RootRecord t3;
     avro::decode(*rd, t3);
     checkRecord(t3, t1);
     checkDefaultValues(t3);
 
+    // Test serialization of default values.
+    // Serialize to string then compile from string.
+    std::ostringstream oss;
+    s_r.toJson(oss);
+    ValidSchema s_rs = avro::compileJsonSchemaFromString(oss.str());
+
+    std::unique_ptr<InputStream> is2 = memoryInputStream(*os);
+    dd->init(*is2);
+    rd = resolvingDecoder(s_w, s_rs, dd);
+    testgen_r::RootRecord t4;
+    avro::decode(*rd, t4);
+    checkDefaultValues(t4);
+
+    std::ostringstream oss_r;
+    std::ostringstream oss_rs;
+    s_r.toJson(oss_r);
+    s_rs.toJson(oss_rs);
+    BOOST_CHECK_EQUAL(oss_r.str(), oss_rs.str());
 }
 
 void testNamespace()
@@ -250,7 +273,7 @@ void testEncoding2()
     ifstream ifs(schemaFilename<T>::value);
     compileJsonSchema(ifs, s);
 
-    auto_ptr<OutputStream> os = memoryOutputStream();
+    unique_ptr<OutputStream> os = memoryOutputStream();
     EncoderPtr e = validatingEncoder(s, binaryEncoder());
     e->init(*os);
     T t1;
@@ -259,7 +282,7 @@ void testEncoding2()
     e->flush();
 
     DecoderPtr d = validatingDecoder(s, binaryDecoder());
-    auto_ptr<InputStream> is = memoryInputStream(*os);
+    unique_ptr<InputStream> is = memoryInputStream(*os);
     d->init(*is);
     T t2;
     avro::decode(*d, t2);

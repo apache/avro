@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,18 +29,18 @@ import org.apache.avro.io.parsing.Symbol;
 import org.apache.avro.util.Utf8;
 
 /**
- * An implementation of {@link Encoder} that wraps another Encoder and
- * ensures that the sequence of operations conforms to the provided schema.
+ * An implementation of {@link Encoder} that wraps another Encoder and ensures
+ * that the sequence of operations conforms to the provided schema.
  * <p/>
  * Use {@link EncoderFactory#validatingEncoder(Schema, Encoder)} to construct
  * and configure.
  * <p/>
  * ValidatingEncoder is not thread-safe.
+ * 
  * @see Encoder
  * @see EncoderFactory
  */
-public class ValidatingEncoder extends ParsingEncoder
-  implements Parser.ActionHandler {
+public class ValidatingEncoder extends ParsingEncoder implements Parser.ActionHandler {
   protected Encoder out;
   protected final Parser parser;
 
@@ -60,10 +60,9 @@ public class ValidatingEncoder extends ParsingEncoder
 
   /**
    * Reconfigures this ValidatingEncoder to wrap the encoder provided.
-   * @param encoder
-   *   The Encoder to wrap for validation.
-   * @return
-   *   This ValidatingEncoder.
+   * 
+   * @param encoder The Encoder to wrap for validation.
+   * @return This ValidatingEncoder.
    */
   public ValidatingEncoder configure(Encoder encoder) {
     this.parser.reset();
@@ -143,8 +142,7 @@ public class ValidatingEncoder extends ParsingEncoder
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     if (len != top.size) {
       throw new AvroTypeException(
-        "Incorrect length for fixed binary: expected " +
-        top.size + " but received " + len + " bytes.");
+          "Incorrect length for fixed binary: expected " + top.size + " but received " + len + " bytes.");
     }
     out.writeFixed(bytes, start, len);
   }
@@ -154,9 +152,7 @@ public class ValidatingEncoder extends ParsingEncoder
     parser.advance(Symbol.ENUM);
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     if (e < 0 || e >= top.size) {
-      throw new AvroTypeException(
-          "Enumeration out of range: max is " +
-          top.size + " but received " + e);
+      throw new AvroTypeException("Enumeration out of range: max is " + top.size + " but received " + e);
     }
     out.writeEnum(e);
   }
@@ -215,4 +211,3 @@ public class ValidatingEncoder extends ParsingEncoder
   }
 
 }
-

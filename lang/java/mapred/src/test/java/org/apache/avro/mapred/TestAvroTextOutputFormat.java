@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -35,23 +35,23 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.RecordWriter;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestAvroTextOutputFormat {
-
-  private static final String UTF8 = "UTF-8";
+  @Rule
+  public TemporaryFolder tmpFolder = new TemporaryFolder();
 
   @Test
   public void testAvroTextRecordWriter() throws Exception {
-    File file = new File(System.getProperty("test.dir", "."), "writer");
+    File file = new File(tmpFolder.getRoot().getPath(), "writer");
     Schema schema = Schema.create(Schema.Type.BYTES);
-    DatumWriter<ByteBuffer> datumWriter =
-      new GenericDatumWriter<ByteBuffer>(schema);
-    DataFileWriter<ByteBuffer> fileWriter =
-      new DataFileWriter<ByteBuffer>(datumWriter);
+    DatumWriter<ByteBuffer> datumWriter = new GenericDatumWriter<>(schema);
+    DataFileWriter<ByteBuffer> fileWriter = new DataFileWriter<>(datumWriter);
     fileWriter.create(schema, file);
-    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<Object, Object>()
-      .new AvroTextRecordWriter(fileWriter, "\t".getBytes(UTF8));
+    RecordWriter<Object, Object> rw = new AvroTextOutputFormat<>().new AvroTextRecordWriter(fileWriter,
+        "\t".getBytes(StandardCharsets.UTF_8));
 
     rw.write(null, null);
     rw.write(null, NullWritable.get());
@@ -69,9 +69,8 @@ public class TestAvroTextOutputFormat {
 
     rw.close(null);
 
-    DatumReader<ByteBuffer> reader = new GenericDatumReader<ByteBuffer>();
-    DataFileReader<ByteBuffer> fileReader =
-      new DataFileReader<ByteBuffer>(file, reader);
+    DatumReader<ByteBuffer> reader = new GenericDatumReader<>();
+    DataFileReader<ByteBuffer> fileReader = new DataFileReader<>(file, reader);
     assertEquals("k1", asString(fileReader.next()));
     assertEquals("k2", asString(fileReader.next()));
     assertEquals("v1", asString(fileReader.next()));
@@ -79,12 +78,13 @@ public class TestAvroTextOutputFormat {
     assertEquals("k3\tv3", asString(fileReader.next()));
     assertEquals("k4\tv4", asString(fileReader.next()));
     assertFalse("End", fileReader.hasNext());
+    fileReader.close();
   }
 
-  private String asString(ByteBuffer buf) throws UnsupportedEncodingException {
+  private String asString(ByteBuffer buf) {
     byte[] b = new byte[buf.remaining()];
     buf.get(b);
-    return new String(b, UTF8);
+    return new String(b, StandardCharsets.UTF_8);
   }
 
 }

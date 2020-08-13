@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,39 +35,42 @@ struct TestData {
     const char *input;
     EntityType type;
     T value;
+    const char *output;
 };
 
 TestData<bool> boolData[] = {
-    { "true", etBool, true },
-    { "false", etBool, false },
+    { "true", etBool, true, "true" },
+    { "false", etBool, false, "false" },
 };
 
 TestData<int64_t> longData[] = {
-    { "0", etLong, 0 },
-    { "-1", etLong, -1 },
-    { "1", etLong, 1 },
-    { "9223372036854775807", etLong, 9223372036854775807LL },
-    { "-9223372036854775807", etLong, -9223372036854775807LL },
+    { "0", etLong, 0, "0" },
+    { "-1", etLong, -1, "-1" },
+    { "1", etLong, 1, "1" },
+    { "9223372036854775807", etLong, 9223372036854775807LL, "9223372036854775807" },
+    { "-9223372036854775807", etLong, -9223372036854775807LL, "-9223372036854775807" },
 };
 
 TestData<double> doubleData[] = {
-    { "0.0", etDouble, 0.0 },
-    { "-1.0", etDouble, -1.0 },
-    { "1.0", etDouble, 1.0 },
-    { "4.7e3", etDouble, 4700.0 },
-    { "-7.2e-4", etDouble, -0.00072 },
-    { "1e4", etDouble, 10000 },
-    { "-1e-4", etDouble, -0.0001 },
-    { "-0e0", etDouble, 0.0 },
+    { "0.0", etDouble, 0.0, "0" },
+    { "-1.0", etDouble, -1.0, "-1" },
+    { "1.0", etDouble, 1.0, "1" },
+    { "4.7e3", etDouble, 4700.0, "4700" },
+    { "-7.2e-4", etDouble, -0.00072, NULL },
+    { "1e4", etDouble, 10000, "10000" },
+    { "-1e-4", etDouble, -0.0001, "-0.0001" },
+    { "-0e0", etDouble, 0.0, "-0" },
 };
 
 TestData<const char*> stringData[] = {
-    { "\"\"", etString, "" },
-    { "\"a\"", etString, "a" },
-    { "\"\\U000a\"", etString, "\n" },
-    { "\"\\u000a\"", etString, "\n" },
-    { "\"\\\"\"", etString, "\"" },
-    { "\"\\/\"", etString, "/" },
+    { "\"\"", etString, "", "\"\"" },
+    { "\"a\"", etString, "a", "\"a\"" },
+    { "\"\\U000a\"", etString, "\n", "\"\\n\"" },
+    { "\"\\u000a\"", etString, "\n", "\"\\n\"" },
+    { "\"\\\"\"", etString, "\"", "\"\\\"\"" },
+    { "\"\\/\"", etString, "/", "\"\\/\"" },
+    { "\"\\u20ac\"", etString, "\xe2\x82\xac",  "\"\\u20ac\""},
+    { "\"\\u03c0\"", etString, "\xcf\x80", "\"\\u03c0\"" },
 };
 
 void testBool(const TestData<bool>& d)
@@ -75,14 +78,16 @@ void testBool(const TestData<bool>& d)
     Entity n = loadEntity(d.input);
     BOOST_CHECK_EQUAL(n.type(), d.type);
     BOOST_CHECK_EQUAL(n.boolValue(), d.value);
+    BOOST_CHECK_EQUAL(n.toString(), d.output);
 }
 
-    
+
 void testLong(const TestData<int64_t>& d)
 {
     Entity n = loadEntity(d.input);
     BOOST_CHECK_EQUAL(n.type(), d.type);
     BOOST_CHECK_EQUAL(n.longValue(), d.value);
+    BOOST_CHECK_EQUAL(n.toString(), d.output);
 }
 
 void testDouble(const TestData<double>& d)
@@ -90,6 +95,9 @@ void testDouble(const TestData<double>& d)
     Entity n = loadEntity(d.input);
     BOOST_CHECK_EQUAL(n.type(), d.type);
     BOOST_CHECK_CLOSE(n.doubleValue(), d.value, 1e-10);
+    if (d.output != NULL) {
+        BOOST_CHECK_EQUAL(n.toString(), d.output);
+    }
 }
 
 void testString(const TestData<const char*>& d)
@@ -97,6 +105,7 @@ void testString(const TestData<const char*>& d)
     Entity n = loadEntity(d.input);
     BOOST_CHECK_EQUAL(n.type(), d.type);
     BOOST_CHECK_EQUAL(n.stringValue(), d.value);
+    BOOST_CHECK_EQUAL(n.toString(), d.output);
 }
 
 static void testNull()
@@ -184,7 +193,7 @@ static void testObject2()
 #define COUNTOF(x)  (sizeof(x) / sizeof(x[0]))
 
 boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite( int argc, char* argv[] )
 {
     using namespace boost::unit_test;
 

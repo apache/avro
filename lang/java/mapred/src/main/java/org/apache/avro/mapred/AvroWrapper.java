@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,21 +23,31 @@ public class AvroWrapper<T> {
   private T datum;
 
   /** Wrap null. Construct {@link AvroWrapper} wrapping no datum. */
-  public AvroWrapper() { this(null); }
+  public AvroWrapper() {
+    this(null);
+  }
 
   /** Wrap a datum. */
-  public AvroWrapper(T datum) { this.datum = datum; }
+  public AvroWrapper(T datum) {
+    this.datum = datum;
+  }
 
   /** Return the wrapped datum. */
-  public T datum() { return datum; }
+  public T datum() {
+    return datum;
+  }
 
   /** Set the wrapped datum. */
-  public void datum(T datum) { this.datum = datum; }
+  public void datum(T datum) {
+    this.datum = datum;
+  }
 
+  @Override
   public int hashCode() {
     return (datum == null) ? 0 : datum.hashCode();
   }
 
+  @Override
   public boolean equals(Object obj) {
     if (this == obj)
       return true;
@@ -45,13 +55,11 @@ public class AvroWrapper<T> {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    AvroWrapper that = (AvroWrapper)obj;
+    AvroWrapper that = (AvroWrapper) obj;
     if (this.datum == null) {
-      if (that.datum != null)
-        return false;
-    } else if (!datum.equals(that.datum))
-      return false;
-    return true;
+      return that.datum == null;
+    } else
+      return datum.equals(that.datum);
   }
 
   /** Get the wrapped datum as JSON. */

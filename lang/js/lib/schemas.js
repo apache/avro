@@ -9,7 +9,7 @@
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *  https://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -93,7 +93,8 @@ function createType(attrs, opts) {
       // Reference to a primitive type. These are also defined names by default
       // so we create the appropriate type and it to the registry for future
       // reference.
-      return opts.registry[attrs] = createType({type: attrs}, opts);
+      type = opts.registry[attrs] = createType({type: attrs}, opts);
+      return type;
     }
     throw new Error(f('undefined type name: %s', attrs));
   }
@@ -1712,7 +1713,7 @@ RecordType.prototype._copy = function (val, opts) {
   var i, l, field, value;
   for (i = 0, l = this._fields.length; i < l; i++) {
     field = this._fields[i];
-    value = field._type._copy(val[field._name], opts);
+    value = field._type._copy(typeof val[field._name] == 'undefined' ? field.getDefault() : val[field._name], opts);
     if (hook) {
       value = hook(field, value, this);
     }
@@ -1789,8 +1790,9 @@ LogicalType.prototype._write = function (tap, any) {
 };
 
 LogicalType.prototype._check = function (any, cb) {
+  var val;
   try {
-    var val = this._toValue(any);
+    val = this._toValue(any);
   } catch (err) {
     if (cb) {
       cb(PATH.slice(), any, this);
@@ -2151,7 +2153,7 @@ function stringify(obj, noDeref) {
   // Since JS objects are unordered, this implementation (unfortunately)
   // relies on engines returning properties in the same order that they are
   // inserted in. This is not in the JS spec, but can be "somewhat" safely
-  // assumed (more here: http://stackoverflow.com/q/5525795/1062617).
+  // assumed (more here: https://stackoverflow.com/q/5525795/1062617).
   return (function (registry) {
     return JSON.stringify(obj, function (key, value) {
       if (value instanceof Field) {

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,12 +38,9 @@ public class ResponderServlet extends HttpServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest request,
-                        HttpServletResponse response)
-    throws IOException, ServletException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
     response.setContentType(HttpTransceiver.CONTENT_TYPE);
-    List<ByteBuffer> requestBufs =
-      HttpTransceiver.readBuffers(request.getInputStream());
+    List<ByteBuffer> requestBufs = HttpTransceiver.readBuffers(request.getInputStream());
     try {
       List<ByteBuffer> responseBufs = responder.respond(requestBufs);
       response.setContentLength(HttpTransceiver.getLength(responseBufs));
@@ -53,4 +50,3 @@ public class ResponderServlet extends HttpServlet {
     }
   }
 }
-

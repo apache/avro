@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -25,20 +25,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
- * An implementation of {@linkplain Syncable} which writes to a file.
- * An instance of this class can be used with {@linkplain DataFileWriter} to
+ * An implementation of {@linkplain Syncable} which writes to a file. An
+ * instance of this class can be used with {@linkplain DataFileWriter} to
  * guarantee that Avro Container Files are persisted to disk on supported
- * platforms using the
- * {@linkplain org.apache.avro.file.DataFileWriter#fSync()} method.
+ * platforms using the {@linkplain org.apache.avro.file.DataFileWriter#fSync()}
+ * method.
  *
  * @see FileOutputStream
  */
-public class SyncableFileOutputStream
-  extends FileOutputStream implements Syncable {
+public class SyncableFileOutputStream extends FileOutputStream implements Syncable {
 
   /**
-   * Creates an instance of {@linkplain SyncableFileOutputStream} with the
-   * given name.
+   * Creates an instance of {@linkplain SyncableFileOutputStream} with the given
+   * name.
    *
    * @param name - the full file name.
    * @throws FileNotFoundException - if the file cannot be created or opened.
@@ -48,50 +47,47 @@ public class SyncableFileOutputStream
   }
 
   /**
-   * Creates an instance of {@linkplain SyncableFileOutputStream} using the
-   * given {@linkplain File} instance.
+   * Creates an instance of {@linkplain SyncableFileOutputStream} using the given
+   * {@linkplain File} instance.
    *
    * @param file - The file to use to create the output stream.
    *
    * @throws FileNotFoundException - if the file cannot be created or opened.
    */
-  public SyncableFileOutputStream(File file)
-    throws FileNotFoundException {
+  public SyncableFileOutputStream(File file) throws FileNotFoundException {
     super(file);
   }
 
   /**
-   * Creates an instance of {@linkplain SyncableFileOutputStream} with the
-   * given name and optionally append to the file if it already exists.
+   * Creates an instance of {@linkplain SyncableFileOutputStream} with the given
+   * name and optionally append to the file if it already exists.
    *
-   * @param name - the full file name.
+   * @param name   - the full file name.
    * @param append - true if the file is to be appended to
    *
    * @throws FileNotFoundException - if the file cannot be created or opened.
    */
-  public SyncableFileOutputStream(String name, boolean append)
-    throws FileNotFoundException {
+  public SyncableFileOutputStream(String name, boolean append) throws FileNotFoundException {
     super(name, append);
   }
 
   /**
-   * Creates an instance of {@linkplain SyncableFileOutputStream}
-   * that writes to the file represented by the given {@linkplain File}
-   * instance and optionally append to the file if it already exists.
+   * Creates an instance of {@linkplain SyncableFileOutputStream} that writes to
+   * the file represented by the given {@linkplain File} instance and optionally
+   * append to the file if it already exists.
    *
-   * @param file - the file instance to use to create the stream.
+   * @param file   - the file instance to use to create the stream.
    * @param append - true if the file is to be appended to
    *
    * @throws FileNotFoundException - if the file cannot be created or opened.
    */
-  public SyncableFileOutputStream(File file, boolean append)
-    throws FileNotFoundException {
+  public SyncableFileOutputStream(File file, boolean append) throws FileNotFoundException {
     super(file, append);
   }
 
   /**
-   * Creates an instance of {@linkplain SyncableFileOutputStream}
-   * using the given {@linkplain FileDescriptor} instance.
+   * Creates an instance of {@linkplain SyncableFileOutputStream} using the given
+   * {@linkplain FileDescriptor} instance.
    */
   public SyncableFileOutputStream(FileDescriptor fdObj) {
     super(fdObj);

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,16 +18,14 @@
 
 #define __STDC_LIMIT_MACROS
 
+#include <memory>
 #include "Decoder.hh"
 #include "Zigzag.hh"
 #include "Exception.hh"
 
-#include <boost/array.hpp>
-#include <boost/make_shared.hpp>
-
 namespace avro {
 
-using boost::make_shared;
+using std::make_shared;
 
 class BinaryDecoder : public Decoder {
     StreamReader in_;
@@ -58,6 +56,8 @@ class BinaryDecoder : public Decoder {
 
     int64_t doDecodeLong();
     size_t doDecodeItemCount();
+    size_t doDecodeLength();
+    void drain();
     void more();
 };
 
@@ -115,33 +115,49 @@ double BinaryDecoder::decodeDouble()
     return result;
 }
 
+size_t BinaryDecoder::doDecodeLength()
+{
+    ssize_t len = decodeInt();
+    if (len < 0) {
+        throw Exception(
+            boost::format("Cannot have negative length: %1%") % len);
+    }
+    return len;
+}
+
+void BinaryDecoder::drain()
+{
+    in_.drain(false);
+}
+
 void BinaryDecoder::decodeString(std::string& value)
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     value.resize(len);
     if (len > 0) {
-        in_.readBytes(reinterpret_cast<uint8_t*>(&value[0]), len);
+        in_.readBytes(const_cast<uint8_t*>(
+                    reinterpret_cast<const uint8_t*>(value.c_str())), len);
     }
 }
 
 void BinaryDecoder::skipString()
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     in_.skipBytes(len);
 }
 
 void BinaryDecoder::decodeBytes(std::vector<uint8_t>& value)
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     value.resize(len);
     if (len > 0) {
-        in_.readBytes(&value[0], len);
+        in_.readBytes(value.data(), len);
     }
 }
 
 void BinaryDecoder::skipBytes()
 {
-    size_t len = decodeInt();
+    size_t len = doDecodeLength();
     in_.skipBytes(len);
 }
 
@@ -149,7 +165,7 @@ void BinaryDecoder::decodeFixed(size_t n, std::vector<uint8_t>& value)
 {
     value.resize(n);
     if (n > 0) {
-        in_.readBytes(&value[0], n);
+        in_.readBytes(value.data(), n);
     }
 }
 
@@ -188,7 +204,7 @@ size_t BinaryDecoder::skipArray()
     for (; ;) {
         int64_t r = doDecodeLong();
         if (r < 0) {
-            size_t n = static_cast<size_t>(doDecodeLong()); 
+            size_t n = static_cast<size_t>(doDecodeLong());
             in_.skipBytes(n);
         } else {
             return static_cast<size_t>(r);

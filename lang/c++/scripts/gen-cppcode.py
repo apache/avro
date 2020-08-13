@@ -9,7 +9,7 @@ license = '''/**
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,11 +33,11 @@ headers = '''
 
 done = False
 
-typeToC= { 'int' : 'int32_t', 'long' :'int64_t', 'float' : 'float', 'double' : 'double', 
-'boolean' : 'bool', 'null': 'avro::Null', 'string' : 'std::string', 'bytes' : 'std::vector<uint8_t>'} 
+typeToC= { 'int' : 'int32_t', 'long' :'int64_t', 'float' : 'float', 'double' : 'double',
+'boolean' : 'bool', 'null': 'avro::Null', 'string' : 'std::string', 'bytes' : 'std::vector<uint8_t>'}
 
 structList = []
-structNames = {} 
+structNames = {}
 forwardDeclareList = []
 
 def addStruct(name, declaration) :
@@ -59,7 +59,7 @@ def doSymbolic(args):
 def addLayout(name, type, var) :
     result = '        add(new $offsetType$(offset + offsetof($name$, $var$)));\n'
     result = result.replace('$name$', name)
-    if typeToC.has_key(type) : 
+    if typeToC.has_key(type) :
         offsetType = 'avro::PrimitiveLayout'
     else :
         offsetType = type+ '_Layout'
@@ -69,7 +69,7 @@ def addLayout(name, type, var) :
 
 def addSimpleLayout(type) :
     result = '        add(new $offsetType$);\n'
-    if typeToC.has_key(type) : 
+    if typeToC.has_key(type) :
         offsetType = 'avro::PrimitiveLayout'
     else :
         offsetType = type+ '_Layout'
@@ -102,7 +102,7 @@ class $name$_Layout : public avro::CompoundLayout {
         CompoundLayout(offset)
     {
 $offsetlist$    }
-}; 
+};
 '''
 
 def doRecord(args):
@@ -117,7 +117,7 @@ def doRecord(args):
     end = False
     while not end:
         line = getNextLine()
-        if line[0] == 'end': 
+        if line[0] == 'end':
             end = True
             initlist = initlist.rstrip(',\n')
         elif line[0] == 'name':
@@ -143,8 +143,8 @@ unionTemplate = '''struct $name$ {
 $typedeflist$
     typedef void* (*GenericSetter)($name$ *, int64_t);
 
-    $name$() : 
-        choice(0), 
+    $name$() :
+        choice(0),
         value(T0()),
         genericSetter(&$name$::genericSet)
     { }
@@ -171,7 +171,7 @@ $setfuncs$
         return data;
     }
 
-    int64_t choice; 
+    int64_t choice;
     boost::any value;
     GenericSetter genericSetter;
 };
@@ -202,7 +202,7 @@ class $name$_Layout : public avro::CompoundLayout {
         add(new avro::PrimitiveLayout(offset + offsetof($name$, choice)));
         add(new avro::PrimitiveLayout(offset + offsetof($name$, genericSetter)));
 $offsetlist$    }
-}; 
+};
 '''
 
 unionser = '      case $choice$:\n        serialize(s, val.getValue< $type$ >());\n        break;\n'
@@ -240,11 +240,11 @@ def doUnion(args):
             switch = unionser
             switch = switch.replace('$choice$', str(i))
             switch = switch.replace('$type$', uniontype)
-            switchserialize += switch 
+            switchserialize += switch
             switch = unionpar
             switch = switch.replace('$choice$', str(i))
             switch = switch.replace('$type$', uniontype)
-            switchparse += switch 
+            switchparse += switch
             setter = setfunc
             setter = setter.replace('$name$', name)
             setter = setter.replace('$type$', uniontype)
@@ -270,8 +270,8 @@ enumTemplate = '''struct $name$ {
         $enumsymbols$
     };
 
-    $name$() : 
-        value($firstsymbol$) 
+    $name$() :
+        value($firstsymbol$)
     { }
 
     EnumSymbols value;
@@ -294,7 +294,7 @@ class $name$_Layout : public avro::CompoundLayout {
     {
         add(new avro::PrimitiveLayout(offset + offsetof($name$, value)));
     }
-}; 
+};
 '''
 
 def doEnum(args):
@@ -323,7 +323,7 @@ arrayTemplate = '''struct $name$ {
     typedef $valuetype$ ValueType;
     typedef std::vector<ValueType> ArrayType;
     typedef ValueType* (*GenericSetter)($name$ *);
-    
+
     $name$() :
         value(),
         genericSetter(&$name$::genericSet)
@@ -362,7 +362,7 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
         int size = p.readArrayBlockSize();
         if(size > 0) {
             val.value.reserve(val.value.size() + size);
-            while (size-- > 0) { 
+            while (size-- > 0) {
                 val.value.push_back($name$::ValueType());
                 parse(p, val.value.back());
             }
@@ -370,7 +370,7 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
         else {
             break;
         }
-    } 
+    }
 }
 
 class $name$_Layout : public avro::CompoundLayout {
@@ -380,7 +380,7 @@ class $name$_Layout : public avro::CompoundLayout {
     {
         add(new avro::PrimitiveLayout(offset + offsetof($name$, genericSetter)));
 $offsetlist$    }
-}; 
+};
 '''
 
 def doArray(args):
@@ -404,7 +404,7 @@ mapTemplate = '''struct $name$ {
     typedef $valuetype$ ValueType;
     typedef std::map<std::string, ValueType> MapType;
     typedef ValueType* (*GenericSetter)($name$ *, const std::string &);
-    
+
     $name$() :
         value(),
         genericSetter(&$name$::genericSet)
@@ -414,7 +414,7 @@ mapTemplate = '''struct $name$ {
         value.insert(MapType::value_type(key, val));
     }
 
-    static ValueType *genericSet($name$ *map, const std::string &key) { 
+    static ValueType *genericSet($name$ *map, const std::string &key) {
         map->value[key] = ValueType();
         return &(map->value[key]);
     }
@@ -445,7 +445,7 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
     while(1) {
         int size = p.readMapBlockSize();
         if(size > 0) {
-            while (size-- > 0) { 
+            while (size-- > 0) {
                 std::string key;
                 parse(p, key);
                 $name$::ValueType m;
@@ -456,7 +456,7 @@ inline void parse(Parser &p, $name$ &val, const boost::true_type &) {
         else {
             break;
         }
-    } 
+    }
 }
 
 class $name$_Layout : public avro::CompoundLayout {
@@ -466,7 +466,7 @@ class $name$_Layout : public avro::CompoundLayout {
     {
         add(new avro::PrimitiveLayout(offset + offsetof($name$, genericSetter)));
 $offsetlist$    }
-}; 
+};
 '''
 
 def doMap(args):
@@ -486,7 +486,7 @@ def doMap(args):
     if line[0] != 'end': print 'error'
     addStruct(typename, structDef)
     return (typename,typename)
-    
+
 fixedTemplate = '''struct $name$ {
     enum {
         fixedSize = $N$
@@ -495,7 +495,7 @@ fixedTemplate = '''struct $name$ {
     $name$() {
         memset(value, 0, sizeof(value));
     }
-    
+
     uint8_t value[fixedSize];
 };
 
@@ -516,7 +516,7 @@ class $name$_Layout : public avro::CompoundLayout {
     {
         add(new avro::PrimitiveLayout(offset + offsetof($name$, value)));
     }
-}; 
+};
 '''
 
 def doFixed(args):
@@ -553,7 +553,7 @@ class $name$_Layout : public avro::CompoundLayout {
     {
         add(new avro::PrimitiveLayout(offset + offsetof($name$, value)));
     }
-}; 
+};
 '''
 
 def doPrimitiveStruct(type):
@@ -563,12 +563,12 @@ def doPrimitiveStruct(type):
     structDef = structDef.replace('$type$', typeToC[type]);
     addStruct(name, structDef)
 
-compoundBuilder= { 'record' : doRecord, 'union' : doUnion, 'enum' : doEnum, 
-'map' : doMap, 'array' : doArray, 'fixed' : doFixed, 'symbolic' : doSymbolic } 
+compoundBuilder= { 'record' : doRecord, 'union' : doUnion, 'enum' : doEnum,
+'map' : doMap, 'array' : doArray, 'fixed' : doFixed, 'symbolic' : doSymbolic }
 
 def processType(inputs) :
     type = inputs[0]
-    if typeToC.has_key(type) : 
+    if typeToC.has_key(type) :
         result = doPrimitive(type)
     else :
         func = compoundBuilder[type]
@@ -578,7 +578,7 @@ def processType(inputs) :
 def generateCode() :
     inputs = getNextLine()
     type = inputs[0]
-    if typeToC.has_key(type) : 
+    if typeToC.has_key(type) :
         doPrimitiveStruct(type)
     else :
         func = compoundBuilder[type]
@@ -594,13 +594,13 @@ def getNextLine():
     if line == '':
         globals()["done"] = True
     return line.split(' ')
-    
+
 def writeHeader(filebase, namespace):
     headerstring = "%s_%s_hh__" % (namespace, filebase)
 
     print license
     print "#ifndef %s" % headerstring
-    print "#define %s" % headerstring 
+    print "#define %s" % headerstring
     print headers
     print "namespace %s {\n" % namespace
 
@@ -636,14 +636,14 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(argv[1:], "hi:o:n:", ["help", "input=", "output=", "namespace="])
 
     except getopt.GetoptError, err:
-        print str(err) 
+        print str(err)
         usage()
         sys.exit(2)
 
     namespace = 'avrouser'
 
-    savein = sys.stdin              
-    saveout = sys.stdout              
+    savein = sys.stdin
+    saveout = sys.stdout
     inputFile = False
     outputFile = False
     outputFileBase = 'AvroGenerated'
@@ -655,7 +655,7 @@ if __name__ == "__main__":
                 sys.stdin = inputFile
             except:
                 print "Could not open file " + a
-                sys.exit() 
+                sys.exit()
         elif o in ("-o", "--output"):
             try:
                 outputFile = open(a, 'w')

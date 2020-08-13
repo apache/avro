@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -551,16 +551,21 @@ avro_generic_link_init(const avro_value_iface_t *viface, void *vself)
 	    container_of(viface, avro_generic_link_value_iface_t, parent.parent);
 
 	avro_value_t  *self = (avro_value_t *) vself;
-	size_t  target_instance_size =
+	ssize_t  target_instance_size =
 	    avro_value_instance_size(iface->target_giface);
-	if (target_instance_size == 0) {
+	if (target_instance_size < 0) {
 		return EINVAL;
 	}
 
 	self->iface = &iface->target_giface->parent;
-	self->self = avro_malloc(target_instance_size);
-	if (self->self == NULL) {
-		return ENOMEM;
+
+	if (target_instance_size == 0) {
+		self->self = NULL;
+	} else {
+		self->self = avro_malloc(target_instance_size);
+		if (self->self == NULL) {
+			return ENOMEM;
+		}
 	}
 
 	rval = avro_value_init(iface->target_giface, self->self);
@@ -2124,8 +2129,8 @@ avro_generic_array_class(avro_schema_t schema, memoize_state_t *state)
 		return NULL;
 	}
 
-	size_t  child_size = avro_value_instance_size(child_giface);
-	if (child_size == 0) {
+	ssize_t  child_size = avro_value_instance_size(child_giface);
+	if (child_size < 0) {
 		avro_set_error("Array item class must provide instance_size");
 		avro_value_iface_decref(&child_giface->parent);
 		return NULL;
@@ -2780,8 +2785,8 @@ avro_generic_map_class(avro_schema_t schema, memoize_state_t *state)
 		return NULL;
 	}
 
-	size_t  child_size = avro_value_instance_size(child_giface);
-	if (child_size == 0) {
+	ssize_t  child_size = avro_value_instance_size(child_giface);
+	if (child_size < 0) {
 		avro_set_error("Map value class must provide instance_size");
 		avro_value_iface_decref(&child_giface->parent);
 		return NULL;
@@ -3103,14 +3108,19 @@ avro_generic_record_class(avro_schema_t schema, memoize_state_t *state)
 	size_t  field_ifaces_size =
 		sizeof(avro_generic_value_iface_t *) * iface->field_count;
 
-	iface->field_offsets = (size_t *) avro_malloc(field_offsets_size);
-	if (iface->field_offsets == NULL) {
-		goto error;
-	}
+	if (iface->field_count == 0) {
+		iface->field_offsets = NULL;
+		iface->field_ifaces = NULL;
+	} else {
+		iface->field_offsets = (size_t *) avro_malloc(field_offsets_size);
+		if (iface->field_offsets == NULL) {
+			goto error;
+		}
 
-	iface->field_ifaces = (avro_generic_value_iface_t **) avro_malloc(field_ifaces_size);
-	if (iface->field_ifaces == NULL) {
-		goto error;
+		iface->field_ifaces = (avro_generic_value_iface_t **) avro_malloc(field_ifaces_size);
+		if (iface->field_ifaces == NULL) {
+			goto error;
+		}
 	}
 
 	size_t  next_offset = sizeof(avro_generic_record_t);
@@ -3139,9 +3149,9 @@ avro_generic_record_class(avro_schema_t schema, memoize_state_t *state)
 			goto error;
 		}
 
-		size_t  field_size =
+		ssize_t  field_size =
 		    avro_value_instance_size(iface->field_ifaces[i]);
-		if (field_size == 0) {
+		if (field_size < 0) {
 			avro_set_error("Record field class must provide instance_size");
 			goto error;
 		}
@@ -3506,9 +3516,9 @@ avro_generic_union_class(avro_schema_t schema, memoize_state_t *state)
 			goto error;
 		}
 
-		size_t  branch_size =
+		ssize_t  branch_size =
 		    avro_value_instance_size(iface->branch_ifaces[i]);
-		if (branch_size == 0) {
+		if (branch_size < 0) {
 			avro_set_error("Union branch class must provide instance_size");
 			goto error;
 		}
@@ -3518,8 +3528,8 @@ avro_generic_union_class(avro_schema_t schema, memoize_state_t *state)
 			i, branch_size);
 #endif
 
-		if (branch_size > max_branch_size) {
-			max_branch_size = branch_size;
+		if ((size_t)branch_size > max_branch_size) {
+			max_branch_size = (size_t)branch_size;
 		}
 	}
 

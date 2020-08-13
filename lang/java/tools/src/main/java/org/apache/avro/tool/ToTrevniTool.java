@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +32,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
-
 /** Reads an Avro data file and writes a Trevni file. */
 public class ToTrevniTool implements Tool {
 
@@ -47,31 +46,24 @@ public class ToTrevniTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     OptionParser p = new OptionParser();
-    OptionSpec<String> codec =
-      p.accepts("codec", "Compression codec")
-      .withRequiredArg()
-      .defaultsTo("null")
-      .ofType(String.class);
+    OptionSpec<String> codec = p.accepts("codec", "Compression codec").withRequiredArg().defaultsTo("null")
+        .ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
     if (opts.nonOptionArguments().size() != 2) {
       err.println("Usage: inFile outFile (filenames or '-' for stdin/stdout)");
       p.printHelpOn(err);
       return 1;
     }
-    args = (List<String>)opts.nonOptionArguments();
+    args = (List<String>) opts.nonOptionArguments();
 
-    DataFileStream<Object> reader =
-      new DataFileStream(Util.fileOrStdin(args.get(0), stdin),
-                         new GenericDatumReader<Object>());
+    DataFileStream<Object> reader = new DataFileStream(Util.fileOrStdin(args.get(0), stdin),
+        new GenericDatumReader<>());
     OutputStream outs = Util.fileOrStdout(args.get(1), out);
-    AvroColumnWriter<Object> writer =
-      new AvroColumnWriter<Object>(reader.getSchema(),
-                                   new ColumnFileMetaData()
-                                   .setCodec(codec.value(opts)));
+    AvroColumnWriter<Object> writer = new AvroColumnWriter<>(reader.getSchema(),
+        new ColumnFileMetaData().setCodec(codec.value(opts)));
     for (Object datum : reader)
       writer.write(datum);
     writer.writeTo(outs);

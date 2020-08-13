@@ -8,7 +8,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-require_once('test_helper.php');
 
-class FloatIntEncodingTest extends PHPUnit_Framework_TestCase
+namespace Apache\Avro\Tests;
+
+use Apache\Avro\AvroDebug;
+use Apache\Avro\Datum\AvroIOBinaryDecoder;
+use Apache\Avro\Datum\AvroIOBinaryEncoder;
+use PHPUnit\Framework\TestCase;
+
+class FloatIntEncodingTest extends TestCase
 {
   const FLOAT_TYPE = 'float';
   const DOUBLE_TYPE = 'double';
@@ -54,37 +60,37 @@ class FloatIntEncodingTest extends PHPUnit_Framework_TestCase
     self::$INT_BITS_NEG_INF  = strrev(pack('H*', 'ff800000'));
   }
 
-  function setUp()
+  function setUp(): void
   {
     self::make_special_vals();
   }
 
   function test_special_values()
   {
-    $this->assertTrue(is_float(self::$FLOAT_NAN), 'float NaN is a float');
+    $this->assertIsFloat(self::$FLOAT_NAN, 'float NaN is a float');
     $this->assertTrue(is_nan(self::$FLOAT_NAN), 'float NaN is NaN');
     $this->assertFalse(is_infinite(self::$FLOAT_NAN), 'float NaN is not infinite');
 
-    $this->assertTrue(is_float(self::$FLOAT_POS_INF), 'float pos infinity is a float');
+    $this->assertIsFloat(self::$FLOAT_POS_INF, 'float pos infinity is a float');
     $this->assertTrue(is_infinite(self::$FLOAT_POS_INF), 'float pos infinity is infinite');
     $this->assertTrue(0 < self::$FLOAT_POS_INF, 'float pos infinity is greater than 0');
     $this->assertFalse(is_nan(self::$FLOAT_POS_INF), 'float pos infinity is not NaN');
 
-    $this->assertTrue(is_float(self::$FLOAT_NEG_INF), 'float neg infinity is a float');
+    $this->assertIsFloat(self::$FLOAT_NEG_INF, 'float neg infinity is a float');
     $this->assertTrue(is_infinite(self::$FLOAT_NEG_INF), 'float neg infinity is infinite');
     $this->assertTrue(0 > self::$FLOAT_NEG_INF, 'float neg infinity is less than 0');
     $this->assertFalse(is_nan(self::$FLOAT_NEG_INF), 'float neg infinity is not NaN');
 
-    $this->assertTrue(is_double(self::$DOUBLE_NAN), 'double NaN is a double');
+    $this->assertIsFloat(self::$DOUBLE_NAN, 'double NaN is a double');
     $this->assertTrue(is_nan(self::$DOUBLE_NAN), 'double NaN is NaN');
     $this->assertFalse(is_infinite(self::$DOUBLE_NAN), 'double NaN is not infinite');
 
-    $this->assertTrue(is_double(self::$DOUBLE_POS_INF), 'double pos infinity is a double');
+    $this->assertIsFloat(self::$DOUBLE_POS_INF, 'double pos infinity is a double');
     $this->assertTrue(is_infinite(self::$DOUBLE_POS_INF), 'double pos infinity is infinite');
     $this->assertTrue(0 < self::$DOUBLE_POS_INF, 'double pos infinity is greater than 0');
     $this->assertFalse(is_nan(self::$DOUBLE_POS_INF), 'double pos infinity is not NaN');
 
-    $this->assertTrue(is_double(self::$DOUBLE_NEG_INF), 'double neg infinity is a double');
+    $this->assertIsFloat(self::$DOUBLE_NEG_INF, 'double neg infinity is a double');
     $this->assertTrue(is_infinite(self::$DOUBLE_NEG_INF), 'double neg infinity is infinite');
     $this->assertTrue(0 > self::$DOUBLE_NEG_INF, 'double neg infinity is less than 0');
     $this->assertFalse(is_nan(self::$DOUBLE_NEG_INF), 'double neg infinity is not NaN');
@@ -228,13 +234,13 @@ _RUBY;
   {
     if (self::FLOAT_TYPE == $type)
     {
-      $decoder = array('AvroIOBinaryDecoder', 'int_bits_to_float');
-      $encoder = array('AvroIOBinaryEncoder', 'float_to_int_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'intBitsToFloat');
+      $encoder = array(AvroIOBinaryEncoder::class, 'floatToIntBits');
     }
     else
     {
-      $decoder = array('AvroIOBinaryDecoder', 'long_bits_to_double');
-      $encoder = array('AvroIOBinaryEncoder', 'double_to_long_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'longBitsToDouble');
+      $encoder = array(AvroIOBinaryEncoder::class, 'doubleToLongBits');
     }
 
     $decoded_bits_val = call_user_func($decoder, $bits);
@@ -246,8 +252,8 @@ _RUBY;
     $this->assertEquals($bits, $encoded_val_bits,
                         sprintf("%s\n expected: '%s'\n    given: '%s'",
                                 'ENCODED VAL',
-                                AvroDebug::hex_string($bits),
-                                AvroDebug::hex_string($encoded_val_bits)));
+                                AvroDebug::hexString($bits),
+                                AvroDebug::hexString($encoded_val_bits)));
 
     $round_trip_value = call_user_func($decoder, $encoded_val_bits);
     $this->assertEquals($val, $round_trip_value,
@@ -259,13 +265,13 @@ _RUBY;
   {
     if (self::FLOAT_TYPE == $type)
     {
-      $decoder = array('AvroIOBinaryDecoder', 'int_bits_to_float');
-      $encoder = array('AvroIOBinaryEncoder', 'float_to_int_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'intBitsToFloat');
+      $encoder = array(AvroIOBinaryEncoder::class, 'floatToIntBits');
     }
     else
     {
-      $decoder = array('AvroIOBinaryDecoder', 'long_bits_to_double');
-      $encoder = array('AvroIOBinaryEncoder', 'double_to_long_bits');
+      $decoder = array(AvroIOBinaryDecoder::class, 'longBitsToDouble');
+      $encoder = array(AvroIOBinaryEncoder::class, 'doubleToLongBits');
     }
 
     $decoded_bits_val = call_user_func($decoder, $bits);
@@ -277,13 +283,12 @@ _RUBY;
     $this->assertEquals($bits, $encoded_val_bits,
                         sprintf("%s\n expected: '%s'\n    given: '%s'",
                                 'ENCODED VAL',
-                                AvroDebug::hex_string($bits),
-                                AvroDebug::hex_string($encoded_val_bits)));
+                                AvroDebug::hexString($bits),
+                                AvroDebug::hexString($encoded_val_bits)));
 
     $round_trip_value = call_user_func($decoder, $encoded_val_bits);
     $this->assertTrue(is_nan($round_trip_value),
                       sprintf("%s\n expected: '%f'\n     given: '%f'",
                               'ROUND TRIP BITS', $val, $round_trip_value));
   }
-
 }

@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -31,6 +31,8 @@ use Object::Tiny qw{
     errors
 };
 
+our $VERSION = '++MODULE_VERSION++';
+
 sub new {
     my $class = shift;
     my $struct = shift;
@@ -49,8 +51,7 @@ sub new {
     my $err_struct = $struct->{errors};
 
     my $response = Avro::Schema->parse_struct($resp_struct, $types);
-    my $errors   = Avro::Schema->parse_struct($err_struct, $types)
-        if $err_struct;
+    my $errors = $err_struct ? Avro::Schema->parse_struct($err_struct, $types) : undef;
 
     return $class->SUPER::new(
         doc      => $struct->{doc},

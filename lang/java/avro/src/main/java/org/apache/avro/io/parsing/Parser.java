@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,25 +23,24 @@ import java.util.Arrays;
 import org.apache.avro.AvroTypeException;
 
 /**
- * Parser is the class that maintains the stack for parsing. This class
- * is used by encoders, which are not required to skip.
+ * Parser is the class that maintains the stack for parsing. This class is used
+ * by encoders, which are not required to skip.
  */
 public class Parser {
   /**
-   * The parser knows how to handle the terminal and non-terminal
-   * symbols. But it needs help from outside to handle implicit
-   * and explicit actions. The clients implement this interface to
-   * provide this help.
+   * The parser knows how to handle the terminal and non-terminal symbols. But it
+   * needs help from outside to handle implicit and explicit actions. The clients
+   * implement this interface to provide this help.
    */
   public interface ActionHandler {
     /**
-     * Handle the action symbol <tt>top</tt> when the <tt>input</tt> is
-     * sought to be taken off the stack.
+     * Handle the action symbol <tt>top</tt> when the <tt>input</tt> is sought to be
+     * taken off the stack.
+     *
      * @param input The input symbol from the caller of advance
-     * @param top The symbol at the top the stack.
-     * @return  <tt>null</tt> if advance() is to continue processing the
-     * stack. If not <tt>null</tt> the return value will be returned
-     * by advance().
+     * @param top   The symbol at the top the stack.
+     * @return <tt>null</tt> if advance() is to continue processing the stack. If
+     *         not <tt>null</tt> the return value will be returned by advance().
      * @throws IOException
      */
     Symbol doAction(Symbol input, Symbol top) throws IOException;
@@ -51,8 +50,7 @@ public class Parser {
   protected Symbol[] stack;
   protected int pos;
 
-  public Parser(Symbol root, ActionHandler symbolHandler)
-    throws IOException {
+  public Parser(Symbol root, ActionHandler symbolHandler) {
     this.symbolHandler = symbolHandler;
     this.stack = new Symbol[5]; // Start small to make sure expansion code works
     this.stack[0] = root;
@@ -63,21 +61,21 @@ public class Parser {
    * If there is no sufficient room in the stack, use this expand it.
    */
   private void expandStack() {
-    stack = Arrays.copyOf(stack, stack.length+Math.max(stack.length,1024));
+    stack = Arrays.copyOf(stack, stack.length + Math.max(stack.length, 1024));
   }
 
   /**
-   * Recursively replaces the symbol at the top of the stack with its
-   * production, until the top is a terminal. Then checks if the
-   * top symbol matches the terminal symbol suppled <tt>terminal</tt>.
-   * @param input The symbol to match against the terminal at the
-   * top of the stack.
-   * @return The terminal symbol at the top of the stack unless an
-   * implicit action resulted in another symbol, in which case that
-   * symbol is returned.
+   * Recursively replaces the symbol at the top of the stack with its production,
+   * until the top is a terminal. Then checks if the top symbol matches the
+   * terminal symbol suppled <tt>terminal</tt>.
+   *
+   * @param input The symbol to match against the terminal at the top of the
+   *              stack.
+   * @return The terminal symbol at the top of the stack unless an implicit action
+   *         resulted in another symbol, in which case that symbol is returned.
    */
   public final Symbol advance(Symbol input) throws IOException {
-    for (; ;) {
+    for (;;) {
       Symbol top = stack[--pos];
       if (top == input) {
         return top; // A common case
@@ -90,11 +88,8 @@ public class Parser {
           return result;
         }
       } else if (k == Symbol.Kind.TERMINAL) {
-        throw new AvroTypeException("Attempt to process a "
-                + input + " when a "
-                + top + " was expected.");
-      } else if (k == Symbol.Kind.REPEATER
-          && input == ((Symbol.Repeater) top).end) {
+        throw new AvroTypeException("Attempt to process a " + input + " when a " + top + " was expected.");
+      } else if (k == Symbol.Kind.REPEATER && input == ((Symbol.Repeater) top).end) {
         return input;
       } else {
         pushProduction(top);
@@ -103,13 +98,14 @@ public class Parser {
   }
 
   /**
-   * Performs any implicit actions at the top the stack, expanding any
-   * production (other than the root) that may be encountered.
-   * This method will fail if there are any repeaters on the stack.
+   * Performs any implicit actions at the top the stack, expanding any production
+   * (other than the root) that may be encountered. This method will fail if there
+   * are any repeaters on the stack.
+   *
    * @throws IOException
    */
   public final void processImplicitActions() throws IOException {
-     while (pos > 1) {
+    while (pos > 1) {
       Symbol top = stack[pos - 1];
       if (top.kind == Symbol.Kind.IMPLICIT_ACTION) {
         pos--;
@@ -129,8 +125,7 @@ public class Parser {
   public final void processTrailingImplicitActions() throws IOException {
     while (pos >= 1) {
       Symbol top = stack[pos - 1];
-      if (top.kind == Symbol.Kind.IMPLICIT_ACTION
-        && ((Symbol.ImplicitAction) top).isTrailing) {
+      if (top.kind == Symbol.Kind.IMPLICIT_ACTION && ((Symbol.ImplicitAction) top).isTrailing) {
         pos--;
         symbolHandler.doAction(null, top);
       } else {
@@ -140,9 +135,10 @@ public class Parser {
   }
 
   /**
-   * Pushes the production for the given symbol <tt>sym</tt>.
-   * If <tt>sym</tt> is a repeater and <tt>input</tt> is either
-   * {@link Symbol#ARRAY_END} or {@link Symbol#MAP_END} pushes nothing.
+   * Pushes the production for the given symbol <tt>sym</tt>. If <tt>sym</tt> is a
+   * repeater and <tt>input</tt> is either {@link Symbol#ARRAY_END} or
+   * {@link Symbol#MAP_END} pushes nothing.
+   *
    * @param sym
    */
   public final void pushProduction(Symbol sym) {
@@ -189,4 +185,3 @@ public class Parser {
     pos = 1;
   }
 }
-

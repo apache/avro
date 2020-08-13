@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,23 +33,27 @@ class ColumnOutputBuffer {
   private List<byte[]> blockData;
   private List<byte[]> firstValues;
   private int rowCount;
-  private long size = 4;                          // room for block count
+  private long size = 4; // room for block count
 
-  public ColumnOutputBuffer(ColumnFileWriter writer, ColumnMetaData meta)
-    throws IOException {
+  public ColumnOutputBuffer(ColumnFileWriter writer, ColumnMetaData meta) throws IOException {
     this.writer = writer;
     this.meta = meta;
     this.codec = Codec.get(meta);
     this.checksum = Checksum.get(meta);
     this.buffer = new OutputBuffer();
-    this.blockDescriptors = new ArrayList<BlockDescriptor>();
-    this.blockData = new ArrayList<byte[]>();
+    this.blockDescriptors = new ArrayList<>();
+    this.blockData = new ArrayList<>();
     if (meta.hasIndexValues())
-      this.firstValues = new ArrayList<byte[]>();
+      this.firstValues = new ArrayList<>();
   }
 
-  public ColumnMetaData getMeta() { return meta; }
-  public OutputBuffer getBuffer() { return buffer; }
+  public ColumnMetaData getMeta() {
+    return meta;
+  }
+
+  public OutputBuffer getBuffer() {
+    return buffer;
+  }
 
   public void startRow() throws IOException {
     if (buffer.isFull())
@@ -57,7 +61,7 @@ class ColumnOutputBuffer {
   }
 
   public void writeLength(int length) throws IOException {
-    throw new TrevniRuntimeException("Not an array column: "+meta);
+    throw new TrevniRuntimeException("Not an array column: " + meta);
   }
 
   public void writeValue(Object value) throws IOException {
@@ -71,25 +75,23 @@ class ColumnOutputBuffer {
   }
 
   void flushBuffer() throws IOException {
-    if (rowCount == 0) return;
+    if (rowCount == 0)
+      return;
     ByteBuffer raw = buffer.asByteBuffer();
     ByteBuffer c = codec.compress(raw);
 
-    blockDescriptors.add(new BlockDescriptor(rowCount,
-                                             raw.remaining(),
-                                             c.remaining()));
+    blockDescriptors.add(new BlockDescriptor(rowCount, raw.remaining(), c.remaining()));
 
     ByteBuffer data = ByteBuffer.allocate(c.remaining() + checksum.size());
     data.put(c);
     data.put(checksum.compute(raw));
     blockData.add(data.array());
 
-    int sizeIncrement =
-      (4*3)                                       // descriptor
-      + (firstValues != null                      // firstValue
-         ? firstValues.get(firstValues.size()-1).length
-         : 0)
-      + data.position();                         // data
+    int sizeIncrement = (4 * 3) // descriptor
+        + (firstValues != null // firstValue
+            ? firstValues.get(firstValues.size() - 1).length
+            : 0)
+        + data.position(); // data
 
     writer.incrementSize(sizeIncrement);
     size += sizeIncrement;

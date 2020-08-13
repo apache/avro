@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,11 +33,13 @@ public class TestReflectionUtil {
   public void testUnsafeWhenNotExists() throws Exception {
     ClassLoader cl = new NoUnsafe();
     Class<?> testerClass = cl.loadClass(Tester.class.getName());
-    testerClass.getDeclaredMethod("checkUnsafe").invoke(testerClass.newInstance());
+    testerClass.getDeclaredMethod("checkUnsafe").invoke(testerClass.getDeclaredConstructor().newInstance());
   }
 
   public static final class Tester {
-    public Tester() {}
+    public Tester() {
+    }
+
     public void checkUnsafe() {
       ReflectionUtil.getFieldAccess();
     }
@@ -48,8 +50,7 @@ public class TestReflectionUtil {
     private ClassLoader parent = TestReflectionUtil.class.getClassLoader();
 
     @Override
-    public java.lang.Class<?> loadClass(String name)
-        throws ClassNotFoundException {
+    public java.lang.Class<?> loadClass(String name) throws ClassNotFoundException {
       Class<?> clazz = findLoadedClass(name);
       if (clazz != null) {
         return clazz;
@@ -61,8 +62,7 @@ public class TestReflectionUtil {
         return parent.loadClass(name);
       }
 
-      InputStream data = parent.getResourceAsStream(name.replace('.', '/')
-          + ".class");
+      InputStream data = parent.getResourceAsStream(name.replace('.', '/') + ".class");
       byte[] buf = new byte[10240]; // big enough, too lazy to loop
       int size;
       try {

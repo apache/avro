@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@ package org.apache.avro;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.file.FileReader;
@@ -82,6 +83,18 @@ public class TestCircularReferences {
     }
   }
 
+  public static class ReferenceTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new Reference(schema);
+    }
+
+    @Override
+    public String getTypeName() {
+      return Reference.REFERENCE;
+    }
+  }
+
   public static class Referenceable extends LogicalType {
     private static final String REFERENCEABLE = "referenceable";
     private static final String ID_FIELD_NAME = "id-field-name";
@@ -124,20 +137,22 @@ public class TestCircularReferences {
     }
   }
 
+  public static class ReferenceableTypeFactory implements LogicalTypes.LogicalTypeFactory {
+    @Override
+    public LogicalType fromSchema(Schema schema) {
+      return new Referenceable(schema);
+    }
+
+    @Override
+    public String getTypeName() {
+      return Referenceable.REFERENCEABLE;
+    }
+  }
+
   @BeforeClass
   public static void addReferenceTypes() {
-    LogicalTypes.register(Referenceable.REFERENCEABLE, new LogicalTypes.LogicalTypeFactory() {
-      @Override
-      public LogicalType fromSchema(Schema schema) {
-        return new Referenceable(schema);
-      }
-    });
-    LogicalTypes.register(Reference.REFERENCE, new LogicalTypes.LogicalTypeFactory() {
-      @Override
-      public LogicalType fromSchema(Schema schema) {
-        return new Reference(schema);
-      }
-    });
+    LogicalTypes.register(Referenceable.REFERENCEABLE, new ReferenceableTypeFactory());
+    LogicalTypes.register(Reference.REFERENCE, new ReferenceTypeFactory());
   }
 
   public static class ReferenceManager {
@@ -145,9 +160,9 @@ public class TestCircularReferences {
       void set(Object referenceable);
     }
 
-    private final Map<Long, Object> references = new HashMap<Long, Object>();
-    private final Map<Object, Long> ids = new IdentityHashMap<Object, Long>();
-    private final Map<Long, List<Callback>> callbacksById = new HashMap<Long, List<Callback>>();
+    private final Map<Long, Object> references = new HashMap<>();
+    private final Map<Object, Long> ids = new IdentityHashMap<>();
+    private final Map<Long, List<Callback>> callbacksById = new HashMap<>();
     private final ReferenceableTracker tracker = new ReferenceableTracker();
     private final ReferenceHandler handler = new ReferenceHandler();
 
@@ -194,7 +209,7 @@ public class TestCircularReferences {
         long id = getId(value, schema);
 
         // keep track of this for later references
-        //references.put(id, value);
+        // references.put(id, value);
         ids.put(value, id);
 
         return value;
@@ -230,18 +245,9 @@ public class TestCircularReferences {
             record.put(refField.pos(), references.get(id));
 
           } else {
-            List<Callback> callbacks = callbacksById.get(id);
-            if (callbacks == null) {
-              callbacks = new ArrayList<Callback>();
-              callbacksById.put(id, callbacks);
-            }
+            List<Callback> callbacks = callbacksById.computeIfAbsent(id, k -> new ArrayList<>());
             // add a callback to resolve this reference when the id is available
-            callbacks.add(new Callback() {
-              @Override
-              public void set(Object referenceable) {
-                record.put(refField.pos(), referenceable);
-              }
-            });
+            callbacks.add(referenceable -> record.put(refField.pos(), referenceable));
           }
         }
 
@@ -302,22 +308,19 @@ public class TestCircularReferences {
 
     Schema parentSchema = Schema.createRecord("Parent", null, null, false);
 
-    Schema parentRefSchema = Schema.createUnion(
-        Schema.create(Schema.Type.NULL),
-        Schema.create(Schema.Type.LONG),
+    Schema parentRefSchema = Schema.createUnion(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.LONG),
         parentSchema);
     Reference parentRef = new Reference("parent");
 
-    List<Schema.Field> childFields = new ArrayList<Schema.Field>();
-    childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING), null, null));
-    childFields.add(new Schema.Field("parent", parentRefSchema, null, null));
-    Schema childSchema = parentRef.addToSchema(
-        Schema.createRecord("Child", null, null, false, childFields));
+    List<Schema.Field> childFields = new ArrayList<>();
+    childFields.add(new Schema.Field("c", Schema.create(Schema.Type.STRING)));
+    childFields.add(new Schema.Field("parent", parentRefSchema));
+    Schema childSchema = parentRef.addToSchema(Schema.createRecord("Child", null, null, false, childFields));
 
-    List<Schema.Field> parentFields = new ArrayList<Schema.Field>();
-    parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG), null, null));
-    parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING), null, null));
-    parentFields.add(new Schema.Field("child", childSchema, null, null));
+    List<Schema.Field> parentFields = new ArrayList<>();
+    parentFields.add(new Schema.Field("id", Schema.create(Schema.Type.LONG)));
+    parentFields.add(new Schema.Field("p", Schema.create(Schema.Type.STRING)));
+    parentFields.add(new Schema.Field("child", childSchema));
     parentSchema.setFields(parentFields);
     Referenceable idRef = new Referenceable("id");
 
@@ -342,38 +345,26 @@ public class TestCircularReferences {
     Record actual = records.get(0);
 
     // because the record is a recursive structure, equals won't work
-    Assert.assertEquals("Should correctly read back the parent id",
-        1L, actual.get("id"));
-    Assert.assertEquals("Should correctly read back the parent data",
-        new Utf8("parent data!"), actual.get("p"));
+    Assert.assertEquals("Should correctly read back the parent id", 1L, actual.get("id"));
+    Assert.assertEquals("Should correctly read back the parent data", new Utf8("parent data!"), actual.get("p"));
 
     Record actualChild = (Record) actual.get("child");
-    Assert.assertEquals("Should correctly read back the child data",
-        new Utf8("child data!"), actualChild.get("c"));
+    Assert.assertEquals("Should correctly read back the child data", new Utf8("child data!"), actualChild.get("c"));
     Object childParent = actualChild.get("parent");
-    Assert.assertTrue("Should have a parent Record object",
-        childParent instanceof Record);
+    Assert.assertTrue("Should have a parent Record object", childParent instanceof Record);
 
     Record childParentRecord = (Record) actualChild.get("parent");
-    Assert.assertEquals("Should have the right parent id",
-        1L, childParentRecord.get("id"));
-    Assert.assertEquals("Should have the right parent data",
-        new Utf8("parent data!"), childParentRecord.get("p"));
+    Assert.assertEquals("Should have the right parent id", 1L, childParentRecord.get("id"));
+    Assert.assertEquals("Should have the right parent data", new Utf8("parent data!"), childParentRecord.get("p"));
   }
 
   private <D> List<D> read(GenericData model, Schema schema, File file) throws IOException {
     DatumReader<D> reader = newReader(model, schema);
-    List<D> data = new ArrayList<D>();
-    FileReader<D> fileReader = null;
+    List<D> data = new ArrayList<>();
 
-    try {
-      fileReader = new DataFileReader<D>(file, reader);
+    try (FileReader<D> fileReader = new DataFileReader<>(file, reader)) {
       for (D datum : fileReader) {
         data.add(datum);
-      }
-    } finally {
-      if (fileReader != null) {
-        fileReader.close();
       }
     }
 
@@ -389,15 +380,12 @@ public class TestCircularReferences {
   private <D> File write(GenericData model, Schema schema, D... data) throws IOException {
     File file = temp.newFile();
     DatumWriter<D> writer = model.createDatumWriter(schema);
-    DataFileWriter<D> fileWriter = new DataFileWriter<D>(writer);
 
-    try {
+    try (DataFileWriter<D> fileWriter = new DataFileWriter<>(writer)) {
       fileWriter.create(schema, file);
       for (D datum : data) {
         fileWriter.append(datum);
       }
-    } finally {
-      fileWriter.close();
     }
 
     return file;

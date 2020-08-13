@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,21 +38,23 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 
 /** The {@link Serialization} used by jobs configured with {@link AvroJob}. */
-public class AvroSerialization<T> extends Configured
-  implements Serialization<AvroWrapper<T>> {
+public class AvroSerialization<T> extends Configured implements Serialization<AvroWrapper<T>> {
 
+  @Override
   public boolean accept(Class<?> c) {
     return AvroWrapper.class.isAssignableFrom(c);
   }
 
-  /** Returns the specified map output deserializer.  Defaults to the final
-   * output deserializer if no map output schema was specified. */
+  /**
+   * Returns the specified map output deserializer. Defaults to the final output
+   * deserializer if no map output schema was specified.
+   */
+  @Override
   public Deserializer<AvroWrapper<T>> getDeserializer(Class<AvroWrapper<T>> c) {
     Configuration conf = getConf();
     boolean isKey = AvroKey.class.isAssignableFrom(c);
-    Schema schema = isKey
-      ? Pair.getKeySchema(AvroJob.getMapOutputSchema(conf))
-      : Pair.getValueSchema(AvroJob.getMapOutputSchema(conf));
+    Schema schema = isKey ? Pair.getKeySchema(AvroJob.getMapOutputSchema(conf))
+        : Pair.getValueSchema(AvroJob.getMapOutputSchema(conf));
     GenericData dataModel = AvroJob.createMapOutputDataModel(conf);
     DatumReader<T> datumReader = dataModel.createDatumReader(schema);
     return new AvroWrapperDeserializer(datumReader, isKey);
@@ -60,8 +62,7 @@ public class AvroSerialization<T> extends Configured
 
   private static final DecoderFactory FACTORY = DecoderFactory.get();
 
-  private class AvroWrapperDeserializer
-    implements Deserializer<AvroWrapper<T>> {
+  private class AvroWrapperDeserializer implements Deserializer<AvroWrapper<T>> {
 
     private DatumReader<T> reader;
     private BinaryDecoder decoder;
@@ -72,21 +73,23 @@ public class AvroSerialization<T> extends Configured
       this.isKey = isKey;
     }
 
+    @Override
     public void open(InputStream in) {
       this.decoder = FACTORY.directBinaryDecoder(in, decoder);
     }
 
-    public AvroWrapper<T> deserialize(AvroWrapper<T> wrapper)
-      throws IOException {
+    @Override
+    public AvroWrapper<T> deserialize(AvroWrapper<T> wrapper) throws IOException {
       T datum = reader.read(wrapper == null ? null : wrapper.datum(), decoder);
       if (wrapper == null) {
-        wrapper = isKey? new AvroKey<T>(datum) : new AvroValue<T>(datum);
+        wrapper = isKey ? new AvroKey<>(datum) : new AvroValue<>(datum);
       } else {
         wrapper.datum(datum);
       }
       return wrapper;
     }
 
+    @Override
     public void close() throws IOException {
       decoder.inputStream().close();
     }
@@ -94,15 +97,14 @@ public class AvroSerialization<T> extends Configured
   }
 
   /** Returns the specified output serializer. */
+  @Override
   public Serializer<AvroWrapper<T>> getSerializer(Class<AvroWrapper<T>> c) {
     // AvroWrapper used for final output, AvroKey or AvroValue for map output
     boolean isFinalOutput = c.equals(AvroWrapper.class);
     Configuration conf = getConf();
-    Schema schema = isFinalOutput
-      ? AvroJob.getOutputSchema(conf)
-      : (AvroKey.class.isAssignableFrom(c)
-         ? Pair.getKeySchema(AvroJob.getMapOutputSchema(conf))
-         : Pair.getValueSchema(AvroJob.getMapOutputSchema(conf)));
+    Schema schema = isFinalOutput ? AvroJob.getOutputSchema(conf)
+        : (AvroKey.class.isAssignableFrom(c) ? Pair.getKeySchema(AvroJob.getMapOutputSchema(conf))
+            : Pair.getValueSchema(AvroJob.getMapOutputSchema(conf)));
     GenericData dataModel = AvroJob.createDataModel(conf);
     return new AvroWrapperSerializer(dataModel.createDatumWriter(schema));
   }
@@ -117,12 +119,13 @@ public class AvroSerialization<T> extends Configured
       this.writer = writer;
     }
 
+    @Override
     public void open(OutputStream out) {
       this.out = out;
-      this.encoder = new EncoderFactory().configureBlockSize(512)
-          .binaryEncoder(out, null);
+      this.encoder = new EncoderFactory().binaryEncoder(out, null);
     }
 
+    @Override
     public void serialize(AvroWrapper<T> wrapper) throws IOException {
       writer.write(wrapper.datum(), encoder);
       // would be a lot faster if the Serializer interface had a flush()
@@ -131,6 +134,7 @@ public class AvroSerialization<T> extends Configured
       encoder.flush();
     }
 
+    @Override
     public void close() throws IOException {
       out.close();
     }

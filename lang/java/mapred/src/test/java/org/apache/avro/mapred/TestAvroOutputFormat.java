@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,126 +17,119 @@
  */
 package org.apache.avro.mapred;
 
-import java.io.UnsupportedEncodingException;
-
-import junit.framework.TestCase;
-
 import org.apache.avro.file.CodecFactory;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Test;
 
-public class TestAvroOutputFormat extends TestCase {
+import static org.junit.Assert.*;
+
+public class TestAvroOutputFormat {
   @Test
   public void testSetSyncInterval() {
     JobConf jobConf = new JobConf();
     int newSyncInterval = 100000;
     AvroOutputFormat.setSyncInterval(jobConf, newSyncInterval);
 
-    assertEquals(newSyncInterval, jobConf.getInt(
-        AvroOutputFormat.SYNC_INTERVAL_KEY, -1));
+    assertEquals(newSyncInterval, jobConf.getInt(AvroOutputFormat.SYNC_INTERVAL_KEY, -1));
   }
 
   @Test
-  public void testNoCodec() throws UnsupportedEncodingException {
-
-
+  public void testNoCodec() {
     JobConf job = new JobConf();
-    assertTrue(AvroOutputFormat.getCodecFactory(job) == null);
+    assertNull(AvroOutputFormat.getCodecFactory(job));
 
     job = new JobConf();
     job.set("mapred.output.compress", "false");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.BZip2Codec");
-    assertTrue(AvroOutputFormat.getCodecFactory(job) == null);
+    assertNull(AvroOutputFormat.getCodecFactory(job));
 
     job = new JobConf();
     job.set("mapred.output.compress", "false");
     job.set(AvroJob.OUTPUT_CODEC, "bzip2");
-    assertTrue(AvroOutputFormat.getCodecFactory(job) == null);
+    assertNull(AvroOutputFormat.getCodecFactory(job));
   }
 
   @Test
-  public void testBZip2CodecUsingHadoopClass() throws UnsupportedEncodingException {
+  public void testBZip2CodecUsingHadoopClass() {
     CodecFactory avroBZip2Codec = CodecFactory.fromString("bzip2");
 
     JobConf job = new JobConf();
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.BZip2Codec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroBZip2Codec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroBZip2Codec.getClass());
   }
 
   @Test
-  public void testBZip2CodecUsingAvroCodec() throws UnsupportedEncodingException {
+  public void testBZip2CodecUsingAvroCodec() {
     CodecFactory avroBZip2Codec = CodecFactory.fromString("bzip2");
 
     JobConf job = new JobConf();
     job.set("mapred.output.compress", "true");
     job.set(AvroJob.OUTPUT_CODEC, "bzip2");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroBZip2Codec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroBZip2Codec.getClass());
   }
 
   @Test
-  public void testDeflateCodecUsingHadoopClass() throws UnsupportedEncodingException {
+  public void testDeflateCodecUsingHadoopClass() {
     CodecFactory avroDeflateCodec = CodecFactory.fromString("deflate");
 
     JobConf job = new JobConf();
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.DeflateCodec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroDeflateCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroDeflateCodec.getClass());
   }
 
   @Test
-  public void testDeflateCodecUsingAvroCodec() throws UnsupportedEncodingException {
+  public void testDeflateCodecUsingAvroCodec() {
     CodecFactory avroDeflateCodec = CodecFactory.fromString("deflate");
 
     JobConf job = new JobConf();
     job.set("mapred.output.compress", "true");
     job.set(AvroJob.OUTPUT_CODEC, "deflate");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroDeflateCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroDeflateCodec.getClass());
   }
 
   @Test
-  public void testSnappyCodecUsingHadoopClass() throws UnsupportedEncodingException {
+  public void testSnappyCodecUsingHadoopClass() {
     CodecFactory avroSnappyCodec = CodecFactory.fromString("snappy");
 
     JobConf job = new JobConf();
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.SnappyCodec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroSnappyCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroSnappyCodec.getClass());
   }
 
   @Test
-  public void testSnappyCodecUsingAvroCodec() throws UnsupportedEncodingException {
+  public void testSnappyCodecUsingAvroCodec() {
     CodecFactory avroSnappyCodec = CodecFactory.fromString("snappy");
 
     JobConf job = new JobConf();
     job.set("mapred.output.compress", "true");
     job.set(AvroJob.OUTPUT_CODEC, "snappy");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroSnappyCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroSnappyCodec.getClass());
   }
 
   @Test
-  public void testGZipCodecUsingHadoopClass() throws UnsupportedEncodingException {
+  public void testGZipCodecUsingHadoopClass() {
     CodecFactory avroDeflateCodec = CodecFactory.fromString("deflate");
 
     JobConf job = new JobConf();
     job.set("mapred.output.compress", "true");
     job.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.GZipCodec");
     CodecFactory factory = AvroOutputFormat.getCodecFactory(job);
-    assertTrue(factory != null);
-    assertTrue(factory.getClass().equals(avroDeflateCodec.getClass()));
+    assertNotNull(factory);
+    assertEquals(factory.getClass(), avroDeflateCodec.getClass());
   }
-
-
 }

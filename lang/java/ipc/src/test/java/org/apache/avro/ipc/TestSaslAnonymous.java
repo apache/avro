@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -35,20 +35,25 @@ import org.junit.Test;
 
 public class TestSaslAnonymous extends TestProtocolGeneric {
 
-  private static final Logger LOG =
-    LoggerFactory.getLogger(TestSaslAnonymous.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestSaslAnonymous.class);
 
   @Before
   public void testStartServer() throws Exception {
-    if (server != null) return;
-    server = new SaslSocketServer(new TestResponder(),new InetSocketAddress(0));
+    if (server != null)
+      return;
+    server = new SaslSocketServer(new TestResponder(), new InetSocketAddress(0));
     server.start();
     client = new SaslSocketTransceiver(new InetSocketAddress(server.getPort()));
     requestor = new GenericRequestor(PROTOCOL, client);
   }
 
-  @Override public void testHandshake() throws IOException {}
-  @Override public void testResponseChange() throws IOException {}
+  @Override
+  public void testHandshake() throws IOException {
+  }
+
+  @Override
+  public void testResponseChange() throws IOException {
+  }
 
   public interface ProtoInterface {
     byte[] test(byte[] b);
@@ -57,17 +62,13 @@ public class TestSaslAnonymous extends TestProtocolGeneric {
   // test big enough to fill socket output buffer
   @Test
   public void test64kRequest() throws Exception {
-    SaslSocketServer s = new SaslSocketServer
-      (new ReflectResponder(ProtoInterface.class, new ProtoInterface() {
-        public byte[] test(byte[] b) { return b; }
-      }), new InetSocketAddress(0));
+    SaslSocketServer s = new SaslSocketServer(new ReflectResponder(ProtoInterface.class, (ProtoInterface) b -> b),
+        new InetSocketAddress(0));
     s.start();
-    SaslSocketTransceiver client =
-      new SaslSocketTransceiver(new InetSocketAddress(s.getPort()));
-    ProtoInterface proxy =
-      (ProtoInterface)ReflectRequestor.getClient(ProtoInterface.class, client);
+    SaslSocketTransceiver client = new SaslSocketTransceiver(new InetSocketAddress(s.getPort()));
+    ProtoInterface proxy = ReflectRequestor.getClient(ProtoInterface.class, client);
 
-    byte[] result = proxy.test(new byte[64*1024]);
+    proxy.test(new byte[64 * 1024]);
 
     client.close();
     s.close();

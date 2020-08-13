@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,10 @@
 #include <fstream>
 #include <sstream>
 #include <boost/test/included/unit_test_framework.hpp>
+
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Winvalid-offsetof"
+#endif
 
 #include "testgen.hh" // < generated header
 #include "testgen2.hh" // < generated header
@@ -77,7 +81,7 @@ void printRecord(testgen::RootRecord &record)
         }
         std::cout  << '\n';
     }
-    
+
     std::cout << "mybool " << record.mybool << '\n';
     std::cout << "inval1 " << record.anothernested.inval1 << '\n';
     std::cout << "inval2 " << record.anothernested.inval2 << '\n';
@@ -135,7 +139,7 @@ void printRecord(testgen2::RootRecord &record)
         std::cout << i << ":" << static_cast<int>(val[i]) << " ";
     }
     std::cout  << '\n';
-    
+
     std::cout << "inval1 " << record.anothernested.inval1 << '\n';
     std::cout << "inval2 " << record.anothernested.inval2 << '\n';
     std::cout << "inval3 " << record.anothernested.inval3 << '\n';
@@ -160,7 +164,7 @@ void printRecord(testgen2::RootRecord &record)
 }
 
 
-void setRecord(testgen::RootRecord &myRecord) 
+void setRecord(testgen::RootRecord &myRecord)
 {
     using namespace testgen;
 
@@ -221,7 +225,7 @@ struct TestCodeGenerator {
         std::cout << "end Validated Serialize\n";
     }
 
-    void checkArray(const testgen::Array_of_double &a1, const testgen::Array_of_double &a2) 
+    void checkArray(const testgen::Array_of_double &a1, const testgen::Array_of_double &a2)
     {
         BOOST_CHECK_EQUAL(a1.value.size(), 3U);
         BOOST_CHECK_EQUAL(a1.value.size(), a2.value.size());
@@ -230,7 +234,7 @@ struct TestCodeGenerator {
         }
     }
 
-    void checkMap(const testgen::Map_of_int &map1, const testgen::Map_of_int &map2) 
+    void checkMap(const testgen::Map_of_int &map1, const testgen::Map_of_int &map2)
     {
         BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
         testgen::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
@@ -302,7 +306,7 @@ struct TestCodeGenerator {
     {
         avro::Writer s;
 
-        avro::serialize(s, myRecord_); 
+        avro::serialize(s, myRecord_);
 
         testgen::RootRecord inRecord;
         avro::Reader p(s.buffer());
@@ -338,12 +342,12 @@ struct TestCodeGenerator {
         BOOST_CHECK_EQUAL(index, 4U);
 
         const avro::NodePtr &enumNode = node->leafAt(index);
-        found = enumNode->nameIndex("one", index); 
+        found = enumNode->nameIndex("one", index);
         BOOST_CHECK_EQUAL(found, true);
         BOOST_CHECK_EQUAL(index, 1U);
     }
 
-    void test() 
+    void test()
     {
         std::cout << "Running code generation tests\n";
 
@@ -358,7 +362,7 @@ struct TestCodeGenerator {
         std::cout << "Finished code generation tests\n";
     }
 
-    TestCodeGenerator() 
+    TestCodeGenerator()
     {
         setRecord(myRecord_);
         std::ifstream in(gWriter.c_str());
@@ -372,7 +376,7 @@ struct TestCodeGenerator {
 
 struct TestSchemaResolving {
 
-    void checkArray(const testgen::Array_of_double &a1, const testgen2::Array_of_double &a2) 
+    void checkArray(const testgen::Array_of_double &a1, const testgen2::Array_of_double &a2)
     {
         BOOST_CHECK_EQUAL(a1.value.size(), 3U);
         BOOST_CHECK_EQUAL(a1.value.size(), a2.value.size());
@@ -381,7 +385,7 @@ struct TestSchemaResolving {
         }
     }
 
-    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_long &map2) 
+    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_long &map2)
     {
         BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
         testgen::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
@@ -396,7 +400,7 @@ struct TestSchemaResolving {
         }
     }
 
-    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_float &map2) 
+    void checkMap(const testgen::Map_of_int &map1, const testgen2::Map_of_float &map2)
     {
         BOOST_CHECK_EQUAL(map1.value.size(), map2.value.size());
         testgen::Map_of_int::MapType::const_iterator iter1 = map1.value.begin();
@@ -518,12 +522,12 @@ struct TestSchemaResolving {
 template<typename T>
 void addTestCase(boost::unit_test::test_suite &test)
 {
-    boost::shared_ptr<T> newtest( new T );
+    std::shared_ptr<T> newtest( new T );
     test.add( BOOST_CLASS_TEST_CASE( &T::test, newtest ));
 }
 
 boost::unit_test::test_suite*
-init_unit_test_suite( int argc, char* argv[] ) 
+init_unit_test_suite( int argc, char* argv[] )
 {
     using namespace boost::unit_test;
 
@@ -553,4 +557,3 @@ init_unit_test_suite( int argc, char* argv[] )
 
     return test;
 }
-

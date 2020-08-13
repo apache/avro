@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,12 +47,12 @@ class TrevniUtil {
   }
 
   /**
-   * Returns stdin if filename is "-", else opens the local or HDFS file
-   * and returns an InputStream for it.
+   * Returns stdin if filename is "-", else opens the local or HDFS file and
+   * returns an InputStream for it.
+   * 
    * @throws IOException
    */
-  static InputStream input(String filename, InputStream stdin)
-    throws IOException {
+  static InputStream input(String filename, InputStream stdin) throws IOException {
     if (filename.equals("-"))
       return new BufferedInputStream(stdin);
     else if (filename.startsWith("hdfs://")) {
@@ -64,12 +64,12 @@ class TrevniUtil {
   }
 
   /**
-   * Returns stdout if filename is "-", else opens the local or HDFS file
-   * and returns an OutputStream for it.
+   * Returns stdout if filename is "-", else opens the local or HDFS file and
+   * returns an OutputStream for it.
+   * 
    * @throws IOException
    */
-  static OutputStream output(String filename, OutputStream stdout)
-    throws IOException {
+  static OutputStream output(String filename, OutputStream stdout) throws IOException {
     if (filename.equals("-"))
       return new BufferedOutputStream(stdout);
     else if (filename.startsWith("hdfs://")) {

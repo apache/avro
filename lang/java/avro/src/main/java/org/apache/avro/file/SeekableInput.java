@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,10 +23,16 @@ import java.io.Closeable;
 /** An InputStream that supports seek and tell. */
 public interface SeekableInput extends Closeable {
 
-  /** Set the position for the next {@link java.io.InputStream#read(byte[],int,int) read()}. */
+  /**
+   * Set the position for the next {@link java.io.InputStream#read(byte[],int,int)
+   * read()}.
+   */
   void seek(long p) throws IOException;
 
-  /** Return the position of the next {@link java.io.InputStream#read(byte[],int,int) read()}. */
+  /**
+   * Return the position of the next
+   * {@link java.io.InputStream#read(byte[],int,int) read()}.
+   */
   long tell() throws IOException;
 
   /** Return the length of the file. */
@@ -35,4 +41,3 @@ public interface SeekableInput extends Closeable {
   /** Equivalent to {@link java.io.InputStream#read(byte[],int,int)}. */
   int read(byte[] b, int off, int len) throws IOException;
 }
-

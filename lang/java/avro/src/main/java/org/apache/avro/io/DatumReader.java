@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,18 +21,21 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 
-/** Read data of a schema.
- * <p>Determines the in-memory data representation.
+/**
+ * Read data of a schema.
+ * <p>
+ * Determines the in-memory data representation.
  */
 public interface DatumReader<D> {
 
   /** Set the writer's schema. */
   void setSchema(Schema schema);
 
-  /** Read a datum.  Traverse the schema, depth-first, reading all leaf values
-   * in the schema into a datum that is returned.  If the provided datum is
-   * non-null it may be reused and returned. */
+  /**
+   * Read a datum. Traverse the schema, depth-first, reading all leaf values in
+   * the schema into a datum that is returned. If the provided datum is non-null
+   * it may be reused and returned.
+   */
   D read(D reuse, Decoder in) throws IOException;
 
 }
-

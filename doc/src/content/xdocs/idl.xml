@@ -7,7 +7,7 @@
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+      https://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd" [
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "https://forrest.apache.org/dtd/document-v20.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -56,7 +56,7 @@
           <code>idl</code> tool. For example:
         </p>
         <source>
-$ java -jar avroj-tools.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
+$ java -jar avro-tools.jar idl src/test/idl/input/namespaces.avdl /tmp/namespaces.avpr
 $ head /tmp/namespaces.avpr
 {
   "protocol" : "TestNamespace",
@@ -152,15 +152,29 @@ protocol MyProtocol {
     <section id="format_enums">
       <title>Defining an Enumeration</title>
       <p>
-        Enums are defined in Avro IDL using a syntax similar to C or Java:
+        Enums are defined in Avro IDL using a syntax similar to C or Java. An Avro Enum supports optional default values.
+        In the case that a reader schema is unable to recognize a symbol written by the writer, the reader will fall back to using the defined default value.
+        This default is only used when an incompatible symbol is read. It is not used if the enum field is missing.
+      </p>
+      <p>
+        Example Writer Enum Definition
       </p>
       <source>
-enum Suit {
-  SPADES, DIAMONDS, CLUBS, HEARTS
+enum Shapes {
+  SQUARE, TRIANGLE, CIRCLE, OVAL
 }
       </source>
       <p>
-        Note that, unlike the JSON format, anonymous enums cannot be defined.
+        Example Reader Enum Definition
+      </p>
+      <source>
+enum Shapes {
+  SQUARE, TRIANGLE, CIRCLE
+} = CIRCLE;
+      </source>
+      <p>
+        In the above example, the reader will use the default value of CIRCLE whenever reading data written with the OVAL symbol of the writer.
+        Also note that, unlike the JSON format, anonymous enums cannot be defined.
       </p>
     </section>
     <section id="format_fixed">

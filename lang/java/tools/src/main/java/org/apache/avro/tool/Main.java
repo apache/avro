@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,7 @@ import java.util.TreeMap;
 
 import java.io.InputStream;
 
-/** Command-line driver.*/
+/** Command-line driver. */
 public class Main {
   /**
    * Available tools, initialized in constructor.
@@ -35,38 +35,18 @@ public class Main {
   int maxLen = 0;
 
   Main() {
-    tools = new TreeMap<String, Tool>();
-    for (Tool tool : new Tool[] {
-        new CatTool(),
-        new SpecificCompilerTool(),
-        new InduceSchemaTool(),
-        new JsonToBinaryFragmentTool(),
-        new BinaryFragmentToJsonTool(),
-        new CreateRandomFileTool(),
-        new DataFileReadTool(),
-        new DataFileWriteTool(),
-        new DataFileGetMetaTool(),
-        new DataFileGetSchemaTool(),
-        new DataFileRepairTool(),
-        new IdlTool(),
-        new IdlToSchemataTool(),
-        new RecodecTool(),
-        new ConcatTool(),
-        new RpcReceiveTool(),
-        new RpcSendTool(),
-        new RpcProtocolTool(),
-        new FromTextTool(),
-        new ToTextTool(),
-        new ToTrevniTool(),
-        new TetherTool(),
-        new TrevniCreateRandomTool(),
-        new TrevniMetadataTool(),
-        new TrevniToJsonTool()
-        }) {
+    tools = new TreeMap<>();
+    for (Tool tool : new Tool[] { new CatTool(), new RecordCountTool(), new SpecificCompilerTool(),
+        new InduceSchemaTool(), new JsonToBinaryFragmentTool(), new BinaryFragmentToJsonTool(),
+        new CreateRandomFileTool(), new DataFileReadTool(), new DataFileWriteTool(), new DataFileGetMetaTool(),
+        new DataFileGetSchemaTool(), new DataFileRepairTool(), new IdlTool(), new IdlToSchemataTool(),
+        new RecodecTool(), new ConcatTool(), new RpcReceiveTool(), new RpcSendTool(), new RpcProtocolTool(),
+        new FromTextTool(), new ToTextTool(), new ToTrevniTool(), new TetherTool(), new TrevniCreateRandomTool(),
+        new TrevniMetadataTool(), new TrevniToJsonTool(), new SchemaNormalizationTool(),
+        new SchemaFingerprintTool() }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {
-        throw new AssertionError(
-            "Two tools with identical names: " + tool + ", " + prev);
+        throw new AssertionError("Two tools with identical names: " + tool + ", " + prev);
       }
       maxLen = Math.max(tool.getName().length(), maxLen);
     }
@@ -84,14 +64,17 @@ public class Main {
     if (args.length != 0) {
       Tool tool = tools.get(args[0]);
       if (tool != null) {
-        return tool.run(
-          System.in, System.out, System.err, Arrays.asList(args).subList(1, args.length));
+        return tool.run(System.in, System.out, System.err, Arrays.asList(args).subList(1, args.length));
       }
     }
     System.err.print("Version ");
-    printStream(Main.class.getClassLoader().getResourceAsStream("VERSION.txt"));
+    try (InputStream versionInput = Main.class.getClassLoader().getResourceAsStream("VERSION.txt")) {
+      printStream(versionInput);
+    }
     System.err.print(" of ");
-    printHead(Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE"), 5);
+    try (InputStream noticeInput = Main.class.getClassLoader().getResourceAsStream("META-INF/NOTICE")) {
+      printHead(noticeInput, 5);
+    }
     System.err.println("----------------");
 
     System.err.println("Available tools:");

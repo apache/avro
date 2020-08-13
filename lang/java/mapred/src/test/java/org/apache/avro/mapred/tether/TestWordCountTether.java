@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +31,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.avro.file.DataFileStream;
@@ -42,47 +42,50 @@ import org.apache.avro.mapred.Pair;
 import org.apache.avro.Schema;
 import org.apache.avro.util.Utf8;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.junit.rules.TemporaryFolder;
 
 /**
- * See also TestTetherTool for an example of how to submit jobs using the thether tool.
- *
+ * See also TestTetherTool for an example of how to submit jobs using the
+ * thether tool.
  */
 public class TestWordCountTether {
 
+  @Rule
+  public TemporaryFolder INPUT_DIR = new TemporaryFolder();
+
+  @Rule
+  public TemporaryFolder OUTPUT_DIR = new TemporaryFolder();
 
   /**
    * Run a job using the given transport protocol
+   *
    * @param proto
    */
-  private void _runjob(String proto)throws Exception {
-    // System.out.println(System.getProperty("java.class.path").replace(":", "\n"));
-    System.out.println(System.getProperty("java.class.path"));
-    JobConf job = new JobConf();
-    String dir = System.getProperty("test.dir", ".") + "/mapred";
-    Path outputPath = new Path(dir + "/out");
+  private void _runjob(String proto) throws Exception {
+    String outputPathStr = OUTPUT_DIR.getRoot().getPath();
+    File inputPath = new File(INPUT_DIR.getRoot(), "lines.avro");
 
-    outputPath.getFileSystem(job).delete(outputPath);
+    JobConf job = new JobConf();
+    Path outputPath = new Path(outputPathStr);
+
+    outputPath.getFileSystem(job).delete(outputPath, true);
 
     // create the input file
-    WordCountUtil.writeLinesFile();
+    WordCountUtil.writeLinesFile(inputPath);
 
-    File exec =
-      new File(System.getProperty("java.home")+"/bin/java");
+    File exec = new File(System.getProperty("java.home") + "/bin/java");
 
-    //input path
-    String in=dir+"/in";
-
-    //create a string of the arguments
-    List<String> execargs = new ArrayList<String>();
+    // create a string of the arguments
+    List<String> execargs = new ArrayList<>();
     execargs.add("-classpath");
     execargs.add(System.getProperty("java.class.path"));
     execargs.add("org.apache.avro.mapred.tether.WordCountTask");
 
-    FileInputFormat.addInputPaths(job, in);
+    FileInputFormat.addInputPaths(job, inputPath.toString());
     FileOutputFormat.setOutputPath(job, outputPath);
     TetherJob.setExecutable(job, exec, execargs, false);
 
-    Schema outscheme= new Pair<Utf8,Long>(new Utf8(""), 0L).getSchema();
+    Schema outscheme = new Pair<Utf8, Long>(new Utf8(""), 0L).getSchema();
     AvroJob.setInputSchema(job, Schema.create(Schema.Type.STRING));
     job.set(AvroJob.OUTPUT_SCHEMA, outscheme.toString());
 
@@ -90,35 +93,34 @@ public class TestWordCountTether {
     TetherJob.runJob(job);
 
     // validate the output
-    DatumReader<Pair<Utf8,Long>> reader
-      = new SpecificDatumReader<Pair<Utf8,Long>>();
-    InputStream cin = new BufferedInputStream(new FileInputStream(WordCountUtil.COUNTS_FILE));
-    DataFileStream<Pair<Utf8,Long>> counts
-      = new DataFileStream<Pair<Utf8,Long>>(cin,reader);
+    DatumReader<Pair<Utf8, Long>> reader = new SpecificDatumReader<>();
+    DataFileStream<Pair<Utf8, Long>> counts = new DataFileStream<>(
+        new BufferedInputStream(new FileInputStream(outputPath + "/part-00000.avro")), reader);
     int numWords = 0;
-    for (Pair<Utf8,Long> wc : counts) {
-      assertEquals(wc.key().toString(),
-                   WordCountUtil.COUNTS.get(wc.key().toString()), wc.value());
+    for (Pair<Utf8, Long> wc : counts) {
+      assertEquals(wc.key().toString(), WordCountUtil.COUNTS.get(wc.key().toString()), wc.value());
       numWords++;
     }
 
-    cin.close();
+    counts.close();
     assertEquals(WordCountUtil.COUNTS.size(), numWords);
 
   }
 
   /**
    * Test the job using the sasl protocol
+   *
    * @throws Exception
    */
   @Test
   @SuppressWarnings("deprecation")
   public void testJob() throws Exception {
-      _runjob("sasl");
+    _runjob("sasl");
   }
 
   /**
    * Test the job using the http protocol
+   *
    * @throws Exception
    */
   @Test

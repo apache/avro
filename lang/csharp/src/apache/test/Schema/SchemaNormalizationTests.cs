@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,18 +18,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using System.IO;
 using Avro.Test.Utils;
-using Avro;
 
 namespace Avro.Test
 {
     [TestFixture]
     public class SchemaNormalizationTests
     {
+        private const long Empty64 = -4513414715797952619;
         private static readonly long One = -9223372036854775808;
         private static readonly byte[] Postfix = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -50,7 +49,9 @@ namespace Avro.Test
 
         private static List<object[]> ProvideFingerprintTestCases()
         {
-            using (StreamReader reader = new StreamReader("../../../../../share/test/data/schema-tests.txt"))
+            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
+            var testsPath = Path.Combine(dir, "../../../../../../../../share/test/data/schema-tests.txt");
+            using (StreamReader reader = new StreamReader(testsPath))
             {
                 return CaseFinder.Find(reader, "fingerprint", new List<object[]>());
             }
@@ -58,7 +59,9 @@ namespace Avro.Test
 
         private static List<object[]> ProvideCanonicalTestCases()
         {
-            using (StreamReader reader = new StreamReader("../../../../../share/test/data/schema-tests.txt"))
+            var dir = Path.GetDirectoryName(new Uri(typeof(SchemaNormalizationTests).Assembly.CodeBase).LocalPath);
+            var testsPath = Path.Combine(dir, "../../../../../../../../share/test/data/schema-tests.txt");
+            using (StreamReader reader = new StreamReader(testsPath))
             {
                 return CaseFinder.Find(reader, "canonical", new List<object[]>());
             }
@@ -66,8 +69,8 @@ namespace Avro.Test
 
         private static long AltFingerprint(string s)
         {
-            long tmp = AltExtended(SchemaNormalization.Empty64, 64, One, Encoding.UTF8.GetBytes(s));
-            return AltExtended(SchemaNormalization.Empty64, 64, tmp, Postfix);
+            long tmp = AltExtended(Empty64, 64, One, Encoding.UTF8.GetBytes(s));
+            return AltExtended(Empty64, 64, tmp, Postfix);
         }
 
         private static long AltExtended(long poly, int degree, long fp, byte[] b)

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef avro_ValidSchema_hh__ 
-#define avro_ValidSchema_hh__ 
+#ifndef avro_ValidSchema_hh__
+#define avro_ValidSchema_hh__
 
 #include "Config.hh"
 #include "Node.hh"
@@ -50,11 +50,15 @@ public:
     }
 
     void toJson(std::ostream &os) const;
+    std::string toJson(bool prettyPrint = true) const;
 
     void toFlatList(std::ostream &os) const;
 
   protected:
     NodePtr root_;
+
+  private:
+    static std::string compactSchema(const std::string &schema);
 };
 
 } // namespace avro

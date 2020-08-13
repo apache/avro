@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,6 +36,7 @@ namespace Avro
         /// Static function to return new instance of the fixed schema class
         /// </summary>
         /// <param name="jtok">JSON object for the fixed schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schema already parsed in</param>
         /// <param name="encspace">enclosing namespace of the fixed schema</param>
         /// <returns></returns>
@@ -43,8 +44,15 @@ namespace Avro
         {
             SchemaName name = NamedSchema.GetName(jtok, encspace);
             var aliases = NamedSchema.GetAliases(jtok, name.Space, name.EncSpace);
-
-            return new FixedSchema(name, aliases, JsonHelper.GetRequiredInteger(jtok, "size"), props, names);
+            try
+            {
+                return new FixedSchema(name, aliases, JsonHelper.GetRequiredInteger(jtok, "size"), props, names,
+                    JsonHelper.GetOptionalString(jtok, "doc"));
+            }
+            catch (Exception e)
+            {
+                throw new SchemaParseException($"{e.Message} at '{jtok.Path}'", e);
+            }
         }
 
         /// <summary>
@@ -53,12 +61,15 @@ namespace Avro
         /// <param name="name">name of the fixed schema</param>
         /// <param name="aliases">list of aliases for the name</param>
         /// <param name="size">fixed size</param>
+        /// <param name="props">custom properties on this schema</param>
         /// <param name="names">list of named schema already parsed in</param>
-        private FixedSchema(SchemaName name, IList<SchemaName> aliases, int size, PropertyMap props, SchemaNames names)
-                            : base(Type.Fixed, name, aliases, props, names)
+        /// <param name="doc">documentation for this named schema</param>
+        private FixedSchema(SchemaName name, IList<SchemaName> aliases, int size, PropertyMap props, SchemaNames names,
+            string doc)
+                            : base(Type.Fixed, name, aliases, props, names, doc)
         {
             if (null == name.Name) throw new SchemaParseException("name cannot be null for fixed schema.");
-            if (size <= 0) throw new ArgumentOutOfRangeException("size", "size must be greater than zero.");
+            if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), "size must be greater than zero.");
             this.Size = size;
         }
 

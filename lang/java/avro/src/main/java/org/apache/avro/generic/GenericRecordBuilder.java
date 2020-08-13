@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,13 +25,16 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.data.RecordBuilderBase;
 import org.apache.avro.generic.GenericData.Record;
 
-/** A RecordBuilder for generic records. GenericRecordBuilder fills in default values
- * for fields if they are not specified.  */
+/**
+ * A RecordBuilder for generic records. GenericRecordBuilder fills in default
+ * values for fields if they are not specified.
+ */
 public class GenericRecordBuilder extends RecordBuilderBase<Record> {
   private final GenericData.Record record;
 
   /**
    * Creates a GenericRecordBuilder for building Record instances.
+   * 
    * @param schema the schema associated with the record class.
    */
   public GenericRecordBuilder(Schema schema) {
@@ -41,6 +44,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Creates a GenericRecordBuilder by copying an existing GenericRecordBuilder.
+   * 
    * @param other the GenericRecordBuilder to copy.
    */
   public GenericRecordBuilder(GenericRecordBuilder other) {
@@ -50,6 +54,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Creates a GenericRecordBuilder by copying an existing record instance.
+   * 
    * @param other the record instance to copy.
    */
   public GenericRecordBuilder(Record other) {
@@ -69,6 +74,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Gets the value of a field.
+   * 
    * @param fieldName the name of the field to get.
    * @return the value of the field with the given name, or null if not set.
    */
@@ -78,6 +84,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Gets the value of a field.
+   * 
    * @param field the field to get.
    * @return the value of the given field, or null if not set.
    */
@@ -87,6 +94,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Gets the value of a field.
+   * 
    * @param pos the position of the field to get.
    * @return the value of the field with the given position, or null if not set.
    */
@@ -96,8 +104,9 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Sets the value of a field.
+   * 
    * @param fieldName the name of the field to set.
-   * @param value the value to set.
+   * @param value     the value to set.
    * @return a reference to the RecordBuilder.
    */
   public GenericRecordBuilder set(String fieldName, Object value) {
@@ -106,6 +115,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Sets the value of a field.
+   * 
    * @param field the field to set.
    * @param value the value to set.
    * @return a reference to the RecordBuilder.
@@ -116,7 +126,8 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Sets the value of a field.
-   * @param pos the field to set.
+   * 
+   * @param pos   the field to set.
    * @param value the value to set.
    * @return a reference to the RecordBuilder.
    */
@@ -126,8 +137,9 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Sets the value of a field.
+   * 
    * @param field the field to set.
-   * @param pos the position of the field.
+   * @param pos   the position of the field.
    * @param value the value to set.
    * @return a reference to the RecordBuilder.
    */
@@ -140,6 +152,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Checks whether a field has been set.
+   * 
    * @param fieldName the name of the field to check.
    * @return true if the given field is non-null; false otherwise.
    */
@@ -149,6 +162,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Checks whether a field has been set.
+   * 
    * @param field the field to check.
    * @return true if the given field is non-null; false otherwise.
    */
@@ -158,6 +172,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Checks whether a field has been set.
+   * 
    * @param pos the position of the field to check.
    * @return true if the given field is non-null; false otherwise.
    */
@@ -167,6 +182,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Clears the value of the given field.
+   * 
    * @param fieldName the name of the field to clear.
    * @return a reference to the RecordBuilder.
    */
@@ -176,6 +192,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Clears the value of the given field.
+   * 
    * @param field the field to clear.
    * @return a reference to the RecordBuilder.
    */
@@ -185,6 +202,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
 
   /**
    * Clears the value of the given field.
+   * 
    * @param pos the position of the field to clear.
    * @return a reference to the RecordBuilder.
    */
@@ -207,7 +225,7 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
       Object value;
       try {
         value = getWithDefault(field);
-      } catch(IOException e) {
+      } catch (IOException e) {
         throw new AvroRuntimeException(e);
       }
       if (value != null) {
@@ -219,18 +237,17 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
   }
 
   /**
-   * Gets the value of the given field.
-   * If the field has been set, the set value is returned (even if it's null).
-   * If the field hasn't been set and has a default value, the default value
-   * is returned.
+   * Gets the value of the given field. If the field has been set, the set value
+   * is returned (even if it's null). If the field hasn't been set and has a
+   * default value, the default value is returned.
+   * 
    * @param field the field whose value should be retrieved.
-   * @return the value set for the given field, the field's default value,
-   * or null.
+   * @return the value set for the given field, the field's default value, or
+   *         null.
    * @throws IOException
    */
   private Object getWithDefault(Field field) throws IOException {
-    return fieldSetFlags()[field.pos()] ?
-        record.get(field.pos()) : defaultValue(field);
+    return fieldSetFlags()[field.pos()] ? record.get(field.pos()) : defaultValue(field);
   }
 
   @Override
@@ -251,10 +268,8 @@ public class GenericRecordBuilder extends RecordBuilderBase<Record> {
       return false;
     GenericRecordBuilder other = (GenericRecordBuilder) obj;
     if (record == null) {
-      if (other.record != null)
-        return false;
-    } else if (!record.equals(other.record))
-      return false;
-    return true;
+      return other.record == null;
+    } else
+      return record.equals(other.record);
   }
 }

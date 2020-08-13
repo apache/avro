@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +47,7 @@ public class TestAvroDatumConverterFactory {
 
   @Before
   public void setup() throws IOException {
-    mJob = new Job();
+    mJob = Job.getInstance();
     mFactory = new AvroDatumConverterFactory(mJob.getConfiguration());
   }
 
@@ -55,10 +55,10 @@ public class TestAvroDatumConverterFactory {
   public void testConvertAvroKey() throws IOException {
     AvroJob.setOutputKeySchema(mJob, Schema.create(Schema.Type.STRING));
 
-    AvroKey<CharSequence> avroKey = new AvroKey<CharSequence>("foo");
+    AvroKey<CharSequence> avroKey = new AvroKey<>("foo");
     @SuppressWarnings("unchecked")
-    AvroDatumConverter<AvroKey<CharSequence>, ?> converter = mFactory.create(
-        (Class<AvroKey<CharSequence>>) avroKey.getClass());
+    AvroDatumConverter<AvroKey<CharSequence>, ?> converter = mFactory
+        .create((Class<AvroKey<CharSequence>>) avroKey.getClass());
     assertEquals("foo", converter.convert(avroKey).toString());
   }
 
@@ -66,18 +66,17 @@ public class TestAvroDatumConverterFactory {
   public void testConvertAvroValue() throws IOException {
     AvroJob.setOutputValueSchema(mJob, Schema.create(Schema.Type.INT));
 
-    AvroValue<Integer> avroValue = new AvroValue<Integer>(42);
+    AvroValue<Integer> avroValue = new AvroValue<>(42);
     @SuppressWarnings("unchecked")
-    AvroDatumConverter<AvroValue<Integer>, Integer> converter = mFactory.create(
-        (Class<AvroValue<Integer>>) avroValue.getClass());
+    AvroDatumConverter<AvroValue<Integer>, Integer> converter = mFactory
+        .create((Class<AvroValue<Integer>>) avroValue.getClass());
     assertEquals(42, converter.convert(avroValue).intValue());
   }
 
   @Test
   public void testConvertBooleanWritable() {
-    AvroDatumConverter<BooleanWritable, Boolean> converter
-        = mFactory.create(BooleanWritable.class);
-    assertEquals(true, converter.convert(new BooleanWritable(true)).booleanValue());
+    AvroDatumConverter<BooleanWritable, Boolean> converter = mFactory.create(BooleanWritable.class);
+    assertEquals(true, converter.convert(new BooleanWritable(true)));
   }
 
   @Test
@@ -98,13 +97,13 @@ public class TestAvroDatumConverterFactory {
   @Test
   public void testConvertDoubleWritable() {
     AvroDatumConverter<DoubleWritable, Double> converter = mFactory.create(DoubleWritable.class);
-    assertEquals(2.0, converter.convert(new DoubleWritable(2.0)).doubleValue(), 0.00001);
+    assertEquals(2.0, converter.convert(new DoubleWritable(2.0)), 0.00001);
   }
 
   @Test
   public void testConvertFloatWritable() {
     AvroDatumConverter<FloatWritable, Float> converter = mFactory.create(FloatWritable.class);
-    assertEquals(2.2f, converter.convert(new FloatWritable(2.2f)).floatValue(), 0.00001);
+    assertEquals(2.2f, converter.convert(new FloatWritable(2.2f)), 0.00001);
   }
 
   @Test

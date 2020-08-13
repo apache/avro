@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,70 +20,62 @@ package org.apache.avro.mapred.tether;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.nio.ByteBuffer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.avro.ipc.HttpServer;
-import org.apache.avro.ipc.HttpTransceiver;
 import org.apache.avro.ipc.SaslSocketServer;
-import org.apache.avro.ipc.SaslSocketTransceiver;
-import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.ipc.Server;
+import org.apache.avro.ipc.jetty.HttpServer;
 
-/** Java implementation of a tether executable.  Useless except for testing,
- * since it's already possible to write Java MapReduce programs without
- * tethering.  Also serves as an example of how a framework may be
- * implemented. */
+/**
+ * Java implementation of a tether executable. Useless except for testing, since
+ * it's already possible to write Java MapReduce programs without tethering.
+ * Also serves as an example of how a framework may be implemented.
+ */
 public class TetherTaskRunner implements InputProtocol {
   static final Logger LOG = LoggerFactory.getLogger(TetherTaskRunner.class);
 
   private Server inputServer;
   private TetherTask task;
 
-  private TetheredProcess.Protocol proto;
-
   public TetherTaskRunner(TetherTask task) throws IOException {
     this.task = task;
 
-    //determine what protocol we are using
+    // determine what protocol we are using
     String protocol = System.getenv("AVRO_TETHER_PROTOCOL");
     if (protocol == null) {
       throw new RuntimeException("AVRO_TETHER_PROTOCOL env var is null");
     }
 
-    protocol=protocol.trim().toLowerCase();
+    protocol = protocol.trim().toLowerCase();
 
+    TetheredProcess.Protocol proto;
     if (protocol.equals("http")) {
       LOG.info("Use HTTP protocol");
-      proto=TetheredProcess.Protocol.HTTP;
+      proto = TetheredProcess.Protocol.HTTP;
     } else if (protocol.equals("sasl")) {
       LOG.info("Use SASL protocol");
-      proto=TetheredProcess.Protocol.SASL;
+      proto = TetheredProcess.Protocol.SASL;
     } else {
-      throw new RuntimeException("AVRO_TETHER_PROTOCOL="+protocol+" but this protocol is unsupported");
+      throw new RuntimeException("AVRO_TETHER_PROTOCOL=" + protocol + " but this protocol is unsupported");
     }
 
-    InetSocketAddress iaddress=new InetSocketAddress(0);
+    InetSocketAddress iaddress = new InetSocketAddress(0);
 
-    switch(proto) {
+    switch (proto) {
     case SASL:
       // start input server
-      this.inputServer = new SaslSocketServer
-      (new SpecificResponder(InputProtocol.class, this),
-          iaddress);
-      LOG.info("Started SaslSocketServer on port:"+iaddress.getPort());
+      this.inputServer = new SaslSocketServer(new SpecificResponder(InputProtocol.class, this), iaddress);
+      LOG.info("Started SaslSocketServer on port:" + iaddress.getPort());
       break;
 
     case HTTP:
-      this.inputServer=new  HttpServer
-      (new SpecificResponder(InputProtocol.class, this),
-          iaddress.getPort());
+      this.inputServer = new HttpServer(new SpecificResponder(InputProtocol.class, this), iaddress.getPort());
 
-      LOG.info("Started HttpServer on port:"+iaddress.getPort());
+      LOG.info("Started HttpServer on port:" + iaddress.getPort());
       break;
     }
 
@@ -93,27 +85,30 @@ public class TetherTaskRunner implements InputProtocol {
     task.open(inputServer.getPort());
   }
 
-  @Override public void configure(TaskType taskType,
-                                  String inSchema,
-                                  String outSchema) {
+  @Override
+  public void configure(TaskType taskType, String inSchema, String outSchema) {
     LOG.info("got configure");
     task.configure(taskType, inSchema, outSchema);
   }
 
-  @Override public synchronized void input(ByteBuffer data, long count) {
+  @Override
+  public synchronized void input(ByteBuffer data, long count) {
     task.input(data, count);
   }
 
-  @Override public void partitions(int partitions) {
+  @Override
+  public void partitions(int partitions) {
     task.partitions(partitions);
   }
 
-  @Override public void abort() {
+  @Override
+  public void abort() {
     LOG.info("got abort");
     close();
   }
 
-  @Override public synchronized void complete() {
+  @Override
+  public synchronized void complete() {
     LOG.info("got input complete");
     task.complete();
   }

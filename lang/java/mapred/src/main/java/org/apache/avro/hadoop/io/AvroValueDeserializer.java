@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,8 +37,7 @@ public class AvroValueDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D
    * @param writerSchema The Avro writer schema for the data to deserialize.
    * @param readerSchema The Avro reader schema for the data to deserialize.
    */
-  public AvroValueDeserializer(Schema writerSchema, Schema readerSchema,
-                               ClassLoader classLoader) {
+  public AvroValueDeserializer(Schema writerSchema, Schema readerSchema, ClassLoader classLoader) {
     super(writerSchema, readerSchema, classLoader);
   }
 
@@ -47,10 +46,9 @@ public class AvroValueDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D
    *
    * @param writerSchema The Avro writer schema for the data to deserialize.
    * @param readerSchema The Avro reader schema for the data to deserialize.
-   * @param datumReader The Avro datum reader to use for deserialization.
+   * @param datumReader  The Avro datum reader to use for deserialization.
    */
-  public AvroValueDeserializer(Schema writerSchema, Schema readerSchema,
-                               DatumReader<D> datumReader) {
+  public AvroValueDeserializer(Schema writerSchema, Schema readerSchema, DatumReader<D> datumReader) {
     super(writerSchema, readerSchema, datumReader);
   }
 
@@ -61,6 +59,6 @@ public class AvroValueDeserializer<D> extends AvroDeserializer<AvroWrapper<D>, D
    */
   @Override
   protected AvroWrapper<D> createAvroWrapper() {
-    return new AvroValue<D>(null);
+    return new AvroValue<>(null);
   }
 }

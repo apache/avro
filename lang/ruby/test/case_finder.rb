@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -44,13 +44,18 @@ class CaseFinder
   private
 
   def scan_case
-    if id = @scanner.scan(/\/\/ \d+\n/)
+    if (id = @scanner.scan(/\/\/ \d+\n/))
       while @scanner.skip(/\/\/ .*\n/); end
 
       input = scan_input
       canonical = scan_canonical
       fingerprint = scan_fingerprint
-
+      if not fingerprint and @cases
+        fingerprint = @cases[-1].fingerprint
+      end
+      if fingerprint
+        fingerprint = fingerprint.to_i & 0xFFFF_FFFF_FFFF_FFFF
+      end
       Case.new(id, input, canonical, fingerprint)
     else
       @scanner.skip(/.*\n/)
@@ -61,7 +66,7 @@ class CaseFinder
   def scan_item(name)
     if @scanner.scan(/<<#{name}\n/)
       lines = []
-      while line = @scanner.scan(/.+\n/)
+      while (line = @scanner.scan(/.+\n/))
         break if line.chomp == name
         lines << line
       end

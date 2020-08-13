@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,8 +21,8 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Closeable;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,28 +33,33 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.InvalidAvroMagicException;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 
-/** Streaming access to files written by {@link DataFileWriter}.  Use {@link
- * DataFileReader} for file-based input.
+/**
+ * Streaming access to files written by {@link DataFileWriter}. Use
+ * {@link DataFileReader} for file-based input.
+ * 
  * @see DataFileWriter
  */
 public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /**
-   * A handle that can be used to reopen a DataFile without re-reading the
-   * header of the stream.
+   * A handle that can be used to reopen a DataFile without re-reading the header
+   * of the stream.
    */
   public static final class Header {
     Schema schema;
-    Map<String,byte[]> meta = new HashMap<String,byte[]>();
-    private transient List<String> metaKeyList = new ArrayList<String>();
+    Map<String, byte[]> meta = new HashMap<>();
+    private transient List<String> metaKeyList = new ArrayList<>();
     byte[] sync = new byte[DataFileConstants.SYNC_SIZE];
-    private Header() {}
+
+    private Header() {
+    }
   }
 
   private DatumReader<D> reader;
@@ -62,30 +67,31 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   private boolean availableBlock = false;
   private Header header;
 
-  /** Decoder on raw input stream.  (Used for metadata.) */
+  /** Decoder on raw input stream. (Used for metadata.) */
   BinaryDecoder vin;
-  /** Secondary decoder, for datums.
-   *  (Different than vin for block segments.) */
+  /**
+   * Secondary decoder, for datums. (Different than vin for block segments.)
+   */
   BinaryDecoder datumIn = null;
 
   ByteBuffer blockBuffer;
-  long blockCount;                              // # entries in block
-  long blockRemaining;                          // # entries remaining in block
+  long blockCount; // # entries in block
+  long blockRemaining; // # entries remaining in block
   byte[] syncBuffer = new byte[DataFileConstants.SYNC_SIZE];
   private Codec codec;
 
-  /** Construct a reader for an input stream.  For file-based input, use
-   * {@link DataFileReader}.  This will buffer, wrapping with a
-   * {@link java.io.BufferedInputStream}
-   * is not necessary. */
-  public DataFileStream(InputStream in, DatumReader<D> reader)
-    throws IOException {
+  /**
+   * Construct a reader for an input stream. For file-based input, use
+   * {@link DataFileReader}. This will buffer, wrapping with a
+   * {@link java.io.BufferedInputStream} is not necessary.
+   */
+  public DataFileStream(InputStream in, DatumReader<D> reader) throws IOException {
     this.reader = reader;
     initialize(in);
   }
 
   /**
-   * create an unitialized DataFileStream
+   * create an uninitialized DataFileStream
    */
   protected DataFileStream(DatumReader<D> reader) throws IOException {
     this.reader = reader;
@@ -97,14 +103,14 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     this.vin = DecoderFactory.get().binaryDecoder(in, vin);
     byte[] magic = new byte[DataFileConstants.MAGIC.length];
     try {
-      vin.readFixed(magic);                         // read magic
+      vin.readFixed(magic); // read magic
     } catch (IOException e) {
-      throw new IOException("Not a data file.", e);
+      throw new IOException("Not an Avro data file.", e);
     }
     if (!Arrays.equals(DataFileConstants.MAGIC, magic))
-      throw new IOException("Not a data file.");
+      throw new InvalidAvroMagicException("Not an Avro data file.");
 
-    long l = vin.readMapStart();                  // read meta data
+    long l = vin.readMapStart(); // read meta data
     if (l > 0) {
       do {
         for (long i = 0; i < l; i++) {
@@ -117,11 +123,11 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
         }
       } while ((l = vin.mapNext()) != 0);
     }
-    vin.readFixed(header.sync);                          // read sync
+    vin.readFixed(header.sync); // read sync
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = Schema.parse(getMetaString(DataFileConstants.SCHEMA),false);
+    header.schema = new Schema.Parser().setValidate(false).parse(getMetaString(DataFileConstants.SCHEMA));
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }
@@ -142,12 +148,17 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
   }
 
-  /** A handle that can be used to reopen this stream without rereading the
-   * head. */
-  public Header getHeader() { return header; }
+  /**
+   * A handle that can be used to reopen this stream without rereading the head.
+   */
+  public Header getHeader() {
+    return header;
+  }
 
   /** Return the schema used in this file. */
-  public Schema getSchema() { return header.schema; }
+  public Schema getSchema() {
+    return header.schema;
+  }
 
   /** Return the list of keys in the metadata */
   public List<String> getMetaKeys() {
@@ -158,30 +169,33 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   public byte[] getMeta(String key) {
     return header.meta.get(key);
   }
+
   /** Return the value of a metadata property. */
   public String getMetaString(String key) {
     byte[] value = getMeta(key);
     if (value == null) {
       return null;
     }
-    try {
-      return new String(value, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return new String(value, StandardCharsets.UTF_8);
   }
+
   /** Return the value of a metadata property. */
   public long getMetaLong(String key) {
     return Long.parseLong(getMetaString(key));
   }
 
-  /** Returns an iterator over entries in this file.  Note that this iterator
-   * is shared with other users of the file: it does not contain a separate
-   * pointer into the file. */
+  /**
+   * Returns an iterator over entries in this file. Note that this iterator is
+   * shared with other users of the file: it does not contain a separate pointer
+   * into the file.
+   */
   @Override
-  public Iterator<D> iterator() { return this; }
+  public Iterator<D> iterator() {
+    return this;
+  }
 
   private DataBlock block = null;
+
   /** True if more entries remain in this file. */
   @Override
   public boolean hasNext() {
@@ -198,20 +212,21 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
           block = nextRawBlock(block);
           block.decompressUsing(codec);
           blockBuffer = block.getAsByteBuffer();
-          datumIn = DecoderFactory.get().binaryDecoder(
-              blockBuffer.array(), blockBuffer.arrayOffset() +
-              blockBuffer.position(), blockBuffer.remaining(), datumIn);
+          datumIn = DecoderFactory.get().binaryDecoder(blockBuffer.array(),
+              blockBuffer.arrayOffset() + blockBuffer.position(), blockBuffer.remaining(), datumIn);
         }
       }
       return blockRemaining != 0;
-    } catch (EOFException e) {                    // at EOF
+    } catch (EOFException e) { // at EOF
       return false;
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
   }
 
-  /** Read the next datum in the file.
+  /**
+   * Read the next datum in the file.
+   * 
    * @throws NoSuchElementException if no more remain in the file.
    */
   @Override
@@ -223,7 +238,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     }
   }
 
-  /** Read the next datum from the file.
+  /**
+   * Read the next datum from the file.
+   * 
    * @param reuse an instance to reuse.
    * @throws NoSuchElementException if no more remain in the file.
    */
@@ -249,10 +266,14 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
   }
 
   /** Expert: Return the count of items in the current block. */
-  public long getBlockCount() { return blockCount; }
+  public long getBlockCount() {
+    return blockCount;
+  }
 
   /** Expert: Return the size in bytes (uncompressed) of the current block. */
-  public long getBlockSize() { return blockSize; }
+  public long getBlockSize() {
+    return blockSize;
+  }
 
   protected void blockFinished() throws IOException {
     // nothing for the stream impl
@@ -260,14 +281,14 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   boolean hasNextBlock() {
     try {
-      if (availableBlock) return true;
-      if (vin.isEnd()) return false;
-      blockRemaining = vin.readLong();      // read block count
-      blockSize = vin.readLong();           // read block size
-      if (blockSize > Integer.MAX_VALUE ||
-          blockSize < 0) {
-        throw new IOException("Block size invalid or too large for this " +
-          "implementation: " + blockSize);
+      if (availableBlock)
+        return true;
+      if (vin.isEnd())
+        return false;
+      blockRemaining = vin.readLong(); // read block count
+      blockSize = vin.readLong(); // read block size
+      if (blockSize > Integer.MAX_VALUE || blockSize < 0) {
+        throw new IOException("Block size invalid or too large for this " + "implementation: " + blockSize);
       }
       blockCount = blockRemaining;
       availableBlock = true;
@@ -287,7 +308,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
       reuse = new DataBlock(blockRemaining, (int) blockSize);
     } else {
       reuse.numEntries = blockRemaining;
-      reuse.blockSize = (int)blockSize;
+      reuse.blockSize = (int) blockSize;
     }
     // throws if it can't read the size requested
     vin.readFixed(reuse.data, 0, reuse.blockSize);
@@ -300,7 +321,9 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /** Not supported. */
   @Override
-  public void remove() { throw new UnsupportedOperationException(); }
+  public void remove() {
+    throw new UnsupportedOperationException();
+  }
 
   /** Close this reader. */
   @Override
@@ -314,6 +337,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
     private int blockSize;
     private int offset = 0;
     private boolean flushOnWrite = true;
+
     private DataBlock(long numEntries, int blockSize) {
       this.data = new byte[blockSize];
       this.numEntries = numEntries;
@@ -375,4 +399,3 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   }
 }
-

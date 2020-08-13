@@ -1,7 +1,7 @@
 
                                  Apache License
                            Version 2.0, January 2004
-                        http://www.apache.org/licenses/
+                        https://www.apache.org/licenses/
 
    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
@@ -193,7 +193,7 @@
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -239,7 +239,7 @@ License for Jackson, included in this binary artifact:
 
 Copyright: 2007-2015 Tatu Saloranta and other contributors
 Home page: http://jackson.codehaus.org/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for SLF4J, include in this binary artifact:
@@ -247,8 +247,8 @@ License for SLF4J, include in this binary artifact:
 Copyright (c) 2004-2013 QOS.ch
 All rights reserved.
 
-Home page: http://www.slf4j.org/
-License: http://slf4j.org/license.html (MIT license)
+Home page: https://www.slf4j.org/
+License: https://slf4j.org/license.html (MIT license)
 SLF4J license text (MIT):
 
 | Permission is hereby granted, free  of charge, to any person obtaining
@@ -271,58 +271,28 @@ SLF4J license text (MIT):
 | WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ----------------------------------------------------------------------
-License for paranamer, included in this binary artifact:
-
-Copyright (c) 2006 Paul Hammant & ThoughtWorks Inc
-All rights reserved.
-
-| Redistribution and use in source and binary forms, with or without
-| modification, are permitted provided that the following conditions
-| are met:
-| 1. Redistributions of source code must retain the above copyright
-|    notice, this list of conditions and the following disclaimer.
-| 2. Redistributions in binary form must reproduce the above copyright
-|    notice, this list of conditions and the following disclaimer in the
-|    documentation and/or other materials provided with the distribution.
-| 3. Neither the name of the copyright holders nor the names of its
-|    contributors may be used to endorse or promote products derived from
-|    this software without specific prior written permission.
-|
-| THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-| AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-| IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-| ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-| LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-| CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-| SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-| INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-| CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-| ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-| THE POSSIBILITY OF SUCH DAMAGE.
-
-----------------------------------------------------------------------
 License for snappy-java, included in this binary artifact:
 
 Copyright: 2011 Taro L. Saito and other contributors
 Home page: http://www.xerial.org/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Compress, included in this binary artifact:
 
 Copyright: 2004-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/compress/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 Commons Compress includes files derived from the LZMA SDK, version 9.20 (C/ and
 CPP/7zip/), in the package org.apache.commons.compress.archivers.sevenz:
 
-| LZMA SDK is placed in the public domain. (http://www.7-zip.org/sdk.html)
+| LZMA SDK is placed in the public domain. (https://www.7-zip.org/sdk.html)
 
 ----------------------------------------------------------------------
 License for xz compression, included in this binary artifact:
 
-Home page: http://tukaani.org/xz/java.html
+Home page: https://tukaani.org/xz/java.html
 
 | This Java implementation of XZ has been put into the public domain, thus you
 | can do whatever you want with it. All the files in the package have been
@@ -334,7 +304,7 @@ License for Apache Commons Lang, included in this binary artifact:
 
 Copyright: 2002-2014 The Apache Software Foundation
 Home page: https://commons.apache.org/lang/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 Commons Lang includes software from the Spring Framework, under the
 Apache License 2.0:
@@ -345,28 +315,28 @@ License for Apache Velocity, included in this binary artifact:
 
 Copyright: 2000-2015 The Apache Software Foundation
 Home page: https://velocity.apache.org/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Collections, included in this binary artifact:
 
 Copyright: 2001-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-collections/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Jetty, included in this binary artifact:
 
 Copyright: 1995-2015 Mort Bay Consulting Pty Ltd.
 Home page: https://eclipse.org/jetty/licenses.php
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Netty, included in this binary artifact:
 
 Copyright: 2011-2013 The Netty Project
-Home page: http://netty.io/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+Home page: https://netty.io/
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 Netty contains the following code (copied from its NOTICE file with licenses
 added inline):
@@ -447,7 +417,7 @@ added inline):
 License for the javax.servlet API, included in this binary artifact:
 
 Copyright (c) 2003-2004 The Apache Software Foundation
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 Source: http://grepcode.com/project/repo1.maven.org/maven2/javax.servlet/servlet-api/
 
 ----------------------------------------------------------------------
@@ -455,34 +425,34 @@ License for Apache Commons Codec, included in this binary artifact:
 
 Copyright: 2002-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-codec/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons CLI, included in this binary artifact:
 
 Copyright: 2001-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-cli/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Logging, included in this binary artifact:
 
 Copyright: 2002-2014 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-logging/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons HttpClient, included in this binary artifact:
 
 Copyright: 1999-2005 The Apache Software Foundation
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 ----------------------------------------------------------------------
 License for Apache Hadoop, included in this binary artifact:
 
 Copyright: 2001-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-collections/
-License: http://www.apache.org/licenses/LICENSE-2.0.txt (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0.txt (see above)
 
 Hadoop contains the following code (from its LICENSE file):
 
@@ -521,14 +491,14 @@ License for Google Guava, included in this binary artifact:
 
 Copyright: 2007-2015 The Guava Authors
 Home page: https://github.com/google/guava
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Math, included in this binary artifact:
 
 Copyright: 2001-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-math/
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 Commons Math includes other works under licenses compatible with the
 Apache Software License:
@@ -748,40 +718,40 @@ License for Apache Commons IO, included in this binary artifact:
 
 Copyright: 2002-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/io/
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Net, included in this binary artifact:
 
 Copyright: 2001-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-net/
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Apache Log4j, included in this binary artifact:
 
 Copyright: 1999-2015 The Apache Software Foundation
 Home page: https://logging.apache.org/log4j/
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Configuration, included in this binary artifact:
 
 Copyright: 2001-2015 The Apache Software Foundation
 Home page: https://commons.apache.org/proper/commons-configuration/
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Digester, included in this binary artifact:
 
 Copyright: 2001-2015 The Apache Software Foundation
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Apache Commons Beanutils, included in this binary artifact:
 
 Copyright: 2000-2015 The Apache Software Foundation
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Google Protocol Buffers, included in this binary artifact:
@@ -823,7 +793,7 @@ Copyright 2014, Google Inc.  All rights reserved.
 License for Apache HttpClient, included in this binary artifact:
 
 Copyright: 1999-2015 The Apache Software Foundation
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 HttpClient contains the following data under the terms of the MPL:
 | This project includes Public Suffix List copied from
@@ -836,7 +806,7 @@ HttpClient contains the following data under the terms of the MPL:
 License for Apache Directory, included in this binary artifact:
 
 Copyright: 2003-2015 The Apache Software Foundation
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 Apache Directory includes other works under licenses compatible with the
 Apache Software License:
@@ -893,7 +863,7 @@ Apache Software License:
 |
 | ----------------------------------------------------------------
 |
-| Copyright (c) 2000 - 2011 The Legion Of The Bouncy Castle (http://www.bouncycastle.org)
+| Copyright (c) 2000 - 2011 The Legion Of The Bouncy Castle (https://www.bouncycastle.org)
 |
 | Permission is hereby granted, free of charge, to any person obtaining a
 | copy of this software and associated documentation files (the "Software"),
@@ -946,7 +916,7 @@ Apache Software License:
 |   you may not use this source code except in compliance with the License.
 |   You may obtain a copy of the License at
 |
-|       http://www.apache.org/licenses/LICENSE-2.0
+|       https://www.apache.org/licenses/LICENSE-2.0
 |
 |   Unless required by applicable law or agreed to in writing, software
 |   distributed under the License is distributed on an "AS IS" BASIS,
@@ -958,13 +928,13 @@ Apache Software License:
 License for the JSR-305 annotations, included in this binary artifact:
 
 Copyright: 2011-2015 Stephen Connolly, Greg Lucas
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Apache ZooKeeper, included in this binary artifact:
 
 Copyright: 2009-2015 The Apache Software Foundation
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for Jersey, included in this binary artifact:
@@ -1010,7 +980,7 @@ License for iq80 LevelDB Java API, included in this binary artifact:
 
 Copyright 2011 Dain Sundstrom <dain@iq80.com>
 Copyright 2011 FuseSource Corp. http://fusesource.com
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 
 ----------------------------------------------------------------------
 License for jquery and jquery-ui, included in this binary artifact:
@@ -1123,5 +1093,5 @@ All rights reserved.
 License for Guava classes included in this binary artifact:
 
 Copyright: 2006-2015 The Guava Authors
-License: http://www.apache.org/licenses/LICENSE-2.0 (see above)
+License: https://www.apache.org/licenses/LICENSE-2.0 (see above)
 

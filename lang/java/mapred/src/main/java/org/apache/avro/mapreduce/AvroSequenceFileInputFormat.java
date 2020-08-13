@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,7 +33,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 /**
- * An input format for reading from AvroSequenceFiles (sequence files that support Avro data).
+ * An input format for reading from AvroSequenceFiles (sequence files that
+ * support Avro data).
  *
  * @param <K> The input key type.
  * @param <V> The input value type.
@@ -41,16 +42,17 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 public class AvroSequenceFileInputFormat<K, V> extends SequenceFileInputFormat<K, V> {
   /** {@inheritDoc} */
   @Override
-  public RecordReader<K, V> createRecordReader(InputSplit inputSplit, TaskAttemptContext context)
-      throws IOException {
+  public RecordReader<K, V> createRecordReader(InputSplit inputSplit, TaskAttemptContext context) throws IOException {
     return new AvroSequenceFileRecordReader();
   }
 
   /**
    * Reads records from a SequenceFile that supports Avro data.
    *
-   * <p>This class is based on Hadoop's SequenceFileRecordReader, modified to construct an
-   * AvroSequenceFile.Reader instead of a SequenceFile.Reader.</p>
+   * <p>
+   * This class is based on Hadoop's SequenceFileRecordReader, modified to
+   * construct an AvroSequenceFile.Reader instead of a SequenceFile.Reader.
+   * </p>
    */
   protected class AvroSequenceFileRecordReader extends RecordReader<K, V> {
     private SequenceFile.Reader mReader;
@@ -62,18 +64,15 @@ public class AvroSequenceFileInputFormat<K, V> extends SequenceFileInputFormat<K
 
     /** {@inheritDoc} */
     @Override
-    public void initialize(InputSplit split, TaskAttemptContext context)
-        throws IOException, InterruptedException {
+    public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
       FileSplit fileSplit = (FileSplit) split;
       Configuration conf = context.getConfiguration();
       Path path = fileSplit.getPath();
       FileSystem fs = path.getFileSystem(conf);
 
       // Configure the SequenceFile reader.
-      AvroSequenceFile.Reader.Options options = new AvroSequenceFile.Reader.Options()
-          .withFileSystem(fs)
-          .withInputPath(path)
-          .withConfiguration(conf);
+      AvroSequenceFile.Reader.Options options = new AvroSequenceFile.Reader.Options().withFileSystem(fs)
+          .withInputPath(path).withConfiguration(conf);
       Schema keySchema = AvroJob.getInputKeySchema(conf);
       if (null != keySchema) {
         options.withKeySchema(keySchema);
@@ -132,7 +131,7 @@ public class AvroSequenceFileInputFormat<K, V> extends SequenceFileInputFormat<K
       if (mEnd == mStart) {
         return 0.0f;
       } else {
-        return Math.min(1.0f, (mReader.getPosition() - mStart) / (float)(mEnd - mStart));
+        return Math.min(1.0f, (mReader.getPosition() - mStart) / (float) (mEnd - mStart));
       }
     }
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +31,9 @@ import org.apache.hadoop.io.RawComparator;
  * The {@link org.apache.hadoop.io.RawComparator} used by jobs configured with
  * {@link org.apache.avro.mapreduce.AvroJob}.
  *
- * <p>Compares AvroKeys output from the map phase for sorting.</p>
+ * <p>
+ * Compares AvroKeys output from the map phase for sorting.
+ * </p>
  */
 public class AvroKeyComparator<T> extends Configured implements RawComparator<AvroKey<T>> {
   /** The schema of the Avro data in the key to compare. */

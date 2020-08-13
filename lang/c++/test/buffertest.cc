@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,6 @@
 
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
-#include <boost/scoped_array.hpp>
 
 #ifdef HAVE_BOOST_ASIO
 #include <boost/asio.hpp>
@@ -56,7 +55,7 @@ std::string makeString(size_t len)
     return newstring;
 }
 
-void printBuffer(const InputBuffer &buf) 
+void printBuffer(const InputBuffer &buf)
 {
     avro::istream is(buf);
     cout << is.rdbuf() << endl;
@@ -112,7 +111,7 @@ void addDataToBuffer(OutputBuffer &buf, size_t size)
 void TestGrow()
 {
     BOOST_TEST_MESSAGE( "TestGrow");
-    { 
+    {
         OutputBuffer ob;
 
         // add exactly one block
@@ -189,7 +188,7 @@ void TestDiscard()
         BOOST_CHECK_EQUAL(ob.numDataChunks(), 3);
     }
 
-    { 
+    {
         // discard exactly one block
         OutputBuffer ob;
         size_t dataSize = kDefaultBlockSize*2 + kDefaultBlockSize/2;
@@ -244,7 +243,7 @@ void TestDiscard()
             ob.discardData(ob.size()+1);
         }
         catch (std::exception &e) {
-            std::cout << "Intentionally triggered exception: " << e.what() << std::endl; 
+            std::cout << "Intentionally triggered exception: " << e.what() << std::endl;
         }
         ob.discardData(ob.size());
 
@@ -310,7 +309,7 @@ void TestExtractToInput()
         BOOST_CHECK_EQUAL(ob.numChunks(), 1);
         BOOST_CHECK_EQUAL(ob.numDataChunks(), 3);
     }
-    
+
     {
         // extract exactly one block
         OutputBuffer ob;
@@ -359,7 +358,7 @@ void TestExtractToInput()
             ob.extractData(ob.size()+1);
         }
         catch (std::exception &e) {
-            std::cout << "Intentionally triggered exception: " << e.what() << std::endl; 
+            std::cout << "Intentionally triggered exception: " << e.what() << std::endl;
         }
 
         InputBuffer ib = ob.extractData(remainder);
@@ -434,7 +433,7 @@ void TestEof()
     OutputBuffer buf2;
     buf2.writeTo(&eofs[0], eofs.size());
 
-    // append the buffers, so the first 
+    // append the buffers, so the first
     // character on a buffer boundary is eof
     buf1.append(buf2);
 
@@ -539,7 +538,7 @@ void TestSeek()
         tmp1.writeTo(str.c_str(), 3); // Sam
         tmp2.writeTo(str.c_str()+3, 7);  // pleMess
         tmp3.writeTo(str.c_str()+10, 3); // age
-        
+
         tmp2.append(tmp3);
         tmp1.append(tmp2);
 
@@ -586,11 +585,11 @@ void TestSeek()
         oss << is.rdbuf();
         cout << "After reading bytes: " << oss.str() << '\n';
         BOOST_CHECK_EQUAL(oss.str(), part2);
-        
+
     }
 }
 
-void TestIterator() 
+void TestIterator()
 {
     BOOST_TEST_MESSAGE( "TestIterator");
     {
@@ -622,7 +621,7 @@ void TestIterator()
 
         size_t acc = 0;
         for(OutputBuffer::const_iterator iter = ob.begin();
-            iter != ob.end(); 
+            iter != ob.end();
             ++iter) {
             acc += iter->size();
         }
@@ -632,13 +631,13 @@ void TestIterator()
             ob.wroteTo(acc+1);
         }
         catch (std::exception &e) {
-            std::cout << "Intentionally triggered exception: " << e.what() << std::endl; 
+            std::cout << "Intentionally triggered exception: " << e.what() << std::endl;
         }
     }
 }
 
 #ifdef HAVE_BOOST_ASIO
-void server(boost::barrier &b) 
+void server(boost::barrier &b)
 {
     using boost::asio::ip::tcp;
     boost::asio::io_service io_service;
@@ -682,7 +681,7 @@ void TestAsioBuffer()
 
         b.wait();
 
-        // set up the thing 
+        // set up the thing
         boost::asio::io_service io_service;
 
         tcp::resolver resolver(io_service);
@@ -705,7 +704,7 @@ void TestAsioBuffer()
         std::string world = "world";
         avro::OutputBuffer buf;
         buf.writeTo(hello.c_str(), hello.size());
-        
+
         BOOST_CHECK_EQUAL(buf.size(), hello.size());
 
         avro::OutputBuffer buf2;
@@ -738,7 +737,7 @@ void TestAsioBuffer()
     }
 }
 #else
-void TestAsioBuffer() 
+void TestAsioBuffer()
 {
     cout << "Skipping asio test\n";
 }
@@ -751,7 +750,7 @@ void TestSplit()
         const std::string str = "This message is to be split";
 
         avro::OutputBuffer buf;
-        buf.writeTo(str.c_str(), str.size()); 
+        buf.writeTo(str.c_str(), str.size());
 
         char datain[12];
         avro::istream is(buf);
@@ -780,20 +779,20 @@ void TestSplitOnBorder()
         const std::string part2 = " is to be split";
 
         avro::OutputBuffer buf;
-        buf.writeTo(part1.c_str(), part1.size()); 
+        buf.writeTo(part1.c_str(), part1.size());
         size_t firstChunkSize = buf.size();
 
         {
             avro::OutputBuffer tmp;
-            tmp.writeTo(part2.c_str(), part2.size()); 
+            tmp.writeTo(part2.c_str(), part2.size());
             buf.append(tmp);
             printBuffer(InputBuffer(buf));
         }
 
         BOOST_CHECK_EQUAL(buf.numDataChunks(), 2);
         size_t bufsize = buf.size();
-    
-        boost::scoped_array<char> datain(new char[firstChunkSize]);
+
+        std::unique_ptr<char[]> datain(new char[firstChunkSize]);
         avro::istream is(buf);
         size_t in = static_cast<size_t>(is.readsome(&datain[0], firstChunkSize));
         BOOST_CHECK_EQUAL(in, firstChunkSize);
@@ -810,7 +809,7 @@ void TestSplitOnBorder()
     }
 }
 
-void TestSplitTwice() 
+void TestSplitTwice()
 {
     BOOST_TEST_MESSAGE( "TestSplitTwice");
     {
@@ -828,7 +827,7 @@ void TestSplitTwice()
         is.readsome(buffer, 5);
         buffer[5] = 0;
         std::cout << "buffer =" << buffer << std::endl;
-        
+
         buf1.discardData(static_cast<size_t>(is.tellg()));
         printBuffer(buf1);
 
@@ -840,7 +839,7 @@ void TestSplitTwice()
     }
 }
 
-void TestCopy() 
+void TestCopy()
 {
     BOOST_TEST_MESSAGE( "TestCopy");
 
@@ -855,7 +854,7 @@ void TestCopy()
 
         BOOST_CHECK_EQUAL(msg.size(), wb.size());
         BOOST_CHECK_EQUAL(wb.numDataChunks(), 1);
-        BOOST_CHECK_EQUAL(kDefaultBlockSize - msg.size(), 
+        BOOST_CHECK_EQUAL(kDefaultBlockSize - msg.size(),
                 wb.freeSpace());
 
         // copy starting at offset 5 and copying 10 less bytes
@@ -871,14 +870,14 @@ void TestCopy()
         // buf 1 should be unchanged
         BOOST_CHECK_EQUAL(msg.size(), wb.size());
         BOOST_CHECK_EQUAL(wb.numDataChunks(), 1);
-        BOOST_CHECK_EQUAL(kDefaultBlockSize - msg.size(), 
+        BOOST_CHECK_EQUAL(kDefaultBlockSize - msg.size(),
                 wb.freeSpace());
 
         // make sure wb is still functional
         wb.reserve(kDefaultBlockSize);
         BOOST_CHECK_EQUAL(wb.size(), msg.size());
         BOOST_CHECK_EQUAL(wb.numChunks(), 2);
-        BOOST_CHECK_EQUAL(kDefaultBlockSize * 2 - msg.size(), 
+        BOOST_CHECK_EQUAL(kDefaultBlockSize * 2 - msg.size(),
                 wb.freeSpace());
     }
 
@@ -896,7 +895,7 @@ void TestCopy()
 
         BOOST_CHECK_EQUAL(wb.size(), msg.size());
         BOOST_CHECK_EQUAL(wb.numDataChunks(), 1);
-        BOOST_CHECK_EQUAL(bufsize - msg.size(), 
+        BOOST_CHECK_EQUAL(bufsize - msg.size(),
                 wb.freeSpace());
 
         BufferReader br(wb);
@@ -924,7 +923,7 @@ void TestCopy()
         wb.reserve(bufsize);
         BOOST_CHECK_EQUAL(msg.size(), wb.size());
         BOOST_CHECK_EQUAL(wb.numChunks(), 4);
-        BOOST_CHECK_EQUAL(kMaxBlockSize * 3 - msg.size() + kMinBlockSize, 
+        BOOST_CHECK_EQUAL(kMaxBlockSize * 3 - msg.size() + kMinBlockSize,
                 wb.freeSpace());
     }
 
@@ -959,7 +958,7 @@ void TestCopy()
         BOOST_CHECK_EQUAL(wb.numDataChunks(), 2);
     }
 
-    // Test4, no data 
+    // Test4, no data
     {
         const OutputBuffer::size_type bufsize= 2*kMaxBlockSize;
         std::cout << "Test4\n";
@@ -996,7 +995,7 @@ void TestCopy()
 }
 
 // this is reproducing a sequence of steps that caused a crash
-void TestBug()  
+void TestBug()
 {
     BOOST_TEST_MESSAGE( "TestBug");
     {
@@ -1010,7 +1009,7 @@ void TestBug()
             avro::InputBuffer ib(rxBuf.extractData());
             buf.append(ib);
         }
-        
+
         buf.discardData(61);
 
         rxBuf.reserve(64 * 1024);
@@ -1030,13 +1029,13 @@ void TestBug()
 
 bool safeToDelete = false;
 
-void deleteForeign(const std::string &val) 
+void deleteForeign(const std::string &val)
 {
     std::cout << "Deleting foreign string containing " << val << '\n';
     BOOST_CHECK(safeToDelete);
 }
 
-void TestForeign ()  
+void TestForeign ()
 {
     BOOST_TEST_MESSAGE( "TestForeign");
     {
@@ -1051,7 +1050,7 @@ void TestForeign ()
             buf.writeTo(hello.c_str(), hello.size());
             buf.appendForeignData(there.c_str(), there.size(), boost::bind(&deleteForeign, there));
             buf.writeTo(world.c_str(), world.size());
-        
+
             printBuffer(buf);
             BOOST_CHECK_EQUAL(buf.size(), 18U);
             copy = buf;
@@ -1063,7 +1062,7 @@ void TestForeign ()
     safeToDelete = false;
 }
 
-void TestForeignDiscard ()  
+void TestForeignDiscard ()
 {
     BOOST_TEST_MESSAGE( "TestForeign");
     {
@@ -1077,7 +1076,7 @@ void TestForeignDiscard ()
         buf.appendForeignData(again.c_str(), again.size(), boost::bind(&deleteForeign, again));
         buf.appendForeignData(there.c_str(), there.size(), boost::bind(&deleteForeign, there));
         buf.writeTo(world.c_str(), world.size());
-        
+
         printBuffer(buf);
         BOOST_CHECK_EQUAL(buf.size(), 24U);
 
@@ -1085,7 +1084,7 @@ void TestForeignDiscard ()
         buf.discardData(9);
         printBuffer(buf);
         BOOST_CHECK_EQUAL(buf.size(), 15U);
-        
+
         // discard some more data, which will lop off the first foreign buffer
         safeToDelete = true;
         buf.discardData(6);
@@ -1115,7 +1114,7 @@ void TestPrinter()
 
 struct BufferTestSuite : public boost::unit_test::test_suite
 {
-    BufferTestSuite()  : 
+    BufferTestSuite()  :
         boost::unit_test::test_suite("BufferTestSuite")
     {
         add (BOOST_TEST_CASE( TestReserve ));
@@ -1143,7 +1142,7 @@ struct BufferTestSuite : public boost::unit_test::test_suite
 };
 
 boost::unit_test::test_suite*
-init_unit_test_suite( int, char* [] ) 
+init_unit_test_suite( int, char* [] )
 {
     boost::unit_test::test_suite *test (BOOST_TEST_SUITE ("Buffer Unit Tests"));
     test->add (new BufferTestSuite() );

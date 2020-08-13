@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -19,11 +19,11 @@
 
 use strict;
 use warnings;
+use File::Temp;
 use Avro::DataFile;
 use Avro::BinaryEncoder;
 use Avro::BinaryDecoder;
 use Avro::Schema;
-use File::Temp;
 use Test::Exception;
 use Test::More;
 
@@ -115,6 +115,62 @@ is_deeply $all[0], $data, "Our data is intact!";
     is $read_file->metadata->{'some'}, 'metadata', 'custom meta';
 
     my @all = $read_file->all;
+    is scalar @all, 1, "one object back";
+    is_deeply $all[0], $data, "Our data is intact!";
+
+
+    ## bzip2!
+    $zfh = File::Temp->new(UNLINK => 0);
+    $write_file = Avro::DataFileWriter->new(
+        fh            => $zfh,
+        writer_schema => $schema,
+        codec         => 'bzip2',
+        metadata      => {
+            some => 'metadata',
+        },
+    );
+    $write_file->print($data);
+    $write_file->flush;
+
+    ## rewind
+    seek $zfh, 0, 0;
+
+    $read_file = Avro::DataFileReader->new(
+        fh            => $zfh,
+        reader_schema => $schema,
+    );
+    is $read_file->metadata->{'avro.codec'}, 'bzip2', 'avro.codec';
+    is $read_file->metadata->{'some'}, 'metadata', 'custom meta';
+
+    @all = $read_file->all;
+    is scalar @all, 1, "one object back";
+    is_deeply $all[0], $data, "Our data is intact!";
+
+
+    ## zstandard!
+    $zfh = File::Temp->new(UNLINK => 0);
+    $write_file = Avro::DataFileWriter->new(
+        fh            => $zfh,
+        writer_schema => $schema,
+        codec         => 'zstandard',
+        metadata      => {
+            some => 'metadata',
+        },
+    );
+    $write_file->print($data);
+    $write_file->flush;
+
+    ## rewind
+    seek $zfh, 0, 0;
+
+    $read_file = Avro::DataFileReader->new(
+        fh            => $zfh,
+        reader_schema => $schema,
+    );
+    is $read_file->metadata->{'avro.codec'}, 'zstandard', 'avro.codec';
+    is $read_file->metadata->{'some'}, 'metadata', 'custom meta';
+
+    @all = $read_file->all;
     is scalar @all, 1, "one object back";
     is_deeply $all[0], $data, "Our data is intact!";
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,23 +41,24 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 
 /**
- * Constructs converters that turn objects (usually from the output of a MR job) into Avro
- * data that can be serialized.
+ * Constructs converters that turn objects (usually from the output of a MR job)
+ * into Avro data that can be serialized.
  *
- * <p>Currently, only the following types have implemented converters:
- *   <ul>
- *     <li>AvroKey</li>
- *     <li>AvroValue</li>
- *     <li>BooleanWritable</li>
- *     <li>BytesWritable</li>
- *     <li>ByteWritable</li>
- *     <li>DoubleWritable</li>
- *     <li>FloatWritable</li>
- *     <li>IntWritable</li>
- *     <li>LongWritable</li>
- *     <li>NullWritable</li>
- *     <li>Text</li>
- *   </ul>
+ * <p>
+ * Currently, only the following types have implemented converters:
+ * <ul>
+ * <li>AvroKey</li>
+ * <li>AvroValue</li>
+ * <li>BooleanWritable</li>
+ * <li>BytesWritable</li>
+ * <li>ByteWritable</li>
+ * <li>DoubleWritable</li>
+ * <li>FloatWritable</li>
+ * <li>IntWritable</li>
+ * <li>LongWritable</li>
+ * <li>NullWritable</li>
+ * <li>Text</li>
+ * </ul>
  * </p>
  */
 public class AvroDatumConverterFactory extends Configured {
@@ -71,14 +72,16 @@ public class AvroDatumConverterFactory extends Configured {
   }
 
   /**
-   * Creates a converter that turns objects of type <code>inputClass</code> into Avro data.
+   * Creates a converter that turns objects of type <code>inputClass</code> into
+   * Avro data.
    *
    * @param inputClass The type of input data to convert.
-   * @return A converter that turns objects of type <code>inputClass</code> into Avro data.
+   * @return A converter that turns objects of type <code>inputClass</code> into
+   *         Avro data.
    */
   @SuppressWarnings("unchecked")
   public <IN, OUT> AvroDatumConverter<IN, OUT> create(Class<IN> inputClass) {
-    boolean isMapOnly = ((JobConf)getConf()).getNumReduceTasks() == 0;
+    boolean isMapOnly = ((JobConf) getConf()).getNumReduceTasks() == 0;
     if (AvroKey.class.isAssignableFrom(inputClass)) {
       Schema schema;
       if (isMapOnly) {
@@ -86,13 +89,11 @@ public class AvroDatumConverterFactory extends Configured {
         if (null == schema) {
           schema = AvroJob.getOutputKeySchema(getConf());
         }
-      }
-      else {
+      } else {
         schema = AvroJob.getOutputKeySchema(getConf());
       }
       if (null == schema) {
-        throw new IllegalStateException(
-            "Writer schema for output key was not set. Use AvroJob.setOutputKeySchema().");
+        throw new IllegalStateException("Writer schema for output key was not set. Use AvroJob.setOutputKeySchema().");
       }
       return (AvroDatumConverter<IN, OUT>) new AvroWrapperConverter(schema);
     }
@@ -103,8 +104,7 @@ public class AvroDatumConverterFactory extends Configured {
         if (null == schema) {
           schema = AvroJob.getOutputValueSchema(getConf());
         }
-      }
-      else {
+      } else {
         schema = AvroJob.getOutputValueSchema(getConf());
       }
       if (null == schema) {
@@ -166,8 +166,7 @@ public class AvroDatumConverterFactory extends Configured {
   }
 
   /** Converts BooleanWritables into Booleans. */
-  public static class BooleanWritableConverter
-      extends AvroDatumConverter<BooleanWritable, Boolean> {
+  public static class BooleanWritableConverter extends AvroDatumConverter<BooleanWritable, Boolean> {
     private final Schema mSchema;
 
     /** Constructor. */
@@ -189,8 +188,7 @@ public class AvroDatumConverterFactory extends Configured {
   }
 
   /** Converts BytesWritables into ByteBuffers. */
-  public static class BytesWritableConverter
-      extends AvroDatumConverter<BytesWritable, ByteBuffer> {
+  public static class BytesWritableConverter extends AvroDatumConverter<BytesWritable, ByteBuffer> {
     private final Schema mSchema;
 
     /** Constructor. */
@@ -212,8 +210,7 @@ public class AvroDatumConverterFactory extends Configured {
   }
 
   /** Converts ByteWritables into GenericFixed of size 1. */
-  public static class ByteWritableConverter
-      extends AvroDatumConverter<ByteWritable, GenericFixed> {
+  public static class ByteWritableConverter extends AvroDatumConverter<ByteWritable, GenericFixed> {
     private final Schema mSchema;
 
     /** Constructor. */

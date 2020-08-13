@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,9 +24,9 @@ Test the schema parsing logic.
 import logging
 import traceback
 import unittest
+import unittest.mock
 
 from avro import schema
-
 
 # ------------------------------------------------------------------------------
 
@@ -451,7 +451,7 @@ VALID_EXAMPLES = [e for e in EXAMPLES if e.valid]
 class TestSchema(unittest.TestCase):
 
   def testCorrectRecursiveExtraction(self):
-    parsed = schema.Parse("""
+    parsed = schema.parse("""
       {
         "type": "record",
         "name": "X",
@@ -467,17 +467,36 @@ class TestSchema(unittest.TestCase):
     """)
     logging.debug('Parsed schema:\n%s', parsed)
     logging.debug('Fields: %s', parsed.fields)
-    t = schema.Parse(str(parsed.fields[0].type))
+    t = schema.parse(str(parsed.fields[0].type))
     # If we've made it this far, the subschema was reasonably stringified;
     # it could be reparsed.
     self.assertEqual("X", t.fields[0].type.name)
 
-  def testParse(self):
+  def testNoName(self):
+    """Test that schema without a name
+    raise AttributeError when you try
+    to access their name."""
+    cases = [
+      '{"type": "array", "items": "int"}',
+      '{"type": "map", "values": "int"}',
+      '["null", "int"]',
+    ]
+    for case in (schema.parse(case) for case in cases):
+      self.assertRaises(AttributeError, lambda: case.name)
+      self.assertEqual(getattr(case, "name", "default"), "default")
+
+  @unittest.mock.patch('avro.schema.warnings.warn')
+  def test_Parse_is_deprecated(self, warn):
+    """Capital-P Parse is deprecated."""
+    schema.Parse(PRIMITIVE_EXAMPLES[0].schema_string)
+    self.assertEqual(warn.call_count, 1)
+
+  def test_parse(self):
     correct = 0
     for iexample, example in enumerate(EXAMPLES):
       logging.debug('Testing example #%d\n%s', iexample, example.schema_string)
       try:
-        schema.Parse(example.schema_string)
+        schema.parse(example.schema_string)
         if example.valid:
           correct += 1
         else:
@@ -508,8 +527,8 @@ class TestSchema(unittest.TestCase):
     """
     correct = 0
     for example in VALID_EXAMPLES:
-      schema_data = schema.Parse(example.schema_string)
-      schema.Parse(str(schema_data))
+      schema_data = schema.parse(example.schema_string)
+      schema.parse(str(schema_data))
       correct += 1
 
     fail_msg = "Cast to string success on %d out of %d schemas" % \
@@ -525,8 +544,8 @@ class TestSchema(unittest.TestCase):
     """
     correct = 0
     for example in VALID_EXAMPLES:
-      original_schema = schema.Parse(example.schema_string)
-      round_trip_schema = schema.Parse(str(original_schema))
+      original_schema = schema.parse(example.schema_string)
+      round_trip_schema = schema.parse(str(original_schema))
       if original_schema == round_trip_schema:
         correct += 1
         debug_msg = "%s: ROUND TRIP SUCCESS" % example.name
@@ -580,7 +599,7 @@ class TestSchema(unittest.TestCase):
   def testDocAttributes(self):
     correct = 0
     for example in DOC_EXAMPLES:
-      original_schema = schema.Parse(example.schema_string)
+      original_schema = schema.parse(example.schema_string)
       if original_schema.doc is not None:
         correct += 1
       if original_schema.type == 'record':
@@ -595,8 +614,8 @@ class TestSchema(unittest.TestCase):
     correct = 0
     props = {}
     for example in OTHER_PROP_EXAMPLES:
-      original_schema = schema.Parse(example.schema_string)
-      round_trip_schema = schema.Parse(str(original_schema))
+      original_schema = schema.parse(example.schema_string)
+      round_trip_schema = schema.parse(str(original_schema))
       self.assertEqual(original_schema.other_props,round_trip_schema.other_props)
       if original_schema.type == "record":
         field_props = 0
@@ -621,6 +640,16 @@ class TestSchema(unittest.TestCase):
       elif k == "cp_array":
         self.assertEqual(type(v), list)
     self.assertEqual(correct,len(OTHER_PROP_EXAMPLES))
+
+  def testDuplicateRecordField(self):
+    schema_string = """{
+      "type": "record",
+      "name": "Test",
+      "fields": [{"name": "foo", "type": "int"}, {"name": "foo", "type": "string"}]
+    }"""
+    with self.assertRaises(schema.SchemaParseException) as e:
+      schema.parse(schema_string)
+    self.assertRegex(str(e.exception), 'Duplicate.*field name.*foo')
 
 
 # ------------------------------------------------------------------------------

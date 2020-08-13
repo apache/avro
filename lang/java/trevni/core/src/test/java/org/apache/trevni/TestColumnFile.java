@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,10 +17,7 @@
  */
 package org.apache.trevni;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.Collection;
 import java.util.Arrays;
@@ -38,7 +35,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class TestColumnFile {
 
   private static final File FILE = new File("target", "test.trv");
-  private static final int COUNT = 1024*64;
+  private static final int COUNT = 1024 * 64;
 
   private String codec;
   private String checksum;
@@ -48,20 +45,18 @@ public class TestColumnFile {
     this.checksum = checksum;
   }
 
-  @Parameters public static Collection<Object[]> codecs() {
-    Object[][] data = new Object[][] {{"null", "null"},
-                                      {"snappy", "crc32"},
-                                      {"deflate", "crc32"}};
+  @Parameters
+  public static Collection<Object[]> codecs() {
+    Object[][] data = new Object[][] { { "null", "null" }, { "snappy", "crc32" }, { "deflate", "crc32" } };
     return Arrays.asList(data);
   }
 
   private ColumnFileMetaData createFileMeta() {
-    return new ColumnFileMetaData()
-      .setCodec(codec)
-      .setChecksum(checksum);
+    return new ColumnFileMetaData().setCodec(codec).setChecksum(checksum);
   }
 
-  @Test public void testEmptyFile() throws Exception {
+  @Test
+  public void testEmptyFile() throws Exception {
     FILE.delete();
     ColumnFileWriter out = new ColumnFileWriter(createFileMeta());
     out.writeTo(FILE);
@@ -71,11 +66,10 @@ public class TestColumnFile {
     in.close();
   }
 
-  @Test public void testEmptyColumn() throws Exception {
+  @Test
+  public void testEmptyColumn() throws Exception {
     FILE.delete();
-    ColumnFileWriter out =
-      new ColumnFileWriter(createFileMeta(),
-                           new ColumnMetaData("test", ValueType.INT));
+    ColumnFileWriter out = new ColumnFileWriter(createFileMeta(), new ColumnMetaData("test", ValueType.INT));
     out.writeTo(FILE);
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(0, in.getRowCount());
@@ -86,12 +80,11 @@ public class TestColumnFile {
     in.close();
   }
 
-  @Test public void testInts() throws Exception {
+  @Test
+  public void testInts() throws Exception {
     FILE.delete();
 
-    ColumnFileWriter out =
-      new ColumnFileWriter(createFileMeta(),
-                           new ColumnMetaData("test", ValueType.INT));
+    ColumnFileWriter out = new ColumnFileWriter(createFileMeta(), new ColumnMetaData("test", ValueType.INT));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       out.writeRow(TestUtil.randomLength(random));
@@ -104,18 +97,17 @@ public class TestColumnFile {
     Iterator<Integer> i = in.getValues("test");
     int count = 0;
     while (i.hasNext()) {
-      Assert.assertEquals(TestUtil.randomLength(random), (int)i.next());
+      Assert.assertEquals(TestUtil.randomLength(random), (int) i.next());
       count++;
     }
     Assert.assertEquals(COUNT, count);
   }
 
-  @Test public void testLongs() throws Exception {
+  @Test
+  public void testLongs() throws Exception {
     FILE.delete();
 
-    ColumnFileWriter out =
-      new ColumnFileWriter(createFileMeta(),
-                           new ColumnMetaData("test", ValueType.LONG));
+    ColumnFileWriter out = new ColumnFileWriter(createFileMeta(), new ColumnMetaData("test", ValueType.LONG));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       out.writeRow(random.nextLong());
@@ -128,18 +120,17 @@ public class TestColumnFile {
     Iterator<Long> i = in.getValues("test");
     int count = 0;
     while (i.hasNext()) {
-      Assert.assertEquals(random.nextLong(), (long)i.next());
+      Assert.assertEquals(random.nextLong(), (long) i.next());
       count++;
     }
     Assert.assertEquals(COUNT, count);
   }
 
-  @Test public void testStrings() throws Exception {
+  @Test
+  public void testStrings() throws Exception {
     FILE.delete();
 
-    ColumnFileWriter out =
-      new ColumnFileWriter(createFileMeta(),
-                           new ColumnMetaData("test", ValueType.STRING));
+    ColumnFileWriter out = new ColumnFileWriter(createFileMeta(), new ColumnMetaData("test", ValueType.STRING));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       out.writeRow(TestUtil.randomString(random));
@@ -158,12 +149,11 @@ public class TestColumnFile {
     Assert.assertEquals(COUNT, count);
   }
 
-  @Test public void testTwoColumn() throws Exception {
+  @Test
+  public void testTwoColumn() throws Exception {
     FILE.delete();
-    ColumnFileWriter out =
-      new ColumnFileWriter(createFileMeta(),
-                           new ColumnMetaData("a", ValueType.FIXED32),
-                           new ColumnMetaData("b", ValueType.STRING));
+    ColumnFileWriter out = new ColumnFileWriter(createFileMeta(), new ColumnMetaData("a", ValueType.FIXED32),
+        new ColumnMetaData("b", ValueType.STRING));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       out.writeRow(random.nextInt(), TestUtil.randomString(random));
@@ -184,17 +174,16 @@ public class TestColumnFile {
     Assert.assertEquals(COUNT, count);
   }
 
-  @Test public void testSeekLongs() throws Exception {
+  @Test
+  public void testSeekLongs() throws Exception {
     FILE.delete();
 
-    ColumnFileWriter out =
-      new ColumnFileWriter(createFileMeta(),
-                           new ColumnMetaData("test", ValueType.LONG));
+    ColumnFileWriter out = new ColumnFileWriter(createFileMeta(), new ColumnMetaData("test", ValueType.LONG));
     Random random = TestUtil.createRandom();
 
-    int seekCount = COUNT/1024;
+    int seekCount = COUNT / 1024;
     int[] seekRows = new int[seekCount];
-    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    Map<Integer, Integer> seekRowMap = new HashMap<>(seekCount);
     while (seekRowMap.size() < seekCount) {
       int row = random.nextInt(COUNT);
       if (!seekRowMap.containsKey(row)) {
@@ -222,18 +211,17 @@ public class TestColumnFile {
 
   }
 
-  @Test public void testSeekStrings() throws Exception {
+  @Test
+  public void testSeekStrings() throws Exception {
     FILE.delete();
 
-    ColumnFileWriter out =
-      new ColumnFileWriter(createFileMeta(),
-                           new ColumnMetaData("test", ValueType.STRING)
-                           .hasIndexValues(true));
+    ColumnFileWriter out = new ColumnFileWriter(createFileMeta(),
+        new ColumnMetaData("test", ValueType.STRING).hasIndexValues(true));
 
     Random random = TestUtil.createRandom();
 
-    int seekCount = COUNT/1024;
-    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    int seekCount = COUNT / 1024;
+    Map<Integer, Integer> seekRowMap = new HashMap<>(seekCount);
     while (seekRowMap.size() < seekCount) {
       int row = random.nextInt(COUNT);
       if (!seekRowMap.containsKey(row))

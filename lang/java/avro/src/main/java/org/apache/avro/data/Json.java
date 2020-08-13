@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,22 +18,21 @@
 package org.apache.avro.data;
 
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.InputStream;
 import java.util.Iterator;
 
 import org.apache.avro.util.internal.JacksonUtils;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.LongNode;
-import org.codehaus.jackson.node.DoubleNode;
-import org.codehaus.jackson.node.TextNode;
-import org.codehaus.jackson.node.BooleanNode;
-import org.codehaus.jackson.node.NullNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.LongNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
@@ -46,7 +45,8 @@ import org.apache.avro.io.ResolvingDecoder;
 
 /** Utilities for reading and writing arbitrary Json data in Avro format. */
 public class Json {
-  private Json() {}                               // singleton: no public ctor
+  private Json() {
+  } // singleton: no public ctor
 
   static final JsonFactory FACTORY = new JsonFactory();
   static final ObjectMapper MAPPER = new ObjectMapper(FACTORY);
@@ -55,66 +55,24 @@ public class Json {
   public static final Schema SCHEMA;
   static {
     try {
-      SCHEMA = Schema.parse
-        (Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc"));
+      try (InputStream in = Json.class.getResourceAsStream("/org/apache/avro/data/Json.avsc")) {
+        SCHEMA = new Schema.Parser().parse(in);
+      }
     } catch (IOException e) {
       throw new AvroRuntimeException(e);
     }
   }
 
   /**
-   * {@link DatumWriter} for arbitrary Json data.
-   * @deprecated use {@link ObjectWriter}
+   * {@link DatumWriter} for arbitrary Json data using the object model described
+   * in {@link org.apache.avro.JsonProperties}.
    */
-  @Deprecated
-  public static class Writer implements DatumWriter<JsonNode> {
-
-    @Override public void setSchema(Schema schema) {
-      if (!SCHEMA.equals(schema))
-        throw new RuntimeException("Not the Json schema: "+schema);
-    }
-
-    @Override
-    public void write(JsonNode datum, Encoder out) throws IOException {
-      Json.write(datum, out);
-    }
-  }
-
-  /**
-   * {@link DatumReader} for arbitrary Json data.
-   * @deprecated use {@link ObjectReader}
-   */
-  @Deprecated
-  public static class Reader implements DatumReader<JsonNode> {
-    private Schema written;
-    private ResolvingDecoder resolver;
-
-    @Override public void setSchema(Schema schema) {
-      this.written = SCHEMA.equals(written) ? null : schema;
-    }
-
-    @Override
-    public JsonNode read(JsonNode reuse, Decoder in) throws IOException {
-      if (written == null)                        // same schema
-        return Json.read(in);
-
-      // use a resolver to adapt alternate version of Json schema
-      if (resolver == null)
-        resolver = DecoderFactory.get().resolvingDecoder(written, SCHEMA, null);
-      resolver.configure(in);
-      JsonNode result = Json.read(resolver);
-      resolver.drain();
-      return result;
-    }
-  }
-
-  /** {@link DatumWriter} for arbitrary Json data using the object model described
-   *  in {@link org.apache.avro.JsonProperties}. */
   public static class ObjectWriter implements DatumWriter<Object> {
 
-    @Override public void setSchema(Schema schema) {
+    @Override
+    public void setSchema(Schema schema) {
       if (!SCHEMA.equals(schema))
-        throw new RuntimeException("Not the Json schema: "+schema);
+        throw new RuntimeException("Not the Json schema: " + schema);
     }
 
     @Override
@@ -123,19 +81,22 @@ public class Json {
     }
   }
 
-  /** {@link DatumReader} for arbitrary Json data using the object model described
-   *  in {@link org.apache.avro.JsonProperties}. */
+  /**
+   * {@link DatumReader} for arbitrary Json data using the object model described
+   * in {@link org.apache.avro.JsonProperties}.
+   */
   public static class ObjectReader implements DatumReader<Object> {
     private Schema written;
     private ResolvingDecoder resolver;
 
-    @Override public void setSchema(Schema schema) {
+    @Override
+    public void setSchema(Schema schema) {
       this.written = SCHEMA.equals(written) ? null : schema;
     }
 
     @Override
     public Object read(Object reuse, Decoder in) throws IOException {
-      if (written == null)                        // same schema
+      if (written == null) // same schema
         return Json.readObject(in);
 
       // use a resolver to adapt alternate version of Json schema
@@ -154,10 +115,7 @@ public class Json {
    */
   public static Object parseJson(String s) {
     try {
-      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createJsonParser(
-          new StringReader(s))));
-    } catch (JsonParseException e) {
-      throw new RuntimeException(e);
+      return JacksonUtils.toObject(MAPPER.readTree(FACTORY.createParser(s)));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -172,26 +130,26 @@ public class Json {
   }
 
   /** Note: this enum must be kept aligned with the union in Json.avsc. */
-  private enum JsonType { LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT }
+  private enum JsonType {
+    LONG, DOUBLE, STRING, BOOLEAN, NULL, ARRAY, OBJECT
+  }
 
   /**
    * Write Json data as Avro data.
-   * @deprecated internal method
    */
-  @Deprecated
-  public static void write(JsonNode node, Encoder out) throws IOException {
-    switch(node.asToken()) {
+  private static void write(JsonNode node, Encoder out) throws IOException {
+    switch (node.asToken()) {
     case VALUE_NUMBER_INT:
       out.writeIndex(JsonType.LONG.ordinal());
-      out.writeLong(node.getLongValue());
+      out.writeLong(node.longValue());
       break;
     case VALUE_NUMBER_FLOAT:
       out.writeIndex(JsonType.DOUBLE.ordinal());
-      out.writeDouble(node.getDoubleValue());
+      out.writeDouble(node.doubleValue());
       break;
     case VALUE_STRING:
       out.writeIndex(JsonType.STRING.ordinal());
-      out.writeString(node.getTextValue());
+      out.writeString(node.textValue());
       break;
     case VALUE_TRUE:
       out.writeIndex(JsonType.BOOLEAN.ordinal());
@@ -219,7 +177,7 @@ public class Json {
       out.writeIndex(JsonType.OBJECT.ordinal());
       out.writeMapStart();
       out.setItemCount(node.size());
-      Iterator<String> i = node.getFieldNames();
+      Iterator<String> i = node.fieldNames();
       while (i.hasNext()) {
         out.startItem();
         String name = i.next();
@@ -229,16 +187,14 @@ public class Json {
       out.writeMapEnd();
       break;
     default:
-      throw new AvroRuntimeException(node.asToken()+" unexpected: "+node);
+      throw new AvroRuntimeException(node.asToken() + " unexpected: " + node);
     }
   }
 
   /**
    * Read Json data from Avro data.
-   * @deprecated internal method
    */
-  @Deprecated
-  public static JsonNode read(Decoder in) throws IOException {
+  private static JsonNode read(Decoder in) throws IOException {
     switch (JsonType.values()[in.readIndex()]) {
     case LONG:
       return new LongNode(in.readLong());
@@ -261,7 +217,7 @@ public class Json {
       ObjectNode object = JsonNodeFactory.instance.objectNode();
       for (long l = in.readMapStart(); l > 0; l = in.mapNext())
         for (long i = 0; i < l; i++)
-          object.put(in.readString(), read(in));
+          object.set(in.readString(), read(in));
       return object;
     default:
       throw new AvroRuntimeException("Unexpected Json node type");

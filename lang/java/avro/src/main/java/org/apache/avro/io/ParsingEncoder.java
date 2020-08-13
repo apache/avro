@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,12 +22,14 @@ import java.util.Arrays;
 
 import org.apache.avro.AvroTypeException;
 
-/** Base class for <a href="parsing/package-summary.html">parser</a>-based
- * {@link Encoder}s. */
+/**
+ * Base class for <a href="parsing/package-summary.html">parser</a>-based
+ * {@link Encoder}s.
+ */
 public abstract class ParsingEncoder extends Encoder {
   /**
-   * Tracks the number of items that remain to be written in
-   * the collections (array or map).
+   * Tracks the number of items that remain to be written in the collections
+   * (array or map).
    */
   private long[] counts = new long[10];
 
@@ -36,8 +38,7 @@ public abstract class ParsingEncoder extends Encoder {
   @Override
   public void setItemCount(long itemCount) throws IOException {
     if (counts[pos] != 0) {
-      throw new AvroTypeException("Incorrect number of items written. " +
-          counts[pos] + " more required.");
+      throw new AvroTypeException("Incorrect number of items written. " + counts[pos] + " more required.");
     }
     counts[pos] = itemCount;
   }
@@ -57,8 +58,7 @@ public abstract class ParsingEncoder extends Encoder {
 
   protected final void pop() {
     if (counts[pos] != 0) {
-      throw new AvroTypeException("Incorrect number of items written. " +
-          counts[pos] + " more required.");
+      throw new AvroTypeException("Incorrect number of items written. " + counts[pos] + " more required.");
     }
     pos--;
   }
@@ -67,4 +67,3 @@ public abstract class ParsingEncoder extends Encoder {
     return pos;
   }
 }
-

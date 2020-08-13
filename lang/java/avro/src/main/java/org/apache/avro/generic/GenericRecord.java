@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,11 +17,19 @@
  */
 package org.apache.avro.generic;
 
-/** A generic instance of a record schema.  Fields are accessible by name as
- * well as by index. */
+/**
+ * A generic instance of a record schema. Fields are accessible by name as well
+ * as by index.
+ */
 public interface GenericRecord extends IndexedRecord {
   /** Set the value of a field given its name. */
   void put(String key, Object v);
+
   /** Return the value of a field given its name. */
   Object get(String key);
+
+  /** Return true if record has field with name: key */
+  default boolean hasField(String key) {
+    return getSchema().getField(key) != null;
+  }
 }

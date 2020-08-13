@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,12 +22,8 @@
 #include <stack>
 #include <map>
 #include <algorithm>
+#include <memory>
 #include <ctype.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/any.hpp>
-#include <boost/utility.hpp>
 
 #include "ValidatingCodec.hh"
 #include "Symbol.hh"
@@ -41,15 +37,15 @@
 
 namespace avro {
 
-using boost::make_shared;
+using std::make_shared;
 
 namespace parsing {
 
-using boost::shared_ptr;
-using boost::static_pointer_cast;
-using boost::make_shared;
+using std::shared_ptr;
+using std::static_pointer_cast;
+using std::make_shared;
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::map;
 using std::pair;
 using std::vector;
@@ -156,7 +152,7 @@ static shared_ptr<vector<uint8_t> > getAvroBinary(
     const GenericDatum& defaultValue)
 {
     EncoderPtr e = binaryEncoder();
-    auto_ptr<OutputStream> os = memoryOutputStream();
+    unique_ptr<OutputStream> os = memoryOutputStream();
     e->init(*os);
     GenericWriter::write(*e, defaultValue);
     e->flush();
@@ -327,7 +323,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
                 m[key] = ProductionPtr();
                 ProductionPtr result = resolveRecords(writer, reader, m, m2);
                 m[key] = result;
-                return result;
+		return make_shared<Production>(1, Symbol::indirect(result));
             }
             break;
 
@@ -447,7 +443,7 @@ ProductionPtr ResolvingGrammarGenerator::doGenerate2(
 
 class ResolvingDecoderHandler {
     shared_ptr<vector<uint8_t> > defaultData_;
-    auto_ptr<InputStream> inp_;
+    unique_ptr<InputStream> inp_;
     DecoderPtr backup_;
     DecoderPtr& base_;
     const DecoderPtr binDecoder;
@@ -513,6 +509,10 @@ class ResolvingDecoderImpl : public ResolvingDecoder
     size_t skipMap();
     size_t decodeUnionIndex();
     const vector<size_t>& fieldOrder();
+    void drain() {
+        parser_.processImplicitActions();
+        base_->drain();
+    }
 public:
     ResolvingDecoderImpl(const ValidSchema& writer, const ValidSchema& reader,
         const DecoderPtr& base) :
@@ -636,11 +636,10 @@ size_t ResolvingDecoderImpl<P>::arrayStart()
 {
     parser_.advance(Symbol::sArrayStart);
     size_t result = base_->arrayStart();
+    parser_.pushRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
         parser_.advance(Symbol::sArrayEnd);
-    } else {
-        parser_.setRepeatCount(result);
     }
     return result;
 }
@@ -650,11 +649,10 @@ size_t ResolvingDecoderImpl<P>::arrayNext()
 {
     parser_.processImplicitActions();
     size_t result = base_->arrayNext();
+    parser_.nextRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
         parser_.advance(Symbol::sArrayEnd);
-    } else {
-        parser_.setRepeatCount(result);
     }
     return result;
 }
@@ -667,7 +665,7 @@ size_t ResolvingDecoderImpl<P>::skipArray()
     if (n == 0) {
         parser_.pop();
     } else {
-        parser_.setRepeatCount(n);
+        parser_.pushRepeatCount(n);
         parser_.skip(*base_);
     }
     parser_.advance(Symbol::sArrayEnd);
@@ -679,11 +677,10 @@ size_t ResolvingDecoderImpl<P>::mapStart()
 {
     parser_.advance(Symbol::sMapStart);
     size_t result = base_->mapStart();
+    parser_.pushRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
         parser_.advance(Symbol::sMapEnd);
-    } else {
-        parser_.setRepeatCount(result);
     }
     return result;
 }
@@ -693,11 +690,10 @@ size_t ResolvingDecoderImpl<P>::mapNext()
 {
     parser_.processImplicitActions();
     size_t result = base_->mapNext();
+    parser_.nextRepeatCount(result);
     if (result == 0) {
         parser_.popRepeater();
         parser_.advance(Symbol::sMapEnd);
-    } else {
-        parser_.setRepeatCount(result);
     }
     return result;
 }
@@ -710,7 +706,7 @@ size_t ResolvingDecoderImpl<P>::skipMap()
     if (n == 0) {
         parser_.pop();
     } else {
-        parser_.setRepeatCount(n);
+        parser_.pushRepeatCount(n);
         parser_.skip(*base_);
     }
     parser_.advance(Symbol::sMapEnd);

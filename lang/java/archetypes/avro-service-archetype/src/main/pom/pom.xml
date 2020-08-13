@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,6 +31,7 @@
 
     <avro.version>${project.version}</avro.version>
     <jackson.version>${jackson.version}</jackson.version>
+    <jackson.databind.version>${jackson.databind.version}</jackson.databind.version>
     <junit.version>${junit.version}</junit.version>
     <logback.version>1.0.0</logback.version>
     <slf4j.version>${slf4j.version}</slf4j.version>
@@ -48,14 +49,19 @@
       <version>\${avro.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro-ipc-netty</artifactId>
+      <version>\${avro.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
       <version>\${jackson.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>\${jackson.version}</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>\${jackson.databind.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -130,8 +136,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${compiler-plugin.version}</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
     </plugins>

@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,18 +37,18 @@
  * resolved_reader_class and a corresponding resolved_record instance
  * is created (using identical "writer" and "reader" schemas for
  * simplicity), and an attempt is made to "read" the resolved avro
- * value. 
- * 
+ * value.
+ *
  * Once the resolved value has been read, the source value (nested)
  * and the resolved value (resolved_record) are both reset using
  * avro_value_reset(). Then the source value (nested) is populated
  * with another (larger) nested array. Then an attempt is made to read
  * the resolved avro value again.
- * 
+ *
  * This second attempt to read the resolved value results in a
- * segmentation fault under Linux, using the patch in 
+ * segmentation fault under Linux, using the patch in
  * https://issues.apache.org/jira/secure/attachment/12516487/0001-AVRO-1034.-C-Resolved-reader-initializes-child-array.patch.
- * 
+ *
  * However, the program does not seg fault, using the patch in
  * https://issues.apache.org/jira/secure/attachment/12515544/AVRO-1034.patch
  *
@@ -281,11 +281,12 @@ int add_array( avro_writer_t writer,
 
     try ( avro_value_write( writer, &resolved_record ),
           "Unable to write record into memory using writer_record" );
-    
+
     print_array_fields( &resolved_record );
 
     avro_value_decref( &resolved_record );
     avro_value_iface_decref( writer_class );
+    avro_value_iface_decref( resolved_reader_class );
   }
   else
   {

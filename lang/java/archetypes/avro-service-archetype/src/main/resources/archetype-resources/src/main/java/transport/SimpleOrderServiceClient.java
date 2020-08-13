@@ -1,7 +1,7 @@
 #set( $symbol_pound = '#' )
 #set( $symbol_dollar = '$' )
 #set( $symbol_escape = '\' )
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -10,7 +10,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,9 +24,8 @@ package ${package}.transport;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.apache.avro.AvroRemoteException;
-import org.apache.avro.ipc.NettyTransceiver;
 import org.apache.avro.ipc.Transceiver;
+import org.apache.avro.ipc.netty.NettyTransceiver;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ import ${package}.service.OrderProcessingService;
  */
 public class SimpleOrderServiceClient implements OrderProcessingService {
 
-  private static final Logger log = LoggerFactory.getLogger(SimpleOrderServiceEndpoint.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SimpleOrderServiceEndpoint.class);
 
   private InetSocketAddress endpointAddress;
 
@@ -55,16 +54,16 @@ public class SimpleOrderServiceClient implements OrderProcessingService {
   }
 
   public synchronized void start() throws IOException {
-    if (log.isInfoEnabled()) {
-      log.info("Starting Simple Ordering Netty client on '{}'", endpointAddress);
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Starting Simple Ordering Netty client on '{}'", endpointAddress);
     }
     transceiver = new NettyTransceiver(endpointAddress);
     service = SpecificRequestor.getClient(OrderProcessingService.class, transceiver);
   }
 
   public void stop() throws IOException {
-    if (log.isInfoEnabled()) {
-      log.info("Stopping Simple Ordering Netty client on '{}'", endpointAddress);
+    if (LOG.isInfoEnabled()) {
+      LOG.info("Stopping Simple Ordering Netty client on '{}'", endpointAddress);
     }
     if (transceiver != null && transceiver.isConnected()) {
       transceiver.close();
@@ -72,7 +71,7 @@ public class SimpleOrderServiceClient implements OrderProcessingService {
   }
 
   @Override
-  public Confirmation submitOrder(Order order) throws AvroRemoteException, OrderFailure {
+  public Confirmation submitOrder(Order order) throws OrderFailure {
     return service.submitOrder(order);
   }
 

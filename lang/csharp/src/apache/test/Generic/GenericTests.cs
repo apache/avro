@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -108,6 +108,50 @@ namespace Avro.Test.Generic
             test(schema, mkMap(values));
         }
 
+        [TestCase()]
+        public void TestLogical_Date()
+        {
+            test("{\"type\": \"int\", \"logicalType\": \"date\"}", DateTime.UtcNow.Date);
+        }
+
+        [TestCase()]
+        public void TestLogical_TimeMillisecond()
+        {
+            test("{\"type\": \"int\", \"logicalType\": \"time-millis\"}", new TimeSpan(3, 0, 0));
+        }
+
+        [TestCase()]
+        public void TestLogical_TimeMicrosecond()
+        {
+            test("{\"type\": \"long\", \"logicalType\": \"time-micros\"}", new TimeSpan(3, 0, 0));
+        }
+
+        [TestCase()]
+        public void TestLogical_TimestampMillisecond()
+        {
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}", new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc));
+        }
+
+        [TestCase()]
+        public void TestLogical_TimestampMicrosecond()
+        {
+            test("{\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}", new DateTime(1990, 1, 1, 14, 15, 30, DateTimeKind.Utc));
+        }
+
+        [TestCase()]
+        public void TestLogical_Decimal_Bytes()
+        {
+            test("{\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 30, \"scale\": 2}",
+                (AvroDecimal)12345678912345.55M);
+        }
+
+        [TestCase()]
+        public void TestLogical_Decimal_Fixed()
+        {
+            test("{\"type\": {\"type\": \"fixed\", \"size\": 16, \"name\": \"n\"}, \"logicalType\": \"decimal\", \"precision\": 30, \"scale\": 2}",
+                (AvroDecimal)12345678912345.55M);
+        }
+
         [TestCase("[{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}, \"string\"]",
             "{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}",
             new object[] { "f1", "v1" })]
@@ -121,11 +165,17 @@ namespace Avro.Test.Generic
         [TestCase("[{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}, \"string\"]",
             "{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}", "s2")]
         [TestCase("[{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}, \"string\"]",
-            "{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}", "s3",
-            ExpectedException = typeof(AvroException))]
-        public void TestUnion_enum(string unionSchema, string enumSchema, string value)
+            "{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}", "s3", typeof(AvroException))]
+        public void TestUnion_enum(string unionSchema, string enumSchema, string value, Type expectedExceptionType = null)
         {
-            test(unionSchema, mkEnum(enumSchema, value));
+            if (expectedExceptionType != null)
+            {
+                Assert.Throws(expectedExceptionType, () => { test(unionSchema, mkEnum(enumSchema, value)); });
+            }
+            else
+            {
+                test(unionSchema, mkEnum(enumSchema, value));
+            }
         }
 
 
@@ -139,14 +189,19 @@ namespace Avro.Test.Generic
         [TestCase("[{\"type\": \"fixed\", \"size\": 2, \"name\": \"f\"}, \"string\"]",
             "{\"type\": \"fixed\", \"size\": 2, \"name\": \"f\"}", new byte[] { 1, 2 })]
         [TestCase("[{\"type\": \"fixed\", \"size\": 2, \"name\": \"f\"}, \"string\"]",
-            "{\"type\": \"fixed\", \"size\": 2, \"name\": \"f\"}", new byte[] { 1, 2, 3 },
-            ExpectedException = typeof(AvroException))]
+            "{\"type\": \"fixed\", \"size\": 2, \"name\": \"f\"}", new byte[] { 1, 2, 3 }, typeof(AvroException))]
         [TestCase("[{\"type\": \"fixed\", \"size\": 2, \"name\": \"f\"}, \"string\"]",
-            "{\"type\": \"fixed\", \"size\": 3, \"name\": \"f\"}", new byte[] { 1, 2, 3 },
-            ExpectedException = typeof(AvroException))]
-        public void TestUnion_fixed(string unionSchema, string fixedSchema, byte[] value)
+            "{\"type\": \"fixed\", \"size\": 3, \"name\": \"f\"}", new byte[] { 1, 2, 3 }, typeof(AvroException))]
+        public void TestUnion_fixed(string unionSchema, string fixedSchema, byte[] value, Type expectedExceptionType = null)
         {
-            test(unionSchema, mkFixed(fixedSchema, value));
+            if (expectedExceptionType != null)
+            {
+                Assert.Throws(expectedExceptionType, () => { test(unionSchema, mkFixed(fixedSchema, value)); });
+            }
+            else
+            {
+                test(unionSchema, mkFixed(fixedSchema, value));
+            }
         }
 
         public void TestResolution<T, S>(string writerSchema, T actual, string readerSchema, S expected)
@@ -300,89 +355,187 @@ namespace Avro.Test.Generic
             deserialize<object>(ms, ws, Schema.Parse(readerSchema));
         }
 
-        [TestCase("boolean", true, "null", ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "boolean", ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "string", ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "bytes", ExpectedException = typeof(AvroException))]
+        [TestCase("boolean", true, "null", typeof(AvroException))]
+        [TestCase("int", 10, "boolean", typeof(AvroException))]
+        [TestCase("int", 10, "string", typeof(AvroException))]
+        [TestCase("int", 10, "bytes", typeof(AvroException))]
         [TestCase("int", 10, "{\"type\":\"record\",\"name\":\"r\",\"fields\":[{\"name\":\"f\", \"type\":\"int\"}]}",
-            ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"s\", \"t\"]}", ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "{\"type\":\"array\",\"items\":\"int\"}", ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "{\"type\":\"map\",\"values\":\"int\"}", ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "[\"string\", \"bytes\"]", ExpectedException = typeof(AvroException))]
-        [TestCase("int", 10, "{\"type\":\"fixed\",\"name\":\"f\",\"size\":2}", ExpectedException = typeof(AvroException))]
+            typeof(AvroException))]
+        [TestCase("int", 10, "{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"s\", \"t\"]}", typeof(AvroException))]
+        [TestCase("int", 10, "{\"type\":\"array\",\"items\":\"int\"}", typeof(AvroException))]
+        [TestCase("int", 10, "{\"type\":\"map\",\"values\":\"int\"}", typeof(AvroException))]
+        [TestCase("int", 10, "[\"string\", \"bytes\"]", typeof(AvroException))]
+        [TestCase("int", 10, "{\"type\":\"fixed\",\"name\":\"f\",\"size\":2}", typeof(AvroException))]
         [TestCase("{\"type\":\"array\",\"items\":\"int\"}", new int[] { 10 },
-            "\"boolean\"", ExpectedException = typeof(AvroException))]
+            "\"boolean\"", typeof(AvroException))]
         [TestCase("{\"type\":\"array\",\"items\":\"int\"}", new int[] { 10 },
-            "{\"type\":\"array\",\"items\":\"string\"}", ExpectedException = typeof(AvroException))]
-        [TestCase("[\"int\", \"boolean\"]", 10, "[\"string\", \"bytes\"]", ExpectedException = typeof(AvroException))]
-        [TestCase("[\"int\", \"boolean\"]", 10, "\"string\"", ExpectedException = typeof(AvroException))]
-        public void TestResolutionMismatch_simple(string writerSchema, object value, string readerSchema)
+            "{\"type\":\"array\",\"items\":\"string\"}", typeof(AvroException))]
+        [TestCase("[\"int\", \"boolean\"]", 10, "[\"string\", \"bytes\"]", typeof(AvroException))]
+        [TestCase("[\"int\", \"boolean\"]", 10, "\"string\"", typeof(AvroException))]
+        public void TestResolutionMismatch_simple(string writerSchema, object value, string readerSchema, Type expectedExceptionType = null)
         {
-            testResolutionMismatch(writerSchema, value, readerSchema);
+            if (expectedExceptionType != null)
+            {
+                Assert.Throws(expectedExceptionType, () => { testResolutionMismatch(writerSchema, value, readerSchema); });
+            }
+            else
+            {
+                testResolutionMismatch(writerSchema, value, readerSchema);
+            }
         }
 
         [TestCase("{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f1\",\"type\":[\"int\", \"null\"]},{\"name\":\"f2\",\"type\":\"int\"}]}",
             new object[] { "f1", 101, "f2", 100 }, "int",
-            ExpectedException = typeof(AvroException), Description = "Non-record schema")]
+            typeof(AvroException), Description = "Non-record schema")]
         [TestCase("{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f1\",\"type\":[\"int\", \"null\"]},{\"name\":\"f2\",\"type\":\"int\"}]}",
             new object[] { "f1", 101, "f2", 100 },
             "{\"type\":\"record\",\"name\":\"s\",\"fields\":" +
             "[{\"name\":\"f2\",\"type\":\"int\"}]}",
-            ExpectedException = typeof(AvroException), Description = "Name mismatch")]
+            typeof(AvroException), Description = "Name mismatch")]
         [TestCase("{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f1\",\"type\":[\"int\", \"null\"]},{\"name\":\"f2\",\"type\":\"int\"}]}",
             new object[] { "f1", 101, "f2", 100 },
             "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f2\",\"type\":\"string\"}]}",
-            ExpectedException = typeof(AvroException), Description = "incompatible field")]
+            typeof(AvroException), Description = "incompatible field")]
         [TestCase("{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f1\",\"type\":[\"int\", \"null\"]},{\"name\":\"f2\",\"type\":\"int\"}]}",
             new object[] { "f1", 101, "f2", 100 },
             "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
             "[{\"name\":\"f3\",\"type\":\"string\"}]}",
-            ExpectedException = typeof(AvroException), Description = "new field without default")]
-        public void TestResolutionMismatch_record(string ws, object[] actual, string rs)
+            typeof(AvroException), Description = "new field without default")]
+        public void TestResolutionMismatch_record(string ws, object[] actual, string rs, Type expectedExceptionType = null)
         {
-            testResolutionMismatch(ws, mkRecord(actual, Schema.Parse(ws) as RecordSchema), rs);
+            if (expectedExceptionType != null)
+            {
+                Assert.Throws(expectedExceptionType, () => { testResolutionMismatch(ws, mkRecord(actual, Schema.Parse(ws) as RecordSchema), rs); });
+            }
+            else
+            {
+                testResolutionMismatch(ws, mkRecord(actual, Schema.Parse(ws) as RecordSchema), rs);
+            }
         }
 
         [TestCase("{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"s\", \"t\"]}", "s", "int",
-            ExpectedException = typeof(AvroException), Description = "Non-enum schema")]
+            typeof(AvroException), Description = "Non-enum schema")]
         [TestCase("{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"s\", \"t\"]}",
             "s", "{\"type\":\"enum\",\"name\":\"f\",\"symbols\":[\"s\", \"t\"]}",
-            ExpectedException = typeof(AvroException), Description = "Name mismatch")]
+            typeof(AvroException), Description = "Name mismatch")]
         [TestCase("{\"type\":\"enum\",\"name\":\"e\",\"symbols\":[\"s\", \"t\"]}",
             "s", "{\"type\":\"enum\",\"name\":\"f\",\"symbols\":[\"t\", \"u\"]}",
-            ExpectedException = typeof(AvroException), Description = "Incompatible symbols")]
-        public void TestResolutionMismatch_enum(string ws, string value, string rs)
+            typeof(AvroException), Description = "Incompatible symbols")]
+        public void TestResolutionMismatch_enum(string ws, string value, string rs, Type expectedExceptionType = null)
         {
-            testResolutionMismatch(ws, mkEnum(ws, value), rs);
+            if (expectedExceptionType != null)
+            {
+                Assert.Throws(expectedExceptionType, () => { testResolutionMismatch(ws, mkEnum(ws, value), rs); });
+            }
+            else
+            {
+                testResolutionMismatch(ws, mkEnum(ws, value), rs);
+            }
         }
 
         [TestCase("{\"type\":\"map\",\"values\":\"int\"}", new object[] { "a", 0 }, "int",
-            ExpectedException = typeof(AvroException), Description = "Non-map schema")]
+            typeof(AvroException), Description = "Non-map schema")]
         [TestCase("{\"type\":\"map\",\"values\":\"int\"}",
             new object[] { "a", 0 }, "{\"type\":\"map\",\"values\":\"string\"}",
-            ExpectedException = typeof(AvroException), Description = "Name mismatch")]
-        public void TestResolutionMismatch_map(string ws, object[] value, string rs)
+            typeof(AvroException), Description = "Name mismatch")]
+        public void TestResolutionMismatch_map(string ws, object[] value, string rs, Type expectedExceptionType = null)
         {
-            testResolutionMismatch(ws, mkMap(value), rs);
+            if (expectedExceptionType != null)
+            {
+                Assert.Throws(expectedExceptionType, () => { testResolutionMismatch(ws, mkMap(value), rs); });
+            }
+            else
+            {
+                testResolutionMismatch(ws, mkMap(value), rs);
+            }
         }
 
         [TestCase("{\"type\":\"fixed\",\"name\":\"f\",\"size\":2}", new byte[] { 1, 1 }, "int",
-            ExpectedException = typeof(AvroException), Description = "Non-fixed schema")]
+            typeof(AvroException), Description = "Non-fixed schema")]
         [TestCase("{\"type\":\"fixed\",\"name\":\"f\",\"size\":2}",
             new byte[] { 1, 1 }, "{\"type\":\"fixed\",\"name\":\"g\",\"size\":2}",
-            ExpectedException = typeof(AvroException), Description = "Name mismatch")]
+            typeof(AvroException), Description = "Name mismatch")]
         [TestCase("{\"type\":\"fixed\",\"name\":\"f\",\"size\":2}",
             new byte[] { 1, 1 }, "{\"type\":\"fixed\",\"name\":\"f\",\"size\":1}",
-            ExpectedException = typeof(AvroException), Description = "Size mismatch")]
-        public void TestResolutionMismatch_fixed(string ws, byte[] value, string rs)
+            typeof(AvroException), Description = "Size mismatch")]
+        public void TestResolutionMismatch_fixed(string ws, byte[] value, string rs, Type expectedExceptionType = null)
         {
-            testResolutionMismatch(ws, mkFixed(ws, value), rs);
+            if (expectedExceptionType != null)
+            {
+                Assert.Throws(expectedExceptionType, () => { testResolutionMismatch(ws, mkFixed(ws, value), rs); });
+            }
+            else
+            {
+                 testResolutionMismatch(ws, mkFixed(ws, value), rs); 
+            }
+        }
+
+        [Test]
+        public void TestRecordEquality_arrayFieldnotEqual()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"int\"}}]}");
+
+            Func<int[], GenericRecord> makeRec = arr => mkRecord(new object[] { "a", arr }, schema);
+
+            var rec1 = makeRec(new[] { 69, 23 });
+            var rec2 = makeRec(new[] { 42, 11 });
+
+            Assert.AreNotEqual(rec1, rec2);
+        }
+
+        [Test]
+        public void TestRecordEquality_arrayFieldequal()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"array\",\"items\":\"int\"}}]}");
+
+            Func<int[], GenericRecord> makeRec = arr => mkRecord(new object[] { "a", arr }, schema);
+
+            // Intentionally duplicated so reference equality doesn't apply
+            var rec1 = makeRec(new[] { 89, 12, 66 });
+            var rec2 = makeRec(new[] { 89, 12, 66 });
+
+            Assert.AreEqual(rec1, rec2);
+        }
+
+        [Test]
+        public void TestRecordEquality_mapFieldequal()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"map\",\"values\":\"int\"}}]}");
+
+            Func<int, GenericRecord> makeRec = value => mkRecord(
+                new object[] { "a", new Dictionary<string, int> { { "key", value } } }, schema);
+
+            var rec1 = makeRec(52);
+            var rec2 = makeRec(52);
+
+            Assert.AreEqual(rec1, rec2);
+        }
+
+        [Test]
+        public void TestRecordEquality_mapFieldnotEqual()
+        {
+            var schema = (RecordSchema)Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"r\",\"fields\":" +
+                "[{\"name\":\"a\",\"type\":{\"type\":\"map\",\"values\":\"int\"}}]}");
+
+            Func<int, GenericRecord> makeRec = value => mkRecord(
+                new object[] { "a", new Dictionary<string, int> { { "key", value } } }, schema);
+
+            var rec1 = makeRec(69);
+            var rec2 = makeRec(98);
+
+            Assert.AreNotEqual(rec1, rec2);
         }
 
         private static GenericRecord mkRecord(object[] kv, RecordSchema s)
@@ -404,7 +557,7 @@ namespace Avro.Test.Generic
                     gf.Value = (byte[])fieldValue;
                     fieldValue = gf;
                 }
-                input.Add(fieldName, fieldValue);
+                input.Add(s[fieldName].Pos, fieldValue);
             }
             return input;
         }
@@ -485,7 +638,7 @@ namespace Avro.Test.Generic
             writer.Write(value, e);
             writer.Write(value, e);
             var output = ms.ToArray();
-            
+
             Assert.AreEqual(expected.Length, output.Length);
             Assert.True(expected.SequenceEqual(output));
         }

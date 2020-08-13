@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  * 
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -460,11 +460,13 @@ static int file_read_block_count(avro_file_reader_t r)
 		r->current_blocklen = len;
 	}
 
-	check_prefix(rval, avro_read(r->reader, r->current_blockdata, len),
-		     "Cannot read file block: ");
+	if (len > 0) {
+		check_prefix(rval, avro_read(r->reader, r->current_blockdata, len),
+			     "Cannot read file block: ");
 
-	check_prefix(rval, avro_codec_decode(r->codec, r->current_blockdata, len),
-		     "Cannot decode file block: ");
+		check_prefix(rval, avro_codec_decode(r->codec, r->current_blockdata, len),
+			     "Cannot decode file block: ");
+	}
 
 	avro_reader_memory_set_source(r->block_reader, (const char *) r->codec->block_data, r->codec->used_size);
 
@@ -525,7 +527,9 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 	r->current_blocklen = 0;
 
 	rval = file_read_block_count(r);
-	if (rval) {
+	if (rval == EOF) {
+		r->blocks_total = 0;
+	} else if (rval) {
 		avro_reader_free(r->reader);
 		avro_codec_reset(r->codec);
 		avro_freet(struct avro_codec_t_, r->codec);
@@ -534,7 +538,7 @@ int avro_file_reader_fp(FILE *fp, const char *path, int should_close,
 	}
 
 	*reader = r;
-	return rval;
+	return 0;
 }
 
 int avro_file_reader(const char *path, avro_file_reader_t * reader)
@@ -690,10 +694,11 @@ int avro_file_reader_read(avro_file_reader_t r, avro_schema_t readers_schema,
 	check_param(EINVAL, r, "reader");
 	check_param(EINVAL, datum, "datum");
 
-	check(rval,
-	      avro_read_data(r->block_reader, r->writers_schema, readers_schema,
-			     datum));
-	r->blocks_read++;
+	/* This will be set to zero when an empty file is opened.
+	 * Return EOF here when the user attempts to read. */
+	if (r->blocks_total == 0) {
+		return EOF;
+	}
 
 	if (r->blocks_read == r->blocks_total) {
 		check(rval, avro_read(r->reader, sync, sizeof(sync)));
@@ -702,9 +707,14 @@ int avro_file_reader_read(avro_file_reader_t r, avro_schema_t readers_schema,
 			avro_set_error("Incorrect sync bytes");
 			return EILSEQ;
 		}
-		/* For now, ignore errors (e.g. EOF) */
-		file_read_block_count(r);
+		check(rval, file_read_block_count(r));
 	}
+
+	check(rval,
+	      avro_read_data(r->block_reader, r->writers_schema, readers_schema,
+			     datum));
+	r->blocks_read++;
+
 	return 0;
 }
 
@@ -716,6 +726,12 @@ avro_file_reader_read_value(avro_file_reader_t r, avro_value_t *value)
 
 	check_param(EINVAL, r, "reader");
 	check_param(EINVAL, value, "value");
+
+	/* This will be set to zero when an empty file is opened.
+	 * Return EOF here when the user attempts to read. */
+	if (r->blocks_total == 0) {
+		return EOF;
+	}
 
 	if (r->blocks_read == r->blocks_total) {
 		/* reads sync bytes and buffers further bytes */

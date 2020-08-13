@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -22,6 +22,8 @@ use warnings;
 use Carp;
 use JSON::XS();
 use Try::Tiny;
+
+our $VERSION = '++MODULE_VERSION++';
 
 my $json = JSON::XS->new->allow_nonref;
 
@@ -631,7 +633,7 @@ sub new {
     my $items = $struct->{items}
         or throw Avro::Schema::Error::Parse("Array must declare 'items'");
 
-    $items = Avro::Schema->parse_struct($items, $param{names});
+    $items = Avro::Schema->parse_struct($items, $param{names}, $param{namespace});
     $schema->{items} = $items;
     return $schema;
 }
@@ -673,7 +675,7 @@ sub new {
     unless (defined $values && length $values) {
         throw Avro::Schema::Error::Parse("Map must declare 'values'");
     }
-    $values = Avro::Schema->parse_struct($values, $param{names});
+    $values = Avro::Schema->parse_struct($values, $param{names}, $param{namespace});
     $schema->{values} = $values;
 
     return $schema;
@@ -716,7 +718,7 @@ sub new {
     my @schemas;
     my %seen_types;
     for my $struct (@$union) {
-        my $sch = Avro::Schema->parse_struct($struct, $names);
+        my $sch = Avro::Schema->parse_struct($struct, $names, $param{namespace});
         my $type = $sch->type;
 
         ## 1.3.2 Unions may not contain more than one schema with the same
@@ -792,7 +794,8 @@ sub new {
             "Fixed.size should be a positive integer"
         );
     }
-    $schema->{size} = $size;
+    # Cast into numeric so that it will be encoded as a JSON number
+    $schema->{size} = $size + 0;
 
     return $schema;
 }

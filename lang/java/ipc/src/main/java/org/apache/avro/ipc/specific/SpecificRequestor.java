@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +25,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-import org.apache.avro.AvroRemoteException;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
@@ -44,44 +43,38 @@ import org.apache.avro.specific.SpecificDatumWriter;
 public class SpecificRequestor extends Requestor implements InvocationHandler {
   SpecificData data;
 
-  public SpecificRequestor(Class<?> iface, Transceiver transceiver)
-    throws IOException {
+  public SpecificRequestor(Class<?> iface, Transceiver transceiver) throws IOException {
     this(iface, transceiver, new SpecificData(iface.getClassLoader()));
   }
 
-  protected SpecificRequestor(Protocol protocol, Transceiver transceiver)
-    throws IOException {
+  protected SpecificRequestor(Protocol protocol, Transceiver transceiver) throws IOException {
     this(protocol, transceiver, SpecificData.get());
   }
 
-  public SpecificRequestor(Class<?> iface, Transceiver transceiver,
-                           SpecificData data)
-    throws IOException {
+  public SpecificRequestor(Class<?> iface, Transceiver transceiver, SpecificData data) throws IOException {
     this(data.getProtocol(iface), transceiver, data);
   }
 
-  public SpecificRequestor(Protocol protocol, Transceiver transceiver,
-                           SpecificData data)
-    throws IOException {
+  public SpecificRequestor(Protocol protocol, Transceiver transceiver, SpecificData data) throws IOException {
     super(protocol, transceiver);
     this.data = data;
   }
 
-  public SpecificData getSpecificData() { return data; }
+  public SpecificData getSpecificData() {
+    return data;
+  }
 
   @Override
-  public Object invoke(Object proxy, Method method, Object[] args)
-    throws Throwable {
+  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String name = method.getName();
-    if (name.equals("hashCode")) {
+    switch (name) {
+    case "hashCode":
       return hashCode();
-    }
-    else if (name.equals("equals")) {
+    case "equals":
       Object obj = args[0];
-      return (proxy == obj) || (obj != null && Proxy.isProxyClass(obj.getClass())
-                                && this.equals(Proxy.getInvocationHandler(obj)));
-    }
-    else if (name.equals("toString")) {
+      return (proxy == obj)
+          || (obj != null && Proxy.isProxyClass(obj.getClass()) && this.equals(Proxy.getInvocationHandler(obj)));
+    case "toString":
       String protocol = "unknown";
       String remote = "unknown";
       Class<?>[] interfaces = proxy.getClass().getInterfaces();
@@ -100,21 +93,18 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
         }
       }
       return "Proxy[" + protocol + "," + remote + "]";
-    }
-    else {
+    default:
       try {
         // Check if this is a callback-based RPC:
         Type[] parameterTypes = method.getParameterTypes();
-        if ((parameterTypes.length > 0) &&
-            (parameterTypes[parameterTypes.length - 1] instanceof Class) &&
-            Callback.class.isAssignableFrom(((Class<?>)parameterTypes[parameterTypes.length - 1]))) {
+        if ((parameterTypes.length > 0) && (parameterTypes[parameterTypes.length - 1] instanceof Class)
+            && Callback.class.isAssignableFrom(((Class<?>) parameterTypes[parameterTypes.length - 1]))) {
           // Extract the Callback from the end of of the argument list
           Object[] finalArgs = Arrays.copyOf(args, args.length - 1);
-          Callback<?> callback = (Callback<?>)args[args.length - 1];
+          Callback<?> callback = (Callback<?>) args[args.length - 1];
           request(method.getName(), finalArgs, callback);
           return null;
-        }
-        else {
+        } else {
           return request(method.getName(), args);
         }
       } catch (Exception e) {
@@ -130,79 +120,68 @@ public class SpecificRequestor extends Requestor implements InvocationHandler {
           throw e;
         }
 
-        // Not an expected Exception, so wrap it in AvroRemoteException:
-        throw new AvroRemoteException(e);
+        // Not an expected Exception, so wrap it in AvroRuntimeException:
+        throw new AvroRuntimeException(e);
       }
     }
   }
 
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new SpecificDatumWriter<Object>(schema, data);
+    return new SpecificDatumWriter<>(schema, data);
   }
 
-  @Deprecated                                     // for compatibility in 1.5
+  @Deprecated // for compatibility in 1.5
   protected DatumReader<Object> getDatumReader(Schema schema) {
     return getDatumReader(schema, schema);
   }
 
   protected DatumReader<Object> getDatumReader(Schema writer, Schema reader) {
-    return new SpecificDatumReader<Object>(writer, reader, data);
+    return new SpecificDatumReader<>(writer, reader, data);
   }
 
   @Override
-  public void writeRequest(Schema schema, Object request, Encoder out)
-    throws IOException {
-    Object[] args = (Object[])request;
+  public void writeRequest(Schema schema, Object request, Encoder out) throws IOException {
+    Object[] args = (Object[]) request;
     int i = 0;
     for (Schema.Field param : schema.getFields())
       getDatumWriter(param.schema()).write(args[i++], out);
   }
 
   @Override
-  public Object readResponse(Schema writer, Schema reader, Decoder in)
-    throws IOException {
+  public Object readResponse(Schema writer, Schema reader, Decoder in) throws IOException {
     return getDatumReader(writer, reader).read(null, in);
   }
 
   @Override
-  public Exception readError(Schema writer, Schema reader, Decoder in)
-    throws IOException {
+  public Exception readError(Schema writer, Schema reader, Decoder in) throws IOException {
     Object value = getDatumReader(writer, reader).read(null, in);
     if (value instanceof Exception)
-      return (Exception)value;
+      return (Exception) value;
     return new AvroRuntimeException(value.toString());
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
-  public static  <T> T getClient(Class<T> iface, Transceiver transciever)
-    throws IOException {
-    return getClient(iface, transciever,
-                     new SpecificData(iface.getClassLoader()));
+  public static <T> T getClient(Class<T> iface, Transceiver transceiver) throws IOException {
+    return getClient(iface, transceiver, new SpecificData(iface.getClassLoader()));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
-  public static  <T> T getClient(Class<T> iface, Transceiver transciever,
-                                 SpecificData data)
-    throws IOException {
+  public static <T> T getClient(Class<T> iface, Transceiver transceiver, SpecificData data) throws IOException {
     Protocol protocol = data.getProtocol(iface);
-    return (T)Proxy.newProxyInstance
-      (data.getClassLoader(),
-       new Class[] { iface },
-       new SpecificRequestor(protocol, transciever, data));
+    return (T) Proxy.newProxyInstance(data.getClassLoader(), new Class[] { iface },
+        new SpecificRequestor(protocol, transceiver, data));
   }
 
   /** Create a proxy instance whose methods invoke RPCs. */
   @SuppressWarnings("unchecked")
-  public static <T> T getClient(Class<T> iface, SpecificRequestor requestor)
-    throws IOException {
-    return (T)Proxy.newProxyInstance(requestor.data.getClassLoader(),
-                                  new Class[] { iface }, requestor);
+  public static <T> T getClient(Class<T> iface, SpecificRequestor requestor) throws IOException {
+    return (T) Proxy.newProxyInstance(requestor.data.getClassLoader(), new Class[] { iface }, requestor);
   }
 
   /** Return the remote protocol for a proxy. */
   public static Protocol getRemote(Object proxy) throws IOException {
-    return ((Requestor)Proxy.getInvocationHandler(proxy)).getRemote();
+    return ((Requestor) Proxy.getInvocationHandler(proxy)).getRemote();
 
   }
 

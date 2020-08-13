@@ -33,6 +33,13 @@
             "name": "privacyDirectImport", 
             "type": ["null", "test.PrivacyDirectImport"],
             "default": null
+        },
+        {
+            "name": "time",
+            "type": {
+                "type": "long",
+                "logicalType": "timestamp-millis"
+            }
         }
     ]
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,12 +18,12 @@
 package org.apache.avro.ipc.stats;
 
 /** Encapsulates the passing of time. */
-class Stopwatch  {
+class Stopwatch {
   /** Encapsulates ticking time sources. */
   interface Ticks {
     /**
-     * Returns a number of "ticks" in nanoseconds.
-     * This should be monotonically non-decreasing.
+     * Returns a number of "ticks" in nanoseconds. This should be monotonically
+     * non-decreasing.
      */
     long ticks();
   }
@@ -45,21 +45,24 @@ class Stopwatch  {
     if (running) {
       return this.ticks.ticks() - start;
     } else {
-      if (elapsed == -1) throw new IllegalStateException();
+      if (elapsed == -1)
+        throw new IllegalStateException();
       return elapsed;
     }
   }
 
   /** Starts the stopwatch. */
   public void start() {
-    if (running) throw new IllegalStateException();
+    if (running)
+      throw new IllegalStateException();
     start = ticks.ticks();
     running = true;
   }
 
   /** Stops the stopwatch and calculates the elapsed time. */
   public void stop() {
-    if (!running) throw new IllegalStateException();
+    if (!running)
+      throw new IllegalStateException();
     elapsed = ticks.ticks() - start;
     running = false;
   }

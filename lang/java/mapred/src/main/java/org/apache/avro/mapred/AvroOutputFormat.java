@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,12 +48,11 @@ import static org.apache.avro.file.CodecFactory.DEFAULT_XZ_LEVEL;
 /**
  * An {@link org.apache.hadoop.mapred.OutputFormat} for Avro data files.
  * <p/>
- * You can specify various options using Job Configuration properties.
- * Look at the fields in {@link AvroJob} as well as this class to get
- * an overview of the supported options.
+ * You can specify various options using Job Configuration properties. Look at
+ * the fields in {@link AvroJob} as well as this class to get an overview of the
+ * supported options.
  */
-public class AvroOutputFormat <T>
-  extends FileOutputFormat<AvroWrapper<T>, NullWritable> {
+public class AvroOutputFormat<T> extends FileOutputFormat<AvroWrapper<T>, NullWritable> {
 
   /** The file name extension for avro data files. */
   public final static String EXT = ".avro";
@@ -66,19 +66,20 @@ public class AvroOutputFormat <T>
   /** The configuration key for Avro sync interval. */
   public static final String SYNC_INTERVAL_KEY = "avro.mapred.sync.interval";
 
-  /** Enable output compression using the deflate codec and specify its level.*/
+  /** Enable output compression using the deflate codec and specify its level. */
   public static void setDeflateLevel(JobConf job, int level) {
     FileOutputFormat.setCompressOutput(job, true);
     job.setInt(DEFLATE_LEVEL_KEY, level);
   }
 
-  /** Set the sync interval to be used by the underlying {@link DataFileWriter}.*/
+  /**
+   * Set the sync interval to be used by the underlying {@link DataFileWriter}.
+   */
   public static void setSyncInterval(JobConf job, int syncIntervalInBytes) {
     job.setInt(SYNC_INTERVAL_KEY, syncIntervalInBytes);
   }
 
-  static <T> void configureDataFileWriter(DataFileWriter<T> writer,
-      JobConf job) throws UnsupportedEncodingException {
+  static <T> void configureDataFileWriter(DataFileWriter<T> writer, JobConf job) throws UnsupportedEncodingException {
 
     CodecFactory factory = getCodecFactory(job);
 
@@ -89,24 +90,24 @@ public class AvroOutputFormat <T>
     writer.setSyncInterval(job.getInt(SYNC_INTERVAL_KEY, DEFAULT_SYNC_INTERVAL));
 
     // copy metadata from job
-    for (Map.Entry<String,String> e : job) {
+    for (Map.Entry<String, String> e : job) {
       if (e.getKey().startsWith(AvroJob.TEXT_PREFIX))
-        writer.setMeta(e.getKey().substring(AvroJob.TEXT_PREFIX.length()),
-                       e.getValue());
+        writer.setMeta(e.getKey().substring(AvroJob.TEXT_PREFIX.length()), e.getValue());
       if (e.getKey().startsWith(AvroJob.BINARY_PREFIX))
         writer.setMeta(e.getKey().substring(AvroJob.BINARY_PREFIX.length()),
-                       URLDecoder.decode(e.getValue(), "ISO-8859-1")
-                       .getBytes("ISO-8859-1"));
+            URLDecoder.decode(e.getValue(), StandardCharsets.ISO_8859_1.name()).getBytes(StandardCharsets.ISO_8859_1));
     }
   }
 
-  /** This will select the correct compression codec from the JobConf.
-   * The order of selection is as follows:
+  /**
+   * This will select the correct compression codec from the JobConf. The order of
+   * selection is as follows:
    * <ul>
-   *   <li>If mapred.output.compress is true then look for codec otherwise no compression</li>
-   *   <li>Use avro.output.codec if populated</li>
-   *   <li>Next use mapred.output.compression.codec if populated</li>
-   *   <li>If not default to Deflate Codec</li>
+   * <li>If mapred.output.compress is true then look for codec otherwise no
+   * compression</li>
+   * <li>Use avro.output.codec if populated</li>
+   * <li>Next use mapred.output.compression.codec if populated</li>
+   * <li>If not default to Deflate Codec</li>
    * </ul>
    */
   static CodecFactory getCodecFactory(JobConf job) {
@@ -120,17 +121,17 @@ public class AvroOutputFormat <T>
       if (codecName == null) {
         String codecClassName = job.get("mapred.output.compression.codec", null);
         String avroCodecName = HadoopCodecFactory.getAvroCodecName(codecClassName);
-        if ( codecClassName != null && avroCodecName != null){
+        if (codecClassName != null && avroCodecName != null) {
           factory = HadoopCodecFactory.fromHadoopString(codecClassName);
-          job.set(AvroJob.OUTPUT_CODEC , avroCodecName);
+          job.set(AvroJob.OUTPUT_CODEC, avroCodecName);
           return factory;
         } else {
           return CodecFactory.deflateCodec(deflateLevel);
         }
       } else {
-        if ( codecName.equals(DEFLATE_CODEC)) {
+        if (codecName.equals(DEFLATE_CODEC)) {
           factory = CodecFactory.deflateCodec(deflateLevel);
-        } else if ( codecName.equals(XZ_CODEC)) {
+        } else if (codecName.equals(XZ_CODEC)) {
           factory = CodecFactory.xzCodec(xzLevel);
         } else {
           factory = CodecFactory.fromString(codecName);
@@ -142,34 +143,31 @@ public class AvroOutputFormat <T>
   }
 
   @Override
-  public RecordWriter<AvroWrapper<T>, NullWritable>
-    getRecordWriter(FileSystem ignore, JobConf job,
-                    String name, Progressable prog)
-    throws IOException {
+  public RecordWriter<AvroWrapper<T>, NullWritable> getRecordWriter(FileSystem ignore, JobConf job, String name,
+      Progressable prog) throws IOException {
 
     boolean isMapOnly = job.getNumReduceTasks() == 0;
-    Schema schema = isMapOnly
-      ? AvroJob.getMapOutputSchema(job)
-      : AvroJob.getOutputSchema(job);
+    Schema schema = isMapOnly ? AvroJob.getMapOutputSchema(job) : AvroJob.getOutputSchema(job);
     GenericData dataModel = AvroJob.createDataModel(job);
 
-    final DataFileWriter<T> writer =
-      new DataFileWriter<T>(dataModel.createDatumWriter(null));
+    final DataFileWriter<T> writer = new DataFileWriter<T>(dataModel.createDatumWriter(null));
 
     configureDataFileWriter(writer, job);
 
-    Path path = FileOutputFormat.getTaskOutputPath(job, name+EXT);
+    Path path = FileOutputFormat.getTaskOutputPath(job, name + EXT);
     writer.create(schema, path.getFileSystem(job).create(path));
 
     return new RecordWriter<AvroWrapper<T>, NullWritable>() {
-        public void write(AvroWrapper<T> wrapper, NullWritable ignore)
-          throws IOException {
-          writer.append(wrapper.datum());
-        }
-        public void close(Reporter reporter) throws IOException {
-          writer.close();
-        }
-      };
+      @Override
+      public void write(AvroWrapper<T> wrapper, NullWritable ignore) throws IOException {
+        writer.append(wrapper.datum());
+      }
+
+      @Override
+      public void close(Reporter reporter) throws IOException {
+        writer.close();
+      }
+    };
   }
 
 }

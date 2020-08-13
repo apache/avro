@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,9 +32,9 @@ class ArrayAccessor {
   static void writeArray(boolean[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (boolean datum : data) {
       out.startItem();
-      out.writeBoolean(data[i]);
+      out.writeBoolean(datum);
     }
   }
 
@@ -43,59 +43,58 @@ class ArrayAccessor {
   static void writeArray(short[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (short datum : data) {
       out.startItem();
-      out.writeInt(data[i]);
+      out.writeInt(datum);
     }
   }
 
   static void writeArray(char[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (char datum : data) {
       out.startItem();
-      out.writeInt(data[i]);
+      out.writeInt(datum);
     }
   }
 
   static void writeArray(int[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (int datum : data) {
       out.startItem();
-      out.writeInt(data[i]);
+      out.writeInt(datum);
     }
   }
 
   static void writeArray(long[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (long datum : data) {
       out.startItem();
-      out.writeLong(data[i]);
+      out.writeLong(datum);
     }
   }
 
   static void writeArray(float[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (float datum : data) {
       out.startItem();
-      out.writeFloat(data[i]);
+      out.writeFloat(datum);
     }
   }
 
   static void writeArray(double[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
+    for (double datum : data) {
       out.startItem();
-      out.writeDouble(data[i]);
+      out.writeDouble(datum);
     }
   }
 
-  static Object readArray(Object array, Class<?> elementType, long l,
-      ResolvingDecoder in) throws IOException {
+  static Object readArray(Object array, Class<?> elementType, long l, ResolvingDecoder in) throws IOException {
     if (elementType == int.class)
       return readArray((int[]) array, l, in);
     if (elementType == long.class)
@@ -113,8 +112,7 @@ class ArrayAccessor {
     return null;
   }
 
-  static boolean[] readArray(boolean[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static boolean[] readArray(boolean[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -129,8 +127,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static int[] readArray(int[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static int[] readArray(int[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -145,8 +142,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static short[] readArray(short[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static short[] readArray(short[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -161,8 +157,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static char[] readArray(char[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static char[] readArray(char[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -177,8 +172,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static long[] readArray(long[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static long[] readArray(long[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -193,8 +187,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static float[] readArray(float[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static float[] readArray(float[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;
@@ -209,8 +202,7 @@ class ArrayAccessor {
     return array;
   }
 
-  static double[] readArray(double[] array, long l, ResolvingDecoder in)
-      throws IOException {
+  static double[] readArray(double[] array, long l, ResolvingDecoder in) throws IOException {
     int index = 0;
     do {
       int limit = index + (int) l;

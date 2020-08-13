@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,8 +31,8 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
- * An {@link InputSplit} that tags another InputSplit with extra data for use
- * by {@link DelegatingInputFormat}s and {@link DelegatingMapper}s.
+ * An {@link InputSplit} that tags another InputSplit with extra data for use by
+ * {@link DelegatingInputFormat}s and {@link DelegatingMapper}s.
  */
 class TaggedInputSplit implements Configurable, InputSplit {
 
@@ -57,15 +57,13 @@ class TaggedInputSplit implements Configurable, InputSplit {
   /**
    * Creates a new TaggedInputSplit.
    *
-   * @param inputSplit The InputSplit to be tagged
-   * @param conf The configuration to use
+   * @param inputSplit       The InputSplit to be tagged
+   * @param conf             The configuration to use
    * @param inputFormatClass The InputFormat class to use for this job
-   * @param mapperClass The Mapper class to use for this job
+   * @param mapperClass      The Mapper class to use for this job
    */
-  public TaggedInputSplit(InputSplit inputSplit, Configuration conf,
-      Class<? extends InputFormat> inputFormatClass,
-      Class<? extends AvroMapper> mapperClass,
-      Schema inputSchema) {
+  public TaggedInputSplit(InputSplit inputSplit, Configuration conf, Class<? extends InputFormat> inputFormatClass,
+      Class<? extends AvroMapper> mapperClass, Schema inputSchema) {
     this.inputSplitClass = inputSplit.getClass();
     this.inputSplit = inputSplit;
     this.conf = conf;
@@ -110,19 +108,21 @@ class TaggedInputSplit implements Configurable, InputSplit {
     return schema;
   }
 
+  @Override
   public long getLength() throws IOException {
     return inputSplit.getLength();
   }
 
+  @Override
   public String[] getLocations() throws IOException {
     return inputSplit.getLocations();
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   public void readFields(DataInput in) throws IOException {
     inputSplitClass = (Class<? extends InputSplit>) readClass(in);
-    inputSplit = (InputSplit) ReflectionUtils
-       .newInstance(inputSplitClass, conf);
+    inputSplit = ReflectionUtils.newInstance(inputSplitClass, conf);
     inputSplit.readFields(in);
     inputFormatClass = (Class<? extends InputFormat>) readClass(in);
     mapperClass = (Class<? extends AvroMapper>) readClass(in);
@@ -139,6 +139,7 @@ class TaggedInputSplit implements Configurable, InputSplit {
     }
   }
 
+  @Override
   public void write(DataOutput out) throws IOException {
     Text.writeString(out, inputSplitClass.getName());
     inputSplit.write(out);
@@ -147,10 +148,12 @@ class TaggedInputSplit implements Configurable, InputSplit {
     Text.writeString(out, schema.toString());
   }
 
+  @Override
   public Configuration getConf() {
     return conf;
   }
 
+  @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
   }

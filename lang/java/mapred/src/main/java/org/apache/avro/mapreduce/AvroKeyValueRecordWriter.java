@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,11 +35,13 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 /**
  * Writes key/value pairs to an Avro container file.
  *
- * <p>Each entry in the Avro container file will be a generic record with two fields,
- * named 'key' and 'value'.  The input types may be basic Writable objects like Text or
- * IntWritable, or they may be AvroWrapper subclasses (AvroKey or AvroValue).  Writable
- * objects will be converted to their corresponding Avro types when written to the generic
- * record key/value pair.</p>
+ * <p>
+ * Each entry in the Avro container file will be a generic record with two
+ * fields, named 'key' and 'value'. The input types may be basic Writable
+ * objects like Text or IntWritable, or they may be AvroWrapper subclasses
+ * (AvroKey or AvroValue). Writable objects will be converted to their
+ * corresponding Avro types when written to the generic record key/value pair.
+ * </p>
  *
  * @param <K> The type of key to write.
  * @param <V> The type of value to write.
@@ -48,7 +50,9 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
   /** A writer for the Avro container file. */
   private final DataFileWriter<GenericRecord> mAvroFileWriter;
 
-  /** The writer schema for the generic record entries of the Avro container file. */
+  /**
+   * The writer schema for the generic record entries of the Avro container file.
+   */
   private final Schema mKeyValuePairSchema;
 
   /** A reusable Avro generic record for writing key/value pairs to the file. */
@@ -63,24 +67,24 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
   /**
    * Constructor.
    *
-   * @param keyConverter A key to Avro datum converter.
-   * @param valueConverter A value to Avro datum converter.
-   * @param dataModel The data model for key and value.
-   * @param compressionCodec A compression codec factory for the Avro container file.
-   * @param outputStream The output stream to write the Avro container file to.
-   * @param syncInterval The sync interval for the Avro container file.
+   * @param keyConverter     A key to Avro datum converter.
+   * @param valueConverter   A value to Avro datum converter.
+   * @param dataModel        The data model for key and value.
+   * @param compressionCodec A compression codec factory for the Avro container
+   *                         file.
+   * @param outputStream     The output stream to write the Avro container file
+   *                         to.
+   * @param syncInterval     The sync interval for the Avro container file.
    * @throws IOException If the record writer cannot be opened.
    */
-  public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter,
-      AvroDatumConverter<V, ?> valueConverter, GenericData dataModel,
-      CodecFactory compressionCodec, OutputStream outputStream, int syncInterval) throws IOException {
+  public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter, AvroDatumConverter<V, ?> valueConverter,
+      GenericData dataModel, CodecFactory compressionCodec, OutputStream outputStream, int syncInterval)
+      throws IOException {
     // Create the generic record schema for the key/value pair.
-    mKeyValuePairSchema = AvroKeyValue.getSchema(
-        keyConverter.getWriterSchema(), valueConverter.getWriterSchema());
+    mKeyValuePairSchema = AvroKeyValue.getSchema(keyConverter.getWriterSchema(), valueConverter.getWriterSchema());
 
     // Create an Avro container file and a writer to it.
-    mAvroFileWriter = new DataFileWriter<GenericRecord>(
-        dataModel.createDatumWriter(mKeyValuePairSchema));
+    mAvroFileWriter = new DataFileWriter<GenericRecord>(dataModel.createDatumWriter(mKeyValuePairSchema));
     mAvroFileWriter.setCodec(compressionCodec);
     mAvroFileWriter.setSyncInterval(syncInterval);
     mAvroFileWriter.create(mKeyValuePairSchema, outputStream);
@@ -90,22 +94,23 @@ public class AvroKeyValueRecordWriter<K, V> extends RecordWriter<K, V> implement
     mValueConverter = valueConverter;
 
     // Create a reusable output record.
-    mOutputRecord = new AvroKeyValue<Object, Object>(new GenericData.Record(mKeyValuePairSchema));
+    mOutputRecord = new AvroKeyValue<>(new GenericData.Record(mKeyValuePairSchema));
   }
 
   /**
    * Constructor.
    *
-   * @param keyConverter A key to Avro datum converter.
-   * @param valueConverter A value to Avro datum converter.
-   * @param dataModel The data model for key and value.
-   * @param compressionCodec A compression codec factory for the Avro container file.
-   * @param outputStream The output stream to write the Avro container file to.
+   * @param keyConverter     A key to Avro datum converter.
+   * @param valueConverter   A value to Avro datum converter.
+   * @param dataModel        The data model for key and value.
+   * @param compressionCodec A compression codec factory for the Avro container
+   *                         file.
+   * @param outputStream     The output stream to write the Avro container file
+   *                         to.
    * @throws IOException If the record writer cannot be opened.
    */
-  public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter,
-      AvroDatumConverter<V, ?> valueConverter, GenericData dataModel,
-      CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
+  public AvroKeyValueRecordWriter(AvroDatumConverter<K, ?> keyConverter, AvroDatumConverter<V, ?> valueConverter,
+      GenericData dataModel, CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
     this(keyConverter, valueConverter, dataModel, compressionCodec, outputStream,
         DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }

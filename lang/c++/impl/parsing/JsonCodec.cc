@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,10 +22,7 @@
 #include <map>
 #include <algorithm>
 #include <ctype.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/any.hpp>
+#include <memory>
 #include <boost/math/special_functions/fpclassify.hpp>
 
 #include "ValidatingCodec.hh"
@@ -41,9 +38,7 @@ namespace avro {
 
 namespace parsing {
 
-using boost::shared_ptr;
-using boost::make_shared;
-using boost::static_pointer_cast;
+using std::make_shared;
 
 using std::map;
 using std::vector;
@@ -106,7 +101,7 @@ ProductionPtr JsonGrammarGenerator::doGenerate(const NodePtr& n,
             reverse(result->begin(), result->end());
 
             m[n] = result;
-            return result;
+            return make_shared<Production>(1, Symbol::indirect(result));
         }
     case AVRO_ENUM:
         {
@@ -215,6 +210,7 @@ class JsonDecoder : public Decoder {
 
     void expect(JsonParser::Token tk);
     void skipComposite();
+    void drain();
 public:
 
     JsonDecoder(const ValidSchema& s) :
@@ -227,6 +223,7 @@ template <typename P>
 void JsonDecoder<P>::init(InputStream& is)
 {
     in_.init(is);
+    parser_.reset();
 }
 
 template <typename P>
@@ -316,7 +313,7 @@ void JsonDecoder<P>::decodeBytes(vector<uint8_t>& value )
 {
     parser_.advance(Symbol::sBytes);
     expect(JsonParser::tkString);
-    value = toBytes(in_.stringValue());
+    value = toBytes(in_.bytesValue());
 }
 
 template <typename P>
@@ -332,7 +329,7 @@ void JsonDecoder<P>::decodeFixed(size_t n, vector<uint8_t>& value)
     parser_.advance(Symbol::sFixed);
     parser_.assertSize(n);
     expect(JsonParser::tkString);
-    value = toBytes(in_.stringValue());
+    value = toBytes(in_.bytesValue());
     if (value.size() != n) {
         throw Exception("Incorrect value for fixed");
     }
@@ -344,7 +341,7 @@ void JsonDecoder<P>::skipFixed(size_t n)
     parser_.advance(Symbol::sFixed);
     parser_.assertSize(n);
     expect(JsonParser::tkString);
-    vector<uint8_t> result = toBytes(in_.stringValue());
+    vector<uint8_t> result = toBytes(in_.bytesValue());
     if (result.size() != n) {
         throw Exception("Incorrect value for fixed");
     }
@@ -363,6 +360,7 @@ template <typename P>
 size_t JsonDecoder<P>::arrayStart()
 {
     parser_.advance(Symbol::sArrayStart);
+    parser_.pushRepeatCount(0);
     expect(JsonParser::tkArrayStart);
     return arrayNext();
 }
@@ -377,7 +375,7 @@ size_t JsonDecoder<P>::arrayNext()
         parser_.advance(Symbol::sArrayEnd);
         return 0;
     }
-    parser_.setRepeatCount(1);
+    parser_.nextRepeatCount(1);
     return 1;
 }
 
@@ -404,6 +402,13 @@ void JsonDecoder<P>::skipComposite()
     }
 }
 
+template<typename P>
+void JsonDecoder<P>::drain()
+{
+    parser_.processImplicitActions();
+    in_.drain();
+}
+
 template <typename P>
 size_t JsonDecoder<P>::skipArray()
 {
@@ -419,6 +424,7 @@ template <typename P>
 size_t JsonDecoder<P>::mapStart()
 {
     parser_.advance(Symbol::sMapStart);
+    parser_.pushRepeatCount(0);
     expect(JsonParser::tkObjectStart);
     return mapNext();
 }
@@ -433,7 +439,7 @@ size_t JsonDecoder<P>::mapNext()
         parser_.advance(Symbol::sMapEnd);
         return 0;
     }
-    parser_.setRepeatCount(1);
+    parser_.nextRepeatCount(1);
     return 1;
 }
 
@@ -496,6 +502,7 @@ class JsonEncoder : public Encoder {
 
     void init(OutputStream& os);
     void flush();
+    int64_t byteCount() const;
     void encodeNull();
     void encodeBool(bool b);
     void encodeInt(int32_t i);
@@ -530,6 +537,12 @@ void JsonEncoder<P, F>::flush()
 {
     parser_.processImplicitActions();
     out_.flush();
+}
+
+template<typename P, typename F>
+int64_t JsonEncoder<P, F>::byteCount() const
+{
+    return out_.byteCount();
 }
 
 template<typename P, typename F>
@@ -624,6 +637,7 @@ template<typename P, typename F>
 void JsonEncoder<P, F>::arrayStart()
 {
     parser_.advance(Symbol::sArrayStart);
+    parser_.pushRepeatCount(0);
     out_.arrayStart();
 }
 
@@ -639,6 +653,7 @@ template<typename P, typename F>
 void JsonEncoder<P, F>::mapStart()
 {
     parser_.advance(Symbol::sMapStart);
+    parser_.pushRepeatCount(0);
     out_.objectStart();
 }
 
@@ -653,7 +668,7 @@ void JsonEncoder<P, F>::mapEnd()
 template<typename P, typename F>
 void JsonEncoder<P, F>::setItemCount(size_t count)
 {
-    parser_.setRepeatCount(count);
+    parser_.nextRepeatCount(count);
 }
 
 template<typename P, typename F>
@@ -683,19 +698,19 @@ void JsonEncoder<P, F>::encodeUnionIndex(size_t e)
 
 DecoderPtr jsonDecoder(const ValidSchema& s)
 {
-    return boost::make_shared<parsing::JsonDecoder<
+    return std::make_shared<parsing::JsonDecoder<
         parsing::SimpleParser<parsing::JsonDecoderHandler> > >(s);
 }
 
 EncoderPtr jsonEncoder(const ValidSchema& schema)
 {
-    return boost::make_shared<parsing::JsonEncoder<
+    return std::make_shared<parsing::JsonEncoder<
         parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonNullFormatter> >, avro::json::JsonNullFormatter> >(schema);
 }
 
 EncoderPtr jsonPrettyEncoder(const ValidSchema& schema)
 {
-    return boost::make_shared<parsing::JsonEncoder<
+    return std::make_shared<parsing::JsonEncoder<
         parsing::SimpleParser<parsing::JsonHandler<avro::json::JsonPrettyFormatter> >, avro::json::JsonPrettyFormatter> >(schema);
 }
 

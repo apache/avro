@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,32 +22,47 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 
+import org.slf4j.LoggerFactory;
+
 /** IPC utilities, including client and server factories. */
 public class Ipc {
-  private Ipc() {}                                // no public ctor
+  private Ipc() {
+  } // no public ctor
+
+  static boolean warned = false;
 
   /** Create a client {@link Transceiver} connecting to the provided URI. */
   public static Transceiver createTransceiver(URI uri) throws IOException {
     if ("http".equals(uri.getScheme()))
-       return new HttpTransceiver(uri.toURL());
+      return new HttpTransceiver(uri.toURL());
     else if ("avro".equals(uri.getScheme()))
-      return new SaslSocketTransceiver
-        (new InetSocketAddress(uri.getHost(), uri.getPort()));
+      return new SaslSocketTransceiver(new InetSocketAddress(uri.getHost(), uri.getPort()));
     else
-      throw new IOException("unknown uri scheme: "+uri);
+      throw new IOException("unknown uri scheme: " + uri);
   }
 
-  /** Create a {@link Server} listening at the named URI using the provided
-   * responder. */
-  public static Server createServer(Responder responder,
-                                    URI uri) throws IOException {
-    if ("http".equals(uri.getScheme()))
-      return new HttpServer(responder, uri.getPort());
-    else if ("avro".equals(uri.getScheme()))
-      return new SaslSocketServer
-        (responder, new InetSocketAddress(uri.getHost(), uri.getPort()));
-    else
-      throw new IOException("unknown uri scheme: "+uri);
+  /**
+   * Create a {@link Server} listening at the named URI using the provided
+   * responder.
+   */
+  public static Server createServer(Responder responder, URI uri) throws IOException {
+    if ("avro".equals(uri.getScheme())) {
+      return new SaslSocketServer(responder, new InetSocketAddress(uri.getHost(), uri.getPort()));
+    } else if ("http".equals(uri.getScheme())) {
+      if (!warned) {
+        LoggerFactory.getLogger(Ipc.class)
+            .error("Using Ipc.createServer to create http instances is deprecated.  Create "
+                + " an instance of org.apache.avro.ipc.jetty.HttpServer directly.");
+        warned = true;
+      }
+      try {
+        Class<?> cls = Class.forName("org.apache.avro.ipc.jetty.HttpServer");
+        return (Server) cls.getConstructor(Responder.class, Integer.TYPE).newInstance(responder, uri.getPort());
+      } catch (Throwable t) {
+        // ignore, exception will be thrown
+      }
+    }
+    throw new IOException("unknown uri scheme: " + uri);
   }
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,33 +52,23 @@ public class CatTool implements Tool {
   private int currentInput;
 
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     OptionParser optParser = new OptionParser();
-    OptionSpec<Long> offsetOpt = optParser
-      .accepts("offset", "offset for reading input")
-      .withRequiredArg()
-      .ofType(Long.class)
-      .defaultsTo(new Long(0));
-    OptionSpec<Long> limitOpt = optParser
-      .accepts("limit", "maximum number of records in the outputfile")
-      .withRequiredArg()
-      .ofType(Long.class)
-      .defaultsTo(Long.MAX_VALUE);
-    OptionSpec<Double> fracOpt = optParser
-      .accepts("samplerate", "rate at which records will be collected")
-      .withRequiredArg()
-      .ofType(Double.class)
-      .defaultsTo(new Double(1));
+    OptionSpec<Long> offsetOpt = optParser.accepts("offset", "offset for reading input").withRequiredArg()
+        .ofType(Long.class).defaultsTo(new Long(0));
+    OptionSpec<Long> limitOpt = optParser.accepts("limit", "maximum number of records in the outputfile")
+        .withRequiredArg().ofType(Long.class).defaultsTo(Long.MAX_VALUE);
+    OptionSpec<Double> fracOpt = optParser.accepts("samplerate", "rate at which records will be collected")
+        .withRequiredArg().ofType(Double.class).defaultsTo(new Double(1));
 
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
-    List<String> nargs = (List<String>)opts.nonOptionArguments();
+    List<String> nargs = (List<String>) opts.nonOptionArguments();
     if (nargs.size() < 2) {
       printHelp(out);
       return 0;
     }
 
-    inFiles = Util.getFiles(nargs.subList(0, nargs.size()-1));
+    inFiles = Util.getFiles(nargs.subList(0, nargs.size() - 1));
 
     System.out.println("List of input files:");
     for (Path p : inFiles) {
@@ -88,16 +78,14 @@ public class CatTool implements Tool {
     nextInput();
 
     OutputStream output = out;
-    String lastArg = nargs.get(nargs.size()-1);
+    String lastArg = nargs.get(nargs.size() - 1);
     if (nargs.size() > 1 && !lastArg.equals("-")) {
       output = Util.createFromFS(lastArg);
     }
-    writer = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>());
+    writer = new DataFileWriter<>(new GenericDatumWriter<>());
 
     String codecName = reader.getMetaString(DataFileConstants.CODEC);
-    CodecFactory codec = (codecName == null)
-        ? CodecFactory.fromString(DataFileConstants.NULL_CODEC)
+    CodecFactory codec = (codecName == null) ? CodecFactory.fromString(DataFileConstants.NULL_CODEC)
         : CodecFactory.fromString(codecName);
     writer.setCodec(codec);
     for (String key : reader.getMetaKeys()) {
@@ -107,7 +95,7 @@ public class CatTool implements Tool {
     }
     writer.create(schema, output);
 
-    long  offset = opts.valueOf(offsetOpt);
+    long offset = opts.valueOf(offsetOpt);
     long limit = opts.valueOf(limitOpt);
     double samplerate = opts.valueOf(fracOpt);
     sampleCounter = 1;
@@ -140,15 +128,14 @@ public class CatTool implements Tool {
     return 0;
   }
 
-  private void nextInput() throws IOException{
+  private void nextInput() throws IOException {
     currentInput++;
     Path path = inFiles.get(currentInput);
     FSDataInputStream input = new FSDataInputStream(Util.openFromFS(path));
-    reader = new DataFileStream<GenericRecord>(input, new GenericDatumReader<GenericRecord>());
-    if (schema == null) {                            // if this is the first file, the schema gets saved
+    reader = new DataFileStream<>(input, new GenericDatumReader<>());
+    if (schema == null) { // if this is the first file, the schema gets saved
       schema = reader.getSchema();
-    }
-    else if (!schema.equals(reader.getSchema())) {   // subsequent files have to have equal schemas
+    } else if (!schema.equals(reader.getSchema())) { // subsequent files have to have equal schemas
       throw new IOException("schemas dont match");
     }
   }
@@ -157,10 +144,10 @@ public class CatTool implements Tool {
     return inFiles.size() > (currentInput + 1);
   }
 
-  /**skips a number of records from the input*/
+  /** skips a number of records from the input */
   private long skip(long skip) throws IOException {
     long skipped = 0;
-    while( 0 < skip  && reader.hasNext()) {
+    while (0 < skip && reader.hasNext()) {
       reader.next(reuse);
       skip--;
       skipped++;
@@ -169,14 +156,16 @@ public class CatTool implements Tool {
       nextInput();
       skipped = skipped + skip(skip);
     }
-  return skipped;
-}
+    return skipped;
+  }
 
-  /** writes records with the given samplerate
-   * The record at position offset is guaranteed to be taken*/
+  /**
+   * writes records with the given samplerate The record at position offset is
+   * guaranteed to be taken
+   */
   private long writeRecords(long count, double samplerate) throws IOException {
     long written = 0;
-    while(written < count && reader.hasNext()) {
+    while (written < count && reader.hasNext()) {
       reuse = reader.next(reuse);
       sampleCounter = sampleCounter + samplerate;
       if (sampleCounter >= 1) {
@@ -210,7 +199,7 @@ public class CatTool implements Tool {
 
   @Override
   public String getShortDescription() {
-    return "extracts samples from files";
+    return "Extracts samples from files";
   }
 
 }

@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -61,9 +61,8 @@ LONG_MIN_VALUE = -(1 << 63)
 LONG_MAX_VALUE = (1 << 63) - 1
 
 STRUCT_INT = struct.Struct('!I')     # big-endian unsigned int
-STRUCT_LONG = struct.Struct('!Q')    # big-endian unsigned long long
-STRUCT_FLOAT = struct.Struct('!f')   # big-endian float
-STRUCT_DOUBLE = struct.Struct('!d')  # big-endian double
+STRUCT_FLOAT = struct.Struct('<f')   # little-endian float
+STRUCT_DOUBLE = struct.Struct('<d')  # little-endian double
 STRUCT_CRC32 = struct.Struct('>I')   # big-endian unsigned int
 
 
@@ -92,6 +91,27 @@ class SchemaResolutionException(schema.AvroException):
 # ------------------------------------------------------------------------------
 # Validate
 
+_valid = {
+  'null': lambda s, d: d is None,
+  'boolean': lambda s, d: isinstance(d, bool),
+  'string': lambda s, d: isinstance(d, str),
+  'bytes': lambda s, d: isinstance(d, bytes),
+  'int': lambda s, d: isinstance(d, int) and (INT_MIN_VALUE <= d <= INT_MAX_VALUE),
+  'long': lambda s, d: isinstance(d, int) and (LONG_MIN_VALUE <= d <= LONG_MAX_VALUE),
+  'float': lambda s, d: isinstance(d, (int, float)),
+  'fixed': lambda s, d: isinstance(d, bytes) and len(d) == s.size,
+  'enum': lambda s, d: d in s.symbols,
+  'array': lambda s, d: isinstance(d, list) and all(Validate(s.items, item) for item in d),
+  'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, str) for key in d)
+                       and all(Validate(s.values, value) for value in d.values())),
+  'union': lambda s, d: any(Validate(branch, d) for branch in s.schemas),
+  'record': lambda s, d: (isinstance(d, dict)
+                          and all(Validate(f.type, d.get(f.name)) for f in s.fields)
+                          and {f.name for f in s.fields}.issuperset(d.keys()))
+}
+_valid['double'] = _valid['float']
+_valid['error_union'] = _valid['union']
+_valid['error'] = _valid['request'] = _valid['record']
 
 def Validate(expected_schema, datum):
   """Determines if a python datum is an instance of a schema.
@@ -102,44 +122,10 @@ def Validate(expected_schema, datum):
   Returns:
     True if the datum is an instance of the schema.
   """
-  schema_type = expected_schema.type
-  if schema_type == 'null':
-    return datum is None
-  elif schema_type == 'boolean':
-    return isinstance(datum, bool)
-  elif schema_type == 'string':
-    return isinstance(datum, str)
-  elif schema_type == 'bytes':
-    return isinstance(datum, bytes)
-  elif schema_type == 'int':
-    return (isinstance(datum, int)
-        and (INT_MIN_VALUE <= datum <= INT_MAX_VALUE))
-  elif schema_type == 'long':
-    return (isinstance(datum, int)
-        and (LONG_MIN_VALUE <= datum <= LONG_MAX_VALUE))
-  elif schema_type in ['float', 'double']:
-    return (isinstance(datum, int) or isinstance(datum, float))
-  elif schema_type == 'fixed':
-    return isinstance(datum, bytes) and (len(datum) == expected_schema.size)
-  elif schema_type == 'enum':
-    return datum in expected_schema.symbols
-  elif schema_type == 'array':
-    return (isinstance(datum, list)
-        and all(Validate(expected_schema.items, item) for item in datum))
-  elif schema_type == 'map':
-    return (isinstance(datum, dict)
-        and all(isinstance(key, str) for key in datum.keys())
-        and all(Validate(expected_schema.values, value)
-                for value in datum.values()))
-  elif schema_type in ['union', 'error_union']:
-    return any(Validate(union_branch, datum)
-               for union_branch in expected_schema.schemas)
-  elif schema_type in ['record', 'error', 'request']:
-    return (isinstance(datum, dict)
-        and all(Validate(field.type, datum.get(field.name))
-                for field in expected_schema.fields))
-  else:
-    raise AvroTypeException('Unknown Avro schema type: %r' % schema_type)
+  try:
+    return _valid[expected_schema.type](expected_schema, datum)
+  except KeyError:
+    raise AvroTypeException(expected_schema, datum)
 
 
 # ------------------------------------------------------------------------------
@@ -211,11 +197,7 @@ class BinaryDecoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xff)) |
-      ((ord(self.read(1)) & 0xff) <<  8) |
-      ((ord(self.read(1)) & 0xff) << 16) |
-      ((ord(self.read(1)) & 0xff) << 24))
-    return STRUCT_FLOAT.unpack(STRUCT_INT.pack(bits))[0]
+    return STRUCT_FLOAT.unpack(self.read(4))[0]
 
   def read_double(self):
     """
@@ -223,15 +205,7 @@ class BinaryDecoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = (((ord(self.read(1)) & 0xff)) |
-      ((ord(self.read(1)) & 0xff) <<  8) |
-      ((ord(self.read(1)) & 0xff) << 16) |
-      ((ord(self.read(1)) & 0xff) << 24) |
-      ((ord(self.read(1)) & 0xff) << 32) |
-      ((ord(self.read(1)) & 0xff) << 40) |
-      ((ord(self.read(1)) & 0xff) << 48) |
-      ((ord(self.read(1)) & 0xff) << 56))
-    return STRUCT_DOUBLE.unpack(STRUCT_LONG.pack(bits))[0]
+    return STRUCT_DOUBLE.unpack(self.read(8))[0]
 
   def read_bytes(self):
     """
@@ -354,11 +328,7 @@ class BinaryEncoder(object):
     The float is converted into a 32-bit integer using a method equivalent to
     Java's floatToIntBits and then encoded in little-endian format.
     """
-    bits = STRUCT_INT.unpack(STRUCT_FLOAT.pack(datum))[0]
-    self.WriteByte((bits) & 0xFF)
-    self.WriteByte((bits >> 8) & 0xFF)
-    self.WriteByte((bits >> 16) & 0xFF)
-    self.WriteByte((bits >> 24) & 0xFF)
+    self.write(STRUCT_FLOAT.pack(datum))
 
   def write_double(self, datum):
     """
@@ -366,15 +336,7 @@ class BinaryEncoder(object):
     The double is converted into a 64-bit integer using a method equivalent to
     Java's doubleToLongBits and then encoded in little-endian format.
     """
-    bits = STRUCT_LONG.unpack(STRUCT_DOUBLE.pack(datum))[0]
-    self.WriteByte((bits) & 0xFF)
-    self.WriteByte((bits >> 8) & 0xFF)
-    self.WriteByte((bits >> 16) & 0xFF)
-    self.WriteByte((bits >> 24) & 0xFF)
-    self.WriteByte((bits >> 32) & 0xFF)
-    self.WriteByte((bits >> 40) & 0xFF)
-    self.WriteByte((bits >> 48) & 0xFF)
-    self.WriteByte((bits >> 56) & 0xFF)
+    self.write(STRUCT_DOUBLE.pack(datum))
 
   def write_bytes(self, datum):
     """
@@ -674,7 +636,7 @@ class DatumReader(object):
 
   def read_union(self, writer_schema, reader_schema, decoder):
     """
-    A union is encoded by first writing a long value indicating
+    A union is encoded by first writing an int value indicating
     the zero-based position within the union of the schema of its value.
     The value is then encoded per the indicated schema within the union.
     """
@@ -904,7 +866,7 @@ class DatumWriter(object):
 
   def write_union(self, writer_schema, datum, encoder):
     """
-    A union is encoded by first writing a long value indicating
+    A union is encoded by first writing an int value indicating
     the zero-based position within the union of the schema of its value.
     The value is then encoded per the indicated schema within the union.
     """

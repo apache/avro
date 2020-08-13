@@ -7,7 +7,7 @@
   (the "License"); you may not use this file except in compliance with
   the License.  You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+      https://www.apache.org/licenses/LICENSE-2.0
 
   Unless required by applicable law or agreed to in writing, software
   distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd" [
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "https://forrest.apache.org/dtd/document-v20.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -102,9 +102,7 @@
 		  of the field (required), and </li>
 		<li><code>doc</code>: a JSON string describing this field
                   for users (optional).</li>
-		<li><code>type:</code> A JSON object defining a schema, or
-		  a JSON string naming a record definition
-		  (required).</li>
+		<li><code>type:</code> a <a href="#schemas">schema</a>, as defined above</li>
 		<li><code>default:</code> A default value for this
 		  field, used when reading instances that lack this
 		  field (optional).  Permitted values depend on the
@@ -134,7 +132,7 @@
 		  impacts sort ordering of this record (optional).
 		  Valid values are "ascending" (the default),
 		  "descending", or "ignore".  For more details on how
-		  this is used, see the the <a href="#order">sort
+		  this is used, see the <a href="#order">sort
 		  order</a> section below.</li>
 		<li><code>aliases:</code> a JSON array of strings, providing
 		  alternate names for this field (optional).</li>
@@ -174,10 +172,19 @@
 	    be unique; duplicates are prohibited.  Every symbol must
 	    match the regular expression <code>[A-Za-z_][A-Za-z0-9_]*</code>
 	    (the same requirement as for <a href="#names">names</a>).</li>
+	    <li><code>default</code>: A default value for this
+	      enumeration, used during resolution when the reader
+	      encounters a symbol from the writer that isn't defined
+	      in the reader's schema (optional).  The value provided
+	      here must be a JSON string that's a member of
+	      the <code>symbols</code> array.
+	      See documentation on schema resolution for how this gets
+	      used.</li>
 	  </ul>
 	  <p>For example, playing card suits might be defined with:</p>
 	  <source>
-{ "type": "enum",
+{
+  "type": "enum",
   "name": "Suit",
   "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
 }
@@ -193,7 +200,13 @@
 	  </ul>
 	  <p>For example, an array of strings is declared
 	  with:</p>
-	  <source>{"type": "array", "items": "string"}</source>
+    <source>
+{
+  "type": "array",
+  "items" : "string",
+  "default": []
+}
+    </source>
 	</section>
 
         <section>
@@ -206,7 +219,13 @@
 	  <p>Map keys are assumed to be strings.</p>
 	  <p>For example, a map from string to long is declared
 	  with:</p>
-	  <source>{"type": "map", "values": "long"}</source>
+    <source>
+{
+  "type": "map",
+  "items" : "long",
+  "default": {}
+}
+    </source>
 	</section>
 
         <section>
@@ -265,6 +284,10 @@
         null namespace.
         Equality of names (including field names and enum symbols)
         as well as fullnames is case-sensitive.</p>
+        <p> The null namespace may not be used in a dot-separated
+        sequence of names.  So the grammar for a namespace
+        is:</p>
+        <p>&nbsp;&nbsp;<code>&lt;empty&gt; | &lt;name&gt;[(&lt;dot&gt;&lt;name&gt;)*]</code></p>
         <p>In record, enum and fixed definitions, the fullname is
         determined in one of the following ways:</p>
 	<ul>
@@ -326,21 +349,41 @@
     </section> <!-- end schemas -->
 
     <section>
-      <title>Data Serialization</title>
+      <title>Data Serialization and Deserialization</title>
 
-      <p>Avro data is always serialized with its schema.  Files that
-	store Avro data should always also include the schema for that
-	data in the same file.  Avro-based remote procedure call (RPC)
-	systems must also guarantee that remote recipients of data
-	have a copy of the schema used to write that data.</p>
+      <p>Binary encoded Avro data does not include type information or
+      field names.  The benefit is that the serialized data is small, but
+      as a result a schema must always be used in order to read Avro data
+      correctly.  The best way to ensure that the schema is structurally
+      identical to the one used to write the data is to use the exact same
+      schema.</p>
 
-      <p>Because the schema used to write data is always available
-	when the data is read, Avro data itself is not tagged with
-	type information.  The schema is required to parse data.</p>
+      <p>Therefore, files or systems that store Avro data should always
+      include the writer's schema for that data.  Avro-based remote procedure
+      call (RPC) systems must also guarantee that remote recipients of data
+      have a copy of the schema used to write that data.  In general, it is
+      advisable that any reader of Avro data should use a schema that is
+      the same (as defined more fully in
+      <a href="#Parsing+Canonical+Form+for+Schemas">Parsing Canonical Form for
+      Schemas</a>) as the schema that was used to write the data in order to
+      deserialize it correctly. Deserializing data into a newer schema is
+      accomplished by specifying an additional schema, the results of which are
+      described in <a href="#Schema+Resolution">Schema Resolution</a>.</p>
 
-      <p>In general, both serialization and deserialization proceed as
-      a depth-first, left-to-right traversal of the schema,
-      serializing primitive types as they are encountered.</p>
+      <p>In general, both serialization and deserialization proceed as a
+      depth-first, left-to-right traversal of the schema, serializing or
+      deserializing primitive types as they are encountered. Therefore, it is
+      possible, though not advisable, to read Avro data with a schema that
+      does not have the same Parsing Canonical Form as the schema with which
+      the data was written. In order for this to work, the serialized primitive
+      values must be compatible, in order value by value, with the items in the
+      deserialization schema. For example, int and long are always serialized
+      the same way, so an int could be deserialized as a long.  Since the
+      compatibility of two schemas depends on both the data and the
+      serialization format (eg. binary is more permissive than JSON because JSON
+      includes field names, eg. a long that is too large will overflow an int),
+      it is simpler and more reliable to use schemas with identical Parsing
+      Canonical Form.</p>
 
       <section>
 	<title>Encodings</title>
@@ -353,6 +396,10 @@
 
       <section id="binary_encoding">
         <title>Binary Encoding</title>
+        <p>Binary encoding does not include field names, self-contained
+          information about the types of individual bytes, nor field or
+          record separators. Therefore readers are wholly reliant on
+          the schema used when the data was encoded.</p>
 
 	<section id="binary_encode_primitive">
           <title>Primitive Types</title>
@@ -380,11 +427,11 @@
 	    </li>
             <li>a <code>float</code> is written as 4 bytes. The float is
               converted into a 32-bit integer using a method equivalent
-              to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Float.html#floatToIntBits%28float%29">Java's floatToIntBits</a> and then encoded
+              to <a href="https://java.sun.com/javase/6/docs/api/java/lang/Float.html#floatToIntBits%28float%29">Java's floatToIntBits</a> and then encoded
               in little-endian format.</li>
             <li>a <code>double</code> is written as 8 bytes. The double
               is converted into a 64-bit integer using a method equivalent
-              to <a href="http://java.sun.com/javase/6/docs/api/java/lang/Double.html#doubleToLongBits%28double%29">Java's
+              to <a href="https://java.sun.com/javase/6/docs/api/java/lang/Double.html#doubleToLongBits%28double%29">Java's
 		doubleToLongBits</a> and then encoded in little-endian
               format.</li>
             <li><code>bytes</code> are encoded as
@@ -503,7 +550,7 @@
 
           <section id="union_encoding">
             <title>Unions</title>
-            <p>A union is encoded by first writing a <code>long</code>
+            <p>A union is encoded by first writing an <code>int</code>
               value indicating the zero-based position within the
               union of the schema of its value.  The value is then
               encoded per the indicated schema within the union.</p>
@@ -517,6 +564,8 @@
                 followed by the serialized string:
                 <source>02 02 61</source></li>
             </ul>
+            <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long. 
+            In reality, we don't expect unions with 215M members </p>
           </section>
 
           <section id="fixed_encoding">
@@ -560,8 +609,8 @@
           Foo instance.</li>
         </ul>
 
-        <p>Note that a schema is still required to correctly process
-        JSON-encoded data.  For example, the JSON encoding does not
+        <p>Note that the original schema is still required to correctly
+        process JSON-encoded data.  For example, the JSON encoding does not
         distinguish between <code>int</code>
         and <code>long</code>, <code>float</code>
         and <code>double</code>, records and maps, enums and strings,
@@ -574,8 +623,8 @@
 
         <p>In some situations a single Avro serialized object is to be stored for a
         longer period of time. One very common example is storing Avro records
-        for several weeks in an <a href="http://kafka.apache.org/">Apache Kafka</a> topic.</p>
-        <p>In the period after a schema change this persistance system will contain records
+        for several weeks in an <a href="https://kafka.apache.org/">Apache Kafka</a> topic.</p>
+        <p>In the period after a schema change this persistence system will contain records
         that have been written with different schemas. So the need arises to know which schema
         was used to write a record to support schema evolution correctly.
         In most cases the schema itself is too large to include in the message,
@@ -733,7 +782,7 @@
         <title>deflate</title>
         <p>The "deflate" codec writes the data block using the
         deflate algorithm as specified in
-        <a href="http://www.isi.edu/in-notes/rfc1951.txt">RFC 1951</a>,
+        <a href="https://www.isi.edu/in-notes/rfc1951.txt">RFC 1951</a>,
         and typically implemented using the zlib library.  Note that this
         format (unlike the "zlib format" in RFC 1950) does not have a
         checksum.
@@ -743,12 +792,31 @@
       <section>
 	<title>Optional Codecs</title>
         <section>
+          <title>bzip2</title>
+          <p>The "bzip2" codec uses the <a href="https://sourceware.org/bzip2/">bzip2</a>
+            compression library.</p>
+        </section>
+
+        <section>
           <title>snappy</title>
           <p>The "snappy" codec uses
-            Google's <a href="http://code.google.com/p/snappy/">Snappy</a>
+            Google's <a href="https://code.google.com/p/snappy/">Snappy</a>
             compression library.  Each compressed block is followed
             by the 4-byte, big-endian CRC32 checksum of the
             uncompressed data in the block.</p>
+        </section>
+
+        <section>
+          <title>xz</title>
+          <p>The "xz" codec uses the <a href="https://tukaani.org/xz/">XZ</a>
+            compression library.</p>
+        </section>
+
+        <section>
+          <title>zstandard</title>
+          <p>The "zstandard" codec uses
+            Facebook's <a href="https://facebook.github.io/zstd/">Zstandard</a>
+            compression library.</p>
         </section>
       </section>
     </section>
@@ -871,7 +939,7 @@
         <section>
           <title>HTTP as Transport</title>
           <p>When
-            <a href="http://www.w3.org/Protocols/rfc2616/rfc2616.html">HTTP</a>
+            <a href="https://www.w3.org/Protocols/rfc2616/rfc2616.html">HTTP</a>
             is used as a transport, each Avro message exchange is an
             HTTP request/response pair.  All messages of an Avro
             protocol should share a single URL at an HTTP server.
@@ -1080,14 +1148,15 @@
       <title>Schema Resolution</title>
 
       <p>A reader of Avro data, whether from an RPC or a file, can
-        always parse that data because its schema is provided.  But
-        that schema may not be exactly the schema that was expected.
+        always parse that data because the original schema must be
+        provided along with the data.  However, the reader may be
+        programmed to read data into a different schema.
         For example, if the data was written with a different version
-        of the software than it is read, then records may have had
-        fields added or removed.  This section specifies how such
+        of the software than it is read, then fields may have been
+        added or removed from records.  This section specifies how such
         schema differences should be resolved.</p>
 
-      <p>We call the schema used to write the data as
+      <p>We refer to the schema used to write the data as
         the <em>writer's</em> schema, and the schema that the
         application expects the <em>reader's</em> schema.  Differences
         between these should be resolved as follows:</p>
@@ -1098,9 +1167,9 @@
           <ul>
             <li>both schemas are arrays whose item types match</li>
             <li>both schemas are maps whose value types match</li>
-            <li>both schemas are enums whose names match</li>
-            <li>both schemas are fixed whose sizes and names match</li>
-            <li>both schemas are records with the same name</li>
+            <li>both schemas are enums whose (unqualified) names match</li>
+            <li>both schemas are fixed whose sizes and (unqualified) names match</li>
+            <li>both schemas are records with the same (unqualified) name</li>
             <li>either schema is a union</li>
             <li>both schemas have same primitive type</li>
             <li>the writer's schema may be <em>promoted</em> to the
@@ -1141,7 +1210,8 @@
 
         <li><strong>if both are enums:</strong>
           <p>if the writer's symbol is not present in the reader's
-            enum, then an error is signalled.</p>
+            enum and the reader has a <code>default</code> value, then
+            that value is used, otherwise an error is signalled.</p>
         </li>
 
         <li><strong>if both are arrays:</strong>
@@ -1183,8 +1253,8 @@
       <title>Parsing Canonical Form for Schemas</title>
 
       <p>One of the defining characteristics of Avro is that a reader
-      is assumed to have the "same" schema used by the writer of the
-      data the reader is reading.  This assumption leads to a data
+      must use the schema used by the writer of the data in
+      order to know how to read the data.  This assumption results in a data
       format that's compact and also amenable to many forms of schema
       evolution.  However, the specification so far has not defined
       what it means for the reader to have the "same" schema as the
@@ -1198,7 +1268,7 @@
       <p><em>Parsing Canonical Form</em> is a transformation of a
       writer's schema that let's us define what it means for two
       schemas to be "the same" for the purpose of reading data written
-      agains the schema.  It is called <em>Parsing</em> Canonical Form
+      against the schema.  It is called <em>Parsing</em> Canonical Form
       because the transformations strip away parts of the schema, like
       "doc" attributes, that are irrelevant to readers trying to parse
       incoming data.  It is called <em>Canonical Form</em> because the
@@ -1273,7 +1343,7 @@
         much shorter bit string, its <em>fingerprint,</em> that
         uniquely identifies the original data for all practical
         purposes" (quoted from [<a
-        href="http://en.wikipedia.org/wiki/Fingerprint_(computing)">Wikipedia</a>]).
+        href="https://en.wikipedia.org/wiki/Fingerprint_(computing)">Wikipedia</a>]).
         In the Avro context, fingerprints of Parsing Canonical Form
         can be useful in a number of applications; for example, to
         cache encoder and decoder objects, to tag data items with a
@@ -1291,14 +1361,14 @@
         <ul>
           <li> When applications can tolerate longer fingerprints, we
           recommend using the <a
-          href="http://en.wikipedia.org/wiki/SHA-2">SHA-256 digest
+          href="https://en.wikipedia.org/wiki/SHA-2">SHA-256 digest
           algorithm</a> to generate 256-bit fingerprints of Parsing
           Canonical Forms.  Most languages today have SHA-256
           implementations in their libraries.</li>
 
           <li> At the opposite extreme, the smallest fingerprint we
           recommend is a 64-bit <a
-          href="http://en.wikipedia.org/wiki/Rabin_fingerprint">Rabin
+          href="https://en.wikipedia.org/wiki/Rabin_fingerprint">Rabin
           fingerprint</a>.  Below, we provide pseudo-code for this
           algorithm that can be easily translated into any programming
           language.  64-bit fingerprints should guarantee uniqueness
@@ -1310,7 +1380,7 @@
           collision).</li>
 
           <li>Between these two extremes, we recommend using the <a
-          href="http://en.wikipedia.org/wiki/MD5">MD5 message
+          href="https://en.wikipedia.org/wiki/MD5">MD5 message
           digest</a> to generate 128-bit fingerprints.  These make
           sense only where very large numbers of schemas are being
           manipulated (tens of millions); otherwise, 64-bit
@@ -1329,10 +1399,10 @@
         fingerprints themselves.</p>
 
         <p>Rabin fingerprints are <a
-        href="http://en.wikipedia.org/wiki/Cyclic_redundancy_check">cyclic
+        href="https://en.wikipedia.org/wiki/Cyclic_redundancy_check">cyclic
         redundancy checks</a> computed using irreducible polynomials.
         In the style of the Appendix of <a
-        href="http://www.ietf.org/rfc/rfc1952.txt">RFC&nbsp;1952</a>
+        href="https://www.ietf.org/rfc/rfc1952.txt">RFC&nbsp;1952</a>
         (pg 10), which defines the CRC-32 algorithm, here's our
         definition of the 64-bit AVRO fingerprinting algorithm:</p>
 
@@ -1359,10 +1429,11 @@ void initFPTable() {
 }
         </source>
 
-        <p> Readers interested in the mathematics behind this
-        algorithm may want to read <a
-        href="http://www.scribd.com/fb-6001967/d/84795-Crc">this book
-        chapter.</a> (Unlike RFC-1952 and the book chapter, we prepend
+        <p>Readers interested in the mathematics behind this
+          algorithm may want to read
+        <a href="https://books.google.com/books?id=XD9iAwAAQBAJ&amp;pg=PA319"
+          >Chapter 14 of the Second Edition of <em>Hacker's Delight</em></a>.
+        (Unlike RFC-1952 and the book chapter, we prepend
         a single one bit to messages.  We do this because CRCs ignore
         leading zero bits, which can be problematic.  Our code
         prepends a one-bit by initializing fingerprints using
@@ -1438,6 +1509,17 @@ void initFPTable() {
       </section>
 
       <section>
+        <title>UUID</title>
+        <p>
+          The <code>uuid</code> logical type represents a random generated universally unique identifier (UUID).
+        </p>
+
+        <p>
+          A <code>uuid</code> logical type annotates an Avro <code>string</code>. The string has to conform with <a href="https://www.ietf.org/rfc/rfc4122.txt">RFC-4122</a>
+        </p>
+      </section>
+
+      <section>
         <title>Date</title>
         <p>
           The <code>date</code> logical type represents a date within the calendar, with no reference to a particular time zone or time of day.
@@ -1445,6 +1527,13 @@ void initFPTable() {
         <p>
           A <code>date</code> logical type annotates an Avro <code>int</code>, where the int stores the number of days from the unix epoch, 1 January 1970 (ISO calendar).
         </p>
+        <p>The following schema represents a date:</p>
+        <source>
+{
+  "type": "int",
+  "logicalType": "date"
+}
+        </source>
       </section>
 
       <section>
@@ -1471,6 +1560,8 @@ void initFPTable() {
         <title>Timestamp (millisecond precision)</title>
         <p>
           The <code>timestamp-millis</code> logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one millisecond.
+          Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation.
+          In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
         </p>
         <p>
           A <code>timestamp-millis</code> logical type annotates an Avro <code>long</code>, where the long stores the number of milliseconds from the unix epoch, 1 January 1970 00:00:00.000 UTC.
@@ -1481,9 +1572,31 @@ void initFPTable() {
         <title>Timestamp (microsecond precision)</title>
         <p>
           The <code>timestamp-micros</code> logical type represents an instant on the global timeline, independent of a particular time zone or calendar, with a precision of one microsecond.
+          Please note that time zone information gets lost in this process. Upon reading a value back, we can only reconstruct the instant, but not the original representation.
+          In practice, such timestamps are typically displayed to users in their local time zones, therefore they may be displayed differently depending on the execution environment.
         </p>
         <p>
           A <code>timestamp-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds from the unix epoch, 1 January 1970 00:00:00.000000 UTC.
+        </p>
+      </section>
+
+      <section>
+        <title>Local timestamp (millisecond precision)</title>
+        <p>
+          The <code>local-timestamp-millis</code> logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one millisecond.
+        </p>
+        <p>
+          A <code>local-timestamp-millis</code> logical type annotates an Avro <code>long</code>, where the long stores the number of milliseconds, from 1 January 1970 00:00:00.000.
+        </p>
+      </section>
+
+      <section>
+        <title>Local timestamp (microsecond precision)</title>
+        <p>
+          The <code>local-timestamp-micros</code> logical type represents a timestamp in a local timezone, regardless of what specific time zone is considered local, with a precision of one microsecond.
+        </p>
+        <p>
+          A <code>local-timestamp-micros</code> logical type annotates an Avro <code>long</code>, where the long stores the number of microseconds, from 1 January 1970 00:00:00.000000.
         </p>
       </section>
 

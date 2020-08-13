@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,7 +28,7 @@
 namespace avro {
 
 
-/// 
+///
 /// The concept classes are used to simplify NodeImpl.  Since different types
 /// of avro types carry different attributes, such as names, or field names for
 /// record members.  Using the concept class of NoAttribute vs Attribute, the
@@ -92,12 +92,12 @@ struct SingleAttribute
 
     SingleAttribute(const Attribute& a) : attr_(a) { }
     // copy constructing from another single attribute is allowed
-    SingleAttribute(const SingleAttribute<Attribute> &rhs) : 
+    SingleAttribute(const SingleAttribute<Attribute> &rhs) :
         attr_(rhs.attr_)
     { }
 
     // copy constructing from a no attribute is allowed
-    SingleAttribute(const NoAttribute<Attribute> &rhs) : 
+    SingleAttribute(const NoAttribute<Attribute> &rhs) :
         attr_()
     { }
 
@@ -133,15 +133,15 @@ struct MultiAttribute
 {
     static const bool hasAttribute = true;
 
-    MultiAttribute() 
+    MultiAttribute()
     { }
 
     // copy constructing from another single attribute is allowed, it
     // pushes the attribute
-    MultiAttribute(const SingleAttribute<Attribute> &rhs) 
-    { 
+    MultiAttribute(const SingleAttribute<Attribute> &rhs)
+    {
         // since map is the only type that does this we know it's
-        // final size will be two, so reserve 
+        // final size will be two, so reserve
         attrs_.reserve(2);
         attrs_.push_back(rhs.attr_);
     }
@@ -158,7 +158,7 @@ struct MultiAttribute
     }
 
     void add(const Attribute &attr) {
-        attrs_.push_back(attr); 
+        attrs_.push_back(attr);
     }
 
     const Attribute &get(size_t index = 0) const {
@@ -190,12 +190,12 @@ struct NameIndexConcept {
 };
 
 template<>
-struct NameIndexConcept < MultiAttribute<std::string> > 
+struct NameIndexConcept < MultiAttribute<std::string> >
 {
     typedef std::map<std::string, size_t> IndexMap;
 
     bool lookup(const std::string &name, size_t &index) const {
-        IndexMap::const_iterator iter = map_.find(name); 
+        IndexMap::const_iterator iter = map_.find(name);
         if(iter == map_.end()) {
             return false;
         }
@@ -205,7 +205,7 @@ struct NameIndexConcept < MultiAttribute<std::string> >
 
     bool add(const::std::string &name, size_t index) {
         bool added = false;
-        IndexMap::iterator lb = map_.lower_bound(name); 
+        IndexMap::iterator lb = map_.lower_bound(name);
         if(lb == map_.end() || map_.key_comp()(name, lb->first)) {
             map_.insert(lb, IndexMap::value_type(name, index));
             added = true;

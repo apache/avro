@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,8 +31,8 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.specific.SpecificDatumWriter;
 
 /**
- * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes
- * via Java reflection.
+ * {@link org.apache.avro.io.DatumWriter DatumWriter} for existing classes via
+ * Java reflection.
  */
 public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   public ReflectDatumWriter() {
@@ -59,11 +59,12 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     super(reflectData);
   }
 
-  /** Called to write a array.  May be overridden for alternate array
-   * representations.*/
+  /**
+   * Called to write a array. May be overridden for alternate array
+   * representations.
+   */
   @Override
-  protected void writeArray(Schema schema, Object datum, Encoder out)
-    throws IOException {
+  protected void writeArray(Schema schema, Object datum, Encoder out) throws IOException {
     if (datum instanceof Collection) {
       super.writeArray(schema, datum, out);
       return;
@@ -77,10 +78,10 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
     if (elementClass.isPrimitive()) {
       Schema.Type type = element.getType();
       out.writeArrayStart();
-      switch(type) {
+      switch (type) {
       case BOOLEAN:
-        if(elementClass.isPrimitive())
-        ArrayAccessor.writeArray((boolean[]) datum, out);
+        if (elementClass.isPrimitive())
+          ArrayAccessor.writeArray((boolean[]) datum, out);
         break;
       case DOUBLE:
         ArrayAccessor.writeArray((double[]) datum, out);
@@ -89,11 +90,11 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
         ArrayAccessor.writeArray((float[]) datum, out);
         break;
       case INT:
-        if(elementClass.equals(int.class)) {
+        if (elementClass.equals(int.class)) {
           ArrayAccessor.writeArray((int[]) datum, out);
-        } else if(elementClass.equals(char.class)) {
+        } else if (elementClass.equals(char.class)) {
           ArrayAccessor.writeArray((char[]) datum, out);
-        } else if(elementClass.equals(short.class)) {
+        } else if (elementClass.equals(short.class)) {
           ArrayAccessor.writeArray((short[]) datum, out);
         } else {
           arrayError(elementClass, type);
@@ -116,64 +117,56 @@ public class ReflectDatumWriter<T> extends SpecificDatumWriter<T> {
   private void writeObjectArray(Schema element, Object[] data, Encoder out) throws IOException {
     int size = data.length;
     out.setItemCount(size);
-    for (int i = 0; i < size; i++) {
-      this.write(element, data[i], out);
+    for (Object datum : data) {
+      this.write(element, datum, out);
     }
   }
 
   private void arrayError(Class<?> cl, Schema.Type type) {
-    throw new AvroRuntimeException("Error writing array with inner type " +
-      cl + " and avro type: " + type);
+    throw new AvroRuntimeException("Error writing array with inner type " + cl + " and avro type: " + type);
   }
 
   @Override
   protected void writeBytes(Object datum, Encoder out) throws IOException {
     if (datum instanceof byte[])
-      out.writeBytes((byte[])datum);
+      out.writeBytes((byte[]) datum);
     else
       super.writeBytes(datum, out);
   }
 
   @Override
-  protected void write(Schema schema, Object datum, Encoder out)
-    throws IOException {
+  protected void write(Schema schema, Object datum, Encoder out) throws IOException {
     if (datum instanceof Byte)
-      datum = ((Byte)datum).intValue();
+      datum = ((Byte) datum).intValue();
     else if (datum instanceof Short)
-      datum = ((Short)datum).intValue();
+      datum = ((Short) datum).intValue();
     else if (datum instanceof Character)
-      datum = (int)(char)(Character)datum;
+      datum = (int) (char) (Character) datum;
     else if (datum instanceof Map && ReflectData.isNonStringMapSchema(schema)) {
       // Maps with non-string keys are written as arrays.
       // Schema for such maps is already changed. Here we
       // just switch the map to a similar form too.
-      Set entries = ((Map)datum).entrySet();
-      List<Map.Entry> entryList = new ArrayList<Map.Entry>(entries.size());
-      for (Object obj: ((Map)datum).entrySet()) {
-          Map.Entry e = (Map.Entry)obj;
-          entryList.add(new MapEntry(e.getKey(), e.getValue()));
+      Set entries = ((Map) datum).entrySet();
+      List<Map.Entry> entryList = new ArrayList<>(entries.size());
+      for (Object obj : ((Map) datum).entrySet()) {
+        Map.Entry e = (Map.Entry) obj;
+        entryList.add(new MapEntry(e.getKey(), e.getValue()));
       }
       datum = entryList;
     }
     try {
       super.write(schema, datum, out);
-    } catch (NullPointerException e) {            // improve error message
-      NullPointerException result =
-        new NullPointerException("in "+schema.getFullName()+" "+e.getMessage());
-      result.initCause(e.getCause() == null ? e : e.getCause());
-      throw result;
+    } catch (NullPointerException e) { // improve error message
+      throw npe(e, " in " + schema.getFullName());
     }
   }
 
   @Override
-  protected void writeField(Object record, Field f, Encoder out, Object state)
-      throws IOException {
+  protected void writeField(Object record, Field f, Encoder out, Object state) throws IOException {
     if (state != null) {
       FieldAccessor accessor = ((FieldAccessor[]) state)[f.pos()];
       if (accessor != null) {
-        if (accessor.supportsIO()
-            && (!Schema.Type.UNION.equals(f.schema().getType())
-                || accessor.isCustomEncoded())) {
+        if (accessor.supportsIO() && (!Schema.Type.UNION.equals(f.schema().getType()) || accessor.isCustomEncoded())) {
           accessor.write(record, out);
           return;
         }

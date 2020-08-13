@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,15 +40,14 @@ import org.apache.avro.mapred.AvroOutputFormat;
  * By default, when pointed at a directory, this will silently skip over any
  * files in it that do not have .avro extension. To instead include all files,
  * set the avro.mapred.ignore.inputs.without.extension property to false.
- * */
-class TetherInputFormat
-  extends FileInputFormat<TetherData, NullWritable> {
+ */
+class TetherInputFormat extends FileInputFormat<TetherData, NullWritable> {
 
   @Override
   protected FileStatus[] listStatus(JobConf job) throws IOException {
     if (job.getBoolean(AvroInputFormat.IGNORE_FILES_WITHOUT_EXTENSION_KEY,
         AvroInputFormat.IGNORE_INPUTS_WITHOUT_EXTENSION_DEFAULT)) {
-      List<FileStatus> result = new ArrayList<FileStatus>();
+      List<FileStatus> result = new ArrayList<>();
       for (FileStatus file : super.listStatus(job))
         if (file.getPath().getName().endsWith(AvroOutputFormat.EXT))
           result.add(file);
@@ -59,12 +58,10 @@ class TetherInputFormat
   }
 
   @Override
-  public RecordReader<TetherData, NullWritable>
-    getRecordReader(InputSplit split, JobConf job, Reporter reporter)
-    throws IOException {
+  public RecordReader<TetherData, NullWritable> getRecordReader(InputSplit split, JobConf job, Reporter reporter)
+      throws IOException {
     reporter.setStatus(split.toString());
-    return new TetherRecordReader(job, (FileSplit)split);
+    return new TetherRecordReader(job, (FileSplit) split);
   }
 
 }
-

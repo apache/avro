@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
+# https://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,10 +74,10 @@ module Avro::IPC
 
   class ConnectionClosedException < Avro::AvroError; end
 
+  # Base class for the client side of a protocol interaction.
   class Requestor
-    """Base class for the client side of a protocol interaction."""
-    attr_reader :local_protocol, :transport
-    attr_accessor :remote_protocol, :remote_hash, :send_protocol
+    attr_reader :local_protocol, :transport, :remote_protocol, :remote_hash
+    attr_accessor :send_protocol
 
     def initialize(local_protocol, transport)
       @local_protocol = local_protocol
@@ -193,9 +193,9 @@ module Avro::IPC
       #   * a one-byte error flag boolean, followed by either:
       #     * if the error flag is false,
       #       the message response, serialized per the message's response schema.
-      #     * if the error flag is true, 
+      #     * if the error flag is true,
       #       the error, serialized per the message's error union schema.
-      response_metadata = META_READER.read(decoder)
+      _response_metadata = META_READER.read(decoder)
 
       # remote response schema
       remote_message_schema = remote_protocol.messages[message_name]
@@ -257,7 +257,7 @@ module Avro::IPC
         end
 
         # read request using remote protocol
-        request_metadata = META_READER.read(buffer_decoder)
+        _request_metadata = META_READER.read(buffer_decoder)
         remote_message_name = buffer_decoder.read_string
 
         # get remote and local request schemas so we can do
@@ -278,7 +278,7 @@ module Avro::IPC
           response = call(local_message, request)
         rescue AvroRemoteError => e
           error = e
-        rescue Exception => e
+        rescue Exception => e # rubocop:disable Lint/RescueException
           error = AvroRemoteError.new(e.to_s)
         end
 
@@ -350,7 +350,7 @@ module Avro::IPC
       remote_protocol
     end
 
-    def call(local_message, request)
+    def call(_local_message, _request)
       # Actual work done by server: cf. handler in thrift.
       raise NotImplementedError
     end

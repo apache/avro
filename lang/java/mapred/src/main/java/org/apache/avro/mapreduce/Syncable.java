@@ -9,7 +9,7 @@ package org.apache.avro.mapreduce;
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -23,8 +23,9 @@ import java.io.IOException;
 public interface Syncable {
 
   /**
-   * Return the current position as a value that may be passed to DataFileReader.seek(long).
-   * Forces the end of the current block, emitting a synchronization marker.
+   * Return the current position as a value that may be passed to
+   * DataFileReader.seek(long). Forces the end of the current block, emitting a
+   * synchronization marker.
    *
    * @throws IOException - if an error occurred while attempting to sync.
    */

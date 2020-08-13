@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <array>
 #include <boost/noncopyable.hpp>
 
 #include "Config.hh"
@@ -76,7 +77,7 @@ class ReaderImpl : private boost::noncopyable
 
     void readValue(float &val) {
         validator_.checkTypeExpected(AVRO_FLOAT);
-        union { 
+        union {
             float f;
             uint32_t i;
         } v;
@@ -86,7 +87,7 @@ class ReaderImpl : private boost::noncopyable
 
     void readValue(double &val) {
         validator_.checkTypeExpected(AVRO_DOUBLE);
-        union { 
+        union {
             double d;
             uint64_t i;
         } v;
@@ -104,7 +105,7 @@ class ReaderImpl : private boost::noncopyable
         validator_.checkTypeExpected(AVRO_BYTES);
         size_t size = static_cast<size_t>(readSize());
         val.resize(size);
-        reader_.read(reinterpret_cast<char *>(&val[0]), size);
+        reader_.read(reinterpret_cast<char *>(val.data()), size);
     }
 
     void readFixed(uint8_t *val, size_t size) {
@@ -116,19 +117,19 @@ class ReaderImpl : private boost::noncopyable
     void readFixed(uint8_t (&val)[N]) {
         this->readFixed(val, N);
     }
-  
+
     template <size_t N>
-    void readFixed(boost::array<uint8_t, N> &val) {
-        this->readFixed(val.c_array(), N);
+    void readFixed(std::array<uint8_t, N> &val) {
+        this->readFixed(val.data(), N);
     }
-  
-    void readRecord() { 
+
+    void readRecord() {
         validator_.checkTypeExpected(AVRO_RECORD);
         validator_.checkTypeExpected(AVRO_LONG);
         validator_.setCount(1);
     }
 
-    void readRecordEnd() { 
+    void readRecordEnd() {
         validator_.checkTypeExpected(AVRO_RECORD);
         validator_.checkTypeExpected(AVRO_LONG);
         validator_.setCount(0);
@@ -139,7 +140,7 @@ class ReaderImpl : private boost::noncopyable
         return readCount();
     }
 
-    int64_t readUnion() { 
+    int64_t readUnion() {
         validator_.checkTypeExpected(AVRO_UNION);
         return readCount();
     }

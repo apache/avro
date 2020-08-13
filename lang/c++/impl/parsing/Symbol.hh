@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,9 +26,6 @@
 #include <sstream>
 
 #include <boost/any.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/tuple/tuple.hpp>
 
 #include "Node.hh"
@@ -41,8 +38,8 @@ namespace parsing {
 class Symbol;
 
 typedef std::vector<Symbol> Production;
-typedef boost::shared_ptr<Production> ProductionPtr;
-typedef boost::tuple<size_t, bool, ProductionPtr, ProductionPtr> RepeaterInfo;
+typedef std::shared_ptr<Production> ProductionPtr;
+typedef boost::tuple<std::stack<ssize_t>, bool, ProductionPtr, ProductionPtr> RepeaterInfo;
 typedef boost::tuple<ProductionPtr, ProductionPtr> RootInfo;
 
 class Symbol {
@@ -135,7 +132,7 @@ public:
 
     static Symbol rootSymbol(ProductionPtr& s)
     {
-        return Symbol(Symbol::sRoot, RootInfo(s, boost::make_shared<Production>()));
+        return Symbol(Symbol::sRoot, RootInfo(s, std::make_shared<Production>()));
     }
 
     static Symbol rootSymbol(const ProductionPtr& main,
@@ -206,22 +203,21 @@ public:
 
     static Symbol repeater(const ProductionPtr& p,
                            bool isArray) {
-        size_t s = 0;
-        return Symbol(sRepeater, boost::make_tuple(s, isArray, p, p));
+        return repeater(p, p, isArray);
     }
 
     static Symbol repeater(const ProductionPtr& read,
                            const ProductionPtr& skip,
                            bool isArray) {
-        size_t s = 0;
-        return Symbol(sRepeater, boost::make_tuple(s, isArray, read, skip));
+        std::stack<ssize_t> s;
+        return Symbol(sRepeater, RepeaterInfo(s, isArray, read, skip));
     }
 
-    static Symbol defaultStartAction(boost::shared_ptr<std::vector<uint8_t> > bb)
+    static Symbol defaultStartAction(std::shared_ptr<std::vector<uint8_t> > bb)
     {
         return Symbol(sDefaultStart, bb);
     }
- 
+
     static Symbol defaultEndAction()
     {
         return Symbol(sDefaultEnd);
@@ -267,7 +263,7 @@ public:
         return Symbol(sIndirect, p);
     }
 
-    static Symbol symbolic(const boost::weak_ptr<Production>& p) {
+    static Symbol symbolic(const std::weak_ptr<Production>& p) {
         return Symbol(sSymbolic, p);
     }
 
@@ -312,7 +308,7 @@ void fixup(const ProductionPtr& p,
         fixup(*it, m, seen);
     }
 }
-    
+
 
 /**
  * Recursively replaces all placeholders in the symbol with the values with the
@@ -358,12 +354,12 @@ void fixup(Symbol& s, const std::map<T, ProductionPtr> &m,
         break;
     case Symbol::sPlaceholder:
         {
-            typename std::map<T, boost::shared_ptr<Production> >::const_iterator it =
+            typename std::map<T, std::shared_ptr<Production> >::const_iterator it =
                 m.find(s.extra<T>());
             if (it == m.end()) {
                 throw Exception("Placeholder symbol cannot be resolved");
             }
-            s = Symbol::symbolic(boost::weak_ptr<Production>(it->second));
+            s = Symbol::symbolic(std::weak_ptr<Production>(it->second));
         }
         break;
     case Symbol::sUnionAdjust:
@@ -381,19 +377,19 @@ class SimpleParser {
     Handler& handler_;
     std::stack<Symbol> parsingStack;
 
-    static void throwMismatch(Symbol::Kind expected, Symbol::Kind actual)
+    static void throwMismatch(Symbol::Kind actual, Symbol::Kind expected)
     {
         std::ostringstream oss;
-        oss << "Invalid operation. Expected: " <<
-            Symbol::toString(expected) << " got " <<
+        oss << "Invalid operation. Schema requires: " <<
+            Symbol::toString(expected) << ", got: " <<
             Symbol::toString(actual);
         throw Exception(oss.str());
     }
 
-    static void assertMatch(Symbol::Kind expected, Symbol::Kind actual)
+    static void assertMatch(Symbol::Kind actual, Symbol::Kind expected)
     {
         if (expected != actual) {
-            throwMismatch(expected, actual);
+            throwMismatch(actual, expected);
         }
 
     }
@@ -425,6 +421,8 @@ public:
     Symbol::Kind advance(Symbol::Kind k) {
         for (; ;) {
             Symbol& s = parsingStack.top();
+//            std::cout << "advance: " << Symbol::toString(s.kind())
+//                      << " looking for " << Symbol::toString(k) << '\n';
             if (s.kind() == k) {
                 parsingStack.pop();
                 return k;
@@ -446,7 +444,7 @@ public:
                 case Symbol::sSymbolic:
                     {
                         ProductionPtr pp(
-                            s.extra<boost::weak_ptr<Production> >());
+                            s.extra<std::weak_ptr<Production> >());
                         parsingStack.pop();
                         append(pp);
                     }
@@ -454,7 +452,16 @@ public:
                 case Symbol::sRepeater:
                     {
                         RepeaterInfo *p = s.extrap<RepeaterInfo>();
-                        --boost::tuples::get<0>(*p);
+                        std::stack<ssize_t>& ns = boost::tuples::get<0>(*p);
+                        if (ns.empty()) {
+                            throw Exception(
+                                "Empty item count stack in repeater advance");
+                        }
+                        if (ns.top() == 0) {
+                            throw Exception(
+                                "Zero item count in repeater advance");
+                        }
+                        --ns.top();
                         append(boost::tuples::get<2>(*p));
                     }
                     continue;
@@ -478,7 +485,7 @@ public:
                         size_t n = handler_.handle(s);
                         if (s.kind() == Symbol::sWriterUnion) {
                             parsingStack.pop();
-                            selectBranch(n); 
+                            selectBranch(n);
                         } else {
                             parsingStack.pop();
                         }
@@ -500,6 +507,7 @@ public:
         }
         while (parsingStack.size() >= sz) {
             Symbol& t = parsingStack.top();
+            // std::cout << "skip: " << Symbol::toString(t.kind()) << '\n';
             switch (t.kind()) {
             case Symbol::sNull:
                 d.decodeNull();
@@ -529,13 +537,14 @@ public:
                 {
                     parsingStack.pop();
                     size_t n = d.skipArray();
+                    processImplicitActions();
                     assertMatch(Symbol::sRepeater, parsingStack.top().kind());
                     if (n == 0) {
                         break;
                     }
                     Symbol& t = parsingStack.top();
                     RepeaterInfo *p = t.extrap<RepeaterInfo>();
-                    boost::tuples::get<0>(*p) = n;
+                    boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
             case Symbol::sArrayEnd:
@@ -544,13 +553,14 @@ public:
                 {
                     parsingStack.pop();
                     size_t n = d.skipMap();
+                    processImplicitActions();
+                    assertMatch(Symbol::sRepeater, parsingStack.top().kind());
                     if (n == 0) {
                         break;
                     }
-                    assertMatch(Symbol::sRepeater, parsingStack.top().kind());
                     Symbol& t = parsingStack.top();
                     RepeaterInfo *p = t.extrap<RepeaterInfo>();
-                    boost::tuples::get<0>(*p) = n;
+                    boost::tuples::get<0>(*p).push(n);
                     continue;
                 }
             case Symbol::sMapEnd:
@@ -576,15 +586,22 @@ public:
             case Symbol::sRepeater:
                 {
                     RepeaterInfo *p = t.extrap<RepeaterInfo>();
-                    if (boost::tuples::get<0>(*p) == 0) {
-                        boost::tuples::get<0>(*p) =
-                            boost::tuples::get<1>(*p) ? d.arrayNext() :
-                                d.mapNext();
+                    std::stack<ssize_t>& ns = boost::tuples::get<0>(*p);
+                    if (ns.empty()) {
+                        throw Exception(
+                            "Empty item count stack in repeater skip");
                     }
-                    if (boost::tuples::get<0>(*p) != 0) {
-                        --boost::tuples::get<0>(*p);
+                    ssize_t& n = ns.top();
+                    if (n == 0) {
+                        n = boost::tuples::get<1>(*p) ? d.arrayNext()
+                                                      : d.mapNext();
+                    }
+                    if (n != 0) {
+                        --n;
                         append(boost::tuples::get<3>(*p));
                         continue;
+                    } else {
+                        ns.pop();
                     }
                 }
                 break;
@@ -599,7 +616,7 @@ public:
             case Symbol::sSymbolic:
                 {
                     ProductionPtr pp(
-                        t.extra<boost::weak_ptr<Production> >());
+                        t.extra<std::weak_ptr<Production> >());
                     parsingStack.pop();
                     append(pp);
                 }
@@ -685,23 +702,40 @@ public:
         return result;
     }
 
-    void setRepeatCount(size_t n) {
+    void pushRepeatCount(size_t n) {
+        processImplicitActions();
         Symbol& s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
-        size_t& nn = boost::tuples::get<0>(*s.extrap<RepeaterInfo>());
-        if (nn != 0) {
-            throw Exception("Wrong number of items");
+        RepeaterInfo *p = s.extrap<RepeaterInfo>();
+        std::stack<ssize_t> &nn = boost::tuples::get<0>(*p);
+        nn.push(n);
+    }
+
+    void nextRepeatCount(size_t n) {
+        processImplicitActions();
+        Symbol& s = parsingStack.top();
+        assertMatch(Symbol::sRepeater, s.kind());
+        RepeaterInfo *p = s.extrap<RepeaterInfo>();
+        std::stack<ssize_t> &nn = boost::tuples::get<0>(*p);
+        if (nn.empty() || nn.top() != 0) {
+          throw Exception("Wrong number of items");
         }
-        nn = n;
+        nn.top() = n;
     }
 
     void popRepeater() {
         processImplicitActions();
-        const Symbol& s = parsingStack.top();
+        Symbol& s = parsingStack.top();
         assertMatch(Symbol::sRepeater, s.kind());
-        if (boost::tuples::get<0>(*s.extrap<RepeaterInfo>()) != 0) {
-            throw Exception("Incorrect number of items");
+        RepeaterInfo *p = s.extrap<RepeaterInfo>();
+        std::stack<ssize_t> &ns = boost::tuples::get<0>(*p);
+        if (ns.empty()) {
+            throw Exception("Incorrect number of items (empty)");
         }
+        if (ns.top() > 0) {
+            throw Exception("Incorrect number of items (non-zero)");
+        }
+        ns.pop();
         parsingStack.pop();
     }
 
@@ -778,17 +812,36 @@ inline std::ostream& operator<<(std::ostream& os, const Symbol s)
             {
                 const RepeaterInfo& ri = *s.extrap<RepeaterInfo>();
                 os << '(' << Symbol::toString(s.kind())
-                    << boost::tuples::get<2>(ri)
-                    << boost::tuples::get<3>(ri)
-                    << ')';
+                   << ' ' << *boost::tuples::get<2>(ri)
+                   << ' ' << *boost::tuples::get<3>(ri)
+                   << ')';
             }
             break;
         case Symbol::sIndirect:
             {
                 os << '(' << Symbol::toString(s.kind()) << ' '
-                << *s.extra<boost::shared_ptr<Production> >() << ')';
+                << *s.extra<std::shared_ptr<Production> >() << ')';
             }
             break;
+        case Symbol::sAlternative:
+            {
+                os << '(' << Symbol::toString(s.kind());
+                for (std::vector<ProductionPtr>::const_iterator it =
+                         s.extrap<std::vector<ProductionPtr> >()->begin();
+                     it != s.extrap<std::vector<ProductionPtr> >()->end();
+                     ++it) {
+                    os << ' ' << **it;
+                }
+                os << ')';
+            }
+            break;
+        case Symbol::sSymbolic:
+            {
+              os << '(' << Symbol::toString(s.kind())
+                 << ' ' << s.extra<std::weak_ptr<Production> >().lock()
+                 << ')';
+          }
+          break;
         default:
             os << Symbol::toString(s.kind());
             break;

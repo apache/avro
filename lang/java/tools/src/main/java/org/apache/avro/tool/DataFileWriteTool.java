@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,23 +50,16 @@ public class DataFileWriteTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     OptionParser p = new OptionParser();
-    OptionSpec<String> codec = Util.compressionCodecOption(p);
+    OptionSpec<String> codec = Util.compressionCodecOptionWithDefault(p, DataFileConstants.NULL_CODEC);
     OptionSpec<Integer> level = Util.compressionLevelOption(p);
-    OptionSpec<String> file =
-        p.accepts("schema-file", "Schema File")
-        .withOptionalArg()
-        .ofType(String.class);
-    OptionSpec<String> inschema =
-        p.accepts("schema", "Schema")
-        .withOptionalArg()
-        .ofType(String.class);
+    OptionSpec<String> file = p.accepts("schema-file", "Schema File").withOptionalArg().ofType(String.class);
+    OptionSpec<String> inschema = p.accepts("schema", "Schema").withOptionalArg().ofType(String.class);
     OptionSet opts = p.parse(args.toArray(new String[0]));
 
-    List<String> nargs = (List<String>)opts.nonOptionArguments();
+    List<String> nargs = (List<String>) opts.nonOptionArguments();
     if (nargs.size() != 1) {
       err.println("Expected 1 arg: input_file");
       p.printHelpOn(err);
@@ -75,21 +68,18 @@ public class DataFileWriteTool implements Tool {
     String schemastr = inschema.value(opts);
     String schemafile = file.value(opts);
     if (schemastr == null && schemafile == null) {
-        err.println("Need an input schema file (--schema-file) or inline schema (--schema)");
-        p.printHelpOn(err);
-        return 1;
+      err.println("Need an input schema file (--schema-file) or inline schema (--schema)");
+      p.printHelpOn(err);
+      return 1;
     }
-    Schema schema = (schemafile != null)
-        ? Util.parseSchemaFromFS(schemafile)
-        : new Schema.Parser().parse(schemastr);
+    Schema schema = (schemafile != null) ? Util.parseSchemaFromFS(schemafile) : new Schema.Parser().parse(schemastr);
 
-    DatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    DatumReader<Object> reader = new GenericDatumReader<>(schema);
 
     InputStream input = Util.fileOrStdin(nargs.get(0), stdin);
     try {
       DataInputStream din = new DataInputStream(input);
-      DataFileWriter<Object> writer =
-        new DataFileWriter<Object>(new GenericDatumWriter<Object>());
+      DataFileWriter<Object> writer = new DataFileWriter<>(new GenericDatumWriter<>());
       writer.setCodec(Util.codecFactory(opts, codec, level, DataFileConstants.NULL_CODEC));
       writer.create(schema, out);
       Decoder decoder = DecoderFactory.get().jsonDecoder(schema, din);

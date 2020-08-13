@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -19,10 +19,10 @@
 
 package org.apache.avro.message;
 
-import com.google.common.collect.MapMaker;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaNormalization;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Interface for classes that can provide avro schemas by fingerprint.
@@ -31,6 +31,7 @@ public interface SchemaStore {
 
   /**
    * Retrieves a fingerprint by its AVRO-CRC-64 fingerprint.
+   * 
    * @param fingerprint an AVRO-CRC-64 fingerprint long
    * @return a Schema with the given fingerprint, or null
    */
@@ -42,7 +43,7 @@ public interface SchemaStore {
    * This class is thread-safe.
    */
   class Cache implements SchemaStore {
-    private final Map<Long, Schema> schemas = new MapMaker().makeMap();
+    private final Map<Long, Schema> schemas = new ConcurrentHashMap<>();
 
     /**
      * Adds a schema to this cache that can be retrieved using its AVRO-CRC-64

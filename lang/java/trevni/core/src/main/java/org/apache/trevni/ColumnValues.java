@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 /** An iterator over column values. */
-public class ColumnValues<T extends Comparable>
-  implements Iterator<T>, Iterable<T> {
+public class ColumnValues<T extends Comparable> implements Iterator<T>, Iterable<T> {
 
   private final ColumnDescriptor column;
   private final ValueType type;
@@ -49,13 +48,15 @@ public class ColumnValues<T extends Comparable>
   }
 
   /** Return the current row number within this file. */
-  public long getRow() { return row; }
+  public long getRow() {
+    return row;
+  }
 
   /** Seek to the named row. */
   public void seek(long r) throws IOException {
-    if (r < row || r >= column.lastRow(block))    // not in current block
-      startBlock(column.findBlock(r));            // seek to block start
-    while (r > row && hasNext()) {                // skip within block
+    if (r < row || r >= column.lastRow(block)) // not in current block
+      startBlock(column.findBlock(r)); // seek to block start
+    while (r > row && hasNext()) { // skip within block
       values.skipValue(type);
       row++;
     }
@@ -65,16 +66,14 @@ public class ColumnValues<T extends Comparable>
   /** Seek to the named value. */
   public void seek(T v) throws IOException {
     if (!column.metaData.hasIndexValues())
-      throw new TrevniRuntimeException
-        ("Column does not have value index: " +column.metaData.getName());
+      throw new TrevniRuntimeException("Column does not have value index: " + column.metaData.getName());
 
-    if (previous == null                          // not in current block?
+    if (previous == null // not in current block?
         || previous.compareTo(v) > 0
-        || (block != column.blockCount()-1
-            && column.firstValues[block+1].compareTo(v) <= 0))
-      startBlock(column.findBlock(v));            // seek to block start
+        || (block != column.blockCount() - 1 && column.firstValues[block + 1].compareTo(v) <= 0))
+      startBlock(column.findBlock(v)); // seek to block start
 
-    while (hasNext()) {                           // scan block
+    while (hasNext()) { // scan block
       long savedPosition = values.tell();
       T savedPrevious = previous;
       if (next().compareTo(v) >= 0) {
@@ -92,25 +91,28 @@ public class ColumnValues<T extends Comparable>
 
     in.seek(column.blockStarts[block]);
     int end = column.blocks[block].compressedSize;
-    byte[] raw = new byte[end+checksum.size()];
+    byte[] raw = new byte[end + checksum.size()];
     in.readFully(raw);
     ByteBuffer data = codec.decompress(ByteBuffer.wrap(raw, 0, end));
-    if (!checksum.compute(data).equals
-        (ByteBuffer.wrap(raw, end, checksum.size())))
+    if (!checksum.compute(data).equals(ByteBuffer.wrap(raw, end, checksum.size())))
       throw new IOException("Checksums mismatch.");
     values = new InputBuffer(new InputBytes(data));
   }
 
-  @Override public Iterator iterator() { return this; }
-
-  @Override public boolean hasNext() {
-    return block < column.blockCount()-1 || row < column.lastRow(block);
+  @Override
+  public Iterator iterator() {
+    return this;
   }
 
-  @Override public T next() {
+  @Override
+  public boolean hasNext() {
+    return block < column.blockCount() - 1 || row < column.lastRow(block);
+  }
+
+  @Override
+  public T next() {
     if (column.metaData.isArray() || column.metaData.getParent() != null)
-      throw new TrevniRuntimeException
-        ("Column is array: " +column.metaData.getName());
+      throw new TrevniRuntimeException("Column is array: " + column.metaData.getName());
     try {
       startRow();
       return nextValue();
@@ -119,13 +121,15 @@ public class ColumnValues<T extends Comparable>
     }
   }
 
-  /** Expert: Must be called before any calls to {@link #nextLength()} or
-   * {@link #nextValue()}. */
+  /**
+   * Expert: Must be called before any calls to {@link #nextLength()} or
+   * {@link #nextValue()}.
+   */
   public void startRow() throws IOException {
     if (row >= column.lastRow(block)) {
       if (block >= column.blockCount())
         throw new TrevniRuntimeException("Read past end of column.");
-      startBlock(block+1);
+      startBlock(block + 1);
     }
     row++;
   }
@@ -133,8 +137,7 @@ public class ColumnValues<T extends Comparable>
   /** Expert: Returns the next length in an array column. */
   public int nextLength() throws IOException {
     if (!column.metaData.isArray())
-      throw new TrevniRuntimeException
-        ("Column is not array: " +column.metaData.getName());
+      throw new TrevniRuntimeException("Column is not array: " + column.metaData.getName());
     assert arrayLength == 0;
     return arrayLength = values.readLength();
   }
@@ -142,9 +145,12 @@ public class ColumnValues<T extends Comparable>
   /** Expert: Returns the next value in a column. */
   public T nextValue() throws IOException {
     arrayLength--;
-    return previous = values.<T>readValue(type);
+    return previous = values.readValue(type);
   }
 
-  @Override public void remove() { throw new UnsupportedOperationException(); }
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
+  }
 
 }

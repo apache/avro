@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,8 +27,7 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.io.BinaryData;
 
 /** Base class for generated fixed-sized data classes. */
-public abstract class SpecificFixed
-  implements GenericFixed, Comparable<SpecificFixed>, Externalizable {
+public abstract class SpecificFixed implements GenericFixed, Comparable<SpecificFixed>, Externalizable {
 
   private byte[] bytes;
 
@@ -40,30 +39,44 @@ public abstract class SpecificFixed
     bytes(bytes);
   }
 
-  public void bytes(byte[] bytes) { this.bytes = bytes; }
-
-  @Override public byte[] bytes() { return bytes; }
-
-  @Override public abstract Schema getSchema();
-
-  @Override public boolean equals(Object o) {
-    if (o == this) return true;
-    return o instanceof GenericFixed
-      && Arrays.equals(bytes, ((GenericFixed)o).bytes());
+  public void bytes(byte[] bytes) {
+    this.bytes = bytes;
   }
 
-  @Override public int hashCode() { return Arrays.hashCode(bytes); }
-  @Override public String toString() { return Arrays.toString(bytes); }
-
-  @Override public int compareTo(SpecificFixed that) {
-    return BinaryData.compareBytes(this.bytes, 0, this.bytes.length,
-                                   that.bytes, 0, that.bytes.length);
+  @Override
+  public byte[] bytes() {
+    return bytes;
   }
 
-  @Override public abstract void writeExternal(ObjectOutput out)
-    throws IOException;
-  @Override public abstract void readExternal(ObjectInput in)
-    throws IOException;
+  @Override
+  public abstract Schema getSchema();
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == this)
+      return true;
+    return o instanceof GenericFixed && Arrays.equals(bytes, ((GenericFixed) o).bytes());
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(bytes);
+  }
+
+  @Override
+  public String toString() {
+    return Arrays.toString(bytes);
+  }
+
+  @Override
+  public int compareTo(SpecificFixed that) {
+    return BinaryData.compareBytes(this.bytes, 0, this.bytes.length, that.bytes, 0, that.bytes.length);
+  }
+
+  @Override
+  public abstract void writeExternal(ObjectOutput out) throws IOException;
+
+  @Override
+  public abstract void readExternal(ObjectInput in) throws IOException;
 
 }
-

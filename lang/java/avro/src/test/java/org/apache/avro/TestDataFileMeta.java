@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,42 +25,50 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.apache.avro.Schema.Type;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TestDataFileMeta {
-  @Test(expected=AvroRuntimeException.class)
-  public void testUseReservedMeta() {
-    DataFileWriter<?> w = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-    w.setMeta("avro.foo", "bar");
+
+  @Rule
+  public TemporaryFolder DIR = new TemporaryFolder();
+
+  @Test(expected = AvroRuntimeException.class)
+  public void testUseReservedMeta() throws IOException {
+    try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      w.setMeta("avro.foo", "bar");
+    }
   }
 
   @Test()
   public void testUseMeta() throws IOException {
-    DataFileWriter<?> w = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-    File f = AvroTestUtil.tempFile(getClass(), "testDataFileMeta.avro");
-    w.setMeta("hello", "bar");
-    w.create(Schema.create(Type.NULL), f);
-    w.close();
+    File f = new File(DIR.getRoot().getPath(), "testDataFileMeta.avro");
+    try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      w.setMeta("hello", "bar");
+      w.create(Schema.create(Type.NULL), f);
+    }
 
-    DataFileStream<Void> r = new DataFileStream<Void>(new FileInputStream(f), new GenericDatumReader<Void>());
+    try (DataFileStream<Void> r = new DataFileStream<>(new FileInputStream(f), new GenericDatumReader<>())) {
+      assertTrue(r.getMetaKeys().contains("hello"));
 
-    assertTrue(r.getMetaKeys().contains("hello"));
+      assertEquals("bar", r.getMetaString("hello"));
+    }
 
-    assertEquals("bar", r.getMetaString("hello"));
   }
 
-  @Test(expected=AvroRuntimeException.class)
+  @Test(expected = AvroRuntimeException.class)
   public void testUseMetaAfterCreate() throws IOException {
-    DataFileWriter<?> w = new DataFileWriter<Object>(new GenericDatumWriter<Object>());
-    w.create(Schema.create(Type.NULL), new ByteArrayOutputStream());
-    w.setMeta("foo", "bar");
+    try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      w.create(Schema.create(Type.NULL), new ByteArrayOutputStream());
+      w.setMeta("foo", "bar");
+    }
+
   }
 
   @Test
@@ -69,11 +77,11 @@ public class TestDataFileMeta {
     for (int i = -1; i < 33; i++) {
       // 33 invalid, one valid
       try {
-        new DataFileWriter<Object>(new GenericDatumWriter<Object>()).setSyncInterval(i);
+        new DataFileWriter<>(new GenericDatumWriter<>()).setSyncInterval(i);
       } catch (IllegalArgumentException iae) {
         exceptions++;
       }
     }
-    Assert.assertEquals(33, exceptions);
+    assertEquals(33, exceptions);
   }
 }

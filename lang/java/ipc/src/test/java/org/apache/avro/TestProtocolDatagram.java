@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,13 +31,12 @@ import org.apache.avro.test.Simple;
 public class TestProtocolDatagram extends TestProtocolSpecific {
   @Override
   public Server createServer(Responder testResponder) throws Exception {
-    return  new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
-        new InetSocketAddress("localhost",
-            new Random().nextInt(10000)+10000));
+    return new DatagramServer(new SpecificResponder(Simple.class, new TestImpl()),
+        new InetSocketAddress("localhost", new Random().nextInt(10000) + 10000));
   }
 
   @Override
-  public Transceiver createTransceiver() throws Exception{
+  public Transceiver createTransceiver() throws Exception {
     return new DatagramTransceiver(new InetSocketAddress("localhost", server.getPort()));
   }
 

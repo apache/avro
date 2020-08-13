@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,62 +48,69 @@ import org.apache.avro.file.FileReader;
 import org.apache.avro.reflect.ReflectData;
 
 /** A {@link FileReader} for sequence files. */
-@SuppressWarnings(value="unchecked")
-public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
+@SuppressWarnings(value = "unchecked")
+public class SequenceFileReader<K, V> implements FileReader<Pair<K, V>> {
   private SequenceFile.Reader reader;
   private Schema schema;
-  private boolean ready = false;            // true iff done & key are current
-  private boolean done = false;             // true iff at EOF
+  private boolean ready = false; // true iff done & key are current
+  private boolean done = false; // true iff at EOF
   private Writable key, spareKey, value;
 
-  private Converter<K> keyConverter =
-    new Converter<K>() { public K convert(Writable o) { return (K)o; } };
+  private Converter<K> keyConverter = o -> (K) o;
 
-  private Converter<V> valConverter =
-    new Converter<V>() { public V convert(Writable o) { return (V)o; } };
+  private Converter<V> valConverter = o -> (V) o;
 
   public SequenceFileReader(File file) throws IOException {
     this(file.toURI(), new Configuration());
   }
 
   public SequenceFileReader(URI uri, Configuration c) throws IOException {
-    this(new SequenceFile.Reader(FileSystem.get(uri, c),
-                                 new Path(uri.toString()), c), c);
+    this(new SequenceFile.Reader(FileSystem.get(uri, c), new Path(uri.toString()), c), c);
   }
 
   public SequenceFileReader(SequenceFile.Reader reader, Configuration conf) {
     this.reader = reader;
-    this.schema =
-      Pair.getPairSchema(WritableData.get().getSchema(reader.getKeyClass()),
-                         WritableData.get().getSchema(reader.getValueClass()));
-    this.key =
-      (Writable)ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-    this.spareKey =
-      (Writable)ReflectionUtils.newInstance(reader.getKeyClass(), conf);
-    this.value =
-      (Writable)ReflectionUtils.newInstance(reader.getValueClass(), conf);
+    this.schema = Pair.getPairSchema(WritableData.get().getSchema(reader.getKeyClass()),
+        WritableData.get().getSchema(reader.getValueClass()));
+    this.key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+    this.spareKey = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+    this.value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);
 
-    if (WRITABLE_CONVERTERS.containsKey(reader.getKeyClass()) )
+    if (WRITABLE_CONVERTERS.containsKey(reader.getKeyClass()))
       keyConverter = WRITABLE_CONVERTERS.get(reader.getKeyClass());
-    if (WRITABLE_CONVERTERS.containsKey(reader.getValueClass()) )
+    if (WRITABLE_CONVERTERS.containsKey(reader.getValueClass()))
       valConverter = WRITABLE_CONVERTERS.get(reader.getValueClass());
   }
 
-  @Override public void close() throws IOException { reader.close(); }
+  @Override
+  public void close() throws IOException {
+    reader.close();
+  }
 
-  @Override public void remove() { throw new UnsupportedOperationException(); }
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
+  }
 
-  @Override public Iterator<Pair<K,V>> iterator() { return this; }
+  @Override
+  public Iterator<Pair<K, V>> iterator() {
+    return this;
+  }
 
-  @Override public Schema getSchema() { return schema; }
+  @Override
+  public Schema getSchema() {
+    return schema;
+  }
 
   private void prepare() throws IOException {
-    if (ready) return;
+    if (ready)
+      return;
     this.done = !reader.next(key);
     ready = true;
   }
 
-  @Override public boolean hasNext() {
+  @Override
+  public boolean hasNext() {
     try {
       prepare();
       return !done;
@@ -112,7 +119,8 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
     }
   }
 
-  @Override public Pair<K,V> next() {
+  @Override
+  public Pair<K, V> next() {
     try {
       return next(null);
     } catch (IOException e) {
@@ -120,14 +128,15 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
     }
   }
 
-  @Override public Pair<K,V> next(Pair<K,V> reuse) throws IOException {
+  @Override
+  public Pair<K, V> next(Pair<K, V> reuse) throws IOException {
     prepare();
     if (!hasNext())
       throw new NoSuchElementException();
 
-    Pair<K,V> result = reuse;
+    Pair<K, V> result = reuse;
     if (result == null)
-      result = new Pair<K,V>(schema);
+      result = new Pair<>(schema);
 
     result.key(keyConverter.convert(key));
     reader.getCurrentValue(value);
@@ -143,47 +152,48 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
     return result;
   }
 
-  @Override public void sync(long position) throws IOException {
+  @Override
+  public void sync(long position) throws IOException {
     if (position > reader.getPosition())
       reader.sync(position);
     ready = false;
   }
 
-  @Override public boolean pastSync(long position) throws IOException {
+  @Override
+  public boolean pastSync(long position) throws IOException {
     return reader.getPosition() >= position && reader.syncSeen();
   }
 
-  @Override public long tell() throws IOException {return reader.getPosition();}
+  @Override
+  public long tell() throws IOException {
+    return reader.getPosition();
+  }
 
-  private static final Map<Type,Schema> WRITABLE_SCHEMAS =
-    new HashMap<Type,Schema>();
+  private static final Map<Type, Schema> WRITABLE_SCHEMAS = new HashMap<>();
   static {
-    WRITABLE_SCHEMAS.put(NullWritable.class,
-                         Schema.create(Schema.Type.NULL));
-    WRITABLE_SCHEMAS.put(BooleanWritable.class,
-                         Schema.create(Schema.Type.BOOLEAN));
-    WRITABLE_SCHEMAS.put(IntWritable.class,
-                         Schema.create(Schema.Type.INT));
-    WRITABLE_SCHEMAS.put(LongWritable.class,
-                         Schema.create(Schema.Type.LONG));
-    WRITABLE_SCHEMAS.put(FloatWritable.class,
-                         Schema.create(Schema.Type.FLOAT));
-    WRITABLE_SCHEMAS.put(DoubleWritable.class,
-                         Schema.create(Schema.Type.DOUBLE));
-    WRITABLE_SCHEMAS.put(BytesWritable.class,
-                         Schema.create(Schema.Type.BYTES));
-    WRITABLE_SCHEMAS.put(Text.class,
-                         Schema.create(Schema.Type.STRING));
+    WRITABLE_SCHEMAS.put(NullWritable.class, Schema.create(Schema.Type.NULL));
+    WRITABLE_SCHEMAS.put(BooleanWritable.class, Schema.create(Schema.Type.BOOLEAN));
+    WRITABLE_SCHEMAS.put(IntWritable.class, Schema.create(Schema.Type.INT));
+    WRITABLE_SCHEMAS.put(LongWritable.class, Schema.create(Schema.Type.LONG));
+    WRITABLE_SCHEMAS.put(FloatWritable.class, Schema.create(Schema.Type.FLOAT));
+    WRITABLE_SCHEMAS.put(DoubleWritable.class, Schema.create(Schema.Type.DOUBLE));
+    WRITABLE_SCHEMAS.put(BytesWritable.class, Schema.create(Schema.Type.BYTES));
+    WRITABLE_SCHEMAS.put(Text.class, Schema.create(Schema.Type.STRING));
   }
 
   private static class WritableData extends ReflectData {
     private static final WritableData INSTANCE = new WritableData();
-    protected WritableData() {}
+
+    protected WritableData() {
+    }
 
     /** Return the singleton instance. */
-    public static WritableData get() { return INSTANCE; }
+    public static WritableData get() {
+      return INSTANCE;
+    }
 
-    @Override public Schema getSchema(java.lang.reflect.Type type) {
+    @Override
+    public Schema getSchema(java.lang.reflect.Type type) {
       if (WRITABLE_SCHEMAS.containsKey(type))
         return WRITABLE_SCHEMAS.get(type);
       else
@@ -195,53 +205,18 @@ public class SequenceFileReader<K,V> implements FileReader<Pair<K,V>> {
     T convert(Writable o);
   }
 
-  private static final Map<Type,Converter> WRITABLE_CONVERTERS =
-    new HashMap<Type,Converter>();
+  private static final Map<Type, Converter> WRITABLE_CONVERTERS = new HashMap<>();
   static {
-    WRITABLE_CONVERTERS.put
-      (NullWritable.class,
-       new Converter<Void>() {
-        public Void convert(Writable o) { return null; }
-      });
-    WRITABLE_CONVERTERS.put
-      (BooleanWritable.class,
-       new Converter<Boolean>() {
-        public Boolean convert(Writable o) {return ((BooleanWritable)o).get();}
-      });
-    WRITABLE_CONVERTERS.put
-      (IntWritable.class,
-       new Converter<Integer>() {
-        public Integer convert(Writable o) { return ((IntWritable)o).get(); }
-      });
-    WRITABLE_CONVERTERS.put
-      (LongWritable.class,
-       new Converter<Long>() {
-        public Long convert(Writable o) { return ((LongWritable)o).get(); }
-      });
-    WRITABLE_CONVERTERS.put
-      (FloatWritable.class,
-       new Converter<Float>() {
-        public Float convert(Writable o) { return ((FloatWritable)o).get(); }
-      });
-    WRITABLE_CONVERTERS.put
-      (DoubleWritable.class,
-       new Converter<Double>() {
-        public Double convert(Writable o) { return ((DoubleWritable)o).get(); }
-      });
-    WRITABLE_CONVERTERS.put
-      (BytesWritable.class,
-       new Converter<ByteBuffer>() {
-        public ByteBuffer convert(Writable o) {
-          BytesWritable b = (BytesWritable)o;
-          return ByteBuffer.wrap(b.getBytes(), 0, b.getLength());
-        }
-      });
-    WRITABLE_CONVERTERS.put
-      (Text.class,
-       new Converter<String>() {
-        public String convert(Writable o) { return o.toString(); }
-      });
+    WRITABLE_CONVERTERS.put(NullWritable.class, (Converter<Void>) o -> null);
+    WRITABLE_CONVERTERS.put(BooleanWritable.class, (Converter<Boolean>) o -> ((BooleanWritable) o).get());
+    WRITABLE_CONVERTERS.put(IntWritable.class, (Converter<Integer>) o -> ((IntWritable) o).get());
+    WRITABLE_CONVERTERS.put(LongWritable.class, (Converter<Long>) o -> ((LongWritable) o).get());
+    WRITABLE_CONVERTERS.put(FloatWritable.class, (Converter<Float>) o -> ((FloatWritable) o).get());
+    WRITABLE_CONVERTERS.put(DoubleWritable.class, (Converter<Double>) o -> ((DoubleWritable) o).get());
+    WRITABLE_CONVERTERS.put(BytesWritable.class, (Converter<ByteBuffer>) o -> {
+      BytesWritable b = (BytesWritable) o;
+      return ByteBuffer.wrap(b.getBytes(), 0, b.getLength());
+    });
+    WRITABLE_CONVERTERS.put(Text.class, (Converter<String>) Object::toString);
   }
-
-
 }

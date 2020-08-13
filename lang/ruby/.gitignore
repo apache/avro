@@ -1,3 +1,4 @@
+lib/avro/VERSION.txt
 tmp
 data.avr
 Gemfile.lock
@@ -5,3 +6,5 @@ Gemfile.lock
 .gem/
 avro.gemspec
 pkg/
+.ruby-version
+.ruby-gemset

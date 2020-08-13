@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,61 +37,70 @@ class TetherOutputService implements OutputProtocol {
 
   // timeout when waiting for messages in seconds.
   // what is a good value?
-  public static final long TIMEOUT=10*1000;
-  public TetherOutputService(OutputCollector<TetherData,NullWritable> collector,
-                             Reporter reporter) {
+  public static final long TIMEOUT = 10 * 1000;
+
+  public TetherOutputService(OutputCollector<TetherData, NullWritable> collector, Reporter reporter) {
     this.reporter = reporter;
     this.collector = collector;
   }
 
+  @Override
   public synchronized void configure(int inputPort) {
-    LOG.info("got input port from child: inputport="+inputPort);
+    LOG.info("got input port from child: inputport=" + inputPort);
     this.inputPort = inputPort;
     notify();
   }
 
   public synchronized int inputPort() throws Exception {
-    if (inputPort==0) {
+    if (inputPort == 0) {
       LOG.info("waiting for input port from child");
       wait(TIMEOUT);
     }
 
-    if (inputPort==0) {
-      LOG.error("Parent process timed out waiting for subprocess to send input port. Check the job log files for more info.");
+    if (inputPort == 0) {
+      LOG.error(
+          "Parent process timed out waiting for subprocess to send input port. Check the job log files for more info.");
       throw new Exception("Parent process timed out waiting for subprocess to send input port");
     }
     return inputPort;
   }
 
+  @Override
   public void output(ByteBuffer datum) {
     try {
       collector.collect(new TetherData(datum), NullWritable.get());
     } catch (Throwable e) {
-      LOG.warn("Error: "+e, e);
+      LOG.warn("Error: " + e, e);
       synchronized (this) {
         error = e.toString();
       }
     }
   }
 
+  @Override
   public void outputPartitioned(int partition, ByteBuffer datum) {
     TetherPartitioner.setNextPartition(partition);
     output(datum);
   }
 
-  public void status(String message) { reporter.setStatus(message.toString());  }
+  @Override
+  public void status(String message) {
+    reporter.setStatus(message.toString());
+  }
 
-
+  @Override
   public void count(String group, String name, long amount) {
     reporter.getCounter(group.toString(), name.toString()).increment(amount);
   }
 
+  @Override
   public synchronized void fail(String message) {
-    LOG.warn("Failing: "+message);
-    error = message.toString();
+    LOG.warn("Failing: " + message);
+    error = message;
     notify();
   }
 
+  @Override
   public synchronized void complete() {
     LOG.info("got task complete");
     complete = true;
@@ -102,7 +111,9 @@ class TetherOutputService implements OutputProtocol {
     return complete || (error != null);
   }
 
-  public String error() { return error; }
+  public String error() {
+    return error;
+  }
 
   public synchronized boolean waitForFinish() throws InterruptedException {
     while (!isFinished())

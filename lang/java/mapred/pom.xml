@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,17 +23,18 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
   <artifactId>avro-mapred</artifactId>
 
   <name>Apache Avro Mapred API</name>
-  <description>An org.apache.hadoop.mapred compatible API for using Avro Serializatin in Hadoop</description>
+  <description>An org.apache.hadoop.mapred compatible API for using Avro Serialization in Hadoop</description>
   <packaging>bundle</packaging>
 
   <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
     <osgi.import>
       !org.apache.avro.mapred*,
       org.apache.avro*;version="${project.version}",
@@ -48,6 +49,49 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.apache.avro.mapred</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <!-- Allow guava because hadoop brings it as a transitive dependency. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-banned-dependencies</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <bannedDependencies>
+                  <includes>
+                    <exclude>com.google.guava:guava</exclude>
+                  </includes>
+                </bannedDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- some IPC tests hang if not run in a separate JVM -->
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
+          <parallel>none</parallel>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>${project.groupId}</groupId>
         <artifactId>avro-maven-plugin</artifactId>
@@ -91,47 +135,32 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>main</id>
-            <goals><goal>jar</goal></goals>
-            <phase>package</phase>
-          </execution>
-          <execution>
-            <id>with-classifier</id>
-            <goals><goal>jar</goal></goals>
-            <phase>package</phase>
-            <configuration>
-              <classifier>${envClassifier}</classifier>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>1.4.1</version>
-        <executions>
-          <execution>
-            <id>enforce-banned-dependencies</id>
+            <id>add-test-source</id>
+            <phase>generate-test-sources</phase>
             <goals>
-              <goal>enforce</goal>
+              <goal>add-test-source</goal>
             </goals>
             <configuration>
-              <rules>
-                <bannedDependencies>
-                  <!-- Ban all versions of Guava other than 11.0.2 that Hadoop uses -->
-                  <excludes>
-                    <exclude>com.google.guava:guava</exclude>
-                  </excludes>
-                  <includes>
-                    <include>com.google.guava:guava:11.0.2</include>
-                  </includes>
-                </bannedDependencies>
-              </rules>
-              <fail>true</fail>
+              <sources>
+                <source>${project.basedir}/target/generated-test-sources/java</source>
+                <source>${project.basedir}/target/generated-test-sources/avro</source>
+              </sources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${project.basedir}/target/generated-sources/java</source>
+              </sources>
             </configuration>
           </execution>
         </executions>
@@ -143,6 +172,11 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>avro-ipc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>avro-ipc-jetty</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -167,68 +201,24 @@
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-library</artifactId>
-      <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <!-- hadoop's execution environment provides its own jars, usurping any others.
+        So we should not include it here -->
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>${commons-codec.version}</version>
+        <groupId>org.xerial.snappy</groupId>
+        <artifactId>snappy-java</artifactId>
+        <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <profiles>
-     <profile>
-      <id>hadoop1</id>
-      <activation>
-        <property>
-          <name>hadoop.version</name>
-          <value>1</value>
-        </property>
-      </activation>
-      <properties>
-        <envClassifier>hadoop1</envClassifier>
-      </properties>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
-          <!-- hadoop's execution environment provides its own jars, usurping any others.
-            So we should not include it here -->
-          <scope>provided</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
-      <id>hadoop2</id>
-      <activation>
-        <property>
-          <name>hadoop.version</name>
-          <value>!1</value> <!-- if the hadoop.version is not 1 (or not set) -->
-        </property>
-      </activation>
-      <properties>
-        <envClassifier>hadoop2</envClassifier>
-      </properties>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-client</artifactId>
-          <!-- hadoop's execution environment provides its own jars, usurping any others.
-            So we should not include it here -->
-          <scope>provided</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
-
 </project>
 

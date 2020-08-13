@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,23 +18,28 @@
 package org.apache.avro.util.internal;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.Schema;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.util.TokenBuffer;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
 
 public class JacksonUtils {
-  static final String BYTES_CHARSET = "ISO-8859-1";
 
   private JacksonUtils() {
   }
@@ -44,7 +49,7 @@ public class JacksonUtils {
       return null;
     }
     try {
-      TokenBuffer generator = new TokenBuffer(new ObjectMapper());
+      TokenBuffer generator = new TokenBuffer(new ObjectMapper(), false);
       toJson(datum, generator);
       return new ObjectMapper().readTree(generator.asParser());
     } catch (IOException e) {
@@ -52,13 +57,13 @@ public class JacksonUtils {
     }
   }
 
-  @SuppressWarnings(value="unchecked")
+  @SuppressWarnings(value = "unchecked")
   static void toJson(Object datum, JsonGenerator generator) throws IOException {
     if (datum == JsonProperties.NULL_VALUE) { // null
       generator.writeNull();
     } else if (datum instanceof Map) { // record, map
       generator.writeStartObject();
-      for (Map.Entry<Object,Object> entry : ((Map<Object,Object>) datum).entrySet()) {
+      for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) datum).entrySet()) {
         generator.writeFieldName(entry.getKey().toString());
         toJson(entry.getValue(), generator);
       }
@@ -70,7 +75,7 @@ public class JacksonUtils {
       }
       generator.writeEndArray();
     } else if (datum instanceof byte[]) { // bytes, fixed
-      generator.writeString(new String((byte[]) datum, BYTES_CHARSET));
+      generator.writeString(new String((byte[]) datum, StandardCharsets.ISO_8859_1));
     } else if (datum instanceof CharSequence || datum instanceof Enum<?>) { // string, enum
       generator.writeString(datum.toString());
     } else if (datum instanceof Double) { // double
@@ -83,6 +88,10 @@ public class JacksonUtils {
       generator.writeNumber((Integer) datum);
     } else if (datum instanceof Boolean) { // boolean
       generator.writeBoolean((Boolean) datum);
+    } else if (datum instanceof BigInteger) {
+      generator.writeNumber((BigInteger) datum);
+    } else if (datum instanceof BigDecimal) {
+      generator.writeNumber((BigDecimal) datum);
     } else {
       throw new AvroRuntimeException("Unknown datum class: " + datum.getClass());
     }
@@ -107,44 +116,54 @@ public class JacksonUtils {
         return jsonNode.asInt();
       } else if (schema.getType().equals(Schema.Type.LONG)) {
         return jsonNode.asLong();
+      } else if (schema.getType().equals(Schema.Type.FLOAT)) {
+        return (float) jsonNode.asDouble();
+      } else if (schema.getType().equals(Schema.Type.DOUBLE)) {
+        return jsonNode.asDouble();
       }
     } else if (jsonNode.isLong()) {
-      return jsonNode.asLong();
-    } else if (jsonNode.isDouble()) {
+      if (schema == null || schema.getType().equals(Schema.Type.LONG)) {
+        return jsonNode.asLong();
+      } else if (schema.getType().equals(Schema.Type.INT)) {
+        if (jsonNode.canConvertToInt()) {
+          return jsonNode.asInt();
+        } else {
+          return jsonNode.asLong();
+        }
+      } else if (schema.getType().equals(Schema.Type.FLOAT)) {
+        return (float) jsonNode.asDouble();
+      } else if (schema.getType().equals(Schema.Type.DOUBLE)) {
+        return jsonNode.asDouble();
+      }
+    } else if (jsonNode.isDouble() || jsonNode.isFloat()) {
       if (schema == null || schema.getType().equals(Schema.Type.DOUBLE)) {
         return jsonNode.asDouble();
       } else if (schema.getType().equals(Schema.Type.FLOAT)) {
         return (float) jsonNode.asDouble();
       }
     } else if (jsonNode.isTextual()) {
-      if (schema == null || schema.getType().equals(Schema.Type.STRING) ||
-          schema.getType().equals(Schema.Type.ENUM)) {
+      if (schema == null || schema.getType().equals(Schema.Type.STRING) || schema.getType().equals(Schema.Type.ENUM)) {
         return jsonNode.asText();
-      } else if (schema.getType().equals(Schema.Type.BYTES)
-              || schema.getType().equals(Schema.Type.FIXED)) {
-        try {
-          return jsonNode.getTextValue().getBytes(BYTES_CHARSET);
-        } catch (UnsupportedEncodingException e) {
-          throw new AvroRuntimeException(e);
-        }
+      } else if (schema.getType().equals(Schema.Type.BYTES) || schema.getType().equals(Schema.Type.FIXED)) {
+        return jsonNode.textValue().getBytes(StandardCharsets.ISO_8859_1);
       }
     } else if (jsonNode.isArray()) {
-      List l = new ArrayList();
+      List<Object> l = new ArrayList<>();
       for (JsonNode node : jsonNode) {
         l.add(toObject(node, schema == null ? null : schema.getElementType()));
       }
       return l;
     } else if (jsonNode.isObject()) {
-      Map m = new LinkedHashMap();
-      for (Iterator<String> it = jsonNode.getFieldNames(); it.hasNext(); ) {
+      Map<Object, Object> m = new LinkedHashMap<>();
+      for (Iterator<String> it = jsonNode.fieldNames(); it.hasNext();) {
         String key = it.next();
-        Schema s = null;
-        if (schema == null) {
-          s = null;
-        } else if (schema.getType().equals(Schema.Type.MAP)) {
+        final Schema s;
+        if (schema != null && schema.getType().equals(Schema.Type.MAP)) {
           s = schema.getValueType();
-        } else if (schema.getType().equals(Schema.Type.RECORD)) {
+        } else if (schema != null && schema.getType().equals(Schema.Type.RECORD)) {
           s = schema.getField(key).schema();
+        } else {
+          s = null;
         }
         Object value = toObject(jsonNode.get(key), s);
         m.put(key, value);
@@ -152,5 +171,19 @@ public class JacksonUtils {
       return m;
     }
     return null;
+  }
+
+  /**
+   * Convert an object into a map
+   * 
+   * @param datum The object
+   * @return Its Map representation
+   */
+  public static Map objectToMap(Object datum) {
+    ObjectMapper mapper = new ObjectMapper();
+    // we only care about fields
+    mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
+    mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    return mapper.convertValue(datum, Map.class);
   }
 }

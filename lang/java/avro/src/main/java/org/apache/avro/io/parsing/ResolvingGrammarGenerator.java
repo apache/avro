@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.apache.avro.io.parsing;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -26,279 +27,211 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.AvroTypeException;
+import org.apache.avro.Resolver;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
-import org.codehaus.jackson.JsonNode;
+import org.apache.avro.util.internal.Accessor;
+import org.apache.avro.util.internal.Accessor.ResolvingGrammarGeneratorAccessor;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
- * The class that generates a resolving grammar to resolve between two
- * schemas.
+ * The class that generates a resolving grammar to resolve between two schemas.
  */
 public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
-  /**
-   * Resolves the writer schema <tt>writer</tt> and the reader schema
-   * <tt>reader</tt> and returns the start symbol for the grammar generated.
-   * @param writer    The schema used by the writer
-   * @param reader    The schema used by the reader
-   * @return          The start symbol for the resolving grammar
-   * @throws IOException
-   */
-  public final Symbol generate(Schema writer, Schema reader)
-    throws IOException {
-    return Symbol.root(generate(writer, reader, new HashMap<LitS, Symbol>()));
+
+  static {
+    Accessor.setAccessor(new ResolvingGrammarGeneratorAccessor() {
+      @Override
+      protected void encode(Encoder e, Schema s, JsonNode n) throws IOException {
+        ResolvingGrammarGenerator.encode(e, s, n);
+      }
+    });
   }
 
   /**
    * Resolves the writer schema <tt>writer</tt> and the reader schema
    * <tt>reader</tt> and returns the start symbol for the grammar generated.
-   * If there is already a symbol in the map <tt>seen</tt> for resolving the
-   * two schemas, then that symbol is returned. Otherwise a new symbol is
-   * generated and returnd.
-   * @param writer    The schema used by the writer
-   * @param reader    The schema used by the reader
-   * @param seen      The &lt;reader-schema, writer-schema&gt; to symbol
-   * map of start symbols of resolving grammars so far.
-   * @return          The start symbol for the resolving grammar
+   *
+   * @param writer The schema used by the writer
+   * @param reader The schema used by the reader
+   * @return The start symbol for the resolving grammar
    * @throws IOException
    */
-  public Symbol generate(Schema writer, Schema reader,
-                                Map<LitS, Symbol> seen) throws IOException
-  {
-    final Schema.Type writerType = writer.getType();
-    final Schema.Type readerType = reader.getType();
-
-    if (writerType == readerType) {
-      switch (writerType) {
-      case NULL:
-        return Symbol.NULL;
-      case BOOLEAN:
-        return Symbol.BOOLEAN;
-      case INT:
-        return Symbol.INT;
-      case LONG:
-        return Symbol.LONG;
-      case FLOAT:
-        return Symbol.FLOAT;
-      case DOUBLE:
-        return Symbol.DOUBLE;
-      case STRING:
-        return Symbol.STRING;
-      case BYTES:
-        return Symbol.BYTES;
-      case FIXED:
-        if (writer.getFullName().equals(reader.getFullName())
-            && writer.getFixedSize() == reader.getFixedSize()) {
-          return Symbol.seq(Symbol.intCheckAction(writer.getFixedSize()),
-              Symbol.FIXED);
-        }
-        break;
-
-      case ENUM:
-        if (writer.getFullName() == null
-                || writer.getFullName().equals(reader.getFullName())) {
-          return Symbol.seq(mkEnumAdjust(writer.getEnumSymbols(),
-                  reader.getEnumSymbols()), Symbol.ENUM);
-        }
-        break;
-
-      case ARRAY:
-        return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END,
-                generate(writer.getElementType(),
-                reader.getElementType(), seen)),
-            Symbol.ARRAY_START);
-
-      case MAP:
-        return Symbol.seq(Symbol.repeat(Symbol.MAP_END,
-                generate(writer.getValueType(),
-                reader.getValueType(), seen), Symbol.STRING),
-            Symbol.MAP_START);
-      case RECORD:
-        return resolveRecords(writer, reader, seen);
-      case UNION:
-        return resolveUnion(writer, reader, seen);
-      default:
-        throw new AvroTypeException("Unkown type for schema: " + writerType);
-      }
-    } else {  // writer and reader are of different types
-      if (writerType == Schema.Type.UNION) {
-        return resolveUnion(writer, reader, seen);
-      }
-
-      switch (readerType) {
-      case LONG:
-        switch (writerType) {
-        case INT:
-          return Symbol.resolve(super.generate(writer, seen), Symbol.LONG);
-        }
-        break;
-
-      case FLOAT:
-        switch (writerType) {
-        case INT:
-        case LONG:
-          return Symbol.resolve(super.generate(writer, seen), Symbol.FLOAT);
-        }
-        break;
-
-      case DOUBLE:
-        switch (writerType) {
-        case INT:
-        case LONG:
-        case FLOAT:
-          return Symbol.resolve(super.generate(writer, seen), Symbol.DOUBLE);
-        }
-        break;
-
-      case BYTES:
-        switch (writerType) {
-        case STRING:
-          return Symbol.resolve(super.generate(writer, seen), Symbol.BYTES);
-        }
-        break;
-
-      case STRING:
-        switch (writerType) {
-        case BYTES:
-          return Symbol.resolve(super.generate(writer, seen), Symbol.STRING);
-        }
-        break;
-
-      case UNION:
-        int j = bestBranch(reader, writer, seen);
-        if (j >= 0) {
-          Symbol s = generate(writer, reader.getTypes().get(j), seen);
-          return Symbol.seq(Symbol.unionAdjustAction(j, s), Symbol.UNION);
-        }
-        break;
-      case NULL:
-      case BOOLEAN:
-      case INT:
-      case ENUM:
-      case ARRAY:
-      case MAP:
-      case RECORD:
-      case FIXED:
-        break;
-      default:
-        throw new RuntimeException("Unexpected schema type: " + readerType);
-      }
-    }
-    return Symbol.error("Found " + writer.getFullName()
-                        + ", expecting " + reader.getFullName());
+  public final Symbol generate(Schema writer, Schema reader) throws IOException {
+    Resolver.Action r = Resolver.resolve(writer, reader);
+    return Symbol.root(generate(r, new HashMap<>()));
   }
 
-  private Symbol resolveUnion(Schema writer, Schema reader,
-      Map<LitS, Symbol> seen) throws IOException {
-    List<Schema> alts = writer.getTypes();
-    final int size = alts.size();
-    Symbol[] symbols = new Symbol[size];
-    String[] labels = new String[size];
+  /**
+   * Takes a {@link Resolver.Action} for resolving two schemas and returns the
+   * start symbol for a grammar that implements that resolution. If the action is
+   * for a record and there's already a symbol for that record in <tt>seen</tt>,
+   * then that symbol is returned. Otherwise a new symbol is generated and
+   * returned.
+   *
+   * @param action The resolver to be implemented
+   * @param seen   The &lt;Action&gt; to symbol map of start symbols of resolving
+   *               grammars so far.
+   * @return The start symbol for the resolving grammar
+   * @throws IOException
+   */
+  private Symbol generate(Resolver.Action action, Map<Object, Symbol> seen) throws IOException {
+    if (action instanceof Resolver.DoNothing) {
+      return simpleGen(action.writer, seen);
 
-    /**
-     * We construct a symbol without filling the arrays. Please see
-     * {@link Symbol#production} for the reason.
-     */
-    int i = 0;
-    for (Schema w : alts) {
-      symbols[i] = generate(w, reader, seen);
-      labels[i] = w.getFullName();
-      i++;
-    }
-    return Symbol.seq(Symbol.alt(symbols, labels),
-                      Symbol.writerUnionAction());
-  }
+    } else if (action instanceof Resolver.ErrorAction) {
+      return Symbol.error(action.toString());
 
-  private Symbol resolveRecords(Schema writer, Schema reader,
-      Map<LitS, Symbol> seen) throws IOException {
-    LitS wsc = new LitS2(writer, reader);
-    Symbol result = seen.get(wsc);
-    if (result == null) {
-      List<Field> wfields = writer.getFields();
-      List<Field> rfields = reader.getFields();
+    } else if (action instanceof Resolver.Skip) {
+      return Symbol.skipAction(simpleGen(action.writer, seen));
 
-      // First, compute reordering of reader fields, plus
-      // number elements in the result's production
-      Field[] reordered = new Field[rfields.size()];
-      int ridx = 0;
-      int count = 1 + wfields.size();
+    } else if (action instanceof Resolver.Promote) {
+      return Symbol.resolve(simpleGen(action.writer, seen), simpleGen(action.reader, seen));
 
-      for (Field f : wfields) {
-        Field rdrField = reader.getField(f.name());
-        if (rdrField != null) {
-          reordered[ridx++] = rdrField;
-        }
+    } else if (action instanceof Resolver.ReaderUnion) {
+      Resolver.ReaderUnion ru = (Resolver.ReaderUnion) action;
+      Symbol s = generate(ru.actualAction, seen);
+      return Symbol.seq(Symbol.unionAdjustAction(ru.firstMatch, s), Symbol.UNION);
+
+    } else if (action.writer.getType() == Schema.Type.ARRAY) {
+      Symbol es = generate(((Resolver.Container) action).elementAction, seen);
+      return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, es), Symbol.ARRAY_START);
+
+    } else if (action.writer.getType() == Schema.Type.MAP) {
+      Symbol es = generate(((Resolver.Container) action).elementAction, seen);
+      return Symbol.seq(Symbol.repeat(Symbol.MAP_END, es, Symbol.STRING), Symbol.MAP_START);
+
+    } else if (action.writer.getType() == Schema.Type.UNION) {
+      if (((Resolver.WriterUnion) action).unionEquiv) {
+        return simpleGen(action.writer, seen);
       }
-
-      for (Field rf : rfields) {
-        String fname = rf.name();
-        if (writer.getField(fname) == null) {
-          if (rf.defaultValue() == null) {
-            result = Symbol.error("Found " + writer.getFullName()
-                                  + ", expecting " + reader.getFullName()
-                                  + ", missing required field " + fname);
-            seen.put(wsc, result);
-            return result;
-          } else {
-            reordered[ridx++] = rf;
-            count += 3;
-          }
-        }
+      Resolver.Action[] branches = ((Resolver.WriterUnion) action).actions;
+      Symbol[] symbols = new Symbol[branches.length];
+      String[] labels = new String[branches.length];
+      int i = 0;
+      for (Resolver.Action branch : branches) {
+        symbols[i] = generate(branch, seen);
+        labels[i] = action.writer.getTypes().get(i).getFullName();
+        i++;
       }
-
-      Symbol[] production = new Symbol[count];
-      production[--count] = Symbol.fieldOrderAction(reordered);
-
-      /**
-       * We construct a symbol without filling the array. Please see
-       * {@link Symbol#production} for the reason.
-       */
-      result = Symbol.seq(production);
-      seen.put(wsc, result);
-
-      /*
-       * For now every field in read-record with no default value
-       * must be in write-record.
-       * Write record may have additional fields, which will be
-       * skipped during read.
-       */
-
-      // Handle all the writer's fields
-      for (Field wf : wfields) {
-        String fname = wf.name();
-        Field rf = reader.getField(fname);
-        if (rf == null) {
-          production[--count] =
-            Symbol.skipAction(generate(wf.schema(), wf.schema(), seen));
-        } else {
-          production[--count] =
-            generate(wf.schema(), rf.schema(), seen);
-        }
+      return Symbol.seq(Symbol.alt(symbols, labels), Symbol.WRITER_UNION_ACTION);
+    } else if (action instanceof Resolver.EnumAdjust) {
+      Resolver.EnumAdjust e = (Resolver.EnumAdjust) action;
+      Object[] adjs = new Object[e.adjustments.length];
+      for (int i = 0; i < adjs.length; i++) {
+        adjs[i] = (0 <= e.adjustments[i] ? new Integer(e.adjustments[i])
+            : "No match for " + e.writer.getEnumSymbols().get(i));
       }
+      return Symbol.seq(Symbol.enumAdjustAction(e.reader.getEnumSymbols().size(), adjs), Symbol.ENUM);
 
-      // Add default values for fields missing from Writer
-      for (Field rf : rfields) {
-        String fname = rf.name();
-        Field wf = writer.getField(fname);
-        if (wf == null) {
-          byte[] bb = getBinary(rf.schema(), rf.defaultValue());
+    } else if (action instanceof Resolver.RecordAdjust) {
+      Symbol result = seen.get(action);
+      if (result == null) {
+        final Resolver.RecordAdjust ra = (Resolver.RecordAdjust) action;
+        int defaultCount = ra.readerOrder.length - ra.firstDefault;
+        int count = 1 + ra.fieldActions.length + 3 * defaultCount;
+        final Symbol[] production = new Symbol[count];
+        result = Symbol.seq(production);
+        seen.put(action, result);
+        production[--count] = Symbol.fieldOrderAction(ra.readerOrder);
+
+        final Resolver.Action[] actions = ra.fieldActions;
+        for (Resolver.Action wfa : actions) {
+          production[--count] = generate(wfa, seen);
+        }
+        for (int i = ra.firstDefault; i < ra.readerOrder.length; i++) {
+          final Schema.Field rf = ra.readerOrder[i];
+          byte[] bb = getBinary(rf.schema(), Accessor.defaultValue(rf));
           production[--count] = Symbol.defaultStartAction(bb);
-          production[--count] = generate(rf.schema(), rf.schema(), seen);
+          production[--count] = simpleGen(rf.schema(), seen);
           production[--count] = Symbol.DEFAULT_END_ACTION;
         }
       }
+      return result;
     }
-    return result;
+
+    throw new IllegalArgumentException("Unrecognized Resolver.Action: " + action);
+  }
+
+  private Symbol simpleGen(Schema s, Map<Object, Symbol> seen) {
+    switch (s.getType()) {
+    case NULL:
+      return Symbol.NULL;
+    case BOOLEAN:
+      return Symbol.BOOLEAN;
+    case INT:
+      return Symbol.INT;
+    case LONG:
+      return Symbol.LONG;
+    case FLOAT:
+      return Symbol.FLOAT;
+    case DOUBLE:
+      return Symbol.DOUBLE;
+    case BYTES:
+      return Symbol.BYTES;
+    case STRING:
+      return Symbol.STRING;
+
+    case FIXED:
+      return Symbol.seq(Symbol.intCheckAction(s.getFixedSize()), Symbol.FIXED);
+
+    case ENUM:
+      return Symbol.seq(Symbol.enumAdjustAction(s.getEnumSymbols().size(), null), Symbol.ENUM);
+
+    case ARRAY:
+      return Symbol.seq(Symbol.repeat(Symbol.ARRAY_END, simpleGen(s.getElementType(), seen)), Symbol.ARRAY_START);
+
+    case MAP:
+      return Symbol.seq(Symbol.repeat(Symbol.MAP_END, simpleGen(s.getValueType(), seen), Symbol.STRING),
+          Symbol.MAP_START);
+
+    case UNION: {
+      final List<Schema> subs = s.getTypes();
+      final Symbol[] symbols = new Symbol[subs.size()];
+      final String[] labels = new String[subs.size()];
+      int i = 0;
+      for (Schema b : s.getTypes()) {
+        symbols[i] = simpleGen(b, seen);
+        labels[i++] = b.getFullName();
+      }
+      return Symbol.seq(Symbol.alt(symbols, labels), Symbol.UNION);
+    }
+
+    case RECORD: {
+      Symbol result = seen.get(s);
+      if (result == null) {
+        final Symbol[] production = new Symbol[s.getFields().size() + 1];
+        result = Symbol.seq(production);
+        seen.put(s, result);
+        int i = production.length;
+        production[--i] = Symbol.fieldOrderAction(s.getFields().toArray(new Schema.Field[0]));
+        for (Field f : s.getFields()) {
+          production[--i] = simpleGen(f.schema(), seen);
+        }
+        // FieldOrderAction is needed even though the field-order hasn't changed,
+        // because the _reader_ doesn't know the field order hasn't changed, and
+        // thus it will probably call {@ ResolvingDecoder.fieldOrder} to find out.
+      }
+      return result;
+    }
+
+    default:
+      throw new IllegalArgumentException("Unexpected schema: " + s);
+    }
   }
 
   private static EncoderFactory factory = new EncoderFactory().configureBufferSize(32);
+
   /**
-   * Returns the Avro binary encoded version of <tt>n</tt> according to
-   * the schema <tt>s</tt>.
+   * Returns the Avro binary encoded version of <tt>n</tt> according to the schema
+   * <tt>s</tt>.
+   *
    * @param s The schema for encoding
    * @param n The Json node that has the value to be encoded.
-   * @return  The binary encoded version of <tt>n</tt>.
+   * @return The binary encoded version of <tt>n</tt>.
    * @throws IOException
    */
   private static byte[] getBinary(Schema s, JsonNode n) throws IOException {
@@ -310,24 +243,22 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
   }
 
   /**
-   * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt>
-   * according to the schema <tt>s</tt>.
+   * Encodes the given Json node <tt>n</tt> on to the encoder <tt>e</tt> according
+   * to the schema <tt>s</tt>.
+   *
    * @param e The encoder to encode into.
    * @param s The schema for the object being encoded.
    * @param n The Json node to encode.
    * @throws IOException
-   * @deprecated internal method
    */
-  @Deprecated
-  public static void encode(Encoder e, Schema s, JsonNode n)
-    throws IOException {
+  public static void encode(Encoder e, Schema s, JsonNode n) throws IOException {
     switch (s.getType()) {
     case RECORD:
       for (Field f : s.getFields()) {
         String name = f.name();
         JsonNode v = n.get(name);
         if (v == null) {
-          v = f.defaultValue();
+          v = Accessor.defaultValue(f);
         }
         if (v == null) {
           throw new AvroTypeException("No default value for: " + name);
@@ -336,7 +267,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       }
       break;
     case ENUM:
-      e.writeEnum(s.getEnumOrdinal(n.getTextValue()));
+      e.writeEnum(s.getEnumOrdinal(n.textValue()));
       break;
     case ARRAY:
       e.writeArrayStart();
@@ -352,7 +283,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       e.writeMapStart();
       e.setItemCount(n.size());
       Schema v = s.getValueType();
-      for (Iterator<String> it = n.getFieldNames(); it.hasNext();) {
+      for (Iterator<String> it = n.fieldNames(); it.hasNext();) {
         e.startItem();
         String key = it.next();
         e.writeString(key);
@@ -366,8 +297,8 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       break;
     case FIXED:
       if (!n.isTextual())
-        throw new AvroTypeException("Non-string default value for fixed: "+n);
-      byte[] bb = n.getTextValue().getBytes("ISO-8859-1");
+        throw new AvroTypeException("Non-string default value for fixed: " + n);
+      byte[] bb = n.textValue().getBytes(StandardCharsets.ISO_8859_1);
       if (bb.length != s.getFixedSize()) {
         bb = Arrays.copyOf(bb, s.getFixedSize());
       }
@@ -375,170 +306,44 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
       break;
     case STRING:
       if (!n.isTextual())
-        throw new AvroTypeException("Non-string default value for string: "+n);
-      e.writeString(n.getTextValue());
+        throw new AvroTypeException("Non-string default value for string: " + n);
+      e.writeString(n.textValue());
       break;
     case BYTES:
       if (!n.isTextual())
-        throw new AvroTypeException("Non-string default value for bytes: "+n);
-      e.writeBytes(n.getTextValue().getBytes("ISO-8859-1"));
+        throw new AvroTypeException("Non-string default value for bytes: " + n);
+      e.writeBytes(n.textValue().getBytes(StandardCharsets.ISO_8859_1));
       break;
     case INT:
       if (!n.isNumber())
-        throw new AvroTypeException("Non-numeric default value for int: "+n);
-      e.writeInt(n.getIntValue());
+        throw new AvroTypeException("Non-numeric default value for int: " + n);
+      e.writeInt(n.intValue());
       break;
     case LONG:
       if (!n.isNumber())
-        throw new AvroTypeException("Non-numeric default value for long: "+n);
-      e.writeLong(n.getLongValue());
+        throw new AvroTypeException("Non-numeric default value for long: " + n);
+      e.writeLong(n.longValue());
       break;
     case FLOAT:
       if (!n.isNumber())
-        throw new AvroTypeException("Non-numeric default value for float: "+n);
-      e.writeFloat((float) n.getDoubleValue());
+        throw new AvroTypeException("Non-numeric default value for float: " + n);
+      e.writeFloat((float) n.doubleValue());
       break;
     case DOUBLE:
       if (!n.isNumber())
-        throw new AvroTypeException("Non-numeric default value for double: "+n);
-      e.writeDouble(n.getDoubleValue());
+        throw new AvroTypeException("Non-numeric default value for double: " + n);
+      e.writeDouble(n.doubleValue());
       break;
     case BOOLEAN:
       if (!n.isBoolean())
-        throw new AvroTypeException("Non-boolean default for boolean: "+n);
-      e.writeBoolean(n.getBooleanValue());
+        throw new AvroTypeException("Non-boolean default for boolean: " + n);
+      e.writeBoolean(n.booleanValue());
       break;
     case NULL:
       if (!n.isNull())
-        throw new AvroTypeException("Non-null default value for null type: "+n);
+        throw new AvroTypeException("Non-null default value for null type: " + n);
       e.writeNull();
       break;
     }
   }
-
-  private static Symbol mkEnumAdjust(List<String> wsymbols,
-      List<String> rsymbols){
-    Object[] adjustments = new Object[wsymbols.size()];
-    for (int i = 0; i < adjustments.length; i++) {
-      int j = rsymbols.indexOf(wsymbols.get(i));
-      adjustments[i] = (j == -1 ? "No match for " + wsymbols.get(i)
-                                : new Integer(j));
-    }
-    return Symbol.enumAdjustAction(rsymbols.size(), adjustments);
-  }
-
-  /**
-   * This checks if the symbol itself is an error or if there is an error in
-   * its production.
-   *
-   * When the symbol is created for a record, this checks whether the record
-   * fields are present (the symbol is not an error action) and that all of the
-   * fields have a non-error action. Record fields may have nested error
-   * actions.
-   *
-   * @return true if the symbol is an error or if its production has an error
-   */
-  private boolean hasMatchError(Symbol sym) {
-    if (sym instanceof Symbol.ErrorAction) {
-      return true;
-    } else {
-      for (int i = 0; i < sym.production.length; i += 1) {
-        if (sym.production[i] instanceof Symbol.ErrorAction) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private int bestBranch(Schema r, Schema w, Map<LitS, Symbol> seen) throws IOException {
-    Schema.Type vt = w.getType();
-      // first scan for exact match
-      int j = 0;
-      int structureMatch = -1;
-      for (Schema b : r.getTypes()) {
-        if (vt == b.getType())
-          if (vt == Schema.Type.RECORD || vt == Schema.Type.ENUM ||
-              vt == Schema.Type.FIXED) {
-            String vname = w.getFullName();
-            String bname = b.getFullName();
-            // return immediately if the name matches exactly according to spec
-            if (vname != null && vname.equals(bname))
-              return j;
-
-            if (vt == Schema.Type.RECORD &&
-                !hasMatchError(resolveRecords(w, b, seen))) {
-              String vShortName = w.getName();
-              String bShortName = b.getName();
-              // use the first structure match or one where the name matches
-              if ((structureMatch < 0) ||
-                  (vShortName != null && vShortName.equals(bShortName))) {
-                structureMatch = j;
-              }
-            }
-          } else
-            return j;
-        j++;
-      }
-
-      // if there is a record structure match, return it
-      if (structureMatch >= 0)
-        return structureMatch;
-
-      // then scan match via numeric promotion
-      j = 0;
-      for (Schema b : r.getTypes()) {
-        switch (vt) {
-        case INT:
-          switch (b.getType()) {
-          case LONG: case DOUBLE:
-            return j;
-          }
-          break;
-        case LONG:
-        case FLOAT:
-          switch (b.getType()) {
-          case DOUBLE:
-            return j;
-          }
-          break;
-        case STRING:
-          switch (b.getType()) {
-          case BYTES:
-            return j;
-          }
-          break;
-        case BYTES:
-          switch (b.getType()) {
-          case STRING:
-            return j;
-          }
-          break;
-        }
-        j++;
-      }
-      return -1;
-  }
-
-  /**
-   * Clever trick which differentiates items put into
-   * <code>seen</code> by {@link ValidatingGrammarGenerator#validating validating()}
-   * from those put in by {@link ValidatingGrammarGenerator#resolving resolving()}.
-   */
-   static class LitS2 extends ValidatingGrammarGenerator.LitS {
-     public Schema expected;
-     public LitS2(Schema actual, Schema expected) {
-       super(actual);
-       this.expected = expected;
-     }
-     public boolean equals(Object o) {
-       if (! (o instanceof LitS2)) return false;
-       LitS2 other = (LitS2) o;
-       return actual == other.actual && expected == other.expected;
-     }
-     public int hashCode() {
-       return super.hashCode() + expected.hashCode();
-     }
-   }
 }
-

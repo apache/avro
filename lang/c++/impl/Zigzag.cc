@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,34 +21,36 @@
 
 namespace avro {
 
-uint64_t 
+uint64_t
 encodeZigzag64(int64_t input)
 {
+    // cppcheck-suppress shiftTooManyBitsSigned
     return ((input << 1) ^ (input >> 63));
 }
 
-int64_t 
+int64_t
 decodeZigzag64(uint64_t input)
 {
     return static_cast<int64_t>(((input >> 1) ^ -(static_cast<int64_t>(input) & 1)));
 }
 
-uint32_t 
+uint32_t
 encodeZigzag32(int32_t input)
 {
+    // cppcheck-suppress shiftTooManyBitsSigned
     return ((input << 1) ^ (input >> 31));
 }
 
-int32_t 
+int32_t
 decodeZigzag32(uint32_t input)
 {
     return static_cast<int32_t>(((input >> 1) ^ -(static_cast<int64_t>(input) & 1)));
 }
 
-size_t 
-encodeInt64(int64_t input, boost::array<uint8_t, 10> &output)
+size_t
+encodeInt64(int64_t input, std::array<uint8_t, 10> &output)
 {
-    // get the zigzag encoding 
+    // get the zigzag encoding
     uint64_t val = encodeZigzag64(input);
 
     // put values in an array of bytes with variable length encoding
@@ -63,10 +65,10 @@ encodeInt64(int64_t input, boost::array<uint8_t, 10> &output)
     return bytesOut;
 }
 
-size_t 
-encodeInt32(int32_t input, boost::array<uint8_t, 5> &output)
+size_t
+encodeInt32(int32_t input, std::array<uint8_t, 5> &output)
 {
-    // get the zigzag encoding 
+    // get the zigzag encoding
     uint32_t val = encodeZigzag32(input);
 
     // put values in an array of bytes with variable length encoding

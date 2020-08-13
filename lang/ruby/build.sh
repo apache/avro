@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,27 +25,31 @@ export GEM_HOME=.gem/
 export PATH="$PATH:.gem/bin"
 
 # bootstrap bundler
-gem install --no-rdoc --no-ri bundler
+gem install --no-document -v 1.17.3 bundler
 bundle install
 
-case "$1" in
-     test)
-        bundle exec rake test
-       ;;
+for target in "$@"
+do
+  case "$target" in
+    lint)
+      rubocop --lint
+      ;;
 
-     dist)
-        bundle exec rake dist
-       ;;
+    test)
+      bundle exec rake test
+      ;;
 
-     clean)
-        bundle exec rake clean
-        rm -rf tmp avro.gemspec data.avr
-       ;;
+    dist)
+      bundle exec rake dist
+      ;;
 
-     *)
-       echo "Usage: $0 {test|dist|clean}"
-       exit 1
+    clean)
+      bundle exec rake clean
+      rm -rf tmp avro.gemspec data.avr
+      ;;
 
-esac
-
-exit 0
+    *)
+      echo "Usage: $0 {lint|test|dist|clean}"
+      exit 1
+  esac
+done

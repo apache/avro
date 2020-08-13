@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,20 +35,21 @@ import org.apache.avro.thrift.test.Nested;
 
 public class TestThrift {
 
-  @org.junit.Test public void testStruct() throws Exception {
+  @org.junit.Test
+  public void testStruct() throws Exception {
 
     System.out.println(ThriftData.get().getSchema(Test.class).toString(true));
 
     Test test = new Test();
     test.setBoolField(true);
-    test.setByteField((byte)2);
-    test.setI16Field((short)3);
-    test.setI16OptionalField((short)14);
+    test.setByteField((byte) 2);
+    test.setI16Field((short) 3);
+    test.setI16OptionalField((short) 14);
     test.setI32Field(4);
     test.setI64Field(5L);
     test.setDoubleField(2.0);
     test.setStringField("foo");
-    test.setBinaryField(ByteBuffer.wrap(new byte[] {0,-1}));
+    test.setBinaryField(ByteBuffer.wrap(new byte[] { 0, -1 }));
     test.setMapField(Collections.singletonMap("x", 1));
     test.setListField(Collections.singletonList(7));
     test.setSetField(Collections.singleton(8));
@@ -61,14 +62,15 @@ public class TestThrift {
     check(test);
   }
 
-  @org.junit.Test public void testOptionals() throws Exception {
+  @org.junit.Test
+  public void testOptionals() throws Exception {
 
     Test test = new Test();
     test.setBoolField(true);
-    test.setByteField((byte)2);
-    test.setByteOptionalField((byte)4);
-    test.setI16Field((short)3);
-    test.setI16OptionalField((short)15);
+    test.setByteField((byte) 2);
+    test.setByteOptionalField((byte) 4);
+    test.setI16Field((short) 3);
+    test.setI16OptionalField((short) 15);
     test.setI64Field(5L);
     test.setDoubleField(2.0);
 
@@ -80,15 +82,13 @@ public class TestThrift {
   private void check(Test test) throws Exception {
 
     ByteArrayOutputStream bao = new ByteArrayOutputStream();
-    ThriftDatumWriter<Test> w = new ThriftDatumWriter<Test>(Test.class);
+    ThriftDatumWriter<Test> w = new ThriftDatumWriter<>(Test.class);
     Encoder e = EncoderFactory.get().binaryEncoder(bao, null);
     w.write(test, e);
     e.flush();
 
-    Object o = new ThriftDatumReader<Test>(Test.class).read
-      (null,
-       DecoderFactory.get().createBinaryDecoder
-       (new ByteArrayInputStream(bao.toByteArray()), null));
+    Object o = new ThriftDatumReader<>(Test.class).read(null,
+        DecoderFactory.get().binaryDecoder(new ByteArrayInputStream(bao.toByteArray()), null));
 
     assertEquals(test, o);
 

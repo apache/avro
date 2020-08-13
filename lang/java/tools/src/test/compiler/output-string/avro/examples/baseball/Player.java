@@ -5,12 +5,13 @@
  */
 package avro.examples.baseball;
 
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.Utf8;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
 
-@SuppressWarnings("all")
 /** 選手 is Japanese for player. */
 @org.apache.avro.specific.AvroGenerated
 public class Player extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
@@ -27,7 +28,16 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$);
 
   /**
+   * Return the BinaryMessageEncoder instance used by this class.
+   * @return the message encoder used by this class
+   */
+  public static BinaryMessageEncoder<Player> getEncoder() {
+    return ENCODER;
+  }
+
+  /**
    * Return the BinaryMessageDecoder instance used by this class.
+   * @return the message decoder used by this class
    */
   public static BinaryMessageDecoder<Player> getDecoder() {
     return DECODER;
@@ -36,27 +46,37 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   /**
    * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
    * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<Player> createDecoder(SchemaStore resolver) {
     return new BinaryMessageDecoder<Player>(MODEL$, SCHEMA$, resolver);
   }
 
-  /** Serializes this Player to a ByteBuffer. */
+  /**
+   * Serializes this Player to a ByteBuffer.
+   * @return a buffer holding the serialized data for this instance
+   * @throws java.io.IOException if this instance could not be serialized
+   */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
     return ENCODER.encode(this);
   }
 
-  /** Deserializes a Player from a ByteBuffer. */
+  /**
+   * Deserializes a Player from a ByteBuffer.
+   * @param b a byte buffer holding serialized data for an instance of this class
+   * @return a Player instance decoded from the given buffer
+   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+   */
   public static Player fromByteBuffer(
       java.nio.ByteBuffer b) throws java.io.IOException {
     return DECODER.decode(b);
   }
 
   /** The number of the player */
-  @Deprecated public int number;
-  @Deprecated public java.lang.String first_name;
-  @Deprecated public java.lang.String last_name;
-  @Deprecated public java.util.List<avro.examples.baseball.Position> position;
+   private int number;
+   private java.lang.String first_name;
+   private java.lang.String last_name;
+   private java.util.List<avro.examples.baseball.Position> position;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -79,6 +99,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     this.position = position;
   }
 
+  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
   public java.lang.Object get(int field$) {
@@ -87,7 +108,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     case 1: return first_name;
     case 2: return last_name;
     case 3: return position;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -96,10 +117,10 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public void put(int field$, java.lang.Object value$) {
     switch (field$) {
     case 0: number = (java.lang.Integer)value$; break;
-    case 1: first_name = (java.lang.String)value$; break;
-    case 2: last_name = (java.lang.String)value$; break;
+    case 1: first_name = value$ != null ? value$.toString() : null; break;
+    case 2: last_name = value$ != null ? value$.toString() : null; break;
     case 3: position = (java.util.List<avro.examples.baseball.Position>)value$; break;
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
@@ -107,16 +128,17 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
    * Gets the value of the 'number' field.
    * @return The number of the player
    */
-  public java.lang.Integer getNumber() {
+  public int getNumber() {
     return number;
   }
+
 
   /**
    * Sets the value of the 'number' field.
    * The number of the player
    * @param value the value to set.
    */
-  public void setNumber(java.lang.Integer value) {
+  public void setNumber(int value) {
     this.number = value;
   }
 
@@ -127,6 +149,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public java.lang.String getFirstName() {
     return first_name;
   }
+
 
   /**
    * Sets the value of the 'first_name' field.
@@ -144,6 +167,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     return last_name;
   }
 
+
   /**
    * Sets the value of the 'last_name' field.
    * @param value the value to set.
@@ -159,6 +183,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   public java.util.List<avro.examples.baseball.Position> getPosition() {
     return position;
   }
+
 
   /**
    * Sets the value of the 'position' field.
@@ -205,6 +230,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
   /**
    * RecordBuilder for Player instances.
    */
+  @org.apache.avro.specific.AvroGenerated
   public static class Builder extends org.apache.avro.specific.SpecificRecordBuilderBase<Player>
     implements org.apache.avro.data.RecordBuilder<Player> {
 
@@ -272,9 +298,10 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       * The number of the player
       * @return The value.
       */
-    public java.lang.Integer getNumber() {
+    public int getNumber() {
       return number;
     }
+
 
     /**
       * Sets the value of the 'number' field.
@@ -317,6 +344,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       return first_name;
     }
 
+
     /**
       * Sets the value of the 'first_name' field.
       * @param value The value of 'first_name'.
@@ -356,6 +384,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
       return last_name;
     }
 
+
     /**
       * Sets the value of the 'last_name' field.
       * @param value The value of 'last_name'.
@@ -394,6 +423,7 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     public java.util.List<avro.examples.baseball.Position> getPosition() {
       return position;
     }
+
 
     /**
       * Sets the value of the 'position' field.
@@ -436,6 +466,8 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
         record.last_name = fieldSetFlags()[2] ? this.last_name : (java.lang.String) defaultValue(fields()[2]);
         record.position = fieldSetFlags()[3] ? this.position : (java.util.List<avro.examples.baseball.Position>) defaultValue(fields()[3]);
         return record;
+      } catch (org.apache.avro.AvroMissingFieldException e) {
+        throw e;
       } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
@@ -460,4 +492,104 @@ public class Player extends org.apache.avro.specific.SpecificRecordBase implemen
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+  @Override protected boolean hasCustomCoders() { return true; }
+
+  @Override public void customEncode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+    out.writeInt(this.number);
+
+    out.writeString(this.first_name);
+
+    out.writeString(this.last_name);
+
+    long size0 = this.position.size();
+    out.writeArrayStart();
+    out.setItemCount(size0);
+    long actualSize0 = 0;
+    for (avro.examples.baseball.Position e0: this.position) {
+      actualSize0++;
+      out.startItem();
+      out.writeEnum(e0.ordinal());
+    }
+    out.writeArrayEnd();
+    if (actualSize0 != size0)
+      throw new java.util.ConcurrentModificationException("Array-size written was " + size0 + ", but element count was " + actualSize0 + ".");
+
+  }
+
+  @Override public void customDecode(org.apache.avro.io.ResolvingDecoder in)
+    throws java.io.IOException
+  {
+    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
+    if (fieldOrder == null) {
+      this.number = in.readInt();
+
+      this.first_name = in.readString();
+
+      this.last_name = in.readString();
+
+      long size0 = in.readArrayStart();
+      java.util.List<avro.examples.baseball.Position> a0 = this.position;
+      if (a0 == null) {
+        a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
+        this.position = a0;
+      } else a0.clear();
+      SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
+      for ( ; 0 < size0; size0 = in.arrayNext()) {
+        for ( ; size0 != 0; size0--) {
+          avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
+          e0 = avro.examples.baseball.Position.values()[in.readEnum()];
+          a0.add(e0);
+        }
+      }
+
+    } else {
+      for (int i = 0; i < 4; i++) {
+        switch (fieldOrder[i].pos()) {
+        case 0:
+          this.number = in.readInt();
+          break;
+
+        case 1:
+          this.first_name = in.readString();
+          break;
+
+        case 2:
+          this.last_name = in.readString();
+          break;
+
+        case 3:
+          long size0 = in.readArrayStart();
+          java.util.List<avro.examples.baseball.Position> a0 = this.position;
+          if (a0 == null) {
+            a0 = new SpecificData.Array<avro.examples.baseball.Position>((int)size0, SCHEMA$.getField("position").schema());
+            this.position = a0;
+          } else a0.clear();
+          SpecificData.Array<avro.examples.baseball.Position> ga0 = (a0 instanceof SpecificData.Array ? (SpecificData.Array<avro.examples.baseball.Position>)a0 : null);
+          for ( ; 0 < size0; size0 = in.arrayNext()) {
+            for ( ; size0 != 0; size0--) {
+              avro.examples.baseball.Position e0 = (ga0 != null ? ga0.peek() : null);
+              e0 = avro.examples.baseball.Position.values()[in.readEnum()];
+              a0.add(e0);
+            }
+          }
+          break;
+
+        default:
+          throw new java.io.IOException("Corrupt ResolvingDecoder.");
+        }
+      }
+    }
+  }
 }
+
+
+
+
+
+
+
+
+
+

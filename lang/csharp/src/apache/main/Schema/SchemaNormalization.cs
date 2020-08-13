@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Text;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace Avro
 {
@@ -27,6 +28,16 @@ namespace Avro
     /// </summary>
     public static class SchemaNormalization
     {
+        /// <summary>
+        /// Obsolete: This will be removed from the public API in a future version.
+        /// This should be a private const field, similar to the Java implementation. It appears
+        /// that this was originally exposed for unit tests. Unit tests should hard-code this value
+        /// rather than access it here.
+        ///
+        /// NOTE: When this is made private, remove the obsolete warning suppression around usages
+        /// of this field in this class.
+        /// </summary>
+        [Obsolete("This will be removed from the public API in a future version.")]
         public static long Empty64 = -4513414715797952619;
 
         /// <summary>
@@ -89,7 +100,8 @@ namespace Avro
                     var sha256 = System.Security.Cryptography.SHA256.Create();
                     return sha256.ComputeHash(data);
                 default:
-                    throw new ArgumentException(string.Format("Unsupported fingerprint computation algorithm ({0})", fpName));
+                    throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
+                        "Unsupported fingerprint computation algorithm ({0})", fpName));
             }
         }
 
@@ -121,7 +133,10 @@ namespace Avro
         /// <returns>Fingerprint</returns>
         private static long Fingerprint64(byte[] data)
         {
+#pragma warning disable CS0618 // Type or member is obsolete - remove with Empty64 made private.
             long result = Empty64;
+#pragma warning restore CS0618 // Type or member is obsolete
+
             foreach (var b in data)
             {
                 result = ((long)(((ulong)result) >> 8)) ^ Fp64.FpTable[(int) (result ^ b) & 0xff];
@@ -201,7 +216,8 @@ namespace Avro
                     else if (st == Schema.Type.Fixed)
                     {
                         FixedSchema fixedSchema = s as FixedSchema;
-                        o.Append(",\"size\":").Append(fixedSchema.Size.ToString());
+                        o.Append(",\"size\":")
+                            .Append(fixedSchema.Size.ToString(CultureInfo.InvariantCulture));
                     }
                     else  // st == Schema.Type.Record
                     {
@@ -246,7 +262,10 @@ namespace Avro
                     for (int j = 0; j < 8; j++)
                     {
                         long mask = -(fp & 1L);
+
+#pragma warning disable CS0618 // Type or member is obsolete - remove with Empty64 made private.
                         fp = ((long) (((ulong) fp) >> 1)) ^ (Empty64 & mask);
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
                     FpTable[i] = fp;
                 }

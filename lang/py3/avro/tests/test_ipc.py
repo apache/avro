@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,9 +27,7 @@ import threading
 import time
 import unittest
 
-from avro import ipc
-from avro import protocol
-from avro import schema
+from avro import ipc, protocol, schema
 
 
 def NowMS():
@@ -77,7 +75,7 @@ ECHO_PROTOCOL_JSON = """
 """
 
 
-ECHO_PROTOCOL = protocol.Parse(ECHO_PROTOCOL_JSON)
+ECHO_PROTOCOL = protocol.parse(ECHO_PROTOCOL_JSON)
 
 
 class EchoResponder(ipc.Responder):

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,13 +19,14 @@
 #ifndef avro_BufferReader_hh__
 #define avro_BufferReader_hh__
 
+#include <type_traits>
 #include "Buffer.hh"
 
 #ifdef min
 #undef min
 #endif
-/** 
- * \file BufferReader.hh 
+/**
+ * \file BufferReader.hh
  *
  * \brief Helper class for reading bytes from buffer in a streaming manner,
  * without the overhead of istreams.
@@ -34,19 +35,19 @@
 
 namespace avro {
 
-/** 
+/**
  * Helper class for reading bytes from buffer without worrying about
  * chunk boundaries.  May read from an InputBuffer or OutputBuffer.
  *
  **/
-class AVRO_DECL BufferReader : private boost::noncopyable 
+class AVRO_DECL BufferReader : private boost::noncopyable
 {
 
   public:
 
     typedef detail::data_type data_type;
     typedef detail::size_type size_type;
-    
+
   private:
 
     size_type chunkRemaining() const {
@@ -90,7 +91,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         chunkPos_(0)
     { }
 
-    /** 
+    /**
      * How many bytes are still not read from this buffer.
      **/
 
@@ -98,7 +99,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return bytesRemaining_;
     }
 
-    /** 
+    /**
      * Read a block of data from the front of the buffer.
      **/
 
@@ -106,11 +107,11 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return bytes_ - bytesRemaining_;
     }
 
-    /** 
+    /**
      * Read a block of data from the buffer.
      **/
 
-    size_type read(data_type *data, size_type size) { 
+    size_type read(data_type *data, size_type size) {
 
         if(size > bytesRemaining_) {
             size = bytesRemaining_;
@@ -128,11 +129,11 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return size;
     }
 
-    /** 
+    /**
      * Read a block of data from the buffer.
      **/
 
-    bool read(std::string &str, size_type size) { 
+    bool read(std::string &str, size_type size) {
         if(size > bytesRemaining_) {
             return false;
         }
@@ -148,7 +149,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
     }
 
 
-    /** 
+    /**
      * Read a single value from the buffer.  The value must be a "fundamental"
      * type, e.g. int, float, etc.  (otherwise use the other writeTo tests).
      *
@@ -156,10 +157,10 @@ class AVRO_DECL BufferReader : private boost::noncopyable
 
     template<typename T>
     bool read(T &val)  {
-        return read(val, boost::is_fundamental<T>());
+        return read(val, std::is_fundamental<T>());
     }
 
-    /** 
+    /**
      * Skips a block of data from the buffer.
      **/
 
@@ -172,7 +173,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return skipped;
     }
 
-    /** 
+    /**
      * Seek to a position in the buffer.
      **/
 
@@ -235,7 +236,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
     }
 
     template<typename T>
-    bool read(T &val, const boost::true_type&)
+    bool read(T &val, const std::true_type&)
     {
         if(sizeof(T) > bytesRemaining_) {
             return false;
@@ -251,11 +252,11 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         return true;
     }
 
-    /// An uninstantiable function, this is if boost::is_fundamental check fails
+    /// An uninstantiable function, that is if boost::is_fundamental check fails
     template<typename T>
-    bool read(T &val, const boost::false_type&)
+    bool read(T &val, const std::false_type&)
     {
-        BOOST_STATIC_ASSERT(sizeof(T)==0);
+        static_assert(sizeof(T) == 0, "Not a valid type to read");
         return false;
     }
 
@@ -263,7 +264,7 @@ class AVRO_DECL BufferReader : private boost::noncopyable
         str.assign(addr(), sizeToCopy);
         incrementChunk(sizeToCopy);
     }
-            
+
     void slowStringRead(std::string &str, size_type sizeToCopy) {
         str.clear();
         str.reserve(sizeToCopy);

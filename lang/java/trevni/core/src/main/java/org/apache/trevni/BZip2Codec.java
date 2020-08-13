@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,37 +33,30 @@ public class BZip2Codec extends Codec {
   @Override
   ByteBuffer compress(ByteBuffer uncompressedData) throws IOException {
     ByteArrayOutputStream baos = getOutputBuffer(uncompressedData.remaining());
-    BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos);
 
-    try {
-      outputStream.write(uncompressedData.array());
-    } finally {
-      outputStream.close();
+    try (BZip2CompressorOutputStream outputStream = new BZip2CompressorOutputStream(baos)) {
+      outputStream.write(uncompressedData.array(), computeOffset(uncompressedData), uncompressedData.remaining());
     }
 
-    ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
-    return result;
+    return ByteBuffer.wrap(baos.toByteArray());
   }
 
   @Override
   ByteBuffer decompress(ByteBuffer compressedData) throws IOException {
-    ByteArrayInputStream bais = new ByteArrayInputStream(compressedData.array());
-    BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais);
-    try {
+    ByteArrayInputStream bais = new ByteArrayInputStream(compressedData.array(), computeOffset(compressedData),
+        compressedData.remaining());
+    try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(bais)) {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
       byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
 
       int readCount = -1;
 
-      while ( (readCount = inputStream.read(buffer, compressedData.position(), buffer.length))> 0) {
+      while ((readCount = inputStream.read(buffer, compressedData.position(), buffer.length)) > 0) {
         baos.write(buffer, 0, readCount);
       }
 
-      ByteBuffer result = ByteBuffer.wrap(baos.toByteArray());
-      return result;
-    } finally {
-      inputStream.close();
+      return ByteBuffer.wrap(baos.toByteArray());
     }
   }
 

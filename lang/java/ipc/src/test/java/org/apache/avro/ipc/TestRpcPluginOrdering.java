@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,10 +22,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.avro.AvroRemoteException;
-import org.apache.avro.ipc.LocalTransceiver;
-import org.apache.avro.ipc.RPCContext;
-import org.apache.avro.ipc.RPCPlugin;
 import org.apache.avro.ipc.specific.SpecificRequestor;
 import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.test.Mail;
@@ -36,7 +32,7 @@ public class TestRpcPluginOrdering {
 
   private static AtomicInteger orderCounter = new AtomicInteger();
 
-  public class OrderPlugin extends RPCPlugin{
+  public class OrderPlugin extends RPCPlugin {
 
     public void clientStartConnect(RPCContext context) {
       assertEquals(0, orderCounter.getAndIncrement());
@@ -82,18 +78,16 @@ public class TestRpcPluginOrdering {
   }
 
   private Message createTestMessage() {
-    Message message = Message.newBuilder().
-      setTo("me@test.com").
-      setFrom("you@test.com").
-      setBody("plugin testing").
-      build();
+    Message message = Message.newBuilder().setTo("me@test.com").setFrom("you@test.com").setBody("plugin testing")
+        .build();
     return message;
   }
 
-  private static class TestMailImpl implements Mail{
-    public String send(Message message) throws AvroRemoteException {
+  private static class TestMailImpl implements Mail {
+    public String send(Message message) {
       return "Received";
     }
+
     public void fireandforget(Message message) {
     }
   }

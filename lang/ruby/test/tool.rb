@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,7 +27,7 @@ class GenericResponder < Avro::IPC::Responder
     @datum = datum
   end
 
-  def call(message, request)
+  def call(message, _request)
     if message.name == @msg
       STDERR.puts "Message: #{message.name} Datum: #{@datum.inspect}"
       @datum
@@ -42,7 +42,6 @@ class GenericHandler < WEBrick::HTTPServlet::AbstractServlet
     writer = Avro::IPC::FramedWriter.new(StringIO.new)
     writer.write_framed_message(unframed_resp)
     resp.body = writer.to_s
-    @server.stop
   end
 end
 
@@ -102,7 +101,7 @@ def main
       case ARGV[4]
       when "-file"
         Avro::DataFile.open(ARGV[5]) {|f|
-          f.each{|d| datum = d; break }
+          f.each{|e| datum = e; break }
         }
       when "-data"
         puts "JSON Decoder not yet implemented."
@@ -125,7 +124,7 @@ def main
     if ARGV.size > 4
       case ARGV[4]
       when "-file"
-        Avro::DataFile.open(ARGV[5]){|f| f.each{|d| datum = d; break } }
+        Avro::DataFile.open(ARGV[5]){|f| f.each{|e| datum = e; break } }
       when "-data"
         puts "JSON Decoder not yet implemented"
         return 1

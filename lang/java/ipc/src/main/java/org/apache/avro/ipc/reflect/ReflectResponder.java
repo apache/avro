@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@ import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.reflect.ReflectDatumReader;
 import org.apache.avro.reflect.ReflectDatumWriter;
 
-/** {@link org.apache.avro.ipc.Responder} for existing interfaces.*/
+/** {@link org.apache.avro.ipc.Responder} for existing interfaces. */
 public class ReflectResponder extends SpecificResponder {
   public ReflectResponder(Class iface, Object impl) {
     this(iface, impl, new ReflectData(impl.getClass().getClassLoader()));
@@ -48,26 +48,25 @@ public class ReflectResponder extends SpecificResponder {
     super(protocol, impl, data);
   }
 
-  public ReflectData getReflectData() { return (ReflectData)getSpecificData(); }
+  public ReflectData getReflectData() {
+    return (ReflectData) getSpecificData();
+  }
 
   @Override
   protected DatumWriter<Object> getDatumWriter(Schema schema) {
-    return new ReflectDatumWriter<Object>(schema, getReflectData());
+    return new ReflectDatumWriter<>(schema, getReflectData());
   }
 
   @Override
   protected DatumReader<Object> getDatumReader(Schema actual, Schema expected) {
-    return new ReflectDatumReader<Object>(actual, expected, getReflectData());
+    return new ReflectDatumReader<>(actual, expected, getReflectData());
   }
 
   @Override
-  public void writeError(Schema schema, Object error,
-                         Encoder out) throws IOException {
+  public void writeError(Schema schema, Object error, Encoder out) throws IOException {
     if (error instanceof CharSequence)
-      error = error.toString();                   // system error: convert
+      error = error.toString(); // system error: convert
     super.writeError(schema, error, out);
   }
-
-
 
 }

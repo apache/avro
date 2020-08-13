@@ -1,6 +1,6 @@
 {
   "name": "avro-js",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "author": "Avro Developers <dev@avro.apache.org>",
   "description": "JavaScript Avro implementation",
   "contributors": [
@@ -14,8 +14,8 @@
     }
   ],
   "repository": {
-    "type": "svn",
-    "url": "http://svn.apache.org/repos/asf/avro/trunk/lang/js/"
+    "type": "git",
+    "url": "https://github.com/apache/avro"
   },
   "keywords": [
     "avro",
@@ -34,17 +34,21 @@
     "crypto": "./etc/browser/crypto.js"
   },
   "scripts": {
-    "cover": "istanbul cover _mocha",
-    "test": "mocha",
-    "clean": "rm -rf coverage node_modules"
+    "cover": "istanbul cover _mocha -- -f interop -i",
+    "test": "mocha -f interop -i",
+    "clean": "rm -rf coverage node_modules",
+    "lint": "jshint lib test",
+    "interop-data-generate": "node test/interop_data_generate.js",
+    "interop-data-test": "mocha test/interop_data_test.js"
   },
   "dependencies": {
     "underscore": "*"
   },
   "devDependencies": {
-    "coveralls": "^2.11.4",
-    "istanbul": "^0.3.19",
-    "mocha": "^2.3.2",
+    "coveralls": "^3.0.7",
+    "istanbul": "^0.4.5",
+    "jshint": "^2.10.2",
+    "mocha": "^6.2.2",
     "tmp": "^0.0.28"
   },
   "noAnalyze": true,

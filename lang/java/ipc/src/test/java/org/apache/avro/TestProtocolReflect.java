@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,29 +41,50 @@ public class TestProtocolReflect {
 
   public static class TestRecord {
     private String name;
-    public int hashCode() { return this.name.hashCode(); }
+
+    public int hashCode() {
+      return this.name.hashCode();
+    }
+
     public boolean equals(Object that) {
-      return this.name.equals(((TestRecord)that).name);
+      return this.name.equals(((TestRecord) that).name);
     }
   }
 
   public interface Simple {
     String hello(String greeting);
+
     TestRecord echo(TestRecord record);
+
     int add(int arg1, int arg2);
+
     byte[] echoBytes(byte[] data);
+
     void error() throws SimpleException;
   }
 
   private static boolean throwUndeclaredError;
 
   public static class TestImpl implements Simple {
-    public String hello(String greeting) { return "goodbye"; }
-    public int add(int arg1, int arg2) { return arg1 + arg2; }
-    public TestRecord echo(TestRecord record) { return record; }
-    public byte[] echoBytes(byte[] data) { return data; }
+    public String hello(String greeting) {
+      return "goodbye";
+    }
+
+    public int add(int arg1, int arg2) {
+      return arg1 + arg2;
+    }
+
+    public TestRecord echo(TestRecord record) {
+      return record;
+    }
+
+    public byte[] echoBytes(byte[] data) {
+      return data;
+    }
+
     public void error() throws SimpleException {
-      if (throwUndeclaredError) throw new RuntimeException("foo");
+      if (throwUndeclaredError)
+        throw new RuntimeException("foo");
       throw new SimpleException("foo");
     }
   }
@@ -74,24 +95,23 @@ public class TestProtocolReflect {
 
   @Before
   public void testStartServer() throws Exception {
-    if (server != null) return;
-    server = new SocketServer(new ReflectResponder(Simple.class, new TestImpl()),
-                              new InetSocketAddress(0));
+    if (server != null)
+      return;
+    server = new SocketServer(new ReflectResponder(Simple.class, new TestImpl()), new InetSocketAddress(0));
     server.start();
     client = new SocketTransceiver(new InetSocketAddress(server.getPort()));
     proxy = ReflectRequestor.getClient(Simple.class, client);
   }
 
-  @Test public void testClassLoader() throws Exception {
-    ClassLoader loader = new ClassLoader() {};
+  @Test
+  public void testClassLoader() throws Exception {
+    ClassLoader loader = new ClassLoader() {
+    };
 
-    ReflectResponder responder
-      = new ReflectResponder(Simple.class, new TestImpl(),
-                             new ReflectData(loader));
+    ReflectResponder responder = new ReflectResponder(Simple.class, new TestImpl(), new ReflectData(loader));
     assertEquals(responder.getReflectData().getClassLoader(), loader);
 
-    ReflectRequestor requestor
-      = new ReflectRequestor(Simple.class, client, new ReflectData(loader));
+    ReflectRequestor requestor = new ReflectRequestor(Simple.class, client, new ReflectData(loader));
     assertEquals(requestor.getReflectData().getClassLoader(), loader);
   }
 
@@ -118,7 +138,7 @@ public class TestProtocolReflect {
   @Test
   public void testEchoBytes() throws IOException {
     Random random = new Random();
-    int length = random.nextInt(1024*16);
+    int length = random.nextInt(1024 * 16);
     byte[] data = new byte[length];
     random.nextBytes(data);
     byte[] echoed = proxy.echoBytes(data);
@@ -143,7 +163,7 @@ public class TestProtocolReflect {
     RuntimeException error = null;
     try {
       proxy.error();
-    } catch (RuntimeException e) {
+    } catch (AvroRuntimeException e) {
       error = e;
     } finally {
       this.throwUndeclaredError = false;

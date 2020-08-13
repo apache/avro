@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -18,7 +18,7 @@
 package Avro;
 
 use strict;
-use 5.008_001;
+use 5.010_001;
 our $VERSION = '++MODULE_VERSION++';
 
 1;
@@ -54,7 +54,7 @@ Copyright 2014 Apache Software Foundation.
 =head1 LICENSE
 
 The Apache License, Version 2.0
-L<http://www.apache.org/licenses/LICENSE-2.0>
+L<https://www.apache.org/licenses/LICENSE-2.0>
 
 =head1 SEE ALSO
 

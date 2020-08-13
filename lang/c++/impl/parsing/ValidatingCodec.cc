@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,9 +21,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 #include <boost/any.hpp>
 
 #include "ValidSchema.hh"
@@ -33,12 +31,12 @@
 
 namespace avro {
 
+using std::make_shared;
+
 namespace parsing {
 
-using boost::shared_ptr;
-using boost::weak_ptr;
-using boost::static_pointer_cast;
-using boost::make_shared;
+using std::shared_ptr;
+using std::static_pointer_cast;
 
 using std::map;
 using std::vector;
@@ -103,7 +101,7 @@ ProductionPtr ValidatingGrammarGenerator::doGenerate(const NodePtr& n,
             reverse(result->begin(), result->end());
 
             m[n] = result;
-            return result;
+            return make_shared<Production>(1, Symbol::indirect(result));
         }
     case AVRO_ENUM:
         {
@@ -196,6 +194,9 @@ class ValidatingDecoder : public Decoder {
     size_t mapNext();
     size_t skipMap();
     size_t decodeUnionIndex();
+    void drain() {
+        base->drain();
+    }
 
 public:
 
@@ -311,11 +312,10 @@ size_t ValidatingDecoder<P>::arrayStart()
 {
     parser.advance(Symbol::sArrayStart);
     size_t result = base->arrayStart();
+    parser.pushRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sArrayEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -324,11 +324,10 @@ template <typename P>
 size_t ValidatingDecoder<P>::arrayNext()
 {
     size_t result = base->arrayNext();
+    parser.nextRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sArrayEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -341,7 +340,7 @@ size_t ValidatingDecoder<P>::skipArray()
     if (n == 0) {
         parser.pop();
     } else {
-        parser.setRepeatCount(n);
+        parser.pushRepeatCount(n);
         parser.skip(*base);
     }
     parser.advance(Symbol::sArrayEnd);
@@ -353,11 +352,10 @@ size_t ValidatingDecoder<P>::mapStart()
 {
     parser.advance(Symbol::sMapStart);
     size_t result = base->mapStart();
+    parser.pushRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sMapEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -366,11 +364,10 @@ template <typename P>
 size_t ValidatingDecoder<P>::mapNext()
 {
     size_t result = base->mapNext();
+    parser.nextRepeatCount(result);
     if (result == 0) {
         parser.popRepeater();
         parser.advance(Symbol::sMapEnd);
-    } else {
-        parser.setRepeatCount(result);
     }
     return result;
 }
@@ -383,7 +380,7 @@ size_t ValidatingDecoder<P>::skipMap()
     if (n == 0) {
         parser.pop();
     } else {
-        parser.setRepeatCount(n);
+        parser.pushRepeatCount(n);
         parser.skip(*base);
     }
     parser.advance(Symbol::sMapEnd);
@@ -407,6 +404,7 @@ class ValidatingEncoder : public Encoder {
 
     void init(OutputStream& os);
     void flush();
+    int64_t byteCount() const;
     void encodeNull();
     void encodeBool(bool b);
     void encodeInt(int32_t i);
@@ -518,6 +516,7 @@ template<typename P>
 void ValidatingEncoder<P>::arrayStart()
 {
     parser_.advance(Symbol::sArrayStart);
+    parser_.pushRepeatCount(0);
     base_->arrayStart();
 }
 
@@ -533,6 +532,7 @@ template<typename P>
 void ValidatingEncoder<P>::mapStart()
 {
     parser_.advance(Symbol::sMapStart);
+    parser_.pushRepeatCount(0);
     base_->mapStart();
 }
 
@@ -547,7 +547,7 @@ void ValidatingEncoder<P>::mapEnd()
 template<typename P>
 void ValidatingEncoder<P>::setItemCount(size_t count)
 {
-    parser_.setRepeatCount(count);
+    parser_.nextRepeatCount(count);
     base_->setItemCount(count);
 }
 
@@ -568,19 +568,23 @@ void ValidatingEncoder<P>::encodeUnionIndex(size_t e)
     base_->encodeUnionIndex(e);
 }
 
+template<typename P>
+int64_t ValidatingEncoder<P>::byteCount() const
+{
+    return base_->byteCount();
+}
+
 }   // namespace parsing
 
 DecoderPtr validatingDecoder(const ValidSchema& s,
     const DecoderPtr& base)
 {
-    return boost::make_shared<parsing::ValidatingDecoder<
-        parsing::SimpleParser<parsing::DummyHandler> > >(s, base);
+    return make_shared<parsing::ValidatingDecoder<parsing::SimpleParser<parsing::DummyHandler> > >(s, base);
 }
 
 EncoderPtr validatingEncoder(const ValidSchema& schema, const EncoderPtr& base)
 {
-    return boost::make_shared<parsing::ValidatingEncoder<
-        parsing::SimpleParser<parsing::DummyHandler> > >(schema, base);
+    return make_shared<parsing::ValidatingEncoder<parsing::SimpleParser<parsing::DummyHandler> > >(schema, base);
 }
 
 }   // namespace avro

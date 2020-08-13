@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,24 +17,25 @@
  */
 package org.apache.avro;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.Locale;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-import org.junit.experimental.runners.Enclosed;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.avro.util.CaseFinder;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Formatter;
+import java.util.List;
+import java.util.Locale;
 
+import org.apache.avro.util.CaseFinder;
+import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Enclosed.class)
 public class TestSchemaNormalization {
@@ -42,27 +43,40 @@ public class TestSchemaNormalization {
   @RunWith(Parameterized.class)
   public static class TestCanonical {
     String input, expectedOutput;
-    public TestCanonical(String i, String o) { input=i; expectedOutput=o; }
 
-    @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(), "canonical", new ArrayList<Object[]>()); }
+    public TestCanonical(String i, String o) {
+      input = i;
+      expectedOutput = o;
+    }
 
-    @Test public void testCanonicalization() throws Exception {
-      assertEquals(SchemaNormalization.toParsingForm(Schema.parse(input)),
-                   expectedOutput);
+    @Parameters
+    public static List<Object[]> cases() throws IOException {
+      return CaseFinder.find(data(), "canonical", new ArrayList<>());
+    }
+
+    @Test
+    public void testCanonicalization() throws Exception {
+      assertEquals(SchemaNormalization.toParsingForm(new Schema.Parser().parse(input)), expectedOutput);
     }
   }
 
   @RunWith(Parameterized.class)
   public static class TestFingerprint {
     String input, expectedOutput;
-    public TestFingerprint(String i, String o) { input=i; expectedOutput=o; }
 
-    @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(),"fingerprint",new ArrayList<Object[]>()); }
+    public TestFingerprint(String i, String o) {
+      input = i;
+      expectedOutput = o;
+    }
 
-    @Test public void testCanonicalization() throws Exception {
-      Schema s = Schema.parse(input);
+    @Parameters
+    public static List<Object[]> cases() throws IOException {
+      return CaseFinder.find(data(), "fingerprint", new ArrayList<>());
+    }
+
+    @Test
+    public void testCanonicalization() throws Exception {
+      Schema s = new Schema.Parser().parse(input);
       long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
       assertEquals(carefulFP, Long.parseLong(expectedOutput));
       assertEqHex(carefulFP, SchemaNormalization.parsingFingerprint64(s));
@@ -73,15 +87,22 @@ public class TestSchemaNormalization {
   @RunWith(Parameterized.class)
   public static class TestFingerprintInternationalization {
     String input, expectedOutput;
-    public TestFingerprintInternationalization(String i, String o) { input=i; expectedOutput=o; }
 
-    @Parameters public static List<Object[]> cases() throws IOException
-    { return CaseFinder.find(data(),"fingerprint",new ArrayList<Object[]>()); }
+    public TestFingerprintInternationalization(String i, String o) {
+      input = i;
+      expectedOutput = o;
+    }
 
-    @Test public void testCanonicalization() throws Exception {
+    @Parameters
+    public static List<Object[]> cases() throws IOException {
+      return CaseFinder.find(data(), "fingerprint", new ArrayList<>());
+    }
+
+    @Test
+    public void testCanonicalization() throws Exception {
       Locale originalDefaultLocale = Locale.getDefault();
       Locale.setDefault(Locale.forLanguageTag("tr"));
-      Schema s = Schema.parse(input);
+      Schema s = new Schema.Parser().parse(input);
       long carefulFP = altFingerprint(SchemaNormalization.toParsingForm(s));
       assertEquals(carefulFP, Long.parseLong(expectedOutput));
       assertEqHex(carefulFP, SchemaNormalization.parsingFingerprint64(s));
@@ -89,38 +110,36 @@ public class TestSchemaNormalization {
     }
   }
 
-  private static String DATA_FILE =
-    (System.getProperty("share.dir", "../../../share")
-     + "/test/data/schema-tests.txt");
+  private static String DATA_FILE = (System.getProperty("share.dir", "../../../share") + "/test/data/schema-tests.txt");
 
-  private static BufferedReader data() throws IOException
-  { return new BufferedReader(new FileReader(DATA_FILE)); }
+  private static BufferedReader data() throws IOException {
+    return Files.newBufferedReader(Paths.get(DATA_FILE), UTF_8);
+  }
 
-  /** Compute the fingerprint of <i>bytes[s,s+l)</i> using a slow
-      algorithm that's an alternative to that implemented in {@link
-      SchemaNormalization}.  Algo from Broder93 ("Some applications of Rabin's
-      fingerpringint method"). */
+  /**
+   * Compute the fingerprint of <i>bytes[s,s+l)</i> using a slow algorithm that's
+   * an alternative to that implemented in {@link SchemaNormalization}. Algo from
+   * Broder93 ("Some applications of Rabin's fingerprinting method").
+   */
   public static long altFingerprint(String s) {
     // In our algorithm, we multiply all inputs by x^64 (which is
     // equivalent to prepending it with a single "1" bit followed
-    // by 64 zero bits).  This both deals with the fact that
+    // by 64 zero bits). This both deals with the fact that
     // CRCs ignore leading zeros, and also ensures some degree of
     // randomness for small inputs
-    try {
-      long tmp = altExtend(SchemaNormalization.EMPTY64, 64, ONE,
-                           s.getBytes("UTF-8"));
-      return altExtend(SchemaNormalization.EMPTY64, 64, tmp, POSTFIX);
-    } catch (java.io.UnsupportedEncodingException e)
-      { throw new RuntimeException(e); }
+
+    long tmp = altExtend(SchemaNormalization.EMPTY64, 64, ONE, s.getBytes(UTF_8));
+    return altExtend(SchemaNormalization.EMPTY64, 64, tmp, POSTFIX);
   }
 
   private static long altExtend(long poly, int degree, long fp, byte[] b) {
-    final long overflowBit = 1L<<(64-degree);
-    for (int i = 0; i < b.length; i++) {
-      for (int j = 1; j < 129; j = j<<1) {
+    final long overflowBit = 1L << (64 - degree);
+    for (byte b1 : b) {
+      for (int j = 1; j < 129; j = j << 1) {
         boolean overflow = (0 != (fp & overflowBit));
         fp >>>= 1;
-        if (0 != (j&b[i])) fp |= ONE; // shift in the input bit
+        if (0 != (j & b1))
+          fp |= ONE; // shift in the input bit
         if (overflow) {
           fp ^= poly; // hi-order coeff of poly kills overflow bit
         }
@@ -133,7 +152,7 @@ public class TestSchemaNormalization {
   private static final byte[] POSTFIX = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
   private static void assertEqHex(long expected, long actual) {
-    String m = format("0x%016x != 0x%016x", expected, actual).toString();
+    String m = format("0x%016x != 0x%016x", expected, actual);
     assertTrue(m, expected == actual);
   }
 

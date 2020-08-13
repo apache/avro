@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ options {
   ERROR_REPORTING = true;
   STATIC = false;
   FORCE_LA_CHECK = true;
-  JDK_VERSION = "1.6";
+  JDK_VERSION = "1.8";
 }
 
 PARSER_BEGIN(Idl)
@@ -73,11 +73,12 @@ import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
 import org.apache.avro.Protocol.*;
+import org.apache.avro.util.internal.Accessor;
 
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.*;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  * Grammar to parse a higher-level language into an Avro Schema.
@@ -132,7 +133,7 @@ public class Idl implements Closeable {
                              Token token) throws ParseException {
     JsonNode value = props.get(key);
     if (value.isTextual())
-      return value.getTextValue();
+      return value.textValue();
     throw error(key+" property must be textual: "+value, token);
   }
 
@@ -144,7 +145,7 @@ public class Idl implements Closeable {
     List<String> values = new ArrayList<String>();
     for (JsonNode n : value)
       if (n.isTextual())
-        values.add(n.getTextValue());
+        values.add(n.textValue());
       else
         throw error(key+" values must be textual: "+n, token);
     return values;
@@ -241,6 +242,7 @@ TOKEN :
 | < TIME: "time_ms" >
 | < TIMESTAMP: "timestamp_ms" >
 | < DECIMAL: "decimal" >
+| < LOCAL_TIMESTAMP: "local_timestamp_ms" >
 }
 
 /* LITERALS */
@@ -1004,13 +1006,13 @@ Protocol CompilationUnit():
   ( < "\u001a" > )?
   ( <STUFF_TO_IGNORE: ~[]> )?
   <EOF>
-  { return p; }
+  { return SchemaResolver.resolve(p); }
 }
 
 /*
  * Declaration syntax follows.
  */
-Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
+private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
 {
   Schema s;
   String savedSpace = this.namespace;
@@ -1034,7 +1036,7 @@ Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
        for (String alias : getTextProps("aliases", props, token))
          s.addAlias(alias);
      } else {                                     // add all other props
-       s.addProp(key, props.get(key));
+       Accessor.addProp(s, key, props.get(key));
      }
 
    return s;
@@ -1085,7 +1087,7 @@ Protocol ProtocolDeclaration():
    for (String key : props.keySet())
      if ("namespace".equals(key)) {               // already handled: ignore
      } else {                                     // add all other props
-       p.addProp(key, props.get(key));
+       Accessor.addProp(p, key, props.get(key));
      }
  }
  ProtocolBody(p)
@@ -1099,13 +1101,16 @@ Schema EnumDeclaration():
 {
   String name;
   List<String> symbols;
+  String defaultSymbol = null;
 }
 {
-  "enum"
+  "enum" {   String doc = getDoc(); }
   name = Identifier()
   symbols = EnumBody()
+      [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON>]
   {
-    Schema s = Schema.createEnum(name, getDoc(), this.namespace, symbols);
+    Schema s = Schema.createEnum(name, doc, this.namespace, symbols,
+                                 defaultSymbol);
     names.put(s.getFullName(), s);
     return s;
   }
@@ -1272,7 +1277,7 @@ Schema RecordDeclaration():
   }
 }
 
-void SchemaProperty(Map<String, JsonNode> properties):
+private void SchemaProperty(Map<String, JsonNode> properties):
 {
   String key;
   JsonNode val;
@@ -1302,7 +1307,7 @@ void FieldDeclaration(List<Field> fields):
   ";"
   {
     for (String key : props.keySet())
-      type.addProp(key, props.get(key));
+      Accessor.addProp(type, key, props.get(key));
   }
 }
 
@@ -1324,14 +1329,16 @@ void VariableDeclarator(Schema type, List<Field> fields):
     for (String key : props.keySet())
       if ("order".equals(key))
         order = Field.Order.valueOf(getTextProp(key,props,token).toUpperCase());
-    Field field = new Field(name, type, getDoc(), defaultValue, order);
+
+    boolean validate = !SchemaResolver.isUnresolvedSchema(type);
+    Field field = Accessor.createField(name, type, getDoc(), defaultValue, validate, order);
     for (String key : props.keySet())
       if ("order".equals(key)) {                  // already handled: ignore
       } else if ("aliases".equals(key)) {         // aliases
         for (String alias : getTextProps("aliases", props, token))
           field.addAlias(alias);
       } else {                                    // add all other props
-        field.addProp(key, props.get(key));
+        Accessor.addProp(field, key, props.get(key));
       }
     fields.add(field);
   }
@@ -1347,7 +1354,7 @@ String MessageDocumentation():
    }
 }
 
-Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
+private Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
 {
   String msgDoc;
   String name;
@@ -1423,7 +1430,7 @@ Schema Type():
   )
   {
     for (String key : props.keySet())
-      s.addProp(key, props.get(key));
+      Accessor.addProp(s, key, props.get(key));
     return s;
   }
 }
@@ -1470,7 +1477,9 @@ Schema ReferenceType():
       name = namespace + "." + name;
     Schema type = names.get(name);
     if (type == null)
-      throw error("Undefined name '" + name + "'", token);
+    {
+      type = SchemaResolver.unresolvedSchema(name);
+    }
     return type;
   }
 }
@@ -1489,6 +1498,7 @@ Schema PrimitiveType():
 | "date" { return LogicalTypes.date().addToSchema(Schema.create(Type.INT)); }
 | "time_ms" { return LogicalTypes.timeMillis().addToSchema(Schema.create(Type.INT)); }
 | "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
+| "local_timestamp_ms" { return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "decimal" { return DecimalTypeProperties(); }
 }
 
@@ -1526,6 +1536,8 @@ String PropertyName():
 {
   t = <IDENTIFIER>   { name.append(t.image); }
   ( t = <DASH>       { name.append(t.image); }
+    t = <IDENTIFIER> { name.append(t.image); } |
+    t = <DOT>        { name.append(t.image); }
     t = <IDENTIFIER> { name.append(t.image); }
   ) *
   { return name.toString(); }
@@ -1562,6 +1574,7 @@ Token AnyIdentifier():
    t = <STRING> |
    t = <PROTOCOL> |
    t = <RECORD> |
+   t = <SCHEMA> |
    t = <THROWS> |
    t = <TRUE> |
    t = <UNION> |
@@ -1569,6 +1582,7 @@ Token AnyIdentifier():
    t = <DATE> |
    t = <TIME> |
    t = <TIMESTAMP> |
+   t = <LOCAL_TIMESTAMP> |
    t = <DECIMAL> |
    t = <IDENTIFIER>)
   {
@@ -1576,7 +1590,7 @@ Token AnyIdentifier():
   }
 }
 
-JsonNode Json() :
+private JsonNode Json() :
 { String s; Token t; JsonNode n; }
 { 
 ( s = JsonString() { n = new TextNode(s); }
@@ -1597,11 +1611,11 @@ String JsonString() :
   t = <STRING_LITERAL>
   {
     String betweenQuotes = t.image.substring(1, t.image.length() - 1);
-    return StringEscapeUtils.unescapeJavaScript(betweenQuotes);
+    return StringEscapeUtils.unescapeJava(betweenQuotes);
   }
 }
 
-JsonNode JsonObject() :
+private JsonNode JsonObject() :
 { 
   ObjectNode o = FACTORY.objectNode();
 }
@@ -1610,30 +1624,30 @@ JsonNode JsonObject() :
   { return o; }
 }
 
-void JsonFields(ObjectNode o) :
+private void JsonFields(ObjectNode o) :
 {}
 {
   JsonPair(o) [ "," JsonFields(o) ]
 }
 
-void JsonPair(ObjectNode o) :
+private void JsonPair(ObjectNode o) :
 {
   String name;
   JsonNode value;
 }
 {
   name=JsonString() <COLON> value=Json()
-    { o.put(name, value); } 
+    { o.set(name, value); }
 }
 
-JsonNode JsonArray() :
+private JsonNode JsonArray() :
 { ArrayNode a = FACTORY.arrayNode(); }
 {
   <LBRACK> [ JsonElements(a) ] <RBRACK>
     { return a; }
 }
 
-void JsonElements(ArrayNode a) :
+private void JsonElements(ArrayNode a) :
 { JsonNode element; }
 {
   element=Json() { a.add(element); } [ "," JsonElements(a) ]

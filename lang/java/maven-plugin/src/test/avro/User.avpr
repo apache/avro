@@ -27,6 +27,13 @@
           "name": "privacy", 
           "type": ["null", "ProtocolPrivacy"],
           "default": null
+        },
+        {
+          "name": "modifiedOn",
+          "type": {
+            "type": "long",
+            "logicalType": "timestamp-millis"
+          }
         }
       ]
     } 

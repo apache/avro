@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,23 +36,16 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
- * A sequence file output format that knows how to write AvroKeys and AvroValues in
- * addition to Writables.
+ * A sequence file output format that knows how to write AvroKeys and AvroValues
+ * in addition to Writables.
  *
  * @param <K> The job output key type (may be a Writable, AvroKey).
  * @param <V> The job output value type (may be a Writable, AvroValue).
  */
 public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
-  /** Configuration key for storing the type of compression for the target sequence file. */
-  private static final String CONF_COMPRESSION_TYPE = "mapred.output.compression.type";
-
-  /** The default compression type for the target sequence file. */
-  private static final CompressionType DEFAULT_COMPRESSION_TYPE = CompressionType.RECORD;
-
   /** {@inheritDoc} */
   @Override
-  public RecordWriter<K, V> getRecordWriter(TaskAttemptContext context)
-      throws IOException, InterruptedException {
+  public RecordWriter<K, V> getRecordWriter(TaskAttemptContext context) throws IOException, InterruptedException {
     Configuration conf = context.getConfiguration();
 
     // Configure compression if requested.
@@ -72,14 +65,9 @@ public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
     FileSystem fs = outputFile.getFileSystem(conf);
 
     // Configure the writer.
-    AvroSequenceFile.Writer.Options options = new AvroSequenceFile.Writer.Options()
-        .withFileSystem(fs)
-        .withConfiguration(conf)
-        .withOutputPath(outputFile)
-        .withKeyClass(context.getOutputKeyClass())
-        .withValueClass(context.getOutputValueClass())
-        .withProgressable(context)
-        .withCompressionType(compressionType)
+    AvroSequenceFile.Writer.Options options = new AvroSequenceFile.Writer.Options().withFileSystem(fs)
+        .withConfiguration(conf).withOutputPath(outputFile).withKeyClass(context.getOutputKeyClass())
+        .withValueClass(context.getOutputValueClass()).withProgressable(context).withCompressionType(compressionType)
         .withCompressionCodec(codec);
     Schema keySchema = AvroJob.getOutputKeySchema(conf);
     if (null != keySchema) {
@@ -107,12 +95,12 @@ public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
   /**
    * Sets the type of compression for the output sequence file.
    *
-   * @param job The job configuration.
+   * @param job             The job configuration.
    * @param compressionType The compression type for the target sequence file.
    */
   public static void setOutputCompressionType(Job job, CompressionType compressionType) {
     setCompressOutput(job, true);
-    job.getConfiguration().set(CONF_COMPRESSION_TYPE, compressionType.name());
+    job.getConfiguration().set(FileOutputFormat.COMPRESS_TYPE, compressionType.name());
   }
 
   /**
@@ -122,7 +110,10 @@ public class AvroSequenceFileOutputFormat<K, V> extends FileOutputFormat<K, V> {
    * @return The compression type.
    */
   public static CompressionType getOutputCompressionType(Configuration conf) {
-    String typeName = conf.get(CONF_COMPRESSION_TYPE, DEFAULT_COMPRESSION_TYPE.name());
-    return CompressionType.valueOf(typeName);
+    String typeName = conf.get(FileOutputFormat.COMPRESS_TYPE);
+    if (typeName != null) {
+      return CompressionType.valueOf(typeName);
+    }
+    return SequenceFile.getDefaultCompressionType(conf);
   }
 }

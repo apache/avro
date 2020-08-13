@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ namespace avro {
 namespace json {
 
 using std::ostringstream;
+using std::string;
 
 const char* const
 JsonParser::tokenNames[] = {
@@ -40,6 +41,9 @@ char JsonParser::next()
 {
     char ch = hasNext ? nextChar : ' ';
     while (isspace(ch)) {
+        if (ch == '\n') {
+            line_++;
+        }
         ch = in_.read();
     }
     hasNext = false;
@@ -284,43 +288,33 @@ JsonParser::Token JsonParser::tryString()
             case '"':
             case '\\':
             case '/':
-                sv.push_back(ch);
-                continue;
             case 'b':
-                sv.push_back('\b');
-                continue;
             case 'f':
-                sv.push_back('\f');
-                continue;
             case 'n':
-                sv.push_back('\n');
-                continue;
             case 'r':
-                sv.push_back('\r');
-                continue;
             case 't':
-                sv.push_back('\t');
-                continue;
+                sv.push_back('\\');
+                sv.push_back(ch);
+                break;
             case 'u':
             case 'U':
                 {
-                    unsigned int n = 0;
+                    uint32_t n = 0;
                     char e[4];
                     in_.readBytes(reinterpret_cast<uint8_t*>(e), 4);
+                    sv.push_back('\\');
+                    sv.push_back(ch);
                     for (int i = 0; i < 4; i++) {
                         n *= 16;
                         char c = e[i];
-                        if (isdigit(c)) {
-                            n += c - '0';
-                        } else if (c >= 'a' && c <= 'f') {
-                            n += c - 'a' + 10;
-                        } else if (c >= 'A' && c <= 'F') {
-                            n += c - 'A' + 10;
+                        if (isdigit(c) ||
+                            (c >= 'a' && c <= 'f') ||
+                            (c >= 'A' && c <= 'F')) {
+                            sv.push_back(c);
                         } else {
                             throw unexpected(c);
                         }
                     }
-                    sv.push_back(n);
                 }
                 break;
             default:
@@ -330,6 +324,91 @@ JsonParser::Token JsonParser::tryString()
             sv.push_back(ch);
         }
     }
+}
+
+
+string JsonParser::decodeString(const string& s, bool binary)
+{
+    string result;
+    for (string::const_iterator it = s.begin(); it != s.end(); ++it) {
+        char ch = *it;
+        if (ch == '\\') {
+            ch = *++it;
+            switch (ch) {
+            case '"':
+            case '\\':
+            case '/':
+                result.push_back(ch);
+                continue;
+            case 'b':
+                result.push_back('\b');
+                continue;
+            case 'f':
+                result.push_back('\f');
+                continue;
+            case 'n':
+                result.push_back('\n');
+                continue;
+            case 'r':
+                result.push_back('\r');
+                continue;
+            case 't':
+                result.push_back('\t');
+                continue;
+            case 'u':
+            case 'U':
+                {
+                    uint32_t n = 0;
+                    char e[4];
+                    for (int i = 0; i < 4; i++) {
+                        n *= 16;
+                        char c = *++it;
+                        e[i] = c;
+                        if (isdigit(c)) {
+                            n += c - '0';
+                        } else if (c >= 'a' && c <= 'f') {
+                            n += c - 'a' + 10;
+                        } else if (c >= 'A' && c <= 'F') {
+                            n += c - 'A' + 10;
+                        }
+                    }
+                    if (binary) {
+                        if (n > 0xff) {
+                            throw Exception(boost::format(
+                                "Invalid byte for binary: %1%%2%") % ch %
+                                    string(e, 4));
+                        } else {
+                            result.push_back(n);
+                            continue;
+                        }
+                    }
+                    if (n < 0x80) {
+                        result.push_back(n);
+                    } else if (n < 0x800) {
+                        result.push_back((n >> 6) | 0xc0);
+                        result.push_back((n & 0x3f) | 0x80);
+                    } else if (n < 0x10000) {
+                        result.push_back((n >> 12) | 0xe0);
+                        result.push_back(((n >> 6)& 0x3f) | 0x80);
+                        result.push_back((n & 0x3f) | 0x80);
+                    } else if (n < 110000) {
+                        result.push_back((n >> 18) | 0xf0);
+                        result.push_back(((n >> 12)& 0x3f) | 0x80);
+                        result.push_back(((n >> 6)& 0x3f) | 0x80);
+                        result.push_back((n & 0x3f) | 0x80);
+                    } else {
+                        throw Exception(boost::format(
+                            "Invalid unicode value: %1%i%2%") % ch %
+                                string(e, 4));
+                    }
+                }
+                continue;
+            }
+        } else {
+            result.push_back(ch);
+        }
+    }
+    return result;
 }
 
 Exception JsonParser::unexpected(unsigned char c)

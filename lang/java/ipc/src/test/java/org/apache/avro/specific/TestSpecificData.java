@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,10 +18,7 @@
 package org.apache.avro.specific;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
+import java.util.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,15 +27,14 @@ import java.io.ObjectOutputStream;
 
 import org.apache.avro.FooBarSpecificRecord;
 import org.apache.avro.TypeEnum;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.Assert;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
-import org.apache.avro.util.Utf8;
 
 import org.apache.avro.TestSchema;
 import org.apache.avro.test.TestRecord;
@@ -64,7 +60,7 @@ public class TestSpecificData {
   }
 
   private static class X {
-    public Map<String,String> map;
+    public Map<String, String> map;
   }
 
   @Test
@@ -77,7 +73,7 @@ public class TestSpecificData {
   public void testSpecificWithinGeneric() throws Exception {
     // define a record with a field that's a generated TestRecord
     Schema schema = Schema.createRecord("Foo", "", "x.y.z", false);
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
+    List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("f", TestRecord.SCHEMA$, "", null));
     schema.setFields(fields);
 
@@ -85,35 +81,30 @@ public class TestSpecificData {
     TestRecord nested = new TestRecord();
     nested.setName("foo");
     nested.setKind(Kind.BAR);
-    nested.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    nested.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
     GenericData.Record record = new GenericData.Record(schema);
     record.put("f", nested);
 
     // test that this instance can be written & re-read
-    TestSchema.checkBinary(schema, record,
-                           new SpecificDatumWriter<Object>(),
-                           new SpecificDatumReader<Object>());
+    TestSchema.checkBinary(schema, record, new SpecificDatumWriter<>(), new SpecificDatumReader<>());
 
-    TestSchema.checkDirectBinary(schema, record,
-        new SpecificDatumWriter<Object>(),
-        new SpecificDatumReader<Object>());
+    TestSchema.checkDirectBinary(schema, record, new SpecificDatumWriter<>(), new SpecificDatumReader<>());
 
-    TestSchema.checkBlockingBinary(schema, record,
-        new SpecificDatumWriter<Object>(),
-        new SpecificDatumReader<Object>());
-}
+    TestSchema.checkBlockingBinary(schema, record, new SpecificDatumWriter<>(), new SpecificDatumReader<>());
+  }
 
-  @Test public void testConvertGenericToSpecific() {
+  @Test
+  public void testConvertGenericToSpecific() {
     GenericRecord generic = new GenericData.Record(TestRecord.SCHEMA$);
     generic.put("name", "foo");
     generic.put("kind", new GenericData.EnumSymbol(Kind.SCHEMA$, "BAR"));
-    generic.put("hash", new GenericData.Fixed
-                (MD5.SCHEMA$, new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
-    TestRecord specific =
-      (TestRecord)SpecificData.get().deepCopy(TestRecord.SCHEMA$, generic);
+    generic.put("hash",
+        new GenericData.Fixed(MD5.SCHEMA$, new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
+    TestRecord specific = (TestRecord) SpecificData.get().deepCopy(TestRecord.SCHEMA$, generic);
   }
 
-  @Test public void testGetClassSchema() throws Exception {
+  @Test
+  public void testGetClassSchema() throws Exception {
     Assert.assertEquals(TestRecord.getClassSchema(), TestRecord.SCHEMA$);
     Assert.assertEquals(MD5.getClassSchema(), MD5.SCHEMA$);
     Assert.assertEquals(Kind.getClassSchema(), Kind.SCHEMA$);
@@ -121,46 +112,40 @@ public class TestSpecificData {
 
   @Test
   public void testSpecificRecordToString() throws IOException {
-    FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder()
-      .setId(123)
-      .setName("foo")
-      .setNicknames(Arrays.asList("bar"))
-      .setRelatedids(Arrays.asList(1, 2, 3))
-      .setTypeEnum(TypeEnum.c)
-      .build();
+    FooBarSpecificRecord foo = FooBarSpecificRecord.newBuilder().setId(123).setName("foo")
+        .setNicknames(Collections.singletonList("bar")).setRelatedids(Arrays.asList(1, 2, 3)).setTypeEnum(TypeEnum.c)
+        .build();
 
     String json = foo.toString();
     JsonFactory factory = new JsonFactory();
-    JsonParser parser = factory.createJsonParser(json);
+    JsonParser parser = factory.createParser(json);
     ObjectMapper mapper = new ObjectMapper();
 
     // will throw exception if string is not parsable json
     mapper.readTree(parser);
   }
 
-  @Test public void testExternalizeable() throws Exception {
+  @Test
+  public void testExternalizeable() throws Exception {
     TestRecord before = new TestRecord();
     before.setName("foo");
     before.setKind(Kind.BAR);
-    before.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    before.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     ObjectOutputStream out = new ObjectOutputStream(bytes);
     out.writeObject(before);
     out.close();
 
-    ObjectInputStream in =
-      new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
-    TestRecord after = (TestRecord)in.readObject();
+    ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    TestRecord after = (TestRecord) in.readObject();
 
     Assert.assertEquals(before, after);
 
   }
 
-  @Test public void testReservedEnumSymbol() throws Exception {
-    Assert.assertEquals(Reserved.default$,
-                        SpecificData.get().createEnum("default",
-                                                      Reserved.SCHEMA$));
+  @Test
+  public void testReservedEnumSymbol() throws Exception {
+    Assert.assertEquals(Reserved.default$, SpecificData.get().createEnum("default", Reserved.SCHEMA$));
   }
 
 }
-

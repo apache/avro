@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,16 +21,19 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 
-/** Write data of a schema.
- * <p>Implemented for different in-memory data representations.
+/**
+ * Write data of a schema.
+ * <p>
+ * Implemented for different in-memory data representations.
  */
 public interface DatumWriter<D> {
 
   /** Set the schema. */
   void setSchema(Schema schema);
 
-  /** Write a datum.  Traverse the schema, depth first, writing each leaf value
-   * in the schema from the datum to the output. */
+  /**
+   * Write a datum. Traverse the schema, depth first, writing each leaf value in
+   * the schema from the datum to the output.
+   */
   void write(D datum, Encoder out) throws IOException;
 }
-

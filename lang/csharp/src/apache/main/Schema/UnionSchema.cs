@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,6 +42,7 @@ namespace Avro
         /// Static function to return instance of the union schema
         /// </summary>
         /// <param name="jarr">JSON object for the union schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schemas already read</param>
         /// <param name="encspace">enclosing namespace of the schema</param>
         /// <returns>new UnionSchema object</returns>
@@ -54,16 +55,15 @@ namespace Avro
             {
                 Schema unionType = Schema.ParseJson(jvalue, names, encspace);
                 if (null == unionType)
-                    throw new SchemaParseException("Invalid JSON in union" + jvalue.ToString());
+                    throw new SchemaParseException($"Invalid JSON in union {jvalue.ToString()} at '{jvalue.Path}'");
 
-                string name = unionType.Name;
+                string name = unionType.Fullname;
                 if (uniqueSchemas.ContainsKey(name))
-                    throw new SchemaParseException("Duplicate type in union: " + name);
+                    throw new SchemaParseException($"Duplicate type in union: {name} at '{jvalue.Path}'");
 
                 uniqueSchemas.Add(name, name);
                 schemas.Add(unionType);
             }
-
             return new UnionSchema(schemas, props);
         }
 
@@ -71,10 +71,11 @@ namespace Avro
         /// Contructor for union schema
         /// </summary>
         /// <param name="schemas"></param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         private UnionSchema(List<Schema> schemas, PropertyMap props) : base(Type.Union, props)
         {
             if (schemas == null)
-                throw new ArgumentNullException("schemas");
+                throw new ArgumentNullException(nameof(schemas));
             this.Schemas = schemas;
         }
 

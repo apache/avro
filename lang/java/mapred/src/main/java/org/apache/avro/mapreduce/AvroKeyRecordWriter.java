@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,32 +43,38 @@ public class AvroKeyRecordWriter<T> extends RecordWriter<AvroKey<T>, NullWritabl
   /**
    * Constructor.
    *
-   * @param writerSchema The writer schema for the records in the Avro container file.
-   * @param compressionCodec A compression codec factory for the Avro container file.
-   * @param outputStream The output stream to write the Avro container file to.
-   * @param syncInterval The sync interval for the Avro container file.
+   * @param writerSchema     The writer schema for the records in the Avro
+   *                         container file.
+   * @param compressionCodec A compression codec factory for the Avro container
+   *                         file.
+   * @param outputStream     The output stream to write the Avro container file
+   *                         to.
+   * @param syncInterval     The sync interval for the Avro container file.
    * @throws IOException If the record writer cannot be opened.
    */
-  public AvroKeyRecordWriter(Schema writerSchema, GenericData dataModel,
-      CodecFactory compressionCodec, OutputStream outputStream, int syncInterval) throws IOException {
+  public AvroKeyRecordWriter(Schema writerSchema, GenericData dataModel, CodecFactory compressionCodec,
+      OutputStream outputStream, int syncInterval) throws IOException {
     // Create an Avro container file and a writer to it.
     mAvroFileWriter = new DataFileWriter<T>(dataModel.createDatumWriter(writerSchema));
     mAvroFileWriter.setCodec(compressionCodec);
     mAvroFileWriter.setSyncInterval(syncInterval);
     mAvroFileWriter.create(writerSchema, outputStream);
   }
+
   /**
    * Constructor.
    *
-   * @param writerSchema The writer schema for the records in the Avro container file.
-   * @param compressionCodec A compression codec factory for the Avro container file.
-   * @param outputStream The output stream to write the Avro container file to.
+   * @param writerSchema     The writer schema for the records in the Avro
+   *                         container file.
+   * @param compressionCodec A compression codec factory for the Avro container
+   *                         file.
+   * @param outputStream     The output stream to write the Avro container file
+   *                         to.
    * @throws IOException If the record writer cannot be opened.
    */
-  public AvroKeyRecordWriter(Schema writerSchema, GenericData dataModel,
-      CodecFactory compressionCodec, OutputStream outputStream) throws IOException {
-    this(writerSchema, dataModel, compressionCodec, outputStream,
-        DataFileConstants.DEFAULT_SYNC_INTERVAL);
+  public AvroKeyRecordWriter(Schema writerSchema, GenericData dataModel, CodecFactory compressionCodec,
+      OutputStream outputStream) throws IOException {
+    this(writerSchema, dataModel, compressionCodec, outputStream, DataFileConstants.DEFAULT_SYNC_INTERVAL);
   }
 
   /** {@inheritDoc} */

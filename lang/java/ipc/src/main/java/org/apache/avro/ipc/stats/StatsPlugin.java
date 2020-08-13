@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,65 +34,34 @@ import org.apache.avro.ipc.stats.Histogram.Segmenter;
 import org.apache.avro.ipc.stats.Stopwatch.Ticks;
 
 /**
- * Collects count and latency statistics about RPC calls.  Keeps
- * data for every method. Can be added to a Requestor (client)
- * or Responder (server).
+ * Collects count and latency statistics about RPC calls. Keeps data for every
+ * method. Can be added to a Requestor (client) or Responder (server).
  *
- * This uses milliseconds as the standard unit of measure
- * throughout the class, stored in floats.
+ * This uses milliseconds as the standard unit of measure throughout the class,
+ * stored in floats.
  */
 public class StatsPlugin extends RPCPlugin {
   /** Static declaration of histogram buckets. */
-  static final Segmenter<String, Float> LATENCY_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Float>(new TreeSet<Float>(Arrays.asList(
-            0f,
-           25f,
-           50f,
-           75f,
-          100f,
-          200f,
-          300f,
-          500f,
-          750f,
-         1000f, // 1 second
-         2000f,
-         5000f,
-        10000f,
-        60000f, // 1 minute
-       600000f)));
+  public static final Segmenter<String, Float> LATENCY_SEGMENTER = new Histogram.TreeMapSegmenter<>(
+      new TreeSet<>(Arrays.asList(0f, 25f, 50f, 75f, 100f, 200f, 300f, 500f, 750f, 1000f, // 1 second
+          2000f, 5000f, 10000f, 60000f, // 1 minute
+          600000f)));
 
-  static final Segmenter<String, Integer> PAYLOAD_SEGMENTER =
-    new Histogram.TreeMapSegmenter<Integer>(new TreeSet<Integer>(Arrays.asList(
-            0,
-           25,
-           50,
-           75,
-          100,
-          200,
-          300,
-          500,
-          750,
-         1000, // 1 k
-         2000,
-         5000,
-        10000,
-        50000,
-       100000)));
+  public static final Segmenter<String, Integer> PAYLOAD_SEGMENTER = new Histogram.TreeMapSegmenter<>(
+      new TreeSet<>(Arrays.asList(0, 25, 50, 75, 100, 200, 300, 500, 750, 1000, // 1 k
+          2000, 5000, 10000, 50000, 100000)));
 
-  /** Per-method histograms.
-   * Must be accessed while holding a lock. */
-  Map<Message, FloatHistogram<?>> methodTimings =
-    new HashMap<Message, FloatHistogram<?>>();
+  /**
+   * Per-method histograms. Must be accessed while holding a lock.
+   */
+  Map<Message, FloatHistogram<?>> methodTimings = new HashMap<>();
 
-  Map<Message, IntegerHistogram<?>> sendPayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
+  Map<Message, IntegerHistogram<?>> sendPayloads = new HashMap<>();
 
-  Map<Message, IntegerHistogram<?>> receivePayloads =
-    new HashMap<Message, IntegerHistogram<?>>();
+  Map<Message, IntegerHistogram<?>> receivePayloads = new HashMap<>();
 
   /** RPCs in flight. */
-  ConcurrentMap<RPCContext, Stopwatch> activeRpcs =
-    new ConcurrentHashMap<RPCContext, Stopwatch>();
+  ConcurrentMap<RPCContext, Stopwatch> activeRpcs = new ConcurrentHashMap<>();
   private Ticks ticks;
 
   /** How long I've been alive */
@@ -102,15 +71,16 @@ public class StatsPlugin extends RPCPlugin {
   private Segmenter<?, Integer> integerSegmenter;
 
   /** Construct a plugin with custom Ticks and Segmenter implementations. */
-  StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter,
-      Segmenter<?, Integer> integerSegmenter) {
+  public StatsPlugin(Ticks ticks, Segmenter<?, Float> floatSegmenter, Segmenter<?, Integer> integerSegmenter) {
     this.floatSegmenter = floatSegmenter;
     this.integerSegmenter = integerSegmenter;
     this.ticks = ticks;
   }
 
-  /** Construct a plugin with default (system) ticks, and default
-   * histogram segmentation. */
+  /**
+   * Construct a plugin with default (system) ticks, and default histogram
+   * segmentation.
+   */
   public StatsPlugin() {
     this(Stopwatch.SYSTEM_TICKS, LATENCY_SEGMENTER, PAYLOAD_SEGMENTER);
   }
@@ -124,7 +94,7 @@ public class StatsPlugin extends RPCPlugin {
     }
 
     int size = 0;
-    for (ByteBuffer bb: payload) {
+    for (ByteBuffer bb : payload) {
       size = size + bb.limit();
     }
 
@@ -137,7 +107,7 @@ public class StatsPlugin extends RPCPlugin {
     t.start();
     this.activeRpcs.put(context, t);
 
-    synchronized(receivePayloads) {
+    synchronized (receivePayloads) {
       IntegerHistogram<?> h = receivePayloads.get(context.getMessage());
       if (h == null) {
         h = createNewIntegerHistogram();
@@ -153,7 +123,7 @@ public class StatsPlugin extends RPCPlugin {
     t.stop();
     publish(context, t);
 
-    synchronized(sendPayloads) {
+    synchronized (sendPayloads) {
       IntegerHistogram<?> h = sendPayloads.get(context.getMessage());
       if (h == null) {
         h = createNewIntegerHistogram();
@@ -169,11 +139,11 @@ public class StatsPlugin extends RPCPlugin {
     t.start();
     this.activeRpcs.put(context, t);
 
-    synchronized(sendPayloads) {
+    synchronized (sendPayloads) {
       IntegerHistogram<?> h = sendPayloads.get(context.getMessage());
       if (h == null) {
         h = createNewIntegerHistogram();
-       sendPayloads.put(context.getMessage(), h);
+        sendPayloads.put(context.getMessage(), h);
       }
       h.add(getPayloadSize(context.getRequestPayload()));
     }
@@ -185,7 +155,7 @@ public class StatsPlugin extends RPCPlugin {
     t.stop();
     publish(context, t);
 
-    synchronized(receivePayloads) {
+    synchronized (receivePayloads) {
       IntegerHistogram<?> h = receivePayloads.get(context.getMessage());
       if (h == null) {
         h = createNewIntegerHistogram();
@@ -198,8 +168,9 @@ public class StatsPlugin extends RPCPlugin {
   /** Adds timing to the histograms. */
   private void publish(RPCContext context, Stopwatch t) {
     Message message = context.getMessage();
-    if (message == null) throw new IllegalArgumentException();
-    synchronized(methodTimings) {
+    if (message == null)
+      throw new IllegalArgumentException();
+    synchronized (methodTimings) {
       FloatHistogram<?> h = methodTimings.get(context.getMessage());
       if (h == null) {
         h = createNewFloatHistogram();
@@ -209,14 +180,12 @@ public class StatsPlugin extends RPCPlugin {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private FloatHistogram<?> createNewFloatHistogram() {
-    return new FloatHistogram(floatSegmenter);
+    return new FloatHistogram<>(floatSegmenter);
   }
 
-  @SuppressWarnings("unchecked")
   private IntegerHistogram<?> createNewIntegerHistogram() {
-    return new IntegerHistogram(integerSegmenter);
+    return new IntegerHistogram<>(integerSegmenter);
   }
 
   /** Converts nanoseconds to milliseconds. */

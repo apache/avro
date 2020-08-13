@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,24 +35,26 @@ namespace Avro
         /// Static class to return a new instance of ArraySchema
         /// </summary>
         /// <param name="jtok">JSON object for the array schema</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <param name="names">list of named schemas already parsed</param>
         /// <param name="encspace">enclosing namespace for the array schema</param>
         /// <returns></returns>
         internal static ArraySchema NewInstance(JToken jtok, PropertyMap props, SchemaNames names, string encspace)
         {
             JToken jitem = jtok["items"];
-            if (null == jitem) throw new AvroTypeException("Array does not have 'items'");
-
-            return new ArraySchema(Schema.ParseJson(jitem, names, encspace), props);
+            if (null == jitem) throw new AvroTypeException($"Array does not have 'items' at '{jtok.Path}'");
+            var schema = Schema.ParseJson(jitem, names, encspace);
+            return new ArraySchema(schema, props);
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="items">schema for the array items type</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         private ArraySchema(Schema items, PropertyMap props) : base(Type.Array, props)
         {
-            if (null == items) throw new ArgumentNullException("items");
+            if (null == items) throw new ArgumentNullException(nameof(items));
             this.ItemSchema = items;
         }
 

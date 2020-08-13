@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 
 /**
  * Deserializes a single datum from a ByteBuffer, byte array, or InputStream.
+ * 
  * @param <D> a datum class
  */
 public interface MessageDecoder<D> {
@@ -36,7 +37,7 @@ public interface MessageDecoder<D> {
    *
    * @param stream stream to read from
    * @return a datum read from the stream
-   * @throws BadHeaderException If the payload's header is not recognized.
+   * @throws BadHeaderException     If the payload's header is not recognized.
    * @throws MissingSchemaException If the payload's schema cannot be found.
    * @throws IOException
    */
@@ -46,9 +47,9 @@ public interface MessageDecoder<D> {
    * Deserialize a single datum from an InputStream.
    *
    * @param stream stream to read from
-   * @param reuse a datum instance to reuse, avoiding instantiation if possible
+   * @param reuse  a datum instance to reuse, avoiding instantiation if possible
    * @return a datum read from the stream
-   * @throws BadHeaderException If the payload's header is not recognized.
+   * @throws BadHeaderException     If the payload's header is not recognized.
    * @throws MissingSchemaException If the payload's schema cannot be found.
    * @throws IOException
    */
@@ -59,7 +60,7 @@ public interface MessageDecoder<D> {
    *
    * @param encoded a ByteBuffer containing an encoded datum
    * @return a datum read from the stream
-   * @throws BadHeaderException If the payload's header is not recognized.
+   * @throws BadHeaderException     If the payload's header is not recognized.
    * @throws MissingSchemaException If the payload's schema cannot be found.
    * @throws IOException
    */
@@ -69,9 +70,9 @@ public interface MessageDecoder<D> {
    * Deserialize a single datum from a ByteBuffer.
    *
    * @param encoded a ByteBuffer containing an encoded datum
-   * @param reuse a datum instance to reuse, avoiding instantiation if possible
+   * @param reuse   a datum instance to reuse, avoiding instantiation if possible
    * @return a datum read from the stream
-   * @throws BadHeaderException If the payload's header is not recognized.
+   * @throws BadHeaderException     If the payload's header is not recognized.
    * @throws MissingSchemaException If the payload's schema cannot be found.
    * @throws IOException
    */
@@ -82,7 +83,7 @@ public interface MessageDecoder<D> {
    *
    * @param encoded a byte array containing an encoded datum
    * @return a datum read from the stream
-   * @throws BadHeaderException If the payload's header is not recognized.
+   * @throws BadHeaderException     If the payload's header is not recognized.
    * @throws MissingSchemaException If the payload's schema cannot be found.
    * @throws IOException
    */
@@ -92,9 +93,9 @@ public interface MessageDecoder<D> {
    * Deserialize a single datum from a byte array.
    *
    * @param encoded a byte array containing an encoded datum
-   * @param reuse a datum instance to reuse, avoiding instantiation if possible
+   * @param reuse   a datum instance to reuse, avoiding instantiation if possible
    * @return a datum read from the stream
-   * @throws BadHeaderException If the payload's header is not recognized.
+   * @throws BadHeaderException     If the payload's header is not recognized.
    * @throws MissingSchemaException If the payload's schema cannot be found.
    * @throws IOException
    */
@@ -110,21 +111,11 @@ public interface MessageDecoder<D> {
    */
   abstract class BaseDecoder<D> implements MessageDecoder<D> {
 
-    private static final ThreadLocal<ReusableByteArrayInputStream>
-        BYTE_ARRAY_IN = new ThreadLocal<ReusableByteArrayInputStream>() {
-          @Override
-          protected ReusableByteArrayInputStream initialValue() {
-            return new ReusableByteArrayInputStream();
-          }
-        };
+    private static final ThreadLocal<ReusableByteArrayInputStream> BYTE_ARRAY_IN = ThreadLocal
+        .withInitial(ReusableByteArrayInputStream::new);
 
-    private static final ThreadLocal<ReusableByteBufferInputStream>
-        BYTE_BUFFER_IN = new ThreadLocal<ReusableByteBufferInputStream>() {
-          @Override
-          protected ReusableByteBufferInputStream initialValue() {
-            return new ReusableByteBufferInputStream();
-          }
-        };
+    private static final ThreadLocal<ReusableByteBufferInputStream> BYTE_BUFFER_IN = ThreadLocal
+        .withInitial(ReusableByteBufferInputStream::new);
 
     @Override
     public D decode(InputStream stream) throws IOException {

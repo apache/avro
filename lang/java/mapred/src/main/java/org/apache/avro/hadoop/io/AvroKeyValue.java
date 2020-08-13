@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,8 +24,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 
 /**
- * A helper object for working with the Avro generic records that are used to store key/value
- * pairs in an Avro container file.
+ * A helper object for working with the Avro generic records that are used to
+ * store key/value pairs in an Avro container file.
  *
  * @param <K> The java type for the key.
  * @param <V> The java type for the value.
@@ -106,16 +106,16 @@ public class AvroKeyValue<K, V> {
    * @return A schema for a generic record with two fields: 'key' and 'value'.
    */
   public static Schema getSchema(Schema keySchema, Schema valueSchema) {
-    Schema schema = Schema.createRecord(
-        KEY_VALUE_PAIR_RECORD_NAME, "A key/value pair", KEY_VALUE_PAIR_RECORD_NAMESPACE, false);
-    schema.setFields(Arrays.asList(
-        new Schema.Field(KEY_FIELD, keySchema, "The key", null),
+    Schema schema = Schema.createRecord(KEY_VALUE_PAIR_RECORD_NAME, "A key/value pair", KEY_VALUE_PAIR_RECORD_NAMESPACE,
+        false);
+    schema.setFields(Arrays.asList(new Schema.Field(KEY_FIELD, keySchema, "The key", null),
         new Schema.Field(VALUE_FIELD, valueSchema, "The value", null)));
     return schema;
   }
 
   /**
-   * A wrapper for iterators over GenericRecords that are known to be KeyValue records.
+   * A wrapper for iterators over GenericRecords that are known to be KeyValue
+   * records.
    *
    * @param <K> The key type.
    * @param <V> The value type.
@@ -146,7 +146,7 @@ public class AvroKeyValue<K, V> {
       if (null == genericRecord) {
         return null;
       }
-      return new AvroKeyValue<K, V>(genericRecord);
+      return new AvroKeyValue<>(genericRecord);
     }
 
     /** {@inheritDoc} */

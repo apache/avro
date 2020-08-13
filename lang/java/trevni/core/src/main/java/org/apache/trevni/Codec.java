@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,13 +34,19 @@ abstract class Codec {
     else if ("bzip2".equals(name))
       return new BZip2Codec();
     else
-      throw new TrevniRuntimeException("Unknown codec: "+name);
+      throw new TrevniRuntimeException("Unknown codec: " + name);
   }
 
   /** Compress data */
   abstract ByteBuffer compress(ByteBuffer uncompressedData) throws IOException;
 
-  /** Decompress data  */
+  /** Decompress data */
   abstract ByteBuffer decompress(ByteBuffer compressedData) throws IOException;
 
+  // Codecs often reference the array inside a ByteBuffer. Compute the offset
+  // to the start of data correctly in the case that our ByteBuffer
+  // is a slice() of another.
+  protected static int computeOffset(ByteBuffer data) {
+    return data.arrayOffset() + data.position();
+  }
 }

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,6 +21,8 @@
 
 #include "Config.hh"
 #include "Reader.hh"
+
+#include <array>
 
 namespace avro {
 
@@ -94,15 +96,15 @@ class Parser : private boost::noncopyable
     }
 
     template<size_t N>
-    void readFixed(boost::array<uint8_t, N> &val) {
+    void readFixed(std::array<uint8_t, N> &val) {
         reader_.readFixed(val);
     }
 
-    void readRecord() { 
+    void readRecord() {
         reader_.readRecord();
     }
 
-    void readRecordEnd() { 
+    void readRecordEnd() {
         reader_.readRecordEnd();
     }
 
@@ -110,7 +112,7 @@ class Parser : private boost::noncopyable
         return reader_.readArrayBlockSize();
     }
 
-    int64_t readUnion() { 
+    int64_t readUnion() {
         return reader_.readUnion();
     }
 

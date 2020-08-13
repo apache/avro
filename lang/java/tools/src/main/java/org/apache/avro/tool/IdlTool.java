@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,21 +28,17 @@ import java.io.PrintStream;
 import java.util.List;
 
 /**
- * Tool implementation for generating Avro JSON schemata from
- * idl format files.
+ * Tool implementation for generating Avro JSON schemata from idl format files.
  */
 public class IdlTool implements Tool {
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-                  List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     PrintStream parseOut = out;
 
-    if (args.size() > 2 ||
-        (args.size() == 1 && (args.get(0).equals("--help") ||
-                              args.get(0).equals("-help")))) {
+    if (args.size() > 2 || (args.size() == 1 && (args.get(0).equals("--help") || args.get(0).equals("-help")))) {
       err.println("Usage: idl [in] [out]");
-      err.println("");
+      err.println();
       err.println("If an output path is not specified, outputs to stdout.");
       err.println("If no input or output is specified, takes input from");
       err.println("stdin and outputs to stdin.");
@@ -52,18 +48,23 @@ public class IdlTool implements Tool {
     }
 
     Idl parser;
-    if (args.size() >= 1 && ! "-".equals(args.get(0))) {
+    if (args.size() >= 1 && !"-".equals(args.get(0))) {
       parser = new Idl(new File(args.get(0)));
     } else {
       parser = new Idl(in);
     }
 
-    if (args.size() == 2 && ! "-".equals(args.get(1))) {
+    if (args.size() == 2 && !"-".equals(args.get(1))) {
       parseOut = new PrintStream(new FileOutputStream(args.get(1)));
     }
 
     Protocol p = parser.CompilationUnit();
-    parseOut.print(p.toString(true));
+    try {
+      parseOut.print(p.toString(true));
+    } finally {
+      if (parseOut != out) // Close only the newly created FileOutputStream
+        parseOut.close();
+    }
     return 0;
   }
 

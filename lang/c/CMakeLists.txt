@@ -7,7 +7,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-cmake_minimum_required(VERSION 2.4)
+cmake_minimum_required(VERSION 3.1)
 project(AvroC)
 enable_testing()
 
@@ -47,6 +47,16 @@ if (UNIX)
     if(LIBAVRO_VERSION_RESULT)
         message(FATAL_ERROR "Cannot determine libavro version number")
     endif(LIBAVRO_VERSION_RESULT)
+
+    execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/version.sh libcurrent
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE LIBAVRO_SOVERSION_RESULT
+        OUTPUT_VARIABLE LIBAVRO_SOVERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(LIBAVRO_SOVERSION_RESULT)
+        message(FATAL_ERROR "Cannot determine libavro version number")
+    endif(LIBAVRO_SOVERSION_RESULT)
+
 else(UNIX)
     # Hard code for win32 -- need to figure out how to port version.sh for
     # Windows.
@@ -131,7 +141,7 @@ find_package(ZLIB)
 if (ZLIB_FOUND)
     set(ZLIB_PKG zlib)
     add_definitions(-DDEFLATE_CODEC)
-    include_directories(${ZLIB_INCLUDE_DIR})
+    include_directories(${ZLIB_INCLUDE_DIRS})
     message("Enabled deflate codec")
 else (ZLIB_FOUND)
     set(ZLIB_PKG "")
@@ -143,7 +153,7 @@ find_package(Snappy)
 if (SNAPPY_FOUND AND ZLIB_FOUND)  # Snappy borrows crc32 from zlib
     set(SNAPPY_PKG libsnappy)
     add_definitions(-DSNAPPY_CODEC)
-    include_directories(${SNAPPY_INCLUDE_DIR})
+    include_directories(${SNAPPY_INCLUDE_DIRS})
     message("Enabled snappy codec")
 else (SNAPPY_FOUND AND ZLIB_FOUND)
     set(SNAPPY_PKG "")
@@ -172,7 +182,7 @@ set(CODEC_PKG "@ZLIB_PKG@ @LZMA_PKG@ @SNAPPY_PKG@")
 pkg_check_modules(JANSSON jansson>=2.3)
 if (JANSSON_FOUND)
     set(JANSSON_PKG libjansson)
-    include_directories(${JANSSON_INCLUDE_DIR})
+    include_directories(${JANSSON_INCLUDE_DIRS})
     link_directories(${JANSSON_LIBRARY_DIRS})
 else (JANSSON_FOUND)
     message(FATAL_ERROR "libjansson >=2.3 not found")

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.ClosedChannelException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,13 +32,14 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.avro.Protocol;
 
-/** A socket-based {@link Transceiver} implementation.  This uses a simple,
+/**
+ * A socket-based {@link Transceiver} implementation. This uses a simple,
  * non-standard wire protocol and is not intended for production services.
+ * 
  * @deprecated use {@link SaslSocketTransceiver} instead.
  */
 public class SocketTransceiver extends Transceiver {
-  private static final Logger LOG
-    = LoggerFactory.getLogger(SocketTransceiver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SocketTransceiver.class);
 
   private SocketChannel channel;
   private ByteBuffer header = ByteBuffer.allocate(4);
@@ -51,24 +53,26 @@ public class SocketTransceiver extends Transceiver {
   public SocketTransceiver(SocketChannel channel) throws IOException {
     this.channel = channel;
     this.channel.socket().setTcpNoDelay(true);
-    LOG.info("open to "+getRemoteName());
+    LOG.info("open to " + getRemoteName());
   }
 
+  @Override
   public String getRemoteName() {
     return channel.socket().getRemoteSocketAddress().toString();
   }
 
+  @Override
   public synchronized List<ByteBuffer> readBuffers() throws IOException {
-    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
+    List<ByteBuffer> buffers = new ArrayList<>();
     while (true) {
-      header.clear();
+      ((Buffer) header).clear();
       while (header.hasRemaining()) {
         if (channel.read(header) < 0)
           throw new ClosedChannelException();
       }
-      header.flip();
+      ((Buffer) header).flip();
       int length = header.getInt();
-      if (length == 0) {                       // end of buffers
+      if (length == 0) { // end of buffers
         return buffers;
       }
       ByteBuffer buffer = ByteBuffer.allocate(length);
@@ -76,45 +80,52 @@ public class SocketTransceiver extends Transceiver {
         if (channel.read(buffer) < 0)
           throw new ClosedChannelException();
       }
-      buffer.flip();
+      ((Buffer) buffer).flip();
       buffers.add(buffer);
     }
   }
 
-  public synchronized void writeBuffers(List<ByteBuffer> buffers)
-    throws IOException {
-    if (buffers == null) return;                  // no data to write
+  @Override
+  public synchronized void writeBuffers(List<ByteBuffer> buffers) throws IOException {
+    if (buffers == null)
+      return; // no data to write
     for (ByteBuffer buffer : buffers) {
-      if (buffer.limit() == 0) continue;
-      writeLength(buffer.limit());                // length-prefix
+      if (buffer.limit() == 0)
+        continue;
+      writeLength(buffer.limit()); // length-prefix
       channel.write(buffer);
     }
-    writeLength(0);                               // null-terminate
+    writeLength(0); // null-terminate
   }
 
   private void writeLength(int length) throws IOException {
-    header.clear();
+    ((Buffer) header).clear();
     header.putInt(length);
-    header.flip();
+    ((Buffer) header).flip();
     channel.write(header);
   }
 
-  @Override public boolean isConnected() { return remote != null; }
+  @Override
+  public boolean isConnected() {
+    return remote != null;
+  }
 
-  @Override public void setRemote(Protocol remote) {
+  @Override
+  public void setRemote(Protocol remote) {
     this.remote = remote;
   }
 
-  @Override public Protocol getRemote() {
+  @Override
+  public Protocol getRemote() {
     return remote;
   }
 
-  @Override public void close() throws IOException {
+  @Override
+  public void close() throws IOException {
     if (channel.isOpen()) {
-      LOG.info("closing to "+getRemoteName());
+      LOG.info("closing to " + getRemoteName());
       channel.close();
     }
   }
 
 }
-

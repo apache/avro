@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,19 +17,20 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Avro
 {
+    /// <summary>
+    /// Provides access to custom properties (those not defined in the Avro spec) in a JSON object.
+    /// </summary>
     public class PropertyMap : Dictionary<string, string>
     {
         /// <summary>
         /// Set of reserved schema property names, any other properties not defined in this set are custom properties and can be added to this map
         /// </summary>
-        private static readonly HashSet<string> ReservedProps = new HashSet<string>() { "type", "name", "namespace", "fields", "items", "size", "symbols", "values", "aliases", "order", "doc", "default" };
+        private static readonly HashSet<string> ReservedProps = new HashSet<string>() { "type", "name", "namespace", "fields", "items", "size", "symbols", "values", "aliases", "order", "doc", "default", "logicalType" };
 
         /// <summary>
         /// Parses the custom properties from the given JSON object and stores them
@@ -44,7 +45,7 @@ namespace Avro
                 if (ReservedProps.Contains(prop.Name))
                     continue;
                 if (!ContainsKey(prop.Name))
-                    Add(prop.Name, prop.Value.ToString());
+                    Add(prop.Name, JsonConvert.SerializeObject(prop.Value));
             }
         }
 
@@ -61,7 +62,10 @@ namespace Avro
             string oldValue;
             if (TryGetValue(key, out oldValue))
             {
-                if (!oldValue.Equals(value)) throw new AvroException("Property cannot be overwritten: " + key);
+                if (!oldValue.Equals(value, StringComparison.Ordinal))
+                {
+                    throw new AvroException("Property cannot be overwritten: " + key);
+                }
             }
             else
                 Add(key, value);
@@ -94,15 +98,15 @@ namespace Avro
             if (obj != null && obj is PropertyMap)
             {
                 var that = obj as PropertyMap;
-                if (this.Count != that.Count) 
-                    return false; 
-                foreach (KeyValuePair<string, string> pair in this) 
-                { 
+                if (this.Count != that.Count)
+                    return false;
+                foreach (KeyValuePair<string, string> pair in this)
+                {
                     if (!that.ContainsKey(pair.Key))
                         return false;
-                    if (!pair.Value.Equals(that[pair.Key]))
-                        return false; 
-                } 
+                    if (!pair.Value.Equals(that[pair.Key], StringComparison.Ordinal))
+                        return false;
+                }
                 return true;
             }
             return false;
@@ -117,7 +121,9 @@ namespace Avro
             int hash = this.Count;
             int index = 1;
             foreach (KeyValuePair<string, string> pair in this)
+#pragma warning disable CA1307 // Specify StringComparison
                 hash += (pair.Key.GetHashCode() + pair.Value.GetHashCode()) * index++;
+#pragma warning restore CA1307 // Specify StringComparison
             return hash;
         }
     }

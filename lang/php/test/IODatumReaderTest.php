@@ -8,7 +8,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,20 +17,48 @@
  * limitations under the License.
  */
 
-require_once('test_helper.php');
+namespace Apache\Avro\Tests;
 
-class IODatumReaderTest extends PHPUnit_Framework_TestCase
+use Apache\Avro\Datum\AvroIOBinaryEncoder;
+use Apache\Avro\Datum\AvroIODatumReader;
+use Apache\Avro\Datum\AvroIODatumWriter;
+use Apache\Avro\IO\AvroStringIO;
+use Apache\Avro\Schema\AvroSchema;
+use PHPUnit\Framework\TestCase;
+
+class IODatumReaderTest extends TestCase
 {
-
-  public function testSchemaMatching()
-  {
-    $writers_schema = <<<JSON
+    public function testSchemaMatching()
+    {
+        $writers_schema = <<<JSON
       { "type": "map",
         "values": "bytes" }
 JSON;
-    $readers_schema = $writers_schema;
-    $this->assertTrue(AvroIODatumReader::schemas_match(
-                        AvroSchema::parse($writers_schema),
-                        AvroSchema::parse($readers_schema)));
-  }
+        $readers_schema = $writers_schema;
+        $this->assertTrue(AvroIODatumReader::schemasMatch(
+            AvroSchema::parse($writers_schema),
+            AvroSchema::parse($readers_schema)));
+    }
+
+    public function testRecordNullField()
+    {
+        $schema_json = <<<_JSON
+{"name":"member",
+ "type":"record",
+ "fields":[{"name":"one", "type":"int"},
+           {"name":"two", "type":["null", "string"]}
+           ]}
+_JSON;
+
+        $schema = AvroSchema::parse($schema_json);
+        $datum = array("one" => 1);
+
+        $io = new AvroStringIO();
+        $writer = new AvroIODatumWriter($schema);
+        $encoder = new AvroIOBinaryEncoder($io);
+        $writer->write($datum, $encoder);
+        $bin = $io->string();
+
+        $this->assertSame('0200', bin2hex($bin));
+    }
 }

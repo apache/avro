@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,11 +47,12 @@ public class TestKeyValueWordCount {
   private static long total = 0;
 
   static final Schema STRING = Schema.create(Schema.Type.STRING);
-  static { GenericData.setStringType(STRING, GenericData.StringType.String); }
+  static {
+    GenericData.setStringType(STRING, GenericData.StringType.String);
+  }
   static final Schema LONG = Schema.create(Schema.Type.LONG);
 
-  private static class WordCountMapper extends
-      Mapper<AvroKey<String>, NullWritable, Text, LongWritable> {
+  private static class WordCountMapper extends Mapper<AvroKey<String>, NullWritable, Text, LongWritable> {
     private LongWritable mCount = new LongWritable();
     private Text mText = new Text();
 
@@ -77,15 +78,16 @@ public class TestKeyValueWordCount {
     }
   }
 
-  private static class WordCountReducer extends Reducer< Text, LongWritable, AvroKey<String>, AvroValue<Long>> {
+  private static class WordCountReducer extends Reducer<Text, LongWritable, AvroKey<String>, AvroValue<Long>> {
 
-    AvroKey<String> resultKey = new AvroKey<String>();
-    AvroValue<Long> resultValue = new AvroValue<Long>();
+    AvroKey<String> resultKey = new AvroKey<>();
+    AvroValue<Long> resultValue = new AvroValue<>();
 
     @Override
-    protected void reduce(Text key, Iterable<LongWritable> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<LongWritable> values, Context context)
+        throws IOException, InterruptedException {
       long sum = 0;
-      for (LongWritable value: values) {
+      for (LongWritable value : values) {
         sum += value.get();
       }
       resultKey.datum(key.toString());
@@ -95,8 +97,7 @@ public class TestKeyValueWordCount {
     }
   }
 
-  public static class Counter extends
-  Mapper<AvroKey<String>, AvroValue<Long>, NullWritable, NullWritable> {
+  public static class Counter extends Mapper<AvroKey<String>, AvroValue<Long>, NullWritable, NullWritable> {
     @Override
     protected void map(AvroKey<String> key, AvroValue<Long> value, Context context)
         throws IOException, InterruptedException {
@@ -104,13 +105,14 @@ public class TestKeyValueWordCount {
     }
   }
 
-  @Test public void testIOFormat() throws Exception {
+  @Test
+  public void testIOFormat() throws Exception {
     checkOutputFormat();
     checkInputFormat();
   }
 
   public void checkOutputFormat() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyValueTest", "part-r-00000");
 
@@ -139,7 +141,7 @@ public class TestKeyValueWordCount {
   }
 
   public void checkInputFormat() throws Exception {
-    Job job = new Job();
+    Job job = Job.getInstance();
 
     WordCountUtil wordCountUtil = new WordCountUtil("trevniMapReduceKeyValueTest");
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,14 +23,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData.StringType;
 import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.compiler.specific.SpecificCompiler.FieldVisibility;
 
 /**
  * A Tool for compiling avro protocols or schemas to Java classes using the Avro
@@ -39,50 +46,71 @@ import org.apache.avro.compiler.specific.SpecificCompiler;
 
 public class SpecificCompilerTool implements Tool {
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
-    if (args.size() < 3) {
-      System.err
-          .println("Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] (schema|protocol) input... outputdir");
-      System.err
-          .println(" input - input files or directories");
-      System.err
-          .println(" outputdir - directory to write generated java");
-      System.err.println(" -encoding <outputencoding> - set the encoding of " +
-          "output file(s)");
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> origArgs) throws Exception {
+    if (origArgs.size() < 3) {
+      System.err.println(
+          "Usage: [-encoding <outputencoding>] [-string] [-bigDecimal] [-fieldVisibility <visibilityType>] [-templateDir <templateDir>] (schema|protocol) input... outputdir");
+      System.err.println(" input - input files or directories");
+      System.err.println(" outputdir - directory to write generated java");
+      System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
-      System.err.println(" -bigDecimal - use java.math.BigDecimal for " +
-          "decimal type instead of java.nio.ByteBuffer");
+      System.err.println(" -fieldVisibility [private|public|public_deprecated]- use either and default private");
+      System.err
+          .println(" -bigDecimal - use java.math.BigDecimal for " + "decimal type instead of java.nio.ByteBuffer");
+      System.err.println(" -templateDir - directory with custom Velocity templates");
       return 1;
     }
 
     StringType stringType = StringType.CharSequence;
     boolean useLogicalDecimal = false;
+    Optional<String> encoding = Optional.empty();
+    Optional<String> templateDir = Optional.empty();
+    Optional<FieldVisibility> fieldVisibility = Optional.empty();
 
     int arg = 0;
+    List<String> args = new ArrayList<>(origArgs);
 
-    String encoding = null;
-    if ("-encoding".equals(args.get(arg))) {
-      arg++;
-      encoding = args.get(arg);
-      arg++;
+    if (args.contains("-encoding")) {
+      arg = args.indexOf("-encoding") + 1;
+      encoding = Optional.of(args.get(arg));
+      args.remove(arg);
+      args.remove(arg - 1);
     }
 
-    if ("-string".equals(args.get(arg))) {
+    if (args.contains("-string")) {
       stringType = StringType.String;
-      arg++;
+      args.remove(args.indexOf("-string"));
     }
 
+    if (args.contains("-fieldVisibility")) {
+      arg = args.indexOf("-fieldVisibility") + 1;
+      try {
+        fieldVisibility = Optional.of(FieldVisibility.valueOf(args.get(arg).toUpperCase(Locale.ENGLISH)));
+      } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+        System.err.println("Expected one of" + Arrays.toString(FieldVisibility.values()));
+        return 1;
+      }
+      args.remove(arg);
+      args.remove(arg - 1);
+    }
+    if (args.contains("-templateDir")) {
+      arg = args.indexOf("-templateDir") + 1;
+      templateDir = Optional.of(args.get(arg));
+      args.remove(arg);
+      args.remove(arg - 1);
+    }
+
+    arg = 0;
     if ("-bigDecimal".equalsIgnoreCase(args.get(arg))) {
       useLogicalDecimal = true;
       arg++;
     }
 
     String method = args.get(arg);
-    List<File> inputs = new ArrayList<File>();
+    List<File> inputs = new ArrayList<>();
     File output = new File(args.get(args.size() - 1));
 
-    for (int i = arg+1; i < args.size() - 1; i++) {
+    for (int i = arg + 1; i < args.size() - 1; i++) {
       inputs.add(new File(args.get(i)));
     }
 
@@ -90,14 +118,14 @@ public class SpecificCompilerTool implements Tool {
       Schema.Parser parser = new Schema.Parser();
       for (File src : determineInputs(inputs, SCHEMA_FILTER)) {
         Schema schema = parser.parse(src);
-        SpecificCompiler compiler = new SpecificCompiler(schema);
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
+        final SpecificCompiler compiler = new SpecificCompiler(schema);
+        executeCompiler(compiler, encoding, stringType, fieldVisibility, useLogicalDecimal, templateDir, src, output);
       }
     } else if ("protocol".equals(method)) {
       for (File src : determineInputs(inputs, PROTOCOL_FILTER)) {
         Protocol protocol = Protocol.parse(src);
-        SpecificCompiler compiler = new SpecificCompiler(protocol);
-        executeCompiler(compiler, encoding, stringType, useLogicalDecimal, src, output);
+        final SpecificCompiler compiler = new SpecificCompiler(protocol);
+        executeCompiler(compiler, encoding, stringType, fieldVisibility, useLogicalDecimal, templateDir, src, output);
       }
     } else {
       System.err.println("Expected \"schema\" or \"protocol\".");
@@ -106,17 +134,14 @@ public class SpecificCompilerTool implements Tool {
     return 0;
   }
 
-  private void executeCompiler(SpecificCompiler compiler,
-                               String encoding,
-                               StringType stringType,
-                               boolean enableDecimalLogicalType,
-                               File src,
-                               File output) throws IOException {
+  private void executeCompiler(SpecificCompiler compiler, Optional<String> encoding, StringType stringType,
+      Optional<FieldVisibility> fieldVisibility, boolean enableDecimalLogicalType, Optional<String> templateDir,
+      File src, File output) throws IOException {
     compiler.setStringType(stringType);
+    templateDir.ifPresent(compiler::setTemplateDir);
     compiler.setEnableDecimalLogicalType(enableDecimalLogicalType);
-    if (encoding != null) {
-      compiler.setOutputCharacterEncoding(encoding);
-    }
+    encoding.ifPresent(compiler::setOutputCharacterEncoding);
+    fieldVisibility.ifPresent(compiler::setFieldVisibility);
     compiler.compileToDestination(src, output);
   }
 
@@ -131,22 +156,39 @@ public class SpecificCompilerTool implements Tool {
   }
 
   /**
+   * For an Array of files, sort using {@link String#compareTo(String)} for each
+   * filename.
+   *
+   * @param files Array of File objects to sort
+   * @return the sorted File array
+   */
+  private static File[] sortFiles(File[] files) {
+    Objects.requireNonNull(files, "files cannot be null");
+    Arrays.sort(files, Comparator.comparing(File::getName));
+    return files;
+  }
+
+  /**
    * For a List of files or directories, returns a File[] containing each file
    * passed as well as each file with a matching extension found in the directory.
+   * Each directory is sorted using {@link String#compareTo(String)} for each
+   * filename.
    *
    * @param inputs List of File objects that are files or directories
-   * @param filter File extension filter to match on when fetching files from a directory
+   * @param filter File extension filter to match on when fetching files from a
+   *               directory
    * @return Unique array of files
    */
   private static File[] determineInputs(List<File> inputs, FilenameFilter filter) {
-    Set<File> fileSet = new LinkedHashSet<File>(); // preserve order and uniqueness
+    Set<File> fileSet = new LinkedHashSet<>(); // preserve order and uniqueness
 
     for (File file : inputs) {
       // if directory, look at contents to see what files match extension
       if (file.isDirectory()) {
-        for (File f : file.listFiles(filter)) {
-          fileSet.add(f);
-        }
+        File[] files = file.listFiles(filter);
+        // sort files in directory to compile deterministically
+        // independent of system/ locale
+        Collections.addAll(fileSet, files != null ? sortFiles(files) : new File[0]);
       }
       // otherwise, just add the file.
       else {
@@ -159,18 +201,15 @@ public class SpecificCompilerTool implements Tool {
       for (File file : fileSet) {
         System.err.println("  " + file);
       }
-    }
-    else {
+    } else {
       System.err.println("No input files found.");
     }
 
-    return fileSet.toArray((new File[fileSet.size()]));
+    return fileSet.toArray(new File[0]);
   }
 
-  private static final FileExtensionFilter SCHEMA_FILTER =
-    new FileExtensionFilter("avsc");
-  private static final FileExtensionFilter PROTOCOL_FILTER =
-    new FileExtensionFilter("avpr");
+  private static final FileExtensionFilter SCHEMA_FILTER = new FileExtensionFilter("avsc");
+  private static final FileExtensionFilter PROTOCOL_FILTER = new FileExtensionFilter("avpr");
 
   private static class FileExtensionFilter implements FilenameFilter {
     private String extension;

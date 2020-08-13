@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -30,25 +30,17 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /**
- * A {@link MessageEncoder} that encodes only a datum's bytes, without additional
- * information (such as a schema fingerprint).
+ * A {@link MessageEncoder} that encodes only a datum's bytes, without
+ * additional information (such as a schema fingerprint).
  * <p>
  * This class is thread-safe.
  */
 public class RawMessageEncoder<D> implements MessageEncoder<D> {
 
-  private static final ThreadLocal<BufferOutputStream> TEMP =
-      new ThreadLocal<BufferOutputStream>() {
-        @Override
-        protected BufferOutputStream initialValue() {
-          return new BufferOutputStream();
-        }
-      };
+  private static final ThreadLocal<BufferOutputStream> TEMP = ThreadLocal.withInitial(BufferOutputStream::new);
 
-  private static final ThreadLocal<BinaryEncoder> ENCODER =
-      new ThreadLocal<BinaryEncoder>();
+  private static final ThreadLocal<BinaryEncoder> ENCODER = new ThreadLocal<>();
 
-  private final Schema writeSchema;
   private final boolean copyOutputBytes;
   private final DatumWriter<D> writer;
 
@@ -57,10 +49,10 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * Buffers returned by {@link #encode(D)} are copied and will not be modified
-   * by future calls to {@code encode}.
+   * Buffers returned by {@link RawMessageEncoder#encode} are copied and will not
+   * be modified by future calls to {@code encode}.
    *
-   * @param model the {@link GenericData data model} for datum instances
+   * @param model  the {@link GenericData data model} for datum instances
    * @param schema the {@link Schema} for datum instances
    */
   public RawMessageEncoder(GenericData model, Schema schema) {
@@ -72,23 +64,24 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
    * {@link GenericData data model} to deconstruct datum instances described by
    * the {@link Schema schema}.
    * <p>
-   * If {@code shouldCopy} is true, then buffers returned by {@link #encode(D)}
-   * are copied and will not be modified by future calls to {@code encode}.
+   * If {@code shouldCopy} is true, then buffers returned by
+   * {@link RawMessageEncoder#encode} are copied and will not be modified by
+   * future calls to {@code encode}.
    * <p>
-   * If {@code shouldCopy} is false, then buffers returned by {@code encode}
-   * wrap a thread-local buffer that can be reused by future calls to
-   * {@code encode}, but may not be. Callers should only set {@code shouldCopy}
-   * to false if the buffer will be copied before the current thread's next call
-   * to {@code encode}.
+   * If {@code shouldCopy} is false, then buffers returned by {@code encode} wrap
+   * a thread-local buffer that can be reused by future calls to {@code encode},
+   * but may not be. Callers should only set {@code shouldCopy} to false if the
+   * buffer will be copied before the current thread's next call to
+   * {@code encode}.
    *
-   * @param model the {@link GenericData data model} for datum instances
-   * @param schema the {@link Schema} for datum instances
+   * @param model      the {@link GenericData data model} for datum instances
+   * @param schema     the {@link Schema} for datum instances
    * @param shouldCopy whether to copy buffers before returning encoded results
    */
   public RawMessageEncoder(GenericData model, Schema schema, boolean shouldCopy) {
-    this.writeSchema = schema;
+    Schema writeSchema = schema;
     this.copyOutputBytes = shouldCopy;
-    this.writer = model.createDatumWriter(this.writeSchema);
+    this.writer = model.createDatumWriter(writeSchema);
   }
 
   @Override
@@ -107,8 +100,7 @@ public class RawMessageEncoder<D> implements MessageEncoder<D> {
 
   @Override
   public void encode(D datum, OutputStream stream) throws IOException {
-    BinaryEncoder encoder = EncoderFactory.get()
-        .directBinaryEncoder(stream, ENCODER.get());
+    BinaryEncoder encoder = EncoderFactory.get().directBinaryEncoder(stream, ENCODER.get());
     ENCODER.set(encoder);
     writer.write(datum, encoder);
     encoder.flush();

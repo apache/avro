@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,14 +18,16 @@
 
 package org.apache.avro.file.codec;
 
-import org.apache.avro.file.Codec;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
-import java.nio.*;
+import java.nio.ByteBuffer;
+
+import org.apache.avro.file.Codec;
 
 /**
- * Simple Custom Codec to validate making Codec Public
- * Compress and Decompress operations are just bitwise-NOT of data
+ * Simple Custom Codec to validate making Codec Public Compress and Decompress
+ * operations are just bitwise-NOT of data
  */
 public class CustomCodec extends Codec {
 
@@ -57,8 +59,8 @@ public class CustomCodec extends Codec {
     if (this == other)
       return true;
     if (other instanceof Codec) {
-      ByteBuffer original = ByteBuffer.allocate(getName().getBytes().length);
-      original.put(getName().getBytes());
+      ByteBuffer original = ByteBuffer.allocate(getName().getBytes(UTF_8).length);
+      original.put(getName().getBytes(UTF_8));
       original.rewind();
       try {
         return compareDecompress((Codec) other, original);
@@ -70,21 +72,17 @@ public class CustomCodec extends Codec {
   }
 
   /**
-   * Codecs must implement an equals() method.  Two codecs, A and B are equal
-   * if: the result of A and B decompressing content compressed by A is the same
-   * AND the retult of A and B decompressing content compressed by B is the same
+   * Codecs must implement an equals() method. Two codecs, A and B are equal if:
+   * the result of A and B decompressing content compressed by A is the same AND
+   * the result of A and B decompressing content compressed by B is the same
    */
   private boolean compareDecompress(Codec other, ByteBuffer original) throws IOException {
     ByteBuffer compressedA = this.compress(original);
     original.rewind();
     ByteBuffer compressedB = other.compress(original);
 
-    if (this.decompress(compressedA).equals(other.decompress((ByteBuffer) compressedA.rewind())) &&
-      this.decompress(compressedB).equals(other.decompress((ByteBuffer) compressedB.rewind()))
-      ) {
-      return true;
-    }
-    return false;
+    return this.decompress(compressedA).equals(other.decompress((ByteBuffer) compressedA.rewind()))
+        && this.decompress(compressedB).equals(other.decompress((ByteBuffer) compressedB.rewind()));
   }
 
   @Override

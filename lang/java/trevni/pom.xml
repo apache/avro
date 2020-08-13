@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+       https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,16 +23,19 @@
   <parent>
     <artifactId>avro-parent</artifactId>
     <groupId>org.apache.avro</groupId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
     <relativePath>../</relativePath>
   </parent>
 
   <artifactId>trevni-java</artifactId>
   <name>Trevni Java</name>
-  <groupId>org.apache.avro</groupId>
   <description>Trevni Java</description>
-  <url>http://avro.apache.org/</url>
+  <url>https://avro.apache.org/</url>
   <packaging>pom</packaging>
+
+  <properties>
+    <main.basedir>${project.parent.parent.basedir}</main.basedir>
+  </properties>
 
   <modules>
     <module>core</module>
@@ -49,53 +52,14 @@
           <version>${surefire-plugin.version}</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
+            <!-- some tests hang if not run in a separate JVM -->
+            <forkCount>1</forkCount>
+            <reuseForks>false</reuseForks>
+            <parallel>none</parallel>
           </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${compiler-plugin.version}</version>
-          <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>${checkstyle-plugin.version}</version>
-          <configuration>
-            <consoleOutput>true</consoleOutput>
-            <configLocation>checkstyle.xml</configLocation>
-          </configuration>
-          <executions>
-            <execution>
-              <id>checkstyle-check</id>
-              <phase>test</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>${jar-plugin.version}</version>
-          <executions>
-            <execution>
-              <goals>
-                <goal>test-jar</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
   </build>
 
-  <profiles>
-  </profiles>
-
 </project>
-

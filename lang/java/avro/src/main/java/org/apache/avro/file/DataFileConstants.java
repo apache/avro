@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,15 +22,14 @@ package org.apache.avro.file;
  * Constants used in data files.
  */
 public class DataFileConstants {
-  private DataFileConstants() {}                  // no public ctor
+  private DataFileConstants() {
+  } // no public ctor
 
   public static final byte VERSION = 1;
-  public static final byte[] MAGIC = new byte[] {
-    (byte)'O', (byte)'b', (byte)'j', VERSION
-  };
+  public static final byte[] MAGIC = new byte[] { (byte) 'O', (byte) 'b', (byte) 'j', VERSION };
   public static final long FOOTER_BLOCK = -1;
   public static final int SYNC_SIZE = 16;
-  public static final int DEFAULT_SYNC_INTERVAL = 4000*SYNC_SIZE;
+  public static final int DEFAULT_SYNC_INTERVAL = 4000 * SYNC_SIZE;
 
   public static final String SCHEMA = "avro.schema";
   public static final String CODEC = "avro.codec";
@@ -39,5 +38,6 @@ public class DataFileConstants {
   public static final String SNAPPY_CODEC = "snappy";
   public static final String BZIP2_CODEC = "bzip2";
   public static final String XZ_CODEC = "xz";
+  public static final String ZSTANDARD_CODEC = "zstandard";
 
 }

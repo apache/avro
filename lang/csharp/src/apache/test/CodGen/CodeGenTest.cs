@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,14 +27,15 @@ using Avro.Specific;
 namespace Avro.Test
 {
     [TestFixture]
- 
+
     class CodeGenTest
     {
+#if !NETCOREAPP // System.CodeDom compilation not supported in .NET Core: https://github.com/dotnet/corefx/issues/12180
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""ClassKeywords"",
 ""namespace"" : ""com.base"",
-""fields"" : 
+""fields"" :
 		[ 	
 			{ ""name"" : ""int"", ""type"" : ""int"" },
 			{ ""name"" : ""base"", ""type"" : ""long"" },
@@ -48,26 +49,47 @@ namespace Avro.Test
 			{ ""name"" : ""string"", ""type"" : { ""type"": ""fixed"", ""size"": 16, ""name"": ""static"" } }
 		]
 }
-", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"})]
+", new object[] {"com.base.ClassKeywords", typeof(int), typeof(long), typeof(bool), typeof(double), typeof(float), typeof(byte[]), typeof(string),typeof(object),"com.base.class", "com.base.static"}, TestName = "TestCodeGen0")]
         [TestCase(@"{
 ""type"" : ""record"",
 ""name"" : ""SchemaObject"",
 ""namespace"" : ""schematest"",
-""fields"" : 
+""fields"" :
 	[ 	
-		{ ""name"" : ""myobject"", ""type"" : 
-			[ 
-				""null"", 
-				{""type"" : ""array"", ""items"" : [ ""null"", 
+		{ ""name"" : ""myobject"", ""type"" :
+			[
+				""null"",
+				{""type"" : ""array"", ""items"" : [ ""null"",
 											{ ""type"" : ""enum"", ""name"" : ""MyEnum"", ""symbols"" : [ ""A"", ""B"" ] },
-											{ ""type"": ""fixed"", ""size"": 16, ""name"": ""MyFixed"" } 
+											{ ""type"": ""fixed"", ""size"": 16, ""name"": ""MyFixed"" }
 											]
 				}
 			]
 		}
 	]
 }
-", new object[] { "schematest.SchemaObject", typeof(IList<object>) })]
+", new object[] { "schematest.SchemaObject", typeof(IList<object>) }, TestName = "TestCodeGen1")]
+        [TestCase(@"{
+	""type"" : ""record"",
+	""name"" : ""LogicalTypes"",
+	""namespace"" : ""schematest"",
+	""fields"" :
+		[ 	
+			{ ""name"" : ""nullibleguid"", ""type"" : [""null"", {""type"": ""string"", ""logicalType"": ""uuid"" } ]},
+			{ ""name"" : ""guid"", ""type"" : {""type"": ""string"", ""logicalType"": ""uuid"" } },
+			{ ""name"" : ""nullibletimestampmillis"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-millis""}]  },
+			{ ""name"" : ""timestampmillis"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-millis""} },
+			{ ""name"" : ""nullibiletimestampmicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""timestamp-micros""}]  },
+			{ ""name"" : ""timestampmicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""timestamp-micros""} },
+			{ ""name"" : ""nullibiletimemicros"", ""type"" : [""null"", {""type"": ""long"", ""logicalType"": ""time-micros""}]  },
+			{ ""name"" : ""timemicros"", ""type"" : {""type"": ""long"", ""logicalType"": ""time-micros""} },
+			{ ""name"" : ""nullibiletimemillis"", ""type"" : [""null"", {""type"": ""int"", ""logicalType"": ""time-millis""}]  },
+			{ ""name"" : ""timemillis"", ""type"" : {""type"": ""int"", ""logicalType"": ""time-millis""} },
+			{ ""name"" : ""nullibledecimal"", ""type"" : [""null"", {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2}]  },
+            { ""name"" : ""decimal"", ""type"" : {""type"": ""bytes"", ""logicalType"": ""decimal"", ""precision"": 4, ""scale"": 2} }
+		]
+}
+", new object[] { "schematest.LogicalTypes", typeof(Guid?), typeof(Guid), typeof(DateTime?), typeof(DateTime), typeof(DateTime?), typeof(DateTime), typeof(TimeSpan?), typeof(TimeSpan), typeof(TimeSpan?), typeof(TimeSpan), typeof(AvroDecimal?), typeof(AvroDecimal) }, TestName = "TestCodeGen2 - Logical Types")]
         public static void TestCodeGen(string str, object[] result)
         {
             Schema schema = Schema.Parse(str);
@@ -93,11 +115,50 @@ namespace Avro.Test
                     stype = (Type)result[i];
                 if (!stype.IsValueType)
                     Assert.IsNull(field);   // can't test reference type, it will be null
+                else if (stype.IsValueType && field == null)
+                    Assert.IsNull(field); // nullable value type, so we can't get the type using GetType
                 else
                     Assert.AreEqual(stype, field.GetType());
             }
         }
 
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", null, null, "com.base")]
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", "com.base", "SchemaTest", "SchemaTest")]
+        [TestCase(@"{
+""type"": ""fixed"",
+""namespace"": ""com.base"",
+""name"": ""MD5"",
+""size"": 16
+}", "miss", "SchemaTest", "com.base")]
+        public void TestCodeGenNamespaceMapping(string str, string avroNamespace, string csharpNamespace,
+            string expectedNamespace)
+        {
+            Schema schema = Schema.Parse(str);
+
+            var codegen = new CodeGen();
+            codegen.AddSchema(schema);
+
+            if (avroNamespace != null && csharpNamespace != null)
+            {
+                codegen.NamespaceMapping[avroNamespace] = csharpNamespace;
+            }
+
+            var results = GenerateAssembly(codegen);
+            foreach(var type in results.CompiledAssembly.GetTypes())
+            {
+                Assert.AreEqual(expectedNamespace, type.Namespace);
+            }
+        }
 
         private static CompilerResults GenerateSchema(Schema schema)
         {
@@ -110,9 +171,9 @@ namespace Avro.Test
         {
             var compileUnit = schema.GenerateCode();
 
-            var comparam = new CompilerParameters(new string[] { "mscorlib.dll" });
+            var comparam = new CompilerParameters(new string[] { "netstandard.dll" });
             comparam.ReferencedAssemblies.Add("System.dll");
-            comparam.ReferencedAssemblies.Add("Avro.dll");
+            comparam.ReferencedAssemblies.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "Avro.dll"));
             comparam.GenerateInMemory = true;
             var ccp = new CSharpCodeProvider();
             var units = new[] { compileUnit };
@@ -125,5 +186,6 @@ namespace Avro.Test
             Assert.AreEqual(0, compres.Errors.Count);
             return compres;
         }
+#endif
     }
 }

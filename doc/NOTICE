@@ -2,7 +2,7 @@ Apache Avro
 Copyright 2010-2015 The Apache Software Foundation
 
 This product includes software developed at
-The Apache Software Foundation (http://www.apache.org/).
+The Apache Software Foundation (https://www.apache.org/).
 
 Based upon the representations of upstream licensors, it is understood that
 portions of the mapreduce API included in the Java implementation are licensed
@@ -18,7 +18,7 @@ is:
 | (the "License"); you may not use this file except in compliance
 | with the License.  You may obtain a copy of the License at
 |
-|     http://www.apache.org/licenses/LICENSE-2.0
+|     https://www.apache.org/licenses/LICENSE-2.0
 |
 | Unless required by applicable law or agreed to in writing, software
 | distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,7 +29,7 @@ is:
 The Odiago NOTICE at the time of the contribution:
 
 | This product includes software developed by Odiago, Inc.
-| (http://www.wibidata.com).
+| (https://www.wibidata.com).
 
 The documentation contains the default Apache Forrest skin.
 Apache Forrest includes the following in its NOTICE file:
@@ -38,7 +38,7 @@ Apache Forrest includes the following in its NOTICE file:
 | Copyright 2002-2007 The Apache Software Foundation.
 |
 | This product includes software developed at
-| The Apache Software Foundation (http://www.apache.org/).
+| The Apache Software Foundation (https://www.apache.org/).
 |
 | See also the file LICENSE.txt
 |
@@ -56,25 +56,25 @@ Apache Forrest includes the following in its NOTICE file:
 | http://www.krysalis.org/
 |
 | This product includes software developed by Andy Clark.
-| http://people.apache.org/~andyc/neko/
+| https://people.apache.org/~andyc/neko/
 |
 | This product includes software developed by the ExoLab Project
-| http://www.exolab.org/
+| https://www.exolab.org/
 |
 | This product includes software developed by TouchGraph LLC
-| http://www.touchgraph.com/
+| https://www.touchgraph.com/
 |
 | This product includes software developed by Marc De Scheemaecker
 | http://nanoxml.cyberelf.be/
 |
 | This product includes software developed by the ANTLR project
-| http://www.antlr.org/
+| https://www.antlr.org/
 |
 | This product includes software developed by Chaperon
 | http://chaperon.sourceforge.net/
 |
 | This product includes software developed by Sal Mangano (included in the XSLT Cookbook published by O'Reilly)
-| http://www.oreilly.com/catalog/xsltckbk/
+| https://www.oreilly.com/catalog/xsltckbk/
 |
 | This product includes software developed by The Werken Company.
 | http://jaxen.werken.com/

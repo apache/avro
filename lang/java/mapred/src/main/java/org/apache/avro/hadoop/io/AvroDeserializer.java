@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,14 +33,18 @@ import org.apache.hadoop.io.serializer.Deserializer;
 /**
  * Deserializes AvroWrapper objects within Hadoop.
  *
- * <p>Keys and values containing Avro tyeps are more efficiently serialized
- * outside of the WritableSerialization model, so they are wrapper in {@link
- * org.apache.avro.mapred.AvroWrapper} objects and deserialization is handled
- * by this class.</p>
+ * <p>
+ * Keys and values containing Avro types are more efficiently serialized outside
+ * of the WritableSerialization model, so they are wrapper in
+ * {@link org.apache.avro.mapred.AvroWrapper} objects and deserialization is
+ * handled by this class.
+ * </p>
  *
- * <p>MapReduce jobs that use AvroWrapper objects as keys or values need to be
- * configured with {@link AvroSerialization}.  Use {@link
- * org.apache.avro.mapreduce.AvroJob} to help with Job configuration.</p>
+ * <p>
+ * MapReduce jobs that use AvroWrapper objects as keys or values need to be
+ * configured with {@link AvroSerialization}. Use
+ * {@link org.apache.avro.mapreduce.AvroJob} to help with Job configuration.
+ * </p>
  *
  * @param <T> The type of Avro wrapper.
  * @param <D> The Java type of the Avro data being wrapped.
@@ -62,25 +66,24 @@ public abstract class AvroDeserializer<T extends AvroWrapper<D>, D> implements D
    * Constructor.
    *
    * @param writerSchema The Avro writer schema for the data to deserialize.
-   * @param readerSchema The Avro reader schema for the data to deserialize (may be null).
+   * @param readerSchema The Avro reader schema for the data to deserialize (may
+   *                     be null).
    */
-  protected AvroDeserializer(Schema writerSchema, Schema readerSchema,
-                             ClassLoader classLoader) {
+  protected AvroDeserializer(Schema writerSchema, Schema readerSchema, ClassLoader classLoader) {
     mWriterSchema = writerSchema;
     mReaderSchema = null != readerSchema ? readerSchema : writerSchema;
-    mAvroDatumReader = new ReflectDatumReader<D>(mWriterSchema, mReaderSchema,
-                                                 new ReflectData(classLoader));
+    mAvroDatumReader = new ReflectDatumReader<>(mWriterSchema, mReaderSchema, new ReflectData(classLoader));
   }
 
   /**
    * Constructor.
    *
    * @param writerSchema The Avro writer schema for the data to deserialize.
-   * @param readerSchema The Avro reader schema for the data to deserialize (may be null).
-   * @param datumReader The Avro datum reader to use for deserialization.
+   * @param readerSchema The Avro reader schema for the data to deserialize (may
+   *                     be null).
+   * @param datumReader  The Avro datum reader to use for deserialization.
    */
-  protected AvroDeserializer(Schema writerSchema, Schema readerSchema,
-                             DatumReader<D> datumReader) {
+  protected AvroDeserializer(Schema writerSchema, Schema readerSchema, DatumReader<D> datumReader) {
     mWriterSchema = writerSchema;
     mReaderSchema = null != readerSchema ? readerSchema : writerSchema;
     mAvroDatumReader = datumReader;

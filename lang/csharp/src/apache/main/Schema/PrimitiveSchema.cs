@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,6 +31,7 @@ namespace Avro
         /// Constructor for primitive schema
         /// </summary>
         /// <param name="type"></param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         private PrimitiveSchema(Type type, PropertyMap props) : base(type, props)
         {
         }
@@ -39,11 +40,17 @@ namespace Avro
         /// Static function to return new instance of primitive schema
         /// </summary>
         /// <param name="type">primitive type</param>
+        /// <param name="props">dictionary that provides access to custom properties</param>
         /// <returns></returns>
         public static PrimitiveSchema NewInstance(string type, PropertyMap props = null)
         {
             const string q = "\"";
-            if (type.StartsWith(q) && type.EndsWith(q)) type = type.Substring(1, type.Length - 2);
+            if (type.StartsWith(q, StringComparison.Ordinal)
+                && type.EndsWith(q, StringComparison.Ordinal))
+            {
+                type = type.Substring(1, type.Length - 2);
+            }
+
             switch (type)
             {
                 case "null":

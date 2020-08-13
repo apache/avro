@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+   https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
    limitations under the License.
   -->
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
-   "http://forrest.apache.org/dtd/document-v20.dtd" [
+   "https://forrest.apache.org/dtd/document-v20.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -37,17 +37,11 @@
       <p>
         Avro implementations for C, C++, C#, Java, PHP, Python, and Ruby can be
         downloaded from the <a
-        href="http://avro.apache.org/releases.html">Apache Avro&#153;
+        href="https://avro.apache.org/releases.html">Apache Avro&#153;
         Releases</a> page.  This guide uses Avro &AvroVersion;, the latest
         version at the time of writing.  For the examples in this guide,
         download <em>avro-&AvroVersion;.jar</em> and
-        <em>avro-tools-&AvroVersion;.jar</em>.  The Avro Java implementation
-        also depends on the <a href="http://jackson.codehaus.org/">Jackson</a>
-        JSON library.  From the Jackson <a
-        href="http://wiki.fasterxml.com/JacksonDownload">download page</a>,
-        download the core-asl and mapper-asl jars.  Add
-        <em>avro-&AvroVersion;.jar</em> and the Jackson jars to your project's
-        classpath (avro-tools will be used for code generation).
+        <em>avro-tools-&AvroVersion;.jar</em>.
       </p>
       <p>
         Alternatively, if you are using Maven, add the following dependency to
@@ -85,8 +79,8 @@
   &#60;groupId&#62;org.apache.maven.plugins&#60;/groupId&#62;
   &#60;artifactId&#62;maven-compiler-plugin&#60;/artifactId&#62;
   &#60;configuration&#62;
-    &#60;source&#62;1.6&#60;/source&#62;
-    &#60;target&#62;1.6&#60;/target&#62;
+    &#60;source&#62;1.8&#60;/source&#62;
+    &#60;target&#62;1.8&#60;/target&#62;
   &#60;/configuration&#62;
 &#60;/plugin&#62;
       </source>
@@ -288,7 +282,17 @@ System.out.println(user);
           class, in this case <code>User</code>.  We pass the
           <code>DatumReader</code> and the previously created <code>File</code>
           to a <code>DataFileReader</code>, analogous to the
-          <code>DataFileWriter</code>, which reads the data file on disk.
+          <code>DataFileWriter</code>, which reads both the schema used by the
+          writer as well as the data from the file on disk. The data will be
+          read using the writer's schema included in the file and the
+          schema provided by the reader, in this case the <code>User</code>
+          class.  The writer's schema is needed to know the order in which
+          fields were written, while the reader's schema is needed to know what
+          fields are expected and how to fill in default values for fields
+          added since the file was written.  If there are differences between
+          the two schemas, they are resolved according to the
+          <a href="spec.html#Schema+Resolution">Schema Resolution</a>
+          specification.
         </p>
         <p>
           Next we use the <code>DataFileReader</code> to iterate through the
@@ -318,6 +322,43 @@ System.out.println(user);
 $ mvn compile # includes code generation via Avro Maven plugin
 $ mvn -q exec:java -Dexec.mainClass=example.SpecificMain
         </source>
+      </section>
+      <section>
+        <title>Beta feature: Generating faster code</title>
+        <p>
+          In this release we have introduced a new approach to
+          generating code that speeds up decoding of objects by more
+          than 10% and encoding by more than 30% (future performance
+          enhancements are underway).  To ensure a smooth introduction
+          of this change into production systems, this feature is
+          controlled by a feature flag, the system
+          property <code>org.apache.avro.specific.use_custom_coders</code>.
+          In this first release, this feature is off by default.  To
+          turn it on, set the system flag to <code>true</code> at
+          runtime.  In the sample above, for example, you could enable
+          the fater coders as follows:
+        </p>
+        <source>
+$ mvn -q exec:java -Dexec.mainClass=example.SpecificMain \
+    -Dorg.apache.avro.specific.use_custom_coders=true
+        </source>
+        <p>
+          Note that you do <em>not</em> have to recompile your Avro
+          schema to have access to this feature.  The feature is
+          compiled and built into your code, and you turn it on and
+          off at runtime using the feature flag.  As a result, you can
+          turn it on during testing, for example, and then off in
+          production.  Or you can turn it on in production, and
+          quickly turn it off if something breaks.
+        </p>
+        <p>
+          We encourage the Avro community to exercise this new feature
+          early to help build confidence.  (For those paying
+          one-demand for compute resources in the cloud, it can lead
+          to meaningful cost savings.)  As confidence builds, we will
+          turn this feature on by default, and eventually eliminate
+          the feature flag (and the old code).
+        </p>
       </section>
     </section>
 
@@ -440,7 +481,17 @@ System.out.println(user);
           converts in-memory serialized items into <code>GenericRecords</code>.
           We pass the <code>DatumReader</code> and the previously created
           <code>File</code> to a <code>DataFileReader</code>, analogous to the
-          <code>DataFileWriter</code>, which reads the data file on disk.
+          <code>DataFileWriter</code>, which reads both the schema used by the
+          writer as well as the data from the file on disk. The data will be
+          read using the writer's schema included in the file, and the reader's
+          schema provided to the <code>GenericDatumReader</code>.  The writer's
+          schema is needed to know the order in which fields were written,
+          while the reader's schema is needed to know what fields are expected
+          and how to fill in default values for fields added since the file
+          was written.  If there are differences between the two schemas, they
+          are resolved according to the
+          <a href="spec.html#Schema+Resolution">Schema Resolution</a>
+          specification.
         </p>
         <p>
           Next, we use the <code>DataFileReader</code> to iterate through the

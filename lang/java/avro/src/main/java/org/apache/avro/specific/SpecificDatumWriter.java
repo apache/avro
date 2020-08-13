@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,18 +25,21 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
 
-/** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java classes. */
+/**
+ * {@link org.apache.avro.io.DatumWriter DatumWriter} for generated Java
+ * classes.
+ */
 public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   public SpecificDatumWriter() {
     super(SpecificData.get());
   }
 
   public SpecificDatumWriter(Class<T> c) {
-    super(SpecificData.get().getSchema(c), SpecificData.get());
+    super(SpecificData.get().getSchema(c), SpecificData.getForClass(c));
   }
 
   public SpecificDatumWriter(Schema schema) {
-    super(schema, SpecificData.get());
+    super(schema, SpecificData.getForSchema(schema));
   }
 
   public SpecificDatumWriter(Schema root, SpecificData specificData) {
@@ -53,27 +56,35 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
   }
 
   @Override
-  protected void writeEnum(Schema schema, Object datum, Encoder out)
-    throws IOException {
+  protected void writeEnum(Schema schema, Object datum, Encoder out) throws IOException {
     if (!(datum instanceof Enum))
-      super.writeEnum(schema, datum, out);        // punt to generic
+      super.writeEnum(schema, datum, out); // punt to generic
     else
-      out.writeEnum(((Enum)datum).ordinal());
+      out.writeEnum(((Enum) datum).ordinal());
   }
 
   @Override
-  protected void writeString(Schema schema, Object datum, Encoder out)
-    throws IOException {
-    if (!(datum instanceof CharSequence)
-        && getSpecificData().isStringable(datum.getClass())) {
-      datum = datum.toString();                   // convert to string
+  protected void writeString(Schema schema, Object datum, Encoder out) throws IOException {
+    if (!(datum instanceof CharSequence) && getSpecificData().isStringable(datum.getClass())) {
+      datum = datum.toString(); // convert to string
     }
     writeString(datum, out);
   }
 
   @Override
-  protected void writeField(Object datum, Schema.Field f, Encoder out,
-                            Object state) throws IOException {
+  protected void writeRecord(Schema schema, Object datum, Encoder out) throws IOException {
+    if (datum instanceof SpecificRecordBase && this.getSpecificData().useCustomCoders()) {
+      SpecificRecordBase d = (SpecificRecordBase) datum;
+      if (d.hasCustomCoders()) {
+        d.customEncode(out);
+        return;
+      }
+    }
+    super.writeRecord(schema, datum, out);
+  }
+
+  @Override
+  protected void writeField(Object datum, Schema.Field f, Encoder out, Object state) throws IOException {
     if (datum instanceof SpecificRecordBase) {
       Conversion<?> conversion = ((SpecificRecordBase) datum).getConversion(f.pos());
       Schema fieldSchema = f.schema();
@@ -91,4 +102,3 @@ public class SpecificDatumWriter<T> extends GenericDatumWriter<T> {
     }
   }
 }
-

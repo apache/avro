@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,10 +25,9 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 
 /**
- * This encoder/decoder writes a java.util.Date object as a long to
- * avro and reads a Date object from long.
- * The long stores the number of milliseconds since January 1, 1970, 00:00:00 GMT
- * represented by the Date object.
+ * This encoder/decoder writes a java.util.Date object as a long to avro and
+ * reads a Date object from long. The long stores the number of milliseconds
+ * since January 1, 1970, 00:00:00 GMT represented by the Date object.
  */
 public class DateAsLongEncoding extends CustomEncoding<Date> {
   {
@@ -38,16 +37,16 @@ public class DateAsLongEncoding extends CustomEncoding<Date> {
 
   @Override
   protected final void write(Object datum, Encoder out) throws IOException {
-    out.writeLong(((Date)datum).getTime());
+    out.writeLong(((Date) datum).getTime());
   }
 
   @Override
   protected final Date read(Object reuse, Decoder in) throws IOException {
-    if (reuse != null && reuse instanceof Date) {
-      ((Date)reuse).setTime(in.readLong());
-      return (Date)reuse;
-    }
-    else return new Date(in.readLong());
+    if (reuse instanceof Date) {
+      ((Date) reuse).setTime(in.readLong());
+      return (Date) reuse;
+    } else
+      return new Date(in.readLong());
   }
 
 }

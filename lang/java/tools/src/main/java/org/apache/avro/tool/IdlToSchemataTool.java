@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,13 +34,11 @@ import java.util.List;
  */
 public class IdlToSchemataTool implements Tool {
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.isEmpty() || args.size() > 2 || isRequestingHelp(args)) {
       err.println("Usage: idl2schemata [idl] [outdir]");
       err.println("");
-      err.println("If an output directory is not specified, "
-          + "outputs to current directory.");
+      err.println("If an output directory is not specified, " + "outputs to current directory.");
       return -1;
     }
 
@@ -57,8 +55,7 @@ public class IdlToSchemataTool implements Tool {
   }
 
   private boolean isRequestingHelp(List<String> args) {
-    return args.size() == 1
-        && (args.get(0).equals("--help") || args.get(0).equals("-help"));
+    return args.size() == 1 && (args.get(0).equals("--help") || args.get(0).equals("-help"));
   }
 
   private File getOutputDirectory(List<String> args) {
@@ -68,8 +65,7 @@ public class IdlToSchemataTool implements Tool {
     return outputDirectory;
   }
 
-  private void print(Schema schema, File outputDirectory, boolean pretty)
-      throws FileNotFoundException {
+  private void print(Schema schema, File outputDirectory, boolean pretty) throws FileNotFoundException {
     String dirpath = outputDirectory.getAbsolutePath();
     String filename = dirpath + "/" + schema.getName() + ".avsc";
     FileOutputStream fileOutputStream = new FileOutputStream(filename);

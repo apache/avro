@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,12 +37,10 @@ public class RecordBuilderBaseTest {
 
   @BeforeClass()
   public static void setUpBeforeClass() {
-    primitives = new HashSet<Type>(Arrays.asList(Type.values()));
-    primitives.removeAll(Arrays.asList(new Type[] {
-        Type.RECORD, Type.ENUM, Type.ARRAY, Type.MAP, Type.UNION, Type.FIXED
-    }));
+    primitives = new HashSet<>(Arrays.asList(Type.values()));
+    primitives.removeAll(Arrays.asList(Type.RECORD, Type.ENUM, Type.ARRAY, Type.MAP, Type.UNION, Type.FIXED));
 
-    nonNullPrimitives = new HashSet<Type>(primitives);
+    nonNullPrimitives = new HashSet<>(primitives);
     nonNullPrimitives.remove(Type.NULL);
   }
 
@@ -64,30 +62,22 @@ public class RecordBuilderBaseTest {
   @Test
   public void testIsValidValueWithNullField() {
     // Verify that null is a valid value for null fields:
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", Schema.create(Type.NULL), null, null), null));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", Schema.create(Type.NULL), null, null), null));
   }
 
   @Test
   public void testIsValidValueWithUnion() {
     // Verify that null values are not valid for a union with no null type:
-    Schema unionWithoutNull = Schema.createUnion(Arrays.asList(new Schema[] {
-        Schema.create(Type.STRING), Schema.create(Type.BOOLEAN)
-    }));
+    Schema unionWithoutNull = Schema
+        .createUnion(Arrays.asList(Schema.create(Type.STRING), Schema.create(Type.BOOLEAN)));
 
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithoutNull, null, null), new Object()));
-    Assert.assertFalse(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithoutNull, null, null), null));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", unionWithoutNull, null, null), new Object()));
+    Assert.assertFalse(RecordBuilderBase.isValidValue(new Field("f", unionWithoutNull, null, null), null));
 
     // Verify that null values are valid for a union with a null type:
-    Schema unionWithNull = Schema.createUnion(Arrays.asList(new Schema[] {
-        Schema.create(Type.STRING), Schema.create(Type.NULL)
-    }));
+    Schema unionWithNull = Schema.createUnion(Arrays.asList(Schema.create(Type.STRING), Schema.create(Type.NULL)));
 
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithNull, null, null), new Object()));
-    Assert.assertTrue(RecordBuilderBase.isValidValue(
-        new Field("f", unionWithNull, null, null), null));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", unionWithNull, null, null), new Object()));
+    Assert.assertTrue(RecordBuilderBase.isValidValue(new Field("f", unionWithNull, null, null), null));
   }
 }

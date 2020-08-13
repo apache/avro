@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,13 @@ using Avro.IO;
 
 namespace Avro.Generic
 {
+    /// <summary>
+    /// Defines the signature for a function that writes an object.
+    /// </summary>
+    /// <typeparam name="T">Type of object to write.</typeparam>
+    /// <param name="t">Object to write.</param>
     public delegate void Writer<T>(T t);
+
     /// <summary>
     /// A typesafe wrapper around DefaultWriter. While a specific object of DefaultWriter
     /// allows the client to serialize a generic type, an object of this class allows
@@ -31,13 +37,24 @@ namespace Avro.Generic
     public class GenericWriter<T> : DatumWriter<T>
     {
         private readonly DefaultWriter writer;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericWriter{T}"/> class.
+        /// </summary>
+        /// <param name="schema">Schema to use when writing.</param>
         public GenericWriter(Schema schema) : this(new DefaultWriter(schema))
         {
 
         }
 
+        /// <inheritdoc/>
         public Schema Schema { get { return writer.Schema; } }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GenericWriter{T}"/> class from a
+        /// <see cref="DefaultWriter"/>.
+        /// </summary>
+        /// <param name="writer">Write to initialize this new writer from.</param>
         public GenericWriter(DefaultWriter writer)
         {
             this.writer = writer;
@@ -62,6 +79,9 @@ namespace Avro.Generic
     /// </summary>
     public class DefaultWriter
     {
+        /// <summary>
+        /// Schema that this object uses to write datum.
+        /// </summary>
         public Schema Schema { get; private set; }
 
         /// <summary>
@@ -70,13 +90,21 @@ namespace Avro.Generic
         /// <param name="schema">The schema for the object to be serialized</param>
         public DefaultWriter(Schema schema)
         {
-            this.Schema = schema;
+            Schema = schema;
         }
 
+        /// <summary>
+        /// Examines the <see cref="Schema"/> and dispatches the actual work to one
+        /// of the other methods of this class. This allows the derived
+        /// classes to override specific methods and get custom results.
+        /// </summary>
+        /// <param name="value">The value to be serialized</param>
+        /// <param name="encoder">The encoder to use during serialization</param>
         public void Write<T>(T value, Encoder encoder)
         {
             Write(Schema, value, encoder);
         }
+
         /// <summary>
         /// Examines the schema and dispatches the actual work to one
         /// of the other methods of this class. This allows the derived
@@ -132,8 +160,11 @@ namespace Avro.Generic
                 case Schema.Type.Union:
                     WriteUnion(schema as UnionSchema, value, encoder);
                     break;
+                case Schema.Type.Logical:
+                    WriteLogical(schema as LogicalSchema, value, encoder);
+                    break;
                 default:
-                    error(schema, value);
+                    Error(schema, value);
                     break;
             }
         }
@@ -151,14 +182,14 @@ namespace Avro.Generic
         /// <summary>
         /// A generic method to serialize primitive Avro types.
         /// </summary>
-        /// <typeparam name="S">Type of the C# type to be serialized</typeparam>
+        /// <typeparam name="T">Type of the C# type to be serialized</typeparam>
         /// <param name="value">The value to be serialized</param>
         /// <param name="tag">The schema type tag</param>
         /// <param name="writer">The writer which should be used to write the given type.</param>
-        protected virtual void Write<S>(object value, Schema.Type tag, Writer<S> writer)
+        protected virtual void Write<T>(object value, Schema.Type tag, Writer<T> writer)
         {
-            if (!(value is S)) throw TypeMismatch(value, tag.ToString(), typeof(S).ToString());
-            writer((S)value);
+            if (!(value is T)) throw TypeMismatch(value, tag.ToString(), typeof(T).ToString());
+            writer((T)value);
         }
 
         /// <summary>
@@ -181,14 +212,20 @@ namespace Avro.Generic
                 }
                 catch (Exception ex)
                 {
-                    throw new AvroException(ex.Message + " in field " + field.Name);
+                    throw new AvroException(ex.Message + " in field " + field.Name, ex);
                 }
             }
         }
 
+        /// <summary>
+        /// Ensures that the given value is a record and that it corresponds to the given schema.
+        /// Throws an exception if either of those assertions are false.
+        /// </summary>
+        /// <param name="s">Schema associated with the record</param>
+        /// <param name="value">Ensure this object is a record</param>
         protected virtual void EnsureRecordObject(RecordSchema s, object value)
         {
-            if (value == null || !(value is GenericRecord) || !((value as GenericRecord).Schema.Equals(s)))
+            if (value == null || !(value is GenericRecord) || !(value as GenericRecord).Schema.Equals(s))
             {
                 throw TypeMismatch(value, "record", "GenericRecord");
             }
@@ -205,7 +242,7 @@ namespace Avro.Generic
         protected virtual object GetField(object value, string fieldName, int fieldPos)
         {
             GenericRecord d = value as GenericRecord;
-            return d[fieldName];
+            return d.GetValue(fieldPos);
         }
 
         /// <summary>
@@ -217,7 +254,7 @@ namespace Avro.Generic
         /// <param name="encoder">Encoder for serialization</param>
         protected virtual void WriteEnum(EnumSchema es, object value, Encoder encoder)
         {
-            if (value == null || !(value is GenericEnum) || !((value as GenericEnum).Schema.Equals(es)))
+            if (value == null || !(value is GenericEnum) || !(value as GenericEnum).Schema.Equals(es))
                 throw TypeMismatch(value, "enum", "GenericEnum");
             encoder.WriteEnum(es.Ordinal((value as GenericEnum).Value));
         }
@@ -305,7 +342,7 @@ namespace Avro.Generic
 
         /// <summary>
         /// Checks if the given object is a map. If it is a valid map, this function returns normally. Otherwise,
-        /// it throws an exception. The default implementation checks if the value is an IDictionary<string, object>.
+        /// it throws an exception. The default implementation checks if the value is an IDictionary&lt;string, object&gt;.
         /// </summary>
         /// <param name="value"></param>
         protected virtual void EnsureMapObject(object value)
@@ -316,7 +353,7 @@ namespace Avro.Generic
         /// <summary>
         /// Returns the size of the map object. The default implementation gurantees that EnsureMapObject has been
         /// successfully called with the given value. The default implementation requires the value
-        /// to be an IDictionary<string, object> and returns the number of elements in it.
+        /// to be an IDictionary&lt;string, object&gt; and returns the number of elements in it.
         /// </summary>
         /// <param name="value">The map object whose size is desired</param>
         /// <returns>The size of the given map object</returns>
@@ -328,7 +365,7 @@ namespace Avro.Generic
         /// <summary>
         /// Returns the contents of the given map object. The default implementation guarantees that EnsureMapObject
         /// has been called with the given value. The defualt implementation of this method requires that
-        /// the value is an IDictionary<string, object> and returns its contents.
+        /// the value is an IDictionary&lt;string, object&gt; and returns its contents.
         /// </summary>
         /// <param name="value">The map object whose size is desired</param>
         /// <returns>The contents of the given map object</returns>
@@ -370,6 +407,18 @@ namespace Avro.Generic
         }
 
         /// <summary>
+        /// Serializes a logical value object by using the underlying logical type to convert the value
+        /// to its base value.
+        /// </summary>
+        /// <param name="ls">The schema for serialization</param>
+        /// <param name="value">The value to be serialized</param>
+        /// <param name="encoder">The encoder for serialization</param>
+        protected virtual void WriteLogical(LogicalSchema ls, object value, Encoder encoder)
+        {
+            Write(ls.BaseSchema, ls.LogicalType.ConvertToBaseValue(value, ls), encoder);
+        }
+
+        /// <summary>
         /// Serialized a fixed object. The default implementation requires that the value is
         /// a GenericFixed object with an identical schema as es.
         /// </summary>
@@ -386,22 +435,36 @@ namespace Avro.Generic
             encoder.WriteFixed(ba.Value);
         }
 
+        /// <summary>
+        /// Creates a new <see cref="AvroException"/> and uses the provided parameters to build an
+        /// exception message indicathing there was a type mismatch.
+        /// </summary>
+        /// <param name="obj">Object whose type does not the expected type</param>
+        /// <param name="schemaType">Schema that we tried to write against</param>
+        /// <param name="type">Type that we expected</param>
+        /// <returns>A new <see cref="AvroException"/> indicating a type mismatch.</returns>
         protected AvroException TypeMismatch(object obj, string schemaType, string type)
         {
             return new AvroException(type + " required to write against " + schemaType + " schema but found " + (null == obj ? "null" : obj.GetType().ToString()) );
         }
 
-        private void error(Schema schema, Object value)
+        private void Error(Schema schema, Object value)
         {
             throw new AvroTypeException("Not a " + schema + ": " + value);
         }
 
-        /*
-         * FIXME: This method of determining the Union branch has problems. If the data is IDictionary<string, object>
-         * if there are two branches one with record schema and the other with map, it choose the first one. Similarly if
-         * the data is byte[] and there are fixed and bytes schemas as branches, it choose the first one that matches.
-         * Also it does not recognize the arrays of primitive types.
-         */
+        /// <summary>
+        /// Tests whether the given schema an object are compatible.
+        /// </summary>
+        /// <remarks>
+        /// FIXME: This method of determining the Union branch has problems. If the data is IDictionary&lt;string, object&gt;
+        /// if there are two branches one with record schema and the other with map, it choose the first one. Similarly if
+        /// the data is byte[] and there are fixed and bytes schemas as branches, it choose the first one that matches.
+        /// Also it does not recognize the arrays of primitive types.
+        /// </remarks>
+        /// <param name="sc">Schema to compare</param>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>True if the two parameters are compatible, false otherwise.</returns>
         protected virtual bool Matches(Schema sc, object obj)
         {
             if (obj == null && sc.Tag != Avro.Schema.Type.Null) return false;
@@ -438,6 +501,8 @@ namespace Avro.Generic
                 case Schema.Type.Fixed:
                     //return obj is GenericFixed && (obj as GenericFixed).Schema.Equals(s);
                     return obj is GenericFixed && (obj as GenericFixed).Schema.SchemaName.Equals((sc as FixedSchema).SchemaName);
+                case Schema.Type.Logical:
+                    return (sc as LogicalSchema).LogicalType.IsInstanceOfLogicalType(obj);
                 default:
                     throw new AvroException("Unknown schema type: " + sc.Tag);
             }

@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -88,6 +88,12 @@ int main(void)
                 fprintf(stderr, "pass %d: ok: schema %s\n", pass, json_schema);
                 check(rval, avro_file_reader_close(file_reader));
                 remove(outpath);
+                
+                avro_writer_free(writer);
+                avro_value_decref(&out);
+                avro_value_decref(&val);
+                avro_value_iface_decref(iface);
+                avro_schema_decref(schema);
         }
 
 	exit(EXIT_SUCCESS);

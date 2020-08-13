@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,7 +34,7 @@
 #endif
 #endif
 
-using std::auto_ptr;
+using std::unique_ptr;
 using std::istream;
 using std::ostream;
 
@@ -51,7 +51,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
 #ifdef _WIN32
     HANDLE h_;
     FileBufferCopyIn(const char* filename) :
-        h_(::CreateFile(filename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+        h_(::CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
         if (h_ == INVALID_HANDLE_VALUE) {
             throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
         }
@@ -62,7 +62,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
     }
 
     void seek(size_t len) {
-        if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) != INVALID_SET_FILE_POINTER) {
+        if (::SetFilePointer(h_, len, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER && ::GetLastError() != NO_ERROR) {
             throw Exception(boost::format("Cannot skip file: %1%") % ::GetLastError());
         }
     }
@@ -107,7 +107,7 @@ struct FileBufferCopyIn : public BufferCopyIn {
         return false;
     }
 #endif
-  
+
 };
 
 struct IStreamBufferCopyIn : public BufferCopyIn {
@@ -133,12 +133,33 @@ struct IStreamBufferCopyIn : public BufferCopyIn {
 
 };
 
+struct NonSeekableIStreamBufferCopyIn : public IStreamBufferCopyIn {
+    NonSeekableIStreamBufferCopyIn(istream& is) : IStreamBufferCopyIn(is) { }
+
+    void seek(size_t len) {
+        const size_t bufSize = 4096;
+        uint8_t buf[bufSize];
+        while (len > 0) {
+            size_t n = std::min(len, bufSize);
+            is_.read(reinterpret_cast<char*>(buf), n);
+            if (is_.bad()) {
+                throw Exception("Cannot skip stream");
+            }
+            size_t actual = static_cast<size_t>(is_.gcount());
+            if (is_.eof() && actual == 0) {
+                throw Exception("Cannot skip stream");
+            }
+            len -= n;
+        }
+    }
+};
+
 }
 
-class BufferCopyInInputStream : public InputStream {
+class BufferCopyInInputStream : public SeekableInputStream {
     const size_t bufferSize_;
     uint8_t* const buffer_;
-    auto_ptr<BufferCopyIn> in_;
+    unique_ptr<BufferCopyIn> in_;
     size_t byteCount_;
     uint8_t* next_;
     size_t available_;
@@ -188,12 +209,19 @@ class BufferCopyInInputStream : public InputStream {
         return false;
     }
 
+    void seek(int64_t position) {
+      // BufferCopyIn::seek is relative to byteCount_, whereas position is
+      // absolute.
+      in_->seek(position - byteCount_ - available_);
+      byteCount_ = position;
+      available_ = 0;
+    }
 
 public:
-    BufferCopyInInputStream(auto_ptr<BufferCopyIn>& in, size_t bufferSize) :
+    BufferCopyInInputStream(unique_ptr<BufferCopyIn> in, size_t bufferSize) :
         bufferSize_(bufferSize),
         buffer_(new uint8_t[bufferSize]),
-        in_(in),
+        in_(std::move(in)),
         byteCount_(0),
         next_(buffer_),
         available_(0) { }
@@ -213,7 +241,7 @@ struct FileBufferCopyOut : public BufferCopyOut {
 #ifdef _WIN32
     HANDLE h_;
     FileBufferCopyOut(const char* filename) :
-        h_(::CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
+        h_(::CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) {
         if (h_ == INVALID_HANDLE_VALUE) {
             throw Exception(boost::format("Cannot open file: %1%") % ::GetLastError());
         }
@@ -256,7 +284,7 @@ struct FileBufferCopyOut : public BufferCopyOut {
         }
     }
 #endif
-  
+
 };
 
 struct OStreamBufferCopyOut : public BufferCopyOut {
@@ -276,7 +304,7 @@ struct OStreamBufferCopyOut : public BufferCopyOut {
 class BufferCopyOutputStream : public OutputStream {
     size_t bufferSize_;
     uint8_t* const buffer_;
-    auto_ptr<BufferCopyOut> out_;
+    unique_ptr<BufferCopyOut> out_;
     uint8_t* next_;
     size_t available_;
     size_t byteCount_;
@@ -311,10 +339,10 @@ class BufferCopyOutputStream : public OutputStream {
     }
 
 public:
-    BufferCopyOutputStream(auto_ptr<BufferCopyOut> out, size_t bufferSize) :
+    BufferCopyOutputStream(unique_ptr<BufferCopyOut> out, size_t bufferSize) :
         bufferSize_(bufferSize),
         buffer_(new uint8_t[bufferSize]),
-        out_(out),
+        out_(std::move(out)),
         next_(buffer_),
         available_(bufferSize_), byteCount_(0) { }
 
@@ -323,32 +351,46 @@ public:
     }
 };
 
-auto_ptr<InputStream> fileInputStream(const char* filename,
+unique_ptr<InputStream> fileInputStream(const char* filename,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
-    return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
+    unique_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
+    return unique_ptr<InputStream>( new BufferCopyInInputStream(std::move(in), bufferSize));
 }
 
-auto_ptr<InputStream> istreamInputStream(istream& is,
+unique_ptr<SeekableInputStream> fileSeekableInputStream(const char* filename,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyIn> in(new IStreamBufferCopyIn(is));
-    return auto_ptr<InputStream>( new BufferCopyInInputStream(in, bufferSize));
+    unique_ptr<BufferCopyIn> in(new FileBufferCopyIn(filename));
+    return unique_ptr<SeekableInputStream>( new BufferCopyInInputStream(std::move(in),
+                                                                        bufferSize));
 }
 
-auto_ptr<OutputStream> fileOutputStream(const char* filename,
-    size_t bufferSize)
+unique_ptr<InputStream> istreamInputStream(istream& is, size_t bufferSize)
 {
-    auto_ptr<BufferCopyOut> out(new FileBufferCopyOut(filename));
-    return auto_ptr<OutputStream>(new BufferCopyOutputStream(out, bufferSize));
+    unique_ptr<BufferCopyIn> in(new IStreamBufferCopyIn(is));
+    return unique_ptr<InputStream>( new BufferCopyInInputStream(std::move(in), bufferSize));
 }
 
-auto_ptr<OutputStream> ostreamOutputStream(ostream& os,
+unique_ptr<InputStream> nonSeekableIstreamInputStream(
+        istream& is, size_t bufferSize)
+{
+    unique_ptr<BufferCopyIn> in(new NonSeekableIStreamBufferCopyIn(is));
+    return unique_ptr<InputStream>( new BufferCopyInInputStream(std::move(in), bufferSize));
+}
+
+unique_ptr<OutputStream> fileOutputStream(const char* filename,
     size_t bufferSize)
 {
-    auto_ptr<BufferCopyOut> out(new OStreamBufferCopyOut(os));
-    return auto_ptr<OutputStream>(new BufferCopyOutputStream(out, bufferSize));
+    unique_ptr<BufferCopyOut> out(new FileBufferCopyOut(filename));
+    return unique_ptr<OutputStream>(new BufferCopyOutputStream(std::move(out), bufferSize));
+}
+
+unique_ptr<OutputStream> ostreamOutputStream(ostream& os,
+    size_t bufferSize)
+{
+    unique_ptr<BufferCopyOut> out(new OStreamBufferCopyOut(os));
+    return unique_ptr<OutputStream>(new BufferCopyOutputStream(std::move(out), bufferSize));
 }
 
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,20 +23,23 @@ import java.io.IOException;
 /** A {@link SeekableInput} backed with data in a byte array. */
 public class SeekableByteArrayInput extends ByteArrayInputStream implements SeekableInput {
 
-    public SeekableByteArrayInput(byte[] data) {
-        super(data);
-    }
+  public SeekableByteArrayInput(byte[] data) {
+    super(data);
+  }
 
-    public long length() throws IOException {
-        return this.count;
-    }
+  @Override
+  public long length() throws IOException {
+    return this.count;
+  }
 
-    public void seek(long p) throws IOException {
-        this.reset();
-        this.skip(p);
-    }
+  @Override
+  public void seek(long p) throws IOException {
+    this.reset();
+    this.skip(p);
+  }
 
-    public long tell() throws IOException {
-        return this.pos;
-    }
+  @Override
+  public long tell() throws IOException {
+    return this.pos;
+  }
 }

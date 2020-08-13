@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,22 +37,34 @@ import org.apache.hadoop.io.serializer.Serializer;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
- * The {@link org.apache.hadoop.io.serializer.Serialization} used by jobs configured with
- * {@link org.apache.avro.mapreduce.AvroJob}.
+ * The {@link org.apache.hadoop.io.serializer.Serialization} used by jobs
+ * configured with {@link org.apache.avro.mapreduce.AvroJob}.
  *
  * @param <T> The Java type of the Avro data to serialize.
  */
 public class AvroSerialization<T> extends Configured implements Serialization<AvroWrapper<T>> {
-  /** Conf key for the writer schema of the AvroKey datum being serialized/deserialized. */
+  /**
+   * Conf key for the writer schema of the AvroKey datum being
+   * serialized/deserialized.
+   */
   private static final String CONF_KEY_WRITER_SCHEMA = "avro.serialization.key.writer.schema";
 
-  /** Conf key for the reader schema of the AvroKey datum being serialized/deserialized. */
+  /**
+   * Conf key for the reader schema of the AvroKey datum being
+   * serialized/deserialized.
+   */
   private static final String CONF_KEY_READER_SCHEMA = "avro.serialization.key.reader.schema";
 
-  /** Conf key for the writer schema of the AvroValue datum being serialized/deserialized. */
+  /**
+   * Conf key for the writer schema of the AvroValue datum being
+   * serialized/deserialized.
+   */
   private static final String CONF_VALUE_WRITER_SCHEMA = "avro.serialization.value.writer.schema";
 
-  /** Conf key for the reader schema of the AvroValue datum being serialized/deserialized. */
+  /**
+   * Conf key for the reader schema of the AvroValue datum being
+   * serialized/deserialized.
+   */
   private static final String CONF_VALUE_READER_SCHEMA = "avro.serialization.value.reader.schema";
 
   /** Conf key for the data model implementation class. */
@@ -77,17 +89,15 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
     if (AvroKey.class.isAssignableFrom(c)) {
       Schema writerSchema = getKeyWriterSchema(conf);
       Schema readerSchema = getKeyReaderSchema(conf);
-      DatumReader<T> datumReader = (readerSchema != null)
-        ? dataModel.createDatumReader(writerSchema, readerSchema)
-        : dataModel.createDatumReader(writerSchema);
-      return new AvroKeyDeserializer<T>(writerSchema, readerSchema, datumReader);
+      DatumReader<T> datumReader = (readerSchema != null) ? dataModel.createDatumReader(writerSchema, readerSchema)
+          : dataModel.createDatumReader(writerSchema);
+      return new AvroKeyDeserializer<>(writerSchema, readerSchema, datumReader);
     } else if (AvroValue.class.isAssignableFrom(c)) {
       Schema writerSchema = getValueWriterSchema(conf);
       Schema readerSchema = getValueReaderSchema(conf);
-      DatumReader<T> datumReader = (readerSchema != null)
-        ? dataModel.createDatumReader(writerSchema, readerSchema)
-        : dataModel.createDatumReader(writerSchema);
-      return new AvroValueDeserializer<T>(writerSchema, readerSchema, datumReader);
+      DatumReader<T> datumReader = (readerSchema != null) ? dataModel.createDatumReader(writerSchema, readerSchema)
+          : dataModel.createDatumReader(writerSchema);
+      return new AvroValueDeserializer<>(writerSchema, readerSchema, datumReader);
     } else {
       throw new IllegalStateException("Only AvroKey and AvroValue are supported.");
     }
@@ -112,12 +122,13 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
     }
     GenericData dataModel = createDataModel(conf);
     DatumWriter<T> datumWriter = dataModel.createDatumWriter(schema);
-    return new AvroSerializer<T>(schema, datumWriter);
+    return new AvroSerializer<>(schema, datumWriter);
   }
 
   /**
-   * Adds the AvroSerialization scheme to the configuration, so SerializationFactory
-   * instances constructed from the given configuration will be aware of it.
+   * Adds the AvroSerialization scheme to the configuration, so
+   * SerializationFactory instances constructed from the given configuration will
+   * be aware of it.
    *
    * @param conf The configuration to add AvroSerialization to.
    */
@@ -125,15 +136,15 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
     Collection<String> serializations = conf.getStringCollection("io.serializations");
     if (!serializations.contains(AvroSerialization.class.getName())) {
       serializations.add(AvroSerialization.class.getName());
-      conf.setStrings("io.serializations",
-          serializations.toArray(new String[serializations.size()]));
+      conf.setStrings("io.serializations", serializations.toArray(new String[0]));
     }
   }
 
   /**
-   * Sets the writer schema of the AvroKey datum that is being serialized/deserialized.
+   * Sets the writer schema of the AvroKey datum that is being
+   * serialized/deserialized.
    *
-   * @param conf The configuration.
+   * @param conf   The configuration.
    * @param schema The Avro key schema.
    */
   public static void setKeyWriterSchema(Configuration conf, Schema schema) {
@@ -144,9 +155,10 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Sets the reader schema of the AvroKey datum that is being serialized/deserialized.
+   * Sets the reader schema of the AvroKey datum that is being
+   * serialized/deserialized.
    *
-   * @param conf The configuration.
+   * @param conf   The configuration.
    * @param schema The Avro key schema.
    */
   public static void setKeyReaderSchema(Configuration conf, Schema schema) {
@@ -154,9 +166,10 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Sets the writer schema of the AvroValue datum that is being serialized/deserialized.
+   * Sets the writer schema of the AvroValue datum that is being
+   * serialized/deserialized.
    *
-   * @param conf The configuration.
+   * @param conf   The configuration.
    * @param schema The Avro value schema.
    */
   public static void setValueWriterSchema(Configuration conf, Schema schema) {
@@ -167,9 +180,10 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Sets the reader schema of the AvroValue datum that is being serialized/deserialized.
+   * Sets the reader schema of the AvroValue datum that is being
+   * serialized/deserialized.
    *
-   * @param conf The configuration.
+   * @param conf   The configuration.
    * @param schema The Avro value schema.
    */
   public static void setValueReaderSchema(Configuration conf, Schema schema) {
@@ -177,9 +191,9 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Sets the data model class for de/seralization.
+   * Sets the data model class for de/serialization.
    *
-   * @param conf The configuration.
+   * @param conf       The configuration.
    * @param modelClass The data model class.
    */
   public static void setDataModelClass(Configuration conf, Class<? extends GenericData> modelClass) {
@@ -187,51 +201,55 @@ public class AvroSerialization<T> extends Configured implements Serialization<Av
   }
 
   /**
-   * Gets the writer schema of the AvroKey datum that is being serialized/deserialized.
+   * Gets the writer schema of the AvroKey datum that is being
+   * serialized/deserialized.
    *
    * @param conf The configuration.
    * @return The Avro key writer schema, or null if none was set.
    */
   public static Schema getKeyWriterSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_WRITER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
-   * Gets the reader schema of the AvroKey datum that is being serialized/deserialized.
+   * Gets the reader schema of the AvroKey datum that is being
+   * serialized/deserialized.
    *
    * @param conf The configuration.
    * @return The Avro key reader schema, or null if none was set.
    */
   public static Schema getKeyReaderSchema(Configuration conf) {
     String json = conf.get(CONF_KEY_READER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
-   * Gets the writer schema of the AvroValue datum that is being serialized/deserialized.
+   * Gets the writer schema of the AvroValue datum that is being
+   * serialized/deserialized.
    *
    * @param conf The configuration.
    * @return The Avro value writer schema, or null if none was set.
    */
   public static Schema getValueWriterSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_WRITER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
-   * Gets the reader schema of the AvroValue datum that is being serialized/deserialized.
+   * Gets the reader schema of the AvroValue datum that is being
+   * serialized/deserialized.
    *
    * @param conf The configuration.
    * @return The Avro value reader schema, or null if none was set.
    */
   public static Schema getValueReaderSchema(Configuration conf) {
     String json = conf.get(CONF_VALUE_READER_SCHEMA);
-    return null == json ? null : Schema.parse(json);
+    return null == json ? null : new Schema.Parser().parse(json);
   }
 
   /**
-   * Gets the data model class for de/seralization.
+   * Gets the data model class for de/serialization.
    *
    * @param conf The configuration.
    */

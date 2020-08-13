@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,6 +56,14 @@ public:
      */
     void read(GenericDatum& datum) const;
 
+    /**
+     * Drains any residual bytes in the input stream (e.g. because
+     * reader's schema has no use of them) and return unused bytes
+     * back to the underlying input stream.
+     */
+    void drain() {
+        decoder_->drain();
+    }
     /**
      * Reads a generic datum from the stream, using the given schema.
      */
@@ -135,7 +143,7 @@ template <> struct codec_traits<GenericDatum> {
         GenericReader::read(d, g);
     }
 };
-    
+
 }   // namespace avro
 #endif
 

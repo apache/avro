@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,12 +25,15 @@ using std::vector;
 namespace avro {
 
 GenericDatum::GenericDatum(const ValidSchema& schema) :
-    type_(schema.root()->type())
+    type_(schema.root()->type()),
+    logicalType_(schema.root()->logicalType())
 {
     init(schema.root());
 }
 
-GenericDatum::GenericDatum(const NodePtr& schema) : type_(schema->type())
+GenericDatum::GenericDatum(const NodePtr& schema) :
+    type_(schema->type()),
+    logicalType_(schema->logicalType())
 {
     init(schema);
 }
@@ -41,6 +44,7 @@ void GenericDatum::init(const NodePtr& schema)
     if (type_ == AVRO_SYMBOLIC) {
         sc = resolveSymbol(schema);
         type_ = sc->type();
+        logicalType_ = sc->logicalType();
     }
     switch (type_) {
     case AVRO_NULL:

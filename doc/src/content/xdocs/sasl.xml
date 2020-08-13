@@ -7,7 +7,7 @@
    (the "License"); you may not use this file except in compliance with
    the License.  You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
+   https://www.apache.org/licenses/LICENSE-2.0
 
    Unless required by applicable law or agreed to in writing, software
    distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
    limitations under the License.
   -->
 <!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
-   "http://forrest.apache.org/dtd/document-v20.dtd" [
+   "https://forrest.apache.org/dtd/document-v20.dtd" [
   <!ENTITY % avro-entities PUBLIC "-//Apache//ENTITIES Avro//EN"
 	   "../../../../build/avro.ent">
   %avro-entities;
@@ -28,7 +28,7 @@
   <body>
     <section id="intro">
       <title>Introduction</title>
-      <p>SASL (<a href="http://www.ietf.org/rfc/rfc2222.txt">RFC 2222</a>)
+      <p>SASL (<a href="https://www.ietf.org/rfc/rfc2222.txt">RFC 2222</a>)
       provides a framework for authentication and security of network
       protocols.  Each protocol that uses SASL is meant to define a
       SASL <em>profile</em>.  This document provides a SASL profile
@@ -62,16 +62,16 @@
 	  <li><code>2: FAIL</code> Terminates negotiation unsuccessfully.</li>
 	  <li><code>3: COMPLETE</code> Terminates negotiation sucessfully.</li>
 	</ul>
-	
+
 	<p>The format of a START message is:</p>
 	<source>| 0 | 4-byte mechanism name length | mechanism name | 4-byte payload length | payload data |</source>
-	
+
 	<p>The format of a CONTINUE message is:</p>
 	<source>| 1 | 4-byte payload length | payload data |</source>
-	
+
 	<p>The format of a FAIL message is:</p>
 	<source>| 2 | 4-byte message length | UTF-8 message |</source>
-	
+
 	<p>The format of a COMPLETE message is:</p>
 	<source>| 3 | 4-byte payload length | payload data |</source>
       </section>
@@ -81,19 +81,19 @@
 	<p>Negotiation is initiated by a client sending a START command
 	  containing the client's chosen mechanism name and any
 	  mechanism-specific payload data.</p>
-	
+
 	<p>The server and client then interchange some number
 	  (possibly zero) of CONTINUE messages.  Each message contains
 	  payload data that is processed by the security mechanism to
 	  generate the next message.</p>
-	
+
 	<p>Once either the client or server send a FAIL message then
 	  negotiation has failed.  UTF-8-encoded text is included in
 	  the failure message.  Once either a FAIL message has been
-	  sent or recieved, or any other error occurs in the
+	  sent or received, or any other error occurs in the
 	  negotiation, further communication on this connection must
 	  cease.</p>
-	
+
 	<p>Once either the client or server send a COMPLETE message
 	  then negotiation has completed successfully.  Session data
 	  may now be transmitted over the connection until it is
@@ -126,13 +126,13 @@
     <section id="anonymous">
       <title>Anonymous Mechanism</title>
       <p>The SASL anonymous mechanism
-      (<a href="http://www.ietf.org/rfc/rfc2222.txt">RFC 2245</a>) is
+      (<a href="https://www.ietf.org/rfc/rfc2222.txt">RFC 2245</a>) is
       quite simple to implement.  In particular, an initial anonymous
       request may be prefixed by the following static sequence:</p>
       <source>| 0 | 0009 | ANONYMOUS | 0000 |</source>
       <p>If a server uses the anonymous mechanism, it should check
       that the mechanism name in the start message prefixing the first
-      request recieved is 'ANONYMOUS', then simply prefix its initial
+      request received is 'ANONYMOUS', then simply prefix its initial
       response with a COMPLETE message of:</p>
       <source>| 3 | 0000 |</source>
       <p>If an anonymous server recieves some other mechanism name,

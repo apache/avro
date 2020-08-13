@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,20 +26,18 @@ import org.apache.avro.util.Utf8;
 /**
  * Low-level support for serializing Avro values.
  *
- * This class has two types of methods.  One type of methods support
- * the writing of leaf values (for example, {@link #writeLong} and
- * {@link #writeString}).  These methods have analogs in {@link
- * Decoder}.
+ * This class has two types of methods. One type of methods support the writing
+ * of leaf values (for example, {@link #writeLong} and {@link #writeString}).
+ * These methods have analogs in {@link Decoder}.
  *
- * The other type of methods support the writing of maps and arrays.
- * These methods are {@link #writeArrayStart}, {@link
- * #startItem}, and {@link #writeArrayEnd} (and similar methods for
- * maps).  Some implementations of {@link Encoder} handle the
- * buffering required to break large maps and arrays into blocks,
- * which is necessary for applications that want to do streaming.
- * (See {@link #writeArrayStart} for details on these methods.)
+ * The other type of methods support the writing of maps and arrays. These
+ * methods are {@link #writeArrayStart}, {@link #startItem}, and
+ * {@link #writeArrayEnd} (and similar methods for maps). Some implementations
+ * of {@link Encoder} handle the buffering required to break large maps and
+ * arrays into blocks, which is necessary for applications that want to do
+ * streaming. (See {@link #writeArrayStart} for details on these methods.)
  *
- *  @see Decoder
+ * @see Decoder
  */
 public class LegacyBinaryEncoder extends Encoder {
   protected OutputStream out;
@@ -64,8 +62,10 @@ public class LegacyBinaryEncoder extends Encoder {
 
   private final ByteWriter byteWriter;
 
-  /** Create a writer that sends its output to the underlying stream
-   *  <code>out</code>. */
+  /**
+   * Create a writer that sends its output to the underlying stream
+   * <code>out</code>.
+   */
   public LegacyBinaryEncoder(OutputStream out) {
     this.out = out;
     this.byteWriter = new SimpleByteWriter(out);
@@ -79,7 +79,8 @@ public class LegacyBinaryEncoder extends Encoder {
   }
 
   @Override
-  public void writeNull() throws IOException { }
+  public void writeNull() throws IOException {
+  }
 
   @Override
   public void writeBoolean(boolean b) throws IOException {
@@ -180,31 +181,30 @@ public class LegacyBinaryEncoder extends Encoder {
   protected static void encodeLong(long n, OutputStream o) throws IOException {
     n = (n << 1) ^ (n >> 63); // move sign to low-order bit
     while ((n & ~0x7F) != 0) {
-      o.write((byte)((n & 0x7f) | 0x80));
+      o.write((byte) ((n & 0x7f) | 0x80));
       n >>>= 7;
     }
-    o.write((byte)n);
+    o.write((byte) n);
   }
 
   protected static void encodeFloat(float f, OutputStream o) throws IOException {
     long bits = Float.floatToRawIntBits(f);
-    o.write((int)(bits      ) & 0xFF);
-    o.write((int)(bits >>  8) & 0xFF);
-    o.write((int)(bits >> 16) & 0xFF);
-    o.write((int)(bits >> 24) & 0xFF);
+    o.write((int) (bits) & 0xFF);
+    o.write((int) (bits >> 8) & 0xFF);
+    o.write((int) (bits >> 16) & 0xFF);
+    o.write((int) (bits >> 24) & 0xFF);
   }
 
   protected static void encodeDouble(double d, OutputStream o) throws IOException {
     long bits = Double.doubleToRawLongBits(d);
-    o.write((int)(bits      ) & 0xFF);
-    o.write((int)(bits >>  8) & 0xFF);
-    o.write((int)(bits >> 16) & 0xFF);
-    o.write((int)(bits >> 24) & 0xFF);
-    o.write((int)(bits >> 32) & 0xFF);
-    o.write((int)(bits >> 40) & 0xFF);
-    o.write((int)(bits >> 48) & 0xFF);
-    o.write((int)(bits >> 56) & 0xFF);
+    o.write((int) (bits) & 0xFF);
+    o.write((int) (bits >> 8) & 0xFF);
+    o.write((int) (bits >> 16) & 0xFF);
+    o.write((int) (bits >> 24) & 0xFF);
+    o.write((int) (bits >> 32) & 0xFF);
+    o.write((int) (bits >> 40) & 0xFF);
+    o.write((int) (bits >> 48) & 0xFF);
+    o.write((int) (bits >> 56) & 0xFF);
   }
 
 }
-

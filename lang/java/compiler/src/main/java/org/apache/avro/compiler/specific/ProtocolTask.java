@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,40 +37,49 @@ public class ProtocolTask extends Task {
   private File dest = new File(".");
   private StringType stringType = StringType.CharSequence;
 
-  private final ArrayList<FileSet> filesets = new ArrayList<FileSet>();
+  private final ArrayList<FileSet> filesets = new ArrayList<>();
 
   /** Set the schema file. */
-  public void setFile(File file) { this.src = file; }
+  public void setFile(File file) {
+    this.src = file;
+  }
 
   /** Set the output directory */
-  public void setDestdir(File dir) { this.dest = dir; }
+  public void setDestdir(File dir) {
+    this.dest = dir;
+  }
 
   /** Set the string type. */
-  public void setStringType(StringType type) { this.stringType = type; }
+  public void setStringType(StringType type) {
+    this.stringType = type;
+  }
 
   /** Get the string type. */
-  public StringType getStringType() { return this.stringType; }
+  public StringType getStringType() {
+    return this.stringType;
+  }
 
   /** Add a fileset. */
-  public void addFileset(FileSet set) { filesets.add(set); }
+  public void addFileset(FileSet set) {
+    filesets.add(set);
+  }
 
   /** Run the compiler. */
   @Override
   public void execute() {
-    if (src == null && filesets.size()==0)
+    if (src == null && filesets.size() == 0)
       throw new BuildException("No file or fileset specified.");
 
     if (src != null)
       compile(src);
 
     Project myProject = getProject();
-    for (int i = 0; i < filesets.size(); i++) {
-      FileSet fs = filesets.get(i);
+    for (FileSet fs : filesets) {
       DirectoryScanner ds = fs.getDirectoryScanner(myProject);
       File dir = fs.getDir(myProject);
       String[] srcs = ds.getIncludedFiles();
-      for (int j = 0; j < srcs.length; j++) {
-        compile(new File(dir, srcs[j]));
+      for (String src1 : srcs) {
+        compile(new File(dir, src1));
       }
     }
   }
@@ -85,11 +94,8 @@ public class ProtocolTask extends Task {
   private void compile(File file) {
     try {
       doCompile(file, dest);
-    } catch (AvroRuntimeException e) {
-      throw new BuildException(e);
-    } catch (IOException e) {
+    } catch (AvroRuntimeException | IOException e) {
       throw new BuildException(e);
     }
   }
 }
-

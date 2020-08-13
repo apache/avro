@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,6 +52,8 @@ public:
         tkObjectEnd
     };
 
+    size_t line() const { return line_; }
+
 private:
     enum State {
         stValue,    // Expect a data type
@@ -73,6 +75,7 @@ private:
     int64_t lv;
     double dv;
     std::string sv;
+    size_t line_;
 
     Token doAdvance();
     Token tryLiteral(const char exp[], size_t n, Token tk);
@@ -81,10 +84,18 @@ private:
     Exception unexpected(unsigned char ch);
     char next();
 
+    static std::string decodeString(const std::string& s, bool binary);
+
 public:
-    JsonParser() : curState(stValue), hasNext(false), peeked(false) { }
+    JsonParser() : curState(stValue), hasNext(false), peeked(false), line_(1) { }
 
     void init(InputStream& is) {
+        // Clear by swapping with an empty stack
+        std::stack<State>().swap(stateStack);
+        curState = stValue;
+        hasNext = false;
+        peeked = false;
+        line_ = 1;
         in_.reset(is);
     }
 
@@ -107,24 +118,55 @@ public:
 
     void expectToken(Token tk);
 
-    bool boolValue() {
+    bool boolValue() const {
         return bv;
     }
 
-    Token cur() {
+    Token cur() const {
         return curToken;
     }
 
-    double doubleValue() {
+    double doubleValue() const {
         return dv;
     }
 
-    int64_t longValue() {
+    int64_t longValue() const {
         return lv;
     }
 
-    std::string stringValue() {
+    const std::string& rawString() const {
         return sv;
+    }
+
+    std::string stringValue() const {
+        return decodeString(sv, false);
+    }
+
+    std::string bytesValue() const {
+        return decodeString(sv, true);
+    }
+
+    void drain() {
+        if (!stateStack.empty() || peeked) {
+            throw Exception("Invalid state for draining");
+        }
+        in_.drain(hasNext);
+        hasNext = false;
+    }
+
+    /**
+     * Return UTF-8 encoded string value.
+     */
+    static std::string toStringValue(const std::string& sv) {
+        return decodeString(sv, false);
+    }
+
+    /**
+     * Return byte-encoded string value. It is an error if the input
+     * JSON string contained unicode characters more than "\u00ff'.
+     */
+    static std::string toBytesValue(const std::string& sv) {
+        return decodeString(sv, true);
     }
 
     static const char* const tokenNames[];
@@ -156,7 +198,7 @@ class AVRO_DECL JsonPrettyFormatter {
         if (indent_.size() < charsToIndent) {
             indent_.resize(charsToIndent * 2, ' ');
         }
-        out_.writeBytes(&(indent_[0]), charsToIndent);
+        out_.writeBytes(indent_.data(), charsToIndent);
     }
 public:
     JsonPrettyFormatter(StreamWriter& out) : out_(out), level_(0), indent_(10, ' ') { }
@@ -212,47 +254,88 @@ class AVRO_DECL JsonGenerator {
     }
 
     void escapeCtl(char c) {
-        out_.write('\\');
-        out_.write('U');
-        out_.write('0');
-        out_.write('0');
+        escapeUnicode(static_cast<uint8_t>(c));
+    }
+
+    void writeHex(char c) {
         out_.write(toHex((static_cast<unsigned char>(c)) / 16));
         out_.write(toHex((static_cast<unsigned char>(c)) % 16));
     }
 
-    void doEncodeString(const std::string& s) {
-        const char* b = &s[0];
-        const char* e = b + s.size();
+    void escapeUnicode(uint32_t c) {
+        out_.write('\\');
+        out_.write('u');
+        writeHex((c >> 8) & 0xff);
+        writeHex(c & 0xff);
+    }
+    void doEncodeString(const char* b, size_t len, bool binary) {
+        const char* e = b + len;
         out_.write('"');
         for (const char* p = b; p != e; p++) {
-            switch (*p) {
-            case '\\':
-            case '"':
-            case '/':
-                escape(*p, b, p);
-                break;
-            case '\b':
-                escape('b', b, p);
-                break;
-            case '\f':
-                escape('f', b, p);
-                break;
-            case '\n':
-                escape('n', b, p);
-                break;
-            case '\r':
-                escape('r', b, p);
-                break;
-            case '\t':
-                escape('t', b, p);
-                break;
-            default:
-                if (! std::iscntrl(*p, std::locale::classic())) {
-                    continue;
-                }
+            if ((*p & 0x80) != 0) {
                 write(b, p);
-                escapeCtl(*p);
-                break;
+                if (binary) {
+                    escapeCtl(*p);
+                } else if ((*p & 0x40) == 0) {
+                    throw Exception("Invalid UTF-8 sequence");
+                } else {
+                    int more = 1;
+                    uint32_t value = 0;
+                    if ((*p & 0x20) != 0) {
+                        more++;
+                        if ((*p & 0x10) != 0) {
+                            more++;
+                            if ((*p & 0x08) != 0) {
+                                throw Exception("Invalid UTF-8 sequence");
+                            } else {
+                                value = *p & 0x07;
+                            }
+                        } else {
+                            value = *p & 0x0f;
+                        }
+                    } else {
+                        value = *p & 0x1f;
+                    }
+                    for (int i = 0; i < more; ++i) {
+                        if (++p == e || (*p & 0xc0) != 0x80) {
+                            throw Exception("Invalid UTF-8 sequence");
+                        }
+                        value <<= 6;
+                        value |= *p & 0x3f;
+                    }
+                    escapeUnicode(value);
+                }
+            } else {
+                switch (*p) {
+                case '\\':
+                case '"':
+                case '/':
+                    escape(*p, b, p);
+                    break;
+                case '\b':
+                    escape('b', b, p);
+                    break;
+                case '\f':
+                    escape('f', b, p);
+                    break;
+                case '\n':
+                    escape('n', b, p);
+                    break;
+                case '\r':
+                    escape('r', b, p);
+                    break;
+                case '\t':
+                    escape('t', b, p);
+                    break;
+                default:
+                    if (std::iscntrl(*p, std::locale::classic())) {
+                        write(b, p);
+                        escapeCtl(*p);
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
             }
             b = p + 1;
         }
@@ -286,6 +369,10 @@ public:
         out_.flush();
     }
 
+    int64_t byteCount() const {
+        return out_.byteCount();
+    }
+
     void encodeNull() {
         sep();
         out_.writeBytes(reinterpret_cast<const uint8_t*>("null"), 4);
@@ -308,7 +395,7 @@ public:
         std::ostringstream oss;
         oss << boost::lexical_cast<std::string>(t);
         const std::string& s = oss.str();
-        out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
+        out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
         sep2();
     }
 
@@ -325,7 +412,7 @@ public:
             oss << "-Infinity";
         }
         const std::string& s = oss.str();
-        out_.writeBytes(reinterpret_cast<const uint8_t*>(&s[0]), s.size());
+        out_.writeBytes(reinterpret_cast<const uint8_t*>(s.data()), s.size());
         sep2();
     }
 
@@ -342,7 +429,7 @@ public:
         } else {
             sep();
         }
-        doEncodeString(s);
+        doEncodeString(s.c_str(), s.size(), false);
         if (top == stKey) {
             out_.write(':');
             formatter_.handleColon();
@@ -351,12 +438,7 @@ public:
 
     void encodeBinary(const uint8_t* bytes, size_t len) {
         sep();
-        out_.write('"');
-        const uint8_t* e = bytes + len;
-        while (bytes != e) {
-            escapeCtl(*bytes++);
-        }
-        out_.write('"');
+        doEncodeString(reinterpret_cast<const char *>(bytes), len, true);
         sep2();
     }
 

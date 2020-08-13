@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
@@ -28,18 +29,18 @@ import org.apache.avro.io.parsing.ValidatingGrammarGenerator;
 import org.apache.avro.util.Utf8;
 
 /**
- * An implementation of {@link Decoder} that ensures that the sequence
- * of operations conforms to a schema.
+ * An implementation of {@link Decoder} that ensures that the sequence of
+ * operations conforms to a schema.
  * <p/>
  * Use {@link DecoderFactory#validatingDecoder(Schema, Decoder)} to construct
  * and configure.
  * <p/>
  * ValidatingDecoder is not thread-safe.
+ * 
  * @see Decoder
  * @see DecoderFactory
  */
-public class ValidatingDecoder extends ParsingDecoder
-  implements Parser.ActionHandler {
+public class ValidatingDecoder extends ParsingDecoder implements Parser.ActionHandler {
   protected Decoder in;
 
   ValidatingDecoder(Symbol root, Decoder in) throws IOException {
@@ -52,9 +53,7 @@ public class ValidatingDecoder extends ParsingDecoder
   }
 
   private static Symbol getSymbol(Schema schema) {
-    if (null == schema) {
-      throw new NullPointerException("Schema cannot be null");
-    }
+    Objects.requireNonNull(schema, "Schema cannot be null");
     return new ValidatingGrammarGenerator().generate(schema);
   }
 
@@ -136,8 +135,7 @@ public class ValidatingDecoder extends ParsingDecoder
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     if (size != top.size) {
       throw new AvroTypeException(
-        "Incorrect length for fixed binary: expected " +
-        top.size + " but received " + size + " bytes.");
+          "Incorrect length for fixed binary: expected " + top.size + " but received " + size + " bytes.");
     }
   }
 
@@ -166,9 +164,7 @@ public class ValidatingDecoder extends ParsingDecoder
     Symbol.IntCheckAction top = (Symbol.IntCheckAction) parser.popSymbol();
     int result = in.readEnum();
     if (result < 0 || result >= top.size) {
-      throw new AvroTypeException(
-          "Enumeration out of range: max is " +
-          top.size + " but received " + result);
+      throw new AvroTypeException("Enumeration out of range: max is " + top.size + " but received " + result);
     }
     return result;
   }
@@ -251,4 +247,3 @@ public class ValidatingDecoder extends ParsingDecoder
     return null;
   }
 }
-

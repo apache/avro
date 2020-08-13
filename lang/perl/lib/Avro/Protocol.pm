@@ -6,7 +6,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -32,6 +32,8 @@ use Object::Tiny qw{
     types
     messages
 };
+
+our $VERSION = '++MODULE_VERSION++';
 
 my $json = JSON::XS->new->allow_nonref;
 
@@ -61,8 +63,8 @@ sub from_struct {
 
     my $types = $class->parse_types($struct->{types});
 
-    my $messages = $class->parse_messages($struct->{messages}, $types)
-        if $struct->{messages};
+    my $messages = $struct->{messages} ?
+        $class->parse_messages($struct->{messages}, $types) : undef;
 
     my $protocol = $class->SUPER::new(
         name      => $name,

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.io.IOException;
 import java.io.File;
 
+import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
@@ -46,21 +47,23 @@ import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.DescriptorProtos.FileOptions;
 
 import org.apache.avro.util.ClassUtils;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.JsonNodeFactory;
+import org.apache.avro.util.internal.Accessor;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 /** Utilities for serializing Protobuf data in Avro format. */
 public class ProtobufData extends GenericData {
-  private static final String PROTOBUF_TYPE = "protobuf";
-
   private static final ProtobufData INSTANCE = new ProtobufData();
 
-  protected ProtobufData() {}
+  protected ProtobufData() {
+  }
 
   /** Return the singleton instance. */
-  public static ProtobufData get() { return INSTANCE; }
+  public static ProtobufData get() {
+    return INSTANCE;
+  }
 
   @Override
   public DatumReader createDatumReader(Schema schema) {
@@ -73,8 +76,8 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  public void setField(Object r, String n, int pos, Object o) {
-    setField(r, n, pos, o, getRecordState(r, getSchema(r.getClass())));
+  public void setField(Object r, String n, int pos, Object value) {
+    setField(r, n, pos, value, getRecordState(r, getSchema(r.getClass())));
   }
 
   @Override
@@ -83,24 +86,24 @@ public class ProtobufData extends GenericData {
   }
 
   @Override
-  protected void setField(Object r, String n, int pos, Object o, Object state) {
-    Builder b = (Builder)r;
-    FieldDescriptor f = ((FieldDescriptor[])state)[pos];
+  protected void setField(Object record, String name, int position, Object value, Object state) {
+    Builder b = (Builder) record;
+    FieldDescriptor f = ((FieldDescriptor[]) state)[position];
     switch (f.getType()) {
     case MESSAGE:
-      if (o == null) {
+      if (value == null) {
         b.clearField(f);
         break;
       }
     default:
-      b.setField(f, o);
+      b.setField(f, value);
     }
   }
 
   @Override
   protected Object getField(Object record, String name, int pos, Object state) {
-    Message m = (Message)record;
-    FieldDescriptor f = ((FieldDescriptor[])state)[pos];
+    Message m = (Message) record;
+    FieldDescriptor f = ((FieldDescriptor[]) state)[pos];
     switch (f.getType()) {
     case MESSAGE:
       if (!f.isRepeated() && !m.hasField(f))
@@ -110,18 +113,17 @@ public class ProtobufData extends GenericData {
     }
   }
 
-  private final Map<Descriptor,FieldDescriptor[]> fieldCache =
-    new ConcurrentHashMap<Descriptor,FieldDescriptor[]>();
+  private final Map<Descriptor, FieldDescriptor[]> fieldCache = new ConcurrentHashMap<>();
 
   @Override
   protected Object getRecordState(Object r, Schema s) {
-    Descriptor d = ((MessageOrBuilder)r).getDescriptorForType();
+    Descriptor d = ((MessageOrBuilder) r).getDescriptorForType();
     FieldDescriptor[] fields = fieldCache.get(d);
-    if (fields == null) {                         // cache miss
+    if (fields == null) { // cache miss
       fields = new FieldDescriptor[s.getFields().size()];
       for (Field f : s.getFields())
         fields[f.pos()] = d.findFieldByName(f.name());
-      fieldCache.put(d, fields);                  // update cache
+      fieldCache.put(d, fields); // update cache
     }
     return fields;
   }
@@ -134,11 +136,11 @@ public class ProtobufData extends GenericData {
   @Override
   public Object newRecord(Object old, Schema schema) {
     try {
-      Class c = ClassUtils.forName(SpecificData.getClassName(schema));
+      Class c = SpecificData.get().getClass(schema);
       if (c == null)
-        return newRecord(old, schema);            // punt to generic
+        return super.newRecord(old, schema); // punt to generic
       if (c.isInstance(old))
-        return old;                               // reuse instance
+        return old; // reuse instance
       return c.getMethod("newBuilder").invoke(null);
 
     } catch (Exception e) {
@@ -158,55 +160,61 @@ public class ProtobufData extends GenericData {
 
   @Override
   protected Schema getRecordSchema(Object record) {
-    return getSchema(((Message)record).getDescriptorForType());
+    Descriptor descriptor = ((Message) record).getDescriptorForType();
+    Schema schema = schemaCache.get(descriptor);
+
+    if (schema == null) {
+      schema = getSchema(descriptor);
+      schemaCache.put(descriptor, schema);
+    }
+    return schema;
   }
 
-  private final Map<Class,Schema> schemaCache
-    = new ConcurrentHashMap<Class,Schema>();
+  private final Map<Object, Schema> schemaCache = new ConcurrentHashMap<>();
 
   /** Return a record schema given a protobuf message class. */
   public Schema getSchema(Class c) {
     Schema schema = schemaCache.get(c);
 
-    if (schema == null) {                         // cache miss
+    if (schema == null) { // cache miss
       try {
         Object descriptor = c.getMethod("getDescriptor").invoke(null);
         if (c.isEnum())
-          schema = getSchema((EnumDescriptor)descriptor);
+          schema = getSchema((EnumDescriptor) descriptor);
         else
-          schema = getSchema((Descriptor)descriptor);
+          schema = getSchema((Descriptor) descriptor);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
-      schemaCache.put(c, schema);                 // update cache
+      schemaCache.put(c, schema); // update cache
     }
     return schema;
   }
 
-  private static final ThreadLocal<Map<Descriptor,Schema>> SEEN
-    = new ThreadLocal<Map<Descriptor,Schema>>() {
-    protected Map<Descriptor,Schema> initialValue() {
-      return new IdentityHashMap<Descriptor,Schema>();
-    }
-  };
+  private static final ThreadLocal<Map<Descriptor, Schema>> SEEN = ThreadLocal.withInitial(IdentityHashMap::new);
 
-  private Schema getSchema(Descriptor descriptor) {
-    Map<Descriptor,Schema> seen = SEEN.get();
-    if (seen.containsKey(descriptor))             // stop recursion
+  public Schema getSchema(Descriptor descriptor) {
+    Map<Descriptor, Schema> seen = SEEN.get();
+    if (seen.containsKey(descriptor)) // stop recursion
       return seen.get(descriptor);
     boolean first = seen.isEmpty();
+
+    Conversion conversion = getConversionByDescriptor(descriptor);
+    if (conversion != null) {
+      Schema converted = conversion.getRecommendedSchema();
+      seen.put(descriptor, converted);
+      return converted;
+    }
+
     try {
-      Schema result =
-        Schema.createRecord(descriptor.getName(), null,
-                            getNamespace(descriptor.getFile(),
-                                         descriptor.getContainingType()),
-                            false);
+      Schema result = Schema.createRecord(descriptor.getName(), null,
+          getNamespace(descriptor.getFile(), descriptor.getContainingType()), false);
 
       seen.put(descriptor, result);
 
-      List<Field> fields = new ArrayList<Field>();
+      List<Field> fields = new ArrayList<>(descriptor.getFields().size());
       for (FieldDescriptor f : descriptor.getFields())
-        fields.add(new Field(f.getName(), getSchema(f), null, getDefault(f)));
+        fields.add(Accessor.createField(f.getName(), getSchema(f), null, getDefault(f)));
       result.setFields(fields);
       return result;
 
@@ -216,34 +224,40 @@ public class ProtobufData extends GenericData {
     }
   }
 
-  private String getNamespace(FileDescriptor fd, Descriptor containing) {
+  public String getNamespace(FileDescriptor fd, Descriptor containing) {
     FileOptions o = fd.getOptions();
-    String p = o.hasJavaPackage()
-      ? o.getJavaPackage()
-      : fd.getPackage();
-    String outer;
-    if (o.hasJavaOuterClassname()) {
-      outer = o.getJavaOuterClassname();
-    } else {
-      outer = new File(fd.getName()).getName();
-      outer = outer.substring(0, outer.lastIndexOf('.'));
-      outer = toCamelCase(outer);
+    String p = o.hasJavaPackage() ? o.getJavaPackage() : fd.getPackage();
+    String outer = "";
+    if (!o.getJavaMultipleFiles()) {
+      if (o.hasJavaOuterClassname()) {
+        outer = o.getJavaOuterClassname();
+      } else {
+        outer = new File(fd.getName()).getName();
+        outer = outer.substring(0, outer.lastIndexOf('.'));
+        outer = toCamelCase(outer);
+      }
     }
-    String inner = "";
+    StringBuilder inner = new StringBuilder();
     while (containing != null) {
-      inner = containing.getName() + "$" + inner;
+      if (inner.length() == 0) {
+        inner.insert(0, containing.getName());
+      } else {
+        inner.insert(0, containing.getName() + "$");
+      }
       containing = containing.getContainingType();
     }
-    return p + "." + outer + "$" + inner;
+    String d1 = (!outer.isEmpty() || inner.length() != 0 ? "." : "");
+    String d2 = (!outer.isEmpty() && inner.length() != 0 ? "$" : "");
+    return p + d1 + outer + d2 + inner;
   }
 
-  private static String toCamelCase(String s){
+  private static String toCamelCase(String s) {
     String[] parts = s.split("_");
-    String camelCaseString = "";
+    StringBuilder camelCaseString = new StringBuilder(s.length());
     for (String part : parts) {
-      camelCaseString = camelCaseString + cap(part);
+      camelCaseString.append(cap(part));
     }
-    return camelCaseString;
+    return camelCaseString.toString();
   }
 
   private static String cap(String s) {
@@ -252,7 +266,7 @@ public class ProtobufData extends GenericData {
 
   private static final Schema NULL = Schema.create(Schema.Type.NULL);
 
-  private Schema getSchema(FieldDescriptor f) {
+  public Schema getSchema(FieldDescriptor f) {
     Schema s = getNonRepeatedSchema(f);
     if (f.isRepeated())
       s = Schema.createArray(s);
@@ -274,9 +288,17 @@ public class ProtobufData extends GenericData {
       return s;
     case BYTES:
       return Schema.create(Schema.Type.BYTES);
-    case INT32: case UINT32: case SINT32: case FIXED32: case SFIXED32:
+    case INT32:
+    case UINT32:
+    case SINT32:
+    case FIXED32:
+    case SFIXED32:
       return Schema.create(Schema.Type.INT);
-    case INT64: case UINT64: case SINT64: case FIXED64: case SFIXED64:
+    case INT64:
+    case UINT64:
+    case SINT64:
+    case FIXED64:
+    case SFIXED64:
       return Schema.create(Schema.Type.LONG);
     case ENUM:
       return getSchema(f.getEnumType());
@@ -284,22 +306,20 @@ public class ProtobufData extends GenericData {
       result = getSchema(f.getMessageType());
       if (f.isOptional())
         // wrap optional record fields in a union with null
-        result = Schema.createUnion(Arrays.asList(new Schema[] {NULL, result}));
+        result = Schema.createUnion(Arrays.asList(NULL, result));
       return result;
-    case GROUP:                                   // groups are deprecated
+    case GROUP: // groups are deprecated
     default:
-      throw new RuntimeException("Unexpected type: "+f.getType());
+      throw new RuntimeException("Unexpected type: " + f.getType());
     }
   }
 
-  private Schema getSchema(EnumDescriptor d) {
-    List<String> symbols = new ArrayList<String>();
+  public Schema getSchema(EnumDescriptor d) {
+    List<String> symbols = new ArrayList<>(d.getValues().size());
     for (EnumValueDescriptor e : d.getValues()) {
       symbols.add(e.getName());
     }
-    return Schema.createEnum(d.getName(), null,
-                             getNamespace(d.getFile(), d.getContainingType()),
-                             symbols);
+    return Schema.createEnum(d.getName(), null, getNamespace(d.getFile(), d.getContainingType()), symbols);
   }
 
   private static final JsonFactory FACTORY = new JsonFactory();
@@ -307,42 +327,73 @@ public class ProtobufData extends GenericData {
   private static final JsonNodeFactory NODES = JsonNodeFactory.instance;
 
   private JsonNode getDefault(FieldDescriptor f) {
-    if (f.isRequired() || f.isRepeated())         // no default
+    if (f.isRequired()) // no default
       return null;
 
-    if (f.hasDefaultValue()) {                    // parse spec'd default value
+    if (f.isRepeated()) // empty array as repeated fields' default value
+      return NODES.arrayNode();
+
+    if (f.hasDefaultValue()) { // parse spec'd default value
       Object value = f.getDefaultValue();
       switch (f.getType()) {
       case ENUM:
-        value = ((EnumValueDescriptor)value).getName();
+        value = ((EnumValueDescriptor) value).getName();
         break;
       }
       String json = toString(value);
       try {
-        return MAPPER.readTree(FACTORY.createJsonParser(json));
+        return MAPPER.readTree(FACTORY.createParser(json));
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
     }
 
-    switch (f.getType()) {                        // generate default for type
+    switch (f.getType()) { // generate default for type
     case BOOL:
       return NODES.booleanNode(false);
-    case FLOAT: case DOUBLE:
-    case INT32: case UINT32: case SINT32: case FIXED32: case SFIXED32:
-    case INT64: case UINT64: case SINT64: case FIXED64: case SFIXED64:
+    case FLOAT:
+    case DOUBLE:
+    case INT32:
+    case UINT32:
+    case SINT32:
+    case FIXED32:
+    case SFIXED32:
+    case INT64:
+    case UINT64:
+    case SINT64:
+    case FIXED64:
+    case SFIXED64:
       return NODES.numberNode(0);
-    case STRING: case BYTES:
+    case STRING:
+    case BYTES:
       return NODES.textNode("");
     case ENUM:
       return NODES.textNode(f.getEnumType().getValues().get(0).getName());
     case MESSAGE:
       return NODES.nullNode();
-    case GROUP:                                   // groups are deprecated
+    case GROUP: // groups are deprecated
     default:
-      throw new RuntimeException("Unexpected type: "+f.getType());
+      throw new RuntimeException("Unexpected type: " + f.getType());
     }
 
   }
 
+  /**
+   * Get Conversion from protobuf descriptor via protobuf classname.
+   *
+   * @param descriptor protobuf descriptor
+   * @return Conversion | null
+   */
+  private Conversion getConversionByDescriptor(Descriptor descriptor) {
+    String namespace = getNamespace(descriptor.getFile(), descriptor.getContainingType());
+    String name = descriptor.getName();
+    String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
+
+    try {
+      Class clazz = ClassUtils.forName(getClassLoader(), namespace + dot + name);
+      return getConversionByClass(clazz);
+    } catch (ClassNotFoundException e) {
+      return null;
+    }
+  }
 }

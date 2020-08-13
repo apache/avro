@@ -1,4 +1,4 @@
-﻿/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,14 +21,22 @@ using Avro.IO;
 
 namespace Avro.Specific
 {
+    /// <summary>
     /// PreresolvingDatumReader for reading data to ISpecificRecord classes.
+    /// </summary>
     /// <see cref="PreresolvingDatumReader{T}">For more information about performance considerations for choosing this implementation</see>
     public class SpecificDatumReader<T> : PreresolvingDatumReader<T>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SpecificDatumReader{T}"/> class.
+        /// </summary>
+        /// <param name="writerSchema">Schema that was used to write the data.</param>
+        /// <param name="readerSchema">Schema to use when reading the data.</param>
         public SpecificDatumReader(Schema writerSchema, Schema readerSchema) : base(writerSchema, readerSchema)
         {
         }
 
+        /// <inheritdoc/>
         protected override bool IsReusable(Schema.Type tag)
         {
             switch (tag)
@@ -47,21 +55,25 @@ namespace Avro.Specific
             return true;
         }
 
+        /// <inheritdoc/>
         protected override ArrayAccess GetArrayAccess(ArraySchema readerSchema)
         {
             return new SpecificArrayAccess(readerSchema);
         }
 
+        /// <inheritdoc/>
         protected override EnumAccess GetEnumAccess(EnumSchema readerSchema)
         {
             return new SpecificEnumAccess();
         }
 
+        /// <inheritdoc/>
         protected override MapAccess GetMapAccess(MapSchema readerSchema)
         {
             return new SpecificMapAccess(readerSchema);
         }
 
+        /// <inheritdoc/>
         protected override RecordAccess GetRecordAccess(RecordSchema readerSchema)
         {
             if (readerSchema.Name == null)
@@ -72,15 +84,10 @@ namespace Avro.Specific
             return new SpecificRecordAccess(readerSchema);
         }
 
+        /// <inheritdoc/>
         protected override FixedAccess GetFixedAccess(FixedSchema readerSchema)
         {
             return new SpecificFixedAccess(readerSchema);
-        }
-
-        private static ObjectCreator.CtorDelegate GetConstructor(string name, Schema.Type schemaType)
-        {
-            var creator = ObjectCreator.Instance;
-            return creator.GetConstructor(name, schemaType, creator.GetType(name, schemaType));
         }
 
         private class SpecificEnumAccess : EnumAccess
@@ -93,16 +100,16 @@ namespace Avro.Specific
 
         private class SpecificRecordAccess : RecordAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificRecordAccess(RecordSchema readerSchema)
             {
-                objCreator = GetConstructor(readerSchema.Fullname, Schema.Type.Record);
+                typeName = readerSchema.Fullname;
             }
 
             public object CreateRecord(object reuse)
             {
-                return reuse ?? objCreator();
+                return reuse ?? ObjectCreator.Instance.New(typeName, Schema.Type.Record);
             }
 
             public object GetField(object record, string fieldName, int fieldPos)
@@ -118,16 +125,16 @@ namespace Avro.Specific
 
         private class SpecificFixedAccess : FixedAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificFixedAccess(FixedSchema readerSchema)
             {
-                objCreator = GetConstructor(readerSchema.Fullname, Schema.Type.Fixed);
+                typeName = readerSchema.Fullname;
             }
 
             public object CreateFixed(object reuse)
             {
-                return reuse ?? objCreator();
+                return reuse ?? ObjectCreator.Instance.New(typeName, Schema.Type.Fixed);
             }
 
             public byte[] GetFixedBuffer(object rec)
@@ -138,7 +145,7 @@ namespace Avro.Specific
 
         private class SpecificArrayAccess : ArrayAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificArrayAccess(ArraySchema readerSchema)
             {
@@ -146,8 +153,8 @@ namespace Avro.Specific
                 string type = Avro.CodeGen.getType(readerSchema, false, ref nEnum);
                 type = type.Remove(0, 6);              // remove IList<
                 type = type.Remove(type.Length - 1);   // remove >
-        
-                objCreator = GetConstructor(type, Schema.Type.Array);
+
+                typeName = type;
             }
 
             public object Create(object reuse)
@@ -164,7 +171,7 @@ namespace Avro.Specific
                     array.Clear();
                 }
                 else
-                    array = objCreator() as IList;
+                    array = ObjectCreator.Instance.New(typeName, Schema.Type.Array) as IList;
                 return array;
             }
 
@@ -190,7 +197,7 @@ namespace Avro.Specific
 
         private class SpecificMapAccess : MapAccess
         {
-            private ObjectCreator.CtorDelegate objCreator;
+            private string typeName;
 
             public SpecificMapAccess(MapSchema readerSchema)
             {
@@ -198,8 +205,8 @@ namespace Avro.Specific
                 string type = Avro.CodeGen.getType(readerSchema, false, ref nEnum);
                 type = type.Remove(0, 19);             // remove IDictionary<string,
                 type = type.Remove(type.Length - 1);   // remove >
-        
-                objCreator = GetConstructor(type, Schema.Type.Map);
+
+                typeName = type;
             }
 
             public object Create(object reuse)
@@ -214,13 +221,13 @@ namespace Avro.Specific
                     map.Clear();
                 }
                 else
-                    map = objCreator() as System.Collections.IDictionary;
+                    map = ObjectCreator.Instance.New(typeName, Schema.Type.Map) as System.Collections.IDictionary;
                 return map;
             }
 
             public void AddElements(object mapObj, int elements, ReadItem itemReader, Decoder decoder, bool reuse)
             {
-                var map = ((IDictionary)mapObj);
+                var map = (IDictionary)mapObj;
                 for (int i = 0; i < elements; i++)
                 {
                     var key = decoder.ReadString();

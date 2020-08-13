@@ -113,6 +113,9 @@
       "name" : "submitTime",
       "type" : {"type": "long", "logicalType": "timestamp-millis"}
     }, {
+      "name" : "submitTimeLocal",
+      "type" : {"type": "long", "logicalType": "local-timestamp-millis"}
+    }, {
       "name" : "jobConfPath",
       "type" : "string"
     } ]

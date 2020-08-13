@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,7 +20,8 @@
 #define avro_Encoding_hh__
 
 #include <stdint.h>
-#include <boost/array.hpp>
+#include <array>
+#include <cstddef>
 
 #include "Config.hh"
 /// \file
@@ -34,8 +35,8 @@ AVRO_DECL int64_t decodeZigzag64(uint64_t input);
 AVRO_DECL uint32_t encodeZigzag32(int32_t input);
 AVRO_DECL int32_t decodeZigzag32(uint32_t input);
 
-AVRO_DECL size_t encodeInt32(int32_t input, boost::array<uint8_t, 5> &output);
-AVRO_DECL size_t encodeInt64(int64_t input, boost::array<uint8_t, 10> &output);
+AVRO_DECL size_t encodeInt32(int32_t input, std::array<uint8_t, 5> &output);
+AVRO_DECL size_t encodeInt64(int64_t input, std::array<uint8_t, 10> &output);
 
 } // namespace avro
 

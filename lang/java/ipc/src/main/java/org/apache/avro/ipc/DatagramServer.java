@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,19 +27,19 @@ import java.nio.channels.DatagramChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A datagram-based server implementation. This uses a simple, non-standard
- * wire protocol and is not intended for production services. */
+/**
+ * A datagram-based server implementation. This uses a simple, non-standard wire
+ * protocol and is not intended for production services.
+ */
 public class DatagramServer extends Thread implements Server {
-  private static final Logger LOG =
-    LoggerFactory.getLogger(DatagramServer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DatagramServer.class);
 
   private final Responder responder;
   private final DatagramChannel channel;
   private final Transceiver transceiver;
 
-  public DatagramServer(Responder responder, SocketAddress addr)
-    throws IOException {
-    String name = "DatagramServer on "+addr;
+  public DatagramServer(Responder responder, SocketAddress addr) throws IOException {
+    String name = "DatagramServer on " + addr;
 
     this.responder = responder;
 
@@ -52,8 +52,12 @@ public class DatagramServer extends Thread implements Server {
     setDaemon(true);
   }
 
-  public int getPort() { return channel.socket().getLocalPort(); }
+  @Override
+  public int getPort() {
+    return channel.socket().getLocalPort();
+  }
 
+  @Override
   public void run() {
     while (true) {
       try {
@@ -67,7 +71,10 @@ public class DatagramServer extends Thread implements Server {
     }
   }
 
-  public void close() { this.interrupt(); }
+  @Override
+  public void close() {
+    this.interrupt();
+  }
 
   public static void main(String[] arg) throws Exception {
     DatagramServer server = new DatagramServer(null, new InetSocketAddress(0));
@@ -77,4 +84,3 @@ public class DatagramServer extends Thread implements Server {
   }
 
 }
-

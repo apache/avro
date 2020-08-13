@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,10 +23,11 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include "array"
 
-#include "boost/array.hpp"
 #include "boost/blank.hpp"
 
+#include "AvroTraits.hh"
 #include "Config.hh"
 #include "Encoder.hh"
 #include "Decoder.hh"
@@ -41,7 +42,7 @@
  * std::vector<T> for aribtrary type T gets encoded as an Avro array of T.
  * Similarly, std::map<std::string, T> for arbitrary type T gets encoded
  * as an Avro map with value type T.
- * 
+ *
  * Users can have their custom types encoded/decoded by specializing
  * avro::codec_traits class for their types.
  */
@@ -61,8 +62,7 @@ template <typename T> void decode(Decoder& d, T& t);
  * The default is empty.
  */
 template <typename T>
-struct codec_traits {
-};
+struct codec_traits;
 
 /**
  * codec_traits for Avro boolean.
@@ -200,21 +200,21 @@ template <> struct codec_traits<std::vector<uint8_t> > {
 /**
  * codec_traits for Avro fixed.
  */
-template <size_t N> struct codec_traits<boost::array<uint8_t, N> > {
+template <size_t N> struct codec_traits<std::array<uint8_t, N> > {
     /**
      * Encodes a given value.
      */
-    static void encode(Encoder& e, const boost::array<uint8_t, N>& b) {
-        e.encodeFixed(&b[0], N);
+    static void encode(Encoder& e, const std::array<uint8_t, N>& b) {
+        e.encodeFixed(b.data(), N);
     }
 
     /**
      * Decodes into a given value.
      */
-    static void decode(Decoder& d, boost::array<uint8_t, N>& s) {
+    static void decode(Decoder& d, std::array<uint8_t, N>& s) {
         std::vector<uint8_t> v(N);
         d.decodeFixed(N, v);
-        std::copy(&v[0], &v[0] + N, &s[0]);
+        std::copy(v.data(), v.data() + N, s.data());
     }
 };
 
@@ -247,9 +247,21 @@ template <typename T> struct codec_traits<std::vector<T> > {
             for (size_t i = 0; i < n; ++i) {
                 T t;
                 avro::decode(d, t);
-                s.push_back(t);
+                s.push_back(std::move(t));
             }
         }
+    }
+};
+
+typedef codec_traits<std::vector<bool>::const_reference> bool_codec_traits;
+
+template <> struct codec_traits<std::conditional<avro::is_not_defined<bool_codec_traits>::value,
+         std::vector<bool>::const_reference, void>::type> {
+   /**
+    * Encodes a given value.
+    */
+    static void encode(Encoder& e, std::vector<bool>::const_reference b) {
+        e.encodeBool(b);
     }
 };
 
@@ -284,9 +296,8 @@ template <typename T> struct codec_traits<std::map<std::string, T> > {
             for (size_t i = 0; i < n; ++i) {
                 std::string k;
                 avro::decode(d, k);
-                T t;
+                T& t = s[std::move(k)];
                 avro::decode(d, t);
-                s[k] = t;
             }
         }
     }
@@ -330,6 +341,7 @@ void decode(Decoder& d, T& t) {
 }
 
 }   // namespace avro
+
 #endif // avro_Codec_hh__
 
 

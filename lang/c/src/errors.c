@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,17 +21,6 @@
 #include <stdlib.h>
 
 #include "avro/errors.h"
-
-#if defined THREADSAFE && (defined __unix__ || defined __unix)
-#include <pthread.h>
-static pthread_key_t error_data_key;
-static pthread_once_t error_data_key_once = PTHREAD_ONCE_INIT;
-
-static void make_error_data_key()
-{
-    pthread_key_create(&error_data_key, free);
-}
-#endif
 
 /* 4K should be enough, right? */
 #define AVRO_ERROR_SIZE 4096
@@ -52,10 +41,30 @@ struct avro_error_data_t {
 };
 
 
+#if defined THREADSAFE 
+#if ( defined __unix__ || defined __unix )
+#include <pthread.h>
+static pthread_key_t error_data_key;
+static pthread_once_t error_data_key_once = PTHREAD_ONCE_INIT;
+
+static void make_error_data_key()
+{
+    pthread_key_create(&error_data_key, free);
+}
+#elif defined _WIN32
+#include <Windows.h>
+
+static __declspec( thread ) struct avro_error_data_t TLS_ERROR_DATA = { "", "", NULL, NULL };
+
+#endif /* unix||_unix||_WIN32 */
+#endif /* THREADSAFE */
+
 static struct avro_error_data_t *
 avro_get_error_data(void)
 {
-#if defined THREADSAFE && (defined __unix__ || defined __unix)
+#if defined THREADSAFE  
+#if defined __unix__ || defined __unix
+
     pthread_once(&error_data_key_once, make_error_data_key);
 
     struct avro_error_data_t *ERROR_DATA =
@@ -72,7 +81,20 @@ avro_get_error_data(void)
     }
 
     return ERROR_DATA;
-#else
+
+#elif defined _WIN32
+	
+	if ( TLS_ERROR_DATA.AVRO_CURRENT_ERROR == NULL )
+	{
+		//first usage of the ERROR_DATA, initialize 'current' and 'other' pointers.
+		TLS_ERROR_DATA.AVRO_CURRENT_ERROR = TLS_ERROR_DATA.AVRO_ERROR1;
+		TLS_ERROR_DATA.AVRO_OTHER_ERROR = TLS_ERROR_DATA.AVRO_ERROR2;
+	}
+	return &TLS_ERROR_DATA;
+
+	#endif /* UNIX and WIN32 threadsafe handling */
+
+#else /* not thread-safe */  
     static struct avro_error_data_t ERROR_DATA = {
       /* .AVRO_ERROR1 = */ {'\0'},
       /* .AVRO_ERROR2 = */ {'\0'},

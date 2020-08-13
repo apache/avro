@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,21 +32,19 @@ import org.junit.Test;
 public class TestSpecificDatumWriter {
   @Test
   public void testResolveUnion() throws IOException {
-    final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<TestRecordWithUnion>();
+    final SpecificDatumWriter<TestRecordWithUnion> writer = new SpecificDatumWriter<>();
     Schema schema = TestRecordWithUnion.SCHEMA$;
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
 
     writer.setSchema(schema);
 
-    TestRecordWithUnion c = TestRecordWithUnion.newBuilder().
-      setKind(Kind.BAR).setValue("rab").build();
+    TestRecordWithUnion c = TestRecordWithUnion.newBuilder().setKind(Kind.BAR).setValue("rab").build();
     writer.write(c, encoder);
     encoder.flush();
     out.close();
 
-    String expectedJson = String.format(
-        "{'kind':{'org.apache.avro.test.Kind':'%s'},'value':{'string':'%s'}}",
+    String expectedJson = String.format("{'kind':{'org.apache.avro.test.Kind':'%s'},'value':{'string':'%s'}}",
         c.getKind().toString(), c.getValue()).replace('\'', '"');
 
     assertEquals(expectedJson, out.toString("UTF-8"));

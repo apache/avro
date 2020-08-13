@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,10 +30,9 @@
 #include <string>
 #include <vector>
 
-#include "boost/array.hpp"
+#include "array"
 #include "boost/utility.hpp"
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/scoped_ptr.hpp>
 
 namespace avro {
 
@@ -48,10 +47,11 @@ enum Codec {
 
 };
 
+const int SyncSize = 16;
 /**
  * The sync value.
  */
-typedef boost::array<uint8_t, 16> DataFileSync;
+typedef std::array<uint8_t, SyncSize> DataFileSync;
 
 /**
  * Type-independent portion of DataFileWriter.
@@ -65,8 +65,8 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     const size_t syncInterval_;
     Codec codec_;
 
-    std::auto_ptr<OutputStream> stream_;
-    std::auto_ptr<OutputStream> buffer_;
+    std::unique_ptr<OutputStream> stream_;
+    std::unique_ptr<OutputStream> buffer_;
     const DataFileSync sync_;
     int64_t objectCount_;
 
@@ -74,7 +74,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
 
     Metadata metadata_;
 
-    static std::auto_ptr<OutputStream> makeStream(const char* filename);
+    static std::unique_ptr<OutputStream> makeStream(const char* filename);
     static DataFileSync makeSync();
 
     void writeHeader();
@@ -84,6 +84,11 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
      * Generates a sync marker in the file.
      */
     void sync();
+
+    /**
+     * Shared constructor portion since we aren't using C++11
+     */
+    void init(const ValidSchema &schema, size_t syncInterval, const Codec &codec);
 
 public:
     /**
@@ -108,6 +113,8 @@ public:
      */
     DataFileWriterBase(const char* filename, const ValidSchema& schema,
         size_t syncInterval, Codec codec = NULL_CODEC);
+    DataFileWriterBase(std::unique_ptr<OutputStream> outputStream,
+                       const ValidSchema& schema, size_t syncInterval, Codec codec);
 
     ~DataFileWriterBase();
     /**
@@ -132,7 +139,7 @@ public:
  */
 template <typename T>
 class DataFileWriter : boost::noncopyable {
-    std::auto_ptr<DataFileWriterBase> base_;
+    std::unique_ptr<DataFileWriterBase> base_;
 public:
     /**
      * Constructs a new data file.
@@ -140,6 +147,10 @@ public:
     DataFileWriter(const char* filename, const ValidSchema& schema,
         size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
         base_(new DataFileWriterBase(filename, schema, syncInterval, codec)) { }
+
+    DataFileWriter(std::unique_ptr<OutputStream> outputStream, const ValidSchema& schema,
+        size_t syncInterval = 16 * 1024, Codec codec = NULL_CODEC) :
+        base_(new DataFileWriterBase(std::move(outputStream), schema, syncInterval, codec)) { }
 
     /**
      * Writes the given piece of data into the file.
@@ -172,28 +183,31 @@ public:
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
-    const std::auto_ptr<InputStream> stream_;
+    const std::unique_ptr<InputStream> stream_;
     const DecoderPtr decoder_;
     int64_t objectCount_;
     bool eof_;
     Codec codec_;
+    int64_t blockStart_;
+    int64_t blockEnd_;
 
     ValidSchema readerSchema_;
     ValidSchema dataSchema_;
     DecoderPtr dataDecoder_;
-    std::auto_ptr<InputStream> dataStream_;
+    std::unique_ptr<InputStream> dataStream_;
     typedef std::map<std::string, std::vector<uint8_t> > Metadata;
 
     Metadata metadata_;
     DataFileSync sync_;
 
     // for compressed buffer
-    boost::scoped_ptr<boost::iostreams::filtering_istream> os_;
+    std::unique_ptr<boost::iostreams::filtering_istream> os_;
     std::vector<char> compressed_;
     std::string uncompressed;
     void readHeader();
 
-    bool readDataBlock();
+    void readDataBlock();
+    void doSeek(int64_t position);
 public:
     /**
      * Returns the current decoder for this reader.
@@ -217,6 +231,8 @@ public:
      * the DataFileReaderBase object.
      */
     DataFileReaderBase(const char* filename);
+
+    DataFileReaderBase(std::unique_ptr<InputStream> inputStream);
 
     /**
      * Initializes the reader so that the reader and writer schemas
@@ -247,6 +263,29 @@ public:
      * Closes the reader. No further operation is possible on this reader.
      */
     void close();
+
+    /**
+     * Move to a specific, known synchronization point, for example one returned
+     * from tell() after sync().
+     */
+    void seek(int64_t position);
+
+    /**
+     * Move to the next synchronization point after a position. To process a
+     * range of file entires, call this with the starting position, then check
+     * pastSync() with the end point before each use of decoder().
+     */
+    void sync(int64_t position);
+
+    /**
+     * Return true if past the next synchronization point after a position.
+     */
+    bool pastSync(int64_t position);
+
+    /**
+     * Return the last synchronization point before our current position.
+     */
+    int64_t previousSync();
 };
 
 /**
@@ -254,7 +293,7 @@ public:
  */
 template <typename T>
 class DataFileReader : boost::noncopyable {
-    std::auto_ptr<DataFileReaderBase> base_;
+    std::unique_ptr<DataFileReaderBase> base_;
 public:
     /**
      * Constructs the reader for the given file and the reader is
@@ -262,6 +301,11 @@ public:
      */
     DataFileReader(const char* filename, const ValidSchema& readerSchema) :
         base_(new DataFileReaderBase(filename)) {
+        base_->init(readerSchema);
+    }
+
+    DataFileReader(std::unique_ptr<InputStream> inputStream, const ValidSchema& readerSchema) :
+        base_(new DataFileReaderBase(std::move(inputStream))) {
         base_->init(readerSchema);
     }
 
@@ -274,6 +318,10 @@ public:
         base_->init();
     }
 
+    DataFileReader(std::unique_ptr<InputStream> inputStream) :
+        base_(new DataFileReaderBase(std::move(inputStream))) {
+        base_->init();
+    }
 
     /**
      * Constructs a reader using the reader base. This form of constructor
@@ -284,7 +332,7 @@ public:
      * The schema present in the data file will be used for reading
      * from this reader.
      */
-    DataFileReader(std::auto_ptr<DataFileReaderBase> base) : base_(base) {
+    DataFileReader(std::unique_ptr<DataFileReaderBase> base) : base_(std::move(base)) {
         base_->init();
     }
 
@@ -297,8 +345,8 @@ public:
      * The argument readerSchema will be used for reading
      * from this reader.
      */
-    DataFileReader(std::auto_ptr<DataFileReaderBase> base,
-        const ValidSchema& readerSchema) : base_(base) {
+    DataFileReader(std::unique_ptr<DataFileReaderBase> base,
+        const ValidSchema& readerSchema) : base_(std::move(base)) {
         base_->init(readerSchema);
     }
 
@@ -330,6 +378,29 @@ public:
      * Closes the reader. No further operation is possible on this reader.
      */
     void close() { return base_->close(); }
+
+    /**
+     * Move to a specific, known synchronization point, for example one returned
+     * from previousSync().
+     */
+    void seek(int64_t position) { base_->seek(position); }
+
+    /**
+     * Move to the next synchronization point after a position. To process a
+     * range of file entires, call this with the starting position, then check
+     * pastSync() with the end point before each call to read().
+     */
+    void sync(int64_t position) { base_->sync(position); }
+
+    /**
+     * Return true if past the next synchronization point after a position.
+     */
+    bool pastSync(int64_t position) { return base_->pastSync(position); }
+
+    /**
+     * Return the last synchronization point before our current position.
+     */
+    int64_t previousSync() { return base_->previousSync(); }
 };
 
 }   // namespace avro

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +35,7 @@ public class TestReflectDatumReader {
 
   private static <T> byte[] serializeWithReflectDatumWriter(T toSerialize, Class<T> toSerializeClass)
       throws IOException {
-    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<T>(toSerializeClass);
+    ReflectDatumWriter<T> datumWriter = new ReflectDatumWriter<>(toSerializeClass);
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     Encoder encoder = EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null);
     datumWriter.write(toSerialize, encoder);
@@ -52,8 +52,7 @@ public class TestReflectDatumReader {
     byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithList, PojoWithList.class);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
-    ReflectDatumReader<PojoWithList> reflectDatumReader = new ReflectDatumReader<PojoWithList>(
-        PojoWithList.class);
+    ReflectDatumReader<PojoWithList> reflectDatumReader = new ReflectDatumReader<>(PojoWithList.class);
 
     PojoWithList deserialized = new PojoWithList();
     reflectDatumReader.read(deserialized, decoder);
@@ -71,8 +70,7 @@ public class TestReflectDatumReader {
     byte[] serializedBytes = serializeWithReflectDatumWriter(pojoWithArray, PojoWithArray.class);
 
     Decoder decoder = DecoderFactory.get().binaryDecoder(serializedBytes, null);
-    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<PojoWithArray>(
-        PojoWithArray.class);
+    ReflectDatumReader<PojoWithArray> reflectDatumReader = new ReflectDatumReader<>(PojoWithArray.class);
 
     PojoWithArray deserialized = new PojoWithArray();
     reflectDatumReader.read(deserialized, decoder);
@@ -121,11 +119,9 @@ public class TestReflectDatumReader {
       if (id != other.id)
         return false;
       if (relatedIds == null) {
-        if (other.relatedIds != null)
-          return false;
-      } else if (!relatedIds.equals(other.relatedIds))
-        return false;
-      return true;
+        return other.relatedIds == null;
+      } else
+        return relatedIds.equals(other.relatedIds);
     }
   }
 
@@ -169,9 +165,7 @@ public class TestReflectDatumReader {
       PojoWithArray other = (PojoWithArray) obj;
       if (id != other.id)
         return false;
-      if (!Arrays.equals(relatedIds, other.relatedIds))
-        return false;
-      return true;
+      return Arrays.equals(relatedIds, other.relatedIds);
     }
 
   }

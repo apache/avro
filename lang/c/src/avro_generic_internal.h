@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,6 +23,8 @@ extern "C" {
 #else
 #define CLOSE_EXTERN
 #endif
+
+#include <sys/types.h>
 
 #include "avro/generic.h"
 #include "avro/schema.h"
@@ -60,7 +62,7 @@ typedef struct avro_generic_value_iface {
 
 
 #define avro_value_instance_size(gcls) \
-    ((gcls)->instance_size == NULL? 0: (gcls)->instance_size(&(gcls)->parent))
+    ((gcls)->instance_size == NULL ? (ssize_t)-1 : (ssize_t)(gcls)->instance_size(&(gcls)->parent))
 #define avro_value_init(gcls, self) \
     ((gcls)->init == NULL? EINVAL: (gcls)->init(&(gcls)->parent, (self)))
 #define avro_value_done(gcls, self) \

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -38,16 +39,15 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public class TestRpcProtocolTool {
 
-  @Parameterized.Parameters(/*name = "{0}"*/)
+  @Parameterized.Parameters(/* name = "{0}" */)
   public static List<Object[]> data() {
-    return Arrays.asList( new Object[]{"http"},
-                          new Object[]{"avro"});
+    return Arrays.asList(new Object[] { "http" }, new Object[] { "avro" });
   }
 
   private RpcReceiveTool receive;
   private Protocol simpleProtocol;
 
-  private String uriScheme ;
+  private String uriScheme;
 
   public TestRpcProtocolTool(String uriScheme) {
     this.uriScheme = uriScheme;
@@ -55,8 +55,7 @@ public class TestRpcProtocolTool {
 
   @Before
   public void setUp() throws Exception {
-    String protocolFile =
-      System.getProperty("share.dir", "../../../share") + "/test/schemas/simple.avpr";
+    String protocolFile = System.getProperty("share.dir", "../../../share") + "/test/schemas/simple.avpr";
 
     simpleProtocol = Protocol.parse(new File(protocolFile));
 
@@ -65,14 +64,12 @@ public class TestRpcProtocolTool {
     PrintStream p1 = new PrintStream(baos1);
     receive = new RpcReceiveTool();
     receive.run1(null, p1, System.err,
-        Arrays.asList(uriScheme + "://0.0.0.0:0/",
-            protocolFile, "hello",
-            "-data", "\"Hello!\""));
+        Arrays.asList(uriScheme + "://0.0.0.0:0/", protocolFile, "hello", "-data", "\"Hello!\""));
   }
 
   @After
   public void tearDown() throws Exception {
-    if( receive != null )
+    if (receive != null)
       receive.server.close(); // force the server to finish
   }
 
@@ -85,12 +82,12 @@ public class TestRpcProtocolTool {
     RpcProtocolTool testObject = new RpcProtocolTool();
 
     testObject.run(null, p2, System.err,
-        Arrays.asList(uriScheme + "://127.0.0.1:" + receive.server.getPort() + "/"));
+        Collections.singletonList(uriScheme + "://127.0.0.1:" + receive.server.getPort() + "/"));
 
     p2.flush();
 
-    assertEquals("Expected the simple.avpr protocol to be echoed to standout",
-        simpleProtocol, Protocol.parse(baos2.toString("UTF-8")));
+    assertEquals("Expected the simple.avpr protocol to be echoed to standout", simpleProtocol,
+        Protocol.parse(baos2.toString("UTF-8")));
 
   }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,21 +22,33 @@ import java.nio.ByteBuffer;
 
 /** A wrapper for a ByteBuffer containing binary-encoded data. */
 class TetherData {
-  private int count = 1;                          // only used for task input
+  private int count = 1; // only used for task input
   private ByteBuffer buffer;
 
-  public TetherData() {}
-  public TetherData(ByteBuffer buffer) { this.buffer = buffer; }
+  public TetherData() {
+  }
 
-  /** Return the count of records in the buffer.  Used for task input only.*/
-  public int count() { return count; }
+  public TetherData(ByteBuffer buffer) {
+    this.buffer = buffer;
+  }
 
-  /** Set the count of records in the buffer.  Used for task input only. */
-  public void count(int count) { this.count = count; }
+  /** Return the count of records in the buffer. Used for task input only. */
+  public int count() {
+    return count;
+  }
+
+  /** Set the count of records in the buffer. Used for task input only. */
+  public void count(int count) {
+    this.count = count;
+  }
 
   /** Return the buffer. */
-  public ByteBuffer buffer() { return buffer; }
+  public ByteBuffer buffer() {
+    return buffer;
+  }
 
   /** Set the buffer. */
-  public void buffer(ByteBuffer buffer) { this.buffer = buffer; }
+  public void buffer(ByteBuffer buffer) {
+    this.buffer = buffer;
+  }
 }

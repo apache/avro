@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,18 +25,16 @@ import org.apache.avro.specific.SpecificData;
  * Logical types provides an opt-in way to extend Avro's types. Logical types
  * specify a way of representing a high-level type as a base Avro type. For
  * example, a date is specified as the number of days after the unix epoch (or
- * before using a negative value). This enables extentions to Avro's type
- * system without breaking binary compatibility. Older versions see the base
- * type and ignore the logical type.
+ * before using a negative value). This enables extensions to Avro's type system
+ * without breaking binary compatibility. Older versions see the base type and
+ * ignore the logical type.
  */
 public class LogicalType {
 
   public static final String LOGICAL_TYPE_PROP = "logicalType";
 
-  private static final String[] INCOMPATIBLE_PROPS = new String[] {
-      GenericData.STRING_PROP, SpecificData.CLASS_PROP,
-      SpecificData.KEY_CLASS_PROP, SpecificData.ELEMENT_PROP
-  };
+  private static final String[] INCOMPATIBLE_PROPS = new String[] { GenericData.STRING_PROP, SpecificData.CLASS_PROP,
+      SpecificData.KEY_CLASS_PROP, SpecificData.ELEMENT_PROP };
 
   private final String name;
 
@@ -86,8 +84,7 @@ public class LogicalType {
   public void validate(Schema schema) {
     for (String incompatible : INCOMPATIBLE_PROPS) {
       if (schema.getProp(incompatible) != null) {
-        throw new IllegalArgumentException(
-            LOGICAL_TYPE_PROP + " cannot be used with " + incompatible);
+        throw new IllegalArgumentException(LOGICAL_TYPE_PROP + " cannot be used with " + incompatible);
       }
     }
   }

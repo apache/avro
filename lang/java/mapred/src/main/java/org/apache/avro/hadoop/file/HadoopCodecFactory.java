@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,16 +30,19 @@ import org.apache.avro.file.CodecFactory;
  *
  * Currently there are three codecs registered by default:
  * <ul>
- *   <li>{@code org.apache.hadoop.io.compress.DeflateCodec} will map to  {@code deflate}</li>
- *   <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to {@code snappy}</li>
- *   <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to {@code zbip2}</li>
- *   <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to {@code deflate}</li>
+ * <li>{@code org.apache.hadoop.io.compress.DeflateCodec} will map to
+ * {@code deflate}</li>
+ * <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to
+ * {@code snappy}</li>
+ * <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to
+ * {@code zbip2}</li>
+ * <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to
+ * {@code deflate}</li>
  * </ul>
  */
 public class HadoopCodecFactory {
 
-  private static final Map<String, String> HADOOP_AVRO_NAME_MAP =
-      new HashMap<String, String>();
+  private static final Map<String, String> HADOOP_AVRO_NAME_MAP = new HashMap<>();
 
   static {
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.DeflateCodec", "deflate");
@@ -48,16 +51,21 @@ public class HadoopCodecFactory {
     HADOOP_AVRO_NAME_MAP.put("org.apache.hadoop.io.compress.GZipCodec", "deflate");
   }
 
-  /** Maps a hadoop codec name into a CodecFactory.
-  *
-  * Currently there are four hadoop codecs registered:
-  * <ul>
-  *   <li>{@code org.apache.hadoop.io.compress.DeflateCodec} will map to  {@code deflate}</li>
-  *   <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to {@code snappy}</li>
-  *   <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to {@code zbip2}</li>
-  *   <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to {@code deflate}</li>
-  * </ul>
-  */
+  /**
+   * Maps a hadoop codec name into a CodecFactory.
+   *
+   * Currently there are four hadoop codecs registered:
+   * <ul>
+   * <li>{@code org.apache.hadoop.io.compress.DeflateCodec} will map to
+   * {@code deflate}</li>
+   * <li>{@code org.apache.hadoop.io.compress.SnappyCodec} will map to
+   * {@code snappy}</li>
+   * <li>{@code org.apache.hadoop.io.compress.BZip2Codec} will map to
+   * {@code zbip2}</li>
+   * <li>{@code org.apache.hadoop.io.compress.GZipCodec} will map to
+   * {@code deflate}</li>
+   * </ul>
+   */
   public static CodecFactory fromHadoopString(String hadoopCodecClass) {
 
     CodecFactory o = null;

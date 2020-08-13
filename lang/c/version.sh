@@ -8,7 +8,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#   http://www.apache.org/licenses/LICENSE-2.0
+#   https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -19,8 +19,6 @@
 #
 
 # This script is used to generate version numbers for autotools
-#
-# The top-level main version is collected from the top-level build.xml
 #
 # The information for libtool is maintained manually since
 # the public API for the C library can change independent of the project
@@ -47,7 +45,7 @@ if test $# != 1; then
   exit 1
 fi
 
-# http://sources.redhat.com/autobook/autobook/autobook_91.html
+# https://www.sourceware.org/autobook/autobook/autobook_91.html
 # 'Current' is the most recent interface number that this library implements
 libcurrent=$(($libavro_micro_version - $libavro_interface_age))
 # The implementation number of the 'current' interface

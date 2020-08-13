@@ -11,7 +11,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,10 +20,19 @@
  * limitations under the License.
  */
 package org.apache.avro;
+
 @SuppressWarnings("all")
 @org.apache.avro.specific.AvroGenerated
-public enum TypeEnum {
-  a, b, c  ;
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"enum\",\"name\":\"TypeEnum\",\"namespace\":\"org.apache.avro\",\"symbols\":[\"a\",\"b\",\"c\"]}");
-  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+public enum TypeEnum implements org.apache.avro.generic.GenericEnumSymbol<TypeEnum> {
+  a, b, c;
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
+      "{\"type\":\"enum\",\"name\":\"TypeEnum\",\"namespace\":\"org.apache.avro\",\"symbols\":[\"a\",\"b\",\"c\"]}");
+
+  public static org.apache.avro.Schema getClassSchema() {
+    return SCHEMA$;
+  }
+
+  public org.apache.avro.Schema getSchema() {
+    return SCHEMA$;
+  }
 }

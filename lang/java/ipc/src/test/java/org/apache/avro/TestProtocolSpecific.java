@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,11 +37,9 @@ import org.apache.avro.test.Kind;
 import org.apache.avro.test.MD5;
 import org.apache.avro.test.TestError;
 import org.apache.avro.test.TestRecord;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertTrue;
 
 import static org.junit.Assert.*;
 
@@ -53,32 +51,43 @@ import java.io.LineNumberReader;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.Random;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashSet;
-
+import java.nio.file.Files;
+import java.util.*;
 
 public class TestProtocolSpecific {
 
   protected static final int REPEATING = -1;
-  protected static final File SERVER_PORTS_DIR
-  = new File(System.getProperty("test.dir", "/tmp")+"/server-ports/");
 
   public static int ackCount;
 
   private static boolean throwUndeclaredError;
 
   public static class TestImpl implements Simple {
-    public String hello(String greeting) { return "goodbye"; }
-    public int add(int arg1, int arg2) { return arg1 + arg2; }
-    public TestRecord echo(TestRecord record) { return record; }
-    public ByteBuffer echoBytes(ByteBuffer data) { return data; }
-    public Void error() throws AvroRemoteException {
-      if (throwUndeclaredError) throw new RuntimeException("foo");
+    public String hello(String greeting) {
+      return "goodbye";
+    }
+
+    public int add(int arg1, int arg2) {
+      return arg1 + arg2;
+    }
+
+    public TestRecord echo(TestRecord record) {
+      return record;
+    }
+
+    public ByteBuffer echoBytes(ByteBuffer data) {
+      return data;
+    }
+
+    public void error() throws TestError {
+      if (throwUndeclaredError)
+        throw new RuntimeException("foo");
       throw TestError.newBuilder().setMessage$("an error").build();
     }
-    public void ack() { ackCount++; }
+
+    public void ack() {
+      ackCount++;
+    }
   }
 
   protected static Server server;
@@ -91,7 +100,8 @@ public class TestProtocolSpecific {
 
   @Before
   public void testStartServer() throws Exception {
-    if (server != null) return;
+    if (server != null)
+      return;
     responder = new SpecificResponder(Simple.class, new TestImpl());
     server = createServer(responder);
     server.start();
@@ -99,37 +109,37 @@ public class TestProtocolSpecific {
     client = createTransceiver();
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     addRpcPlugins(req);
-    proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    proxy = SpecificRequestor.getClient(Simple.class, req);
 
     monitor = new HandshakeMonitor();
     responder.addRPCPlugin(monitor);
   }
 
-  public void addRpcPlugins(Requestor requestor){}
-
-  public Server createServer(Responder testResponder) throws Exception{
-    return server = new SocketServer(testResponder,
-                              new InetSocketAddress(0));
+  public void addRpcPlugins(Requestor requestor) {
   }
 
-  public Transceiver createTransceiver() throws Exception{
+  public Server createServer(Responder testResponder) throws Exception {
+    return server = new SocketServer(testResponder, new InetSocketAddress(0));
+  }
+
+  public Transceiver createTransceiver() throws Exception {
     return new SocketTransceiver(new InetSocketAddress(server.getPort()));
   }
 
-  @Test public void testClassLoader() throws Exception {
-    ClassLoader loader = new ClassLoader() {};
+  @Test
+  public void testClassLoader() throws Exception {
+    ClassLoader loader = new ClassLoader() {
+    };
 
-    SpecificResponder responder
-      = new SpecificResponder(Simple.class, new TestImpl(),
-                              new SpecificData(loader));
+    SpecificResponder responder = new SpecificResponder(Simple.class, new TestImpl(), new SpecificData(loader));
     assertEquals(responder.getSpecificData().getClassLoader(), loader);
 
-    SpecificRequestor requestor
-      = new SpecificRequestor(Simple.class, client, new SpecificData(loader));
+    SpecificRequestor requestor = new SpecificRequestor(Simple.class, client, new SpecificData(loader));
     assertEquals(requestor.getSpecificData().getClassLoader(), loader);
   }
 
-  @Test public void testGetRemote() throws IOException {
+  @Test
+  public void testGetRemote() throws IOException {
     assertEquals(Simple.PROTOCOL, SpecificRequestor.getRemote(proxy));
   }
 
@@ -150,7 +160,7 @@ public class TestProtocolSpecific {
     TestRecord record = new TestRecord();
     record.setName("foo");
     record.setKind(Kind.BAR);
-    record.setHash(new MD5(new byte[]{0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5}));
+    record.setHash(new MD5(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5 }));
     TestRecord echoed = proxy.echo(record);
     assertEquals(record, echoed);
     assertEquals(record.hashCode(), echoed.hashCode());
@@ -165,7 +175,7 @@ public class TestProtocolSpecific {
   @Test
   public void testEchoBytes() throws IOException {
     Random random = new Random();
-    int length = random.nextInt(1024*16);
+    int length = random.nextInt(1024 * 16);
     ByteBuffer data = ByteBuffer.allocate(length);
     random.nextBytes(data.array());
     data.flip();
@@ -190,7 +200,7 @@ public class TestProtocolSpecific {
       error = e;
     }
     assertNotNull(error);
-    assertEquals("an error", error.getMessage$().toString());
+    assertEquals("an error", error.getMessage$());
   }
 
   @Test
@@ -208,14 +218,16 @@ public class TestProtocolSpecific {
     assertTrue(error.toString().contains("foo"));
   }
 
-
   @Test
   public void testOneWay() throws IOException {
     ackCount = 0;
     proxy.ack();
-    proxy.hello("foo");                           // intermix normal req
+    proxy.hello("foo"); // intermix normal req
     proxy.ack();
-    try { Thread.sleep(100); } catch (InterruptedException e) {}
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) {
+    }
     assertEquals(2, ackCount);
   }
 
@@ -231,29 +243,24 @@ public class TestProtocolSpecific {
     Transceiver client = new HttpTransceiver(new URL("http://localhost:4444"));
     SpecificRequestor req = new SpecificRequestor(Simple.class, client);
     addRpcPlugins(req);
-    Simple proxy = SpecificRequestor.getClient(Simple.class, (SpecificRequestor)req);
+    Simple proxy = SpecificRequestor.getClient(Simple.class, req);
     proxy.ack();
   }
 
   @Test
-  /** Construct and use a protocol whose "hello" method has an extra
-      argument to check that schema is sent to parse request. */
+  /**
+   * Construct and use a protocol whose "hello" method has an extra argument to
+   * check that schema is sent to parse request.
+   */
   public void testParamVariation() throws Exception {
     Protocol protocol = new Protocol("Simple", "org.apache.avro.test");
-    List<Schema.Field> fields = new ArrayList<Schema.Field>();
-    fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN),
-                   null, null));
-    fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING),
-                   null, null));
-    Protocol.Message message =
-      protocol.createMessage("hello",
-                             null /* doc */,
-                             Schema.createRecord(fields),
-                             Schema.create(Schema.Type.STRING),
-                             Schema.createUnion(new ArrayList<Schema>()));
+    List<Schema.Field> fields = new ArrayList<>();
+    fields.add(new Schema.Field("extra", Schema.create(Schema.Type.BOOLEAN), null, null));
+    fields.add(new Schema.Field("greeting", Schema.create(Schema.Type.STRING), null, null));
+    Protocol.Message message = protocol.createMessage("hello", null /* doc */, new LinkedHashMap<String, String>(),
+        Schema.createRecord(fields), Schema.create(Schema.Type.STRING), Schema.createUnion(new ArrayList<>()));
     protocol.getMessages().put("hello", message);
-    Transceiver t = createTransceiver();
-    try {
+    try (Transceiver t = createTransceiver()) {
       GenericRequestor r = new GenericRequestor(protocol, t);
       addRpcPlugins(r);
       GenericRecord params = new GenericData.Record(message.getRequest());
@@ -261,8 +268,6 @@ public class TestProtocolSpecific {
       params.put("greeting", "bob");
       String response = r.request("hello", params).toString();
       assertEquals("goodbye", response);
-    } finally {
-      t.close();
     }
   }
 
@@ -278,59 +283,66 @@ public class TestProtocolSpecific {
     server = null;
   }
 
-  public class HandshakeMonitor extends RPCPlugin{
+  public class HandshakeMonitor extends RPCPlugin {
 
     private int handshakes;
-    private HashSet<String> seenProtocols = new HashSet<String>();
+    private HashSet<String> seenProtocols = new HashSet<>();
 
     @Override
     public void serverConnecting(RPCContext context) {
       handshakes++;
       int expected = getExpectedHandshakeCount();
-      if(expected > 0  && handshakes > expected){
-        throw new IllegalStateException("Expected number of Protocol negotiation handshakes exceeded expected "+expected+" was "+handshakes);
+      if (expected > 0 && handshakes > expected) {
+        throw new IllegalStateException(
+            "Expected number of Protocol negotiation handshakes exceeded expected " + expected + " was " + handshakes);
       }
 
       // check that a given client protocol is only sent once
-      String clientProtocol =
-        context.getHandshakeRequest().clientProtocol;
+      String clientProtocol = context.getHandshakeRequest().getClientProtocol();
       if (clientProtocol != null) {
         assertFalse(seenProtocols.contains(clientProtocol));
         seenProtocols.add(clientProtocol);
       }
     }
 
-    public void assertHandshake(){
+    public void assertHandshake() {
       int expected = getExpectedHandshakeCount();
-      if(expected != REPEATING){
+      if (expected != REPEATING) {
         assertEquals("Expected number of handshakes did not take place.", expected, handshakes);
       }
     }
   }
 
   protected int getExpectedHandshakeCount() {
-   return 3;
+    return 3;
   }
 
   public static class InteropTest {
 
-  @Test
+    private static File SERVER_PORTS_DIR;
+    static {
+      try {
+        SERVER_PORTS_DIR = Files.createTempDirectory(TestProtocolSpecific.class.getSimpleName()).toFile();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+    @Test
     public void testClient() throws Exception {
-      for (File f : SERVER_PORTS_DIR.listFiles()) {
-        LineNumberReader reader = new LineNumberReader(new FileReader(f));
-        int port = Integer.parseInt(reader.readLine());
-        System.out.println("Validating java client to "+
-            f.getName()+" - " + port);
-        Transceiver client = new SocketTransceiver(
-            new InetSocketAddress("localhost", port));
-        proxy = (Simple)SpecificRequestor.getClient(Simple.class, client);
-        TestProtocolSpecific proto = new TestProtocolSpecific();
-        proto.testHello();
-        proto.testEcho();
-        proto.testEchoBytes();
-        proto.testError();
-        System.out.println("Done! Validation java client to "+
-            f.getName()+" - " + port);
+      for (File f : Objects.requireNonNull(SERVER_PORTS_DIR.listFiles())) {
+        try (LineNumberReader reader = new LineNumberReader(new FileReader(f))) {
+          int port = Integer.parseInt(reader.readLine());
+          System.out.println("Validating java client to " + f.getName() + " - " + port);
+          Transceiver client = new SocketTransceiver(new InetSocketAddress("localhost", port));
+          proxy = SpecificRequestor.getClient(Simple.class, client);
+          TestProtocolSpecific proto = new TestProtocolSpecific();
+          proto.testHello();
+          proto.testEcho();
+          proto.testEchoBytes();
+          proto.testError();
+          System.out.println("Done! Validation java client to " + f.getName() + " - " + port);
+        }
       }
     }
 
@@ -338,14 +350,14 @@ public class TestProtocolSpecific {
      * Starts the RPC server.
      */
     public static void main(String[] args) throws Exception {
-      SocketServer server = new SocketServer(
-          new SpecificResponder(Simple.class, new TestImpl()),
+      SocketServer server = new SocketServer(new SpecificResponder(Simple.class, new TestImpl()),
           new InetSocketAddress(0));
       server.start();
       File portFile = new File(SERVER_PORTS_DIR, "java-port");
-      FileWriter w = new FileWriter(portFile);
-      w.write(Integer.toString(server.getPort()));
-      w.close();
+      try (FileWriter w = new FileWriter(portFile)) {
+        w.write(Integer.toString(server.getPort()));
+      }
+
     }
   }
 }

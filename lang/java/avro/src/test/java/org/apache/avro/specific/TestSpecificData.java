@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,17 +18,12 @@
 
 package org.apache.avro.specific;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -88,14 +83,17 @@ public class TestSpecificData {
   }
 
   static class Reflection {
-    public void primitive(int i) {}
-    public void primitiveWrapper(Integer i) {}
+    public void primitive(int i) {
+    }
+
+    public void primitiveWrapper(Integer i) {
+    }
   }
 
   public static class TestRecord extends SpecificRecordBase {
     private static final Schema SCHEMA = Schema.createRecord("TestRecord", null, null, false);
     static {
-      List<Field> fields = new ArrayList<Field>();
+      List<Field> fields = new ArrayList<>();
       fields.add(new Field("x", Schema.create(Type.INT), null, null));
       Schema stringSchema = Schema.create(Type.STRING);
       GenericData.setStringType(stringSchema, GenericData.StringType.String);
@@ -108,17 +106,24 @@ public class TestSpecificData {
     @Override
     public void put(int i, Object v) {
       switch (i) {
-      case 0: x = (Integer) v; break;
-      case 1: y = (String) v; break;
-      default: throw new RuntimeException();
+      case 0:
+        x = (Integer) v;
+        break;
+      case 1:
+        y = (String) v;
+        break;
+      default:
+        throw new RuntimeException();
       }
     }
 
     @Override
     public Object get(int i) {
       switch (i) {
-      case 0: return x;
-      case 1: return y;
+      case 0:
+        return x;
+      case 1:
+        return y;
       }
       throw new RuntimeException();
     }
@@ -139,7 +144,8 @@ public class TestSpecificData {
     assertEquals("str", record.get("y"));
   }
 
-  @Test public void testExternalizeable() throws Exception {
+  @Test
+  public void testExternalizeable() throws Exception {
     final TestRecord before = new TestRecord();
     before.put("x", 1);
     before.put("y", "str");
@@ -148,9 +154,8 @@ public class TestSpecificData {
     out.writeObject(before);
     out.close();
 
-    ObjectInputStream in =
-      new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
-    TestRecord after = (TestRecord)in.readObject();
+    ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    TestRecord after = (TestRecord) in.readObject();
 
     assertEquals(before, after);
   }
@@ -161,7 +166,7 @@ public class TestSpecificData {
     final Schema string = Schema.create(Type.STRING);
     final ByteArrayOutputStream baos = new ByteArrayOutputStream();
     final Encoder encoder = EncoderFactory.get().directBinaryEncoder(baos, null);
-    final DatumWriter<Object> writer = new SpecificDatumWriter<Object>(string);
+    final DatumWriter<Object> writer = new SpecificDatumWriter<>(string);
     try {
       writer.write(new Object(), encoder);
       fail("Non stringable object should be rejected.");

@@ -7,7 +7,7 @@
 ## "License"); you may not use this file except in compliance
 ## with the License.  You may obtain a copy of the License at
 ##
-##     http://www.apache.org/licenses/LICENSE-2.0
+##     https://www.apache.org/licenses/LICENSE-2.0
 ##
 ## Unless required by applicable law or agreed to in writing, software
 ## distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,19 @@
 ## limitations under the License.
 ##
 #if ($schema.getNamespace())
-package $schema.getNamespace();
+package $this.mangle($schema.getNamespace());
 #end
 
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.Utf8;
 #if (!$schema.isError())
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.SchemaStore;
 #end
+#if (${this.gettersReturnOptional} || ${this.createOptionalGetters})import java.util.Optional;#end
 
-@SuppressWarnings("all")
 #if ($schema.getDoc())
 /** $schema.getDoc() */
 #end
@@ -40,6 +42,14 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static SpecificData MODEL$ = new SpecificData();
+#set ($usedConversions = $this.getUsedConversionClasses($schema))
+#if (!$usedConversions.isEmpty())
+static {
+#foreach ($conversion in $usedConversions)
+    MODEL$.addLogicalTypeConversion(new ${conversion}());
+#end
+  }
+#end
 
 #if (!$schema.isError())
   private static final BinaryMessageEncoder<${this.mangle($schema.getName())}> ENCODER =
@@ -49,7 +59,16 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
 
   /**
+   * Return the BinaryMessageEncoder instance used by this class.
+   * @return the message encoder used by this class
+   */
+  public static BinaryMessageEncoder<${this.mangle($schema.getName())}> getEncoder() {
+    return ENCODER;
+  }
+
+  /**
    * Return the BinaryMessageDecoder instance used by this class.
+   * @return the message decoder used by this class
    */
   public static BinaryMessageDecoder<${this.mangle($schema.getName())}> getDecoder() {
     return DECODER;
@@ -58,17 +77,27 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
   /**
    * Create a new BinaryMessageDecoder instance for this class that uses the specified {@link SchemaStore}.
    * @param resolver a {@link SchemaStore} used to find schemas by fingerprint
+   * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<${this.mangle($schema.getName())}> createDecoder(SchemaStore resolver) {
     return new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$, resolver);
   }
 
-  /** Serializes this ${schema.getName()} to a ByteBuffer. */
+  /**
+   * Serializes this ${schema.getName()} to a ByteBuffer.
+   * @return a buffer holding the serialized data for this instance
+   * @throws java.io.IOException if this instance could not be serialized
+   */
   public java.nio.ByteBuffer toByteBuffer() throws java.io.IOException {
     return ENCODER.encode(this);
   }
 
-  /** Deserializes a ${schema.getName()} from a ByteBuffer. */
+  /**
+   * Deserializes a ${schema.getName()} from a ByteBuffer.
+   * @param b a byte buffer holding serialized data for an instance of this class
+   * @return a ${schema.getName()} instance decoded from the given buffer
+   * @throws java.io.IOException if the given bytes could not be deserialized into an instance of this class
+   */
   public static ${this.mangle($schema.getName())} fromByteBuffer(
       java.nio.ByteBuffer b) throws java.io.IOException {
     return DECODER.decode(b);
@@ -82,7 +111,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
 #end
-  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #end
 #if ($schema.isError())
 
@@ -121,9 +150,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 #end
    */
-  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end) {
+  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($foreach.count < $schema.getFields().size()), #end#end) {
 #foreach ($field in $schema.getFields())
-    this.${this.mangle($field.name())} = ${this.mangle($field.name())};
+    ${this.generateSetterCode($field.schema(), ${this.mangle($field.name())}, ${this.mangle($field.name())})}
 #end
   }
 #else
@@ -137,6 +166,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
 
 #end
+  public org.apache.avro.specific.SpecificData getSpecificData() { return MODEL$; }
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
   // Used by DatumWriter.  Applications should not call.
   public java.lang.Object get(int field$) {
@@ -146,16 +176,11 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     case $i: return ${this.mangle($field.name(), $schema.isError())};
 #set ($i = $i + 1)
 #end
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
 #if ($this.hasLogicalTypeField($schema))
-  protected static final org.apache.avro.data.TimeConversions.DateConversion DATE_CONVERSION = new org.apache.avro.data.TimeConversions.DateConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimeConversion TIME_CONVERSION = new org.apache.avro.data.TimeConversions.TimeConversion();
-  protected static final org.apache.avro.data.TimeConversions.TimestampConversion TIMESTAMP_CONVERSION = new org.apache.avro.data.TimeConversions.TimestampConversion();
-  protected static final org.apache.avro.Conversions.DecimalConversion DECIMAL_CONVERSION = new org.apache.avro.Conversions.DecimalConversion();
-
   private static final org.apache.avro.Conversion<?>[] conversions =
       new org.apache.avro.Conversion<?>[] {
 #foreach ($field in $schema.getFields())
@@ -176,23 +201,47 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-    case $i: ${this.mangle($field.name(), $schema.isError())} = (${this.javaType($field.schema())})value$; break;
+    case $i: ${this.mangle($field.name(), $schema.isError())} = #if(${this.javaType($field.schema())} != "java.lang.Object" && ${this.javaType($field.schema())} != "java.lang.String")(${this.javaType($field.schema())})#{end}value$#if(${this.javaType($field.schema())} == "java.lang.String") != null ? value$.toString() : null#{end}; break;
 #set ($i = $i + 1)
 #end
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
 
 #foreach ($field in $schema.getFields())
+#if (${this.gettersReturnOptional} && (!${this.optionalGettersForNullableFieldsOnly} || ${field.schema().isNullable()}))
+  /**
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
+#if ($field.doc())      * $field.doc()
+#end
+   * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+   */
+  public Optional<${this.javaType($field.schema())}> ${this.generateGetMethod($schema, $field)}() {
+    return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
+  }
+#else
   /**
    * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #if ($field.doc())   * @return $field.doc()
 #else   * @return The value of the '${this.mangle($field.name(), $schema.isError())}' field.
 #end
    */
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
+#end
+
+#if (${this.createOptionalGetters})
+  /**
+   * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
+#if ($field.doc())      * $field.doc()
+#end
+   * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+   */
+  public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
+    return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
+  }
+#end
 
 #if ($this.createSetters)
   /**
@@ -201,8 +250,8 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
    * @param value the value to set.
    */
-  public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} value) {
-    this.${this.mangle($field.name(), $schema.isError())} = value;
+  public void ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
+    ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
   }
 #end
 
@@ -211,8 +260,8 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * Creates a new ${this.mangle($schema.getName())} RecordBuilder.
    * @return A new ${this.mangle($schema.getName())} RecordBuilder
    */
-  public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder() {
-    return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+  public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder newBuilder() {
+    return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder();
   }
 
   /**
@@ -220,11 +269,11 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * @param other The existing builder to copy.
    * @return A new ${this.mangle($schema.getName())} RecordBuilder
    */
-  public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder other) {
+  public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder other) {
     if (other == null) {
-      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder();
     } else {
-      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder(other);
     }
   }
 
@@ -233,17 +282,18 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
    * @param other The existing instance to copy.
    * @return A new ${this.mangle($schema.getName())} RecordBuilder
    */
-  public static #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
+  public static #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder newBuilder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())} other) {
     if (other == null) {
-      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder();
+      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder();
     } else {
-      return new #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder(other);
+      return new #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder(other);
     }
   }
 
   /**
    * RecordBuilder for ${this.mangle($schema.getName())} instances.
    */
+  @org.apache.avro.specific.AvroGenerated
   public static class Builder extends#if ($schema.isError()) org.apache.avro.specific.SpecificErrorBuilderBase<${this.mangle($schema.getName())}>#else org.apache.avro.specific.SpecificRecordBuilderBase<${this.mangle($schema.getName())}>#end
 
     implements#if ($schema.isError()) org.apache.avro.data.ErrorBuilder<${this.mangle($schema.getName())}>#else org.apache.avro.data.RecordBuilder<${this.mangle($schema.getName())}>#end {
@@ -252,9 +302,9 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #if ($field.doc())
     /** $field.doc() */
 #end
-    private ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+    private ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #if (${this.hasBuilder($field.schema())})
-    private ${this.javaUnbox($field.schema())}.Builder ${this.mangle($field.name(), $schema.isError())}Builder;
+    private ${this.javaUnbox($field.schema(), false)}.Builder ${this.mangle($field.name(), $schema.isError())}Builder;
 #end
 #end
 
@@ -267,7 +317,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
      * Creates a Builder by copying an existing Builder.
      * @param other The existing Builder to copy.
      */
-    private Builder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder other) {
+    private Builder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder other) {
       super(other);
 #foreach ($field in $schema.getFields())
       if (isValidValue(fields()[$field.pos()], other.${this.mangle($field.name(), $schema.isError())})) {
@@ -286,7 +336,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
      * Creates a Builder by copying an existing $this.mangle($schema.getName()) instance
      * @param other The existing instance to copy.
      */
-    private Builder(#if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())} other) {
+    private Builder(#if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())} other) {
 #if ($schema.isError())      super(other)#else
       super(SCHEMA$)#end;
 #foreach ($field in $schema.getFields())
@@ -302,25 +352,25 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #if ($schema.isError())
 
     @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder setValue(Object value) {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder setValue(Object value) {
       super.setValue(value);
       return this;
     }
 
     @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder clearValue() {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder clearValue() {
       super.clearValue();
       return this;
     }
 
     @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder setCause(Throwable cause) {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder setCause(Throwable cause) {
       super.setCause(cause);
       return this;
     }
 
     @Override
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder clearCause() {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder clearCause() {
       super.clearCause();
       return this;
     }
@@ -333,9 +383,21 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
       * @return The value.
       */
-    public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    public ${this.javaUnbox($field.schema(), false)} ${this.generateGetMethod($schema, $field)}() {
       return ${this.mangle($field.name(), $schema.isError())};
     }
+
+#if (${this.createOptionalGetters})
+    /**
+      * Gets the value of the '${this.mangle($field.name(), $schema.isError())}' field as an Optional&lt;${this.javaType($field.schema())}&gt;.
+#if ($field.doc())      * $field.doc()
+#end
+      * @return The value wrapped in an Optional&lt;${this.javaType($field.schema())}&gt;.
+      */
+    public Optional<${this.javaType($field.schema())}> ${this.generateGetOptionalMethod($schema, $field)}() {
+      return Optional.<${this.javaType($field.schema())}>ofNullable(${this.mangle($field.name(), $schema.isError())});
+    }
+#end
 
     /**
       * Sets the value of the '${this.mangle($field.name(), $schema.isError())}' field.
@@ -344,12 +406,12 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
       * @param value The value of '${this.mangle($field.name(), $schema.isError())}'.
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema())} value) {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder ${this.generateSetMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)} value) {
       validate(fields()[$field.pos()], value);
 #if (${this.hasBuilder($field.schema())})
       this.${this.mangle($field.name(), $schema.isError())}Builder = null;
 #end
-      this.${this.mangle($field.name(), $schema.isError())} = value;
+      ${this.generateSetterCode($field.schema(), ${this.mangle($field.name(), $schema.isError())}, "value")}
       fieldSetFlags()[$field.pos()] = true;
       return this;
     }
@@ -389,7 +451,8 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
      * @param value The builder instance that must be set.
      * @return This builder.
      */
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema())}.Builder value) {
+
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder ${this.generateSetBuilderMethod($schema, $field)}(${this.javaUnbox($field.schema(), false)}.Builder value) {
       ${this.generateClearMethod($schema, $field)}();
       ${this.mangle($field.name(), $schema.isError())}Builder = value;
       return this;
@@ -412,7 +475,7 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #end
       * @return This builder.
       */
-    public #if ($schema.getNamespace())$schema.getNamespace().#end${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
+    public #if ($schema.getNamespace())$this.mangle($schema.getNamespace()).#end${this.mangle($schema.getName())}.Builder ${this.generateClearMethod($schema, $field)}() {
 #if (${this.isUnboxedJavaTypeNullable($field.schema())})
       ${this.mangle($field.name(), $schema.isError())} = null;
 #end
@@ -432,23 +495,22 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
 #foreach ($field in $schema.getFields())
 #if (${this.hasBuilder($field.schema())})
         if (${this.mangle($field.name(), $schema.isError())}Builder != null) {
-          record.${this.mangle($field.name(), $schema.isError())} = this.${this.mangle($field.name(), $schema.isError())}Builder.build();
+          try {
+            record.${this.mangle($field.name(), $schema.isError())} = this.${this.mangle($field.name(), $schema.isError())}Builder.build();
+          } catch (org.apache.avro.AvroMissingFieldException e) {
+            e.addParentField(record.getSchema().getField("${this.mangle($field.name(), $schema.isError())}"));
+            throw e;
+          }
         } else {
-#if ($this.hasLogicalTypeField($schema))
-          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()], record.getConversion($field.pos()));
-#else
-          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
-#end
+          record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()]);
         }
 #else
-#if ($this.hasLogicalTypeField($schema))
-        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()], record.getConversion($field.pos()));
-#else
-        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : (${this.javaType($field.schema())}) defaultValue(fields()[$field.pos()]);
-#end
+        record.${this.mangle($field.name(), $schema.isError())} = fieldSetFlags()[$field.pos()] ? this.${this.mangle($field.name(), $schema.isError())} : #if(${this.javaType($field.schema())} != "java.lang.Object")(${this.javaType($field.schema())})#{end} defaultValue(fields()[$field.pos()]);
 #end
 #end
         return record;
+      } catch (org.apache.avro.AvroMissingFieldException e) {
+        throw e;
       } catch (java.lang.Exception e) {
         throw new org.apache.avro.AvroRuntimeException(e);
       }
@@ -473,4 +535,323 @@ public class ${this.mangle($schema.getName())}#if ($schema.isError()) extends or
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+#if ($this.isCustomCodable($schema))
+  @Override protected boolean hasCustomCoders() { return true; }
+
+  @Override public void customEncode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+#set ($nv = 0)## Counter to ensure unique var-names
+#set ($maxnv = 0)## Holds high-water mark during recursion
+#foreach ($field in $schema.getFields())
+#set ($n = $this.mangle($field.name(), $schema.isError()))
+#set ($s = $field.schema())
+#encodeVar(0 "this.${n}" $s)
+
+#set ($nv = $maxnv)
+#end
+  }
+
+  @Override public void customDecode(org.apache.avro.io.ResolvingDecoder in)
+    throws java.io.IOException
+  {
+    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
+    if (fieldOrder == null) {
+## Common case: order of fields hasn't changed, so read them in a
+## fixed order according to reader's schema
+#set ($nv = 0)## Counter to ensure unique var-names
+#set ($maxnv = 0)## Holds high-water mark during recursion
+#foreach ($field in $schema.getFields())
+#set ($n = $this.mangle($field.name(), $schema.isError()))
+#set ($s = $field.schema())
+#set ($rs = "SCHEMA$.getField(""${n}"").schema()")
+#decodeVar(2 "this.${n}" $s $rs)
+
+#set ($nv = $maxnv)
+#end
+    } else {
+      for (int i = 0; i < $schema.getFields().size(); i++) {
+        switch (fieldOrder[i].pos()) {
+#set ($fieldno = 0)
+#set ($nv = 0)## Counter to ensure unique var-names
+#set ($maxnv = 0)## Holds high-water mark during recursion
+#foreach ($field in $schema.getFields())
+        case $fieldno:
+#set ($n = $this.mangle($field.name(), $schema.isError()))
+#set ($s = $field.schema())
+#set ($rs = "SCHEMA$.getField(""${n}"").schema()")
+#decodeVar(6 "this.${n}" $s $rs)
+          break;
+
+#set ($nv = $maxnv)
+#set ($fieldno = $fieldno + 1)
+#end
+        default:
+          throw new java.io.IOException("Corrupt ResolvingDecoder.");
+        }
+      }
+    }
+  }
+#end
 }
+
+#macro( encodeVar $indent $var $s )
+#set ($I = $this.indent($indent))
+##### Compound types (array, map, and union) require calls
+##### that will recurse back into this encodeVar macro:
+#if ($s.Type.Name.equals("array"))
+#encodeArray($indent $var $s)
+#elseif ($s.Type.Name.equals("map"))
+#encodeMap($indent $var $s)
+#elseif ($s.Type.Name.equals("union"))
+#encodeUnion($indent $var $s)
+##### Use the generated "encode" method as fast way to write
+##### (specific) record types:
+#elseif ($s.Type.Name.equals("record"))
+$I    ${var}.customEncode(out);
+##### For rest of cases, generate calls out.writeXYZ:
+#elseif ($s.Type.Name.equals("null"))
+$I    out.writeNull();
+#elseif ($s.Type.Name.equals("boolean"))
+$I    out.writeBoolean(${var});
+#elseif ($s.Type.Name.equals("int"))
+$I    out.writeInt(${var});
+#elseif ($s.Type.Name.equals("long"))
+$I    out.writeLong(${var});
+#elseif ($s.Type.Name.equals("float"))
+$I    out.writeFloat(${var});
+#elseif ($s.Type.Name.equals("double"))
+$I    out.writeDouble(${var});
+#elseif ($s.Type.Name.equals("string"))
+#if ($this.isStringable($s))
+$I    out.writeString(${var}.toString());
+#else
+$I    out.writeString(${var});
+#end
+#elseif ($s.Type.Name.equals("bytes"))
+$I    out.writeBytes(${var});
+#elseif ($s.Type.Name.equals("fixed"))
+$I    out.writeFixed(${var}.bytes(), 0, ${s.FixedSize});
+#elseif ($s.Type.Name.equals("enum"))
+$I    out.writeEnum(${var}.ordinal());
+#else
+## TODO -- singal a code-gen-time error
+#end
+#end
+
+#macro( encodeArray $indent $var $s )
+#set ($I = $this.indent($indent))
+#set ($et = $this.javaType($s.ElementType))
+$I    long size${nv} = ${var}.size();
+$I    out.writeArrayStart();
+$I    out.setItemCount(size${nv});
+$I    long actualSize${nv} = 0;
+$I    for ($et e${nv}: ${var}) {
+$I      actualSize${nv}++;
+$I      out.startItem();
+#set ($var = "e${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 2)
+#encodeVar($indent $var $s.ElementType)
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+$I    out.writeArrayEnd();
+$I    if (actualSize${nv} != size${nv})
+$I      throw new java.util.ConcurrentModificationException("Array-size written was " + size${nv} + ", but element count was " + actualSize${nv} + ".");
+#end
+
+#macro( encodeMap $indent $var $s )
+#set ($I = $this.indent($indent))
+#set ($kt = $this.getStringType($s))
+#set ($vt = $this.javaType($s.ValueType))
+$I    long size${nv} = ${var}.size();
+$I    out.writeMapStart();
+$I    out.setItemCount(size${nv});
+$I    long actualSize${nv} = 0;
+$I    for (java.util.Map.Entry<$kt, $vt> e${nv}: ${var}.entrySet()) {
+$I      actualSize${nv}++;
+$I      out.startItem();
+#if ($this.isStringable($s))
+$I      out.writeString(e${nv}.getKey().toString());
+#else
+$I      out.writeString(e${nv}.getKey());
+#end
+$I      $vt v${nv} = e${nv}.getValue();
+#set ($var = "v${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 2)
+#encodeVar($indent $var $s.ValueType)
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+$I    out.writeMapEnd();
+$I    if (actualSize${nv} != size${nv})
+      throw new java.util.ConcurrentModificationException("Map-size written was " + size${nv} + ", but element count was " + actualSize${nv} + ".");
+#end
+
+#macro( encodeUnion $indent $var $s )
+#set ($I = $this.indent($indent))
+#set ($et = $this.javaType($s.Types.get($this.getNonNullIndex($s))))
+$I    if (${var} == null) {
+$I      out.writeIndex(#if($this.getNonNullIndex($s)==0)1#{else}0#end);
+$I      out.writeNull();
+$I    } else {
+$I      out.writeIndex(${this.getNonNullIndex($s)});
+#set ($indent = $indent + 2)
+#encodeVar($indent $var $s.Types.get($this.getNonNullIndex($s)))
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+#end
+
+
+#macro( decodeVar $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+##### Compound types (array, map, and union) require calls
+##### that will recurse back into this decodeVar macro:
+#if ($s.Type.Name.equals("array"))
+#decodeArray($indent $var $s $rs)
+#elseif ($s.Type.Name.equals("map"))
+#decodeMap($indent $var $s $rs)
+#elseif ($s.Type.Name.equals("union"))
+#decodeUnion($indent $var $s $rs)
+##### Use the generated "decode" method as fast way to write
+##### (specific) record types:
+#elseif ($s.Type.Name.equals("record"))
+$I    if (${var} == null) {
+$I      ${var} = new ${this.javaType($s)}();
+$I    }
+$I    ${var}.customDecode(in);
+##### For rest of cases, generate calls in.readXYZ:
+#elseif ($s.Type.Name.equals("null"))
+$I    in.readNull();
+#elseif ($s.Type.Name.equals("boolean"))
+$I    $var = in.readBoolean();
+#elseif ($s.Type.Name.equals("int"))
+$I    $var = in.readInt();
+#elseif ($s.Type.Name.equals("long"))
+$I    $var = in.readLong();
+#elseif ($s.Type.Name.equals("float"))
+$I    $var = in.readFloat();
+#elseif ($s.Type.Name.equals("double"))
+$I    $var = in.readDouble();
+#elseif ($s.Type.Name.equals("string"))
+#decodeString( "$I" $var $s )
+#elseif ($s.Type.Name.equals("bytes"))
+$I    $var = in.readBytes(${var});
+#elseif ($s.Type.Name.equals("fixed"))
+$I    if (${var} == null) {
+$I      ${var} = new ${this.javaType($s)}();
+$I    }
+$I    in.readFixed(${var}.bytes(), 0, ${s.FixedSize});
+#elseif ($s.Type.Name.equals("enum"))
+$I    $var = ${this.javaType($s)}.values()[in.readEnum()];
+#else
+## TODO -- singal a code-gen-time error
+#end
+#end
+
+#macro( decodeString $II $var $s )
+#set ($st = ${this.getStringType($s)})
+#if ($this.isStringable($s))
+#if ($st.equals("java.net.URI"))
+$II    try {
+$II      ${var} = new ${st}(in.readString());
+$II    } catch (java.net.URISyntaxException e) {
+$II      throw new java.io.IOException(e.getMessage());
+$II    }
+#elseif ($st.equals("java.net.URL"))
+$II    try {
+$II      ${var} = new ${st}(in.readString());
+$II    } catch (java.net.MalformedURLException e) {
+$II      throw new java.io.IOException(e.getMessage());
+$II    }
+#else
+$II    ${var} = new ${st}(in.readString());
+#end
+#elseif ($st.equals("java.lang.String"))
+$II    $var = in.readString();
+#elseif ($st.equals("org.apache.avro.util.Utf8"))
+$II    $var = in.readString(${var});
+#else
+$II    $var = in.readString(${var} instanceof Utf8 ? (Utf8)${var} : null);
+#end
+#end
+
+#macro( decodeArray $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+#set ($t = $this.javaType($s))
+#set ($et = $this.javaType($s.ElementType))
+#set ($gat = "SpecificData.Array<${et}>")
+$I    long size${nv} = in.readArrayStart();
+## Need fresh variable name due to limitation of macro system
+$I    $t a${nv} = ${var};
+$I    if (a${nv} == null) {
+$I      a${nv} = new ${gat}((int)size${nv}, ${rs});
+$I      $var = a${nv};
+$I    } else a${nv}.clear();
+$I    $gat ga${nv} = (a${nv} instanceof SpecificData.Array ? (${gat})a${nv} : null);
+$I    for ( ; 0 < size${nv}; size${nv} = in.arrayNext()) {
+$I      for ( ; size${nv} != 0; size${nv}--) {
+$I        $et e${nv} = (ga${nv} != null ? ga${nv}.peek() : null);
+#set ($var = "e${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 4)
+#decodeVar($indent $var $s.ElementType "${rs}.getElementType()")
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 4)
+#set ($I = $this.indent($indent))
+$I        a${nv}.add(e${nv});
+$I      }
+$I    }
+#end
+
+#macro( decodeMap $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+#set ($t = $this.javaType($s))
+#set ($kt = $this.getStringType($s))
+#set ($vt = $this.javaType($s.ValueType))
+$I    long size${nv} = in.readMapStart();
+$I    $t m${nv} = ${var}; // Need fresh name due to limitation of macro system
+$I    if (m${nv} == null) {
+$I      m${nv} = new java.util.HashMap<${kt},${vt}>((int)size${nv});
+$I      $var = m${nv};
+$I    } else m${nv}.clear();
+$I    for ( ; 0 < size${nv}; size${nv} = in.mapNext()) {
+$I      for ( ; size${nv} != 0; size${nv}--) {
+$I        $kt k${nv} = null;
+#decodeString( "$I    " "k${nv}" $s )
+$I        $vt v${nv} = null;
+#set ($var = "v${nv}")
+#set ($nv = $nv + 1)
+#set ($maxnv = $nv)
+#set ($indent = $indent + 4)
+#decodeVar($indent $var $s.ValueType "${rs}.getValueType()")
+#set ($nv = $nv - 1)
+#set ($indent = $indent - 4)
+#set ($I = $this.indent($indent))
+$I        m${nv}.put(k${nv}, v${nv});
+$I      }
+$I    }
+#end
+
+#macro( decodeUnion $indent $var $s $rs )
+#set ($I = $this.indent($indent))
+#set ($et = $this.javaType($s.Types.get($this.getNonNullIndex($s))))
+#set ($si = $this.getNonNullIndex($s))
+$I    if (in.readIndex() != ${si}) {
+$I      in.readNull();
+$I      ${var} = null;
+$I    } else {
+#set ($indent = $indent + 2)
+#decodeVar($indent $var $s.Types.get($si) "${rs}.getTypes().get(${si})")
+#set ($indent = $indent - 2)
+#set ($I = $this.indent($indent))
+$I    }
+#end

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,16 +38,15 @@ public class DataFileGetSchemaTool implements Tool {
   }
 
   @Override
-  public int run(InputStream stdin, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream stdin, PrintStream out, PrintStream err, List<String> args) throws Exception {
     if (args.size() != 1) {
       err.println("Expected 1 argument: input_file");
       return 1;
     }
-    DataFileReader<Void> reader =
-      new DataFileReader<Void>(Util.openSeekableFromFS(args.get(0)),
-                               new GenericDatumReader<Void>());
+    DataFileReader<Void> reader = new DataFileReader<>(Util.openSeekableFromFS(args.get(0)),
+        new GenericDatumReader<>());
     out.println(reader.getSchema().toString(true));
+    reader.close();
     return 0;
   }
 }

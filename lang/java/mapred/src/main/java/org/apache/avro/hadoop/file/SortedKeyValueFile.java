@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,16 +48,19 @@ import org.slf4j.LoggerFactory;
  * A SortedKeyValueFile is an indexed Avro container file of KeyValue records
  * sorted by key.
  *
- * <p>The SortedKeyValueFile is a directory with two files, named 'data' and
- * 'index'. The 'data' file is an ordinary Avro container file with
- * records. Each record has exactly two fields, 'key' and 'value'. The keys are
- * sorted lexicographically. The 'index' file is a small Avro container file
- * mapping keys in the 'data' file to their byte positions. The index file is
- * intended to fit in memory, so it should remain small. There is one entry in
- * the index file for each data block in the Avro container file.</p>
+ * <p>
+ * The SortedKeyValueFile is a directory with two files, named 'data' and
+ * 'index'. The 'data' file is an ordinary Avro container file with records.
+ * Each record has exactly two fields, 'key' and 'value'. The keys are sorted
+ * lexicographically. The 'index' file is a small Avro container file mapping
+ * keys in the 'data' file to their byte positions. The index file is intended
+ * to fit in memory, so it should remain small. There is one entry in the index
+ * file for each data block in the Avro container file.
+ * </p>
  *
- * <p>SortedKeyValueFile is to Avro container file as MapFile is to
- * SequenceFile.</p>
+ * <p>
+ * SortedKeyValueFile is to Avro container file as MapFile is to SequenceFile.
+ * </p>
  */
 public class SortedKeyValueFile {
   private static final Logger LOG = LoggerFactory.getLogger(SortedKeyValueFile.class);
@@ -71,10 +74,12 @@ public class SortedKeyValueFile {
   /**
    * Reads a SortedKeyValueFile by loading the key index into memory.
    *
-   * <p>When doing a lookup, this reader finds the correct block in the data file using
-   * the key index. It performs a single disk seek to the block and loads the entire block
-   * into memory. The block is scanned until the key is found or is determined not to
-   * exist.</p>
+   * <p>
+   * When doing a lookup, this reader finds the correct block in the data file
+   * using the key index. It performs a single disk seek to the block and loads
+   * the entire block into memory. The block is scanned until the key is found or
+   * is determined not to exist.
+   * </p>
    *
    * @param <K> The key type.
    * @param <V> The value type.
@@ -214,26 +219,25 @@ public class SortedKeyValueFile {
 
       // Load the whole index file into memory.
       Path indexFilePath = new Path(options.getPath(), INDEX_FILENAME);
-      LOG.debug("Loading the index from " + indexFilePath);
+      LOG.debug("Loading the index from {}", indexFilePath);
       mIndex = loadIndexFile(options.getConfiguration(), indexFilePath, mKeySchema);
 
       // Open the data file.
       Path dataFilePath = new Path(options.getPath(), DATA_FILENAME);
-      LOG.debug("Loading the data file " + dataFilePath);
+      LOG.debug("Loading the data file {}", dataFilePath);
       Schema recordSchema = AvroKeyValue.getSchema(mKeySchema, options.getValueSchema());
-      DatumReader<GenericRecord> datumReader =
-        model.createDatumReader(recordSchema);
-      mDataFileReader =
-        new DataFileReader<GenericRecord>
-        (new FsInput(dataFilePath, options.getConfiguration()), datumReader);
+      DatumReader<GenericRecord> datumReader = model.createDatumReader(recordSchema);
+      mDataFileReader = new DataFileReader<>(new FsInput(dataFilePath, options.getConfiguration()), datumReader);
 
     }
 
     /**
      * Gets the first value associated with a given key, or null if it is not found.
      *
-     * <p>This method will move the current position in the file to the record immediately
-     * following the requested key.</p>
+     * <p>
+     * This method will move the current position in the file to the record
+     * immediately following the requested key.
+     * </p>
      *
      * @param key The key to look up.
      * @return The value associated with the key, or null if not found.
@@ -241,51 +245,54 @@ public class SortedKeyValueFile {
      */
     public V get(K key) throws IOException {
       // Look up the entry in the index.
-      LOG.debug("Looking up key " + key + " in the index.");
+      LOG.debug("Looking up key {} in the index", key);
       Map.Entry<K, Long> indexEntry = mIndex.floorEntry(key);
       if (null == indexEntry) {
-        LOG.debug("Key " + key + " was not found in the index (it is before the first entry)");
+        LOG.debug("Key {} was not found in the index (it is before the first entry)", key);
         return null;
       }
-      LOG.debug("Key was found in the index, seeking to syncpoint " + indexEntry.getValue());
+      LOG.debug("Key was found in the index, seeking to syncpoint {}", indexEntry.getValue());
 
       // Seek to the data block that would contain the entry.
       mDataFileReader.seek(indexEntry.getValue());
 
       // Scan from this position of the file until we find it or pass it.
-      Iterator<AvroKeyValue<K, V>> iter = iterator();
-      while (iter.hasNext()) {
-        AvroKeyValue<K, V> record = iter.next();
+      for (AvroKeyValue<K, V> record : this) {
         int comparison = model.compare(record.getKey(), key, mKeySchema);
         if (0 == comparison) {
           // We've found it!
-          LOG.debug("Found record for key " + key);
+          LOG.debug("Found record for key {}", key);
           return record.getValue();
         }
         if (comparison > 0) {
           // We've passed it.
-          LOG.debug("Searched beyond the point where key " + key + " would appear in the file.");
+          LOG.debug("Searched beyond the point where key {} would appear in the file", key);
           return null;
         }
       }
 
       // We've reached the end of the file.
-      LOG.debug("Searched to the end of the file but did not find key " + key);
+      LOG.debug("Searched to the end of the file but did not find key {}", key);
       return null;
     }
 
     /**
      * Returns an iterator starting at the current position in the file.
      *
-     * <p>Use the get() method to move the current position.</p>
+     * <p>
+     * Use the get() method to move the current position.
+     * </p>
      *
-     * <p>Note that this iterator is shared with other clients of the file; it does not
-     * contain a separate pointer into the file.</p>
+     * <p>
+     * Note that this iterator is shared with other clients of the file; it does not
+     * contain a separate pointer into the file.
+     * </p>
      *
      * @return An iterator.
      */
+    @Override
     public Iterator<AvroKeyValue<K, V>> iterator() {
-      return new AvroKeyValue.Iterator<K, V>(mDataFileReader.iterator());
+      return new AvroKeyValue.Iterator<>(mDataFileReader.iterator());
     }
 
     /** {@inheritDoc} */
@@ -297,37 +304,34 @@ public class SortedKeyValueFile {
     /**
      * Loads an index file into an in-memory map, from key to file offset in bytes.
      *
-     * @param conf The configuration.
-     * @param path The path to the index file.
+     * @param conf      The configuration.
+     * @param path      The path to the index file.
      * @param keySchema The reader schema for the key.
      * @throws IOException If there is an error.
      */
-    private <K> NavigableMap<K, Long> loadIndexFile(
-        Configuration conf, Path path, Schema keySchema) throws IOException {
-      DatumReader<GenericRecord> datumReader = model.createDatumReader(
-          AvroKeyValue.getSchema(keySchema, Schema.create(Schema.Type.LONG)));
-      DataFileReader<GenericRecord> fileReader = new DataFileReader<GenericRecord>(
-          new FsInput(path, conf), datumReader);
+    private <K> NavigableMap<K, Long> loadIndexFile(Configuration conf, Path path, Schema keySchema)
+        throws IOException {
+      DatumReader<GenericRecord> datumReader = model
+          .createDatumReader(AvroKeyValue.getSchema(keySchema, Schema.create(Schema.Type.LONG)));
 
-      NavigableMap<K, Long> index;
-      if (Schema.create(Schema.Type.STRING).equals(keySchema)) {
-        // Because Avro STRING types are mapped to the Java CharSequence class that does not
-        // mandate the implementation of Comparable, we need to specify a special
-        // CharSequence comparator if the key type is a string.  This hack only fixes the
-        // problem for primitive string types.  If, for example, you tried to use a record
-        // type as the key, any string fields inside of it would not be compared correctly
-        // against java.lang.Strings.
-        index = new TreeMap<K, Long>(new AvroCharSequenceComparator<K>());
-      } else {
-        index = new TreeMap<K, Long>();
-      }
-      try {
+      NavigableMap<K, Long> index = new TreeMap<>();
+      try (DataFileReader<GenericRecord> fileReader = new DataFileReader<>(new FsInput(path, conf), datumReader)) {
+        if (Schema.create(Schema.Type.STRING).equals(keySchema)) {
+          // Because Avro STRING types are mapped to the Java CharSequence class that does
+          // not
+          // mandate the implementation of Comparable, we need to specify a special
+          // CharSequence comparator if the key type is a string. This hack only fixes the
+          // problem for primitive string types. If, for example, you tried to use a
+          // record
+          // type as the key, any string fields inside of it would not be compared
+          // correctly
+          // against java.lang.Strings.
+          index = new TreeMap<>(new AvroCharSequenceComparator<>());
+        }
         for (GenericRecord genericRecord : fileReader) {
-          AvroKeyValue<K, Long> indexRecord = new AvroKeyValue<K, Long>(genericRecord);
+          AvroKeyValue<K, Long> indexRecord = new AvroKeyValue<>(genericRecord);
           index.put(indexRecord.getKey(), indexRecord.getValue());
         }
-      } finally {
-        fileReader.close();
       }
       return index;
     }
@@ -361,7 +365,10 @@ public class SortedKeyValueFile {
     /** The writer for the index file. */
     private final DataFileWriter<GenericRecord> mIndexFileWriter;
 
-    /** We store an indexed key for every mIndexInterval records written to the data file. */
+    /**
+     * We store an indexed key for every mIndexInterval records written to the data
+     * file.
+     */
     private final int mIndexInterval;
 
     /** The number of records written to the file so far. */
@@ -370,7 +377,9 @@ public class SortedKeyValueFile {
     /** The most recent key that was appended to the file, or null. */
     private K mPreviousKey;
 
-    /** A class to encapsulate the various options of a SortedKeyValueFile.Writer. */
+    /**
+     * A class to encapsulate the various options of a SortedKeyValueFile.Writer.
+     */
     public static class Options {
       /** The key schema. */
       private Schema mKeySchema;
@@ -476,8 +485,10 @@ public class SortedKeyValueFile {
       /**
        * Sets the index interval.
        *
-       * <p>If the index inverval is N, then every N records will be indexed into the
-       * index file.</p>
+       * <p>
+       * If the index inverval is N, then every N records will be indexed into the
+       * index file.
+       * </p>
        *
        * @param indexInterval The index interval.
        * @return This options instance.
@@ -509,19 +520,19 @@ public class SortedKeyValueFile {
 
       /** Set the compression codec. */
       public Options withCodec(String codec) {
-          this.codec = CodecFactory.fromString(codec);
-          return this;
+        this.codec = CodecFactory.fromString(codec);
+        return this;
       }
 
       /** Set the compression codec. */
       public Options withCodec(CodecFactory codec) {
-          this.codec = codec;
-          return this;
+        this.codec = codec;
+        return this;
       }
 
       /** Return the compression codec. */
       public CodecFactory getCodec() {
-          return this.codec;
+        return this.codec;
       }
     }
 
@@ -555,53 +566,48 @@ public class SortedKeyValueFile {
 
       // Create the directory.
       if (!fileSystem.mkdirs(options.getPath())) {
-        throw new IOException(
-            "Unable to create directory for SortedKeyValueFile: " + options.getPath());
+        throw new IOException("Unable to create directory for SortedKeyValueFile: " + options.getPath());
       }
-      LOG.debug("Created directory " + options.getPath());
+      LOG.debug("Created directory {}", options.getPath());
 
       // Open a writer for the data file.
       Path dataFilePath = new Path(options.getPath(), DATA_FILENAME);
-      LOG.debug("Creating writer for avro data file: " + dataFilePath);
+      LOG.debug("Creating writer for avro data file: {}", dataFilePath);
       mRecordSchema = AvroKeyValue.getSchema(mKeySchema, mValueSchema);
-      DatumWriter<GenericRecord> datumWriter =
-        model.createDatumWriter(mRecordSchema);
+      DatumWriter<GenericRecord> datumWriter = model.createDatumWriter(mRecordSchema);
       OutputStream dataOutputStream = fileSystem.create(dataFilePath);
-      mDataFileWriter = new DataFileWriter<GenericRecord>(datumWriter)
-          .setSyncInterval(1 << 20)  // Set the auto-sync interval sufficiently large, since
-                                     // we will manually sync every mIndexInterval records.
-          .setCodec(options.getCodec())
-          .create(mRecordSchema, dataOutputStream);
+      mDataFileWriter = new DataFileWriter<>(datumWriter).setSyncInterval(1 << 20) // Set the auto-sync interval
+                                                                                   // sufficiently large, since
+                                                                                   // we will manually sync every
+                                                                                   // mIndexInterval records.
+          .setCodec(options.getCodec()).create(mRecordSchema, dataOutputStream);
 
       // Open a writer for the index file.
       Path indexFilePath = new Path(options.getPath(), INDEX_FILENAME);
-      LOG.debug("Creating writer for avro index file: " + indexFilePath);
+      LOG.debug("Creating writer for avro index file: {}", indexFilePath);
       mIndexSchema = AvroKeyValue.getSchema(mKeySchema, Schema.create(Schema.Type.LONG));
-      DatumWriter<GenericRecord> indexWriter =
-        model.createDatumWriter(mIndexSchema);
+      DatumWriter<GenericRecord> indexWriter = model.createDatumWriter(mIndexSchema);
       OutputStream indexOutputStream = fileSystem.create(indexFilePath);
-      mIndexFileWriter = new DataFileWriter<GenericRecord>(indexWriter)
-          .create(mIndexSchema, indexOutputStream);
+      mIndexFileWriter = new DataFileWriter<>(indexWriter).create(mIndexSchema, indexOutputStream);
     }
 
     /**
      * Appends a record to the SortedKeyValueFile.
      *
-     * @param key The key.
+     * @param key   The key.
      * @param value The value.
      * @throws IOException If there is an error.
      */
     public void append(K key, V value) throws IOException {
       // Make sure the keys are inserted in sorted order.
       if (null != mPreviousKey && model.compare(key, mPreviousKey, mKeySchema) < 0) {
-        throw new IllegalArgumentException("Records must be inserted in sorted key order."
-            + " Attempted to insert key " + key + " after " + mPreviousKey + ".");
+        throw new IllegalArgumentException("Records must be inserted in sorted key order." + " Attempted to insert key "
+            + key + " after " + mPreviousKey + ".");
       }
       mPreviousKey = model.deepCopy(mKeySchema, key);
 
       // Construct the data record.
-      AvroKeyValue<K, V> dataRecord
-          = new AvroKeyValue<K, V>(new GenericData.Record(mRecordSchema));
+      AvroKeyValue<K, V> dataRecord = new AvroKeyValue<>(new GenericData.Record(mRecordSchema));
       dataRecord.setKey(key);
       dataRecord.setValue(value);
 
@@ -612,8 +618,7 @@ public class SortedKeyValueFile {
         long position = mDataFileWriter.sync();
 
         // Construct the record to put in the index.
-        AvroKeyValue<K, Long> indexRecord
-            = new AvroKeyValue<K, Long>(new GenericData.Record(mIndexSchema));
+        AvroKeyValue<K, Long> indexRecord = new AvroKeyValue<>(new GenericData.Record(mIndexSchema));
         indexRecord.setKey(key);
         indexRecord.setValue(position);
         mIndexFileWriter.append(indexRecord.get());

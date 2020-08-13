@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,13 +20,15 @@
 
 """Read/Write Avro File Object Containers."""
 
+import bz2
 import io
 import logging
+import lzma
 import os
 import zlib
 
-from avro import schema
 from avro import io as avro_io
+from avro import schema
 
 try:
   import snappy
@@ -34,6 +36,11 @@ try:
 except ImportError:
   has_snappy = False
 
+try:
+  import zstandard as zstd
+  has_zstandard = True
+except ImportError:
+  has_zstandard = False
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +64,7 @@ SYNC_SIZE = 16
 SYNC_INTERVAL = 1000 * SYNC_SIZE
 
 # Schema of the container header:
-META_SCHEMA = schema.Parse("""
+META_SCHEMA = schema.parse("""
 {
   "type": "record", "name": "org.apache.avro.file.Header",
   "fields": [{
@@ -76,10 +83,20 @@ META_SCHEMA = schema.Parse("""
     'sync_size': SYNC_SIZE,
 })
 
+# Compression codecs:
+NULL_CODEC = 'null'
+DEFLATE_CODEC = 'deflate'
+BZIP2_CODEC = 'bzip2'
+SNAPPY_CODEC = 'snappy'
+XZ_CODEC = 'xz'
+ZSTANDARD_CODEC = 'zstandard'
+
 # Codecs supported by container files:
-VALID_CODECS = frozenset(['null', 'deflate'])
+VALID_CODECS = frozenset([NULL_CODEC, DEFLATE_CODEC, BZIP2_CODEC, XZ_CODEC])
 if has_snappy:
-  VALID_CODECS = frozenset.union(VALID_CODECS, ['snappy'])
+  VALID_CODECS = frozenset.union(VALID_CODECS, [SNAPPY_CODEC])
+if has_zstandard:
+  VALID_CODECS = frozenset.union(VALID_CODECS, [ZSTANDARD_CODEC])
 
 # Not used yet
 VALID_ENCODINGS = frozenset(['binary'])
@@ -119,7 +136,7 @@ class DataFileWriter(object):
       writer,
       datum_writer,
       writer_schema=None,
-      codec='null',
+      codec=NULL_CODEC,
   ):
     """Constructs a new DataFileWriter instance.
 
@@ -164,7 +181,7 @@ class DataFileWriter(object):
       # get schema used to write existing file
       schema_from_file = dfr.GetMeta('avro.schema').decode('utf-8')
       self.SetMeta('avro.schema', schema_from_file)
-      self.datum_writer.writer_schema = schema.Parse(schema_from_file)
+      self.datum_writer.writer_schema = schema.parse(schema_from_file)
 
       # seek to the end of the file and prepare for writing
       writer.seek(0, 2)
@@ -261,17 +278,26 @@ class DataFileWriter(object):
     # write block contents
     uncompressed_data = self._buffer_writer.getvalue()
     codec = self.GetMeta(CODEC_KEY).decode('utf-8')
-    if codec == 'null':
+    if codec == NULL_CODEC:
       compressed_data = uncompressed_data
       compressed_data_length = len(compressed_data)
-    elif codec == 'deflate':
+    elif codec == DEFLATE_CODEC:
       # The first two characters and last character are zlib
       # wrappers around deflate data.
       compressed_data = zlib.compress(uncompressed_data)[2:-1]
       compressed_data_length = len(compressed_data)
-    elif codec == 'snappy':
+    elif codec == BZIP2_CODEC:
+      compressed_data = bz2.compress(uncompressed_data)
+      compressed_data_length = len(compressed_data)
+    elif codec == SNAPPY_CODEC:
       compressed_data = snappy.compress(uncompressed_data)
       compressed_data_length = len(compressed_data) + 4 # crc32
+    elif codec == XZ_CODEC:
+      compressed_data = lzma.compress(uncompressed_data)
+      compressed_data_length = len(compressed_data)
+    elif codec == ZSTANDARD_CODEC:
+      compressed_data = zstd.ZstdCompressor().compress(uncompressed_data)
+      compressed_data_length = len(compressed_data)
     else:
       fail_msg = '"%s" codec is not supported.' % codec
       raise DataFileException(fail_msg)
@@ -283,7 +309,7 @@ class DataFileWriter(object):
     self.writer.write(compressed_data)
 
     # Write CRC32 checksum for Snappy
-    if self.GetMeta(CODEC_KEY) == 'snappy':
+    if codec == SNAPPY_CODEC:
       self.encoder.write_crc32(uncompressed_data)
 
     # write sync marker
@@ -353,7 +379,7 @@ class DataFileReader(object):
     # ensure codec is valid
     avro_codec_raw = self.GetMeta('avro.codec')
     if avro_codec_raw is None:
-      self.codec = "null"
+      self.codec = NULL_CODEC
     else:
       self.codec = avro_codec_raw.decode('utf-8')
     if self.codec not in VALID_CODECS:
@@ -364,7 +390,7 @@ class DataFileReader(object):
     # get ready to read
     self._block_count = 0
     self.datum_reader.writer_schema = (
-        schema.Parse(self.GetMeta(SCHEMA_KEY).decode('utf-8')))
+        schema.parse(self.GetMeta(SCHEMA_KEY).decode('utf-8')))
 
   def __enter__(self):
     return self
@@ -376,10 +402,6 @@ class DataFileReader(object):
 
   def __iter__(self):
     return self
-
-  def __next__(self):
-    """Implements the iterator interface."""
-    return next(self)
 
   # read-only properties
   @property
@@ -476,11 +498,11 @@ class DataFileReader(object):
 
   def _read_block_header(self):
     self._block_count = self.raw_decoder.read_long()
-    if self.codec == "null":
+    if self.codec == NULL_CODEC:
       # Skip a long; we don't need to use the length.
       self.raw_decoder.skip_long()
       self._datum_decoder = self._raw_decoder
-    elif self.codec == 'deflate':
+    elif self.codec == DEFLATE_CODEC:
       # Compressed data is stored as (length, data), which
       # corresponds to how the "bytes" type is encoded.
       data = self.raw_decoder.read_bytes()
@@ -488,13 +510,35 @@ class DataFileReader(object):
       # "raw" (no zlib headers) decompression.  See zlib.h.
       uncompressed = zlib.decompress(data, -15)
       self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
-    elif self.codec == 'snappy':
+    elif self.codec == BZIP2_CODEC:
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length)
+      uncompressed = bz2.decompress(data)
+      self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
+    elif self.codec == SNAPPY_CODEC:
       # Compressed data includes a 4-byte CRC32 checksum
       length = self.raw_decoder.read_long()
       data = self.raw_decoder.read(length - 4)
       uncompressed = snappy.decompress(data)
       self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
       self.raw_decoder.check_crc32(uncompressed);
+    elif self.codec == XZ_CODEC:
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length)
+      uncompressed = lzma.decompress(data)
+      self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
+    elif self.codec == ZSTANDARD_CODEC:
+      length = self.raw_decoder.read_long()
+      data = self.raw_decoder.read(length)
+      uncompressed = bytearray()
+      dctx = zstd.ZstdDecompressor()
+      with dctx.stream_reader(io.BytesIO(data)) as reader:
+        while True:
+          chunk = reader.read(16384)
+          if not chunk:
+            break
+          uncompressed.extend(chunk)
+      self._datum_decoder = avro_io.BinaryDecoder(io.BytesIO(uncompressed))
     else:
       raise DataFileException("Unknown codec: %r" % self.codec)
 
@@ -507,21 +551,14 @@ class DataFileReader(object):
     if proposed_sync_marker != self.sync_marker:
       self.reader.seek(-SYNC_SIZE, 1)
       return False
-    else:
-      return True
+    return True
 
-  # TODO: handle block of length zero
-  # TODO: clean this up with recursion
   def __next__(self):
     """Return the next datum in the file."""
-    if self.block_count == 0:
-      if self.is_EOF():
+    while self.block_count == 0:
+      if self.is_EOF() or (self._skip_sync() and self.is_EOF()):
         raise StopIteration
-      elif self._skip_sync():
-        if self.is_EOF(): raise StopIteration
-        self._read_block_header()
-      else:
-        self._read_block_header()
+      self._read_block_header()
 
     datum = self.datum_reader.read(self.datum_decoder)
     self._block_count -= 1

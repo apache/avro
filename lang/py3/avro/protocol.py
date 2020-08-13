@@ -10,7 +10,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+# https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,14 +21,13 @@
 Protocol implementation.
 """
 
-
 import hashlib
 import json
 import logging
+import warnings
+from types import MappingProxyType
 
 from avro import schema
-
-ImmutableDict = schema.ImmutableDict
 
 # ------------------------------------------------------------------------------
 # Constants
@@ -146,8 +145,7 @@ class Protocol(object):
 
     self._types = tuple(types)
     # Map: type full name -> type schema
-    self._type_map = (
-        ImmutableDict((type.fullname, type) for type in self._types))
+    self._type_map = MappingProxyType({type.fullname: type for type in self._types})
     # This assertion cannot fail unless we don't track named schemas properly:
     assert (len(self._types) == len(self._type_map)), (
         'Type list %r does not match type map: %r'
@@ -158,8 +156,7 @@ class Protocol(object):
 
     # Map: message name -> Message
     # Note that message names are simple names unique within the protocol.
-    self._message_map = ImmutableDict(
-        items=((message.name, message) for message in self._messages))
+    self._message_map = MappingProxyType({message.name: message for message in self._messages})
     if len(self._messages) != len(self._message_map):
       raise ProtocolParseException(
           'Invalid protocol %s with duplicate message name: %r'
@@ -227,7 +224,7 @@ class Protocol(object):
     return to_dump
 
   def __str__(self):
-    return json.dumps(self.to_json())
+    return json.dumps(self.to_json(), cls=schema.MappingProxyEncoder)
 
   def __eq__(self, that):
     to_cmp = json.loads(str(self))
@@ -319,7 +316,7 @@ class Message(object):
     return self._props
 
   def __str__(self):
-    return json.dumps(self.to_json())
+    return json.dumps(self.to_json(), cls=schema.MappingProxyEncoder)
 
   def to_json(self, names=None):
     if names is None:
@@ -379,7 +376,7 @@ def ProtocolFromJSONData(json_data):
   )
 
 
-def Parse(json_string):
+def parse(json_string):
   """Constructs a Protocol from its JSON descriptor in text form.
 
   Args:
@@ -400,3 +397,9 @@ def Parse(json_string):
 
   return ProtocolFromJSONData(json_data)
 
+def Parse(json_string):
+  """Deprecated implementation of parse."""
+  warnings.warn("`Parse` is deprecated in avro 1.10. "
+                "Please use `parse` (lowercase) instead.",
+                DeprecationWarning)
+  return parse(json_string)

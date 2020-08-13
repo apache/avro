@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,9 +30,9 @@ class ColumnDescriptor<T extends Comparable> {
 
   BlockDescriptor[] blocks;
 
-  long[] blockStarts;                             // for random access
-  long[] firstRows;                               // for binary searches
-  T[] firstValues;                                // for binary searches
+  long[] blockStarts; // for random access
+  long[] firstRows; // for binary searches
+  T[] firstValues; // for binary searches
 
   public ColumnDescriptor(Input file, ColumnMetaData metaData) {
     this.file = file;
@@ -53,27 +53,31 @@ class ColumnDescriptor<T extends Comparable> {
     return block;
   }
 
-  public int blockCount() { return blocks.length; }
+  public int blockCount() {
+    return blocks.length;
+  }
 
   public long lastRow(int block) {
-    if (blocks.length == 0 || block < 0) return 0;
+    if (blocks.length == 0 || block < 0)
+      return 0;
     return firstRows[block] + blocks[block].rowCount;
   }
 
   public void ensureBlocksRead() throws IOException {
-    if (blocks != null) return;
+    if (blocks != null)
+      return;
 
     // read block descriptors
     InputBuffer in = new InputBuffer(file, start);
     int blockCount = in.readFixed32();
     BlockDescriptor[] blocks = new BlockDescriptor[blockCount];
     if (metaData.hasIndexValues())
-      firstValues = (T[])new Comparable[blockCount];
+      firstValues = (T[]) new Comparable[blockCount];
 
     for (int i = 0; i < blockCount; i++) {
       blocks[i] = BlockDescriptor.read(in);
       if (metaData.hasIndexValues())
-        firstValues[i] = in.<T>readValue(metaData.getType());
+        firstValues[i] = in.readValue(metaData.getType());
     }
     dataStart = in.tell();
 

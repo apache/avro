@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,11 +23,13 @@ import java.nio.ByteBuffer;
 /** Implements "null" (pass through) codec. */
 final class NullCodec extends Codec {
 
-  @Override ByteBuffer compress(ByteBuffer buffer) throws IOException {
+  @Override
+  ByteBuffer compress(ByteBuffer buffer) throws IOException {
     return buffer;
   }
 
-  @Override ByteBuffer decompress(ByteBuffer data) throws IOException {
+  @Override
+  ByteBuffer decompress(ByteBuffer data) throws IOException {
     return data;
   }
 

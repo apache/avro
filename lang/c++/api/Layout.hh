@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,13 +21,12 @@
 
 #include <boost/noncopyable.hpp>
 #include "Config.hh"
-#include "Boost.hh"
 
 /// \file Layout.hh
 ///
 
 namespace avro {
-    
+
 class AVRO_DECL Layout : private boost::noncopyable {
 
   protected:
@@ -66,17 +65,17 @@ class AVRO_DECL CompoundLayout : public Layout {
         Layout(offset)
     {}
 
-    void add(Layout *layout) {
-        layouts_.push_back(layout);
+    void add(std::unique_ptr<Layout> &layout) {
+        layouts_.push_back(std::move(layout));
     }
 
     const Layout &at (size_t idx) const {
-        return layouts_.at(idx);
+        return *layouts_.at(idx);
     }
 
   private:
 
-    boost::ptr_vector<Layout> layouts_;
+    std::vector<std::unique_ptr<Layout> > layouts_;
 };
 
 } // namespace avro

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,11 +49,11 @@ namespace Avro.Test
       ""errors"": [""Curse"", ""CurseMore""]
     }
   }
-}", true)]
+}", true, TestName = "TestProtocol0")]
         [TestCase(@"{
   ""protocol"" : ""MyProtocol"",
   ""namespace"" : ""com.foo"",
-  ""types"" : [ 
+  ""types"" : [
    {
 	""type"" : ""record"",
 	""name"" : ""A"",
@@ -65,14 +65,14 @@ namespace Avro.Test
 	""symbols"" : [ ""A"", ""B"", ""C"" ]
    },
    {
-   ""type"": ""fixed"", 
-   ""size"": 16, 
+   ""type"": ""fixed"",
+   ""size"": 16,
    ""name"": ""MyFixed""
    },
    {
 	""type"" : ""record"",
 	""name"" : ""Z"",
-	""fields"" : 
+	""fields"" :
 			[ 	
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ] },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ] },
@@ -107,16 +107,16 @@ namespace Avro.Test
 	""type"" : ""int""
    }
    ]
-}", true)]
+}", true, TestName = "TestProtocol1")]
         [TestCase(@"{
   ""protocol"" : ""MyProtocol"",
   ""namespace"" : ""com.bar"",
-  ""types"" : [ 
+  ""types"" : [
    {
 	""type"" : ""record"",
 	""name"" : ""A"",
-	""fields"" : 
-		[ 
+	""fields"" :
+		[
 			{ ""name"" : ""f1"", ""type"" : ""long"" }
 		]
    },
@@ -126,14 +126,14 @@ namespace Avro.Test
 	""symbols"" : [ ""A"", ""B"", ""C"" ]
    },
    {
-   ""type"": ""fixed"", 
-   ""size"": 16, 
+   ""type"": ""fixed"",
+   ""size"": 16,
    ""name"": ""MyFixed""
    },
    {
 	""type"" : ""record"",
 	""name"" : ""Z"",
-	""fields"" : 
+	""fields"" :
 			[ 	
 				{ ""name"" : ""myUInt"", ""type"" : [ ""int"", ""null"" ], ""default"" : 1 },
 				{ ""name"" : ""myULong"", ""type"" : [ ""long"", ""null"" ], ""default"" : 2 },
@@ -168,7 +168,7 @@ namespace Avro.Test
 	""type"" : ""int""
    }
    ]
-}", true)]
+}", true, TestName = "TestProtocol2")]
         public static void TestProtocol(string str, bool valid)
         {
             Protocol protocol = Protocol.Parse(str);
@@ -201,7 +201,7 @@ namespace Avro.Test
       ""errors"": [""Curse""]
     }
   }
-}", 
+}",
 @"{
   ""protocol"": ""TestProtocol"",
   ""namespace"": ""com.acme"",
@@ -221,7 +221,7 @@ namespace Avro.Test
     }
   }
 }",
-  true,true)]
+  true,true, TestName = "TestProtocolHash_ProtocolsMatch")]
         // Protocols match, order of schemas in 'types' are different
         [TestCase(
 @"{
@@ -262,7 +262,7 @@ namespace Avro.Test
     }
   }
 }",
-  false,true)]
+  false,true, TestName = "TestProtocolHash_ProtocolsMatch_OrderOfSchemasInTypesAreDifferent")]
         // Name of protocol is different
         [TestCase(
 @"{
@@ -303,7 +303,7 @@ namespace Avro.Test
     }
   }
 }",
-  false,false)]
+  false,false, TestName = "TestProtocolHash_NameOfProtocolIsDifferent")]
         // Name of a message request is different: 'hi'
         [TestCase(
 @"{
@@ -344,7 +344,7 @@ namespace Avro.Test
     }
   }
 }",
-  false,false)]
+  false,false, TestName = "TestProtocolHash_NameOfMessageRequestIsDifferent")]
         // Name of a type is different : Curse1
         [TestCase(
 @"{
@@ -385,7 +385,7 @@ namespace Avro.Test
     }
   }
 }",
-  false,false)]
+  false,false, TestName = "TestProtocolHash_NameOfTypeIsDifferent_Curse1")]
         // Name of a record field is different: 'mymessage'
         [TestCase(
 @"{
@@ -426,7 +426,7 @@ namespace Avro.Test
     }
   }
 }",
-  false,false)]
+  false,false, TestName = "TestProtocolHash_NameOfRecordFieldIsDifferent_MyMessage")]
         public static void TestProtocolHash(string str1, string str2, bool md5_equal, bool hash_equal)
         {
             Protocol protocol1 = Protocol.Parse(str1);

@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,16 +21,17 @@ import org.apache.avro.ipc.SocketServer;
 import org.apache.avro.ipc.SocketTransceiver;
 import org.apache.avro.ipc.reflect.ReflectRequestor;
 import org.apache.avro.ipc.reflect.ReflectResponder;
-import org.apache.avro.test.Simple;
 import org.junit.Before;
 
 import java.net.InetSocketAddress;
 
 public class TestProtocolReflectMeta extends TestProtocolReflect {
 
-  @Before @Override
+  @Before
+  @Override
   public void testStartServer() throws Exception {
-    if (server != null) return;
+    if (server != null)
+      return;
     ReflectResponder rresp = new ReflectResponder(Simple.class, new TestImpl());
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     rresp.addRPCPlugin(new RPCMetaTestPlugin("key2"));
@@ -41,7 +42,7 @@ public class TestProtocolReflectMeta extends TestProtocolReflect {
     ReflectRequestor requestor = new ReflectRequestor(Simple.class, client);
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key1"));
     requestor.addRPCPlugin(new RPCMetaTestPlugin("key2"));
-    proxy = ReflectRequestor.getClient(Simple.class, (ReflectRequestor)requestor);
+    proxy = ReflectRequestor.getClient(Simple.class, requestor);
   }
 
 }

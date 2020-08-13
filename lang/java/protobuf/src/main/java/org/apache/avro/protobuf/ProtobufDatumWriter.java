@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,8 +26,10 @@ import org.apache.avro.io.Encoder;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 
-/** {@link org.apache.avro.io.DatumWriter DatumWriter} for generated protobuf
- * classes. */
+/**
+ * {@link org.apache.avro.io.DatumWriter DatumWriter} for generated protobuf
+ * classes.
+ */
 public class ProtobufDatumWriter<T> extends GenericDatumWriter<T> {
   public ProtobufDatumWriter() {
     super(ProtobufData.get());
@@ -50,20 +52,17 @@ public class ProtobufDatumWriter<T> extends GenericDatumWriter<T> {
   }
 
   @Override
-  protected void writeEnum(Schema schema, Object datum, Encoder out)
-    throws IOException {
+  protected void writeEnum(Schema schema, Object datum, Encoder out) throws IOException {
     if (!(datum instanceof EnumValueDescriptor))
-      super.writeEnum(schema, datum, out);        // punt to generic
+      super.writeEnum(schema, datum, out); // punt to generic
     else
-      out.writeEnum
-        (schema.getEnumOrdinal(((EnumValueDescriptor)datum).getName()));
+      out.writeEnum(schema.getEnumOrdinal(((EnumValueDescriptor) datum).getName()));
   }
 
   @Override
   protected void writeBytes(Object datum, Encoder out) throws IOException {
-    ByteString bytes = (ByteString)datum;
+    ByteString bytes = (ByteString) datum;
     out.writeBytes(bytes.toByteArray(), 0, bytes.size());
   }
 
 }
-

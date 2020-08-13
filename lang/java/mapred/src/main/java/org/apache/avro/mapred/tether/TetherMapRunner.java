@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,8 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import org.apache.avro.mapred.AvroJob;
 
-class TetherMapRunner
-  extends MapRunner<TetherData, NullWritable, TetherData, NullWritable> {
+class TetherMapRunner extends MapRunner<TetherData, NullWritable, TetherData, NullWritable> {
 
   private static final Logger LOG = LoggerFactory.getLogger(TetherMapRunner.class);
 
@@ -47,30 +46,25 @@ class TetherMapRunner
 
   @SuppressWarnings("unchecked")
   public void run(RecordReader<TetherData, NullWritable> recordReader,
-                  OutputCollector<TetherData, NullWritable> collector,
-                  Reporter reporter) throws IOException {
+      OutputCollector<TetherData, NullWritable> collector, Reporter reporter) throws IOException {
     try {
       // start tethered process
       process = new TetheredProcess(job, collector, reporter);
 
       // configure it
       LOG.info("send configure to subprocess for map task");
-      process.inputClient.configure
-        (TaskType.MAP,
-         job.get(AvroJob.INPUT_SCHEMA),
-         AvroJob.getMapOutputSchema(job).toString());
+      process.inputClient.configure(TaskType.MAP, job.get(AvroJob.INPUT_SCHEMA),
+          AvroJob.getMapOutputSchema(job).toString());
 
       LOG.info("send partitions to subprocess for map task");
       process.inputClient.partitions(job.getNumReduceTasks());
 
       // run map
-      Counter inputRecordCounter =
-        reporter.getCounter("org.apache.hadoop.mapred.Task$Counter",
-                            "MAP_INPUT_RECORDS");
+      Counter inputRecordCounter = reporter.getCounter("org.apache.hadoop.mapred.Task$Counter", "MAP_INPUT_RECORDS");
       TetherData data = new TetherData();
       while (recordReader.next(data, NullWritable.get())) {
         process.inputClient.input(data.buffer(), data.count());
-        inputRecordCounter.increment(data.count()-1);
+        inputRecordCounter.increment(data.count() - 1);
         if (process.outputService.isFinished())
           break;
       }
@@ -79,14 +73,14 @@ class TetherMapRunner
 
       // wait for completion
       if (process.outputService.waitForFinish())
-        throw new IOException("Task failed: "+process.outputService.error());
+        throw new IOException("Task failed: " + process.outputService.error());
 
-    } catch (Throwable t) {                       // send abort
+    } catch (Throwable t) { // send abort
       LOG.warn("Task failed", t);
       process.inputClient.abort();
-      throw new IOException("Task failed: "+t, t);
+      throw new IOException("Task failed: " + t, t);
 
-    } finally {                                   // clean up
+    } finally { // clean up
       if (process != null)
         process.close();
     }

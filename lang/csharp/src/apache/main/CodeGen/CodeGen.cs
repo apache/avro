@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,20 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.CodeDom;
 using System.CodeDom.Compiler;
-using Microsoft.CSharp;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
+using System.Text;
+using Microsoft.CSharp;
 
 namespace Avro
 {
+    /// <summary>
+    /// Generates C# code from Avro schemas and protocols.
+    /// </summary>
     public class CodeGen
     {
         /// <summary>
@@ -45,9 +48,26 @@ namespace Avro
         public IList<Protocol> Protocols { get; private set; }
 
         /// <summary>
-        /// List of generated namespaces 
+        /// Mapping of Avro namespaces to C# namespaces
         /// </summary>
+        public IDictionary<string, string> NamespaceMapping { get; private set; }
+
+        /// <summary>
+        /// List of generated namespaces
+        /// </summary>
+        [Obsolete("Use NamespaceLookup instead. This will be removed from the public API in a future version.")]
         protected Dictionary<string, CodeNamespace> namespaceLookup = new Dictionary<string, CodeNamespace>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// List of generated namespaces.
+        /// </summary>
+        protected Dictionary<string, CodeNamespace> NamespaceLookup
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            get => namespaceLookup;
+            set => namespaceLookup = value;
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
 
         /// <summary>
         /// Default constructor
@@ -56,6 +76,7 @@ namespace Avro
         {
             this.Schemas = new List<Schema>();
             this.Protocols = new List<Protocol>();
+            this.NamespaceMapping = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -83,19 +104,23 @@ namespace Avro
         /// <returns></returns>
         protected virtual CodeNamespace addNamespace(string name)
         {
-            if (string.IsNullOrEmpty(name)) 
-                throw new ArgumentNullException("name", "name cannot be null.");
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name), "name cannot be null.");
 
             CodeNamespace ns = null;
 
-            if (!namespaceLookup.TryGetValue(name, out ns))
+            if (!NamespaceLookup.TryGetValue(name, out ns))
             {
-                ns = new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
+                string csharpNamespace;
+                ns = NamespaceMapping.TryGetValue(name, out csharpNamespace)
+                    ? new CodeNamespace(csharpNamespace)
+                    : new CodeNamespace(CodeGenUtil.Instance.Mangle(name));
+
                 foreach (CodeNamespaceImport nci in CodeGenUtil.Instance.NamespaceImports)
                     ns.Imports.Add(nci);
 
                 CompileUnit.Namespaces.Add(ns);
-                namespaceLookup.Add(name, ns);
+                NamespaceLookup.Add(name, ns);
             }
             return ns;
         }
@@ -207,6 +232,7 @@ namespace Avro
                 case Schema.Type.Double:
                 case Schema.Type.Bytes:
                 case Schema.Type.String:
+                case Schema.Type.Logical:
                     break;
 
                 case Schema.Type.Enumeration:
@@ -247,7 +273,6 @@ namespace Avro
         /// Creates a class declaration for fixed schema
         /// </summary>
         /// <param name="schema">fixed schema</param>
-        /// <param name="ns">namespace object</param>
         protected virtual void processFixed(Schema schema)
         {
             FixedSchema fixedSchema = schema as FixedSchema;
@@ -259,6 +284,11 @@ namespace Avro
             ctd.IsPartial = true;
             ctd.Attributes = MemberAttributes.Public;
             ctd.BaseTypes.Add("SpecificFixed");
+
+            if (fixedSchema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(fixedSchema.Documentation));
+            }
 
             // create static schema field
             createSchemaField(schema, ctd, true);
@@ -272,7 +302,6 @@ namespace Avro
             ctd.Members.Add(codeField);
 
             // Add Size property
-            var fieldRef = new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), sizefname);
             var property = new CodeMemberProperty();
             property.Attributes = MemberAttributes.Public | MemberAttributes.Static;
             property.Name = "FixedSize";
@@ -297,7 +326,6 @@ namespace Avro
         /// Creates an enum declaration
         /// </summary>
         /// <param name="schema">enum schema</param>
-        /// <param name="ns">namespace</param>
         protected virtual void processEnum(Schema schema)
         {
             EnumSchema enumschema = schema as EnumSchema;
@@ -306,6 +334,11 @@ namespace Avro
             CodeTypeDeclaration ctd = new CodeTypeDeclaration(CodeGenUtil.Instance.Mangle(enumschema.Name));
             ctd.IsEnum = true;
             ctd.Attributes = MemberAttributes.Public;
+
+            if (enumschema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(enumschema.Documentation));
+            }
 
             foreach (string symbol in enumschema.Symbols)
             {
@@ -319,10 +352,14 @@ namespace Avro
             if (string.IsNullOrEmpty(nspace))
                 throw new CodeGenException("Namespace required for enum schema " + enumschema.Name);
             CodeNamespace codens = addNamespace(nspace);
-            
+
             codens.Types.Add(ctd);
         }
 
+        /// <summary>
+        /// Generates code for an individual protocol.
+        /// </summary>
+        /// <param name="protocol">Protocol to generate code for.</param>
         protected virtual void processInterface(Protocol protocol)
         {
             // Create abstract class
@@ -370,19 +407,20 @@ namespace Avro
 
             if (protocol.Messages.Count > 0)
             {
-                builder.Append("switch(messageName)\n\t\t\t{");
+                builder.AppendLine("switch(messageName)");
+                builder.Append("\t\t\t{");
 
                 foreach (var a in protocol.Messages)
                 {
-                    builder.Append("\n\t\t\t\tcase \"").Append(a.Key).Append("\":\n");
+                    builder.AppendLine().Append("\t\t\t\tcase \"").Append(a.Key).AppendLine("\":");
 
                     bool unused = false;
                     string type = getType(a.Value.Response, false, ref unused);
 
                     builder.Append("\t\t\t\trequestor.Request<")
                            .Append(type)
-                           .Append(">(messageName, args, callback);\n");
-                    builder.Append("\t\t\t\tbreak;\n");
+                           .AppendLine(">(messageName, args, callback);");
+                    builder.AppendLine("\t\t\t\tbreak;");
                 }
 
                 builder.Append("\t\t\t}");
@@ -408,7 +446,7 @@ namespace Avro
             ctd.BaseTypes.Add(protocolNameMangled);
 
             // Need to override
-            
+
 
 
             AddProtocolDocumentation(protocol, ctd);
@@ -510,8 +548,7 @@ namespace Avro
         /// Creates a class declaration
         /// </summary>
         /// <param name="schema">record schema</param>
-        /// <param name="ns">namespace</param>
-        /// <returns></returns>
+        /// <returns>A new class code type declaration</returns>
         protected virtual CodeTypeDeclaration processRecord(Schema schema)
         {
             RecordSchema recordSchema = schema as RecordSchema;
@@ -527,6 +564,11 @@ namespace Avro
             ctd.IsClass = true;
             ctd.IsPartial = true;
 
+            if (recordSchema.Documentation != null)
+            {
+                ctd.Comments.Add(createDocComment(recordSchema.Documentation));
+            }
+
             createSchemaField(schema, ctd, isError);
 
             // declare Get() to be used by the Writer classes
@@ -535,7 +577,8 @@ namespace Avro
             cmmGet.Attributes = MemberAttributes.Public;
             cmmGet.ReturnType = new CodeTypeReference("System.Object");
             cmmGet.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
-            StringBuilder getFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
+            StringBuilder getFieldStmt = new StringBuilder("switch (fieldPos)")
+                .AppendLine().AppendLine("\t\t\t{");
 
             // declare Put() to be used by the Reader classes
             var cmmPut = new CodeMemberMethod();
@@ -544,7 +587,8 @@ namespace Avro
             cmmPut.ReturnType = new CodeTypeReference(typeof(void));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression(typeof(int), "fieldPos"));
             cmmPut.Parameters.Add(new CodeParameterDeclarationExpression("System.Object", "fieldValue"));
-            var putFieldStmt = new StringBuilder("switch (fieldPos)\n\t\t\t{\n");
+            var putFieldStmt = new StringBuilder("switch (fieldPos)")
+                .AppendLine().AppendLine("\t\t\t{");
 
             if (isError)
             {
@@ -598,7 +642,7 @@ namespace Avro
                 getFieldStmt.Append(field.Pos);
                 getFieldStmt.Append(": return this.");
                 getFieldStmt.Append(mangledName);
-                getFieldStmt.Append(";\n");
+                getFieldStmt.AppendLine(";");
 
                 // add to Put()
                 putFieldStmt.Append("\t\t\tcase ");
@@ -616,24 +660,26 @@ namespace Avro
                     type = type.Remove(type.Length - 1);   // remove >
 
                     putFieldStmt.Append(type);
-                    putFieldStmt.Append(")fieldValue; break;\n");
+                    putFieldStmt.AppendLine(")fieldValue; break;");
                 }
                 else
                 {
                     putFieldStmt.Append(" = (");
                     putFieldStmt.Append(baseType);
-                    putFieldStmt.Append(")fieldValue; break;\n");
+                    putFieldStmt.AppendLine(")fieldValue; break;");
                 }
             }
 
             // end switch block for Get()
-            getFieldStmt.Append("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");\n\t\t\t}");
+            getFieldStmt.AppendLine("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Get()\");")
+                .Append("\t\t\t}");
             var cseGet = new CodeSnippetExpression(getFieldStmt.ToString());
             cmmGet.Statements.Add(cseGet);
             ctd.Members.Add(cmmGet);
 
             // end switch block for Put()
-            putFieldStmt.Append("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");\n\t\t\t}");
+            putFieldStmt.AppendLine("\t\t\tdefault: throw new AvroRuntimeException(\"Bad index \" + fieldPos + \" in Put()\");")
+                .Append("\t\t\t}");
             var csePut = new CodeSnippetExpression(putFieldStmt.ToString());
             cmmPut.Statements.Add(csePut);
             ctd.Members.Add(cmmPut);
@@ -649,31 +695,35 @@ namespace Avro
         }
 
         /// <summary>
-        /// Gets the string representation of the schema's data type 
+        /// Gets the string representation of the schema's data type
         /// </summary>
         /// <param name="schema">schema</param>
         /// <param name="nullible">flag to indicate union with null</param>
-        /// <returns></returns>
+        /// <param name="nullibleEnum">
+        /// This method sets this value to indicate whether the enum is nullable. True indicates
+        /// that it is nullable. False indicates that it is not nullable.
+        /// </param>
+        /// <returns>Name of the schema's C# type representation.</returns>
         internal static string getType(Schema schema, bool nullible, ref bool nullibleEnum)
         {
             switch (schema.Tag)
             {
                 case Schema.Type.Null:
-                    return "System.Object";
+                    return typeof(object).ToString();
                 case Schema.Type.Boolean:
-                    if (nullible) return "System.Nullable<bool>";
+                    if (nullible) return $"System.Nullable<{typeof(bool)}>";
                     else return typeof(bool).ToString();
                 case Schema.Type.Int:
-                    if (nullible) return "System.Nullable<int>";
+                    if (nullible) return $"System.Nullable<{typeof(int)}>";
                     else return typeof(int).ToString();
                 case Schema.Type.Long:
-                    if (nullible) return "System.Nullable<long>";
+                    if (nullible) return $"System.Nullable<{typeof(long)}>";
                     else return typeof(long).ToString();
                 case Schema.Type.Float:
-                    if (nullible) return "System.Nullable<float>";
+                    if (nullible) return $"System.Nullable<{typeof(float)}>";
                     else return typeof(float).ToString();
                 case Schema.Type.Double:
-                    if (nullible) return "System.Nullable<double>";
+                    if (nullible) return $"System.Nullable<{typeof(double)}>";
                     else return typeof(double).ToString();
 
                 case Schema.Type.Bytes:
@@ -722,6 +772,21 @@ namespace Avro
                         return CodeGenUtil.Object;
                     else
                         return getType(nullibleType, true, ref nullibleEnum);
+
+                case Schema.Type.Logical:
+                    var logicalSchema = schema as LogicalSchema;
+                    if (null == logicalSchema)
+                        throw new CodeGenException("Unable to cast schema into a logical schema");
+                    var csharpType = logicalSchema.LogicalType.GetCSharpType(nullible);
+                    if (csharpType.IsGenericType && csharpType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        return $"System.Nullable<{csharpType.GetGenericArguments()[0]}>";
+                    }
+                    else
+                    {
+                        return csharpType.ToString();
+                    }
+
             }
             throw new CodeGenException("Unable to generate CodeTypeReference for " + schema.Name + " type " + schema.Tag);
         }
@@ -755,9 +820,13 @@ namespace Avro
         /// </summary>
         /// <param name="schema">schema</param>
         /// <param name="ctd">CodeTypeDeclaration for the class</param>
+        /// <param name="overrideFlag">
+        /// Indicates whether we should add the <see cref="MemberAttributes.Override"/> to the
+        /// generated property.
+        /// </param>
         protected virtual void createSchemaField(Schema schema, CodeTypeDeclaration ctd, bool overrideFlag)
         {
-            // create schema field 
+            // create schema field
             var ctrfield = new CodeTypeReference("Schema");
             string schemaFname = "_SCHEMA";
             var codeField = new CodeMemberField(ctrfield, schemaFname);
@@ -788,7 +857,8 @@ namespace Avro
         /// <returns>CodeCommentStatement object</returns>
         protected virtual CodeCommentStatement createDocComment(string comment)
         {
-            string text = string.Format("<summary>\r\n {0}\r\n </summary>", comment);
+            string text = string.Format(CultureInfo.InvariantCulture,
+                "<summary>{1} {0}{1} </summary>", comment, Environment.NewLine);
             return new CodeCommentStatement(text, true);
         }
 
@@ -829,7 +899,11 @@ namespace Avro
             {
                 var ns = nsc[i];
 
-                string dir = outputdir + "\\" + CodeGenUtil.Instance.UnMangle(ns.Name).Replace('.', '\\');
+                string dir = outputdir;
+                foreach (string name in CodeGenUtil.Instance.UnMangle(ns.Name).Split('.'))
+                {
+                    dir = Path.Combine(dir, name);
+                }
                 Directory.CreateDirectory(dir);
 
                 var new_ns = new CodeNamespace(ns.Name);
@@ -841,7 +915,7 @@ namespace Avro
                 for (int j = 0; j < types.Count; j++)
                 {
                     var ctd = types[j];
-                    string file = dir + "\\" + CodeGenUtil.Instance.UnMangle(ctd.Name) + ".cs";
+                    string file = Path.Combine(dir, Path.ChangeExtension(CodeGenUtil.Instance.UnMangle(ctd.Name), "cs"));
                     using (var writer = new StreamWriter(file, false))
                     {
                         new_ns.Types.Add(ctd);

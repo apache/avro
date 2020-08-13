@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -72,7 +72,7 @@ namespace Avro.Test.Utils
             Assert.True(Eq(result, expectedOutput), Pr(result));
         }
 
-        private List<Object[]> OutputTestCases()
+        private static List<Object[]> OutputTestCases()
         {
             List<Object[]> result = new List<Object[]>();
             result.Add(new Object[] { "", "foo", new List<object[]> { } });
@@ -81,7 +81,6 @@ namespace Avro.Test.Utils
             result.Add(new Object[] { "<<INPUT a\n<<OUTPUT b\n\n", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
             result.Add(new Object[] { "<<INPUT a\r<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
             result.Add(new Object[] { "// This is a test\n<<INPUT a\n\n\n<<OUTPUT b", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
-            result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\nb\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
             result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\nb\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b" } } });
             result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\nb\n\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "b\n" } } });
             result.Add(new Object[] { "<<INPUT a\n<<OUTPUT\n\n  b  \n\nOUTPUT", "OUTPUT", new List<object[]> { new object[] { "a", "\n  b  \n" } } });

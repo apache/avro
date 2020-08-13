@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,11 +30,13 @@ import org.apache.trevni.avro.AvroColumnReader;
 import org.apache.trevni.avro.HadoopInput;
 
 /**
- * Abstract base class for <code>RecordReader</code>s that read Trevni container files.
+ * Abstract base class for <code>RecordReader</code>s that read Trevni container
+ * files.
  *
  * @param <K> The type of key the record reader should generate.
  * @param <V> The type of value the record reader should generate.
- * @param <T> The type of the entries within the Trevni container file being read.
+ * @param <T> The type of the entries within the Trevni container file being
+ *        read.
  */
 public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K, V> {
 
@@ -52,20 +54,19 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
 
   /** {@inheritDoc} */
   @Override
-  public void initialize(InputSplit inputSplit, TaskAttemptContext context)
-      throws IOException, InterruptedException {
-    final FileSplit file = (FileSplit)inputSplit;
+  public void initialize(InputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
+    final FileSplit file = (FileSplit) inputSplit;
     context.setStatus(file.toString());
 
-    final AvroColumnReader.Params params =
-      new AvroColumnReader.Params(new HadoopInput(file.getPath(), context.getConfiguration()));
+    final AvroColumnReader.Params params = new AvroColumnReader.Params(
+        new HadoopInput(file.getPath(), context.getConfiguration()));
     params.setModel(ReflectData.get());
 
     if (AvroJob.getInputKeySchema(context.getConfiguration()) != null) {
       params.setSchema(AvroJob.getInputKeySchema(context.getConfiguration()));
     }
 
-    reader = new AvroColumnReader<T>(params);
+    reader = new AvroColumnReader<>(params);
     rows = reader.getRowCount();
   }
 
@@ -82,7 +83,9 @@ public abstract class AvroTrevniRecordReaderBase<K, V, T> extends RecordReader<K
   /**
    * Gets the current record read from the Trevni container file.
    *
-   * <p>Calling <code>nextKeyValue()</code> moves this to the next record.</p>
+   * <p>
+   * Calling <code>nextKeyValue()</code> moves this to the next record.
+   * </p>
    *
    * @return The current Trevni record (may be null if no record has been read).
    */

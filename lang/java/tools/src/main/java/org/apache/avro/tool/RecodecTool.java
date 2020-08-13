@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,15 +38,14 @@ import org.apache.avro.generic.GenericRecord;
 /** Tool to alter the codec of an Avro data file. */
 public class RecodecTool implements Tool {
   @Override
-  public int run(InputStream in, PrintStream out, PrintStream err,
-      List<String> args) throws Exception {
+  public int run(InputStream in, PrintStream out, PrintStream err, List<String> args) throws Exception {
 
     OptionParser optParser = new OptionParser();
-    OptionSpec<String> codecOpt = Util.compressionCodecOption(optParser);
+    OptionSpec<String> codecOpt = Util.compressionCodecOptionWithDefault(optParser, DataFileConstants.NULL_CODEC);
     OptionSpec<Integer> levelOpt = Util.compressionLevelOption(optParser);
     OptionSet opts = optParser.parse(args.toArray(new String[0]));
 
-    List<String> nargs = (List<String>)opts.nonOptionArguments();
+    List<String> nargs = (List<String>) opts.nonOptionArguments();
     if (nargs.size() > 2) {
       err.println("Expected at most an input file and output file.");
       optParser.printHelpOn(err);
@@ -65,11 +64,9 @@ public class RecodecTool implements Tool {
       outputNeedsClosing = true;
     }
 
-    DataFileStream<GenericRecord> reader = new DataFileStream<GenericRecord>(
-        input, new GenericDatumReader<GenericRecord>());
+    DataFileStream<GenericRecord> reader = new DataFileStream<>(input, new GenericDatumReader<>());
     Schema schema = reader.getSchema();
-    DataFileWriter<GenericRecord> writer = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>());
+    DataFileWriter<GenericRecord> writer = new DataFileWriter<>(new GenericDatumWriter<>());
     // unlike the other Avro tools, we default to a null codec, not deflate
     CodecFactory codec = Util.codecFactory(opts, codecOpt, levelOpt, DataFileConstants.NULL_CODEC);
     writer.setCodec(codec);
@@ -89,6 +86,7 @@ public class RecodecTool implements Tool {
     if (outputNeedsClosing) {
       output.close();
     }
+    writer.close();
     return 0;
   }
 

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *   https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -43,22 +43,19 @@ import java.io.InputStream;
  */
 public class RawMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
 
-  private static final ThreadLocal<BinaryDecoder> DECODER =
-      new ThreadLocal<BinaryDecoder>();
+  private static final ThreadLocal<BinaryDecoder> DECODER = new ThreadLocal<>();
 
-  private final Schema writeSchema;
-  private final Schema readSchema;
   private final DatumReader<D> reader;
 
   /**
    * Creates a new {@link RawMessageDecoder} that uses the given
-   * {@link GenericData data model} to construct datum instances described by
-   * the {@link Schema schema}.
+   * {@link GenericData data model} to construct datum instances described by the
+   * {@link Schema schema}.
    * <p>
-   * The {@code schema} is used as both the expected schema (read schema) and
-   * for the schema of payloads that are decoded (written schema).
+   * The {@code schema} is used as both the expected schema (read schema) and for
+   * the schema of payloads that are decoded (written schema).
    *
-   * @param model the {@link GenericData data model} for datum instances
+   * @param model  the {@link GenericData data model} for datum instances
    * @param schema the {@link Schema} used to construct datum instances and to
    *               decode buffers.
    */
@@ -68,29 +65,27 @@ public class RawMessageDecoder<D> extends MessageDecoder.BaseDecoder<D> {
 
   /**
    * Creates a new {@link RawMessageDecoder} that uses the given
-   * {@link GenericData data model} to construct datum instances described by
-   * the {@link Schema readSchema}.
+   * {@link GenericData data model} to construct datum instances described by the
+   * {@link Schema readSchema}.
    * <p>
    * The {@code readSchema} is used for the expected schema and the
    * {@code writeSchema} is the schema used to decode buffers. The
    * {@code writeSchema} must be the schema that was used to encode all buffers
    * decoded by this class.
    *
-   * @param model the {@link GenericData data model} for datum instances
-   * @param readSchema the {@link Schema} used to construct datum instances
+   * @param model       the {@link GenericData data model} for datum instances
+   * @param readSchema  the {@link Schema} used to construct datum instances
    * @param writeSchema the {@link Schema} used to decode buffers
    */
-  public RawMessageDecoder(GenericData model, Schema writeSchema,
-                           Schema readSchema) {
-    this.writeSchema = writeSchema;
-    this.readSchema = readSchema;
-    this.reader = model.createDatumReader(this.writeSchema, this.readSchema);
+  public RawMessageDecoder(GenericData model, Schema writeSchema, Schema readSchema) {
+    Schema writeSchema1 = writeSchema;
+    Schema readSchema1 = readSchema;
+    this.reader = model.createDatumReader(writeSchema1, readSchema1);
   }
 
   @Override
   public D decode(InputStream stream, D reuse) {
-    BinaryDecoder decoder = DecoderFactory.get()
-        .directBinaryDecoder(stream, DECODER.get());
+    BinaryDecoder decoder = DecoderFactory.get().directBinaryDecoder(stream, DECODER.get());
     DECODER.set(decoder);
     try {
       return reader.read(reuse, decoder);

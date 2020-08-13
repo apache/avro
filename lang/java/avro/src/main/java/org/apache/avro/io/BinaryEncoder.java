@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package org.apache.avro.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.avro.util.Utf8;
 
@@ -37,7 +38,8 @@ import org.apache.avro.util.Utf8;
 public abstract class BinaryEncoder extends Encoder {
 
   @Override
-  public void writeNull() throws IOException {}
+  public void writeNull() throws IOException {
+  }
 
   @Override
   public void writeString(Utf8 utf8) throws IOException {
@@ -50,7 +52,7 @@ public abstract class BinaryEncoder extends Encoder {
       writeZero();
       return;
     }
-    byte[] bytes = string.getBytes("UTF-8");
+    byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
     writeInt(bytes.length);
     writeFixed(bytes, 0, bytes.length);
   }
@@ -82,7 +84,8 @@ public abstract class BinaryEncoder extends Encoder {
   }
 
   @Override
-  public void writeArrayStart() throws IOException {}
+  public void writeArrayStart() throws IOException {
+  }
 
   @Override
   public void setItemCount(long itemCount) throws IOException {
@@ -92,7 +95,8 @@ public abstract class BinaryEncoder extends Encoder {
   }
 
   @Override
-  public void startItem() throws IOException {}
+  public void startItem() throws IOException {
+  }
 
   @Override
   public void writeArrayEnd() throws IOException {
@@ -100,7 +104,8 @@ public abstract class BinaryEncoder extends Encoder {
   }
 
   @Override
-  public void writeMapStart() throws IOException {}
+  public void writeMapStart() throws IOException {
+  }
 
   @Override
   public void writeMapEnd() throws IOException {
@@ -124,4 +129,3 @@ public abstract class BinaryEncoder extends Encoder {
   public abstract int bytesBuffered();
 
 }
-

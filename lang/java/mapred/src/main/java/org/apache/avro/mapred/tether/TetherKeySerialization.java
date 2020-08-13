@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,8 +33,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.EncoderFactory;
 
 /** A {@link Serialization} for {@link TetherData}. */
-class TetherKeySerialization
-  extends Configured implements Serialization<TetherData> {
+class TetherKeySerialization extends Configured implements Serialization<TetherData> {
 
   public boolean accept(Class<?> c) {
     return TetherData.class.isAssignableFrom(c);
@@ -54,7 +53,8 @@ class TetherKeySerialization
     }
 
     public TetherData deserialize(TetherData datum) throws IOException {
-      if (datum == null) datum = new TetherData();
+      if (datum == null)
+        datum = new TetherData();
       datum.buffer(decoder.readBytes(datum.buffer()));
       return datum;
     }
@@ -80,7 +80,7 @@ class TetherKeySerialization
 
     public void serialize(TetherData datum) throws IOException {
       encoder.writeBytes(datum.buffer());
-      encoder.flush(); //Flush shouldn't be required. Might be a bug in AVRO.
+      encoder.flush(); // Flush shouldn't be required. Might be a bug in AVRO.
     }
 
     public void close() throws IOException {

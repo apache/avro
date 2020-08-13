@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef avro_Schema_hh__ 
-#define avro_Schema_hh__ 
+#ifndef avro_Schema_hh__
+#define avro_Schema_hh__
 
 #include "Config.hh"
 #include "NodeImpl.hh"
+#include <string>
 
 /// \file
 ///
@@ -102,6 +103,9 @@ class AVRO_DECL RecordSchema : public Schema {
 public:
     RecordSchema(const std::string &name);
     void addField(const std::string &name, const Schema &fieldSchema);
+
+    std::string getDoc() const;
+    void setDoc(const std::string &);
 };
 
 class AVRO_DECL EnumSchema : public Schema {
@@ -113,11 +117,13 @@ public:
 class AVRO_DECL ArraySchema : public Schema {
 public:
     ArraySchema(const Schema &itemsSchema);
+    ArraySchema(const ArraySchema &itemsSchema);
 };
 
 class AVRO_DECL MapSchema : public Schema {
 public:
     MapSchema(const Schema &valuesSchema);
+    MapSchema(const MapSchema &itemsSchema);
 };
 
 class AVRO_DECL UnionSchema : public Schema {

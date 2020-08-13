@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,6 +32,7 @@ public class TestBinaryEncoderFidelity {
   static byte[] legacydata;
   static byte[] complexdata;
   EncoderFactory factory = EncoderFactory.get();
+
   public static void generateData(Encoder e, boolean useReadOnlyByteBuffer) throws IOException {
     // generate a bunch of data that should test the bounds of a BinaryEncoder
     Random r = new Random(665321);
@@ -111,7 +112,7 @@ public class TestBinaryEncoderFidelity {
     e.writeString("");
     e.writeString(new Utf8("Utf8\uD834\uDD1E"));
     if (e instanceof BinaryEncoder) {
-      int count = ((BinaryEncoder)e).bytesBuffered();
+      int count = ((BinaryEncoder) e).bytesBuffered();
       System.out.println(e.getClass().getSimpleName() + " buffered: " + count);
     }
     e.flush();
@@ -177,7 +178,6 @@ public class TestBinaryEncoderFidelity {
     Assert.assertEquals(complexdata.length, result2.length);
     Assert.assertArrayEquals(complexdata, result2);
   }
-
 
   @Test
   public void testBlockingBinaryEncoder() throws IOException {

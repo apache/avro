@@ -7,7 +7,7 @@
 # (the "License"); you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,49 +17,24 @@
 
 set -e # exit on error
 
-function usage {
-  echo "Usage: $0 {test|dist|clean}"
-  exit 1
+usage() {
+  echo "Usage: $0 {isort|lint|test|dist|clean}"
 }
 
-if [ $# -eq 0 ]
-then
-  usage
-fi
-
-if [ -f VERSION.txt ]
-then
-  VERSION=`cat VERSION.txt`
-else
-  VERSION=`cat ../../share/VERSION.txt`
-fi
-
-for target in "$@"
-do
-
-function do_clean(){
-  python3 setup.py clean
-  rm -rvf dist avro_python3.egg-info avro/*.avsc avro/VERSION.txt avro/__pycache__/ avro/tests/interop.avsc avro/tests/__pycache__/
-}
-
-case "$target" in
-  test)
-    python3 setup.py test
-    ;;
-
-  dist)
-     python3 setup.py sdist
-     cp -r dist ../../dist/py3
-    ;;
-
-  clean)
-    do_clean
-    ;;
-
-  *)
+main() {
+  local target
+  if (( $# == 0 )); then
     usage
-esac
+    return 1
+  fi
+  for target; do
+    case "$target" in
+      lint) set -- isort "$@";;
+      clean|dist|isort|test) :;;
+      *) usage; return 1;;
+    esac
+    python3 setup.py "$target"
+  done
+}
 
-done
-
-exit 0
+main "$@"

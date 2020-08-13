@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,7 +43,7 @@ main()
     avro::ValidSchema cpxSchema = load("cpx.json");
     avro::ValidSchema imaginarySchema = load("imaginary.json");
 
-    std::auto_ptr<avro::OutputStream> out = avro::memoryOutputStream();
+    std::unique_ptr<avro::OutputStream> out = avro::memoryOutputStream();
     avro::EncoderPtr e = avro::binaryEncoder();
     e->init(*out);
     c::cpx c1;
@@ -51,7 +51,7 @@ main()
     c1.im = 105.77;
     avro::encode(*e, c1);
 
-    std::auto_ptr<avro::InputStream> in = avro::memoryInputStream(*out);
+    std::unique_ptr<avro::InputStream> in = avro::memoryInputStream(*out);
     avro::DecoderPtr d = avro::resolvingDecoder(cpxSchema, imaginarySchema,
         avro::binaryDecoder());
     d->init(*in);
