@@ -5,7 +5,7 @@ use crate::{
     schema::{Precision, RecordField, Scale, Schema, SchemaKind, UnionSchema},
     AvroResult, Error,
 };
-use serde_json::Value as JsonValue;
+use serde_json::{Number, Value as JsonValue};
 use std::{collections::HashMap, convert::TryFrom, hash::BuildHasher, str::FromStr, u8};
 use uuid::Uuid;
 
@@ -244,6 +244,58 @@ impl From<JsonValue> for Value {
                     .map(|(key, value)| (key, value.into()))
                     .collect(),
             ),
+        }
+    }
+}
+
+/// Convert Avro values to Json values
+impl std::convert::TryFrom<Value> for JsonValue {
+    type Error = crate::error::Error;
+    fn try_from(value: Value) -> AvroResult<Self> {
+        match value {
+            Value::Null => Ok(Self::Null),
+            Value::Boolean(b) => Ok(Self::Bool(b)),
+            Value::Int(i) => Ok(Self::Number(i.into())),
+            Value::Long(l) => Ok(Self::Number(l.into())),
+            Value::Float(f) => Number::from_f64(f.into())
+                .map(Self::Number)
+                .ok_or_else(|| Error::ConvertF64ToJson(f.into())),
+            Value::Double(d) => Number::from_f64(d)
+                .map(Self::Number)
+                .ok_or_else(|| Error::ConvertF64ToJson(d)),
+            Value::Bytes(bytes) => Ok(Self::Array(bytes.into_iter().map(|b| b.into()).collect())),
+            Value::String(s) => Ok(Self::String(s)),
+            Value::Fixed(_size, items) => {
+                Ok(Self::Array(items.into_iter().map(|v| v.into()).collect()))
+            }
+            Value::Enum(_i, s) => Ok(Self::String(s)),
+            Value::Union(b) => Self::try_from(*b),
+            Value::Array(items) => items
+                .into_iter()
+                .map(Self::try_from)
+                .collect::<Result<Vec<_>, _>>()
+                .map(Self::Array),
+            Value::Map(items) => items
+                .into_iter()
+                .map(|(key, value)| Self::try_from(value).map(|v| (key, v)))
+                .collect::<Result<Vec<_>, _>>()
+                .map(|v| Self::Object(v.into_iter().collect())),
+            Value::Record(items) => items
+                .into_iter()
+                .map(|(key, value)| Self::try_from(value).map(|v| (key, v)))
+                .collect::<Result<Vec<_>, _>>()
+                .map(|v| Self::Object(v.into_iter().collect())),
+            Value::Date(d) => Ok(Self::Number(d.into())),
+            Value::Decimal(ref d) => <Vec<u8>>::try_from(d)
+                .map(|vec| Self::Array(vec.into_iter().map(|v| v.into()).collect())),
+            Value::TimeMillis(t) => Ok(Self::Number(t.into())),
+            Value::TimeMicros(t) => Ok(Self::Number(t.into())),
+            Value::TimestampMillis(t) => Ok(Self::Number(t.into())),
+            Value::TimestampMicros(t) => Ok(Self::Number(t.into())),
+            Value::Duration(d) => Ok(Self::Array(
+                <[u8; 12]>::from(d).iter().map(|&v| v.into()).collect(),
+            )),
+            Value::Uuid(uuid) => Ok(Self::String(uuid.to_hyphenated().to_string())),
         }
     }
 }
@@ -692,6 +744,7 @@ impl Value {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{
         decimal::Decimal,
         duration::{Days, Duration, Millis, Months},
@@ -989,5 +1042,164 @@ mod tests {
         let value = Value::Uuid(Uuid::parse_str("1481531d-ccc9-46d9-a56f-5b67459c0537").unwrap());
         assert!(value.clone().resolve(&Schema::Uuid).is_ok());
         assert!(value.resolve(&Schema::TimestampMicros).is_err());
+    }
+
+    #[test]
+    fn json_from_avro() {
+        assert_eq!(JsonValue::try_from(Value::Null).unwrap(), JsonValue::Null);
+        assert_eq!(
+            JsonValue::try_from(Value::Boolean(true)).unwrap(),
+            JsonValue::Bool(true)
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Int(1)).unwrap(),
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Long(1)).unwrap(),
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Float(1.0)).unwrap(),
+            JsonValue::Number(Number::from_f64(1.0).unwrap())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Double(1.0)).unwrap(),
+            JsonValue::Number(Number::from_f64(1.0).unwrap())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Bytes(vec![1, 2, 3])).unwrap(),
+            JsonValue::Array(vec![
+                JsonValue::Number(1.into()),
+                JsonValue::Number(2.into()),
+                JsonValue::Number(3.into())
+            ])
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::String("test".into())).unwrap(),
+            JsonValue::String("test".into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Fixed(3, vec![1, 2, 3])).unwrap(),
+            JsonValue::Array(vec![
+                JsonValue::Number(1.into()),
+                JsonValue::Number(2.into()),
+                JsonValue::Number(3.into())
+            ])
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Enum(1, "test_enum".into())).unwrap(),
+            JsonValue::String("test_enum".into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Union(Box::new(Value::String("test_enum".into())))).unwrap(),
+            JsonValue::String("test_enum".into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Array(vec![
+                Value::Int(1),
+                Value::Int(2),
+                Value::Int(3)
+            ]))
+            .unwrap(),
+            JsonValue::Array(vec![
+                JsonValue::Number(1.into()),
+                JsonValue::Number(2.into()),
+                JsonValue::Number(3.into())
+            ])
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Map(
+                vec![
+                    ("v1".to_string(), Value::Int(1)),
+                    ("v2".to_string(), Value::Int(2)),
+                    ("v3".to_string(), Value::Int(3))
+                ]
+                .into_iter()
+                .collect()
+            ))
+            .unwrap(),
+            JsonValue::Object(
+                vec![
+                    ("v1".to_string(), JsonValue::Number(1.into())),
+                    ("v2".to_string(), JsonValue::Number(2.into())),
+                    ("v3".to_string(), JsonValue::Number(3.into()))
+                ]
+                .into_iter()
+                .collect()
+            )
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Record(vec![
+                ("v1".to_string(), Value::Int(1)),
+                ("v2".to_string(), Value::Int(2)),
+                ("v3".to_string(), Value::Int(3))
+            ]))
+            .unwrap(),
+            JsonValue::Object(
+                vec![
+                    ("v1".to_string(), JsonValue::Number(1.into())),
+                    ("v2".to_string(), JsonValue::Number(2.into())),
+                    ("v3".to_string(), JsonValue::Number(3.into()))
+                ]
+                .into_iter()
+                .collect()
+            )
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Date(1)).unwrap(),
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Decimal(vec![1, 2, 3].into())).unwrap(),
+            JsonValue::Array(vec![
+                JsonValue::Number(1.into()),
+                JsonValue::Number(2.into()),
+                JsonValue::Number(3.into())
+            ])
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::TimeMillis(1)).unwrap(),
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::TimeMicros(1)).unwrap(),
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::TimestampMillis(1)).unwrap(),
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::TimestampMicros(1)).unwrap(),
+            JsonValue::Number(1.into())
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Duration(
+                [1u8, 2u8, 3u8, 4u8, 5u8, 6u8, 7u8, 8u8, 9u8, 10u8, 11u8, 12u8].into()
+            ))
+            .unwrap(),
+            JsonValue::Array(vec![
+                JsonValue::Number(1.into()),
+                JsonValue::Number(2.into()),
+                JsonValue::Number(3.into()),
+                JsonValue::Number(4.into()),
+                JsonValue::Number(5.into()),
+                JsonValue::Number(6.into()),
+                JsonValue::Number(7.into()),
+                JsonValue::Number(8.into()),
+                JsonValue::Number(9.into()),
+                JsonValue::Number(10.into()),
+                JsonValue::Number(11.into()),
+                JsonValue::Number(12.into()),
+            ])
+        );
+        assert_eq!(
+            JsonValue::try_from(Value::Uuid(
+                Uuid::parse_str("936DA01F-9ABD-4D9D-80C7-02AF85C822A8").unwrap()
+            ))
+            .unwrap(),
+            JsonValue::String("936da01f-9abd-4d9d-80c7-02af85c822a8".into())
+        );
     }
 }

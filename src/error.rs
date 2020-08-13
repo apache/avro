@@ -333,6 +333,10 @@ pub enum Error {
 
     #[error("Failed to convert JSON to string")]
     ConvertJsonToString(#[source] serde_json::Error),
+
+    /// Error while converting float to json value
+    #[error("failed to convert avro float to json: {0}")]
+    ConvertF64ToJson(f64),
 }
 
 impl serde::ser::Error for Error {
