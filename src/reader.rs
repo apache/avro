@@ -1,15 +1,9 @@
 //! Logic handling reading from Avro format at user level.
-use crate::{
-    decode::decode,
-    errors::{AvroResult, Error},
-    schema::Schema,
-    types::Value,
-    util, Codec,
-};
+use crate::{decode::decode, schema::Schema, types::Value, util, AvroResult, Codec, Error};
 use serde_json::from_slice;
 use std::{
     io::{ErrorKind, Read},
-    str::{from_utf8, FromStr},
+    str::FromStr,
 };
 
 // Internal Block reader.
@@ -48,15 +42,17 @@ impl<R: Read> Block<R> {
         let meta_schema = Schema::Map(Box::new(Schema::Bytes));
 
         let mut buf = [0u8; 4];
-        self.reader.read_exact(&mut buf)?;
+        self.reader
+            .read_exact(&mut buf)
+            .map_err(Error::ReadHeader)?;
 
         if buf != [b'O', b'b', b'j', 1u8] {
-            return Err(Error::Decode("wrong magic in header".to_string()));
+            return Err(Error::HeaderMagic);
         }
 
         if let Value::Map(meta) = decode(&meta_schema, &mut self.reader)? {
             // TODO: surface original parse schema errors instead of coalescing them here
-            let schema = meta
+            let json = meta
                 .get("avro.schema")
                 .and_then(|bytes| {
                     if let Value::Bytes(ref bytes) = *bytes {
@@ -65,18 +61,14 @@ impl<R: Read> Block<R> {
                         None
                     }
                 })
-                .and_then(|json| Schema::parse(&json).ok());
-            if let Some(schema) = schema {
-                self.writer_schema = schema;
-            } else {
-                return Err(Error::Parse("unable to parse schema".to_string()));
-            }
+                .ok_or_else(|| Error::GetAvroSchemaFromMap)?;
+            self.writer_schema = Schema::parse(&json)?;
 
             if let Some(codec) = meta
                 .get("avro.codec")
                 .and_then(|codec| {
                     if let Value::Bytes(ref bytes) = *codec {
-                        from_utf8(bytes.as_ref()).ok()
+                        std::str::from_utf8(bytes.as_ref()).ok()
                     } else {
                         None
                     }
@@ -86,14 +78,12 @@ impl<R: Read> Block<R> {
                 self.codec = codec;
             }
         } else {
-            return Err(Error::Decode("no metadata in header".to_string()));
+            return Err(Error::GetHeaderMetadata);
         }
 
-        let mut buf = [0u8; 16];
-        self.reader.read_exact(&mut buf)?;
-        self.marker = buf;
-
-        Ok(())
+        self.reader
+            .read_exact(&mut self.marker)
+            .map_err(Error::ReadMarker)
     }
 
     fn fill_buf(&mut self, n: usize) -> AvroResult<()> {
@@ -109,7 +99,9 @@ impl<R: Read> Block<R> {
         //
         // TODO: Figure out a way to avoid having to truncate for the second case.
         self.buf.resize(n, 0);
-        self.reader.read_exact(&mut self.buf)?;
+        self.reader
+            .read_exact(&mut self.buf)
+            .map_err(Error::ReadIntoBuf)?;
         self.buf_idx = 0;
         Ok(())
     }
@@ -124,12 +116,12 @@ impl<R: Read> Block<R> {
                 let block_bytes = util::read_long(&mut self.reader)?;
                 self.fill_buf(block_bytes as usize)?;
                 let mut marker = [0u8; 16];
-                self.reader.read_exact(&mut marker)?;
+                self.reader
+                    .read_exact(&mut marker)
+                    .map_err(Error::ReadBlockMarker)?;
 
                 if marker != self.marker {
-                    return Err(Error::Decode(
-                        "block marker does not match header marker".to_string(),
-                    ));
+                    return Err(Error::GetBlockMarker);
                 }
 
                 // NOTE (JAB): This doesn't fit this Reader pattern very well.
@@ -138,20 +130,18 @@ impl<R: Read> Block<R> {
                 // and replace `buf` with the new one, instead of reusing the same buffer.
                 // We can address this by using some "limited read" type to decode directly
                 // into the buffer. But this is fine, for now.
-                self.codec.decompress(&mut self.buf)?;
-
-                return Ok(());
+                self.codec.decompress(&mut self.buf)
             }
-            Err(e) => {
-                if let Error::IO(ioe) = e {
-                    if let ErrorKind::UnexpectedEof = ioe.kind() {
-                        // to not return any error in case we only finished to read cleanly from the stream
-                        return Ok(());
-                    }
+            Err(Error::ReadVariableIntegerBytes(io_err)) => {
+                if let ErrorKind::UnexpectedEof = io_err.kind() {
+                    // to not return any error in case we only finished to read cleanly from the stream
+                    Ok(())
+                } else {
+                    Err(Error::ReadVariableIntegerBytes(io_err))
                 }
             }
-        };
-        Err(Error::Decode("unable to read block".to_string()))
+            Err(e) => Err(e),
+        }
     }
 
     fn len(&self) -> usize {

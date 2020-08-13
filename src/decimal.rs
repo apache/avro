@@ -1,5 +1,5 @@
-use crate::errors::{AvroResult, Error};
-use num_bigint::BigInt;
+use crate::{AvroResult, Error};
+use num_bigint::{BigInt, Sign};
 
 #[derive(Debug, Clone)]
 pub struct Decimal {
@@ -25,7 +25,7 @@ impl Decimal {
     }
 
     pub(crate) fn to_sign_extended_bytes_with_len(&self, len: usize) -> AvroResult<Vec<u8>> {
-        let sign_byte = 0xFF * u8::from(self.value.sign() == num_bigint::Sign::Minus);
+        let sign_byte = 0xFF * u8::from(self.value.sign() == Sign::Minus);
         let mut decimal_bytes = vec![sign_byte; len];
         let raw_bytes = self.value.to_signed_bytes_be();
         let num_raw_bytes = raw_bytes.len();
@@ -48,11 +48,12 @@ impl std::convert::TryFrom<&Decimal> for Vec<u8> {
     }
 }
 
-impl From<Vec<u8>> for Decimal {
-    fn from(bytes: Vec<u8>) -> Self {
+impl<T: AsRef<[u8]>> From<T> for Decimal {
+    fn from(bytes: T) -> Self {
+        let bytes_ref = bytes.as_ref();
         Self {
-            value: num_bigint::BigInt::from_signed_bytes_be(&bytes),
-            len: bytes.len(),
+            value: BigInt::from_signed_bytes_be(bytes_ref),
+            len: bytes_ref.len(),
         }
     }
 }

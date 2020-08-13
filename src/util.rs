@@ -1,6 +1,6 @@
-use crate::errors::{AvroResult, Error};
+use crate::{AvroResult, Error};
 use serde_json::{Map, Value};
-use std::{i64, io::Read, sync::Once};
+use std::{convert::TryFrom, i64, io::Read, sync::Once};
 
 /// Maximum number of bytes that can be allocated when decoding
 /// Avro-encoded values. This is a protection against ill-formed
@@ -43,11 +43,7 @@ pub fn zig_i64(n: i64, buffer: &mut Vec<u8>) {
 
 pub fn zag_i32<R: Read>(reader: &mut R) -> AvroResult<i32> {
     let i = zag_i64(reader)?;
-    if i < i64::from(i32::min_value()) || i > i64::from(i32::max_value()) {
-        Err(Error::Decode("int out of range".to_string()))
-    } else {
-        Ok(i as i32)
-    }
+    i32::try_from(i).map_err(|e| Error::ZagI32(e, i))
 }
 
 pub fn zag_i64<R: Read>(reader: &mut R) -> AvroResult<i64> {
@@ -79,11 +75,11 @@ fn decode_variable<R: Read>(reader: &mut R) -> AvroResult<u64> {
     loop {
         if j > 9 {
             // if j * 7 > 64
-            return Err(Error::Decode(
-                "Overflow when decoding integer value".to_string(),
-            ));
+            return Err(Error::IntegerOverflow);
         }
-        reader.read_exact(&mut buf[..])?;
+        reader
+            .read_exact(&mut buf[..])
+            .map_err(Error::ReadVariableIntegerBytes)?;
         i |= (u64::from(buf[0] & 0x7F)) << (j * 7);
         if (buf[0] >> 7) == 0 {
             break;

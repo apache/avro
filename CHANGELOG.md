@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update digest crate and digest::Digest trait to 0.9 (backward-incompatible with digest::Digest 0.8) (#133)
 - Replace some manual from_str implementations with strum (#136)
 - Handle logical types in canonical form schemas (#144)
+- Move to specific error variants for errors (#146)
 
 ## Deprecated
 - Deprecate ToAvro in favor of From<T> for Value implementations (#137)

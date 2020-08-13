@@ -1,10 +1,10 @@
 use crate::{
     decimal::Decimal,
     duration::Duration,
-    errors::{AvroResult, Error},
     schema::Schema,
     types::Value,
     util::{safe_len, zag_i32, zag_i64},
+    AvroResult, Error,
 };
 use std::{collections::HashMap, convert::TryFrom, io::Read, str::FromStr};
 use uuid::Uuid;
@@ -21,7 +21,8 @@ fn decode_int<R: Read>(reader: &mut R) -> AvroResult<Value> {
 
 #[inline]
 fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
-    safe_len(usize::try_from(zag_i64(reader)?)?)
+    let len = zag_i64(reader)?;
+    safe_len(usize::try_from(len).map_err(|e| Error::ConvertI64ToUsize(e, len))?)
 }
 
 /// Decode the length of a sequence.
@@ -30,14 +31,17 @@ fn decode_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
 /// the end of the map or array.
 fn decode_seq_len<R: Read>(reader: &mut R) -> AvroResult<usize> {
     let raw_len = zag_i64(reader)?;
-    safe_len(usize::try_from(match raw_len.cmp(&0) {
-        std::cmp::Ordering::Equal => return Ok(0),
-        std::cmp::Ordering::Less => {
-            let _size = zag_i64(reader)?;
-            -raw_len
-        }
-        std::cmp::Ordering::Greater => raw_len,
-    })?)
+    safe_len(
+        usize::try_from(match raw_len.cmp(&0) {
+            std::cmp::Ordering::Equal => return Ok(0),
+            std::cmp::Ordering::Less => {
+                let _size = zag_i64(reader)?;
+                -raw_len
+            }
+            std::cmp::Ordering::Greater => raw_len,
+        })
+        .map_err(|e| Error::ConvertI64ToUsize(e, raw_len))?,
+    )
 }
 
 /// Decode a `Value` from avro format given its `Schema`.
@@ -46,41 +50,34 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
         Schema::Null => Ok(Value::Null),
         Schema::Boolean => {
             let mut buf = [0u8; 1];
-            reader.read_exact(&mut buf[..])?;
+            reader
+                .read_exact(&mut buf[..])
+                .map_err(Error::ReadBoolean)?;
 
             match buf[0] {
                 0u8 => Ok(Value::Boolean(false)),
                 1u8 => Ok(Value::Boolean(true)),
-                _ => Err(Error::Decode("not a bool".to_string())),
+                _ => Err(Error::BoolValue(buf[0])),
             }
         }
-        Schema::Decimal { ref inner, .. } => match **inner {
+        Schema::Decimal { ref inner, .. } => match &**inner {
             Schema::Fixed { .. } => match decode(inner, reader)? {
                 Value::Fixed(_, bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
-                _ => Err(Error::Decode(
-                    "not a fixed value, required for decimal with fixed schema".to_string(),
-                )),
+                value => Err(Error::FixedValue(value.into())),
             },
             Schema::Bytes => match decode(inner, reader)? {
                 Value::Bytes(bytes) => Ok(Value::Decimal(Decimal::from(bytes))),
-                _ => Err(Error::Decode(
-                    "not a bytes value, required for decimal with bytes schema".to_string(),
-                )),
+                value => Err(Error::BytesValue(value.into())),
             },
-            _ => Err(Error::Decode(
-                "not a fixed or bytes type, required for decimal schema".to_string(),
-            )),
+            schema => Err(Error::ResolveDecimalSchema(schema.into())),
         },
-        Schema::Uuid => Ok(Value::Uuid(Uuid::from_str(
-            match decode(&Schema::String, reader)? {
+        Schema::Uuid => Ok(Value::Uuid(
+            Uuid::from_str(match decode(&Schema::String, reader)? {
                 Value::String(ref s) => s,
-                _ => {
-                    return Err(Error::Decode(
-                        "not a string type, required for uuid".to_string(),
-                    ))
-                }
-            },
-        )?)),
+                value => return Err(Error::GetUuidFromStringValue(value.into())),
+            })
+            .map_err(Error::ConvertStrToUuid)?,
+        )),
         Schema::Int => decode_int(reader),
         Schema::Date => zag_i32(reader).map(Value::Date),
         Schema::TimeMillis => zag_i32(reader).map(Value::TimeMillis),
@@ -90,37 +87,39 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
         Schema::TimestampMicros => zag_i64(reader).map(Value::TimestampMicros),
         Schema::Duration => {
             let mut buf = [0u8; 12];
-            reader.read_exact(&mut buf)?;
+            reader.read_exact(&mut buf).map_err(Error::ReadDuration)?;
             Ok(Value::Duration(Duration::from(buf)))
         }
         Schema::Float => {
             let mut buf = [0u8; std::mem::size_of::<f32>()];
-            reader.read_exact(&mut buf[..])?;
+            reader.read_exact(&mut buf[..]).map_err(Error::ReadFloat)?;
             Ok(Value::Float(f32::from_le_bytes(buf)))
         }
         Schema::Double => {
             let mut buf = [0u8; std::mem::size_of::<f64>()];
-            reader.read_exact(&mut buf[..])?;
+            reader.read_exact(&mut buf[..]).map_err(Error::ReadDouble)?;
             Ok(Value::Double(f64::from_le_bytes(buf)))
         }
         Schema::Bytes => {
             let len = decode_len(reader)?;
             let mut buf = vec![0u8; len];
-            reader.read_exact(&mut buf)?;
+            reader.read_exact(&mut buf).map_err(Error::ReadBytes)?;
             Ok(Value::Bytes(buf))
         }
         Schema::String => {
             let len = decode_len(reader)?;
             let mut buf = vec![0u8; len];
-            reader.read_exact(&mut buf)?;
+            reader.read_exact(&mut buf).map_err(Error::ReadString)?;
 
-            String::from_utf8(buf)
-                .map(Value::String)
-                .map_err(|_| Error::Decode("not a valid utf-8 string".to_string()))
+            Ok(Value::String(
+                String::from_utf8(buf).map_err(Error::ConvertToUtf8)?,
+            ))
         }
         Schema::Fixed { size, .. } => {
             let mut buf = vec![0u8; size];
-            reader.read_exact(&mut buf)?;
+            reader
+                .read_exact(&mut buf)
+                .map_err(|e| Error::ReadFixed(e, size))?;
             Ok(Value::Fixed(size, buf))
         }
         Schema::Array(ref inner) => {
@@ -151,11 +150,12 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
 
                 items.reserve(len);
                 for _ in 0..len {
-                    if let Value::String(key) = decode(&Schema::String, reader)? {
-                        let value = decode(inner, reader)?;
-                        items.insert(key, value);
-                    } else {
-                        return Err(Error::Decode("map key is not a string".to_string()));
+                    match decode(&Schema::String, reader)? {
+                        Value::String(key) => {
+                            let value = decode(inner, reader)?;
+                            items.insert(key, value);
+                        }
+                        value => return Err(Error::MapKeyType(value.into())),
                     }
                 }
             }
@@ -166,8 +166,11 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             let index = zag_i64(reader)?;
             let variants = inner.variants();
             let variant = variants
-                .get(usize::try_from(index)?)
-                .ok_or_else(|| Error::Decode("Union index out of bounds".to_string()))?;
+                .get(usize::try_from(index).map_err(|e| Error::ConvertI64ToUsize(e, index))?)
+                .ok_or_else(|| Error::GetUnionVariant {
+                    index,
+                    num_variants: variants.len(),
+                })?;
             let value = decode(variant, reader)?;
             Ok(Value::Union(Box::new(value)))
         }
@@ -181,25 +184,36 @@ pub fn decode<R: Read>(schema: &Schema, reader: &mut R) -> AvroResult<Value> {
             Ok(Value::Record(items))
         }
         Schema::Enum { ref symbols, .. } => {
-            if let Value::Int(raw_index) = decode_int(reader)? {
-                let index = usize::try_from(raw_index)?;
+            Ok(if let Value::Int(raw_index) = decode_int(reader)? {
+                let index = usize::try_from(raw_index)
+                    .map_err(|e| Error::ConvertI32ToUsize(e, raw_index))?;
                 if (0..=symbols.len()).contains(&index) {
                     let symbol = symbols[index].clone();
-                    Ok(Value::Enum(raw_index, symbol))
+                    Value::Enum(raw_index, symbol)
                 } else {
-                    Err(Error::Decode("enum symbol index out of bounds".to_string()))
+                    return Err(Error::GetEnumValue {
+                        index,
+                        nsymbols: symbols.len(),
+                    });
                 }
             } else {
-                Err(Error::Decode("enum symbol not found".to_string()))
-            }
+                return Err(Error::GetEnumSymbol);
+            })
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{decode, Decimal, Schema, Value};
-    use crate::types::Value::{Array, Int, Map};
+    use crate::{
+        decode::decode,
+        schema::Schema,
+        types::{
+            Value,
+            Value::{Array, Int, Map},
+        },
+        Decimal,
+    };
     use std::collections::HashMap;
 
     #[test]

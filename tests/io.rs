@@ -198,7 +198,7 @@ fn test_default_value() {
 }
 
 #[test]
-fn test_no_default_value() -> Result<(), String> {
+fn test_no_default_value() -> Result<(), Error> {
     let reader_schema = Schema::parse_str(
         r#"{
             "type": "record",
@@ -210,16 +210,13 @@ fn test_no_default_value() -> Result<(), String> {
     )
     .unwrap();
     let encoded = to_avro_datum(&LONG_RECORD_SCHEMA, LONG_RECORD_DATUM.clone()).unwrap();
-    let decoded = from_avro_datum(
+    let result = from_avro_datum(
         &LONG_RECORD_SCHEMA,
         &mut Cursor::new(encoded),
         Some(&reader_schema),
     );
-    match decoded {
-        Ok(_) => Err(String::from("Expected SchemaResolutionError, got Ok")),
-        Err(Error::SchemaResolution(_)) => Ok(()),
-        Err(ref e) => Err(format!("Expected SchemaResolutionError, got {}", e)),
-    }
+    assert!(result.is_err());
+    Ok(())
 }
 
 #[test]
@@ -302,7 +299,7 @@ fn test_type_exception() -> Result<(), String> {
     let encoded = to_avro_datum(&writer_schema, datum_to_write);
     match encoded {
         Ok(_) => Err(String::from("Expected ValidationError, got Ok")),
-        Err(Error::Validation(_)) => Ok(()),
+        Err(Error::Validation) => Ok(()),
         Err(ref e) => Err(format!("Expected ValidationError, got {}", e)),
     }
 }

@@ -679,7 +679,7 @@ mod decimal;
 mod decode;
 mod duration;
 mod encode;
-mod errors;
+mod error;
 mod reader;
 mod ser;
 mod util;
@@ -689,18 +689,19 @@ pub mod schema;
 pub mod schema_compatibility;
 pub mod types;
 
-pub use crate::{
-    codec::Codec,
-    de::from_value,
-    decimal::Decimal,
-    duration::{Days, Duration, Millis, Months},
-    errors::Error,
-    reader::{from_avro_datum, Reader},
-    schema::Schema,
-    ser::to_value,
-    util::max_allocation_bytes,
-    writer::{to_avro_datum, Writer},
-};
+pub use codec::Codec;
+pub use de::from_value;
+pub use decimal::Decimal;
+pub use duration::{Days, Duration, Millis, Months};
+pub use error::{Error, Error as DeError, Error as SerError};
+pub use reader::{from_avro_datum, Reader};
+pub use schema::Schema;
+pub use ser::to_value;
+pub use util::max_allocation_bytes;
+pub use writer::{to_avro_datum, Writer};
+
+/// A convenience type alias for `Result`s with `Error`s.
+pub type AvroResult<T> = Result<T, Error>;
 
 #[cfg(test)]
 mod tests {

@@ -1,18 +1,12 @@
-use avro_rs::{to_value, Error};
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, serde::Serialize)]
 struct Test {
     a: i64,
-    b: String,
+    b: &'static str,
 }
 
-fn main() -> Result<(), Error> {
-    let test = Test {
-        a: 27,
-        b: "foo".to_owned(),
-    };
-    println!("{:?}", to_value(test)?);
-
+fn main() -> anyhow::Result<()> {
+    let test = Test { a: 27, b: "foo" };
+    let value = avro_rs::to_value(test)?;
+    println!("{:?}", value);
     Ok(())
 }

@@ -1,11 +1,10 @@
 //! Logic handling writing in Avro format at user level.
 use crate::{
     encode::{encode, encode_ref, encode_to_vec},
-    errors::{AvroResult, Error},
     schema::Schema,
     ser::Serializer,
     types::Value,
-    Codec,
+    AvroResult, Codec, Error,
 };
 use rand::random;
 use serde::Serialize;
@@ -232,7 +231,10 @@ impl<'a, W: Write> Writer<'a, W> {
 
         let num_bytes = self.append_raw(&num_values.into(), &Schema::Long)?
             + self.append_raw(&stream_len.into(), &Schema::Long)?
-            + self.writer.write(self.buffer.as_ref())?
+            + self
+                .writer
+                .write(self.buffer.as_ref())
+                .map_err(Error::WriteBytes)?
             + self.append_marker()?;
 
         self.buffer.clear();
@@ -254,7 +256,7 @@ impl<'a, W: Write> Writer<'a, W> {
     fn append_marker(&mut self) -> AvroResult<usize> {
         // using .writer.write directly to avoid mutable borrow of self
         // with ref borrowing of self.marker
-        Ok(self.writer.write(&self.marker)?)
+        self.writer.write(&self.marker).map_err(Error::WriteMarker)
     }
 
     /// Append a raw Avro Value to the payload avoiding to encode it again.
@@ -264,12 +266,14 @@ impl<'a, W: Write> Writer<'a, W> {
 
     /// Append pure bytes to the payload.
     fn append_bytes(&mut self, bytes: &[u8]) -> AvroResult<usize> {
-        Ok(self.writer.write(bytes)?)
+        self.writer.write(bytes).map_err(Error::WriteBytes)
     }
 
     /// Create an Avro header based on schema, codec and sync marker.
-    fn header(&self) -> AvroResult<Vec<u8>> {
-        let schema_bytes = serde_json::to_string(self.schema)?.into_bytes();
+    fn header(&self) -> Result<Vec<u8>, Error> {
+        let schema_bytes = serde_json::to_string(self.schema)
+            .map_err(Error::ConvertJsonToString)?
+            .into_bytes();
 
         let mut metadata = HashMap::with_capacity(2);
         metadata.insert("avro.schema", Value::Bytes(schema_bytes));
@@ -297,10 +301,10 @@ fn write_avro_datum<T: Into<Value>>(
     schema: &Schema,
     value: T,
     buffer: &mut Vec<u8>,
-) -> AvroResult<()> {
+) -> Result<(), Error> {
     let avro = value.into();
     if !avro.validate(schema) {
-        return Err(Error::Validation("value does not match schema".to_string()));
+        return Err(Error::Validation);
     }
     encode(&avro, schema, buffer);
     Ok(())
@@ -308,7 +312,7 @@ fn write_avro_datum<T: Into<Value>>(
 
 fn write_value_ref(schema: &Schema, value: &Value, buffer: &mut Vec<u8>) -> AvroResult<()> {
     if !value.validate(schema) {
-        return Err(Error::Validation("value does not match schema".to_string()));
+        return Err(Error::Validation);
     }
     encode_ref(value, schema, buffer);
     Ok(())

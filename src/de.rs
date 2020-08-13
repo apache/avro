@@ -1,5 +1,5 @@
 //! Logic for serde-compatible deserialization.
-use crate::{errors::Error, types::Value};
+use crate::{types::Value, Error};
 use serde::{
     de::{self, DeserializeSeed, Visitor},
     forward_to_deserialize_any, Deserialize,
@@ -9,15 +9,8 @@ use std::{
         hash_map::{Keys, Values},
         HashMap,
     },
-    fmt,
     slice::Iter,
 };
-
-impl de::Error for Error {
-    fn custom<T: fmt::Display>(msg: T) -> Self {
-        Error::De(msg.to_string())
-    }
-}
 
 pub struct Deserializer<'de> {
     input: &'de Value,
