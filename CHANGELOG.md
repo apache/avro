@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace some manual from_str implementations with strum (#136)
 - Handle logical types in canonical form schemas (#144)
 - Move to specific error variants for errors (#146)
+
+### Added
 - Support to convert avro value to json value (#155)
+- Implement deserialize for Uuid (#153)
 
 ## Deprecated
 - Deprecate ToAvro in favor of From<T> for Value implementations (#137)
