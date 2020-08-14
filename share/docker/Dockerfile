@@ -53,11 +53,7 @@ RUN apt-get -qqy update \
                                                  mypy \
                                                  openjdk-8-jdk \
                                                  perl \
-                                                 python \
-                                                 python-pip \
-                                                 python-setuptools \
-                                                 python-snappy \
-                                                 python-wheel \
+                                                 python3 \
                                                  python3-pip \
                                                  python3-setuptools \
                                                  python3-snappy \
@@ -141,10 +137,6 @@ RUN curl -sSL https://cpanmin.us \
 
 # Install Python packages
 ENV PIP_NO_CACHE_DIR=off
-
-# Install Python2 packages
-RUN python2 -m pip install --upgrade pip setuptools wheel \
- && python2 -m pip install zstandard
 
 # Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools wheel \

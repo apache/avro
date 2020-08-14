@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -1119,8 +1121,6 @@ def parse(json_string, validate_enum_symbols=True):
         msg = 'Error parsing JSON: {}, error = {}'.format(json_string, e)
         new_exception = avro.errors.SchemaParseException(msg)
         traceback = sys.exc_info()[2]
-        if not hasattr(new_exception, 'with_traceback'):
-            raise (new_exception, None, traceback)  # Python 2 syntax
         raise new_exception.with_traceback(traceback)
 
     # Initialize the names object
