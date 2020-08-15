@@ -50,7 +50,8 @@ import sys
 from decimal import Decimal, getcontext
 from struct import Struct
 
-from avro import constants, schema, timezones
+import avro.errors
+from avro import constants, timezones
 
 try:
     unicode
@@ -87,30 +88,6 @@ STRUCT_SIGNED_SHORT = Struct('>h')    # big-endian signed short
 STRUCT_SIGNED_INT = Struct('>i')      # big-endian signed int
 STRUCT_SIGNED_LONG = Struct('>q')     # big-endian signed long
 
-
-#
-# Exceptions
-#
-
-class AvroTypeException(schema.AvroException):
-    """Raised when datum is not an example of schema."""
-
-    def __init__(self, expected_schema, datum):
-        pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
-        fail_msg = "The datum %s is not an example of the schema %s"\
-                   % (datum, pretty_expected)
-        schema.AvroException.__init__(self, fail_msg)
-
-
-class SchemaResolutionException(schema.AvroException):
-    def __init__(self, fail_msg, writers_schema=None, readers_schema=None):
-        pretty_writers = json.dumps(json.loads(str(writers_schema)), indent=2)
-        pretty_readers = json.dumps(json.loads(str(readers_schema)), indent=2)
-        if writers_schema:
-            fail_msg += "\nWriter's Schema: %s" % pretty_writers
-        if readers_schema:
-            fail_msg += "\nReader's Schema: %s" % pretty_readers
-        schema.AvroException.__init__(self, fail_msg)
 
 #
 # Validate
@@ -468,7 +445,7 @@ class BinaryEncoder(object):
         """
         sign, digits, exp = datum.as_tuple()
         if exp > scale:
-            raise AvroTypeException('Scale provided in schema does not match the decimal')
+            raise avro.errors.AvroTypeException('Scale provided in schema does not match the decimal')
 
         unscaled_datum = 0
         for digit in digits:
@@ -494,7 +471,7 @@ class BinaryEncoder(object):
         """
         sign, digits, exp = datum.as_tuple()
         if exp > scale:
-            raise AvroTypeException('Scale provided in schema does not match the decimal')
+            raise avro.errors.AvroTypeException('Scale provided in schema does not match the decimal')
 
         unscaled_datum = 0
         for digit in digits:
@@ -629,7 +606,7 @@ class DatumReader(object):
         # schema matching
         if not readers_schema.match(writers_schema):
             fail_msg = 'Schemas do not match.'
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
         logical_type = getattr(writers_schema, 'logical_type', None)
 
@@ -645,7 +622,7 @@ class DatumReader(object):
 
             # This shouldn't happen because of the match check at the start of this method.
             fail_msg = 'Schemas do not match.'
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
         if writers_schema.type == 'null':
             return decoder.read_null()
@@ -698,7 +675,7 @@ class DatumReader(object):
             return self.read_record(writers_schema, readers_schema, decoder)
         else:
             fail_msg = "Cannot read unknown schema type: %s" % writers_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
     def skip_data(self, writers_schema, decoder):
         if writers_schema.type == 'null':
@@ -731,7 +708,7 @@ class DatumReader(object):
             return self.skip_record(writers_schema, decoder)
         else:
             fail_msg = "Unknown schema type: %s" % writers_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
     def read_fixed(self, writers_schema, readers_schema, decoder):
         """
@@ -753,13 +730,13 @@ class DatumReader(object):
         if index_of_symbol >= len(writers_schema.symbols):
             fail_msg = "Can't access enum index %d for enum with %d symbols"\
                        % (index_of_symbol, len(writers_schema.symbols))
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
         read_symbol = writers_schema.symbols[index_of_symbol]
 
         # schema resolution
         if read_symbol not in readers_schema.symbols:
             fail_msg = "Symbol %s not present in Reader's Schema" % read_symbol
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
         return read_symbol
 
@@ -855,7 +832,7 @@ class DatumReader(object):
         if index_of_schema >= len(writers_schema.schemas):
             fail_msg = "Can't access branch index %d for union with %d branches"\
                        % (index_of_schema, len(writers_schema.schemas))
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
         selected_writers_schema = writers_schema.schemas[index_of_schema]
 
         # read data
@@ -866,7 +843,7 @@ class DatumReader(object):
         if index_of_schema >= len(writers_schema.schemas):
             fail_msg = "Can't access branch index %d for union with %d branches"\
                        % (index_of_schema, len(writers_schema.schemas))
-            raise SchemaResolutionException(fail_msg, writers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema)
         return self.skip_data(writers_schema.schemas[index_of_schema], decoder)
 
     def read_record(self, writers_schema, readers_schema, decoder):
@@ -910,8 +887,8 @@ class DatumReader(object):
                         read_record[field.name] = field_val
                     else:
                         fail_msg = 'No default value for field %s' % field_name
-                        raise SchemaResolutionException(fail_msg, writers_schema,
-                                                        readers_schema)
+                        raise avro.errors.SchemaResolutionException(fail_msg, writers_schema,
+                                                                    readers_schema)
         return read_record
 
     def skip_record(self, writers_schema, decoder):
@@ -959,7 +936,7 @@ class DatumReader(object):
             return read_record
         else:
             fail_msg = 'Unknown type: %s' % field_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
 
 class DatumWriter(object):
@@ -976,7 +953,7 @@ class DatumWriter(object):
 
     def write(self, datum, encoder):
         if not validate(self.writers_schema, datum):
-            raise AvroTypeException(self.writers_schema, datum)
+            raise avro.errors.AvroTypeException(self.writers_schema, datum)
         self.write_data(self.writers_schema, datum, encoder)
 
     def write_data(self, writers_schema, datum, encoder):
@@ -1034,7 +1011,7 @@ class DatumWriter(object):
             self.write_record(writers_schema, datum, encoder)
         else:
             fail_msg = 'Unknown type: %s' % writers_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
     def write_fixed(self, writers_schema, datum, encoder):
         """
@@ -1106,7 +1083,7 @@ class DatumWriter(object):
             if validate(candidate_schema, datum):
                 index_of_schema = i
         if index_of_schema < 0:
-            raise AvroTypeException(writers_schema, datum)
+            raise avro.errors.AvroTypeException(writers_schema, datum)
 
         # write data
         encoder.write_long(index_of_schema)

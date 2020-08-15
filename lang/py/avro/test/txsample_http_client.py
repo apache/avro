@@ -22,6 +22,7 @@ from __future__ import absolute_import, division, print_function
 
 import sys
 
+import avro.errors
 from avro import protocol, txipc
 from twisted.internet import defer, reactor
 from twisted.python.util import println
@@ -57,14 +58,6 @@ SERVER_HOST = 'localhost'
 SERVER_PORT = 9090
 
 
-class UsageError(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-
 def make_requestor(server_host, server_port, protocol):
     client = txipc.TwistedHTTPTransceiver(SERVER_HOST, SERVER_PORT)
     return txipc.TwistedRequestor(protocol, client)
@@ -72,7 +65,7 @@ def make_requestor(server_host, server_port, protocol):
 
 if __name__ == '__main__':
     if len(sys.argv) not in [4, 5]:
-        raise UsageError("Usage: <to> <from> <body> [<count>]")
+        raise avro.errors.UsageError("Usage: <to> <from> <body> [<count>]")
 
     # client code - attach to the server and send a message
     # fill in the Message record

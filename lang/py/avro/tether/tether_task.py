@@ -27,6 +27,7 @@ import sys
 import threading
 import traceback
 
+import avro.errors
 import avro.io
 from avro import ipc, protocol, schema
 
@@ -35,38 +36,27 @@ __all__ = ["TetherTask", "TaskType", "inputProtocol", "outputProtocol", "HTTPReq
 # create protocol objects for the input and output protocols
 # The build process should copy InputProtocol.avpr and OutputProtocol.avpr
 # into the same directory as this module
-inputProtocol = None
-outputProtocol = None
 
 TaskType = None
-if (inputProtocol is None):
-    pfile = os.path.split(__file__)[0] + os.sep + "InputProtocol.avpr"
+pfile = os.path.split(__file__)[0] + os.sep + "InputProtocol.avpr"
+with open(pfile, 'r') as hf:
+    prototxt = hf.read()
 
-    if not(os.path.exists(pfile)):
-        raise Exception("Could not locate the InputProtocol: {0} does not exist".format(pfile))
+inputProtocol = protocol.parse(prototxt)
 
-    with open(pfile, 'r') as hf:
-        prototxt = hf.read()
+# use a named tuple to represent the tasktype enumeration
+taskschema = inputProtocol.types_dict["TaskType"]
+# Mypy cannot statically type check a dynamically constructed named tuple.
+# Since InputProtocol.avpr is hard-coded here, we can hard-code the symbols.
+_ttype = collections.namedtuple("_tasktype", ("MAP", "REDUCE"))
+TaskType = _ttype(*taskschema.symbols)
 
-    inputProtocol = protocol.parse(prototxt)
+pfile = os.path.split(__file__)[0] + os.sep + "OutputProtocol.avpr"
 
-    # use a named tuple to represent the tasktype enumeration
-    taskschema = inputProtocol.types_dict["TaskType"]
-    # Mypy cannot statically type check a dynamically constructed named tuple.
-    # Since InputProtocol.avpr is hard-coded here, we can hard-code the symbols.
-    _ttype = collections.namedtuple("_tasktype", ("MAP", "REDUCE"))
-    TaskType = _ttype(*taskschema.symbols)
+with open(pfile, 'r') as hf:
+    prototxt = hf.read()
 
-if (outputProtocol is None):
-    pfile = os.path.split(__file__)[0] + os.sep + "OutputProtocol.avpr"
-
-    if not(os.path.exists(pfile)):
-        raise Exception("Could not locate the OutputProtocol: {0} does not exist".format(pfile))
-
-    with open(pfile, 'r') as hf:
-        prototxt = hf.read()
-
-    outputProtocol = protocol.parse(prototxt)
+outputProtocol = protocol.parse(prototxt)
 
 
 class Collector(object):
@@ -74,9 +64,8 @@ class Collector(object):
     Collector for map and reduce output values
     """
 
-    def __init__(self, scheme=None, outputClient=None):
+    def __init__(self, scheme, outputClient):
         """
-
         Parameters
         ---------------------------------------------
         scheme - The scheme for the datums to output - can be a json string
@@ -84,11 +73,8 @@ class Collector(object):
         outputClient - The output client used to send messages to the parent
         """
 
-        if not(isinstance(scheme, schema.Schema)):
+        if not isinstance(scheme, schema.Schema):
             scheme = schema.parse(scheme)
-
-        if (outputClient is None):
-            raise ValueError("output client can't be none.")
 
         self.scheme = scheme
 
@@ -179,7 +165,7 @@ class TetherTask(object):
     away but wait for space to free up)
     """
 
-    def __init__(self, inschema=None, midschema=None, outschema=None):
+    def __init__(self, inschema, midschema, outschema):
         """
 
         Parameters
@@ -203,16 +189,6 @@ class TetherTask(object):
         the differences (see https://avro.apache.org/docs/current/spec.html#Schema+Resolution))
 
         """
-
-        if (inschema is None):
-            raise ValueError("inschema can't be None")
-
-        if (midschema is None):
-            raise ValueError("midschema can't be None")
-
-        if (outschema is None):
-            raise ValueError("outschema can't be None")
-
         # make sure we can parse the schemas
         # Should we call fail if we can't parse the schemas?
         self.inschema = schema.parse(inschema)
@@ -266,32 +242,20 @@ class TetherTask(object):
         # The port the parent process is listening on is set in the environment
         # variable AVRO_TETHER_OUTPUT_PORT
         # open output client, connecting to parent
-
-        if (clientPort is None):
-            clientPortString = os.getenv("AVRO_TETHER_OUTPUT_PORT")
-            if (clientPortString is None):
-                raise Exception("AVRO_TETHER_OUTPUT_PORT env var is not set")
-
-            clientPort = int(clientPortString)
+        clientPort = int(clientPort or os.getenv("AVRO_TETHER_OUTPUT_PORT", 0))
+        if clientPort == 0:
+            raise avro.errors.UsageError("AVRO_TETHER_OUTPUT_PORT env var is not set")
 
         self.log.info("TetherTask.open: Opening connection to parent server on port={0}".format(clientPort))
 
-        # We use the HTTP protocol although we hope to shortly have
-        # support for SocketServer,
-        usehttp = True
-
-        if(usehttp):
-            # self.outputClient =  ipc.Requestor(outputProtocol, self.clientTransceiver)
-            # since HTTP is stateless, a new transciever
-            # is created and closed for each request. We therefore set clientTransciever to None
-            # We still declare clientTransciever because for other (state) protocols we will need
-            # it and we want to check when we get the message fail whether the transciever
-            # needs to be closed.
-            # self.clientTranciever=None
-            self.outputClient = HTTPRequestor("127.0.0.1", clientPort, outputProtocol)
-
-        else:
-            raise NotImplementedError("Only http protocol is currently supported")
+        # self.outputClient =  ipc.Requestor(outputProtocol, self.clientTransceiver)
+        # since HTTP is stateless, a new transciever
+        # is created and closed for each request. We therefore set clientTransciever to None
+        # We still declare clientTransciever because for other (state) protocols we will need
+        # it and we want to check when we get the message fail whether the transciever
+        # needs to be closed.
+        # self.clientTranciever=None
+        self.outputClient = HTTPRequestor("127.0.0.1", clientPort, outputProtocol)
 
         try:
             self.outputClient.request('configure', {"port": inputport})
