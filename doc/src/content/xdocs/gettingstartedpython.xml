@@ -38,7 +38,7 @@
       <p>
         A package called "avro-python3" had been provided to support
         Python 3 previously, but the codebase was consolidated into
-        the "avro" package and that supports both Python 2 and 3 now.
+        the "avro" package that supports Python 3 now.
 
         The avro-python3 package will be removed in the near future,
         so users should use the "avro" package instead.
@@ -70,8 +70,8 @@ $ python3 -m pip install avro
       <source>
 $ tar xvf avro-&AvroVersion;.tar.gz
 $ cd avro-&AvroVersion;
-$ python setup.py install
-$ python
+$ python3 setup.py install
+$ python3
 >>> import avro # should not raise ImportError
       </source>
       <p>
@@ -81,7 +81,7 @@ $ python
       <source>
 $ cd lang/py/
 $ python3 -m pip install -e .
-$ python
+$ python3
       </source>
     </section>
 
