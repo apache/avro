@@ -20,8 +20,11 @@
 
 __all__ = ('schema', 'io', 'datafile', 'protocol', 'ipc')
 
-
 import pkgutil
+import warnings
 
 __version__ = (pkgutil.get_data(__name__, 'VERSION.txt') or b'0.0.1+unknown').decode().strip()
 VERSION = __version__
+
+warnings.warn("`avro-python3` is deprecated. Please use the `avro` package instead.",
+              DeprecationWarning)
