@@ -36,7 +36,10 @@ clean() {
 }
 
 dist() {
-  ./setup.py dist
+  python3 setup.py sdist
+  python3 setup.py bdist_wheel
+  mkdir -p ../../dist/py
+  cp dist/*.{tar.gz,whl} ../../dist/py
 }
 
 interop-data-generate() {
