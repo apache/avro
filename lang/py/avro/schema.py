@@ -42,11 +42,13 @@ A schema may be one of:
 
 from __future__ import absolute_import, division, print_function
 
+import datetime
 import json
 import math
 import re
 import sys
 import warnings
+from decimal import Decimal
 
 import avro.errors
 from avro import constants
@@ -122,6 +124,11 @@ VALID_FIELD_SORT_ORDERS = (
     'ignore',
 )
 
+INT_MIN_VALUE = -(1 << 31)
+INT_MAX_VALUE = (1 << 31) - 1
+LONG_MIN_VALUE = -(1 << 63)
+LONG_MAX_VALUE = (1 << 63) - 1
+
 
 def validate_basename(basename):
     """Raise InvalidName if the given basename is not a valid name."""
@@ -131,10 +138,14 @@ def validate_basename(basename):
                 "does not match the pattern {!s}".format(
                     basename, _BASE_NAME_PATTERN.pattern))
 
+
+def _is_timezone_aware_datetime(dt):
+    return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
+
+
 #
 # Base Classes
 #
-
 
 class Schema(object):
     """Base class for all Schema classes."""
@@ -201,6 +212,18 @@ class Schema(object):
         in the parameter names.
         """
         raise NotImplemented("Must be implemented by subclasses.")
+
+    def validate(self, datum):
+        """Returns the appropriate schema object if datum is valid for that schema, else None.
+
+        Validation concerns only shape and type of data in the top level of the current schema.
+        In most cases, the returned schema object will be self. However, for UnionSchema objects,
+        the returned Schema will be the first branch schema for which validation passes.
+
+        @arg datum: The data to be checked for validity according to this schema
+        @return Optional[Schema]
+        """
+        raise Exception("Must be implemented by subclasses.")
 
 
 class Name(object):
@@ -475,6 +498,17 @@ class Field(object):
 class PrimitiveSchema(Schema):
     """Valid primitive types are in PRIMITIVE_TYPES."""
 
+    _validators = {
+        'null': lambda x: x is None,
+        'boolean': lambda x: isinstance(x, bool),
+        'string': lambda x: isinstance(x, unicode),
+        'bytes': lambda x: isinstance(x, bytes),
+        'int': lambda x: isinstance(x, int) and INT_MIN_VALUE <= x <= INT_MAX_VALUE,
+        'long': lambda x: isinstance(x, int) and LONG_MIN_VALUE <= x <= LONG_MAX_VALUE,
+        'float': lambda x: isinstance(x, (int, float)),
+        'double': lambda x: isinstance(x, (int, float)),
+    }
+
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
         if type not in PRIMITIVE_TYPES:
@@ -503,6 +537,15 @@ class PrimitiveSchema(Schema):
         else:
             return self.props
 
+    def validate(self, datum):
+        """Return self if datum is a valid representation of this type of primitive schema, else None
+
+        @arg datum: The data to be checked for validity according to this schema
+        @return Schema object or None
+        """
+        validator = self._validators.get(self.type, lambda x: False)
+        return self if validator(datum) else None
+
     def __eq__(self, that):
         return self.props == that.props
 
@@ -524,6 +567,10 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
 
     def to_json(self, names=None):
         return self.props
+
+    def validate(self, datum):
+        """Return self if datum is a Decimal object, else None."""
+        return self if isinstance(datum, Decimal) else None
 
     def __eq__(self, that):
         return self.props == that.props
@@ -565,6 +612,10 @@ class FixedSchema(NamedSchema):
             names.names[self.fullname] = self
             return names.prune_namespace(self.props)
 
+    def validate(self, datum):
+        """Return self if datum is a valid representation of this schema, else None."""
+        return self if isinstance(datum, bytes) and len(datum) == self.size else None
+
     def __eq__(self, that):
         return self.props == that.props
 
@@ -587,6 +638,10 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
 
     def to_json(self, names=None):
         return self.props
+
+    def validate(self, datum):
+        """Return self if datum is a Decimal object, else None."""
+        return self if isinstance(datum, Decimal) else None
 
     def __eq__(self, that):
         return self.props == that.props
@@ -637,6 +692,10 @@ class EnumSchema(NamedSchema):
             names.names[self.fullname] = self
             return names.prune_namespace(self.props)
 
+    def validate(self, datum):
+        """Return self if datum is a valid member of this Enum, else None."""
+        return self if datum in self.symbols else None
+
     def __eq__(self, that):
         return self.props == that.props
 
@@ -656,7 +715,7 @@ class ArraySchema(Schema):
         else:
             try:
                 items_schema = make_avsc_object(items, names)
-            except SchemaParseException as e:
+            except avro.errors.SchemaParseException as e:
                 fail_msg = 'Items schema (%s) not a valid Avro schema: %s (known names: %s)' % (items, e, names.names.keys())
                 raise avro.errors.SchemaParseException(fail_msg)
 
@@ -681,6 +740,10 @@ class ArraySchema(Schema):
         to_dump['items'] = item_schema.to_json(names)
         return to_dump
 
+    def validate(self, datum):
+        """Return self if datum is a valid representation of this schema, else None."""
+        return self if isinstance(datum, list) else None
+
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
@@ -697,7 +760,7 @@ class MapSchema(Schema):
         else:
             try:
                 values_schema = make_avsc_object(values, names)
-            except SchemaParseException:
+            except avro.errors.SchemaParseException:
                 raise
             except Exception:
                 raise avro.errors.SchemaParseException('Values schema is not a valid Avro schema.')
@@ -721,6 +784,10 @@ class MapSchema(Schema):
         to_dump = self.props.copy()
         to_dump['values'] = self.get_prop('values').to_json(names)
         return to_dump
+
+    def validate(self, datum):
+        """Return self if datum is a valid representation of this schema, else None."""
+        return self if isinstance(datum, dict) and all(isinstance(key, unicode) for key in datum) else None
 
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
@@ -779,6 +846,12 @@ class UnionSchema(Schema):
         for schema in self.schemas:
             to_dump.append(schema.to_json(names))
         return to_dump
+
+    def validate(self, datum):
+        """Return the first branch schema of which datum is a valid example, else None."""
+        for branch in self.schemas:
+            if branch.validate(datum) is not None:
+                return branch
 
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
@@ -901,6 +974,10 @@ class RecordSchema(NamedSchema):
         to_dump['fields'] = [f.to_json(names) for f in self.fields]
         return to_dump
 
+    def validate(self, datum):
+        """Return self if datum is a valid representation of this schema, else None"""
+        return self if isinstance(datum, dict) and {f.name for f in self.fields}.issuperset(datum.keys()) else None
+
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
         return to_cmp == json.loads(str(that))
@@ -918,6 +995,10 @@ class DateSchema(LogicalSchema, PrimitiveSchema):
     def to_json(self, names=None):
         return self.props
 
+    def validate(self, datum):
+        """Return self if datum is a valid date object, else None."""
+        return self if isinstance(datum, datetime.date) else None
+
     def __eq__(self, that):
         return self.props == that.props
 
@@ -933,6 +1014,10 @@ class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
 
     def to_json(self, names=None):
         return self.props
+
+    def validate(self, datum):
+        """Return self if datum is a valid representation of this schema, else None."""
+        return self if isinstance(datum, datetime.time) else None
 
     def __eq__(self, that):
         return self.props == that.props
@@ -950,6 +1035,10 @@ class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
     def to_json(self, names=None):
         return self.props
 
+    def validate(self, datum):
+        """Return self if datum is a valid representation of this schema, else None."""
+        return self if isinstance(datum, datetime.time) else None
+
     def __eq__(self, that):
         return self.props == that.props
 
@@ -966,6 +1055,9 @@ class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
     def to_json(self, names=None):
         return self.props
 
+    def validate(self, datum):
+        return self if isinstance(datum, datetime.datetime) and _is_timezone_aware_datetime(datum) else None
+
     def __eq__(self, that):
         return self.props == that.props
 
@@ -981,6 +1073,9 @@ class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
 
     def to_json(self, names=None):
         return self.props
+
+    def validate(self, datum):
+        return self if isinstance(datum, datetime.datetime) and _is_timezone_aware_datetime(datum) else None
 
     def __eq__(self, that):
         return self.props == that.props
