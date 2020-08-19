@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -46,6 +48,7 @@ import re
 import sys
 import warnings
 
+import avro.errors
 from avro import constants
 
 try:
@@ -119,37 +122,14 @@ VALID_FIELD_SORT_ORDERS = (
     'ignore',
 )
 
-#
-# Exceptions
-#
-
-
-class AvroException(Exception):
-    pass
-
-
-class SchemaParseException(AvroException):
-    pass
-
-
-class InvalidName(SchemaParseException):
-    """User attempted to parse a schema with an invalid name."""
-
-
-class AvroWarning(UserWarning):
-    """Base class for warnings."""
-
-
-class IgnoredLogicalType(AvroWarning):
-    """Warnings for unknown or invalid logical types."""
-
 
 def validate_basename(basename):
     """Raise InvalidName if the given basename is not a valid name."""
     if not _BASE_NAME_PATTERN.search(basename):
-        raise InvalidName("{!s} is not a valid Avro name because it "
-                          "does not match the pattern {!s}".format(
-                              basename, _BASE_NAME_PATTERN.pattern))
+        raise avro.errors.InvalidName(
+                "{!s} is not a valid Avro name because it "
+                "does not match the pattern {!s}".format(
+                    basename, _BASE_NAME_PATTERN.pattern))
 
 #
 # Base Classes
@@ -164,10 +144,10 @@ class Schema(object):
         # Ensure valid ctor args
         if not isinstance(type, basestring):
             fail_msg = 'Schema type must be a string.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
         elif type not in VALID_TYPES:
             fail_msg = '%s is not a valid type.' % type
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
 
         # add members
         if self._props is None:
@@ -176,13 +156,14 @@ class Schema(object):
         self.type = type
         self._props.update(other_props or {})
 
-    # Read-only properties dict. Printing schemas
-    # creates JSON properties directly from this dict.
-    props = property(lambda self: self._props)
+    @property
+    def props(self):
+        return self._props
 
-    # Read-only property dict. Non-reserved properties
-    other_props = property(lambda self: get_other_props(self._props, SCHEMA_RESERVED_PROPS),
-                           doc="dictionary of non-reserved properties")
+    @property
+    def other_props(self):
+        """Dictionary of non-reserved properties"""
+        return get_other_props(self.props, SCHEMA_RESERVED_PROPS)
 
     def check_props(self, other, props):
         """Check that the given props are identical in two schemas.
@@ -219,7 +200,7 @@ class Schema(object):
         be aware of not re-defining schemas that are already listed
         in the parameter names.
         """
-        raise Exception("Must be implemented by subclasses.")
+        raise NotImplemented("Must be implemented by subclasses.")
 
 
 class Name(object):
@@ -251,7 +232,7 @@ class Name(object):
         if name_attr is None:
             return
         if name_attr == "":
-            raise SchemaParseException('Name must not be the empty string.')
+            raise avro.errors.SchemaParseException('Name must not be the empty string.')
 
         if '.' in name_attr or space_attr == "" or not (space_attr or default_space):
             # The empty string may be used as a namespace to indicate the null namespace.
@@ -332,10 +313,10 @@ class Names(object):
 
         if to_add.fullname in VALID_TYPES:
             fail_msg = '%s is a reserved type name.' % to_add.fullname
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
         elif to_add.fullname in self.names:
             fail_msg = 'The name "%s" is already in use.' % to_add.fullname
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
 
         self.names[to_add.fullname] = new_schema
         return to_add
@@ -348,13 +329,13 @@ class NamedSchema(Schema):
         # Ensure valid ctor args
         if not name:
             fail_msg = 'Named Schemas must have a non-empty name.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
         elif not isinstance(name, basestring):
             fail_msg = 'The name property must be a string.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
         elif namespace is not None and not isinstance(namespace, basestring):
             fail_msg = 'The namespace property must be a string.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
 
         # Call parent ctor
         Schema.__init__(self, type, other_props)
@@ -395,20 +376,21 @@ class LogicalSchema(object):
 class DecimalLogicalSchema(LogicalSchema):
     def __init__(self, precision, scale=0, max_precision=0):
         if not isinstance(precision, int) or precision <= 0:
-            raise IgnoredLogicalType(
+            raise avro.errors.IgnoredLogicalType(
                 "Invalid decimal precision {}. Must be a positive integer.".format(precision))
 
         if precision > max_precision:
-            raise IgnoredLogicalType(
+            raise avro.errors.IgnoredLogicalType(
                 "Invalid decimal precision {}. Max is {}.".format(precision, max_precision))
 
         if not isinstance(scale, int) or scale < 0:
-            raise IgnoredLogicalType(
+            raise avro.errors.IgnoredLogicalType(
                 "Invalid decimal scale {}. Must be a positive integer.".format(scale))
 
         if scale > precision:
-            raise IgnoredLogicalType("Invalid decimal scale {}. Cannot be greater than precision {}."
-                                     .format(scale, precision))
+            raise avro.errors.IgnoredLogicalType(
+                    "Invalid decimal scale {}. Cannot be greater than precision {}.".format(
+                        scale, precision))
 
         super(DecimalLogicalSchema, self).__init__('decimal')
 
@@ -419,13 +401,13 @@ class Field(object):
         # Ensure valid ctor args
         if not name:
             fail_msg = 'Fields must have a non-empty name.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
         elif not isinstance(name, basestring):
             fail_msg = 'The name property must be a string.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
         elif order is not None and order not in VALID_FIELD_SORT_ORDERS:
             fail_msg = 'The order property %s is not valid.' % order
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
 
         # add members
         self._props = {}
@@ -440,7 +422,7 @@ class Field(object):
                 type_schema = make_avsc_object(type, names)
             except Exception as e:
                 fail_msg = 'Type property "%s" not a valid Avro schema: %s' % (type, e)
-                raise SchemaParseException(fail_msg)
+                raise avro.errors.SchemaParseException(fail_msg)
         self.set_prop('type', type_schema)
         self.set_prop('name', name)
         self.type = type_schema
@@ -496,7 +478,7 @@ class PrimitiveSchema(Schema):
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
         if type not in PRIMITIVE_TYPES:
-            raise AvroException("%s is not a valid primitive type." % type)
+            raise avro.errors.AvroException("%s is not a valid primitive type." % type)
 
         # Call parent ctor
         Schema.__init__(self, type, other_props=other_props)
@@ -555,7 +537,7 @@ class FixedSchema(NamedSchema):
         # Ensure valid ctor args
         if not isinstance(size, int) or size < 0:
             fail_msg = 'Fixed Schema requires a valid positive integer for size property.'
-            raise AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
         # Call parent ctor
         NamedSchema.__init__(self, 'fixed', name, namespace, names, other_props)
@@ -619,12 +601,12 @@ class EnumSchema(NamedSchema):
             for symbol in symbols:
                 try:
                     validate_basename(symbol)
-                except InvalidName:
-                    raise InvalidName("An enum symbol must be a valid schema name.")
+                except avro.errors.InvalidName:
+                    raise avro.errors.InvalidName("An enum symbol must be a valid schema name.")
 
         if len(set(symbols)) < len(symbols):
             fail_msg = 'Duplicate symbol: %s' % symbols
-            raise AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
         # Call parent ctor
         NamedSchema.__init__(self, 'enum', name, namespace, names, other_props)
@@ -676,7 +658,7 @@ class ArraySchema(Schema):
                 items_schema = make_avsc_object(items, names)
             except SchemaParseException as e:
                 fail_msg = 'Items schema (%s) not a valid Avro schema: %s (known names: %s)' % (items, e, names.names.keys())
-                raise SchemaParseException(fail_msg)
+                raise avro.errors.SchemaParseException(fail_msg)
 
         self.set_prop('items', items_schema)
 
@@ -718,7 +700,7 @@ class MapSchema(Schema):
             except SchemaParseException:
                 raise
             except Exception:
-                raise SchemaParseException('Values schema is not a valid Avro schema.')
+                raise avro.errors.SchemaParseException('Values schema is not a valid Avro schema.')
 
         self.set_prop('values', values_schema)
 
@@ -754,7 +736,7 @@ class UnionSchema(Schema):
         # Ensure valid ctor args
         if not isinstance(schemas, list):
             fail_msg = 'Union schema requires a list of schemas.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
 
         # Call parent ctor
         Schema.__init__(self, 'union')
@@ -768,13 +750,13 @@ class UnionSchema(Schema):
                 try:
                     new_schema = make_avsc_object(schema, names)
                 except Exception as e:
-                    raise SchemaParseException('Union item must be a valid Avro schema: %s' % str(e))
+                    raise avro.errors.SchemaParseException('Union item must be a valid Avro schema: %s' % str(e))
             # check the new schema
             if (new_schema.type in VALID_TYPES and new_schema.type not in NAMED_TYPES and
                     new_schema.type in [schema.type for schema in schema_objects]):
-                raise SchemaParseException('%s type already in Union' % new_schema.type)
+                raise avro.errors.SchemaParseException('%s type already in Union' % new_schema.type)
             elif new_schema.type == 'union':
-                raise SchemaParseException('Unions cannot contain other unions.')
+                raise avro.errors.SchemaParseException('Unions cannot contain other unions.')
             else:
                 schema_objects.append(new_schema)
         self._schemas = schema_objects
@@ -846,10 +828,10 @@ class RecordSchema(NamedSchema):
                 # make sure field name has not been used yet
                 if new_field.name in field_names:
                     fail_msg = 'Field name %s already in use.' % new_field.name
-                    raise SchemaParseException(fail_msg)
+                    raise avro.errors.SchemaParseException(fail_msg)
                 field_names.append(new_field.name)
             else:
-                raise SchemaParseException('Not a valid field: %s' % field)
+                raise avro.errors.SchemaParseException('Not a valid field: %s' % field)
             field_objects.append(new_field)
         return field_objects
 
@@ -866,10 +848,10 @@ class RecordSchema(NamedSchema):
         # Ensure valid ctor args
         if fields is None:
             fail_msg = 'Record schema requires a non-empty fields property.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
         elif not isinstance(fields, list):
             fail_msg = 'Fields property must be a list of Avro schemas.'
-            raise SchemaParseException(fail_msg)
+            raise avro.errors.SchemaParseException(fail_msg)
 
         # Call parent ctor (adds own name to namespace, too)
         if schema_type == 'request':
@@ -1042,11 +1024,11 @@ def make_logical_schema(logical_type, type_, other_props):
         expected_types = sorted(literal_type for lt, literal_type in logical_types if lt == logical_type)
         if expected_types:
             warnings.warn(
-                IgnoredLogicalType("Logical type {} requires literal type {}, not {}.".format(
+                avro.errors.IgnoredLogicalType("Logical type {} requires literal type {}, not {}.".format(
                     logical_type, "/".join(expected_types), type_)))
         else:
-            warnings.warn(IgnoredLogicalType("Unknown {}, using {}.".format(logical_type, type_)))
-    except IgnoredLogicalType as warning:
+            warnings.warn(avro.errors.IgnoredLogicalType("Unknown {}, using {}.".format(logical_type, type_)))
+    except avro.errors.IgnoredLogicalType as warning:
         warnings.warn(warning)
     return None
 
@@ -1080,7 +1062,7 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
                     scale = 0 if json_data.get('scale') is None else json_data.get('scale')
                     try:
                         return FixedDecimalSchema(size, name, precision, scale, namespace, names, other_props)
-                    except IgnoredLogicalType as warning:
+                    except avro.errors.IgnoredLogicalType as warning:
                         warnings.warn(warning)
                 return FixedSchema(name, namespace, size, names, other_props)
             elif type == 'enum':
@@ -1092,7 +1074,7 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
                 doc = json_data.get('doc')
                 return RecordSchema(name, namespace, fields, names, type, doc, other_props)
             else:
-                raise SchemaParseException('Unknown Named Type: %s' % type)
+                raise avro.errors.SchemaParseException('Unknown Named Type: %s' % type)
         if type in PRIMITIVE_TYPES:
             return PrimitiveSchema(type, other_props)
         if type in VALID_TYPES:
@@ -1106,11 +1088,11 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
                 declared_errors = json_data.get('declared_errors')
                 return ErrorUnionSchema(declared_errors, names)
             else:
-                raise SchemaParseException('Unknown Valid Type: %s' % type)
+                raise avro.errors.SchemaParseException('Unknown Valid Type: %s' % type)
         elif type is None:
-            raise SchemaParseException('No "type" property: %s' % json_data)
+            raise avro.errors.SchemaParseException('No "type" property: %s' % json_data)
         else:
-            raise SchemaParseException('Undefined type: %s' % type)
+            raise avro.errors.SchemaParseException('Undefined type: %s' % type)
     # JSON array (union)
     elif isinstance(json_data, list):
         return UnionSchema(json_data, names)
@@ -1120,7 +1102,7 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
     # not for us!
     else:
         fail_msg = "Could not make an Avro Schema object from %s." % json_data
-        raise SchemaParseException(fail_msg)
+        raise avro.errors.SchemaParseException(fail_msg)
 
 # TODO(hammer): make method for reading from a file?
 
@@ -1128,17 +1110,17 @@ def make_avsc_object(json_data, names=None, validate_enum_symbols=True):
 def parse(json_string, validate_enum_symbols=True):
     """Constructs the Schema from the JSON text.
 
+    @arg json_string: The json string of the schema to parse
     @arg validate_enum_symbols: If False, will allow enum symbols that are not valid Avro names.
+    @return Schema
     """
     # parse the JSON
     try:
         json_data = json.loads(json_string)
     except Exception as e:
         msg = 'Error parsing JSON: {}, error = {}'.format(json_string, e)
-        new_exception = SchemaParseException(msg)
+        new_exception = avro.errors.SchemaParseException(msg)
         traceback = sys.exc_info()[2]
-        if not hasattr(new_exception, 'with_traceback'):
-            raise (new_exception, None, traceback)  # Python 2 syntax
         raise new_exception.with_traceback(traceback)
 
     # Initialize the names object

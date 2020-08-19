@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -66,6 +68,12 @@ class TestTetherTaskRunner(unittest.TestCase):
             runner = avro.tether.tether_task_runner.TaskRunner(avro.test.word_count_task.WordCountTask())
 
             runner.start(outputport=parent_port, join=False)
+            for _ in range(12):
+                if runner.server is not None:
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError("Server never started")
 
             # Test sending various messages to the server and ensuring they are processed correctly
             requestor = avro.tether.tether_task.HTTPRequestor(

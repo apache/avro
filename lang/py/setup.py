@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -20,12 +22,11 @@
 
 from __future__ import absolute_import, division, print_function
 
+import setuptools  # type: ignore
 import distutils.errors
 import glob
 import os
 import subprocess
-
-import setuptools  # type: ignore
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _AVRO_DIR = os.path.join(_HERE, 'avro')
