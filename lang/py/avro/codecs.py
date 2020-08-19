@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -36,8 +38,8 @@ from abc import ABCMeta, abstractmethod
 from binascii import crc32
 from struct import Struct
 
+import avro.errors
 import avro.io
-from avro.schema import AvroException
 
 #
 # Constants
@@ -152,7 +154,7 @@ if has_snappy:
         def check_crc32(self, bytes, checksum):
             checksum = STRUCT_CRC32.unpack(checksum)[0]
             if crc32(bytes) & 0xffffffff != checksum:
-                raise schema.AvroException("Checksum failure")
+                raise avro.errors.AvroException("Checksum failure")
 
 
 if has_zstandard:
@@ -181,16 +183,16 @@ class Codecs(object):
         codec_name = codec_name.lower()
         if codec_name == "null":
             return NullCodec()
-        elif codec_name == "deflate":
+        if codec_name == "deflate":
             return DeflateCodec()
-        elif codec_name == "bzip2" and has_bzip2:
+        if codec_name == "bzip2" and has_bzip2:
             return BZip2Codec()
-        elif codec_name == "snappy" and has_snappy:
+        if codec_name == "snappy" and has_snappy:
             return SnappyCodec()
-        elif codec_name == "zstandard" and has_zstandard:
+        if codec_name == "zstandard" and has_zstandard:
             return ZstandardCodec()
-        else:
-            raise ValueError("Unsupported codec: %r" % codec_name)
+        raise avro.errors.UnsupportedCodec("Unsupported codec: {}. (Is it installed?)"
+                                           .format(codec_name))
 
     @staticmethod
     def supported_codec_names():

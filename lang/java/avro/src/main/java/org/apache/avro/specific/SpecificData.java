@@ -17,36 +17,36 @@
  */
 package org.apache.avro.specific;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Protocol;
+import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.util.ClassUtils;
+
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.nio.ByteBuffer;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.ParameterizedType;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-
-import org.apache.avro.Schema;
-import org.apache.avro.Protocol;
-import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.AvroTypeException;
-import org.apache.avro.Schema.Type;
-import org.apache.avro.util.ClassUtils;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.io.BinaryDecoder;
 
 /** Utilities for generated Java classes and interfaces. */
 public class SpecificData extends GenericData {
@@ -241,15 +241,24 @@ public class SpecificData extends GenericData {
       String name = schema.getFullName();
       if (name == null)
         return null;
-      Class c = classCache.computeIfAbsent(name, n -> {
+      Class<?> c = classCache.computeIfAbsent(name, n -> {
         try {
           return ClassUtils.forName(getClassLoader(), getClassName(schema));
         } catch (ClassNotFoundException e) {
-          try { // nested class?
-            return ClassUtils.forName(getClassLoader(), getNestedClassName(schema));
-          } catch (ClassNotFoundException ex) {
-            return NO_CLASS;
+          // This might be a nested namespace. Try using the last tokens in the
+          // namespace as an enclosing class by progressively replacing period
+          // delimiters with $
+          StringBuilder nestedName = new StringBuilder(n);
+          int lastDot = n.lastIndexOf('.');
+          while (lastDot != -1) {
+            nestedName.setCharAt(lastDot, '$');
+            try {
+              return ClassUtils.forName(getClassLoader(), nestedName.toString());
+            } catch (ClassNotFoundException ignored) {
+            }
+            lastDot = n.lastIndexOf('.', lastDot - 1);
           }
+          return NO_CLASS;
         }
       });
       return c == NO_CLASS ? null : c;
@@ -310,14 +319,6 @@ public class SpecificData extends GenericData {
       return name;
     String dot = namespace.endsWith("$") ? "" : "."; // back-compatibly handle $
     return namespace + dot + name;
-  }
-
-  private String getNestedClassName(Schema schema) {
-    String namespace = schema.getNamespace();
-    String name = schema.getName();
-    if (namespace == null || "".equals(namespace))
-      return name;
-    return namespace + "$" + name;
   }
 
   // cache for schemas created from Class objects. Use ClassValue to avoid
