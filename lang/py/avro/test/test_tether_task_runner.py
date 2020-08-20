@@ -34,11 +34,6 @@ import avro.tether.tether_task
 import avro.tether.tether_task_runner
 import avro.tether.util
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 
 class TestTetherTaskRunner(unittest.TestCase):
     """unit test for a tethered task runner."""
@@ -83,12 +78,12 @@ class TestTetherTaskRunner(unittest.TestCase):
             # Test the mapper
             requestor.request("configure", {
                 "taskType": avro.tether.tether_task.TaskType.MAP,
-                "inSchema": unicode(str(runner.task.inschema)),
-                "outSchema": unicode(str(runner.task.midschema))
+                "inSchema": str(runner.task.inschema),
+                "outSchema": str(runner.task.midschema)
             })
 
             # Serialize some data so we can send it to the input function
-            datum = unicode("This is a line of text")
+            datum = "This is a line of text"
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(runner.task.inschema)
@@ -103,12 +98,12 @@ class TestTetherTaskRunner(unittest.TestCase):
             # Test the reducer
             requestor.request("configure", {
                 "taskType": avro.tether.tether_task.TaskType.REDUCE,
-                "inSchema": unicode(str(runner.task.midschema)),
-                "outSchema": unicode(str(runner.task.outschema))}
+                "inSchema": str(runner.task.midschema),
+                "outSchema": str(runner.task.outschema)}
             )
 
             # Serialize some data so we can send it to the input function
-            datum = {"key": unicode("word"), "value": 2}
+            datum = {"key": "word", "value": 2}
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(runner.task.midschema)

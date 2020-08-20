@@ -28,15 +28,10 @@ from decimal import Decimal
 import avro.io
 from avro import schema, timezones
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 SCHEMAS_TO_VALIDATE = (
     ('"null"', None),
     ('"boolean"', True),
-    ('"string"', unicode('adsfasdf09809dsf-=adsf')),
+    ('"string"', 'adsfasdf09809dsf-=adsf'),
     ('"bytes"', b'12345abcd'),
     ('"int"', 1234),
     ('"long"', 1234),
@@ -51,9 +46,9 @@ SCHEMAS_TO_VALIDATE = (
     ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', Decimal('-3.1415')),
     ('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', 'B'),
     ('{"type": "array", "items": "long"}', [1, 3, 2]),
-    ('{"type": "map", "values": "long"}', {unicode('a'): 1,
-                                           unicode('b'): 3,
-                                           unicode('c'): 2}),
+    ('{"type": "map", "values": "long"}', {'a': 1,
+                                           'b': 3,
+                                           'c': 2}),
     ('["string", "null", "long"]', None),
     ('{"type": "int", "logicalType": "date"}', datetime.date(2000, 1, 1)),
     ('{"type": "int", "logicalType": "time-millis"}', datetime.time(23, 59, 59, 999000)),
@@ -101,7 +96,7 @@ SCHEMAS_TO_VALIDATE = (
                           "name": "Cons",
                           "fields": [{"name": "car", "type": "Lisp"},
                                      {"name": "cdr", "type": "Lisp"}]}]}]}
-   """, {'value': {'car': {'value': unicode('head')}, 'cdr': {'value': None}}}),
+   """, {'value': {'car': {'value': 'head'}, 'cdr': {'value': None}}}),
 )
 
 BINARY_ENCODINGS = (
@@ -128,8 +123,8 @@ DEFAULT_VALUE_EXAMPLES = (
     ('{"type": "fixed", "name": "F", "size": 2}', '"\u00FF\u00FF"', u'\xff\xff'),
     ('{"type": "enum", "name": "F", "symbols": ["FOO", "BAR"]}', '"FOO"', 'FOO'),
     ('{"type": "array", "items": "int"}', '[1, 2, 3]', [1, 2, 3]),
-    ('{"type": "map", "values": "int"}', '{"a": 1, "b": 2}', {unicode('a'): 1,
-                                                              unicode('b'): 2}),
+    ('{"type": "map", "values": "int"}', '{"a": 1, "b": 2}', {'a': 1,
+                                                              'b': 2}),
     ('["int", "null"]', '5', 5),
     ('{"type": "record", "name": "F", "fields": [{"name": "A", "type": "int"}]}',
      '{"A": 5}', {'A': 5}),

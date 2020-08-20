@@ -51,16 +51,6 @@ from decimal import Decimal
 import avro.errors
 from avro import constants
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
-try:
-    basestring  # type: ignore
-except NameError:
-    basestring = (bytes, unicode)
-
 #
 # Constants
 #
@@ -151,7 +141,7 @@ class Schema:
 
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
-        if not isinstance(type, basestring):
+        if not isinstance(type, str):
             fail_msg = 'Schema type must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
         elif type not in VALID_TYPES:
@@ -351,10 +341,10 @@ class NamedSchema(Schema):
         if not name:
             fail_msg = 'Named Schemas must have a non-empty name.'
             raise avro.errors.SchemaParseException(fail_msg)
-        elif not isinstance(name, basestring):
+        elif not isinstance(name, str):
             fail_msg = 'The name property must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
-        elif namespace is not None and not isinstance(namespace, basestring):
+        elif namespace is not None and not isinstance(namespace, str):
             fail_msg = 'The namespace property must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
 
@@ -423,7 +413,7 @@ class Field:
         if not name:
             fail_msg = 'Fields must have a non-empty name.'
             raise avro.errors.SchemaParseException(fail_msg)
-        elif not isinstance(name, basestring):
+        elif not isinstance(name, str):
             fail_msg = 'The name property must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
         elif order is not None and order not in VALID_FIELD_SORT_ORDERS:
@@ -435,7 +425,7 @@ class Field:
         self._has_default = has_default
         self._props.update(other_props or {})
 
-        if (isinstance(type, basestring) and names is not None and
+        if (isinstance(type, str) and names is not None and
                 names.has_name(type, None)):
             type_schema = names.get_name(type, None)
         else:
@@ -499,7 +489,7 @@ class PrimitiveSchema(Schema):
     _validators = {
         'null': lambda x: x is None,
         'boolean': lambda x: isinstance(x, bool),
-        'string': lambda x: isinstance(x, unicode),
+        'string': lambda x: isinstance(x, str),
         'bytes': lambda x: isinstance(x, bytes),
         'int': lambda x: isinstance(x, int) and INT_MIN_VALUE <= x <= INT_MAX_VALUE,
         'long': lambda x: isinstance(x, int) and LONG_MIN_VALUE <= x <= LONG_MAX_VALUE,
@@ -708,7 +698,7 @@ class ArraySchema(Schema):
         Schema.__init__(self, 'array', other_props)
         # Add class members
 
-        if isinstance(items, basestring) and names.has_name(items, None):
+        if isinstance(items, str) and names.has_name(items, None):
             items_schema = names.get_name(items, None)
         else:
             try:
@@ -753,7 +743,7 @@ class MapSchema(Schema):
         Schema.__init__(self, 'map', other_props)
 
         # Add class members
-        if isinstance(values, basestring) and names.has_name(values, None):
+        if isinstance(values, str) and names.has_name(values, None):
             values_schema = names.get_name(values, None)
         else:
             try:
@@ -785,7 +775,7 @@ class MapSchema(Schema):
 
     def validate(self, datum):
         """Return self if datum is a valid representation of this schema, else None."""
-        return self if isinstance(datum, dict) and all(isinstance(key, unicode) for key in datum) else None
+        return self if isinstance(datum, dict) and all(isinstance(key, str) for key in datum) else None
 
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
@@ -809,7 +799,7 @@ class UnionSchema(Schema):
         # Add class members
         schema_objects = []
         for schema in schemas:
-            if isinstance(schema, basestring) and names.has_name(schema, None):
+            if isinstance(schema, str) and names.has_name(schema, None):
                 new_schema = names.get_name(schema, None)
             else:
                 try:

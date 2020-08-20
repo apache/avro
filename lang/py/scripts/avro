@@ -38,11 +38,6 @@ ifilter = getattr(itertools, 'ifilter', filter)
 imap = getattr(itertools, 'imap', map)
 
 try:
-    unicode
-except NameError:
-    unicode = str
-
-try:
     long
 except NameError:
     long = int
@@ -178,7 +173,7 @@ def convert(value, field):
         "long": long,
         "float": float,
         "double": float,
-        "string": unicode,
+        "string": str,
         "bytes": bytes,
         "boolean": bool,
         "null": lambda _: None,

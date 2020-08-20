@@ -34,11 +34,6 @@ import avro.schema
 from avro.datafile import DataFileWriter
 from avro.io import DatumWriter
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 NUM_RECORDS = 7
 
 
@@ -56,13 +51,13 @@ SCHEMA = '''
 '''
 
 LOONIES = (
-    (unicode("daffy"), unicode("duck"), unicode("duck")),
-    (unicode("bugs"), unicode("bunny"), unicode("bunny")),
-    (unicode("tweety"), unicode(""), unicode("bird")),
-    (unicode("road"), unicode("runner"), unicode("bird")),
-    (unicode("wile"), unicode("e"), unicode("coyote")),
-    (unicode("pepe"), unicode("le pew"), unicode("skunk")),
-    (unicode("foghorn"), unicode("leghorn"), unicode("rooster")),
+    ("daffy", "duck", "duck"),
+    ("bugs", "bunny", "bunny"),
+    ("tweety", "", "bird"),
+    ("road", "runner", "bird"),
+    ("wile", "e", "coyote"),
+    ("pepe", "le pew", "skunk"),
+    ("foghorn", "leghorn", "rooster"),
 )
 
 
@@ -124,7 +119,7 @@ class TestCat(unittest.TestCase):
         assert len(list(reader)) == NUM_RECORDS
 
     def test_csv_header(self):
-        r = {"type": unicode("duck"), "last": unicode("duck"), "first": unicode("daffy")}
+        r = {"type": "duck", "last": "duck", "first": "daffy"}
         out = self._run("-f", "csv", "--header", raw=True)
         io_ = io.StringIO(out)
         reader = csv.DictReader(io_)
@@ -157,17 +152,17 @@ class TestCat(unittest.TestCase):
 
         # Field selection (with comma and space)
         out = self._run('--fields', 'first, last')
-        assert json.loads(out[0]) == {'first': unicode('daffy'), 'last': unicode('duck')}
+        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
 
         # Empty fields should get all
         out = self._run('--fields', '')
         assert json.loads(out[0]) == \
-            {'first': unicode('daffy'), 'last': unicode('duck'),
-             'type': unicode('duck')}
+            {'first': 'daffy', 'last': 'duck',
+             'type': 'duck'}
 
         # Non existing fields are ignored
         out = self._run('--fields', 'first,last,age')
-        assert json.loads(out[0]) == {'first': unicode('daffy'), 'last': unicode('duck')}
+        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
 
 
 class TestWrite(unittest.TestCase):
@@ -217,7 +212,7 @@ class TestWrite(unittest.TestCase):
 
         records = self.load_avro(tmp)
         assert len(records) == NUM_RECORDS
-        assert records[0]["first"] == unicode("daffy")
+        assert records[0]["first"] == "daffy"
 
         remove(tmp)
 

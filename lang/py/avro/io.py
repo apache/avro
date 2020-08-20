@@ -34,8 +34,8 @@ uses the following mapping:
   * Schema records are implemented as dict.
   * Schema arrays are implemented as list.
   * Schema maps are implemented as dict.
-  * Schema strings are implemented as unicode.
-  * Schema bytes are implemented as str.
+  * Schema strings are implemented as str.
+  * Schema bytes are implemented as bytes.
   * Schema ints are implemented as int.
   * Schema longs are implemented as long.
   * Schema floats are implemented as float.
@@ -95,16 +95,6 @@ from struct import Struct
 
 import avro.errors
 from avro import constants, timezones
-
-try:
-    unicode
-except NameError:
-    unicode = str
-
-try:
-    basestring  # type: ignore
-except NameError:
-    basestring = (bytes, unicode)
 
 try:
     long
@@ -346,7 +336,7 @@ class BinaryDecoder:
         A string is encoded as a long followed by
         that many bytes of UTF-8 encoded character data.
         """
-        return unicode(self.read_bytes(), "utf-8")
+        return self.read_bytes().decode("utf-8")
 
     def read_date_from_int(self):
         """

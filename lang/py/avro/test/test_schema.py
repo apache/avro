@@ -29,16 +29,6 @@ import avro.errors
 from avro import schema
 
 try:
-    unicode
-except NameError:
-    unicode = str
-
-try:
-    basestring  # type: ignore
-except NameError:
-    basestring = (bytes, unicode)
-
-try:
     from typing import List
 except ImportError:
     pass
@@ -48,7 +38,7 @@ class TestSchema:
     """A proxy for a schema string that provides useful test metadata."""
 
     def __init__(self, data, name='', comment='', warnings=None):
-        if not isinstance(data, basestring):
+        if not isinstance(data, str):
             data = json.dumps(data)
         self.data = data
         self.name = name or data  # default to data for name
@@ -567,7 +557,7 @@ class OtherAttributesTestCase(unittest.TestCase):
         "cp_int": int,
         "cp_null": type(None),
         "cp_object": dict,
-        "cp_string": basestring,
+        "cp_string": str,
     }
 
     def __init__(self, test_schema):

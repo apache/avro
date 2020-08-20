@@ -34,11 +34,6 @@ try:
 except ImportError:
     from http import client as httplib  # type: ignore
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 
 def _load(name):
     dir_path = os.path.dirname(__file__)
@@ -131,7 +126,7 @@ class BaseRequestor:
         request_datum['clientHash'] = local_hash
         request_datum['serverHash'] = remote_hash
         if self.send_protocol:
-            request_datum['clientProtocol'] = unicode(self.local_protocol)
+            request_datum['clientProtocol'] = str(self.local_protocol)
         HANDSHAKE_REQUESTOR_WRITER.write(request_datum, encoder)
 
     def write_call_request(self, message_name, request_datum, encoder):
@@ -301,7 +296,7 @@ class Responder:
             except AvroRemoteException as e:
                 error = e
             except Exception as e:
-                error = AvroRemoteException(unicode(e))
+                error = AvroRemoteException(str(e))
 
             # write response using local protocol
             META_WRITER.write(response_metadata, buffer_encoder)
@@ -313,7 +308,7 @@ class Responder:
                 writers_schema = local_message.errors
                 self.write_error(writers_schema, error, buffer_encoder)
         except schema.AvroException as e:
-            error = AvroRemoteException(unicode(e))
+            error = AvroRemoteException(str(e))
             buffer_encoder = avro.io.BinaryEncoder(io.BytesIO())
             META_WRITER.write(response_metadata, buffer_encoder)
             buffer_encoder.write_boolean(True)
@@ -346,7 +341,7 @@ class Responder:
                 handshake_response['match'] = 'CLIENT'
 
         if handshake_response['match'] != 'BOTH':
-            handshake_response['serverProtocol'] = unicode(self.local_protocol)
+            handshake_response['serverProtocol'] = str(self.local_protocol)
             handshake_response['serverHash'] = self.local_hash
 
         HANDSHAKE_RESPONDER_WRITER.write(handshake_response, encoder)
@@ -368,7 +363,7 @@ class Responder:
 
     def write_error(self, writers_schema, error_exception, encoder):
         datum_writer = avro.io.DatumWriter(writers_schema)
-        datum_writer.write(unicode(error_exception), encoder)
+        datum_writer.write(str(error_exception), encoder)
 
 #
 # Utility classes
