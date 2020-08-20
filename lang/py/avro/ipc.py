@@ -21,8 +21,6 @@
 
 """Support for inter-process calls."""
 
-from __future__ import absolute_import, division, print_function
-
 import io
 import os
 from struct import Struct

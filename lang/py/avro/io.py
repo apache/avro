@@ -86,8 +86,6 @@ datum contained. This allows iteration over the child nodes
 in that datum, if there are any.
 """
 
-from __future__ import absolute_import, division, print_function
-
 import datetime
 import json
 import struct

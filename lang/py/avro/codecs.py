@@ -28,8 +28,6 @@ so don't confuse it with the Python's "codecs", which is a package mainly for
 converting charsets (https://docs.python.org/3/library/codecs.html).
 """
 
-from __future__ import absolute_import, division, print_function
-
 import io
 import struct
 import sys

@@ -24,8 +24,6 @@ There are currently no IPC tests within python, in part because there are no
 servers yet available.
 """
 
-from __future__ import absolute_import, division, print_function
-
 import unittest
 
 # This test does import this code, to make sure it at least passes

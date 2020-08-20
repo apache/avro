@@ -25,8 +25,6 @@ Command-line tool
 NOTE: The API for the command-line tool is experimental.
 """
 
-from __future__ import absolute_import, division, print_function
-
 import os.path
 import sys
 import threading
