@@ -86,15 +86,15 @@ datum contained. This allows iteration over the child nodes
 in that datum, if there are any.
 """
 
+import collections
 import datetime
+import decimal
 import json
 import struct
-from collections import deque, namedtuple
-from decimal import Decimal, getcontext
-from struct import Struct
 
+import avro.constants
 import avro.errors
-from avro import constants, timezones
+import avro.timezones
 
 #
 # Constants
@@ -102,11 +102,11 @@ from avro import constants, timezones
 
 
 # TODO(hammer): shouldn't ! be < for little-endian (according to spec?)
-STRUCT_FLOAT = Struct('<f')           # big-endian float
-STRUCT_DOUBLE = Struct('<d')          # big-endian double
-STRUCT_SIGNED_SHORT = Struct('>h')    # big-endian signed short
-STRUCT_SIGNED_INT = Struct('>i')      # big-endian signed int
-STRUCT_SIGNED_LONG = Struct('>q')     # big-endian signed long
+STRUCT_FLOAT = struct.Struct('<f')           # big-endian float
+STRUCT_DOUBLE = struct.Struct('<d')          # big-endian double
+STRUCT_SIGNED_SHORT = struct.Struct('>h')    # big-endian signed short
+STRUCT_SIGNED_INT = struct.Struct('>i')      # big-endian signed int
+STRUCT_SIGNED_LONG = struct.Struct('>q')     # big-endian signed long
 
 
 #
@@ -114,7 +114,7 @@ STRUCT_SIGNED_LONG = Struct('>q')     # big-endian signed long
 #
 
 
-ValidationNode = namedtuple("ValidationNode", ['schema', 'datum', 'name'])
+ValidationNode = collections.namedtuple("ValidationNode", ['schema', 'datum', 'name'])
 
 
 def validate(expected_schema, datum, raise_on_error=False):
@@ -132,7 +132,7 @@ def validate(expected_schema, datum, raise_on_error=False):
     :returns: True if datum is valid for expected_schema, False if not.
     """
     # use a FIFO queue to process schema nodes breadth first.
-    nodes = deque()
+    nodes = collections.deque()
     nodes.append(ValidationNode(expected_schema, datum, getattr(expected_schema, "name", None)))
 
     while nodes:
@@ -313,10 +313,12 @@ class BinaryDecoder:
                 unscaled_datum <<= 8
                 unscaled_datum += ord(datum[offset:1 + offset])
 
-        original_prec = getcontext().prec
-        getcontext().prec = precision
-        scaled_datum = Decimal(unscaled_datum).scaleb(-scale)
-        getcontext().prec = original_prec
+        original_prec = decimal.getcontext().prec
+        try:
+            decimal.getcontext().prec = precision
+            scaled_datum = decimal.Decimal(unscaled_datum).scaleb(-scale)
+        finally:
+            decimal.getcontext().prec = original_prec
         return scaled_datum
 
     def read_bytes(self):
@@ -378,7 +380,7 @@ class BinaryDecoder:
         """
         timestamp_millis = self.read_long()
         timedelta = datetime.timedelta(microseconds=timestamp_millis * 1000)
-        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
         return unix_epoch_datetime + timedelta
 
     def read_timestamp_micros_from_long(self):
@@ -388,7 +390,7 @@ class BinaryDecoder:
         """
         timestamp_micros = self.read_long()
         timedelta = datetime.timedelta(microseconds=timestamp_micros)
-        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+        unix_epoch_datetime = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
         return unix_epoch_datetime + timedelta
 
     def skip_null(self):
@@ -599,8 +601,8 @@ class BinaryEncoder:
         Encode python datetime object as long.
         It stores the number of milliseconds from midnight of unix epoch, 1 January 1970.
         """
-        datum = datum.astimezone(tz=timezones.utc)
-        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+        datum = datum.astimezone(tz=avro.timezones.utc)
+        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
         milliseconds = self._timedelta_total_microseconds(timedelta) // 1000
         self.write_long(milliseconds)
 
@@ -609,8 +611,8 @@ class BinaryEncoder:
         Encode python datetime object as long.
         It stores the number of microseconds from midnight of unix epoch, 1 January 1970.
         """
-        datum = datum.astimezone(tz=timezones.utc)
-        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
+        datum = datum.astimezone(tz=avro.timezones.utc)
+        timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=avro.timezones.utc)
         microseconds = self._timedelta_total_microseconds(timedelta)
         self.write_long(microseconds)
 
@@ -675,17 +677,17 @@ class DatumReader:
         elif writers_schema.type == 'string':
             return decoder.read_utf8()
         elif writers_schema.type == 'int':
-            if logical_type == constants.DATE:
+            if logical_type == avro.constants.DATE:
                 return decoder.read_date_from_int()
-            if logical_type == constants.TIME_MILLIS:
+            if logical_type == avro.constants.TIME_MILLIS:
                 return decoder.read_time_millis_from_int()
             return decoder.read_int()
         elif writers_schema.type == 'long':
-            if logical_type == constants.TIME_MICROS:
+            if logical_type == avro.constants.TIME_MICROS:
                 return decoder.read_time_micros_from_long()
-            elif logical_type == constants.TIMESTAMP_MILLIS:
+            elif logical_type == avro.constants.TIMESTAMP_MILLIS:
                 return decoder.read_timestamp_millis_from_long()
-            elif logical_type == constants.TIMESTAMP_MICROS:
+            elif logical_type == avro.constants.TIMESTAMP_MICROS:
                 return decoder.read_timestamp_micros_from_long()
             else:
                 return decoder.read_long()
@@ -1009,18 +1011,18 @@ class DatumWriter:
         elif writers_schema.type == 'string':
             encoder.write_utf8(datum)
         elif writers_schema.type == 'int':
-            if logical_type == constants.DATE:
+            if logical_type == avro.constants.DATE:
                 encoder.write_date_int(datum)
-            elif logical_type == constants.TIME_MILLIS:
+            elif logical_type == avro.constants.TIME_MILLIS:
                 encoder.write_time_millis_int(datum)
             else:
                 encoder.write_int(datum)
         elif writers_schema.type == 'long':
-            if logical_type == constants.TIME_MICROS:
+            if logical_type == avro.constants.TIME_MICROS:
                 encoder.write_time_micros_long(datum)
-            elif logical_type == constants.TIMESTAMP_MILLIS:
+            elif logical_type == avro.constants.TIMESTAMP_MILLIS:
                 encoder.write_timestamp_millis_long(datum)
-            elif logical_type == constants.TIMESTAMP_MICROS:
+            elif logical_type == avro.constants.TIMESTAMP_MICROS:
                 encoder.write_timestamp_micros_long(datum)
             else:
                 encoder.write_long(datum)

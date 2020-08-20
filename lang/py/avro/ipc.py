@@ -21,18 +21,15 @@
 
 """Support for inter-process calls."""
 
+import http.client
 import io
 import os
-from struct import Struct
+import struct
 
 import avro.errors
 import avro.io
-from avro import protocol, schema
-
-try:
-    import httplib  # type: ignore
-except ImportError:
-    from http import client as httplib  # type: ignore
+import avro.protocol
+import avro.schema
 
 
 def _load(name):
@@ -44,25 +41,25 @@ def _load(name):
 
 HANDSHAKE_REQUEST_SCHEMA_JSON = _load('HandshakeRequest.avsc')
 HANDSHAKE_RESPONSE_SCHEMA_JSON = _load('HandshakeResponse.avsc')
-HANDSHAKE_REQUEST_SCHEMA = schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
-HANDSHAKE_RESPONSE_SCHEMA = schema.parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
+HANDSHAKE_REQUEST_SCHEMA = avro.schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
+HANDSHAKE_RESPONSE_SCHEMA = avro.schema.parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
 
 HANDSHAKE_REQUESTOR_WRITER = avro.io.DatumWriter(HANDSHAKE_REQUEST_SCHEMA)
 HANDSHAKE_REQUESTOR_READER = avro.io.DatumReader(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_WRITER = avro.io.DatumWriter(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_READER = avro.io.DatumReader(HANDSHAKE_REQUEST_SCHEMA)
 
-META_SCHEMA = schema.parse('{"type": "map", "values": "bytes"}')
+META_SCHEMA = avro.schema.parse('{"type": "map", "values": "bytes"}')
 META_WRITER = avro.io.DatumWriter(META_SCHEMA)
 META_READER = avro.io.DatumReader(META_SCHEMA)
 
-SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
+SYSTEM_ERROR_SCHEMA = avro.schema.parse('["string"]')
 
 # protocol cache
 REMOTE_HASHES = {}
 REMOTE_PROTOCOLS = {}
 
-BIG_ENDIAN_INT_STRUCT = Struct('!I')
+BIG_ENDIAN_INT_STRUCT = struct.Struct('!I')
 BUFFER_HEADER_LENGTH = 4
 BUFFER_SIZE = 8192
 
@@ -163,7 +160,7 @@ class BaseRequestor:
         elif match == 'CLIENT':
             if self.send_protocol:
                 raise avro.errors.AvroException('Handshake failure.')
-            self.remote_protocol = protocol.parse(
+            self.remote_protocol = avro.protocol.parse(
                 handshake_response.get('serverProtocol'))
             self.remote_hash = handshake_response.get('serverHash')
             self.send_protocol = False
@@ -171,7 +168,7 @@ class BaseRequestor:
         elif match == 'NONE':
             if self.send_protocol:
                 raise avro.errors.AvroException('Handshake failure.')
-            self.remote_protocol = protocol.parse(
+            self.remote_protocol = avro.protocol.parse(
                 handshake_response.get('serverProtocol'))
             self.remote_hash = handshake_response.get('serverHash')
             self.send_protocol = True
@@ -324,7 +321,7 @@ class Responder:
         client_protocol = handshake_request.get('clientProtocol')
         remote_protocol = self.get_protocol_cache(client_hash)
         if remote_protocol is None and client_protocol is not None:
-            remote_protocol = protocol.parse(client_protocol)
+            remote_protocol = avro.protocol.parse(client_protocol)
             self.set_protocol_cache(client_hash, remote_protocol)
 
         # evaluate remote's guess of the local protocol
@@ -444,7 +441,7 @@ class HTTPTransceiver:
 
     def __init__(self, host, port, req_resource='/'):
         self.req_resource = req_resource
-        self.conn = httplib.HTTPConnection(host, port)
+        self.conn = http.client.HTTPConnection(host, port)
         self.conn.connect()
         self.remote_name = self.conn.sock.getsockname()
 

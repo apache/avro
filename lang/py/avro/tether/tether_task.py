@@ -29,7 +29,9 @@ import traceback
 
 import avro.errors
 import avro.io
-from avro import ipc, protocol, schema
+import avro.ipc
+import avro.protocol
+import avro.schema
 
 __all__ = ["TetherTask", "TaskType", "inputProtocol", "outputProtocol", "HTTPRequestor"]
 
@@ -42,7 +44,7 @@ pfile = os.path.split(__file__)[0] + os.sep + "InputProtocol.avpr"
 with open(pfile, 'r') as hf:
     prototxt = hf.read()
 
-inputProtocol = protocol.parse(prototxt)
+inputProtocol = avro.protocol.parse(prototxt)
 
 # use a named tuple to represent the tasktype enumeration
 taskschema = inputProtocol.types_dict["TaskType"]
@@ -56,7 +58,7 @@ pfile = os.path.split(__file__)[0] + os.sep + "OutputProtocol.avpr"
 with open(pfile, 'r') as hf:
     prototxt = hf.read()
 
-outputProtocol = protocol.parse(prototxt)
+outputProtocol = avro.protocol.parse(prototxt)
 
 
 class Collector:
@@ -73,8 +75,8 @@ class Collector:
         outputClient - The output client used to send messages to the parent
         """
 
-        if not isinstance(scheme, schema.Schema):
-            scheme = schema.parse(scheme)
+        if not isinstance(scheme, avro.schema.Schema):
+            scheme = avro.schema.parse(scheme)
 
         self.scheme = scheme
 
@@ -145,8 +147,8 @@ class HTTPRequestor:
         self.protocol = protocol
 
     def request(self, *args, **param):
-        transciever = ipc.HTTPTransceiver(self.server, self.port)
-        requestor = ipc.Requestor(self.protocol, transciever)
+        transciever = avro.ipc.HTTPTransceiver(self.server, self.port)
+        requestor = avro.ipc.Requestor(self.protocol, transciever)
         return requestor.request(*args, **param)
 
 
@@ -191,9 +193,9 @@ class TetherTask:
         """
         # make sure we can parse the schemas
         # Should we call fail if we can't parse the schemas?
-        self.inschema = schema.parse(inschema)
-        self.midschema = schema.parse(midschema)
-        self.outschema = schema.parse(outschema)
+        self.inschema = avro.schema.parse(inschema)
+        self.midschema = avro.schema.parse(midschema)
+        self.outschema = avro.schema.parse(outschema)
 
         # declare various variables
         self.clienTransciever = None
@@ -248,7 +250,7 @@ class TetherTask:
 
         self.log.info("TetherTask.open: Opening connection to parent server on port={0}".format(clientPort))
 
-        # self.outputClient =  ipc.Requestor(outputProtocol, self.clientTransceiver)
+        # self.outputClient =  avro.ipc.Requestor(outputProtocol, self.clientTransceiver)
         # since HTTP is stateless, a new transciever
         # is created and closed for each request. We therefore set clientTransciever to None
         # We still declare clientTransciever because for other (state) protocols we will need
@@ -282,8 +284,8 @@ class TetherTask:
         self.taskType = taskType
 
         try:
-            inSchema = schema.parse(inSchemaText)
-            outSchema = schema.parse(outSchemaText)
+            inSchema = avro.schema.parse(inSchemaText)
+            outSchema = avro.schema.parse(outSchemaText)
 
             if (taskType == TaskType.MAP):
                 self.inReader = avro.io.DatumReader(writers_schema=inSchema, readers_schema=self.inschema)

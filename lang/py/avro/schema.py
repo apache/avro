@@ -41,15 +41,15 @@ A schema may be one of:
 """
 
 import datetime
+import decimal
 import json
 import math
 import re
 import sys
 import warnings
-from decimal import Decimal
 
+import avro.constants
 import avro.errors
-from avro import constants
 
 #
 # Constants
@@ -558,7 +558,7 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
 
     def validate(self, datum):
         """Return self if datum is a Decimal object, else None."""
-        return self if isinstance(datum, Decimal) else None
+        return self if isinstance(datum, decimal.Decimal) else None
 
     def __eq__(self, that):
         return self.props == that.props
@@ -629,7 +629,7 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
 
     def validate(self, datum):
         """Return self if datum is a Decimal object, else None."""
-        return self if isinstance(datum, Decimal) else None
+        return self if isinstance(datum, decimal.Decimal) else None
 
     def __eq__(self, that):
         return self.props == that.props
@@ -977,7 +977,7 @@ class RecordSchema(NamedSchema):
 
 class DateSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.DATE)
+        LogicalSchema.__init__(self, avro.constants.DATE)
         PrimitiveSchema.__init__(self, 'int', other_props)
 
     def to_json(self, names=None):
@@ -997,7 +997,7 @@ class DateSchema(LogicalSchema, PrimitiveSchema):
 
 class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIME_MILLIS)
+        LogicalSchema.__init__(self, avro.constants.TIME_MILLIS)
         PrimitiveSchema.__init__(self, 'int', other_props)
 
     def to_json(self, names=None):
@@ -1017,7 +1017,7 @@ class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
 
 class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIME_MICROS)
+        LogicalSchema.__init__(self, avro.constants.TIME_MICROS)
         PrimitiveSchema.__init__(self, 'long', other_props)
 
     def to_json(self, names=None):
@@ -1037,7 +1037,7 @@ class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
 
 class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIMESTAMP_MILLIS)
+        LogicalSchema.__init__(self, avro.constants.TIMESTAMP_MILLIS)
         PrimitiveSchema.__init__(self, 'long', other_props)
 
     def to_json(self, names=None):
@@ -1056,7 +1056,7 @@ class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
 
 class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIMESTAMP_MICROS)
+        LogicalSchema.__init__(self, avro.constants.TIMESTAMP_MICROS)
         PrimitiveSchema.__init__(self, 'long', other_props)
 
     def to_json(self, names=None):
@@ -1090,14 +1090,14 @@ def make_bytes_decimal_schema(other_props):
 def make_logical_schema(logical_type, type_, other_props):
     """Map the logical types to the appropriate literal type and schema class."""
     logical_types = {
-        (constants.DATE, 'int'): DateSchema,
-        (constants.DECIMAL, 'bytes'): make_bytes_decimal_schema,
+        (avro.constants.DATE, 'int'): DateSchema,
+        (avro.constants.DECIMAL, 'bytes'): make_bytes_decimal_schema,
         # The fixed decimal schema is handled later by returning None now.
-        (constants.DECIMAL, 'fixed'): lambda x: None,
-        (constants.TIMESTAMP_MICROS, 'long'): TimestampMicrosSchema,
-        (constants.TIMESTAMP_MILLIS, 'long'): TimestampMillisSchema,
-        (constants.TIME_MICROS, 'long'): TimeMicrosSchema,
-        (constants.TIME_MILLIS, 'int'): TimeMillisSchema,
+        (avro.constants.DECIMAL, 'fixed'): lambda x: None,
+        (avro.constants.TIMESTAMP_MICROS, 'long'): TimestampMicrosSchema,
+        (avro.constants.TIMESTAMP_MILLIS, 'long'): TimestampMillisSchema,
+        (avro.constants.TIME_MICROS, 'long'): TimeMicrosSchema,
+        (avro.constants.TIME_MILLIS, 'int'): TimeMillisSchema,
     }
     try:
         schema_type = logical_types.get((logical_type, type_), None)

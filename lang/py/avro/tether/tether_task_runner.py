@@ -19,6 +19,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import http.server
 import logging
 import sys
 import threading
@@ -26,19 +27,14 @@ import traceback
 import weakref
 
 import avro.errors
+import avro.ipc
 import avro.tether.tether_task
 import avro.tether.util
-from avro import ipc
-
-try:
-    import BaseHTTPServer as http_server  # type: ignore
-except ImportError:
-    from http import server as http_server  # type: ignore
 
 __all__ = ["TaskRunner"]
 
 
-class TaskRunnerResponder(ipc.Responder):
+class TaskRunnerResponder(avro.ipc.Responder):
     """
     The responder for the tethered process
     """
@@ -49,7 +45,7 @@ class TaskRunnerResponder(ipc.Responder):
         ----------------------------------------------------------
         runner - Instance of TaskRunner
         """
-        ipc.Responder.__init__(self, avro.tether.tether_task.inputProtocol)
+        avro.ipc.Responder.__init__(self, avro.tether.tether_task.inputProtocol)
 
         self.log = logging.getLogger("TaskRunnerResponder")
 
@@ -111,7 +107,7 @@ def HTTPHandlerGen(runner):
     else:
         runnerref = runner
 
-    class TaskRunnerHTTPHandler(http_server.BaseHTTPRequestHandler):
+    class TaskRunnerHTTPHandler(http.server.BaseHTTPRequestHandler):
         """Create a handler for the parent.
         """
 
@@ -120,17 +116,17 @@ def HTTPHandlerGen(runner):
         def __init__(self, *args, **param):
             """
             """
-            http_server.BaseHTTPRequestHandler.__init__(self, *args, **param)
+            http.server.BaseHTTPRequestHandler.__init__(self, *args, **param)
 
         def do_POST(self):
             self.responder = TaskRunnerResponder(self.runner)
-            call_request_reader = ipc.FramedReader(self.rfile)
+            call_request_reader = avro.ipc.FramedReader(self.rfile)
             call_request = call_request_reader.read_framed_message()
             resp_body = self.responder.respond(call_request)
             self.send_response(200)
             self.send_header('Content-Type', 'avro/binary')
             self.end_headers()
-            resp_writer = ipc.FramedWriter(self.wfile)
+            resp_writer = avro.ipc.FramedWriter(self.wfile)
             resp_writer.write_framed_message(resp_body)
 
     return TaskRunnerHTTPHandler
@@ -178,7 +174,7 @@ class TaskRunner:
         address = ("localhost", port)
 
         def thread_run(task_runner=None):
-            task_runner.server = http_server.HTTPServer(address, HTTPHandlerGen(task_runner))
+            task_runner.server = http.server.HTTPServer(address, HTTPHandlerGen(task_runner))
             task_runner.server.allow_reuse_address = True
             task_runner.server.serve_forever()
 

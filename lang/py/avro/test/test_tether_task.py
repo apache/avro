@@ -31,7 +31,6 @@ import avro.test.mock_tether_parent
 import avro.test.word_count_task
 import avro.tether.tether_task
 import avro.tether.util
-from avro import schema, tether
 
 
 class TestTetherTask(unittest.TestCase):

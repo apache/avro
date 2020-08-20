@@ -19,14 +19,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import binascii
 import datetime
+import decimal
 import io
 import unittest
-from binascii import hexlify
-from decimal import Decimal
 
 import avro.io
-from avro import schema, timezones
+import avro.schema
+import avro.timezones
 
 SCHEMAS_TO_VALIDATE = (
     ('"null"', None),
@@ -39,11 +40,11 @@ SCHEMAS_TO_VALIDATE = (
     ('"double"', 1234.0),
     ('{"type": "fixed", "name": "Test", "size": 1}', b'B'),
     ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 4}',
-     Decimal('3.1415')),
+     decimal.Decimal('3.1415')),
     ('{"type": "fixed", "logicalType": "decimal", "name": "Test", "size": 8, "precision": 5, "scale": 4}',
-     Decimal('-3.1415')),
-    ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', Decimal('3.1415')),
-    ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', Decimal('-3.1415')),
+     decimal.Decimal('-3.1415')),
+    ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', decimal.Decimal('3.1415')),
+    ('{"type": "bytes", "logicalType": "decimal", "precision": 5, "scale": 4}', decimal.Decimal('-3.1415')),
     ('{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', 'B'),
     ('{"type": "array", "items": "long"}', [1, 3, 2]),
     ('{"type": "map", "values": "long"}', {'a': 1,
@@ -57,27 +58,27 @@ SCHEMAS_TO_VALIDATE = (
     ('{"type": "long", "logicalType": "time-micros"}', datetime.time(0, 0, 0, 000000)),
     (
         '{"type": "long", "logicalType": "timestamp-millis"}',
-        datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=timezones.utc)
+        datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=avro.timezones.utc)
     ),
     (
         '{"type": "long", "logicalType": "timestamp-millis"}',
-        datetime.datetime(9999, 12, 31, 23, 59, 59, 999000, tzinfo=timezones.utc)
+        datetime.datetime(9999, 12, 31, 23, 59, 59, 999000, tzinfo=avro.timezones.utc)
     ),
     (
         '{"type": "long", "logicalType": "timestamp-millis"}',
-        datetime.datetime(2000, 1, 18, 2, 2, 1, 100000, tzinfo=timezones.tst)
+        datetime.datetime(2000, 1, 18, 2, 2, 1, 100000, tzinfo=avro.timezones.tst)
     ),
     (
         '{"type": "long", "logicalType": "timestamp-micros"}',
-        datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=timezones.utc)
+        datetime.datetime(1000, 1, 1, 0, 0, 0, 000000, tzinfo=avro.timezones.utc)
     ),
     (
         '{"type": "long", "logicalType": "timestamp-micros"}',
-        datetime.datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=timezones.utc)
+        datetime.datetime(9999, 12, 31, 23, 59, 59, 999999, tzinfo=avro.timezones.utc)
     ),
     (
         '{"type": "long", "logicalType": "timestamp-micros"}',
-        datetime.datetime(2000, 1, 18, 2, 2, 1, 123499, tzinfo=timezones.tst)
+        datetime.datetime(2000, 1, 18, 2, 2, 1, 123499, tzinfo=avro.timezones.tst)
     ),
     ('{"type": "string", "logicalType": "uuid"}', u'12345abcd'),
     ('{"type": "string", "logicalType": "unknown-logical-type"}', u'12345abcd'),
@@ -130,7 +131,7 @@ DEFAULT_VALUE_EXAMPLES = (
      '{"A": 5}', {'A': 5}),
 )
 
-LONG_RECORD_SCHEMA = schema.parse("""\
+LONG_RECORD_SCHEMA = avro.schema.parse("""\
   {"type": "record",
    "name": "Test",
    "fields": [{"name": "A", "type": "int"},
@@ -148,10 +149,10 @@ def avro_hexlify(reader):
     """Return the hex value, as a string, of a binary-encoded int or long."""
     b = []
     current_byte = reader.read(1)
-    b.append(hexlify(current_byte))
+    b.append(binascii.hexlify(current_byte))
     while (ord(current_byte) & 0x80) != 0:
         current_byte = reader.read(1)
-        b.append(hexlify(current_byte))
+        b.append(binascii.hexlify(current_byte))
     return b' '.join(b)
 
 
@@ -184,7 +185,7 @@ def check_binary_encoding(number_type):
         print('Datum: %d' % datum)
         print('Correct Encoding: %s' % hex_encoding)
 
-        writers_schema = schema.parse('"%s"' % number_type.lower())
+        writers_schema = avro.schema.parse('"%s"' % number_type.lower())
         writer, encoder, datum_writer = write_datum(datum, writers_schema)
         writer.seek(0)
         hex_val = avro_hexlify(writer)
@@ -204,7 +205,7 @@ def check_skip_number(number_type):
         print('Value to Skip: %d' % value_to_skip)
 
         # write the value to skip and a known value
-        writers_schema = schema.parse('"%s"' % number_type.lower())
+        writers_schema = avro.schema.parse('"%s"' % number_type.lower())
         writer, encoder, datum_writer = write_datum(value_to_skip, writers_schema)
         datum_writer.write(VALUE_TO_READ, encoder)
 
@@ -235,7 +236,7 @@ class TestIO(unittest.TestCase):
         for example_schema, datum in SCHEMAS_TO_VALIDATE:
             print('Schema: %s' % example_schema)
             print('Datum: %s' % datum)
-            validated = avro.io.validate(schema.parse(example_schema), datum)
+            validated = avro.io.validate(avro.schema.parse(example_schema), datum)
             print('Valid: %s' % validated)
             if validated:
                 passed += 1
@@ -248,16 +249,16 @@ class TestIO(unittest.TestCase):
             print('Schema: %s' % example_schema)
             print('Datum: %s' % datum)
 
-            writers_schema = schema.parse(example_schema)
+            writers_schema = avro.schema.parse(example_schema)
             writer, encoder, datum_writer = write_datum(datum, writers_schema)
             round_trip_datum = read_datum(writer, writers_schema)
 
             print('Round Trip Datum: %s' % round_trip_datum)
-            if isinstance(round_trip_datum, Decimal):
+            if isinstance(round_trip_datum, decimal.Decimal):
                 round_trip_datum = round_trip_datum.to_eng_string()
                 datum = str(datum)
             elif isinstance(round_trip_datum, datetime.datetime):
-                datum = datum.astimezone(tz=timezones.utc)
+                datum = datum.astimezone(tz=avro.timezones.utc)
             if datum == round_trip_datum:
                 correct += 1
         self.assertEqual(correct, len(SCHEMAS_TO_VALIDATE))
@@ -293,10 +294,10 @@ class TestIO(unittest.TestCase):
         promotable_schemas = ['"int"', '"long"', '"float"', '"double"']
         incorrect = 0
         for i, ws in enumerate(promotable_schemas):
-            writers_schema = schema.parse(ws)
+            writers_schema = avro.schema.parse(ws)
             datum_to_write = 219
             for rs in promotable_schemas[i + 1:]:
-                readers_schema = schema.parse(rs)
+                readers_schema = avro.schema.parse(rs)
                 writer, enc, dw = write_datum(datum_to_write, writers_schema)
                 datum_read = read_datum(writer, writers_schema, readers_schema)
                 print('Writer: %s Reader: %s' % (writers_schema, readers_schema))
@@ -307,12 +308,12 @@ class TestIO(unittest.TestCase):
 
     def test_unknown_symbol(self):
         print_test_name('TEST UNKNOWN SYMBOL')
-        writers_schema = schema.parse("""\
+        writers_schema = avro.schema.parse("""\
       {"type": "enum", "name": "Test",
        "symbols": ["FOO", "BAR"]}""")
         datum_to_write = 'FOO'
 
-        readers_schema = schema.parse("""\
+        readers_schema = avro.schema.parse("""\
       {"type": "enum", "name": "Test",
        "symbols": ["BAR", "BAZ"]}""")
 
@@ -329,7 +330,7 @@ class TestIO(unittest.TestCase):
 
         correct = 0
         for field_type, default_json, default_datum in DEFAULT_VALUE_EXAMPLES:
-            readers_schema = schema.parse("""\
+            readers_schema = avro.schema.parse("""\
         {"type": "record", "name": "Test",
          "fields": [{"name": "H", "type": %s, "default": %s}]}
         """ % (field_type, default_json))
@@ -347,7 +348,7 @@ class TestIO(unittest.TestCase):
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
 
-        readers_schema = schema.parse("""\
+        readers_schema = avro.schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "H", "type": "int"}]}""")
 
@@ -362,7 +363,7 @@ class TestIO(unittest.TestCase):
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
 
-        readers_schema = schema.parse("""\
+        readers_schema = avro.schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "E", "type": "int"},
                   {"name": "F", "type": "int"}]}""")
@@ -378,7 +379,7 @@ class TestIO(unittest.TestCase):
         writers_schema = LONG_RECORD_SCHEMA
         datum_to_write = LONG_RECORD_DATUM
 
-        readers_schema = schema.parse("""\
+        readers_schema = avro.schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")
@@ -391,7 +392,7 @@ class TestIO(unittest.TestCase):
 
     def test_type_exception(self):
         print_test_name('TEST TYPE EXCEPTION')
-        writers_schema = schema.parse("""\
+        writers_schema = avro.schema.parse("""\
       {"type": "record", "name": "Test",
        "fields": [{"name": "F", "type": "int"},
                   {"name": "E", "type": "int"}]}""")

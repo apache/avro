@@ -25,29 +25,23 @@ Command-line tool
 NOTE: The API for the command-line tool is experimental.
 """
 
+import http.server
 import os.path
 import sys
 import threading
+import urllib.parse
 import warnings
 
+import avro.datafile
 import avro.io
-from avro import datafile, ipc, protocol
-
-try:
-    import BaseHTTPServer as http_server  # type: ignore
-except ImportError:
-    import http.server as http_server  # type: ignore
-
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse  # type: ignore
+import avro.ipc
+import avro.protocol
 
 
-class GenericResponder(ipc.Responder):
+class GenericResponder(avro.ipc.Responder):
     def __init__(self, proto, msg, datum):
         proto_json = open(proto, 'rb').read()
-        ipc.Responder.__init__(self, protocol.parse(proto_json))
+        avro.ipc.Responder.__init__(self, avro.protocol.parse(proto_json))
         self.msg = msg
         self.datum = datum
 
@@ -60,16 +54,16 @@ class GenericResponder(ipc.Responder):
             return self.datum
 
 
-class GenericHandler(http_server.BaseHTTPRequestHandler):
+class GenericHandler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         self.responder = responder
-        call_request_reader = ipc.FramedReader(self.rfile)
+        call_request_reader = avro.ipc.FramedReader(self.rfile)
         call_request = call_request_reader.read_framed_message()
         resp_body = self.responder.respond(call_request)
         self.send_response(200)
         self.send_header('Content-Type', 'avro/binary')
         self.end_headers()
-        resp_writer = ipc.FramedWriter(self.wfile)
+        resp_writer = avro.ipc.FramedWriter(self.wfile)
         resp_writer.write_framed_message(resp_body)
         if server_should_shutdown:
             print("Shutting down server.", file=sys.stderr)
@@ -79,13 +73,13 @@ class GenericHandler(http_server.BaseHTTPRequestHandler):
 
 
 def run_server(uri, proto, msg, datum):
-    url_obj = urlparse(uri)
+    url_obj = urllib.parse(uri)
     server_addr = (url_obj.hostname, url_obj.port)
     global responder
     global server_should_shutdown
     server_should_shutdown = False
     responder = GenericResponder(proto, msg, datum)
-    server = http_server.HTTPServer(server_addr, GenericHandler)
+    server = http.server.HTTPServer(server_addr, GenericHandler)
     print("Port: %s" % server.server_port)
     sys.stdout.flush()
     server.allow_reuse_address = True
@@ -94,10 +88,10 @@ def run_server(uri, proto, msg, datum):
 
 
 def send_message(uri, proto, msg, datum):
-    url_obj = urlparse(uri)
-    client = ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
+    url_obj = urllib.parse(uri)
+    client = avro.ipc.HTTPTransceiver(url_obj.hostname, url_obj.port)
     proto_json = open(proto, 'rb').read()
-    requestor = ipc.Requestor(protocol.parse(proto_json), client)
+    requestor = avro.ipc.Requestor(avro.protocol.parse(proto_json), client)
     print(requestor.request(msg, datum))
 
 ##
@@ -117,7 +111,7 @@ def main(args=sys.argv):
         if len(args) != 3:
             print("Usage: %s dump input_file" % args[0])
             return 1
-        for d in datafile.DataFileReader(file_or_stdin(args[2]), avro.io.DatumReader()):
+        for d in avro.datafile.DataFileReader(file_or_stdin(args[2]), avro.io.DatumReader()):
             print(repr(d))
     elif args[1] == "rpcreceive":
         usage_str = "Usage: %s rpcreceive uri protocol_file " % args[0]
@@ -131,7 +125,7 @@ def main(args=sys.argv):
             if args[5] == "-file":
                 reader = open(args[6], 'rb')
                 datum_reader = avro.io.DatumReader()
-                dfr = datafile.DataFileReader(reader, datum_reader)
+                dfr = avro.datafile.DataFileReader(reader, datum_reader)
                 datum = next(dfr)
             elif args[5] == "-data":
                 print("JSON Decoder not yet implemented.")
@@ -152,7 +146,7 @@ def main(args=sys.argv):
             if args[5] == "-file":
                 reader = open(args[6], 'rb')
                 datum_reader = avro.io.DatumReader()
-                dfr = datafile.DataFileReader(reader, datum_reader)
+                dfr = avro.datafile.DataFileReader(reader, datum_reader)
                 datum = next(dfr)
             elif args[5] == "-data":
                 print("JSON Decoder not yet implemented.")
