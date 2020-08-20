@@ -37,7 +37,7 @@ uses the following mapping:
   * Schema strings are implemented as str.
   * Schema bytes are implemented as bytes.
   * Schema ints are implemented as int.
-  * Schema longs are implemented as long.
+  * Schema longs are implemented as int.
   * Schema floats are implemented as float.
   * Schema doubles are implemented as float.
   * Schema booleans are implemented as bool.
@@ -95,12 +95,6 @@ from struct import Struct
 
 import avro.errors
 from avro import constants, timezones
-
-try:
-    long
-except NameError:
-    long = int
-
 
 #
 # Constants
@@ -607,8 +601,8 @@ class BinaryEncoder:
         """
         datum = datum.astimezone(tz=timezones.utc)
         timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
-        milliseconds = self._timedelta_total_microseconds(timedelta) / 1000
-        self.write_long(long(milliseconds))
+        milliseconds = self._timedelta_total_microseconds(timedelta) // 1000
+        self.write_long(milliseconds)
 
     def write_timestamp_micros_long(self, datum):
         """
@@ -618,7 +612,7 @@ class BinaryEncoder:
         datum = datum.astimezone(tz=timezones.utc)
         timedelta = datum - datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=timezones.utc)
         microseconds = self._timedelta_total_microseconds(timedelta)
-        self.write_long(long(microseconds))
+        self.write_long(microseconds)
 
 
 #
@@ -956,7 +950,7 @@ class DatumReader:
         elif field_schema.type == 'int':
             return int(default_value)
         elif field_schema.type == 'long':
-            return long(default_value)
+            return int(default_value)
         elif field_schema.type in ['float', 'double']:
             return float(default_value)
         elif field_schema.type in ['enum', 'fixed', 'string', 'bytes']:

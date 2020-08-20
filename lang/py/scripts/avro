@@ -37,11 +37,6 @@ _AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
 ifilter = getattr(itertools, 'ifilter', filter)
 imap = getattr(itertools, 'imap', map)
 
-try:
-    long
-except NameError:
-    long = int
-
 
 def _version():
     with open(os.path.join(_AVRO_DIR, 'VERSION.txt')) as v:
@@ -170,7 +165,7 @@ def convert(value, field):
 
     return  {
         "int": int,
-        "long": long,
+        "long": int,
         "float": float,
         "double": float,
         "string": str,
