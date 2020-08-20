@@ -59,7 +59,7 @@ SCHEMA_KEY = "avro.schema"
 #
 
 
-class _DataFile(object):
+class _DataFile:
     """Mixin for methods common to both reading and writing."""
 
     block_count = 0

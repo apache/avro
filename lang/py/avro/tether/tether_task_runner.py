@@ -136,7 +136,7 @@ def HTTPHandlerGen(runner):
     return TaskRunnerHTTPHandler
 
 
-class TaskRunner(object):
+class TaskRunner:
     """This class ties together the server handling the requests from
     the parent process and the instance of TetherTask which actually
     implements the logic for the mapper and reducer phases

@@ -49,7 +49,7 @@ VALID_TYPE_SCHEMA_TYPES = ('enum', 'record', 'error', 'fixed')
 #
 
 
-class Protocol(object):
+class Protocol:
     """An application protocol."""
 
     def _parse_types(self, types, type_names):
@@ -171,7 +171,7 @@ class Protocol(object):
         return to_cmp == json.loads(str(that))
 
 
-class Message(object):
+class Message:
     """A Protocol message."""
 
     def _parse_request(self, request, names):

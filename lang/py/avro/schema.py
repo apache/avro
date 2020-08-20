@@ -145,7 +145,7 @@ def _is_timezone_aware_datetime(dt):
 # Base Classes
 #
 
-class Schema(object):
+class Schema:
     """Base class for all Schema classes."""
     _props = None
 
@@ -224,7 +224,7 @@ class Schema(object):
         raise Exception("Must be implemented by subclasses.")
 
 
-class Name(object):
+class Name:
     """Class to describe Avro name."""
 
     _full = None
@@ -287,7 +287,7 @@ class Name(object):
         return self.space
 
 
-class Names(object):
+class Names:
     """Track name set and default namespace during parsing."""
 
     def __init__(self, default_namespace=None):
@@ -385,7 +385,7 @@ class NamedSchema(Schema):
 #
 
 
-class LogicalSchema(object):
+class LogicalSchema:
     def __init__(self, logical_type):
         self.logical_type = logical_type
 
@@ -416,7 +416,7 @@ class DecimalLogicalSchema(LogicalSchema):
         super(DecimalLogicalSchema, self).__init__('decimal')
 
 
-class Field(object):
+class Field:
     def __init__(self, type, name, has_default, default=None,
                  order=None, names=None, doc=None, other_props=None):
         # Ensure valid ctor args

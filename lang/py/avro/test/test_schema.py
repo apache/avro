@@ -44,7 +44,7 @@ except ImportError:
     pass
 
 
-class TestSchema(object):
+class TestSchema:
     """A proxy for a schema string that provides useful test metadata."""
 
     def __init__(self, data, name='', comment='', warnings=None):

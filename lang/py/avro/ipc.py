@@ -76,7 +76,7 @@ BUFFER_SIZE = 8192
 #
 
 
-class BaseRequestor(object):
+class BaseRequestor:
     """Base class for the client side of a protocol interaction."""
 
     def __init__(self, local_protocol, transceiver):
@@ -237,7 +237,7 @@ class Requestor(BaseRequestor):
         return self.request(message_name, request_datum)
 
 
-class Responder(object):
+class Responder:
     """Base class for the server side of a protocol interaction."""
 
     def __init__(self, local_protocol):
@@ -375,7 +375,7 @@ class Responder(object):
 #
 
 
-class FramedReader(object):
+class FramedReader:
     """Wrapper around a file-like object to read framed data."""
 
     def __init__(self, reader):
@@ -405,7 +405,7 @@ class FramedReader(object):
         return BIG_ENDIAN_INT_STRUCT.unpack(read)[0]
 
 
-class FramedWriter(object):
+class FramedWriter:
     """Wrapper around a file-like object to write framed data."""
 
     def __init__(self, writer):
@@ -441,7 +441,7 @@ class FramedWriter(object):
 #
 
 
-class HTTPTransceiver(object):
+class HTTPTransceiver:
     """
     A simple HTTP-based transceiver implementation.
     Useful for clients but not for servers

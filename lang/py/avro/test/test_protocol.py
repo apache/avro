@@ -39,7 +39,7 @@ except NameError:
     basestring = (bytes, unicode)
 
 
-class TestProtocol(object):
+class TestProtocol:
     """A proxy for a protocol string that provides useful test metadata."""
 
     def __init__(self, data, name='', comment=''):

@@ -59,7 +59,7 @@ with open(pfile, 'r') as hf:
 outputProtocol = protocol.parse(prototxt)
 
 
-class Collector(object):
+class Collector:
     """
     Collector for map and reduce output values
     """
@@ -120,7 +120,7 @@ def keys_are_equal(rec1, rec2, fkeys):
     return True
 
 
-class HTTPRequestor(object):
+class HTTPRequestor:
     """
     This is a small requestor subclass I created for the HTTP protocol.
     Since the HTTP protocol isn't persistent, we need to instantiate
@@ -150,7 +150,7 @@ class HTTPRequestor(object):
         return requestor.request(*args, **param)
 
 
-class TetherTask(object):
+class TetherTask:
     """
     Base class for python tether mapreduce programs.
 

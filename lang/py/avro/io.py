@@ -233,7 +233,7 @@ _ITERATORS['error'] = _ITERATORS['request'] = _ITERATORS['record']
 # Decoder/Encoder
 #
 
-class BinaryDecoder(object):
+class BinaryDecoder:
     """Read leaf values."""
 
     def __init__(self, reader):
@@ -437,7 +437,7 @@ class BinaryDecoder(object):
         self.reader.seek(self.reader.tell() + n)
 
 
-class BinaryEncoder(object):
+class BinaryEncoder:
     """Write leaf values."""
 
     def __init__(self, writer):
@@ -634,7 +634,7 @@ class BinaryEncoder(object):
 #
 # DatumReader/Writer
 #
-class DatumReader(object):
+class DatumReader:
     """Deserialize Avro-encoded data into a Python data structure."""
 
     def __init__(self, writers_schema=None, readers_schema=None):
@@ -999,7 +999,7 @@ class DatumReader(object):
             raise avro.errors.AvroException(fail_msg)
 
 
-class DatumWriter(object):
+class DatumWriter:
     """DatumWriter for generic python objects."""
 
     def __init__(self, writers_schema=None):
