@@ -19,6 +19,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
 import collections
 import io
 import logging
@@ -152,7 +153,7 @@ class HTTPRequestor:
         return requestor.request(*args, **param)
 
 
-class TetherTask:
+class TetherTask(abc.ABC):
     """
     Base class for python tether mapreduce programs.
 
@@ -366,6 +367,7 @@ class TetherTask:
 
         self.outputClient.request("complete", dict())
 
+    @abc.abstractmethod
     def map(self, record, collector):
         """Called with input values to generate intermediat values (i.e mapper output).
 
@@ -378,8 +380,7 @@ class TetherTask:
         subclass.
         """
 
-        raise NotImplementedError("This is an abstract method which should be overloaded in the subclass")
-
+    @abc.abstractmethod
     def reduce(self, record, collector):
         """ Called with input values to generate reducer output. Inputs are sorted by the mapper
         key.
@@ -396,8 +397,7 @@ class TetherTask:
         subclass.
         """
 
-        raise NotImplementedError("This is an abstract method which should be overloaded in the subclass")
-
+    @abc.abstractmethod
     def reduceFlush(self, record, collector):
         """
         Called with the last intermediate value in each equivalence run.
@@ -408,7 +408,6 @@ class TetherTask:
         ------------------------------------------------------------------
         record - the last record on which reduce was invoked.
         """
-        raise NotImplementedError("This is an abstract method which should be overloaded in the subclass")
 
     def status(self, message):
         """

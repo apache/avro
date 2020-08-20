@@ -40,6 +40,7 @@ A schema may be one of:
   Null.
 """
 
+import abc
 import datetime
 import decimal
 import json
@@ -135,7 +136,7 @@ def _is_timezone_aware_datetime(dt):
 # Base Classes
 #
 
-class Schema:
+class Schema(abc.ABC):
     """Base class for all Schema classes."""
     _props = None
 
@@ -173,13 +174,13 @@ class Schema:
         """
         return all(getattr(self, prop) == getattr(other, prop) for prop in props)
 
+    @abc.abstractmethod
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
 
         @arg writer: the writer schema to match against.
         @return bool
         """
-        raise NotImplemented("Must be implemented by subclasses")
 
     # utility functions to manipulate properties dict
     def get_prop(self, key):
@@ -191,6 +192,7 @@ class Schema:
     def __str__(self):
         return json.dumps(self.to_json())
 
+    @abc.abstractmethod
     def to_json(self, names):
         """
         Converts the schema object into its AVRO specification representation.
@@ -199,7 +201,6 @@ class Schema:
         be aware of not re-defining schemas that are already listed
         in the parameter names.
         """
-        raise NotImplemented("Must be implemented by subclasses.")
 
     def validate(self, datum):
         """Returns the appropriate schema object if datum is valid for that schema, else None.
