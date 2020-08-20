@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -22,6 +24,7 @@ from __future__ import absolute_import, division, print_function
 import socket
 import sys
 
+import avro.errors
 import avro.tether.tether_task
 import avro.tether.util
 from avro import ipc, protocol
@@ -29,7 +32,7 @@ from avro import ipc, protocol
 try:
     import BaseHTTPServer as http_server  # type: ignore
 except ImportError:
-    import http.server as http_server  # type: ignore
+    from http import server as http_server  # type: ignore
 
 
 SERVER_ADDRESS = ('localhost', avro.tether.util.find_port())
@@ -78,14 +81,14 @@ class MockParentHandler(http_server.BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     if (len(sys.argv) <= 1):
-        raise ValueError("Usage: mock_tether_parent command")
+        raise avro.errors.UsageError("Usage: mock_tether_parent command")
 
     cmd = sys.argv[1].lower()
     if (sys.argv[1] == 'start_server'):
         if (len(sys.argv) == 3):
             port = int(sys.argv[2])
         else:
-            raise ValueError("Usage: mock_tether_parent start_server port")
+            raise avro.errors.UsageError("Usage: mock_tether_parent start_server port")
 
         SERVER_ADDRESS = (SERVER_ADDRESS[0], port)
         print("mock_tether_parent: Launching Server on Port: {0}".format(SERVER_ADDRESS[1]))

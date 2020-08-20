@@ -36,7 +36,10 @@ clean() {
 }
 
 dist() {
-  ./setup.py dist
+  python3 setup.py sdist
+  python3 setup.py bdist_wheel
+  mkdir -p ../../dist/py
+  cp dist/*.{tar.gz,whl} ../../dist/py
 }
 
 interop-data-generate() {
@@ -47,7 +50,7 @@ interop-data-generate() {
 interop-data-test() {
   mkdir -p avro/test/interop ../../build/interop/data
   cp -r ../../build/interop/data avro/test/interop
-  python -m unittest avro.test.test_datafile_interop
+  python3 -m unittest avro.test.test_datafile_interop
 }
 
 lint() {

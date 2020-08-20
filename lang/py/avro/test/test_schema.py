@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -25,6 +27,7 @@ import json
 import unittest
 import warnings
 
+import avro.errors
 from avro import schema
 
 try:
@@ -236,70 +239,70 @@ TIMESTAMPMICROS_LOGICAL_TYPE = [
 IGNORED_LOGICAL_TYPE = [
     ValidTestSchema(
         {"type": "string", "logicalType": "uuid"},
-        warnings=[schema.IgnoredLogicalType('Unknown uuid, using string.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Unknown uuid, using string.')]),
     ValidTestSchema(
         {"type": "string", "logicalType": "unknown-logical-type"},
-        warnings=[schema.IgnoredLogicalType('Unknown unknown-logical-type, using string.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Unknown unknown-logical-type, using string.')]),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "scale": 0},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal precision None. Must be a positive integer.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal precision None. Must be a positive integer.')]),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": 2.4, "scale": 0},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal precision 2.4. Must be a positive integer.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal precision 2.4. Must be a positive integer.')]),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": -2},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal scale -2. Must be a positive integer.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal scale -2. Must be a positive integer.')]),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": -2, "scale": 2},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal precision -2. Must be a positive integer.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal precision -2. Must be a positive integer.')]),
     ValidTestSchema(
         {"type": "bytes", "logicalType": "decimal", "precision": 2, "scale": 3},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal scale 3. Cannot be greater than precision 2.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal scale 3. Cannot be greater than precision 2.')]),
     ValidTestSchema(
         {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": -10, "scale": 2, "size": 5},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal precision -10. Must be a positive integer.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal precision -10. Must be a positive integer.')]),
     ValidTestSchema(
         {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "scale": 2, "size": 5},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal precision None. Must be a positive integer.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal precision None. Must be a positive integer.')]),
     ValidTestSchema(
         {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": 2, "scale": 3, "size": 2},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal scale 3. Cannot be greater than precision 2.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal scale 3. Cannot be greater than precision 2.')]),
     ValidTestSchema(
         {"type": "fixed", "logicalType": "decimal", "name": "TestIgnored", "precision": 311, "size": 129},
-        warnings=[schema.IgnoredLogicalType('Invalid decimal precision 311. Max is 310.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Invalid decimal precision 311. Max is 310.')]),
     ValidTestSchema(
         {"type": "float", "logicalType": "decimal", "precision": 2, "scale": 0},
-        warnings=[schema.IgnoredLogicalType('Logical type decimal requires literal type bytes/fixed, not float.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Logical type decimal requires literal type bytes/fixed, not float.')]),
     ValidTestSchema(
         {"type": "int", "logicalType": "date1"},
-        warnings=[schema.IgnoredLogicalType('Unknown date1, using int.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Unknown date1, using int.')]),
     ValidTestSchema(
         {"type": "long", "logicalType": "date"},
-        warnings=[schema.IgnoredLogicalType('Logical type date requires literal type int, not long.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Logical type date requires literal type int, not long.')]),
     ValidTestSchema(
         {"type": "int", "logicalType": "time-milis"},
-        warnings=[schema.IgnoredLogicalType('Unknown time-milis, using int.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Unknown time-milis, using int.')]),
     ValidTestSchema(
         {"type": "long", "logicalType": "time-millis"},
-        warnings=[schema.IgnoredLogicalType('Logical type time-millis requires literal type int, not long.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Logical type time-millis requires literal type int, not long.')]),
     ValidTestSchema(
         {"type": "long", "logicalType": "time-micro"},
-        warnings=[schema.IgnoredLogicalType('Unknown time-micro, using long.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Unknown time-micro, using long.')]),
     ValidTestSchema(
         {"type": "int", "logicalType": "time-micros"},
-        warnings=[schema.IgnoredLogicalType('Logical type time-micros requires literal type long, not int.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Logical type time-micros requires literal type long, not int.')]),
     ValidTestSchema(
         {"type": "long", "logicalType": "timestamp-milis"},
-        warnings=[schema.IgnoredLogicalType('Unknown timestamp-milis, using long.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Unknown timestamp-milis, using long.')]),
     ValidTestSchema(
         {"type": "int", "logicalType": "timestamp-millis"},
-        warnings=[schema.IgnoredLogicalType('Logical type timestamp-millis requires literal type long, not int.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Logical type timestamp-millis requires literal type long, not int.')]),
     ValidTestSchema(
         {"type": "long", "logicalType": "timestamp-micro"},
-        warnings=[schema.IgnoredLogicalType('Unknown timestamp-micro, using long.')]),
+        warnings=[avro.errors.IgnoredLogicalType('Unknown timestamp-micro, using long.')]),
     ValidTestSchema(
         {"type": "int", "logicalType": "timestamp-micros"},
-        warnings=[schema.IgnoredLogicalType('Logical type timestamp-micros requires literal type long, not int.')])
+        warnings=[avro.errors.IgnoredLogicalType('Logical type timestamp-micros requires literal type long, not int.')])
 ]
 
 EXAMPLES = PRIMITIVE_EXAMPLES
@@ -349,7 +352,7 @@ class TestMisc(unittest.TestCase):
 
     def test_name_not_empty_string(self):
         """A name cannot be the empty string."""
-        self.assertRaises(schema.SchemaParseException, schema.Name, "", None, None)
+        self.assertRaises(avro.errors.SchemaParseException, schema.Name, "", None, None)
 
     def test_name_space_specified(self):
         """Space combines with a name to become the fullname."""
@@ -390,8 +393,8 @@ class TestMisc(unittest.TestCase):
     def test_invalid_name(self):
         """The name portion of a fullname, record field names, and enum symbols must:
            start with [A-Za-z_] and subsequently contain only [A-Za-z0-9_]"""
-        self.assertRaises(schema.InvalidName, schema.Name, 'an especially spacey cowboy', None, None)
-        self.assertRaises(schema.InvalidName, schema.Name, '99 problems but a name aint one', None, None)
+        self.assertRaises(avro.errors.InvalidName, schema.Name, 'an especially spacey cowboy', None, None)
+        self.assertRaises(avro.errors.InvalidName, schema.Name, '99 problems but a name aint one', None, None)
 
     def test_null_namespace(self):
         """The empty string may be used as a namespace to indicate the null namespace."""
@@ -401,7 +404,7 @@ class TestMisc(unittest.TestCase):
 
     def test_exception_is_not_swallowed_on_parse_error(self):
         """A specific exception message should appear on a json parse error."""
-        self.assertRaisesRegexp(schema.SchemaParseException,
+        self.assertRaisesRegexp(avro.errors.SchemaParseException,
                                 r'Error parsing JSON: /not/a/real/file',
                                 schema.parse,
                                 '/not/a/real/file')
@@ -465,7 +468,7 @@ class TestMisc(unittest.TestCase):
 
         try:
             case = schema.parse(test_schema_string, validate_enum_symbols=True)
-        except schema.InvalidName:
+        except avro.errors.InvalidName:
             pass
         else:
             self.fail("When enum symbol validation is enabled, "
@@ -473,7 +476,7 @@ class TestMisc(unittest.TestCase):
 
         try:
             case = schema.parse(test_schema_string, validate_enum_symbols=False)
-        except schema.InvalidName:
+        except avro.errors.InvalidName:
             self.fail("When enum symbol validation is disabled, "
                       "an invalid symbol should not raise InvalidName.")
 
@@ -498,7 +501,7 @@ class SchemaParseTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as actual_warnings:
             try:
                 self.test_schema.parse()
-            except (schema.AvroException, schema.SchemaParseException):
+            except (avro.errors.AvroException, avro.errors.SchemaParseException):
                 self.fail("Valid schema failed to parse: {!s}".format(self.test_schema))
             actual_messages = [str(wmsg.message) for wmsg in actual_warnings]
             if self.test_schema.warnings:
@@ -511,7 +514,7 @@ class SchemaParseTestCase(unittest.TestCase):
         """Parsing an invalid schema should error."""
         try:
             self.test_schema.parse()
-        except (schema.AvroException, schema.SchemaParseException):
+        except (avro.errors.AvroException, avro.errors.SchemaParseException):
             pass
         else:
             self.fail("Invalid schema should not have parsed: {!s}".format(self.test_schema))

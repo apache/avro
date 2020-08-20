@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -39,6 +41,49 @@ uses the following mapping:
   * Schema floats are implemented as float.
   * Schema doubles are implemented as float.
   * Schema booleans are implemented as bool.
+
+Validation:
+
+The validation of schema is performed using breadth-first graph
+traversal. This allows validation exceptions to pinpoint the exact node
+within a complex schema that is problematic, simplifying debugging
+considerably. Because it is a traversal, it will also be less
+resource-intensive, particularly when validating schema with deep
+structures.
+
+Components
+==========
+
+Nodes
+-----
+Avro schemas contain many different schema types. Data about the schema
+types is used to validate the data in the corresponding part of a Python
+body (the object to be serialized). A node combines a given schema type
+with the corresponding Python data, as well as an optional "name" to
+identify the specific node. Names are generally the name of a schema
+(for named schema) or the name of a field (for child nodes of schema
+with named children like maps and records), or None, for schema who's
+children are not named (like Arrays).
+
+Iterators
+---------
+Iterators are generator functions that take a node and return a
+generator which will yield a node for each child datum in the data for
+the current node. If a node is of a type which has no children, then the
+default iterator will immediately exit.
+
+Validators
+----------
+Validators are used to determine if the datum for a given node is valid
+according to the given schema type. Validator functions take a node as
+an argument and return a node if the node datum passes validation. If it
+does not, the validator must return None.
+
+In most cases, the node returned is identical to the node provided (is
+in fact the same object). However, in the case of Union schema, the
+returned "valid" node will hold the schema that is represented by the
+datum contained. This allows iteration over the child nodes
+in that datum, if there are any.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -46,11 +91,12 @@ from __future__ import absolute_import, division, print_function
 import datetime
 import json
 import struct
-import sys
+from collections import deque, namedtuple
 from decimal import Decimal, getcontext
 from struct import Struct
 
-from avro import constants, schema, timezones
+import avro.errors
+from avro import constants, timezones
 
 try:
     unicode
@@ -72,13 +118,6 @@ except NameError:
 # Constants
 #
 
-_DEBUG_VALIDATE_INDENT = 0
-_DEBUG_VALIDATE = False
-
-INT_MIN_VALUE = -(1 << 31)
-INT_MAX_VALUE = (1 << 31) - 1
-LONG_MIN_VALUE = -(1 << 63)
-LONG_MAX_VALUE = (1 << 63) - 1
 
 # TODO(hammer): shouldn't ! be < for little-endian (according to spec?)
 STRUCT_FLOAT = Struct('<f')           # big-endian float
@@ -89,107 +128,107 @@ STRUCT_SIGNED_LONG = Struct('>q')     # big-endian signed long
 
 
 #
-# Exceptions
-#
-
-class AvroTypeException(schema.AvroException):
-    """Raised when datum is not an example of schema."""
-
-    def __init__(self, expected_schema, datum):
-        pretty_expected = json.dumps(json.loads(str(expected_schema)), indent=2)
-        fail_msg = "The datum %s is not an example of the schema %s"\
-                   % (datum, pretty_expected)
-        schema.AvroException.__init__(self, fail_msg)
-
-
-class SchemaResolutionException(schema.AvroException):
-    def __init__(self, fail_msg, writers_schema=None, readers_schema=None):
-        pretty_writers = json.dumps(json.loads(str(writers_schema)), indent=2)
-        pretty_readers = json.dumps(json.loads(str(readers_schema)), indent=2)
-        if writers_schema:
-            fail_msg += "\nWriter's Schema: %s" % pretty_writers
-        if readers_schema:
-            fail_msg += "\nReader's Schema: %s" % pretty_readers
-        schema.AvroException.__init__(self, fail_msg)
-
-#
 # Validate
 #
 
 
-def _is_timezone_aware_datetime(dt):
-    return dt.tzinfo is not None and dt.tzinfo.utcoffset(dt) is not None
+ValidationNode = namedtuple("ValidationNode", ['schema', 'datum', 'name'])
 
 
-_valid = {
-    'null': lambda s, d: d is None,
-    'boolean': lambda s, d: isinstance(d, bool),
-    'string': lambda s, d: isinstance(d, unicode),
-    'bytes': lambda s, d: ((isinstance(d, bytes)) or
-                           (isinstance(d, Decimal) and
-                            getattr(s, 'logical_type', None) == constants.DECIMAL)),
-    'int': lambda s, d: ((isinstance(d, (int, long))) and (INT_MIN_VALUE <= d <= INT_MAX_VALUE) or
-                         (isinstance(d, datetime.date) and
-                          getattr(s, 'logical_type', None) == constants.DATE) or
-                         (isinstance(d, datetime.time) and
-                          getattr(s, 'logical_type', None) == constants.TIME_MILLIS)),
-    'long': lambda s, d: ((isinstance(d, (int, long))) and (LONG_MIN_VALUE <= d <= LONG_MAX_VALUE) or
-                          (isinstance(d, datetime.time) and
-                           getattr(s, 'logical_type', None) == constants.TIME_MICROS) or
-                          (isinstance(d, datetime.date) and
-                           _is_timezone_aware_datetime(d) and
-                           getattr(s, 'logical_type', None) in (constants.TIMESTAMP_MILLIS,
-                                                                constants.TIMESTAMP_MICROS))),
-    'float': lambda s, d: isinstance(d, (int, long, float)),
-    'fixed': lambda s, d: ((isinstance(d, bytes) and len(d) == s.size) or
-                           (isinstance(d, Decimal) and
-                            getattr(s, 'logical_type', None) == constants.DECIMAL)),
-    'enum': lambda s, d: d in s.symbols,
+def validate(expected_schema, datum, raise_on_error=False):
+    """Return True if the provided datum is valid for the expected schema
 
-    'array': lambda s, d: isinstance(d, list) and all(validate(s.items, item) for item in d),
-    'map': lambda s, d: (isinstance(d, dict) and all(isinstance(key, unicode) for key in d) and
-                         all(validate(s.values, value) for value in d.values())),
-    'union': lambda s, d: any(validate(branch, d) for branch in s.schemas),
-    'record': lambda s, d: (isinstance(d, dict) and
-                            all(validate(f.type, d.get(f.name)) for f in s.fields) and
-                            {f.name for f in s.fields}.issuperset(d.keys())),
-}
-_valid['double'] = _valid['float']
-_valid['error_union'] = _valid['union']
-_valid['error'] = _valid['request'] = _valid['record']
+    If raise_on_error is passed and True, then raise a validation error
+    with specific information about the error encountered in validation.
 
-
-def validate(expected_schema, datum):
-    """Determines if a python datum is an instance of a schema.
-
-    Args:
-      expected_schema: Schema to validate against.
-      datum: Datum to validate.
-    Returns:
-      True if the datum is an instance of the schema.
+    :param expected_schema: An avro schema type object representing the schema against
+                            which the datum will be validated.
+    :param datum: The datum to be validated, A python dictionary or some supported type
+    :param raise_on_error: True if a AvroTypeException should be raised immediately when a
+                           validation problem is encountered.
+    :raises: AvroTypeException if datum is invalid and raise_on_error is True
+    :returns: True if datum is valid for expected_schema, False if not.
     """
-    global _DEBUG_VALIDATE_INDENT
-    global _DEBUG_VALIDATE
-    expected_type = expected_schema.type
-    name = getattr(expected_schema, 'name', '')
-    if name:
-        name = ' ' + name
-    if expected_type in ('array', 'map', 'union', 'record'):
-        if _DEBUG_VALIDATE:
-            print('{!s}{!s}{!s}: {!s} {{'.format(' ' * _DEBUG_VALIDATE_INDENT, expected_schema.type, name, type(datum).__name__), file=sys.stderr)
-            _DEBUG_VALIDATE_INDENT += 2
-            if datum is not None and not datum:
-                print('{!s}<Empty>'.format(' ' * _DEBUG_VALIDATE_INDENT), file=sys.stderr)
-        result = _valid[expected_type](expected_schema, datum)
-        if _DEBUG_VALIDATE:
-            _DEBUG_VALIDATE_INDENT -= 2
-            print('{!s}}} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT, result), file=sys.stderr)
-    else:
-        result = _valid[expected_type](expected_schema, datum)
-        if _DEBUG_VALIDATE:
-            print('{!s}{!s}{!s}: {!s} -> {!s}'.format(' ' * _DEBUG_VALIDATE_INDENT,
-                  expected_schema.type, name, type(datum).__name__, result), file=sys.stderr)
-    return result
+    # use a FIFO queue to process schema nodes breadth first.
+    nodes = deque()
+    nodes.append(ValidationNode(expected_schema, datum, getattr(expected_schema, "name", None)))
+
+    while nodes:
+        current_node = nodes.popleft()
+
+        # _validate_node returns the node for iteration if it is valid. Or it returns None
+        # if current_node.schema.type in {'array', 'map', 'record'}:
+        validated_schema = current_node.schema.validate(current_node.datum)
+        if validated_schema:
+            valid_node = ValidationNode(validated_schema, current_node.datum, current_node.name)
+        else:
+            valid_node = None
+        # else:
+        #     valid_node = _validate_node(current_node)
+
+        if valid_node is not None:
+            # if there are children of this node to append, do so.
+            for child_node in _iterate_node(valid_node):
+                nodes.append(child_node)
+        else:
+            # the current node was not valid.
+            if raise_on_error:
+                raise avro.errors.AvroTypeException(current_node.schema, current_node.datum)
+            else:
+                # preserve the prior validation behavior of returning false when there are problems.
+                return False
+
+    return True
+
+
+def _iterate_node(node):
+    for item in _ITERATORS.get(node.schema.type, _default_iterator)(node):
+        yield ValidationNode(*item)
+
+
+#############
+# Iteration #
+#############
+
+def _default_iterator(_):
+    """Immediately raise StopIteration.
+
+    This exists to prevent problems with iteration over unsupported container types.
+
+    More efficient approaches are not possible due to support for Python 2.7
+    """
+    for item in ():
+        yield item
+
+
+def _record_iterator(node):
+    """Yield each child node of the provided record node."""
+    schema, datum, name = node
+    for field in schema.fields:
+        yield ValidationNode(field.type, datum.get(field.name), field.name)  # type: ignore
+
+
+def _array_iterator(node):
+    """Yield each child node of the provided array node."""
+    schema, datum, name = node
+    for item in datum:  # type: ignore
+        yield ValidationNode(schema.items, item, name)
+
+
+def _map_iterator(node):
+    """Yield each child node of the provided map node."""
+    schema, datum, _ = node
+    child_schema = schema.values
+    for child_name, child_datum in datum.items():  # type: ignore
+        yield ValidationNode(child_schema, child_datum, child_name)
+
+
+_ITERATORS = {
+    'record': _record_iterator,
+    'array': _array_iterator,
+    'map': _map_iterator,
+}
+_ITERATORS['error'] = _ITERATORS['request'] = _ITERATORS['record']
 
 
 #
@@ -468,7 +507,7 @@ class BinaryEncoder(object):
         """
         sign, digits, exp = datum.as_tuple()
         if exp > scale:
-            raise AvroTypeException('Scale provided in schema does not match the decimal')
+            raise avro.errors.AvroTypeException('Scale provided in schema does not match the decimal')
 
         unscaled_datum = 0
         for digit in digits:
@@ -494,7 +533,7 @@ class BinaryEncoder(object):
         """
         sign, digits, exp = datum.as_tuple()
         if exp > scale:
-            raise AvroTypeException('Scale provided in schema does not match the decimal')
+            raise avro.errors.AvroTypeException('Scale provided in schema does not match the decimal')
 
         unscaled_datum = 0
         for digit in digits:
@@ -629,7 +668,7 @@ class DatumReader(object):
         # schema matching
         if not readers_schema.match(writers_schema):
             fail_msg = 'Schemas do not match.'
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
         logical_type = getattr(writers_schema, 'logical_type', None)
 
@@ -645,7 +684,7 @@ class DatumReader(object):
 
             # This shouldn't happen because of the match check at the start of this method.
             fail_msg = 'Schemas do not match.'
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
         if writers_schema.type == 'null':
             return decoder.read_null()
@@ -698,7 +737,7 @@ class DatumReader(object):
             return self.read_record(writers_schema, readers_schema, decoder)
         else:
             fail_msg = "Cannot read unknown schema type: %s" % writers_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
     def skip_data(self, writers_schema, decoder):
         if writers_schema.type == 'null':
@@ -731,7 +770,7 @@ class DatumReader(object):
             return self.skip_record(writers_schema, decoder)
         else:
             fail_msg = "Unknown schema type: %s" % writers_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
     def read_fixed(self, writers_schema, readers_schema, decoder):
         """
@@ -753,13 +792,13 @@ class DatumReader(object):
         if index_of_symbol >= len(writers_schema.symbols):
             fail_msg = "Can't access enum index %d for enum with %d symbols"\
                        % (index_of_symbol, len(writers_schema.symbols))
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
         read_symbol = writers_schema.symbols[index_of_symbol]
 
         # schema resolution
         if read_symbol not in readers_schema.symbols:
             fail_msg = "Symbol %s not present in Reader's Schema" % read_symbol
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
 
         return read_symbol
 
@@ -855,7 +894,7 @@ class DatumReader(object):
         if index_of_schema >= len(writers_schema.schemas):
             fail_msg = "Can't access branch index %d for union with %d branches"\
                        % (index_of_schema, len(writers_schema.schemas))
-            raise SchemaResolutionException(fail_msg, writers_schema, readers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema, readers_schema)
         selected_writers_schema = writers_schema.schemas[index_of_schema]
 
         # read data
@@ -866,7 +905,7 @@ class DatumReader(object):
         if index_of_schema >= len(writers_schema.schemas):
             fail_msg = "Can't access branch index %d for union with %d branches"\
                        % (index_of_schema, len(writers_schema.schemas))
-            raise SchemaResolutionException(fail_msg, writers_schema)
+            raise avro.errors.SchemaResolutionException(fail_msg, writers_schema)
         return self.skip_data(writers_schema.schemas[index_of_schema], decoder)
 
     def read_record(self, writers_schema, readers_schema, decoder):
@@ -910,8 +949,8 @@ class DatumReader(object):
                         read_record[field.name] = field_val
                     else:
                         fail_msg = 'No default value for field %s' % field_name
-                        raise SchemaResolutionException(fail_msg, writers_schema,
-                                                        readers_schema)
+                        raise avro.errors.SchemaResolutionException(fail_msg, writers_schema,
+                                                                    readers_schema)
         return read_record
 
     def skip_record(self, writers_schema, decoder):
@@ -959,7 +998,7 @@ class DatumReader(object):
             return read_record
         else:
             fail_msg = 'Unknown type: %s' % field_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
 
 class DatumWriter(object):
@@ -975,8 +1014,7 @@ class DatumWriter(object):
                               set_writers_schema)
 
     def write(self, datum, encoder):
-        if not validate(self.writers_schema, datum):
-            raise AvroTypeException(self.writers_schema, datum)
+        validate(self.writers_schema, datum, raise_on_error=True)
         self.write_data(self.writers_schema, datum, encoder)
 
     def write_data(self, writers_schema, datum, encoder):
@@ -1034,7 +1072,7 @@ class DatumWriter(object):
             self.write_record(writers_schema, datum, encoder)
         else:
             fail_msg = 'Unknown type: %s' % writers_schema.type
-            raise schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
     def write_fixed(self, writers_schema, datum, encoder):
         """
@@ -1106,7 +1144,7 @@ class DatumWriter(object):
             if validate(candidate_schema, datum):
                 index_of_schema = i
         if index_of_schema < 0:
-            raise AvroTypeException(writers_schema, datum)
+            raise avro.errors.AvroTypeException(writers_schema, datum)
 
         # write data
         encoder.write_long(index_of_schema)

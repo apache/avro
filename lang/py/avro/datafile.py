@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -26,6 +28,7 @@ import os
 import random
 import zlib
 
+import avro.errors
 import avro.io
 import avro.schema
 from avro.codecs import Codecs
@@ -52,19 +55,6 @@ VALID_ENCODINGS = ['binary']  # not used yet
 
 CODEC_KEY = "avro.codec"
 SCHEMA_KEY = "avro.schema"
-
-#
-# Exceptions
-#
-
-
-class DataFileException(avro.schema.AvroException):
-    """
-    Raised when there's a problem reading or writing file object containers.
-    """
-
-    def __init__(self, fail_msg):
-        avro.schema.AvroException.__init__(self, fail_msg)
 
 #
 # Write Path
@@ -115,7 +105,7 @@ class _DataFile(object):
     def codec(self, value):
         """Meta are stored as bytes, but codec is set as a string."""
         if value not in VALID_CODECS:
-            raise DataFileException("Unknown codec: {!r}".format(value))
+            raise avro.errors.DataFileException("Unknown codec: {!r}".format(value))
         self.set_meta(CODEC_KEY, value.encode())
 
     @property
@@ -191,7 +181,7 @@ class DataFileWriter(_DataFile):
     def codec(self, value):
         """Meta are stored as bytes, but codec is set as a string."""
         if value not in VALID_CODECS:
-            raise DataFileException("Unknown codec: {!r}".format(value))
+            raise avro.errors.DataFileException("Unknown codec: {!r}".format(value))
         self.set_meta(CODEC_KEY, value.encode())
 
     # TODO(hammer): make a schema for blocks and use datum_writer
@@ -307,7 +297,7 @@ class DataFileReader(_DataFile):
         if header.get('magic') != MAGIC:
             fail_msg = "Not an Avro data file: %s doesn't match %s."\
                        % (header.get('magic'), MAGIC)
-            raise avro.schema.AvroException(fail_msg)
+            raise avro.errors.AvroException(fail_msg)
 
         # set metadata
         self._meta = header['meta']
