@@ -329,7 +329,6 @@ class DataFileReader(_DataFile):
         datum = self.datum_reader.read(self.datum_decoder)
         self.block_count -= 1
         return datum
-    next = __next__
 
     def close(self):
         """Close this reader."""
