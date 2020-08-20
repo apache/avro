@@ -30,7 +30,7 @@ import avro.datafile
 import avro.io
 import avro.schema
 
-CODECS_TO_VALIDATE = avro.codecs.Codecs.supported_codec_names()
+CODECS_TO_VALIDATE = avro.codecs.supported_codec_names()
 TEST_PAIRS = tuple((avro.schema.parse(schema), datum) for schema, datum in (
     ('"null"', None),
     ('"boolean"', True),

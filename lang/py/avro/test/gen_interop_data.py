@@ -23,18 +23,19 @@
 import os
 import sys
 
+import avro.codecs
 import avro.datafile
 import avro.io
 import avro.schema
-from avro.codecs import Codecs
 
 try:
     unicode
 except NameError:
     unicode = str
 
+
 NULL_CODEC = 'null'
-CODECS_TO_VALIDATE = Codecs.supported_codec_names()
+CODECS_TO_VALIDATE = avro.codecs.supported_codec_names()
 
 DATUM = {
     'intField': 12,

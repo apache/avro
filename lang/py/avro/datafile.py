@@ -26,10 +26,10 @@ import os
 import random
 import zlib
 
+import avro.codecs
 import avro.errors
 import avro.io
 import avro.schema
-from avro.codecs import Codecs
 
 #
 # Constants
@@ -48,7 +48,7 @@ META_SCHEMA = avro.schema.parse("""\
 """ % (MAGIC_SIZE, SYNC_SIZE))
 
 NULL_CODEC = 'null'
-VALID_CODECS = Codecs.supported_codec_names()
+VALID_CODECS = avro.codecs.supported_codec_names()
 VALID_ENCODINGS = ['binary']  # not used yet
 
 CODEC_KEY = "avro.codec"
@@ -193,7 +193,7 @@ class DataFileWriter(_DataFile):
 
             # write block contents
             uncompressed_data = self.buffer_writer.getvalue()
-            codec = Codecs.get_codec(self.codec)
+            codec = avro.codecs.get_codec(self.codec)
             compressed_data, compressed_data_length = codec.compress(uncompressed_data)
 
             # Write length of block
@@ -305,7 +305,7 @@ class DataFileReader(_DataFile):
 
     def _read_block_header(self):
         self.block_count = self.raw_decoder.read_long()
-        codec = Codecs.get_codec(self.codec)
+        codec = avro.codecs.get_codec(self.codec)
         self._datum_decoder = codec.decompress(self.raw_decoder)
 
     def _skip_sync(self):
