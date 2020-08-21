@@ -1,0 +1,17 @@
+@namespace("org.apache.avro")
+protocol MyProtocol {
+    record APlaygroundEvent {
+
+    /**
+     * Documentation must be provided for each attribute
+     */
+    uuid identifier;
+
+
+    /**
+     * a nullable uuid field
+     */
+
+    union { null, uuid } optionalString;
+  }
+}
