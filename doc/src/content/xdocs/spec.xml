@@ -222,7 +222,7 @@
     <source>
 {
   "type": "map",
-  "items" : "long",
+  "values" : "long",
   "default": {}
 }
     </source>
