@@ -1,6 +1,7 @@
 {
   "protocol" : "MyProtocol",
   "namespace" : "org.apache.avro",
+  "doc" : "Testing UUID fields",
   "types" : [ {
     "type" : "record",
     "name" : "APlaygroundEvent",

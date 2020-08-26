@@ -16,6 +16,12 @@
  * limitations under the License.
  */
 
+
+
+/**
+Testing UUID fields
+*/
+
 @namespace("org.apache.avro")
 protocol MyProtocol {
     record APlaygroundEvent {
