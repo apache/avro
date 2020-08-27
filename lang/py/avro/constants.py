@@ -21,7 +21,6 @@
 
 """Contains Constants for Python Avro"""
 
-from __future__ import absolute_import, division, print_function
 
 DATE = "date"
 DECIMAL = "decimal"

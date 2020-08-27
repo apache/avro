@@ -40,28 +40,17 @@ A schema may be one of:
   Null.
 """
 
-from __future__ import absolute_import, division, print_function
-
+import abc
 import datetime
+import decimal
 import json
 import math
 import re
 import sys
 import warnings
-from decimal import Decimal
 
+import avro.constants
 import avro.errors
-from avro import constants
-
-try:
-    unicode
-except NameError:
-    unicode = str
-
-try:
-    basestring  # type: ignore
-except NameError:
-    basestring = (bytes, unicode)
 
 #
 # Constants
@@ -147,13 +136,13 @@ def _is_timezone_aware_datetime(dt):
 # Base Classes
 #
 
-class Schema(object):
+class Schema(abc.ABC):
     """Base class for all Schema classes."""
     _props = None
 
     def __init__(self, type, other_props=None):
         # Ensure valid ctor args
-        if not isinstance(type, basestring):
+        if not isinstance(type, str):
             fail_msg = 'Schema type must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
         elif type not in VALID_TYPES:
@@ -185,13 +174,13 @@ class Schema(object):
         """
         return all(getattr(self, prop) == getattr(other, prop) for prop in props)
 
+    @abc.abstractmethod
     def match(self, writer):
         """Return True if the current schema (as reader) matches the writer schema.
 
         @arg writer: the writer schema to match against.
         @return bool
         """
-        raise NotImplemented("Must be implemented by subclasses")
 
     # utility functions to manipulate properties dict
     def get_prop(self, key):
@@ -203,6 +192,7 @@ class Schema(object):
     def __str__(self):
         return json.dumps(self.to_json())
 
+    @abc.abstractmethod
     def to_json(self, names):
         """
         Converts the schema object into its AVRO specification representation.
@@ -211,7 +201,6 @@ class Schema(object):
         be aware of not re-defining schemas that are already listed
         in the parameter names.
         """
-        raise NotImplemented("Must be implemented by subclasses.")
 
     def validate(self, datum):
         """Returns the appropriate schema object if datum is valid for that schema, else None.
@@ -226,7 +215,7 @@ class Schema(object):
         raise Exception("Must be implemented by subclasses.")
 
 
-class Name(object):
+class Name:
     """Class to describe Avro name."""
 
     _full = None
@@ -289,7 +278,7 @@ class Name(object):
         return self.space
 
 
-class Names(object):
+class Names:
     """Track name set and default namespace during parsing."""
 
     def __init__(self, default_namespace=None):
@@ -353,10 +342,10 @@ class NamedSchema(Schema):
         if not name:
             fail_msg = 'Named Schemas must have a non-empty name.'
             raise avro.errors.SchemaParseException(fail_msg)
-        elif not isinstance(name, basestring):
+        elif not isinstance(name, str):
             fail_msg = 'The name property must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
-        elif namespace is not None and not isinstance(namespace, basestring):
+        elif namespace is not None and not isinstance(namespace, str):
             fail_msg = 'The namespace property must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
 
@@ -387,7 +376,7 @@ class NamedSchema(Schema):
 #
 
 
-class LogicalSchema(object):
+class LogicalSchema:
     def __init__(self, logical_type):
         self.logical_type = logical_type
 
@@ -418,14 +407,14 @@ class DecimalLogicalSchema(LogicalSchema):
         super(DecimalLogicalSchema, self).__init__('decimal')
 
 
-class Field(object):
+class Field:
     def __init__(self, type, name, has_default, default=None,
                  order=None, names=None, doc=None, other_props=None):
         # Ensure valid ctor args
         if not name:
             fail_msg = 'Fields must have a non-empty name.'
             raise avro.errors.SchemaParseException(fail_msg)
-        elif not isinstance(name, basestring):
+        elif not isinstance(name, str):
             fail_msg = 'The name property must be a string.'
             raise avro.errors.SchemaParseException(fail_msg)
         elif order is not None and order not in VALID_FIELD_SORT_ORDERS:
@@ -437,7 +426,7 @@ class Field(object):
         self._has_default = has_default
         self._props.update(other_props or {})
 
-        if (isinstance(type, basestring) and names is not None and
+        if (isinstance(type, str) and names is not None and
                 names.has_name(type, None)):
             type_schema = names.get_name(type, None)
         else:
@@ -501,7 +490,7 @@ class PrimitiveSchema(Schema):
     _validators = {
         'null': lambda x: x is None,
         'boolean': lambda x: isinstance(x, bool),
-        'string': lambda x: isinstance(x, unicode),
+        'string': lambda x: isinstance(x, str),
         'bytes': lambda x: isinstance(x, bytes),
         'int': lambda x: isinstance(x, int) and INT_MIN_VALUE <= x <= INT_MAX_VALUE,
         'long': lambda x: isinstance(x, int) and LONG_MIN_VALUE <= x <= LONG_MAX_VALUE,
@@ -570,7 +559,7 @@ class BytesDecimalSchema(PrimitiveSchema, DecimalLogicalSchema):
 
     def validate(self, datum):
         """Return self if datum is a Decimal object, else None."""
-        return self if isinstance(datum, Decimal) else None
+        return self if isinstance(datum, decimal.Decimal) else None
 
     def __eq__(self, that):
         return self.props == that.props
@@ -641,7 +630,7 @@ class FixedDecimalSchema(FixedSchema, DecimalLogicalSchema):
 
     def validate(self, datum):
         """Return self if datum is a Decimal object, else None."""
-        return self if isinstance(datum, Decimal) else None
+        return self if isinstance(datum, decimal.Decimal) else None
 
     def __eq__(self, that):
         return self.props == that.props
@@ -710,7 +699,7 @@ class ArraySchema(Schema):
         Schema.__init__(self, 'array', other_props)
         # Add class members
 
-        if isinstance(items, basestring) and names.has_name(items, None):
+        if isinstance(items, str) and names.has_name(items, None):
             items_schema = names.get_name(items, None)
         else:
             try:
@@ -755,7 +744,7 @@ class MapSchema(Schema):
         Schema.__init__(self, 'map', other_props)
 
         # Add class members
-        if isinstance(values, basestring) and names.has_name(values, None):
+        if isinstance(values, str) and names.has_name(values, None):
             values_schema = names.get_name(values, None)
         else:
             try:
@@ -787,7 +776,7 @@ class MapSchema(Schema):
 
     def validate(self, datum):
         """Return self if datum is a valid representation of this schema, else None."""
-        return self if isinstance(datum, dict) and all(isinstance(key, unicode) for key in datum) else None
+        return self if isinstance(datum, dict) and all(isinstance(key, str) for key in datum) else None
 
     def __eq__(self, that):
         to_cmp = json.loads(str(self))
@@ -811,7 +800,7 @@ class UnionSchema(Schema):
         # Add class members
         schema_objects = []
         for schema in schemas:
-            if isinstance(schema, basestring) and names.has_name(schema, None):
+            if isinstance(schema, str) and names.has_name(schema, None):
                 new_schema = names.get_name(schema, None)
             else:
                 try:
@@ -989,7 +978,7 @@ class RecordSchema(NamedSchema):
 
 class DateSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.DATE)
+        LogicalSchema.__init__(self, avro.constants.DATE)
         PrimitiveSchema.__init__(self, 'int', other_props)
 
     def to_json(self, names=None):
@@ -1009,7 +998,7 @@ class DateSchema(LogicalSchema, PrimitiveSchema):
 
 class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIME_MILLIS)
+        LogicalSchema.__init__(self, avro.constants.TIME_MILLIS)
         PrimitiveSchema.__init__(self, 'int', other_props)
 
     def to_json(self, names=None):
@@ -1029,7 +1018,7 @@ class TimeMillisSchema(LogicalSchema, PrimitiveSchema):
 
 class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIME_MICROS)
+        LogicalSchema.__init__(self, avro.constants.TIME_MICROS)
         PrimitiveSchema.__init__(self, 'long', other_props)
 
     def to_json(self, names=None):
@@ -1049,7 +1038,7 @@ class TimeMicrosSchema(LogicalSchema, PrimitiveSchema):
 
 class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIMESTAMP_MILLIS)
+        LogicalSchema.__init__(self, avro.constants.TIMESTAMP_MILLIS)
         PrimitiveSchema.__init__(self, 'long', other_props)
 
     def to_json(self, names=None):
@@ -1068,7 +1057,7 @@ class TimestampMillisSchema(LogicalSchema, PrimitiveSchema):
 
 class TimestampMicrosSchema(LogicalSchema, PrimitiveSchema):
     def __init__(self, other_props=None):
-        LogicalSchema.__init__(self, constants.TIMESTAMP_MICROS)
+        LogicalSchema.__init__(self, avro.constants.TIMESTAMP_MICROS)
         PrimitiveSchema.__init__(self, 'long', other_props)
 
     def to_json(self, names=None):
@@ -1102,14 +1091,14 @@ def make_bytes_decimal_schema(other_props):
 def make_logical_schema(logical_type, type_, other_props):
     """Map the logical types to the appropriate literal type and schema class."""
     logical_types = {
-        (constants.DATE, 'int'): DateSchema,
-        (constants.DECIMAL, 'bytes'): make_bytes_decimal_schema,
+        (avro.constants.DATE, 'int'): DateSchema,
+        (avro.constants.DECIMAL, 'bytes'): make_bytes_decimal_schema,
         # The fixed decimal schema is handled later by returning None now.
-        (constants.DECIMAL, 'fixed'): lambda x: None,
-        (constants.TIMESTAMP_MICROS, 'long'): TimestampMicrosSchema,
-        (constants.TIMESTAMP_MILLIS, 'long'): TimestampMillisSchema,
-        (constants.TIME_MICROS, 'long'): TimeMicrosSchema,
-        (constants.TIME_MILLIS, 'int'): TimeMillisSchema,
+        (avro.constants.DECIMAL, 'fixed'): lambda x: None,
+        (avro.constants.TIMESTAMP_MICROS, 'long'): TimestampMicrosSchema,
+        (avro.constants.TIMESTAMP_MILLIS, 'long'): TimestampMillisSchema,
+        (avro.constants.TIME_MICROS, 'long'): TimeMicrosSchema,
+        (avro.constants.TIME_MILLIS, 'int'): TimeMillisSchema,
     }
     try:
         schema_type = logical_types.get((logical_type, type_), None)

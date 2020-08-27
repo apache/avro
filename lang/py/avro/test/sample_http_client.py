@@ -20,12 +20,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import sys
 
 import avro.errors
-from avro import ipc, protocol
+import avro.ipc
+import avro.protocol
 
 MAIL_PROTOCOL_JSON = """\
 {"namespace": "example.proto",
@@ -53,14 +52,14 @@ MAIL_PROTOCOL_JSON = """\
  }
 }
 """
-MAIL_PROTOCOL = protocol.parse(MAIL_PROTOCOL_JSON)
+MAIL_PROTOCOL = avro.protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_HOST = 'localhost'
 SERVER_PORT = 9090
 
 
 def make_requestor(server_host, server_port, protocol):
-    client = ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
-    return ipc.Requestor(protocol, client)
+    client = avro.ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
+    return avro.ipc.Requestor(protocol, client)
 
 
 if __name__ == '__main__':

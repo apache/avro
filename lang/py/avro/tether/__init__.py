@@ -20,8 +20,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from __future__ import absolute_import, division, print_function
-
 from avro.tether.tether_task import HTTPRequestor, TaskType, TetherTask, inputProtocol, outputProtocol
 from avro.tether.tether_task_runner import TaskRunner
 from avro.tether.util import find_port

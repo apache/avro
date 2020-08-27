@@ -28,15 +28,12 @@ so don't confuse it with the Python's "codecs", which is a package mainly for
 converting charsets (https://docs.python.org/3/library/codecs.html).
 """
 
-from __future__ import absolute_import, division, print_function
-
+import abc
+import binascii
 import io
 import struct
 import sys
 import zlib
-from abc import ABCMeta, abstractmethod
-from binascii import crc32
-from struct import Struct
 
 import avro.errors
 import avro.io
@@ -44,7 +41,7 @@ import avro.io
 #
 # Constants
 #
-STRUCT_CRC32 = Struct('>I')  # big-endian unsigned int
+STRUCT_CRC32 = struct.Struct('>I')  # big-endian unsigned int
 
 
 try:
@@ -64,11 +61,10 @@ except ImportError:
     has_zstandard = False
 
 
-class Codec:
+class Codec(abc.ABC):
     """Abstract base class for all Avro codec classes."""
-    __metaclass__ = ABCMeta
 
-    @abstractmethod
+    @abc.abstractmethod
     def compress(self, data):
         """Compress the passed data.
 
@@ -78,9 +74,8 @@ class Codec:
         :rtype: tuple
         :return: compressed data and its length
         """
-        pass
 
-    @abstractmethod
+    @abc.abstractmethod
     def decompress(self, readers_decoder):
         """Read compressed data via the passed BinaryDecoder and decompress it.
 
@@ -92,7 +87,6 @@ class Codec:
         :return: a newly instantiated BinaryDecoder object that contains the
                  decompressed data which is wrapped by a StringIO
         """
-        pass
 
 
 class NullCodec(Codec):
@@ -139,7 +133,7 @@ if has_snappy:
         def compress(self, data):
             compressed_data = snappy.compress(data)
             # A 4-byte, big-endian CRC32 checksum
-            compressed_data += STRUCT_CRC32.pack(crc32(data) & 0xffffffff)
+            compressed_data += STRUCT_CRC32.pack(binascii.crc32(data) & 0xffffffff)
             return compressed_data, len(compressed_data)
 
         def decompress(self, readers_decoder):
@@ -153,7 +147,7 @@ if has_snappy:
 
         def check_crc32(self, bytes, checksum):
             checksum = STRUCT_CRC32.unpack(checksum)[0]
-            if crc32(bytes) & 0xffffffff != checksum:
+            if binascii.crc32(bytes) & 0xffffffff != checksum:
                 raise avro.errors.AvroException("Checksum failure")
 
 
@@ -177,30 +171,28 @@ if has_zstandard:
             return avro.io.BinaryDecoder(io.BytesIO(uncompressed))
 
 
-class Codecs(object):
-    @staticmethod
-    def get_codec(codec_name):
-        codec_name = codec_name.lower()
-        if codec_name == "null":
-            return NullCodec()
-        if codec_name == "deflate":
-            return DeflateCodec()
-        if codec_name == "bzip2" and has_bzip2:
-            return BZip2Codec()
-        if codec_name == "snappy" and has_snappy:
-            return SnappyCodec()
-        if codec_name == "zstandard" and has_zstandard:
-            return ZstandardCodec()
-        raise avro.errors.UnsupportedCodec("Unsupported codec: {}. (Is it installed?)"
-                                           .format(codec_name))
+def get_codec(codec_name):
+    codec_name = codec_name.lower()
+    if codec_name == "null":
+        return NullCodec()
+    if codec_name == "deflate":
+        return DeflateCodec()
+    if codec_name == "bzip2" and has_bzip2:
+        return BZip2Codec()
+    if codec_name == "snappy" and has_snappy:
+        return SnappyCodec()
+    if codec_name == "zstandard" and has_zstandard:
+        return ZstandardCodec()
+    raise avro.errors.UnsupportedCodec("Unsupported codec: {}. (Is it installed?)"
+                                       .format(codec_name))
 
-    @staticmethod
-    def supported_codec_names():
-        codec_names = ['null', 'deflate']
-        if has_bzip2:
-            codec_names.append('bzip2')
-        if has_snappy:
-            codec_names.append('snappy')
-        if has_zstandard:
-            codec_names.append('zstandard')
-        return codec_names
+
+def supported_codec_names():
+    codec_names = ['null', 'deflate']
+    if has_bzip2:
+        codec_names.append('bzip2')
+    if has_snappy:
+        codec_names.append('snappy')
+    if has_zstandard:
+        codec_names.append('zstandard')
+    return codec_names
