@@ -46,6 +46,11 @@ if (WIN32 AND NOT CYGWIN AND NOT MSYS)
     add_definitions (/EHa)
     add_definitions (
         -DNOMINMAX
+        -DBOOST_REGEX_DYN_LINK
+        -DBOOST_FILESYSTEM_DYN_LINK
+        -DBOOST_SYSTEM_DYN_LINK
+        -DBOOST_IOSTREAMS_DYN_LINK
+        -DBOOST_PROGRAM_OPTIONS_DYN_LINK
         -DBOOST_ALL_NO_LIB)
 else()
 # Replease c++11 with c++17 below in case C++ 17 should be used
@@ -65,7 +70,7 @@ endif ()
 
 
 find_package (Boost 1.38 REQUIRED
-    COMPONENTS filesystem iostreams program_options regex system zlib)
+    COMPONENTS filesystem iostreams program_options regex system)
 
 find_package(Snappy)
 if (SNAPPY_FOUND)
