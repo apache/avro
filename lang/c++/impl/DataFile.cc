@@ -73,7 +73,8 @@ DataFileWriterBase::DataFileWriterBase(const char* filename, const ValidSchema& 
     stream_(fileOutputStream(filename)),
     buffer_(memoryOutputStream()),
     sync_(makeSync()),
-    objectCount_(0)
+    objectCount_(0),
+    lastSync_(0)
 {
     init(schema, syncInterval, codec);
 }
@@ -88,7 +89,8 @@ DataFileWriterBase::DataFileWriterBase(std::unique_ptr<OutputStream> outputStrea
     stream_(std::move(outputStream)),
     buffer_(memoryOutputStream()),
     sync_(makeSync()),
-    objectCount_(0)
+    objectCount_(0),
+    lastSync_(0)
 {
     init(schema, syncInterval, codec);
 }
@@ -116,6 +118,8 @@ void DataFileWriterBase::init(const ValidSchema &schema, size_t syncInterval, co
 
     writeHeader();
     encoderPtr_->init(*buffer_);
+
+    lastSync_ = stream_->byteCount();
 }
 
 
@@ -214,6 +218,7 @@ void DataFileWriterBase::sync()
     avro::encode(*encoderPtr_, sync_);
     encoderPtr_->flush();
 
+    lastSync_ = stream_->byteCount();
 
     buffer_ = memoryOutputStream();
     encoderPtr_->init(*buffer_);
@@ -226,6 +231,11 @@ void DataFileWriterBase::syncIfNeeded()
     if (buffer_->byteCount() >= syncInterval_) {
         sync();
     }
+}
+
+uint64_t DataFileWriterBase::getLastSync()
+{
+    return lastSync_;
 }
 
 void DataFileWriterBase::flush()

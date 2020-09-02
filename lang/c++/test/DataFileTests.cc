@@ -760,6 +760,152 @@ void testSkipStringSnappyCodec()
 }
 #endif
 
+
+struct TestRecord {
+    std::string s1;
+    int64_t id;
+    TestRecord(const char* s1, int64_t id) : s1(s1), id(id) {}
+};
+
+namespace avro {
+    template<> struct codec_traits<TestRecord> {
+        static void encode(Encoder& e, const TestRecord& v) {
+            avro::encode(e, v.s1);
+            avro::encode(e, v.id);
+        }
+
+        static void decode(Decoder& d, TestRecord& v) {
+            avro::decode(d, v.s1);
+            avro::decode(d, v.id);
+        }
+    };
+}   // namespace avro
+
+void testLastSync(avro::Codec codec) {
+
+    //
+    // This test does two validations:
+    // 1. Validates equivalence of the lastSync API on the writer and the previousSync() returned by the reader for every record read.
+    // 
+    // 2. For a specific nth record, we get the sync marker at the beginning of the sync block it resides,
+    // and validate using the reader that we can sync to that block, skip the requisite number of rows and read the same nth record.
+    //
+
+    const char* schema = R"({
+       "type":"record",
+       "name":"R",
+       "fields":[
+          {
+             "name":"s1",
+             "type":"string"
+          },
+          {
+             "name":"id",
+             "type":"long"
+          }
+       ]
+    })";
+
+    avro::ValidSchema writerSchema =
+        avro::compileJsonSchemaFromString(schema);
+    
+    const size_t stringLen = 100;
+    char largeString[stringLen + 1];
+    for(size_t i = 0; i < stringLen; i++) {
+        largeString[i] = 'a';
+    }
+
+    largeString[stringLen] = '\0';
+
+    const char* filename = "test_lastSync.df";
+    std::vector<std::pair<int64_t, int>> syncMetadata;
+    int randomRecordId = 50;
+    int recordsToSkipFromTargetSync = 0;
+    int64_t targetSyncPoint = 0;
+    {
+        avro::DataFileWriter<TestRecord> df(filename,
+            writerSchema, 1024, codec);
+
+        int64_t lastSync = 0;
+        int numRecords = 0;
+        ::printf("\nBefore writing anything, sync point is at %llu", df.getLastSync());
+        for(int i = 0; i < 100; i++)
+        {
+            df.write(TestRecord(largeString, (int64_t)i));
+            numRecords++;
+
+            if((numRecords == randomRecordId) && (targetSyncPoint == 0))
+            {
+                std::pair<int64_t, int> lastMetadata = syncMetadata.back();
+                recordsToSkipFromTargetSync = numRecords - lastMetadata.second;
+                ::printf("\nTarget sync point %llu for seeking into record %d", lastSync, numRecords);
+                targetSyncPoint = lastSync;
+            }
+
+            // During the write process, gather all the sync boundaries
+            if(df.getLastSync() != lastSync)
+            {
+                int recordsUptoSync = numRecords - 1;
+                syncMetadata.push_back(std::pair<int64_t, int>(lastSync, recordsUptoSync));
+                lastSync = df.getLastSync();
+
+                ::printf("\nPast sync point %llu, total rows upto sync %d", lastSync, recordsUptoSync);
+            }
+        }
+
+        df.flush();
+        df.close();
+    }
+
+    // Validate writer.lastSync and reader.previousSync are equivalent for every record
+    {
+        avro::DataFileReader<TestRecord> df(filename);
+        TestRecord readRecord("", 0);
+        for(int index = 0; index < recordsToSkipFromTargetSync; index++)
+        {
+            BOOST_CHECK_EQUAL(df.read(readRecord), true);
+
+            int64_t expectedId = index;
+            BOOST_CHECK_EQUAL(expectedId, readRecord.id);
+        }
+    }
+
+    // Validate specific record read properly
+    {
+        avro::DataFileReader<TestRecord> df(filename);
+        TestRecord readRecord("", 0);
+        df.seek(targetSyncPoint);
+        int64_t expectedRecordId = randomRecordId - recordsToSkipFromTargetSync;
+        for(int index = 0; index < recordsToSkipFromTargetSync; index++)
+        {
+            BOOST_CHECK_EQUAL(df.read(readRecord), true);
+
+            int64_t expectedId = (expectedRecordId + index);
+            BOOST_CHECK_EQUAL(expectedId, readRecord.id);
+        }
+    }
+}
+
+void testLastSyncNullCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testLastSync(avro::NULL_CODEC);
+}
+
+void testLastSyncDeflateCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testLastSync(avro::DEFLATE_CODEC);
+}
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+void testLastSyncSnappyCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testLastSync(avro::SNAPPY_CODEC);
+}
+#endif
+
 test_suite*
 init_unit_test_suite(int argc, char *argv[])
 {
@@ -883,6 +1029,7 @@ init_unit_test_suite(int argc, char *argv[])
         ts->add(BOOST_CLASS_TEST_CASE(&DataFileTest::testCleanup, t));
         boost::unit_test::framework::master_test_suite().add(ts);
     }
+
     boost::unit_test::framework::master_test_suite().
         add(BOOST_TEST_CASE(&testSkipStringNullCodec));
     boost::unit_test::framework::master_test_suite().
@@ -891,6 +1038,16 @@ init_unit_test_suite(int argc, char *argv[])
     boost::unit_test::framework::master_test_suite().
         add(BOOST_TEST_CASE(&testSkipStringSnappyCodec));
 #endif
+
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testLastSyncNullCodec));
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testLastSyncDeflateCodec));
+#ifdef SNAPPY_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testLastSyncSnappyCodec));
+#endif
+
 
     return 0;
 }
