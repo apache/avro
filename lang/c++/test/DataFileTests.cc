@@ -784,11 +784,7 @@ namespace avro {
 void testLastSync(avro::Codec codec) {
 
     //
-    // This test does two validations:
-    // 1. Validates equivalence of the lastSync API on the writer and the previousSync() returned by the reader for every record read.
-    // 
-    // 2. For a specific nth record, we get the sync marker at the beginning of the sync block it resides,
-    // and validate using the reader that we can sync to that block, skip the requisite number of rows and read the same nth record.
+    // This test does validates equivalence of the lastSync API on the writer and the previousSync() returned by the reader for every record read.
     //
 
     const char* schema = R"({
@@ -818,71 +814,65 @@ void testLastSync(avro::Codec codec) {
     largeString[stringLen] = '\0';
 
     const char* filename = "test_lastSync.df";
-    std::vector<std::pair<int64_t, int>> syncMetadata;
-    int randomRecordId = 50;
-    int recordsToSkipFromTargetSync = 0;
-    int64_t targetSyncPoint = 0;
+    std::deque<std::pair<uint64_t, int>> syncMetadata;
+    int numberOfRecords = 100;
     {
         avro::DataFileWriter<TestRecord> df(filename,
             writerSchema, 1024, codec);
 
-        int64_t lastSync = 0;
-        int numRecords = 0;
-        ::printf("\nBefore writing anything, sync point is at %llu", df.getLastSync());
-        for(int i = 0; i < 100; i++)
+        uint64_t lastSync = df.getLastSync();
+        syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, 0));
+        for(int i = 0; i < numberOfRecords; i++)
         {
             df.write(TestRecord(largeString, (int64_t)i));
-            numRecords++;
-
-            if((numRecords == randomRecordId) && (targetSyncPoint == 0))
-            {
-                std::pair<int64_t, int> lastMetadata = syncMetadata.back();
-                recordsToSkipFromTargetSync = numRecords - lastMetadata.second;
-                ::printf("\nTarget sync point %llu for seeking into record %d", lastSync, numRecords);
-                targetSyncPoint = lastSync;
-            }
-
-            // During the write process, gather all the sync boundaries
+            
+            // During the write, gather all the sync boundaries from the lastSync() API
             if(df.getLastSync() != lastSync)
             {
-                int recordsUptoSync = numRecords - 1;
-                syncMetadata.push_back(std::pair<int64_t, int>(lastSync, recordsUptoSync));
+                int recordsUptoSync = i;    // 1 less than total number of records written, since the sync block is sealed before a write
+                syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, recordsUptoSync));
                 lastSync = df.getLastSync();
 
-                ::printf("\nPast sync point %llu, total rows upto sync %d", lastSync, recordsUptoSync);
+                //::printf("\nPast sync point %llu, total rows upto sync %d", lastSync, recordsUptoSync);
             }
         }
+
+        //::printf("\nPast sync point %llu, total rows upto sync %d", df.getLastSync(), numberOfRecords);
+        syncMetadata.push_back(std::pair<uint64_t, int>(df.getLastSync(), numberOfRecords));
 
         df.flush();
         df.close();
     }
 
-    // Validate writer.lastSync and reader.previousSync are equivalent for every record
+    // Validate sync points returned by the writer using the lastSync API and the reader are the same for every record
     {
         avro::DataFileReader<TestRecord> df(filename);
         TestRecord readRecord("", 0);
-        for(int index = 0; index < recordsToSkipFromTargetSync; index++)
+
+        for(int index = 0; index < numberOfRecords; index++)
         {
+            int rowsRead = index;
+            if(rowsRead > syncMetadata.front().second)
+            {
+                syncMetadata.pop_front();
+            }
+
+            BOOST_CHECK_EQUAL(df.previousSync(), syncMetadata.front().first);
+
             BOOST_CHECK_EQUAL(df.read(readRecord), true);
 
             int64_t expectedId = index;
             BOOST_CHECK_EQUAL(expectedId, readRecord.id);
         }
-    }
 
-    // Validate specific record read properly
-    {
-        avro::DataFileReader<TestRecord> df(filename);
-        TestRecord readRecord("", 0);
-        df.seek(targetSyncPoint);
-        int64_t expectedRecordId = randomRecordId - recordsToSkipFromTargetSync;
-        for(int index = 0; index < recordsToSkipFromTargetSync; index++)
+        if(numberOfRecords > syncMetadata.front().second)
         {
-            BOOST_CHECK_EQUAL(df.read(readRecord), true);
-
-            int64_t expectedId = (expectedRecordId + index);
-            BOOST_CHECK_EQUAL(expectedId, readRecord.id);
+            syncMetadata.pop_front();
         }
+
+        // validate previousSync matches even at the end of the file
+        BOOST_CHECK_EQUAL(df.previousSync(), syncMetadata.front().first);
+        BOOST_CHECK_EQUAL(1, syncMetadata.size());  // only 1 item must be remaining in the syncMetadata queue
     }
 }
 
