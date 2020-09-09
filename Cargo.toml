@@ -44,10 +44,10 @@ thiserror = "1.0"
 typed-builder = "0.5.1"
 uuid = { version = "0.8.1", features = ["serde", "v4"] }
 zerocopy = "0.3.0"
+lazy_static = "^1.1"
 
 [dev-dependencies]
 md-5 = "0.9"
-lazy_static = "^1.1"
 sha2 = "0.9"
 criterion = "0.3.1"
 anyhow = "1.0.31"

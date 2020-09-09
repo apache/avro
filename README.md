@@ -469,12 +469,12 @@ This library supports calculating the following fingerprints:
 
  - SHA-256
  - MD5
-
-Note: Rabin fingerprinting is NOT SUPPORTED yet.
+ - Rabin
 
 An example of fingerprinting for the supported fingerprints:
 
 ```rust
+use avro_rs::rabin::Rabin;
 use avro_rs::{Schema, Error};
 use md5::Md5;
 use sha2::Sha256;
@@ -493,6 +493,7 @@ fn main() -> Result<(), Error> {
     let schema = Schema::parse_str(raw_schema)?;
     println!("{}", schema.fingerprint::<Sha256>());
     println!("{}", schema.fingerprint::<Md5>());
+    println!("{}", schema.fingerprint::<Rabin>());
     Ok(())
 }
 ```

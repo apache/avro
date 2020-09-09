@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.12.0] - 2020-09-08
+### Added
+- Added support for the Rabin fingerprint
+
 ## [0.11.0] - 2020-08-13
 ### Changed
 - Introduce custom Error enum to replace all existing errors (backward-incompatible) (#135)

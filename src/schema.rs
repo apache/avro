@@ -1126,6 +1126,7 @@ mod tests {
 
     #[test]
     fn test_schema_fingerprint() {
+        use crate::rabin::Rabin;
         use md5::Md5;
         use sha2::Sha256;
 
@@ -1151,6 +1152,10 @@ mod tests {
             "660ecfda702dfcf7512961d232e94dbe",
             format!("{}", schema.fingerprint::<Md5>())
         );
+        assert_eq!(
+            "25dec0a03ef42014",
+            format!("{}", schema.fingerprint::<Rabin>())
+        )
     }
 
     #[test]
