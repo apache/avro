@@ -57,8 +57,11 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   }
 
   public Utf8(String string) {
-    this.bytes = getBytesFor(string);
-    this.length = bytes.length;
+    byte[] bytes = getBytesFor(string);
+    int length = bytes.length;
+    checkLength(length);
+    this.bytes = bytes;
+    this.length = length;
     this.string = string;
   }
 
@@ -70,8 +73,10 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   }
 
   public Utf8(byte[] bytes) {
+    int length = bytes.length;
+    checkLength(length);
     this.bytes = bytes;
-    this.length = bytes.length;
+    this.length = length;
   }
 
   /**
@@ -112,9 +117,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
    * length does not change, as this also clears the cached String.
    */
   public Utf8 setByteLength(int newLength) {
-    if (newLength > MAX_LENGTH) {
-      throw new AvroRuntimeException("String length " + newLength + " exceeds maximum allowed");
-    }
+    checkLength(newLength);
     if (this.bytes.length < newLength) {
       this.bytes = Arrays.copyOf(this.bytes, newLength);
     }
@@ -128,9 +131,7 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
   public Utf8 set(String string) {
     byte[] bytes = getBytesFor(string);
     int length = bytes.length;
-    if (length > MAX_LENGTH) {
-      throw new AvroRuntimeException("String length " + length + " exceeds maximum allowed");
-    }
+    checkLength(length);
     this.bytes = bytes;
     this.length = length;
     this.string = string;
@@ -210,9 +211,14 @@ public class Utf8 implements Comparable<Utf8>, CharSequence {
     return toString().subSequence(start, end);
   }
 
+  private static void checkLength(int length) {
+    if (length > MAX_LENGTH) {
+      throw new AvroRuntimeException("String length " + length + " exceeds maximum allowed");
+    }
+  }
+
   /** Gets the UTF-8 bytes for a String */
   public static byte[] getBytesFor(String str) {
     return str.getBytes(StandardCharsets.UTF_8);
   }
-
 }
