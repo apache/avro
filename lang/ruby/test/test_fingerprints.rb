@@ -50,7 +50,7 @@ class TestFingerprints < Test::Unit::TestCase
       { "type": "int" }
     SCHEMA
 
-    assert_equal ["c3", "01", "72", "75", "d5", "1a", "3f", "39", "5c", "8f"].map{|e| e.to_i(16) },
+    assert_equal ["c3", "01", "8f", "5c", "39", "3f", "1a", "D5", "75", "72"].map{|e| e.to_i(16) },
       schema.single_object_encoding_header
   end
 end
