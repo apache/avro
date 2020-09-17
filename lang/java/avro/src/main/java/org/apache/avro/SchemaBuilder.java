@@ -789,8 +789,8 @@ public class SchemaBuilder {
       return context().complete(schema);
     }
 
-    public R symbols(Schema.SymbolProperties... symbolProperties) {
-      Schema schema = Schema.createEnumWithProperties(name(), doc(), space(), Arrays.asList(symbolProperties),
+    public R symbols(Schema.SymbolDefinition... symbolProperties) {
+      Schema schema = Schema.createEnumWithDefinitions(name(), doc(), space(), Arrays.asList(symbolProperties),
           this.enumDefault);
       completeSchema(schema);
       return context().complete(schema);

@@ -360,8 +360,8 @@ public class TestSchema {
   @Test
   /** test that extended enum schemas serialize and deserialize well */
   public void testExtendedEnumSchemaSerializeAndDeserialize() {
-    Schema schema = Schema.createEnumWithProperties("e", null, "ns", Arrays.asList(
-        new Schema.SymbolProperties("s1", "doc1").withProp("prop", 1), new Schema.SymbolProperties("s2", "d2")));
+    Schema schema = Schema.createEnumWithDefinitions("e", null, "ns", Arrays.asList(
+        new Schema.SymbolDefinition("s1", "doc1").withProp("prop", 1), new Schema.SymbolDefinition("s2", "d2")));
 
     String schemaString = schema.toString(true);
     Schema readSchema = new Schema.Parser().parse(schemaString);
@@ -371,8 +371,8 @@ public class TestSchema {
   @Test
   /** test that trivial enum schemas don't end up in the JSON schema */
   public void testSimpleEnumSchemaSerialize() {
-    Schema schema = Schema.createEnumWithProperties("e", null, "ns",
-        Arrays.asList(new Schema.SymbolProperties("s1", null), new Schema.SymbolProperties("s2", null)));
+    Schema schema = Schema.createEnumWithDefinitions("e", null, "ns",
+        Arrays.asList(new Schema.SymbolDefinition("s1", null), new Schema.SymbolDefinition("s2", null)));
     String schemaString = schema.toString();
     assertFalse(schemaString.contains("schema-properties"));
   }
