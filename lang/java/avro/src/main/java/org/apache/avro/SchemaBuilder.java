@@ -789,6 +789,13 @@ public class SchemaBuilder {
       return context().complete(schema);
     }
 
+    public R symbols(Schema.SymbolProperties... symbolProperties) {
+      Schema schema = Schema.createEnumWithProperties(name(), doc(), space(), Arrays.asList(symbolProperties),
+          this.enumDefault);
+      completeSchema(schema);
+      return context().complete(schema);
+    }
+
     /** Set the default value of the enum. */
     public EnumBuilder<R> defaultSymbol(String enumDefault) {
       this.enumDefault = enumDefault;

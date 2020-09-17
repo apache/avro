@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -354,5 +355,25 @@ public class TestSchema {
     assertTrue(field.hasDefaultValue());
     assertEquals(1.0f, field.defaultVal());
     assertEquals(1.0f, GenericData.get().getDefaultValue(field));
+  }
+
+  @Test
+  /** test that extended enum schemas serialize and deserialize well */
+  public void testExtendedEnumSchemaSerializeAndDeserialize() {
+    Schema schema = Schema.createEnumWithProperties("e", null, "ns", Arrays.asList(
+        new Schema.SymbolProperties("s1", "doc1").withProp("prop", 1), new Schema.SymbolProperties("s2", "d2")));
+
+    String schemaString = schema.toString(true);
+    Schema readSchema = new Schema.Parser().parse(schemaString);
+    assertEquals(schema, readSchema);
+  }
+
+  @Test
+  /** test that trivial enum schemas don't end up in the JSON schema */
+  public void testSimpleEnumSchemaSerialize() {
+    Schema schema = Schema.createEnumWithProperties("e", null, "ns",
+        Arrays.asList(new Schema.SymbolProperties("s1", null), new Schema.SymbolProperties("s2", null)));
+    String schemaString = schema.toString();
+    assertFalse(schemaString.contains("schema-properties"));
   }
 }

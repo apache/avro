@@ -127,7 +127,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     public String getName() {
       return name;
     }
-  };
+  }
 
   private final Type type;
   private LogicalType logicalType = null;
@@ -165,8 +165,10 @@ public abstract class Schema extends JsonProperties implements Serializable {
       Arrays.asList("doc", "fields", "items", "name", "namespace", "size", "symbols", "values", "type", "aliases"));
 
   private static final Set<String> ENUM_RESERVED = new HashSet<>(SCHEMA_RESERVED);
+
   static {
     ENUM_RESERVED.add("default");
+    ENUM_RESERVED.add("symbol-properties");
   }
 
   int hashCode = NO_HASHCODE;
@@ -227,6 +229,18 @@ public abstract class Schema extends JsonProperties implements Serializable {
     return new EnumSchema(new Name(name, namespace), doc, new LockableArrayList<>(values), enumDefault);
   }
 
+  /** Create an extended enum schema with symbol-specific doc and properties. */
+  public static Schema createEnumWithProperties(String name, String doc, String namespace,
+      List<SymbolProperties> symbols) {
+    return createEnumWithProperties(name, doc, namespace, symbols, null);
+  }
+
+  /** Create an extended enum schema with symbol-specific doc and properties. */
+  public static Schema createEnumWithProperties(String name, String doc, String namespace,
+      List<SymbolProperties> symbols, String enumDefault) {
+    return new EnumSchema(new Name(name, namespace), doc, symbols, enumDefault);
+  }
+
   /** Create an array schema. */
   public static Schema createArray(Schema elementType) {
     return new ArraySchema(elementType);
@@ -284,6 +298,15 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   /** If this is an enum, return its symbols. */
   public List<String> getEnumSymbols() {
+    throw new AvroRuntimeException("Not an enum: " + this);
+  }
+
+  /**
+   * If this is an enum, return its extended symbol definitions
+   *
+   * @return
+   */
+  public List<SymbolProperties> getEnumSymbolProperties() {
     throw new AvroRuntimeException("Not an enum: " + this);
   }
 
@@ -520,7 +543,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       private Order() {
         this.name = this.name().toLowerCase(Locale.ENGLISH);
       }
-    };
+    }
 
     /**
      * For Schema unions with a "null" type as the first entry, this can be used to
@@ -594,7 +617,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     public String name() {
       return name;
-    };
+    }
 
     /** The position of this field within the record. */
     public int pos() {
@@ -1017,6 +1040,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   private static class EnumSchema extends NamedSchema {
     private final List<String> symbols;
+    private final List<SymbolProperties> symbolProperties;
     private final Map<String, Integer> ordinals;
     private final String enumDefault;
 
@@ -1026,11 +1050,35 @@ public abstract class Schema extends JsonProperties implements Serializable {
       this.ordinals = new HashMap<>(Math.multiplyExact(2, symbols.size()));
       this.enumDefault = enumDefault;
       int i = 0;
+      this.symbolProperties = new ArrayList<>(symbols.size());
       for (String symbol : symbols) {
         if (ordinals.put(validateName(symbol), i++) != null) {
           throw new SchemaParseException("Duplicate enum symbol: " + symbol);
         }
+        symbolProperties.add(new SymbolProperties(symbol, null));
       }
+      if (enumDefault != null && !symbols.contains(enumDefault)) {
+        throw new SchemaParseException(
+            "The Enum Default: " + enumDefault + " is not in the enum symbol set: " + symbols);
+      }
+    }
+
+    public EnumSchema(Name name, String doc, List<SymbolProperties> symbolProperties, String enumDefault) {
+      super(Type.ENUM, name, doc);
+
+      LockableArrayList<String> symbols = new LockableArrayList<>(symbolProperties.size());
+      this.ordinals = new HashMap<>(Math.multiplyExact(2, symbols.size()));
+      this.enumDefault = enumDefault;
+      int i = 0;
+      this.symbolProperties = symbolProperties;
+      for (SymbolProperties thisProperties : symbolProperties) {
+        String symbolName = thisProperties.getName();
+        if (ordinals.put(validateName(symbolName), i++) != null) {
+          throw new SchemaParseException("Duplicate enum symbol: " + symbolName);
+        }
+        symbols.add(symbolName);
+      }
+      this.symbols = symbols.lock();
       if (enumDefault != null && !symbols.contains(enumDefault)) {
         throw new SchemaParseException(
             "The Enum Default: " + enumDefault + " is not in the enum symbol set: " + symbols);
@@ -1040,6 +1088,11 @@ public abstract class Schema extends JsonProperties implements Serializable {
     @Override
     public List<String> getEnumSymbols() {
       return symbols;
+    }
+
+    @Override
+    public List<SymbolProperties> getEnumSymbolProperties() {
+      return symbolProperties;
     }
 
     @Override
@@ -1069,7 +1122,20 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     @Override
     int computeHash() {
-      return super.computeHash() + symbols.hashCode();
+      return Objects.hash(super.computeHash(), symbols, symbolProperties, enumDefault);
+    }
+
+    /**
+     * return true if any symbol of this enum has information stored besides the
+     * name
+     */
+    boolean hasExtendedSymbols() {
+      for (SymbolProperties thisSymbol : symbolProperties) {
+        if (thisSymbol.isExtended()) {
+          return true;
+        }
+      }
+      return false;
     }
 
     @Override
@@ -1085,11 +1151,114 @@ public abstract class Schema extends JsonProperties implements Serializable {
       for (String symbol : symbols)
         gen.writeString(symbol);
       gen.writeEndArray();
+      if (hasExtendedSymbols()) {
+        gen.writeArrayFieldStart("symbol-properties");
+        for (SymbolProperties thisSymbol : symbolProperties) {
+          thisSymbol.toJson(gen);
+        }
+        gen.writeEndArray();
+      }
       if (getEnumDefault() != null)
         gen.writeStringField("default", getEnumDefault());
       writeProps(gen);
       aliasesToJson(gen);
       gen.writeEndObject();
+    }
+  }
+
+  public static class SymbolProperties extends JsonProperties {
+
+    private static final HashSet<String> RESERVED = new HashSet<>(Arrays.asList("name", "doc", "alias"));
+
+    private final String name;
+    private final String doc;
+
+    SymbolProperties(String name, String doc) {
+      super(RESERVED);
+      this.name = name;
+      this.doc = doc;
+    }
+
+    public SymbolProperties withProp(String name, Object obj) {
+      addProp(name, obj);
+      return this;
+    }
+
+    /**
+     * return true if symbol properties contain any information besides the symbol
+     * name.
+     */
+    boolean isExtended() {
+      return hasProps() || doc != null;
+    }
+
+    public String getName() {
+      return this.name;
+    }
+
+    public String getDoc() {
+      return this.doc;
+    }
+
+    public void toJson(JsonGenerator gen) throws IOException {
+      gen.writeStartObject();
+      gen.writeStringField("name", name);
+      if (doc != null) {
+        gen.writeStringField("doc", doc);
+      }
+      writeProps(gen);
+      gen.writeEndObject();
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(propsHashCode(), name, doc);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o == this)
+        return true;
+      if (!(o instanceof SymbolProperties))
+        return false;
+      SymbolProperties that = (SymbolProperties) o;
+      return (hashCode() == that.hashCode()) && Objects.equals(this.name, that.name)
+          && Objects.equals(this.doc, that.doc) && propsEqual(that);
+    }
+
+    public static SymbolProperties fromJsonNode(JsonNode node) throws SchemaParseException {
+      if (!node.isObject()) {
+        throw new SchemaParseException("Symbol properties value must be an object.");
+      }
+      String name = getRequiredText(node, "name", "No field name");
+      String doc = getOptionalText(node, "doc");
+
+      SymbolProperties properties = new SymbolProperties(name, doc);
+      Iterator<String> i = node.fieldNames();
+      while (i.hasNext()) { // add field props
+        String prop = i.next();
+        if (!RESERVED.contains(prop))
+          properties.addProp(prop, node.get(prop));
+      }
+      return properties;
+    }
+
+    /**
+     * return true if symbols and symbol properties align, i.e. for each symbol,
+     * there exists exactly one properties entry in the same order.
+     */
+    public static boolean symbolPropertiesAreAligned(List<String> names, List<SymbolProperties> properties) {
+      if (names.size() != properties.size()) {
+        return false;
+      }
+
+      for (int i = 0; i < names.size(); i++) {
+        if (!names.get(i).equals(properties.get(i).getName())) {
+          return false;
+        }
+      }
+
+      return true;
     }
   }
 
@@ -1485,6 +1654,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
   }
 
   static final Map<String, Type> PRIMITIVES = new HashMap<>();
+
   static {
     PRIMITIVES.put("string", Type.STRING);
     PRIMITIVES.put("bytes", Type.BYTES);
@@ -1697,7 +1867,23 @@ public abstract class Schema extends JsonProperties implements Serializable {
         String defaultSymbol = null;
         if (enumDefault != null)
           defaultSymbol = enumDefault.textValue();
-        result = new EnumSchema(name, doc, symbols, defaultSymbol);
+        JsonNode symbolPropertiesNode = schema.get("symbol-properties");
+        List<SymbolProperties> symbolProperties = null;
+        if (symbolPropertiesNode != null) {
+          if (!symbolPropertiesNode.isArray()) {
+            throw new SchemaParseException("Symbol properties of enum are no array: " + schema);
+          }
+          symbolProperties = new ArrayList<>(symbolPropertiesNode.size());
+          for (JsonNode thisPropertiesNode : symbolPropertiesNode) {
+            symbolProperties.add(SymbolProperties.fromJsonNode(thisPropertiesNode));
+          }
+          if (!SymbolProperties.symbolPropertiesAreAligned(symbols, symbolProperties)) {
+            throw new SchemaParseException("Symbol properties are mismatched to symbols: " + schema);
+          }
+          result = new EnumSchema(name, doc, symbolProperties, defaultSymbol);
+        } else {
+          result = new EnumSchema(name, doc, symbols, defaultSymbol);
+        }
         if (name != null)
           names.add(result);
       } else if (type.equals("array")) { // array
