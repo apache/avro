@@ -1101,7 +1101,7 @@ Protocol ProtocolDeclaration():
 Schema EnumDeclaration():
 {
   String name;
-  List<String> symbols;
+  List<Schema.SymbolDefinition> symbols;
   String defaultSymbol = null;
 }
 {
@@ -1110,16 +1110,16 @@ Schema EnumDeclaration():
   symbols = EnumBody()
       [ <EQUALS> defaultSymbol=Identifier() <SEMICOLON>]
   {
-    Schema s = Schema.createEnum(name, doc, this.namespace, symbols,
+    Schema s = Schema.createEnumWithDefinitions(name, doc, this.namespace, symbols,
                                  defaultSymbol);
     names.put(s.getFullName(), s);
     return s;
   }
 }
 
-List<String> EnumBody():
+List<Schema.SymbolDefinition> EnumBody():
 {
-  List<String> symbols = new ArrayList<String>();
+  List<Schema.SymbolDefinition> symbols = new ArrayList<Schema.SymbolDefinition>();
 }
 {
   "{"
@@ -1130,12 +1130,12 @@ List<String> EnumBody():
   }
 }
 
-void EnumConstant(List<String> symbols):
+void EnumConstant(List<Schema.SymbolDefinition> symbols):
 {
   String sym;
 }
 {
-  sym = Identifier() { symbols.add(sym); }
+  sym = Identifier() { symbols.add(new Schema.SymbolDefinition(sym,getDoc())); }
 }
 
 void ProtocolBody(Protocol p):

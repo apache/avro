@@ -1173,7 +1173,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private final String name;
     private final String doc;
 
-    SymbolDefinition(String name, String doc) {
+    public SymbolDefinition(String name, String doc) {
       super(RESERVED);
       this.name = name;
       this.doc = doc;
