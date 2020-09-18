@@ -1,0 +1,1 @@
+{"protocol":"EnumWithSymbolDocs","namespace":"org.apache.avro.test","types":[{"type":"enum","name":"ExampleEnum","symbols":["ONE","TWO"],"symbol-props":[{"name":"ONE","doc":"one"},{"name":"TWO","doc":"two"}]}],"messages":{}}
