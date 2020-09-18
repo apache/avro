@@ -180,13 +180,27 @@
 	      the <code>symbols</code> array.
 	      See documentation on schema resolution for how this gets
 	      used.</li>
+      <li><code>symbol-props</code>: a JSON array of objects
+        that provide additional information for the individual symbols.
+        (optional)
+        If provided, there must be a props object for each defined
+        symbol, each specifying a the symbol <code>name</code>, in the same order as
+        provided by the <code>symbols</code> array. Notably, the props
+        field <code>doc</code> may be used to provide per-symbol documentation.
+      </li>
 	  </ul>
 	  <p>For example, playing card suits might be defined with:</p>
 	  <source>
 {
   "type": "enum",
   "name": "Suit",
-  "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"]
+  "symbols" : ["SPADES", "HEARTS", "DIAMONDS", "CLUBS"],
+  "symbol-props" : [
+      { "name": "SPADES", "doc": "Spades or Pikes" },
+      { "name": "HEARTS" },
+      { "name": "DIAMONDS", "doc": "Diamonds or Tiles" },
+      { "name": "CLUBS", "doc": "Clubs or Clovers" }
+  ]
 }
 	  </source>
 	</section>
@@ -564,7 +578,7 @@
                 followed by the serialized string:
                 <source>02 02 61</source></li>
             </ul>
-            <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long. 
+            <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long.
             In reality, we don't expect unions with 215M members </p>
           </section>
 
