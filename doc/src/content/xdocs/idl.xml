@@ -355,7 +355,7 @@ void fireAndForget(string message) oneway;
         <code>//</code> on a line is ignored, as is any text between <code>/*</code> and
         <code>*/</code>, possibly spanning multiple lines.</p>
         <p>Comments that begin with <code>/**</code> are used as the
-        documentation string for the type or field definition that
+        documentation string for the type, field definition or enum symbol that
         follows the comment.</p>
       </section>
       <section id="minutiae_escaping">
