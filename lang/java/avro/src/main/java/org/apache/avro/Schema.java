@@ -1865,7 +1865,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         if (enumDefault != null)
           defaultSymbol = enumDefault.textValue();
         JsonNode symbolPropsNode = schema.get("symbol-props");
-        List<SymbolDefinition> symbolDefinitions = null;
+        List<SymbolDefinition> symbolDefinitions;
         if (symbolPropsNode != null) {
           if (!symbolPropsNode.isArray()) {
             throw new SchemaParseException("Symbol props of enum are no array: " + schema);
@@ -1881,8 +1881,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
         } else {
           result = new EnumSchema(name, doc, symbols, defaultSymbol);
         }
-        if (name != null)
-          names.add(result);
+        names.add(result);
       } else if (type.equals("array")) { // array
         JsonNode itemsNode = schema.get("items");
         if (itemsNode == null)
