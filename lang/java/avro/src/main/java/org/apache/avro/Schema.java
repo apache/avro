@@ -301,11 +301,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     throw new AvroRuntimeException("Not an enum: " + this);
   }
 
-  /**
-   * If this is an enum, return its extended symbol definitions
-   *
-   * @return
-   */
+  /** If this is an enum, return its extended symbol definitions */
   public List<SymbolDefinition> getEnumSymbolDefinitions() {
     throw new AvroRuntimeException("Not an enum: " + this);
   }
@@ -1112,7 +1108,8 @@ public abstract class Schema extends JsonProperties implements Serializable {
       if (!(o instanceof EnumSchema))
         return false;
       EnumSchema that = (EnumSchema) o;
-      return equalCachedHash(that) && equalNames(that) && symbols.equals(that.symbols) && propsEqual(that);
+      return equalCachedHash(that) && equalNames(that) && propsEqual(that)
+          && symbolDefinitions.equals(that.symbolDefinitions) && Objects.equals(enumDefault, that.enumDefault);
     }
 
     @Override
@@ -1122,7 +1119,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
     @Override
     int computeHash() {
-      return Objects.hash(super.computeHash(), symbols, symbolDefinitions, enumDefault);
+      return Objects.hash(super.computeHash(), symbolDefinitions, enumDefault);
     }
 
     /**
