@@ -35,8 +35,9 @@ namespace Avro.File
         /// Decompress data using implemented codec
         /// </summary>
         /// <param name="compressedData"></param>
+        /// <param name="blockLength"></param>
         /// <returns></returns>
-        abstract public byte[] Decompress(byte[] compressedData);
+        abstract public byte[] Decompress(byte[] compressedData, int blockLength);
 
         /// <summary>
         /// Name of this codec type
@@ -68,7 +69,10 @@ namespace Avro.File
             /// </summary>
             Deflate,
 
-            //Snappy
+            /// <summary>
+            /// Codec type that implments the "snappy" compression algorithm.
+            /// </summary>
+            Snappy,
 
             /// <summary>
             /// Codec that does not perform any compression.
@@ -88,6 +92,8 @@ namespace Avro.File
             {
                 case Type.Deflate:
                     return new DeflateCodec();
+                case Type.Snappy:
+                    return new SnappyCodec();
                 default:
                     return new NullCodec();
             }
@@ -105,6 +111,8 @@ namespace Avro.File
             {
                 case DataFileConstants.DeflateCodec:
                     return new DeflateCodec();
+                case DataFileConstants.SnappyCodec:
+                    return new SnappyCodec();
                 default:
                     return new NullCodec();
             }

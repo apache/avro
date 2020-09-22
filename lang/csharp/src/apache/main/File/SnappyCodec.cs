@@ -16,35 +16,53 @@
  * limitations under the License.
  */
 
+using System;
+using System.IO;
+
 namespace Avro.File
 {
     /// <summary>
-    /// Implements a codec that does not perform any compression. This codec simply returns the
-    /// bytes presented to it "as-is".
+    /// Implements deflate compression and decompression.
     /// </summary>
-    public class NullCodec : Codec
+    public class SnappyCodec : Codec
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NullCodec"/> class.
-        /// </summary>
-        public NullCodec() { }
-
         /// <inheritdoc/>
         public override byte[] Compress(byte[] uncompressedData)
         {
-            return uncompressedData;
+            MemoryStream outStream = new MemoryStream();
+
+            byte[] compressed = IronSnappy.Snappy.Encode(uncompressedData);
+            outStream.Write(compressed, 0, compressed.Length);
+
+            var crc = ByteSwap(Crc32.Compute(uncompressedData));
+            outStream.Write(BitConverter.GetBytes(crc), 0, 4);
+
+            return outStream.ToArray();
         }
 
         /// <inheritdoc/>
         public override byte[] Decompress(byte[] compressedData, int blockLength)
         {
-            return compressedData;
+            byte[] decompressedData = IronSnappy.Snappy.Decode(compressedData.AsSpan(0, blockLength - 4));
+
+            var crc = ByteSwap(Crc32.Compute(decompressedData));
+            if (crc != BitConverter.ToUInt32(compressedData, blockLength - 4))
+            {
+                throw new AvroRuntimeException("CRC32 check failure uncompressing block with Snappy");
+            }
+
+            return decompressedData;
+        }
+
+        private static uint ByteSwap(uint word)
+        {
+            return ((word >> 24) & 0x000000FF) | ((word >> 8) & 0x0000FF00) | ((word << 8) & 0x00FF0000) | ((word << 24) & 0xFF000000);
         }
 
         /// <inheritdoc/>
         public override string GetName()
         {
-            return DataFileConstants.NullCodec;
+            return DataFileConstants.SnappyCodec;
         }
 
         /// <inheritdoc/>
@@ -58,7 +76,7 @@ namespace Avro.File
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return DataFileConstants.NullCodecHash;
+            return DataFileConstants.SnappyCodecHash;
         }
     }
 }

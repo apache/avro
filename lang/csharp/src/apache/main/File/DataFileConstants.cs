@@ -52,6 +52,11 @@ namespace Avro.File
         public const string DeflateCodec = "deflate";
 
         /// <summary>
+        /// Identifier for the snappy codec.
+        /// </summary>
+        public const string SnappyCodec = "snappy";
+
+        /// <summary>
         /// Reserved 'avro' metadata key.
         /// </summary>
         public const string MetaDataReserved = "avro";
@@ -80,6 +85,12 @@ namespace Avro.File
         /// </summary>
         /// <seealso cref="DeflateCodec.GetHashCode()"/>
         public const int DeflateCodecHash = 0;
+
+        /// <summary>
+        /// Hash code for the snappy codec.
+        /// </summary>
+        /// <seealso cref="SnappyCodec.GetHashCode()"/>
+        public const int SnappyCodecHash = 0;
 
         /// <summary>
         /// Size of a sync token in bytes.

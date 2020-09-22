@@ -60,6 +60,20 @@ namespace Avro.Test.File
                                                  new object[] {"Dave", 103}, new object[] { "Hillary", 79 }, new object[] { "Grant", 88 },
                                                  new object[] {"JJ", 14}, new object[] { "Bill", 90 }, new object[] { "Larry", 4 },
                                                  new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Null, TestName = "TestSpecificData7")]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, Codec.Type.Snappy, TestName = "TestSpecificData8")]
+        [TestCase(specificSchema, new object[] { new object[] { "Jane", 23 } }, Codec.Type.Snappy, TestName = "TestSpecificData9")]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 }, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 } }, Codec.Type.Snappy, TestName = "TestSpecificData10")]
+        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
+                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
+                                                 new object[] {"Jamie", 53}, new object[] { "Fanessa", 101 }, new object[] { "Kan", 18 },
+                                                 new object[] {"Janey", 33}, new object[] { "Deva", 102 }, new object[] { "Gavin", 28 },
+                                                 new object[] {"Lochy", 113}, new object[] { "Nickie", 10 }, new object[] { "Liddia", 38 },
+                                                 new object[] {"Fred", 3}, new object[] { "April", 17 }, new object[] { "Novac", 48 },
+                                                 new object[] {"Idan", 33}, new object[] { "Jolyon", 76 }, new object[] { "Ant", 68 },
+                                                 new object[] {"Ernie", 43}, new object[] { "Joel", 99 }, new object[] { "Dan", 78 },
+                                                 new object[] {"Dave", 103}, new object[] { "Hillary", 79 }, new object[] { "Grant", 88 },
+                                                 new object[] {"JJ", 14}, new object[] { "Bill", 90 }, new object[] { "Larry", 4 },
+                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }}, Codec.Type.Snappy, TestName = "TestSpecificData11")]
         public void TestSpecificData(string schemaStr, object[] recs, Codec.Type codecType)
         {
             // create and write out
@@ -114,6 +128,12 @@ namespace Avro.Test.File
                                                  new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }},
                                   new object[] { new object[] { "Hillary", 79 },
                                                  new object[] { "Grant", 88 } }, Codec.Type.Null, TestName = "TestAppendSpecificData3")]
+        [TestCase(specificSchema, new object[] { new object[] { "John", 23 } }, new object[] { new object[] { "Jane", 21 } }, Codec.Type.Snappy, TestName = "TestAppendSpecificData4")]
+        [TestCase(specificSchema, new object[] { new object[] {"John", 23}, new object[] { "Jane", 99 }, new object[] { "Jeff", 88 },
+                                                 new object[] {"James", 13}, new object[] { "June", 109 }, new object[] { "Lloyd", 18 },
+                                                 new object[] {"Jenny", 3}, new object[] { "Bob", 9 }, new object[] { null, 48 }},
+                                  new object[] { new object[] { "Hillary", 79 },
+                                                 new object[] { "Grant", 88 } }, Codec.Type.Snappy, TestName = "TestAppendSpecificData5")]
         public void TestAppendSpecificData(string schemaStr, object[] recs, object[] appendRecs, Codec.Type codecType)
         {
             IList<Foo> records = MakeRecords(recs);
@@ -236,6 +256,39 @@ namespace Avro.Test.File
         [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
             "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
             new object[] { "f1", 100L }, Codec.Type.Null)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"null\"}]}",
+            new object[] { "f1", null }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
+            new object[] { "f1", true }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"boolean\"}]}",
+            new object[] { "f1", false }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
+            new object[] { "f1", 101 }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"long\"}]}",
+            new object[] { "f1", 101L }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"float\"}]}",
+            new object[] { "f1", 101.78f }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"double\"}]}",
+            new object[] { "f1", 101.78 }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"string\"}]}",
+            new object[] { "f1", "A" }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"bytes\"}]}",
+            new object[] { "f1", new byte[] { 0, 1 } }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
+            "[{\"name\":\"f1\", \"type\":{\"type\": \"enum\", \"name\": \"e\", \"symbols\":[\"s1\", \"s2\"]}}]}",
+            new object[] { "f1", "s2" }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
+            "[{\"name\":\"f1\", \"type\":{\"type\": \"array\", \"items\": \"int\"}}]}",
+            new object[] { "f1", new object[] { 0, 1, 101 } }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
+            "[{\"name\":\"f1\", \"type\":{\"type\": \"array\", \"items\": \"int\"}}]}",
+            new object[] { "f1", new int[] { 0, 1, 101 } }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
+            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
+            new object[] { "f1", 100 }, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":" +
+            "[{\"name\":\"f1\", \"type\":[\"int\", \"long\"]}]}",
+            new object[] { "f1", 100L }, Codec.Type.Snappy)]
         public void TestGenericData(string schemaStr, object[] value, Codec.Type codecType)
         {
             foreach(var rwFactory in GenericOptions<GenericRecord>())
@@ -275,6 +328,8 @@ namespace Avro.Test.File
             new object[] { "f1", true }, new object[] { "f1", false }, Codec.Type.Deflate)]
         [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
             new object[] { "f1", 1 }, new object[] { "f1", 2 }, Codec.Type.Null)]
+        [TestCase("{\"type\":\"record\", \"name\":\"n\", \"fields\":[{\"name\":\"f1\", \"type\":\"int\"}]}",
+            new object[] { "f1", 1 }, new object[] { "f1", 2 }, Codec.Type.Snappy)]
         public void TestAppendGenericData(string schemaStr, object[] recs, object[] appendRecs, Codec.Type codecType)
         {
             foreach (var rwFactory in GenericOptions<GenericRecord>())
@@ -397,6 +452,8 @@ namespace Avro.Test.File
         [TestCase("{\"type\": \"boolean\"}", false, Codec.Type.Deflate)]
         [TestCase("{\"type\": \"boolean\"}", true, Codec.Type.Null)]
         [TestCase("{\"type\": \"boolean\"}", false, Codec.Type.Null)]
+        [TestCase("{\"type\": \"boolean\"}", true, Codec.Type.Snappy)]
+        [TestCase("{\"type\": \"boolean\"}", false, Codec.Type.Snappy)]
         [TestCase("[\"boolean\", \"null\"]", null, Codec.Type.Deflate)]
         [TestCase("[\"boolean\", \"null\"]", true, Codec.Type.Deflate)]
         [TestCase("[\"int\", \"long\"]", 100, Codec.Type.Deflate)]
@@ -438,6 +495,26 @@ namespace Avro.Test.File
         [TestCase("{\"type\":\"float\"}", 0.0f, Codec.Type.Null)]
         [TestCase("{\"type\":\"double\"}", 0.0, Codec.Type.Null)]
         [TestCase("{\"type\":\"string\"}", "test", Codec.Type.Null)]
+        [TestCase("[\"boolean\", \"null\"]", null, Codec.Type.Snappy)]
+        [TestCase("[\"boolean\", \"null\"]", true, Codec.Type.Snappy)]
+        [TestCase("[\"int\", \"long\"]", 100, Codec.Type.Snappy)]
+        [TestCase("[\"int\", \"long\"]", 100L, Codec.Type.Snappy)]
+        [TestCase("[\"float\", \"double\"]", 100.75, Codec.Type.Snappy)]
+        [TestCase("[\"float\", \"double\"]", 23.67f, Codec.Type.Snappy)]
+        [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", new float[] { 23.67f, 22.78f }, Codec.Type.Snappy)]
+        [TestCase("[{\"type\": \"array\", \"items\": \"float\"}, \"double\"]", 100.89, Codec.Type.Snappy)]
+        [TestCase("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", "a", Codec.Type.Snappy)]
+        [TestCase("[{\"type\": \"array\", \"items\": \"string\"}, \"string\"]", new string[] { "a", "b" }, Codec.Type.Snappy)]
+        [TestCase("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new byte[] { 1, 2, 3 }, Codec.Type.Snappy)]
+        [TestCase("[{\"type\": \"array\", \"items\": \"bytes\"}, \"bytes\"]", new object[] { new byte[] { 1, 2 }, new byte[] { 3, 4 } }, Codec.Type.Snappy)]
+        [TestCase("[{\"type\": \"enum\", \"symbols\": [\"s1\", \"s2\"], \"name\": \"e\"}, \"string\"]", "h1", Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"string\"}", "John", Codec.Type.Snappy)]
+        [TestCase("{\"type\":[\"null\",\"string\"]}", null, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"int\"}", 1, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"boolean\"}", false, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"long\"}", 12312313123L, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"float\"}", 0.0f, Codec.Type.Snappy)]
+        [TestCase("{\"type\":\"double\"}", 0.0, Codec.Type.Snappy)]
         public void TestPrimitiveData(string schemaStr, object value, Codec.Type codecType)
         {
             foreach(var rwFactory in GenericOptions<object>())
@@ -471,6 +548,11 @@ namespace Avro.Test.File
         [TestCase("longTest", 12312313123L, Codec.Type.Deflate, true)]
         [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Deflate, true)]
         [TestCase("longTest", -21211212L, Codec.Type.Deflate, true)]
+        [TestCase("bytesTest", new byte[] { 1, 2, 3 }, Codec.Type.Snappy, true)]
+        [TestCase("stringTest", "testVal", Codec.Type.Snappy, true)]
+        [TestCase("longTest", 12312313123L, Codec.Type.Snappy, true)]
+        [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Snappy, true)]
+        [TestCase("longTest", -21211212L, Codec.Type.Snappy, true)]
         [TestCase("bytesTest", new byte[] { 1, 2, 3 }, Codec.Type.Null, false)]
         [TestCase("stringTest", "testVal", Codec.Type.Null, false)]
         [TestCase("longTest", 12312313123L, Codec.Type.Null, false)]
@@ -481,6 +563,11 @@ namespace Avro.Test.File
         [TestCase("longTest", 12312313123L, Codec.Type.Deflate, false)]
         [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Deflate, false)]
         [TestCase("longTest", -21211212L, Codec.Type.Deflate, false)]
+        [TestCase("bytesTest", new byte[] { 1, 2, 3 }, Codec.Type.Snappy, false)]
+        [TestCase("stringTest", "testVal", Codec.Type.Snappy, false)]
+        [TestCase("longTest", 12312313123L, Codec.Type.Snappy, false)]
+        [TestCase("bytesTest", new byte[] { 1 }, Codec.Type.Snappy, false)]
+        [TestCase("longTest", -21211212L, Codec.Type.Snappy, false)]
         public void TestMetaData(string key, object value, Codec.Type codecType, bool useTypeGetter)
         {
             // create and write out
@@ -573,6 +660,7 @@ namespace Avro.Test.File
         /// <param name="codecType"></param>
         [TestCase(specificSchema, Codec.Type.Null)]
         [TestCase(specificSchema, Codec.Type.Deflate)]
+        [TestCase(specificSchema, Codec.Type.Snappy)]
         public void TestPartialReadAll(string schemaStr, Codec.Type codecType)
         {
             // create and write out
@@ -736,6 +824,10 @@ namespace Avro.Test.File
         [TestCase(specificSchema, Codec.Type.Deflate, 10, 1, 4)]
         [TestCase(specificSchema, Codec.Type.Deflate, 200, 111, 15)]
         [TestCase(specificSchema, Codec.Type.Deflate, 1000, 588, 998)]
+        [TestCase(specificSchema, Codec.Type.Snappy, 2, 0, 1)]
+        [TestCase(specificSchema, Codec.Type.Snappy, 10, 1, 4)]
+        [TestCase(specificSchema, Codec.Type.Snappy, 200, 111, 15)]
+        [TestCase(specificSchema, Codec.Type.Snappy, 1000, 588, 998)]
         public void TestSyncAndSeekPositions(string schemaStr, Codec.Type codecType, int iterations, int firstSyncPosition, int secondSyncPosition)
         {
             // create and write out
