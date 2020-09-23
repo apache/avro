@@ -162,6 +162,21 @@ static const char ischWithDoc[] =
         "\"doc\": \"extra slashes\\\\\\\\\"}"
     "]}";
 
+static const char schemaWithIdAndString[] = R"({
+       "type":"record",
+       "name":"R",
+       "fields":[
+          {
+             "name":"s1",
+             "type":"string"
+          },
+          {
+             "name":"id",
+             "type":"long"
+          }
+       ]
+    })";
+
 string toString(const ValidSchema& s)
 {
     ostringstream oss;
@@ -787,23 +802,8 @@ void testLastSync(avro::Codec codec) {
     // This test does validates equivalence of the lastSync API on the writer and the previousSync() returned by the reader for every record read.
     //
 
-    const char* schema = R"({
-       "type":"record",
-       "name":"R",
-       "fields":[
-          {
-             "name":"s1",
-             "type":"string"
-          },
-          {
-             "name":"id",
-             "type":"long"
-          }
-       ]
-    })";
-
     avro::ValidSchema writerSchema =
-        avro::compileJsonSchemaFromString(schema);
+        avro::compileJsonSchemaFromString(schemaWithIdAndString);
     
     const size_t stringLen = 100;
     char largeString[stringLen + 1];
@@ -844,7 +844,7 @@ void testLastSync(avro::Codec codec) {
         df.close();
     }
 
-    // Validate sync points returned by the writer using the lastSync API and the reader are the same for every record
+    // Validate that the sync points returned by the writer using the lastSync API and the reader are the same for every record
     {
         avro::DataFileReader<TestRecord> df(filename);
         TestRecord readRecord("", 0);
@@ -876,6 +876,103 @@ void testLastSync(avro::Codec codec) {
     }
 }
 
+
+void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
+
+    //
+    // This test highlights a motivating use case for the lastSync API on the DataFileWriter.
+    //
+
+    avro::ValidSchema writerSchema =
+        avro::compileJsonSchemaFromString(schemaWithIdAndString);
+
+    const size_t stringLen = 100;
+    char largeString[stringLen + 1];
+    for(size_t i = 0; i < stringLen; i++) {
+        largeString[i] = 'a';
+    }
+
+    largeString[stringLen] = '\0';
+
+    const char* filename = "test_readRecordUsingLastSync.df";
+    
+    int numberOfRecords = 100;
+    int recordToRead = 37;  // random record to read efficiently
+    int syncPointWithRecord = 0;
+    int finalSync = 0;
+    int recordsUptoLastSync = 0;
+    int firstSyncPoint = 0;
+    {
+        avro::DataFileWriter<TestRecord> df(filename,
+            writerSchema, 1024, codec);
+
+        firstSyncPoint = df.getLastSync();
+        syncPointWithRecord = firstSyncPoint;
+        for(int i = 0; i < numberOfRecords; i++)
+        {
+            df.write(TestRecord(largeString, (int64_t)i));
+
+            // During the write, gather all the sync boundaries from the lastSync() API
+            int recordsWritten = i + 1;
+            if((recordsWritten <= recordToRead) && (df.getLastSync() != syncPointWithRecord))
+            {
+                recordsUptoLastSync = i;    // 1 less than total number of records written, since the sync block is sealed before a write
+                syncPointWithRecord = df.getLastSync();
+
+                //::printf("\nPast sync point %llu, total rows upto sync %d", syncPointWithRecord, recordsUptoLastSync);
+            }
+        }
+
+        finalSync = df.getLastSync();
+        df.flush();
+        df.close();
+    }
+
+    // Validate that we're able to stitch together {header block | specific block with record} and read the specific record from the stitched block
+    {
+        std::unique_ptr<avro::SeekableInputStream> seekableInputStream = avro::fileSeekableInputStream(filename, 1000000);
+
+        const uint8_t* pData = nullptr;
+        size_t length = 0;
+        bool hasRead = seekableInputStream->next(&pData, &length);
+
+        // keep it simple, assume we've got in all data we want
+        BOOST_CHECK_GE(length, firstSyncPoint);
+        BOOST_CHECK_GE(length, finalSync);
+
+        std::vector<uint8_t> stitchedData;
+        // reserve space for header and data from specific block
+        stitchedData.reserve(firstSyncPoint + (finalSync - syncPointWithRecord));
+
+        // Copy header of the file
+        std::copy(pData, pData + firstSyncPoint, std::back_inserter(stitchedData));
+
+        // Copy data from the sync block containing the record of interest
+        std::copy(pData + syncPointWithRecord, pData + finalSync, std::back_inserter(stitchedData));
+
+        // Convert to inputStream
+        std::unique_ptr<avro::InputStream> inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
+
+        int recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
+        BOOST_CHECK_GT(recordsUptoRecordToRead, 0);
+
+        avro::DataFileReader<TestRecord> df(std::move(inputStream));
+        TestRecord readRecord("", 0);
+        //::printf("\nReading %d rows until specific record is reached", recordsUptoRecordToRead);
+        for(int index = 0; index < recordsUptoRecordToRead; index++)
+        {
+            BOOST_CHECK_EQUAL(df.read(readRecord), true);
+
+            int64_t expectedId = (recordToRead - recordsUptoRecordToRead + index);
+            BOOST_CHECK_EQUAL(expectedId, readRecord.id);
+        }
+
+        // read specific record
+        BOOST_CHECK_EQUAL(df.read(readRecord), true);
+        BOOST_CHECK_EQUAL(recordToRead, readRecord.id);
+    }
+}
+
 void testLastSyncNullCodec()
 {
     BOOST_TEST_CHECKPOINT(__func__);
@@ -893,6 +990,26 @@ void testLastSyncSnappyCodec()
 {
     BOOST_TEST_CHECKPOINT(__func__);
     testLastSync(avro::SNAPPY_CODEC);
+}
+#endif
+
+void testReadRecordEfficientlyUsingLastSyncNullCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testReadRecordEfficientlyUsingLastSync(avro::NULL_CODEC);
+}
+
+void testReadRecordEfficientlyUsingLastSyncDeflateCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testReadRecordEfficientlyUsingLastSync(avro::DEFLATE_CODEC);
+}
+
+#ifdef SNAPPY_CODEC_AVAILABLE
+void testReadRecordEfficientlyUsingLastSyncSnappyCodec()
+{
+    BOOST_TEST_CHECKPOINT(__func__);
+    testReadRecordEfficientlyUsingLastSync(avro::SNAPPY_CODEC);
 }
 #endif
 
@@ -1038,6 +1155,14 @@ init_unit_test_suite(int argc, char *argv[])
         add(BOOST_TEST_CASE(&testLastSyncSnappyCodec));
 #endif
 
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncNullCodec));
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncDeflateCodec));
+#ifdef SNAPPY_CODEC_AVAILABLE
+    boost::unit_test::framework::master_test_suite().
+        add(BOOST_TEST_CASE(&testReadRecordEfficientlyUsingLastSyncSnappyCodec));
+#endif
 
     return 0;
 }
