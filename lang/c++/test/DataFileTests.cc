@@ -897,7 +897,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
     const char* filename = "test_readRecordUsingLastSync.df";
     
     int numberOfRecords = 100;
-    int recordToRead = 37;  // random record to read efficiently
+    int recordToRead = 37;  // pick specific record to read efficiently
     int syncPointWithRecord = 0;
     int finalSync = 0;
     int recordsUptoLastSync = 0;
@@ -936,7 +936,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         size_t length = 0;
         bool hasRead = seekableInputStream->next(&pData, &length);
 
-        // keep it simple, assume we've got in all data we want
+        // keep it simple, assume we've got in all data we want. We have a high buffersize to ensure this above.
         BOOST_CHECK_GE(length, firstSyncPoint);
         BOOST_CHECK_GE(length, finalSync);
 
@@ -954,6 +954,8 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         std::unique_ptr<avro::InputStream> inputStream = avro::memoryInputStream(stitchedData.data(), stitchedData.size());
 
         int recordsUptoRecordToRead = recordToRead - recordsUptoLastSync;
+
+        // Ensure this is not the first record in the chunk.
         BOOST_CHECK_GT(recordsUptoRecordToRead, 0);
 
         avro::DataFileReader<TestRecord> df(std::move(inputStream));
