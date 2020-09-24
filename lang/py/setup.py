@@ -20,8 +20,6 @@
 # limitations under the License.
 
 
-from __future__ import absolute_import, division, print_function
-
 import setuptools  # type: ignore
 import distutils.errors
 import glob

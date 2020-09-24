@@ -243,6 +243,7 @@ TOKEN :
 | < TIMESTAMP: "timestamp_ms" >
 | < DECIMAL: "decimal" >
 | < LOCAL_TIMESTAMP: "local_timestamp_ms" >
+| < UUID: "uuid" >
 }
 
 /* LITERALS */
@@ -254,7 +255,7 @@ TOKEN :
     (   <DECIMAL_LITERAL> (["l","L"])?
       | <HEX_LITERAL> (["l","L"])?
       | <OCTAL_LITERAL> (["l","L"])?
-        )  
+        )
   >
 |
   < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
@@ -1180,7 +1181,7 @@ Protocol ImportIdl() : {
   <IDL> importFile = JsonString() ";"
     {
       try {
-        Idl idl = new Idl(findFile(importFile), this); 
+        Idl idl = new Idl(findFile(importFile), this);
         try {
           return idl.CompilationUnit();
         } finally {
@@ -1188,7 +1189,7 @@ Protocol ImportIdl() : {
         }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
-      }        
+      }
     }
 }
 
@@ -1208,7 +1209,7 @@ Protocol ImportProtocol() : {
         }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
-      }        
+      }
     }
 }
 
@@ -1231,7 +1232,7 @@ Schema ImportSchema() : {
         }
       } catch (IOException e) {
         throw error("Error importing "+importFile+": "+e, token);
-      }        
+      }
     }
 }
 
@@ -1319,11 +1320,11 @@ void VariableDeclarator(Schema type, List<Field> fields):
 }
 {
     ( SchemaProperty(props) )*
-    
+
   name = Identifier()
 
     [ <EQUALS> defaultValue=Json() ]
-    
+
   {
     Field.Order order = Field.Order.ASCENDING;
     for (String key : props.keySet())
@@ -1378,7 +1379,7 @@ private Message MessageDeclaration(Protocol p, Map<String, JsonNode> props):
     return oneWay
     ? p.createMessage(name, msgDoc, props, request)
     : p.createMessage(name, msgDoc, props, request, response, errors);
-    
+
   }
 }
 
@@ -1500,6 +1501,7 @@ Schema PrimitiveType():
 | "timestamp_ms" { return LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "local_timestamp_ms" { return LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Type.LONG)); }
 | "decimal" { return DecimalTypeProperties(); }
+| "uuid" {return LogicalTypes.uuid().addToSchema(Schema.create(Type.STRING));}
 }
 
 Schema DecimalTypeProperties():

@@ -19,32 +19,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
+import http.server
 import socket
 import sys
 
 import avro.errors
+import avro.ipc
+import avro.protocol
 import avro.tether.tether_task
 import avro.tether.util
-from avro import ipc, protocol
-
-try:
-    import BaseHTTPServer as http_server  # type: ignore
-except ImportError:
-    from http import server as http_server  # type: ignore
-
 
 SERVER_ADDRESS = ('localhost', avro.tether.util.find_port())
 
 
-class MockParentResponder(ipc.Responder):
+class MockParentResponder(avro.ipc.Responder):
     """
     The responder for the mocked parent
     """
 
     def __init__(self):
-        ipc.Responder.__init__(self, avro.tether.tether_task.outputProtocol)
+        avro.ipc.Responder.__init__(self, avro.tether.tether_task.outputProtocol)
 
     def invoke(self, message, request):
         if message.name == 'configure':
@@ -63,19 +57,19 @@ class MockParentResponder(ipc.Responder):
         return None
 
 
-class MockParentHandler(http_server.BaseHTTPRequestHandler):
+class MockParentHandler(http.server.BaseHTTPRequestHandler):
     """Create a handler for the parent.
     """
 
     def do_POST(self):
         self.responder = MockParentResponder()
-        call_request_reader = ipc.FramedReader(self.rfile)
+        call_request_reader = avro.ipc.FramedReader(self.rfile)
         call_request = call_request_reader.read_framed_message()
         resp_body = self.responder.respond(call_request)
         self.send_response(200)
         self.send_header('Content-Type', 'avro/binary')
         self.end_headers()
-        resp_writer = ipc.FramedWriter(self.wfile)
+        resp_writer = avro.ipc.FramedWriter(self.wfile)
         resp_writer.write_framed_message(resp_body)
 
 
@@ -95,6 +89,6 @@ if __name__ == '__main__':
 
         # flush the output so it shows up in the parent process
         sys.stdout.flush()
-        parent_server = http_server.HTTPServer(SERVER_ADDRESS, MockParentHandler)
+        parent_server = http.server.HTTPServer(SERVER_ADDRESS, MockParentHandler)
         parent_server.allow_reuse_address = True
         parent_server.serve_forever()

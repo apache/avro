@@ -19,8 +19,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import io
 import os
 import subprocess
@@ -33,12 +31,6 @@ import avro.test.mock_tether_parent
 import avro.test.word_count_task
 import avro.tether.tether_task
 import avro.tether.util
-from avro import schema, tether
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 
 class TestTetherTask(unittest.TestCase):
@@ -79,7 +71,7 @@ class TestTetherTask(unittest.TestCase):
             )
 
             # Serialize some data so we can send it to the input function
-            datum = unicode("This is a line of text")
+            datum = "This is a line of text"
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(task.inschema)
@@ -99,7 +91,7 @@ class TestTetherTask(unittest.TestCase):
             )
 
             # Serialize some data so we can send it to the input function
-            datum = {"key": unicode("word"), "value": 2}
+            datum = {"key": "word", "value": 2}
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(task.midschema)
@@ -114,7 +106,7 @@ class TestTetherTask(unittest.TestCase):
             task.complete()
 
             # try a status
-            task.status(unicode("Status message"))
+            task.status("Status message")
         finally:
             # close the process
             if not(proc is None):

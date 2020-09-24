@@ -19,35 +19,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
-from datetime import datetime, timedelta, tzinfo
+import datetime
 
 
-class UTCTzinfo(tzinfo):
+class UTCTzinfo(datetime.tzinfo):
     def utcoffset(self, dt):
-        return timedelta(0)
+        return datetime.timedelta(0)
 
     def tzname(self, dt):
         return "UTC"
 
     def dst(self, dt):
-        return timedelta(0)
+        return datetime.timedelta(0)
 
 
 utc = UTCTzinfo()
 
 
 # Test Time Zone with fixed offset and no DST
-class TSTTzinfo(tzinfo):
+class TSTTzinfo(datetime.tzinfo):
     def utcoffset(self, dt):
-        return timedelta(hours=10)
+        return datetime.timedelta(hours=10)
 
     def tzname(self, dt):
         return "TST"
 
     def dst(self, dt):
-        return timedelta(0)
+        return datetime.timedelta(0)
 
 
 tst = TSTTzinfo()

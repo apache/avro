@@ -21,6 +21,7 @@
 namespace Apache\Avro\Datum;
 
 use Apache\Avro\AvroException;
+use Apache\Avro\Schema\AvroName;
 use Apache\Avro\Schema\AvroSchema;
 
 /**
@@ -81,14 +82,10 @@ class AvroIODatumReader
      */
     public function readData($writers_schema, $readers_schema, $decoder)
     {
-        if (!self::schemasMatch($writers_schema, $readers_schema)) {
-            throw new AvroIOSchemaMatchException($writers_schema, $readers_schema);
-        }
-
         // Schema resolution: reader's schema is a union, writer's schema is not
         if (
-            AvroSchema::UNION_SCHEMA == $readers_schema->type()
-            && AvroSchema::UNION_SCHEMA != $writers_schema->type()
+            AvroSchema::UNION_SCHEMA === $readers_schema->type()
+            && AvroSchema::UNION_SCHEMA !== $writers_schema->type()
         ) {
             foreach ($readers_schema->schemas() as $schema) {
                 if (self::schemasMatch($writers_schema, $schema)) {
@@ -149,89 +146,81 @@ class AvroIODatumReader
         $writers_schema_type = $writers_schema->type;
         $readers_schema_type = $readers_schema->type;
 
+        if (AvroSchema::UNION_SCHEMA === $writers_schema_type || AvroSchema::UNION_SCHEMA === $readers_schema_type) {
+            return true;
+        }
+
+        if (AvroSchema::isPrimitiveType($writers_schema_type)) {
+            return true;
+        }
+
+        switch ($readers_schema_type) {
+            case AvroSchema::MAP_SCHEMA:
+                return self::attributesMatch(
+                    $writers_schema->values(),
+                    $readers_schema->values(),
+                    [AvroSchema::TYPE_ATTR]
+                );
+            case AvroSchema::ARRAY_SCHEMA:
+                return self::attributesMatch(
+                    $writers_schema->items(),
+                    $readers_schema->items(),
+                    [AvroSchema::TYPE_ATTR]
+                );
+            case AvroSchema::ENUM_SCHEMA:
+                return self::attributesMatch(
+                    $writers_schema,
+                    $readers_schema,
+                    [AvroSchema::FULLNAME_ATTR]
+                );
+            case AvroSchema::FIXED_SCHEMA:
+                return self::attributesMatch(
+                    $writers_schema,
+                    $readers_schema,
+                    [
+                        AvroSchema::FULLNAME_ATTR,
+                        AvroSchema::SIZE_ATTR
+                    ]
+                );
+            case AvroSchema::RECORD_SCHEMA:
+            case AvroSchema::ERROR_SCHEMA:
+                return self::attributesMatch(
+                    $writers_schema,
+                    $readers_schema,
+                    [AvroSchema::FULLNAME_ATTR]
+                );
+            case AvroSchema::REQUEST_SCHEMA:
+                // XXX: This seems wrong
+                return true;
+            // XXX: no default
+        }
+
         if (
-            AvroSchema::UNION_SCHEMA == $writers_schema_type
-            || AvroSchema::UNION_SCHEMA == $readers_schema_type
+            AvroSchema::INT_TYPE === $writers_schema_type
+            && in_array($readers_schema_type, [
+                AvroSchema::LONG_TYPE,
+                AvroSchema::FLOAT_TYPE,
+                AvroSchema::DOUBLE_TYPE
+            ])
         ) {
             return true;
         }
 
-        if ($writers_schema_type == $readers_schema_type) {
-            if (AvroSchema::isPrimitiveType($writers_schema_type)) {
-                return true;
-            }
-
-            switch ($readers_schema_type) {
-                case AvroSchema::MAP_SCHEMA:
-                    return self::attributesMatch(
-                        $writers_schema->values(),
-                        $readers_schema->values(),
-                        array(AvroSchema::TYPE_ATTR)
-                    );
-                case AvroSchema::ARRAY_SCHEMA:
-                    return self::attributesMatch(
-                        $writers_schema->items(),
-                        $readers_schema->items(),
-                        array(AvroSchema::TYPE_ATTR)
-                    );
-                case AvroSchema::ENUM_SCHEMA:
-                    return self::attributesMatch(
-                        $writers_schema,
-                        $readers_schema,
-                        array(AvroSchema::FULLNAME_ATTR)
-                    );
-                case AvroSchema::FIXED_SCHEMA:
-                    return self::attributesMatch(
-                        $writers_schema,
-                        $readers_schema,
-                        array(
-                            AvroSchema::FULLNAME_ATTR,
-                            AvroSchema::SIZE_ATTR
-                        )
-                    );
-                case AvroSchema::RECORD_SCHEMA:
-                case AvroSchema::ERROR_SCHEMA:
-                    return self::attributesMatch(
-                        $writers_schema,
-                        $readers_schema,
-                        array(AvroSchema::FULLNAME_ATTR)
-                    );
-                case AvroSchema::REQUEST_SCHEMA:
-                    // XXX: This seems wrong
-                    return true;
-                // XXX: no default
-            }
-
-            if (
-                AvroSchema::INT_TYPE == $writers_schema_type
-                && in_array($readers_schema_type, array(
-                    AvroSchema::LONG_TYPE,
-                    AvroSchema::FLOAT_TYPE,
-                    AvroSchema::DOUBLE_TYPE
-                ))
-            ) {
-                return true;
-            }
-
-            if (
-                AvroSchema::LONG_TYPE == $writers_schema_type
-                && in_array($readers_schema_type, array(
-                    AvroSchema::FLOAT_TYPE,
-                    AvroSchema::DOUBLE_TYPE
-                ))
-            ) {
-                return true;
-            }
-
-            if (
-                AvroSchema::FLOAT_TYPE == $writers_schema_type
-                && AvroSchema::DOUBLE_TYPE == $readers_schema_type
-            ) {
-                return true;
-            }
-
-            return false;
+        if (
+            AvroSchema::LONG_TYPE === $writers_schema_type
+            && in_array($readers_schema_type, [
+                AvroSchema::FLOAT_TYPE,
+                AvroSchema::DOUBLE_TYPE
+            ])
+        ) {
+            return true;
         }
+
+        if (AvroSchema::FLOAT_TYPE === $writers_schema_type && AvroSchema::DOUBLE_TYPE === $readers_schema_type) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -246,10 +235,20 @@ class AvroIODatumReader
     public static function attributesMatch($schema_one, $schema_two, $attribute_names)
     {
         foreach ($attribute_names as $attribute_name) {
-            if (
-                $schema_one->attribute($attribute_name)
-                !== $schema_two->attribute($attribute_name)
-            ) {
+            if ($schema_one->attribute($attribute_name) !== $schema_two->attribute($attribute_name)) {
+                if ($attribute_name === AvroSchema::FULLNAME_ATTR) {
+                    foreach ($schema_two->getAliases() as $alias) {
+                        if (
+                            $schema_one->attribute($attribute_name) === (new AvroName(
+                                $alias,
+                                $schema_two->attribute(AvroSchema::NAMESPACE_ATTR),
+                                null
+                            ))->fullname()
+                        ) {
+                            return true;
+                        }
+                    }
+                }
                 return false;
             }
         }
@@ -344,35 +343,29 @@ class AvroIODatumReader
     public function readRecord($writers_schema, $readers_schema, $decoder)
     {
         $readers_fields = $readers_schema->fieldsHash();
-        $record = array();
+        $record = [];
         foreach ($writers_schema->fields() as $writers_field) {
             $type = $writers_field->type();
-            if (isset($readers_fields[$writers_field->name()])) {
-                $record[$writers_field->name()]
-                    = $this->readData(
-                        $type,
-                        $readers_fields[$writers_field->name()]->type(),
-                        $decoder
-                    );
+            $readers_field = $readers_fields[$writers_field->name()] ?? null;
+            if ($readers_field) {
+                $record[$writers_field->name()] = $this->readData($type, $readers_field->type(), $decoder);
+            } elseif (isset($readers_schema->fieldsByAlias()[$writers_field->name()])) {
+                $readers_field = $readers_schema->fieldsByAlias()[$writers_field->name()];
+                $field_val = $this->readData($writers_field->type(), $readers_field->type(), $decoder);
+                $record[$readers_field->name()] = $field_val;
             } else {
                 self::skipData($type, $decoder);
             }
         }
         // Fill in default values
-        if (count($readers_fields) > count($record)) {
-            $writers_fields = $writers_schema->fieldsHash();
-            foreach ($readers_fields as $field_name => $field) {
-                if (!isset($writers_fields[$field_name])) {
-                    if ($field->hasDefaultValue()) {
-                        $record[$field->name()]
-                            = $this->readDefaultValue(
-                                $field->type(),
-                                $field->defaultValue()
-                            );
-                    } else {
-                        null;
-                    } // FIXME: unset
-                }
+        foreach ($readers_fields as $field_name => $field) {
+            if (isset($writers_fields[$field_name])) {
+                continue;
+            }
+            if ($field->hasDefaultValue()) {
+                $record[$field->name()] = $this->readDefaultValue($field->type(), $field->defaultValue());
+            } else {
+                null;
             }
         }
 

@@ -21,25 +21,15 @@
 
 """Support for inter-process calls."""
 
-from __future__ import absolute_import, division, print_function
-
+import http.client
 import io
 import os
-from struct import Struct
+import struct
 
 import avro.errors
 import avro.io
-from avro import protocol, schema
-
-try:
-    import httplib  # type: ignore
-except ImportError:
-    from http import client as httplib  # type: ignore
-
-try:
-    unicode
-except NameError:
-    unicode = str
+import avro.protocol
+import avro.schema
 
 
 def _load(name):
@@ -51,25 +41,25 @@ def _load(name):
 
 HANDSHAKE_REQUEST_SCHEMA_JSON = _load('HandshakeRequest.avsc')
 HANDSHAKE_RESPONSE_SCHEMA_JSON = _load('HandshakeResponse.avsc')
-HANDSHAKE_REQUEST_SCHEMA = schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
-HANDSHAKE_RESPONSE_SCHEMA = schema.parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
+HANDSHAKE_REQUEST_SCHEMA = avro.schema.parse(HANDSHAKE_REQUEST_SCHEMA_JSON)
+HANDSHAKE_RESPONSE_SCHEMA = avro.schema.parse(HANDSHAKE_RESPONSE_SCHEMA_JSON)
 
 HANDSHAKE_REQUESTOR_WRITER = avro.io.DatumWriter(HANDSHAKE_REQUEST_SCHEMA)
 HANDSHAKE_REQUESTOR_READER = avro.io.DatumReader(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_WRITER = avro.io.DatumWriter(HANDSHAKE_RESPONSE_SCHEMA)
 HANDSHAKE_RESPONDER_READER = avro.io.DatumReader(HANDSHAKE_REQUEST_SCHEMA)
 
-META_SCHEMA = schema.parse('{"type": "map", "values": "bytes"}')
+META_SCHEMA = avro.schema.parse('{"type": "map", "values": "bytes"}')
 META_WRITER = avro.io.DatumWriter(META_SCHEMA)
 META_READER = avro.io.DatumReader(META_SCHEMA)
 
-SYSTEM_ERROR_SCHEMA = schema.parse('["string"]')
+SYSTEM_ERROR_SCHEMA = avro.schema.parse('["string"]')
 
 # protocol cache
 REMOTE_HASHES = {}
 REMOTE_PROTOCOLS = {}
 
-BIG_ENDIAN_INT_STRUCT = Struct('!I')
+BIG_ENDIAN_INT_STRUCT = struct.Struct('!I')
 BUFFER_HEADER_LENGTH = 4
 BUFFER_SIZE = 8192
 
@@ -78,7 +68,7 @@ BUFFER_SIZE = 8192
 #
 
 
-class BaseRequestor(object):
+class BaseRequestor:
     """Base class for the client side of a protocol interaction."""
 
     def __init__(self, local_protocol, transceiver):
@@ -133,7 +123,7 @@ class BaseRequestor(object):
         request_datum['clientHash'] = local_hash
         request_datum['serverHash'] = remote_hash
         if self.send_protocol:
-            request_datum['clientProtocol'] = unicode(self.local_protocol)
+            request_datum['clientProtocol'] = str(self.local_protocol)
         HANDSHAKE_REQUESTOR_WRITER.write(request_datum, encoder)
 
     def write_call_request(self, message_name, request_datum, encoder):
@@ -170,7 +160,7 @@ class BaseRequestor(object):
         elif match == 'CLIENT':
             if self.send_protocol:
                 raise avro.errors.AvroException('Handshake failure.')
-            self.remote_protocol = protocol.parse(
+            self.remote_protocol = avro.protocol.parse(
                 handshake_response.get('serverProtocol'))
             self.remote_hash = handshake_response.get('serverHash')
             self.send_protocol = False
@@ -178,7 +168,7 @@ class BaseRequestor(object):
         elif match == 'NONE':
             if self.send_protocol:
                 raise avro.errors.AvroException('Handshake failure.')
-            self.remote_protocol = protocol.parse(
+            self.remote_protocol = avro.protocol.parse(
                 handshake_response.get('serverProtocol'))
             self.remote_hash = handshake_response.get('serverHash')
             self.send_protocol = True
@@ -239,7 +229,7 @@ class Requestor(BaseRequestor):
         return self.request(message_name, request_datum)
 
 
-class Responder(object):
+class Responder:
     """Base class for the server side of a protocol interaction."""
 
     def __init__(self, local_protocol):
@@ -303,7 +293,7 @@ class Responder(object):
             except AvroRemoteException as e:
                 error = e
             except Exception as e:
-                error = AvroRemoteException(unicode(e))
+                error = AvroRemoteException(str(e))
 
             # write response using local protocol
             META_WRITER.write(response_metadata, buffer_encoder)
@@ -315,7 +305,7 @@ class Responder(object):
                 writers_schema = local_message.errors
                 self.write_error(writers_schema, error, buffer_encoder)
         except schema.AvroException as e:
-            error = AvroRemoteException(unicode(e))
+            error = AvroRemoteException(str(e))
             buffer_encoder = avro.io.BinaryEncoder(io.BytesIO())
             META_WRITER.write(response_metadata, buffer_encoder)
             buffer_encoder.write_boolean(True)
@@ -331,7 +321,7 @@ class Responder(object):
         client_protocol = handshake_request.get('clientProtocol')
         remote_protocol = self.get_protocol_cache(client_hash)
         if remote_protocol is None and client_protocol is not None:
-            remote_protocol = protocol.parse(client_protocol)
+            remote_protocol = avro.protocol.parse(client_protocol)
             self.set_protocol_cache(client_hash, remote_protocol)
 
         # evaluate remote's guess of the local protocol
@@ -348,7 +338,7 @@ class Responder(object):
                 handshake_response['match'] = 'CLIENT'
 
         if handshake_response['match'] != 'BOTH':
-            handshake_response['serverProtocol'] = unicode(self.local_protocol)
+            handshake_response['serverProtocol'] = str(self.local_protocol)
             handshake_response['serverHash'] = self.local_hash
 
         HANDSHAKE_RESPONDER_WRITER.write(handshake_response, encoder)
@@ -370,14 +360,14 @@ class Responder(object):
 
     def write_error(self, writers_schema, error_exception, encoder):
         datum_writer = avro.io.DatumWriter(writers_schema)
-        datum_writer.write(unicode(error_exception), encoder)
+        datum_writer.write(str(error_exception), encoder)
 
 #
 # Utility classes
 #
 
 
-class FramedReader(object):
+class FramedReader:
     """Wrapper around a file-like object to read framed data."""
 
     def __init__(self, reader):
@@ -407,7 +397,7 @@ class FramedReader(object):
         return BIG_ENDIAN_INT_STRUCT.unpack(read)[0]
 
 
-class FramedWriter(object):
+class FramedWriter:
     """Wrapper around a file-like object to write framed data."""
 
     def __init__(self, writer):
@@ -443,7 +433,7 @@ class FramedWriter(object):
 #
 
 
-class HTTPTransceiver(object):
+class HTTPTransceiver:
     """
     A simple HTTP-based transceiver implementation.
     Useful for clients but not for servers
@@ -451,7 +441,7 @@ class HTTPTransceiver(object):
 
     def __init__(self, host, port, req_resource='/'):
         self.req_resource = req_resource
-        self.conn = httplib.HTTPConnection(host, port)
+        self.conn = http.client.HTTPConnection(host, port)
         self.conn.connect()
         self.remote_name = self.conn.sock.getsockname()
 

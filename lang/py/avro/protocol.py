@@ -21,23 +21,11 @@
 
 """Protocol implementation."""
 
-from __future__ import absolute_import, division, print_function
-
 import hashlib
 import json
 
 import avro.errors
 import avro.schema
-
-try:
-    unicode
-except NameError:
-    unicode = str
-
-try:
-    basestring  # type: ignore
-except NameError:
-    basestring = (bytes, unicode)
 
 #
 # Constants
@@ -51,7 +39,7 @@ VALID_TYPE_SCHEMA_TYPES = ('enum', 'record', 'error', 'fixed')
 #
 
 
-class Protocol(object):
+class Protocol:
     """An application protocol."""
 
     def _parse_types(self, types, type_names):
@@ -85,10 +73,10 @@ class Protocol(object):
         if not name:
             fail_msg = 'Protocols must have a non-empty name.'
             raise avro.errors.ProtocolParseException(fail_msg)
-        elif not isinstance(name, basestring):
+        elif not isinstance(name, str):
             fail_msg = 'The name property must be a string.'
             raise avro.errors.ProtocolParseException(fail_msg)
-        elif not (namespace is None or isinstance(namespace, basestring)):
+        elif not (namespace is None or isinstance(namespace, str)):
             fail_msg = 'The namespace property must be a string.'
             raise avro.errors.ProtocolParseException(fail_msg)
         elif not (types is None or isinstance(types, list)):
@@ -173,7 +161,7 @@ class Protocol(object):
         return to_cmp == json.loads(str(that))
 
 
-class Message(object):
+class Message:
     """A Protocol message."""
 
     def _parse_request(self, request, names):
@@ -183,7 +171,7 @@ class Message(object):
         return avro.schema.RecordSchema(None, None, request, names, 'request')
 
     def _parse_response(self, response, names):
-        if isinstance(response, basestring) and names.has_name(response, None):
+        if isinstance(response, str) and names.has_name(response, None):
             return names.get_name(response, None)
         else:
             return avro.schema.make_avsc_object(response, names)
