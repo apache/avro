@@ -63,6 +63,10 @@ module Avro
         writer_schema_fingerprint = buffer.read(8).unpack(FINGERPRINT_PACK_MODE).first
         writer_schema = @schema_store.find_by_fingerprint(writer_schema_fingerprint)
 
+        if !writer_schema
+          raise MissingSchemaError.new("Cannot resolve schema for fingerprint: #{writer_schema_fingerprint}")
+        end
+
         decoder = Avro::IO::BinaryDecoder.new(buffer)
 
         reader = Avro::IO::DatumReader.new(writer_schema, @reader_schema)
@@ -85,7 +89,7 @@ module Avro
         end
 
         def find_by_fingerprint(fingerprint)
-          @schemas.fetch(fingerprint) { raise MissingSchemaError.new("Cannot resolve schema for fingerprint: #{fingerprint}") }
+          @schemas[fingerprint]
         end
       end
     end
