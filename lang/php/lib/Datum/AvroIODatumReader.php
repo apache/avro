@@ -247,7 +247,7 @@ class AvroIODatumReader
      * @param AvroSchema $schema_two
      * @param string[] $attribute_names array of string attribute names to compare
      *
-     * @returns boolean true if the attributes match and false otherwise.
+     * @return boolean true if the attributes match and false otherwise.
      */
     public static function attributesMatch($schema_one, $schema_two, $attribute_names)
     {
@@ -263,7 +263,7 @@ class AvroIODatumReader
     }
 
     /**
-     * @returns array
+     * @return array
      */
     public function readArray($writers_schema, $readers_schema, $decoder)
     {
@@ -272,7 +272,7 @@ class AvroIODatumReader
         while (0 !== $block_count) {
             if ($block_count < 0) {
                 $block_count = -$block_count;
-                $block_size = $decoder->read_long(); // Read (and ignore) block size
+                $block_size = $decoder->readLong(); // Read (and ignore) block size
             }
             for ($i = 0; $i < $block_count; $i++) {
                 $items [] = $this->readData(
@@ -361,7 +361,7 @@ class AvroIODatumReader
                         $decoder
                     );
             } else {
-                $this->skipData($type, $decoder);
+                self::skipData($type, $decoder);
             }
         }
         // Fill in default values
@@ -390,7 +390,7 @@ class AvroIODatumReader
      * @param AvroSchema $writers_schema
      * @param AvroIOBinaryDecoder $decoder
      */
-    private function skipData($writers_schema, $decoder)
+    public static function skipData($writers_schema, $decoder)
     {
         switch ($writers_schema->type()) {
             case AvroSchema::NULL_TYPE:
