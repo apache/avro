@@ -104,9 +104,9 @@ public:
     void syncIfNeeded();
 
     /**
-     * Returns offset to the last sync marker written.
+     * Returns the byte offset (within the current file) of the start of the current block being written.
      */
-    uint64_t getLastSync();
+    uint64_t getCurrentBlockStart();
 
     /**
      * Increments the object count.
@@ -168,9 +168,9 @@ public:
     }
 
     /**
-     * Returns offset to the last sync marker written.
+     *  Returns the byte offset (within the current file) of the start of the current block being written.
      */
-    uint64_t getLastSync() { return base_->getLastSync(); }
+    uint64_t getCurrentBlockStart() { return base_->getCurrentBlockStart(); }
 
 
     /**

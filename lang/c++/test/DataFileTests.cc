@@ -820,25 +820,25 @@ void testLastSync(avro::Codec codec) {
         avro::DataFileWriter<TestRecord> df(filename,
             writerSchema, 1024, codec);
 
-        uint64_t lastSync = df.getLastSync();
+        uint64_t lastSync = df.getCurrentBlockStart();
         syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, 0));
         for(int i = 0; i < numberOfRecords; i++)
         {
             df.write(TestRecord(largeString, (int64_t)i));
             
             // During the write, gather all the sync boundaries from the lastSync() API
-            if(df.getLastSync() != lastSync)
+            if(df.getCurrentBlockStart() != lastSync)
             {
                 int recordsUptoSync = i;    // 1 less than total number of records written, since the sync block is sealed before a write
                 syncMetadata.push_back(std::pair<uint64_t, int>(lastSync, recordsUptoSync));
-                lastSync = df.getLastSync();
+                lastSync = df.getCurrentBlockStart();
 
-                //::printf("\nPast sync point %llu, total rows upto sync %d", lastSync, recordsUptoSync);
+                //::printf("\nPast current block start %llu, total rows upto sync %d", lastSync, recordsUptoSync);
             }
         }
 
-        //::printf("\nPast sync point %llu, total rows upto sync %d", df.getLastSync(), numberOfRecords);
-        syncMetadata.push_back(std::pair<uint64_t, int>(df.getLastSync(), numberOfRecords));
+        //::printf("\nPast current block start %llu, total rows upto sync %d", df.getCurrentBlockStart(), numberOfRecords);
+        syncMetadata.push_back(std::pair<uint64_t, int>(df.getCurrentBlockStart(), numberOfRecords));
 
         df.flush();
         df.close();
@@ -906,7 +906,7 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
         avro::DataFileWriter<TestRecord> df(filename,
             writerSchema, 1024, codec);
 
-        firstSyncPoint = df.getLastSync();
+        firstSyncPoint = df.getCurrentBlockStart();
         syncPointWithRecord = firstSyncPoint;
         for(int i = 0; i < numberOfRecords; i++)
         {
@@ -914,16 +914,16 @@ void testReadRecordEfficientlyUsingLastSync(avro::Codec codec) {
 
             // During the write, gather all the sync boundaries from the lastSync() API
             int recordsWritten = i + 1;
-            if((recordsWritten <= recordToRead) && (df.getLastSync() != syncPointWithRecord))
+            if((recordsWritten <= recordToRead) && (df.getCurrentBlockStart() != syncPointWithRecord))
             {
                 recordsUptoLastSync = i;    // 1 less than total number of records written, since the sync block is sealed before a write
-                syncPointWithRecord = df.getLastSync();
+                syncPointWithRecord = df.getCurrentBlockStart();
 
-                //::printf("\nPast sync point %llu, total rows upto sync %d", syncPointWithRecord, recordsUptoLastSync);
+                //::printf("\nPast current block start %llu, total rows upto sync %d", syncPointWithRecord, recordsUptoLastSync);
             }
         }
 
-        finalSync = df.getLastSync();
+        finalSync = df.getCurrentBlockStart();
         df.flush();
         df.close();
     }

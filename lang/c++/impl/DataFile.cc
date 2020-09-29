@@ -233,7 +233,7 @@ void DataFileWriterBase::syncIfNeeded()
     }
 }
 
-uint64_t DataFileWriterBase::getLastSync()
+uint64_t DataFileWriterBase::getCurrentBlockStart()
 {
     return lastSync_;
 }
