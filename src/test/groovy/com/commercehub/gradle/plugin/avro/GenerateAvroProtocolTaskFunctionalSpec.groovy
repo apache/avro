@@ -89,6 +89,6 @@ class GenerateAvroProtocolTaskFunctionalSpec extends FunctionalSpec {
         then: "avpr files are generated for each IDL file"
         result.task(":generateAvroProtocol").outcome == SUCCESS
         projectFile("build/generated-main-avro-avpr/org/example/v1/TestProtocol.avpr").file
-        projectFile("build/generated-main-avro-avpr/org/example/v1/TestProtocol.avpr").file
+        projectFile("build/generated-main-avro-avpr/org/example/v2/TestProtocol.avpr").file
     }
 }
