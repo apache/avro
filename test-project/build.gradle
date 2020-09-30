@@ -1,5 +1,4 @@
 plugins {
-    id "application"
     id "idea"
     id "com.commercehub.gradle.plugin.avro" version "0.21.0"
 }
@@ -15,7 +14,6 @@ ext {
 dependencies {
     implementation "org.apache.avro:avro:${avroVersion}"
     implementation "org.apache.avro:avro-tools:${avroVersion}"
-    implementation "joda-time:joda-time:2.10.6"
     testImplementation "org.junit.jupiter:junit-jupiter:5.6.2"
 }
 
@@ -29,5 +27,4 @@ test {
 avro {
     stringType = "CharSequence"
     fieldVisibility = "private"
-    dateTimeLogicalType = "JODA"
 }

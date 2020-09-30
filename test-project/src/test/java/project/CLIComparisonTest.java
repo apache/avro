@@ -27,9 +27,9 @@ public class CLIComparisonTest {
     private static Stream<Arguments> compareSpecificCompilerOutput() {
         return Stream.of(
             // From https://stackoverflow.com/questions/45581437/how-to-specify-converter-for-default-value-in-avro-union-logical-type-fields
-            Arguments.of("BuggyRecord.avsc", "com/example/BuggyRecord.java", "compile -dateTimeLogicalTypeImpl JODA schema".split(" ")),
+            Arguments.of("BuggyRecord.avsc", "com/example/BuggyRecord.java", "compile schema".split(" ")),
             // From https://github.com/davidmc24/gradle-avro-plugin/issues/120
-            Arguments.of("Messages.avsc", "com/somedomain/Messages.java", "compile -dateTimeLogicalTypeImpl JODA schema".split(" "))
+            Arguments.of("Messages.avsc", "com/somedomain/Messages.java", "compile schema".split(" "))
         );
     }
 
