@@ -4,6 +4,8 @@
   "minimum-stability": "stable",
   "license": "Apache-2.0",
   "require": {
+    "ext-json": "*",
+    "ext-sockets": "*",
     "beberlei/composer-monorepo-plugin": "^0.12"
   },
   "require-dev": {
