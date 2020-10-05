@@ -126,13 +126,12 @@ public class GenericData {
   public void addLogicalTypeConversion(Conversion<?> conversion) {
     conversions.put(conversion.getLogicalTypeName(), conversion);
     Class<?> type = conversion.getConvertedType();
-    if (conversionsByClass.containsKey(type)) {
-      conversionsByClass.get(type).put(conversion.getLogicalTypeName(), conversion);
-    } else {
-      Map<String, Conversion<?>> conversions = new LinkedHashMap<>();
-      conversions.put(conversion.getLogicalTypeName(), conversion);
+    Map<String, Conversion<?>> conversions = conversionsByClass.get(type);
+    if (conversions == null) {
+      conversions = new LinkedHashMap<>();
       conversionsByClass.put(type, conversions);
     }
+    conversions.put(conversion.getLogicalTypeName(), conversion);
   }
 
   /**
