@@ -57,7 +57,9 @@ public class SpecificCompilerTool implements Tool {
       System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
       System.err.println(" -fieldVisibility [private|public|public_deprecated]- use either and default private");
-      System.err.println(" -optionalGetters [all_fields|only_nullable_fields]- use either and default none");
+      System.err.println(" -noSetters - do not generate setters");
+      System.err.println(" -addExtraOptionalGetters - generate extra getters with this format: 'getOptional<FieldName>'");
+      System.err.println(" -optionalGetters [all_fields|only_nullable_fields]- generate getters returning Optional<T> for all fields or only for nullable fields");
       System.err
           .println(" -bigDecimal - use java.math.BigDecimal for " + "decimal type instead of java.nio.ByteBuffer");
       System.err.println(" -templateDir - directory with custom Velocity templates");
