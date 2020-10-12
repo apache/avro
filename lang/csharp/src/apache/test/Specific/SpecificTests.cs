@@ -563,6 +563,7 @@ namespace Avro.Test
                 return Schema.Parse(@"{
    ""type"":""record"",
    ""name"":""EnumRecord"",
+   ""namespace"":""Avro.Test"",
    ""fields"":[
       {
          ""name"":""enumType"",
