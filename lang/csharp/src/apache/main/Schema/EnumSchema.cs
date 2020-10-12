@@ -127,7 +127,7 @@ namespace Avro
             foreach (string s in this.Symbols)
                 writer.WriteValue(s);
             writer.WriteEndArray();
-            if (Default != null) 
+            if (null != Default) 
             {
                 writer.WritePropertyName("default");
                 writer.WriteValue(Default);
@@ -143,7 +143,11 @@ namespace Avro
         public int Ordinal(string symbol)
         {
             int result;
-            if (symbolMap.TryGetValue(symbol, out result)) return result;
+            if (symbolMap.TryGetValue(symbol, out result))
+                return result;
+            if (null != Default)
+                return symbolMap[Default];
+
             throw new AvroException("No such symbol: " + symbol);
         }
 
