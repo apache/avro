@@ -43,7 +43,7 @@ import org.apache.avro.io.DatumReader;
 /**
  * Streaming access to files written by {@link DataFileWriter}. Use
  * {@link DataFileReader} for file-based input.
- * 
+ *
  * @see DataFileWriter
  */
 public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
@@ -127,7 +127,8 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
     // finalize the header
     header.metaKeyList = Collections.unmodifiableList(header.metaKeyList);
-    header.schema = new Schema.Parser().setValidate(false).parse(getMetaString(DataFileConstants.SCHEMA));
+    header.schema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
+        .parse(getMetaString(DataFileConstants.SCHEMA));
     this.codec = resolveCodec();
     reader.setSchema(header.schema);
   }
@@ -226,7 +227,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /**
    * Read the next datum in the file.
-   * 
+   *
    * @throws NoSuchElementException if no more remain in the file.
    */
   @Override
@@ -240,7 +241,7 @@ public class DataFileStream<D> implements Iterator<D>, Iterable<D>, Closeable {
 
   /**
    * Read the next datum from the file.
-   * 
+   *
    * @param reuse an instance to reuse.
    * @throws NoSuchElementException if no more remain in the file.
    */

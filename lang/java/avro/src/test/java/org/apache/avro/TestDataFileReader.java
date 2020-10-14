@@ -17,15 +17,22 @@
  */
 package org.apache.avro;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.apache.avro.file.DataFileReader;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.Test;
 import com.sun.management.UnixOperatingSystemMXBean;
 
@@ -60,6 +67,28 @@ public class TestDataFileReader {
       return ((UnixOperatingSystemMXBean) osMxBean).getOpenFileDescriptorCount();
     }
     return 0;
+  }
+
+  @Test
+  public void testIgnoreSchemaValidationOnRead() throws IOException {
+    // This schema has an accent in the name and the default for the field doesn't
+    // match the first type in the union. A Java SDK in the past could create a file
+    // containing this schema.
+    Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
+        .parse("{\"type\": \"record\", \"name\": \"InvalidAccëntWithInvalidNull\", \"fields\": "
+            + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+
+    // Create a file with the legacy schema.
+    File f = Files.createTempFile("testIgnoreSchemaValidationOnRead", ".avro").toFile();
+    try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      w.create(legacySchema, f);
+      w.flush();
+    }
+
+    // This should not throw an exception.
+    try (DataFileStream<Void> r = new DataFileStream<>(new FileInputStream(f), new GenericDatumReader<>())) {
+      assertEquals(legacySchema, r.getSchema());
+    }
   }
 
 }
