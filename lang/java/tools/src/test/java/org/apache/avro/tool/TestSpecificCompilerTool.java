@@ -45,6 +45,13 @@ public class TestSpecificCompilerTool {
   private static final File TEST_EXPECTED_PLAYER = new File(TEST_EXPECTED_OUTPUT_DIR, "Player.java");
   private static final File TEST_EXPECTED_FIELDVISIBILITYTEST = new File(TEST_EXPECTED_OUTPUT_DIR,
       "FieldVisibilityTest.java");
+  private static final File TEST_EXPECTED_NO_SETTERS = new File(TEST_EXPECTED_OUTPUT_DIR, "NoSettersTest.java");
+  private static final File TEST_EXPECTED_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS = new File(TEST_EXPECTED_OUTPUT_DIR,
+      "OptionalGettersNullableFieldsTest.java");
+  private static final File TEST_EXPECTED_OPTIONAL_GETTERS_FOR_ALL_FIELDS = new File(TEST_EXPECTED_OUTPUT_DIR,
+      "OptionalGettersAllFieldsTest.java");
+  private static final File TEST_EXPECTED_ADD_EXTRA_OPTIONAL_GETTERS = new File(TEST_EXPECTED_OUTPUT_DIR,
+      "AddExtraOptionalGettersTest.java");
 
   private static final File TEST_EXPECTED_STRING_OUTPUT_DIR = new File(TEST_DIR, "output-string");
   private static final File TEST_EXPECTED_STRING_POSITION = new File(TEST_EXPECTED_STRING_OUTPUT_DIR,
@@ -60,6 +67,14 @@ public class TestSpecificCompilerTool {
   private static final File TEST_OUTPUT_POSITION = new File(TEST_OUTPUT_DIR, "avro/examples/baseball/Position.java");
   private static final File TEST_OUTPUT_FIELDVISIBILITYTEST = new File(TEST_OUTPUT_DIR,
       "avro/examples/baseball/FieldVisibilityTest.java");
+  private static final File TEST_OUTPUT_NO_SETTERS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/NoSettersTest.java");
+  private static final File TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/OptionalGettersNullableFieldsTest.java");
+  private static final File TEST_OUTPUT_OPTIONAL_GETTERS_ALL_FIELDS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/OptionalGettersAllFieldsTest.java");
+  private static final File TEST_OUTPUT_ADD_EXTRA_OPTIONAL_GETTERS = new File(TEST_OUTPUT_DIR,
+      "avro/examples/baseball/AddExtraOptionalGettersTest.java");
 
   private static final File TEST_OUTPUT_STRING_DIR = new File("target/compiler/output-string");
   private static final File TEST_OUTPUT_STRING_PLAYER = new File(TEST_OUTPUT_STRING_DIR,
@@ -81,6 +96,42 @@ public class TestSpecificCompilerTool {
     doCompile(new String[] { "-encoding", "UTF-8", "-fieldVisibility", "public_deprecated", "schema",
         TEST_INPUT_DIR.toString() + "/fieldvisibilitytest.avsc", TEST_OUTPUT_DIR.getPath() });
     assertFileMatch(TEST_EXPECTED_FIELDVISIBILITYTEST, TEST_OUTPUT_FIELDVISIBILITYTEST);
+  }
+
+  @Test
+  public void testCompileSchemaWithExcludedSetters() throws Exception {
+
+    TEST_OUTPUT_NO_SETTERS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-noSetters", "schema",
+        TEST_INPUT_DIR.toString() + "/nosetterstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_NO_SETTERS, TEST_OUTPUT_NO_SETTERS);
+  }
+
+  @Test
+  public void testCompileSchemaWithOptionalGettersForNullableFieldsOnly() throws Exception {
+
+    TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-optionalGetters", "only_nullable_fields", "schema",
+        TEST_INPUT_DIR.toString() + "/optionalgettersnullablefieldstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_OPTIONAL_GETTERS_FOR_NULLABLE_FIELDS, TEST_OUTPUT_OPTIONAL_GETTERS_NULLABLE_FIELDS);
+  }
+
+  @Test
+  public void testCompileSchemaWithOptionalGettersForAllFields() throws Exception {
+
+    TEST_OUTPUT_OPTIONAL_GETTERS_ALL_FIELDS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-optionalGetters", "all_fields", "schema",
+        TEST_INPUT_DIR.toString() + "/optionalgettersallfieldstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_OPTIONAL_GETTERS_FOR_ALL_FIELDS, TEST_OUTPUT_OPTIONAL_GETTERS_ALL_FIELDS);
+  }
+
+  @Test
+  public void testCompileSchemaWithAddExtraOptionalGetters() throws Exception {
+
+    TEST_OUTPUT_ADD_EXTRA_OPTIONAL_GETTERS.delete();
+    doCompile(new String[] { "-encoding", "UTF-8", "-addExtraOptionalGetters", "schema",
+        TEST_INPUT_DIR.toString() + "/addextraoptionalgetterstest.avsc", TEST_OUTPUT_DIR.getPath() });
+    assertFileMatch(TEST_EXPECTED_ADD_EXTRA_OPTIONAL_GETTERS, TEST_OUTPUT_ADD_EXTRA_OPTIONAL_GETTERS);
   }
 
   @Test

@@ -328,6 +328,10 @@
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/FieldVisibilityTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/NoSettersTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/OptionalGettersNullableFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/OptionalGettersAllFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/AddExtraOptionalGettersTest.java</exclude>
                 <exclude>lang/csharp/build/doc/html/**</exclude>
                 <exclude>lang/csharp/src/apache/ipc.test/GeneratedFiles/**/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/perf/com/foo/*.cs</exclude>
