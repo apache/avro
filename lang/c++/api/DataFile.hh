@@ -73,6 +73,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     typedef std::map<std::string, std::vector<uint8_t> > Metadata;
 
     Metadata metadata_;
+    int64_t lastSync_;
 
     static std::unique_ptr<OutputStream> makeStream(const char* filename);
     static DataFileSync makeSync();
@@ -101,6 +102,11 @@ public:
      * inserted.
      */
     void syncIfNeeded();
+
+    /**
+     * Returns the byte offset (within the current file) of the start of the current block being written.
+     */
+    uint64_t getCurrentBlockStart();
 
     /**
      * Increments the object count.
@@ -160,6 +166,12 @@ public:
         avro::encode(base_->encoder(), datum);
         base_->incr();
     }
+
+    /**
+     *  Returns the byte offset (within the current file) of the start of the current block being written.
+     */
+    uint64_t getCurrentBlockStart() { return base_->getCurrentBlockStart(); }
+
 
     /**
      * Closes the current file. Once closed this datafile object cannot be

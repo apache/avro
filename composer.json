@@ -6,7 +6,7 @@
   "require": {
     "ext-json": "*",
     "ext-sockets": "*",
-    "beberlei/composer-monorepo-plugin": "^0.12"
+    "beberlei/composer-monorepo-plugin": "^0.16"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.1",
