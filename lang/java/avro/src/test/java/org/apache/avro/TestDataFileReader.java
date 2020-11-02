@@ -28,13 +28,16 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import com.sun.management.UnixOperatingSystemMXBean;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.file.FileReader;
+import org.apache.avro.file.SeekableFileInput;
+import org.apache.avro.file.SeekableInput;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.junit.Test;
-import com.sun.management.UnixOperatingSystemMXBean;
 
 @SuppressWarnings("restriction")
 public class TestDataFileReader {
@@ -67,6 +70,65 @@ public class TestDataFileReader {
       return ((UnixOperatingSystemMXBean) osMxBean).getOpenFileDescriptorCount();
     }
     return 0;
+  }
+
+  @Test
+  // regression test for bug AVRO-2944
+  public void testThrottledInputStream() throws IOException {
+    // AVRO-2944 describes hanging/failure in reading Avro file with performing
+    // magic header check. This happens with throttled input stream,
+    // where we read into buffer less bytes than requested.
+
+    Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
+        .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
+            + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+    File f = Files.createTempFile("testThrottledInputStream", ".avro").toFile();
+    try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      w.create(legacySchema, f);
+      w.flush();
+    }
+
+    // Without checking for magic header, throttled input has no effect
+    FileReader r = new DataFileReader(throttledInputStream(f), new GenericDatumReader<>());
+    assertEquals("TestSchema", r.getSchema().getName());
+
+    // With checking for magic header, throttled input should pass too.
+    FileReader r2 = DataFileReader.openReader(throttledInputStream(f), new GenericDatumReader<>());
+    assertEquals("TestSchema", r2.getSchema().getName());
+  }
+
+  private SeekableInput throttledInputStream(File f) throws IOException {
+    SeekableFileInput input = new SeekableFileInput(f);
+    return new SeekableInput() {
+      @Override
+      public void close() throws IOException {
+        input.close();
+      }
+
+      @Override
+      public void seek(long p) throws IOException {
+        input.seek(p);
+      }
+
+      @Override
+      public long tell() throws IOException {
+        return input.tell();
+      }
+
+      @Override
+      public long length() throws IOException {
+        return input.length();
+      }
+
+      @Override
+      public int read(byte[] b, int off, int len) throws IOException {
+        if (len == 1) {
+          return input.read(b, off, len);
+        } else {
+          return input.read(b, off, len - 1);
+        }
+      }
+    };
   }
 
   @Test
