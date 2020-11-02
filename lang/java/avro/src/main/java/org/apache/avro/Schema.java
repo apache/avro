@@ -17,15 +17,6 @@
  */
 package org.apache.avro;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,9 +37,33 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import org.apache.avro.logicaltypes.AvroArray;
+import org.apache.avro.logicaltypes.AvroBoolean;
+import org.apache.avro.logicaltypes.AvroBytes;
+import org.apache.avro.logicaltypes.AvroDouble;
+import org.apache.avro.logicaltypes.AvroEnum;
+import org.apache.avro.logicaltypes.AvroFixed;
+import org.apache.avro.logicaltypes.AvroFloat;
+import org.apache.avro.logicaltypes.AvroInt;
+import org.apache.avro.logicaltypes.AvroLong;
+import org.apache.avro.logicaltypes.AvroMap;
+import org.apache.avro.logicaltypes.AvroRecord;
+import org.apache.avro.logicaltypes.AvroString;
+import org.apache.avro.logicaltypes.AvroType;
+import org.apache.avro.logicaltypes.AvroDatatype;
 import org.apache.avro.util.internal.Accessor;
 import org.apache.avro.util.internal.Accessor.FieldAccessor;
 import org.apache.avro.util.internal.JacksonUtils;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 
 /**
  * An abstract data type.
@@ -189,6 +204,57 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   void setLogicalType(LogicalType logicalType) {
     this.logicalType = logicalType;
+  }
+
+  /**
+   * For the Avro-defined primitive and complex data types this method returns
+   * matching AvroDatatype objects. The Avro-provided logical data types
+   * themselves implement the AvroDatatype interface already.
+   * 
+   * @return An object with more metadata about the data type and methods to
+   *         convert values
+   */
+  public AvroDatatype getDataType() {
+    if (logicalType != null && logicalType instanceof AvroDatatype) {
+      return (AvroDatatype) logicalType;
+    } else {
+      return getBackingDataType(this);
+    }
+  }
+
+  /**
+   * @param schema of the field
+   * @return The AvroDatatype object useful for conversions
+   */
+  private static AvroDatatype getBackingDataType(Schema schema) {
+    switch (schema.getType()) {
+    case ARRAY:
+      return AvroArray.create();
+    case BOOLEAN:
+      return AvroBoolean.create();
+    case BYTES:
+      return AvroBytes.create();
+    case DOUBLE:
+      return AvroDouble.create();
+    case ENUM:
+      return new AvroEnum(schema);
+    case FIXED:
+      return new AvroFixed(schema);
+    case FLOAT:
+      return AvroFloat.create();
+    case INT:
+      return AvroInt.create();
+    case LONG:
+      return AvroLong.create();
+    case MAP:
+      return AvroMap.create();
+    case RECORD:
+      return AvroRecord.create();
+    case STRING:
+      return AvroString.create();
+    default:
+      return null;
+    }
   }
 
   /**
@@ -535,6 +601,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
     private final JsonNode defaultValue;
     private final Order order;
     private Set<String> aliases;
+    private final AvroDatatype datatype;
 
     Field(String name, Schema schema, String doc, JsonNode defaultValue, boolean validateDefault, Order order) {
       super(FIELD_RESERVED);
@@ -543,6 +610,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
       this.doc = doc;
       this.defaultValue = validateDefault ? validateDefault(name, schema, defaultValue) : defaultValue;
       this.order = Objects.requireNonNull(order, "Order cannot be null");
+      this.datatype = AvroType.getBaseSchema(schema).getDataType();
     }
 
     /**
@@ -563,6 +631,17 @@ public abstract class Schema extends JsonProperties implements Serializable {
      */
     public Field(String name, Schema schema) {
       this(name, schema, (String) null, (JsonNode) null, true, Order.ASCENDING);
+    }
+
+    /**
+     * This is the data type of the field, e.g. if the field is defined as
+     * union[NULL, Long] the returned data type is AvroLong because the field should
+     * be set with Long values.
+     * 
+     * @return the AvroDataType used to convert values for this field
+     */
+    public AvroDatatype getDataType() {
+      return datatype;
     }
 
     /**

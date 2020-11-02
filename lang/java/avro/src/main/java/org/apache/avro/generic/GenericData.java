@@ -240,7 +240,6 @@ public class GenericData {
       if (field == null) {
         throw new AvroRuntimeException("Not a valid schema field: " + key);
       }
-
       values[field.pos()] = value;
     }
 

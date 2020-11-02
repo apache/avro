@@ -361,6 +361,7 @@
                       <pluginExecutionFilter>
                         <groupId>com.diffplug.spotless</groupId>
                         <artifactId>spotless-maven-plugin</artifactId>
+                        <versionRange>[${spotless-maven-plugin.version},)</versionRange>
                         <goals>
                           <goal>check</goal>
                         </goals>

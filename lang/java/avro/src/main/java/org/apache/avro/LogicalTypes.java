@@ -22,6 +22,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.avro.logicaltypes.AvroByte;
+import org.apache.avro.logicaltypes.AvroCLOB;
+import org.apache.avro.logicaltypes.AvroDate;
+import org.apache.avro.logicaltypes.AvroDecimal;
+import org.apache.avro.logicaltypes.AvroLocalTimestampMicros;
+import org.apache.avro.logicaltypes.AvroLocalTimestampMillis;
+import org.apache.avro.logicaltypes.AvroNCLOB;
+import org.apache.avro.logicaltypes.AvroNVarchar;
+import org.apache.avro.logicaltypes.AvroSTGeometry;
+import org.apache.avro.logicaltypes.AvroSTPoint;
+import org.apache.avro.logicaltypes.AvroShort;
+import org.apache.avro.logicaltypes.AvroTimeMicros;
+import org.apache.avro.logicaltypes.AvroTimeMillis;
+import org.apache.avro.logicaltypes.AvroTimestampMicros;
+import org.apache.avro.logicaltypes.AvroTimestampMillis;
+import org.apache.avro.logicaltypes.AvroUUID;
+import org.apache.avro.logicaltypes.AvroUri;
+import org.apache.avro.logicaltypes.AvroVarchar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,32 +93,59 @@ public class LogicalTypes {
 
     try {
       switch (typeName) {
-      case TIMESTAMP_MILLIS:
-        logicalType = TIMESTAMP_MILLIS_TYPE;
+      case AvroByte.TYPENAME:
+        logicalType = AvroByte.create();
         break;
-      case DECIMAL:
-        logicalType = new Decimal(schema);
+      case AvroCLOB.TYPENAME:
+        logicalType = AvroCLOB.create();
         break;
-      case UUID:
-        logicalType = UUID_TYPE;
+      case AvroDate.TYPENAME:
+        logicalType = AvroDate.create();
         break;
-      case DATE:
-        logicalType = DATE_TYPE;
+      case AvroDecimal.TYPENAME:
+        logicalType = new AvroDecimal(schema);
         break;
-      case TIMESTAMP_MICROS:
-        logicalType = TIMESTAMP_MICROS_TYPE;
+      case AvroNCLOB.TYPENAME:
+        logicalType = AvroNCLOB.create();
         break;
-      case TIME_MILLIS:
-        logicalType = TIME_MILLIS_TYPE;
+      case AvroNVarchar.TYPENAME:
+        logicalType = new AvroNVarchar(schema);
         break;
-      case TIME_MICROS:
-        logicalType = TIME_MICROS_TYPE;
+      case AvroShort.TYPENAME:
+        logicalType = AvroShort.create();
         break;
-      case LOCAL_TIMESTAMP_MICROS:
-        logicalType = LOCAL_TIMESTAMP_MICROS_TYPE;
+      case AvroSTGeometry.TYPENAME:
+        logicalType = AvroSTGeometry.create();
         break;
-      case LOCAL_TIMESTAMP_MILLIS:
-        logicalType = LOCAL_TIMESTAMP_MILLIS_TYPE;
+      case AvroSTPoint.TYPENAME:
+        logicalType = AvroSTPoint.create();
+        break;
+      case AvroTimeMicros.TYPENAME:
+        logicalType = AvroTimeMicros.create();
+        break;
+      case AvroTimeMillis.TYPENAME:
+        logicalType = AvroTimeMillis.create();
+        break;
+      case AvroTimestampMicros.TYPENAME:
+        logicalType = AvroTimestampMicros.create();
+        break;
+      case AvroTimestampMillis.TYPENAME:
+        logicalType = AvroTimestampMillis.create();
+        break;
+      case AvroUri.TYPENAME:
+        logicalType = AvroUri.create();
+        break;
+      case AvroUUID.TYPENAME:
+        logicalType = AvroUUID.create();
+        break;
+      case AvroVarchar.TYPENAME:
+        logicalType = new AvroVarchar(schema);
+        break;
+      case AvroLocalTimestampMicros.TYPENAME:
+        logicalType = AvroLocalTimestampMicros.create();
+        break;
+      case AvroLocalTimestampMillis.TYPENAME:
+        logicalType = AvroLocalTimestampMillis.create();
         break;
       default:
         final LogicalTypeFactory typeFactory = REGISTERED_TYPES.get(typeName);
@@ -125,69 +170,69 @@ public class LogicalTypes {
     return logicalType;
   }
 
-  private static final String DECIMAL = "decimal";
-  private static final String UUID = "uuid";
-  private static final String DATE = "date";
-  private static final String TIME_MILLIS = "time-millis";
-  private static final String TIME_MICROS = "time-micros";
-  private static final String TIMESTAMP_MILLIS = "timestamp-millis";
-  private static final String TIMESTAMP_MICROS = "timestamp-micros";
-  private static final String LOCAL_TIMESTAMP_MILLIS = "local-timestamp-millis";
-  private static final String LOCAL_TIMESTAMP_MICROS = "local-timestamp-micros";
+  public static final String DECIMAL = "decimal";
+  public static final String UUID = "uuid";
+  public static final String DATE = "date";
+  public static final String TIME_MILLIS = "time-millis";
+  public static final String TIME_MICROS = "time-micros";
+  public static final String TIMESTAMP_MILLIS = "timestamp-millis";
+  public static final String TIMESTAMP_MICROS = "timestamp-micros";
+  public static final String LOCAL_TIMESTAMP_MILLIS = "local-timestamp-millis";
+  public static final String LOCAL_TIMESTAMP_MICROS = "local-timestamp-micros";
 
   /** Create a Decimal LogicalType with the given precision and scale 0 */
-  public static Decimal decimal(int precision) {
+  public static AvroDecimal decimal(int precision) {
     return decimal(precision, 0);
   }
 
   /** Create a Decimal LogicalType with the given precision and scale */
-  public static Decimal decimal(int precision, int scale) {
-    return new Decimal(precision, scale);
+  public static AvroDecimal decimal(int precision, int scale) {
+    return new AvroDecimal(precision, scale);
   }
 
-  private static final LogicalType UUID_TYPE = new LogicalType("uuid");
+  private static final LogicalType UUID_TYPE = AvroUUID.create();
 
   public static LogicalType uuid() {
     return UUID_TYPE;
   }
 
-  private static final Date DATE_TYPE = new Date();
+  private static final Date DATE_TYPE = AvroDate.create();
 
   public static Date date() {
     return DATE_TYPE;
   }
 
-  private static final TimeMillis TIME_MILLIS_TYPE = new TimeMillis();
+  private static final TimeMillis TIME_MILLIS_TYPE = AvroTimeMillis.create();
 
   public static TimeMillis timeMillis() {
     return TIME_MILLIS_TYPE;
   }
 
-  private static final TimeMicros TIME_MICROS_TYPE = new TimeMicros();
+  private static final TimeMicros TIME_MICROS_TYPE = AvroTimeMicros.create();
 
   public static TimeMicros timeMicros() {
     return TIME_MICROS_TYPE;
   }
 
-  private static final TimestampMillis TIMESTAMP_MILLIS_TYPE = new TimestampMillis();
+  private static final TimestampMillis TIMESTAMP_MILLIS_TYPE = AvroTimestampMillis.create();
 
   public static TimestampMillis timestampMillis() {
     return TIMESTAMP_MILLIS_TYPE;
   }
 
-  private static final TimestampMicros TIMESTAMP_MICROS_TYPE = new TimestampMicros();
+  private static final TimestampMicros TIMESTAMP_MICROS_TYPE = AvroTimestampMicros.create();
 
   public static TimestampMicros timestampMicros() {
     return TIMESTAMP_MICROS_TYPE;
   }
 
-  private static final LocalTimestampMillis LOCAL_TIMESTAMP_MILLIS_TYPE = new LocalTimestampMillis();
+  private static final LocalTimestampMillis LOCAL_TIMESTAMP_MILLIS_TYPE = AvroLocalTimestampMillis.create();
 
   public static LocalTimestampMillis localTimestampMillis() {
     return LOCAL_TIMESTAMP_MILLIS_TYPE;
   }
 
-  private static final LocalTimestampMicros LOCAL_TIMESTAMP_MICROS_TYPE = new LocalTimestampMicros();
+  private static final LocalTimestampMicros LOCAL_TIMESTAMP_MICROS_TYPE = AvroLocalTimestampMicros.create();
 
   public static LocalTimestampMicros localTimestampMicros() {
     return LOCAL_TIMESTAMP_MICROS_TYPE;
@@ -198,17 +243,17 @@ public class LogicalTypes {
     private static final String PRECISION_PROP = "precision";
     private static final String SCALE_PROP = "scale";
 
-    private final int precision;
-    private final int scale;
+    private int precision;
+    private int scale;
 
-    private Decimal(int precision, int scale) {
+    protected Decimal(int precision, int scale) {
       super(DECIMAL);
       this.precision = precision;
       this.scale = scale;
     }
 
-    private Decimal(Schema schema) {
-      super("decimal");
+    protected Decimal(Schema schema) {
+      super(DECIMAL);
       if (!hasProperty(schema, PRECISION_PROP)) {
         throw new IllegalArgumentException("Invalid decimal: missing precision");
       }
@@ -219,6 +264,19 @@ public class LogicalTypes {
         this.scale = getInt(schema, SCALE_PROP);
       } else {
         this.scale = 0;
+      }
+    }
+
+    protected Decimal(String text) {
+      super(DECIMAL);
+      String[] parts = text.split("[\\(\\)\\,]");
+      this.precision = 28;
+      this.scale = 7;
+      if (parts.length > 1) {
+        this.precision = Integer.parseInt(parts[1]);
+      }
+      if (parts.length > 2) {
+        this.scale = Integer.parseInt(parts[2]);
       }
     }
 
@@ -309,7 +367,7 @@ public class LogicalTypes {
 
   /** Date represents a date without a time */
   public static class Date extends LogicalType {
-    private Date() {
+    protected Date() {
       super(DATE);
     }
 
@@ -324,7 +382,7 @@ public class LogicalTypes {
 
   /** TimeMillis represents a time in milliseconds without a date */
   public static class TimeMillis extends LogicalType {
-    private TimeMillis() {
+    protected TimeMillis() {
       super(TIME_MILLIS);
     }
 
@@ -339,7 +397,7 @@ public class LogicalTypes {
 
   /** TimeMicros represents a time in microseconds without a date */
   public static class TimeMicros extends LogicalType {
-    private TimeMicros() {
+    protected TimeMicros() {
       super(TIME_MICROS);
     }
 
@@ -354,7 +412,7 @@ public class LogicalTypes {
 
   /** TimestampMillis represents a date and time in milliseconds */
   public static class TimestampMillis extends LogicalType {
-    private TimestampMillis() {
+    protected TimestampMillis() {
       super(TIMESTAMP_MILLIS);
     }
 
@@ -369,7 +427,7 @@ public class LogicalTypes {
 
   /** TimestampMicros represents a date and time in microseconds */
   public static class TimestampMicros extends LogicalType {
-    private TimestampMicros() {
+    protected TimestampMicros() {
       super(TIMESTAMP_MICROS);
     }
 
@@ -383,7 +441,7 @@ public class LogicalTypes {
   }
 
   public static class LocalTimestampMillis extends LogicalType {
-    private LocalTimestampMillis() {
+    protected LocalTimestampMillis() {
       super(LOCAL_TIMESTAMP_MILLIS);
     }
 
@@ -397,7 +455,7 @@ public class LogicalTypes {
   }
 
   public static class LocalTimestampMicros extends LogicalType {
-    private LocalTimestampMicros() {
+    protected LocalTimestampMicros() {
       super(LOCAL_TIMESTAMP_MICROS);
     }
 
