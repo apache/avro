@@ -128,6 +128,48 @@ public class TestGenericData {
     assertEquals(r1, r2);
   }
 
+  @Test
+  public void testMapKeyEquals() {
+    Schema mapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\"}");
+    Field myMapField = new Field("my_map", Schema.createMap(mapSchema), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myMapField));
+    GenericRecord r0 = new GenericData.Record(schema);
+    GenericRecord r1 = new GenericData.Record(schema);
+
+    HashMap<CharSequence, String> pair1 = new HashMap<>();
+    pair1.put("keyOne", "valueOne");
+    r0.put("my_map", pair1);
+
+    HashMap<CharSequence, String> pair2 = new HashMap<>();
+    pair2.put(new Utf8("keyOne"), "valueOne");
+    r1.put("my_map", pair2);
+
+    assertEquals(r0, r1);
+    assertEquals(r1, r0);
+  }
+
+  @Test
+  public void testMapValuesEquals() {
+    Schema mapSchema = new Schema.Parser().parse("{\"type\": \"map\", \"values\": \"string\"}");
+    Field myMapField = new Field("my_map", Schema.createMap(mapSchema), null, null);
+    Schema schema = Schema.createRecord("my_record", "doc", "mytest", false);
+    schema.setFields(Arrays.asList(myMapField));
+    GenericRecord r0 = new GenericData.Record(schema);
+    GenericRecord r1 = new GenericData.Record(schema);
+
+    HashMap<CharSequence, CharSequence> pair1 = new HashMap<>();
+    pair1.put("keyOne", "valueOne");
+    r0.put("my_map", pair1);
+
+    HashMap<CharSequence, CharSequence> pair2 = new HashMap<>();
+    pair2.put("keyOne", new Utf8("valueOne"));
+    r1.put("my_map", pair2);
+
+    assertEquals(r0, r1);
+    assertEquals(r1, r0);
+  }
+
   private Schema recordSchema() {
     List<Field> fields = new ArrayList<>();
     fields.add(new Field("anArray", Schema.createArray(Schema.create(Type.STRING)), null, null));
