@@ -934,7 +934,7 @@ public class SpecificCompiler {
       return "null";
     }
 
-    if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass()) && !enableDecimalLogicalType) {
+    if (schema.getLogicalType() instanceof LogicalTypes.Decimal && !enableDecimalLogicalType) {
       return "null";
     }
 
