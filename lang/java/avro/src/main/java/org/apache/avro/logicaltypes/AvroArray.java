@@ -121,5 +121,4 @@ public class AvroArray implements AvroPrimitive {
   public Class<?> getConvertedType() {
     return Collection.class;
   }
-
 }
