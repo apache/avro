@@ -25,6 +25,10 @@
 #include "avro/value.h"
 #include "avro_private.h"
 
+#if defined(_MSC_VER) && _MSC_VER < 1900 && !defined(__cplusplus)
+#define inline __inline
+#endif
+
 #define check_return(retval, call) \
 	do { \
 		int  rval = call; \
