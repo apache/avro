@@ -32,6 +32,10 @@
 #include "st.h"
 #include "schema.h"
 
+#if defined(_MSC_VER) && _MSC_VER < 1700 && defined(__cplusplus)
+#define namespace _Namespace
+#endif
+
 #define DEFAULT_TABLE_SIZE 32
 
 /* forward declaration */
