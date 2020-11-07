@@ -74,7 +74,7 @@ static int is_avro_id(const char *name)
  * namespace (as a newly allocated buffer using Avro's allocator). */
 static char *split_namespace_name(const char *fullname, const char **name_out)
 {
-	char *last_dot = strrchr(fullname, '.');
+	const char *last_dot = strrchr(fullname, '.');
 	if (last_dot == NULL) {
 		*name_out = fullname;
 		return NULL;
