@@ -19,7 +19,9 @@
 #include "avro_private.h"
 #include <stddef.h>
 #include <stdio.h>
-#ifndef _WIN32
+#ifdef _WIN32
+#include "msdirent.h"
+#else
 #include <dirent.h>
 #endif
 
