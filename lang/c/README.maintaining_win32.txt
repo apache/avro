@@ -31,10 +31,8 @@ Limitations of Windows Build:
    statements were removed, that Avro-C would compile under
    Microsoft's C compiler also. I have not tried this.
 
-   Note: This is referring to a C11 feature which is supported from VS2013
-   onward. However, compiling as C++ does not work as the code is not C++
-   compliant either. Basically, VS2010 or before just cannot be supported
-   unless significant changes are made to the code.
+   Note: This is referring to a C11 feature which is supported in VS2013
+   and later.
 
 2. The shared library, i.e. DLL, for avro has not been built. There
    are instructions on how to build DLLs using CMake at
