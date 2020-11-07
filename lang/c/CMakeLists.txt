@@ -107,17 +107,18 @@ if(CMAKE_COMPILER_IS_GNUCC)
     add_compile_options(-W -Wall)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
-if (MSVC)
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-if(MSVC_VERSION LESS 1700)
-   # Compile as C++ to allow declarations after statements. (C11 feature)
-   add_compile_options(/TP)
-   # However, this does not work as the code is not C++ compliant either.
-   message(FATAL_ERROR "MSVC_VERSION(${MSVC_VERSION}) is not supported.")
-elseif(MSVC_VERSION LESS 1920)
-else()
-   add_compile_options(/std:c11)
-endif(MSVC_VERSION LESS 1700)
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    if(MSVC_VERSION LESS 1700)
+        # VS2010 and earlier.
+        # Compile as C++ to allow declarations after statements. (C11 feature)
+        add_compile_options(/TP)
+    elseif(MSVC_VERSION LESS 1920)
+        # VS2013|VS2015|VS2017
+    else()
+        # VS2019 and later.
+        add_compile_options(/std:c11)
+    endif(MSVC_VERSION LESS 1700)
 endif(MSVC)
 
 # Uncomment to allow missing fields in the resolved-writer
