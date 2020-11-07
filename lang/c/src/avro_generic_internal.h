@@ -30,6 +30,14 @@ extern "C" {
 #include "avro/schema.h"
 #include "avro/value.h"
 
+#ifdef _MSC_VER
+#ifdef _WIN64
+typedef __int64 ssize_t;
+#else
+typedef int ssize_t;
+#endif
+#endif
+
 /*
  * Each generic value implementation struct defines a couple of extra
  * methods that we use to control the lifecycle of the value objects.
