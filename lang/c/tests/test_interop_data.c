@@ -17,9 +17,11 @@
 
 #include "avro.h"
 #include "avro_private.h"
-#include <dirent.h>
 #include <stddef.h>
 #include <stdio.h>
+#ifndef _WIN32
+#include <dirent.h>
+#endif
 
 int should_test(char *d_name)
 {
