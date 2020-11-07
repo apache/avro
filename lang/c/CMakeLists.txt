@@ -108,6 +108,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (MSVC)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 if(MSVC_VERSION LESS 1700)
    # Compile as C++ to allow declarations after statements. (C11 feature)
    add_compile_options(/TP)
