@@ -109,8 +109,10 @@ endif(CMAKE_COMPILER_IS_GNUCC)
 
 if (MSVC)
 if(MSVC_VERSION LESS 1700)
-   # Compile win32 in C++ to allow declarations after statements
+   # Compile as C++ to allow declarations after statements. (C11 feature)
    add_compile_options(/TP)
+   # However, this does not work as the code is not C++ compliant either.
+   message(FATAL_ERROR "MSVC_VERSION(${MSVC_VERSION}) is not supported.")
 elseif(MSVC_VERSION LESS 1920)
 else()
    add_compile_options(/std:c11)
