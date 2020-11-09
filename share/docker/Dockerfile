@@ -112,7 +112,7 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN curl -sS https://getcomposer.org/installer | php -- --version=2.0.4 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
 RUN apt-get -qqy update \
