@@ -37,6 +37,9 @@ RPC framework
 
 =head1 DESCRIPTION
 
+L<Apache Avro|https://avro.apache.org/> is a data serialization system providing rich data
+structures and a compact, fast, binary data form.
+
 =head1 AUTHOR
 
 Apache Avro <dev@avro.apache.org>
