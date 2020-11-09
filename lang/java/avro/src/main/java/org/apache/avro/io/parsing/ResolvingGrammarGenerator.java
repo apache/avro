@@ -106,7 +106,7 @@ public class ResolvingGrammarGenerator extends ValidatingGrammarGenerator {
 
     } else if (action.writer.getType() == Schema.Type.UNION) {
       if (((Resolver.WriterUnion) action).unionEquiv) {
-        return simpleGen(action.writer, seen);
+        return simpleGen(action.reader, seen);
       }
       Resolver.Action[] branches = ((Resolver.WriterUnion) action).actions;
       Symbol[] symbols = new Symbol[branches.length];
