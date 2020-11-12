@@ -149,7 +149,7 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
  && dpkg -i packages-microsoft-prod.deb \
  && rm packages-microsoft-prod.deb \
  && apt-get -qqy update \
- && apt-get -qqy install --no-install-recommends dotnet-sdk-3.1 \
+ && apt-get -qqy install --no-install-recommends dotnet-sdk-2.1 dotnet-sdk-3.1 dotnet-sdk-5.0 \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
