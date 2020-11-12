@@ -38,7 +38,7 @@ public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
   private static AvroTimeMicros element = new AvroTimeMicros();
   public static final String NAME = "TIMEMICROS";
   public static final String TYPENAME = LogicalTypes.TIME_MICROS;
-  public static final TimeMicrosConversion CONVERTER = new TimeMicrosConversion();
+  private static final TimeMicrosConversion CONVERTER = new TimeMicrosConversion();
 
   static {
     schema = element.addToSchema(Schema.create(Type.LONG));

@@ -42,6 +42,10 @@ public class AvroDecimal extends Decimal implements AvroPrimitive {
     super(precision, scale);
   }
 
+  public static AvroDecimal create(int precision, int scale) {
+    return new AvroDecimal(precision, scale);
+  }
+
   public AvroDecimal(Schema schema) {
     super(schema);
   }
@@ -80,12 +84,12 @@ public class AvroDecimal extends Decimal implements AvroPrimitive {
           v = new BigDecimal(((CharSequence) value).toString());
           return convertToRawType(v);
         } catch (NumberFormatException e) {
-          throw new AvroTypeException("Cannot convert the string \"" + value + "\" into a Decimal");
+          throw new AvroTypeException("Cannot convert the string \"" + value + "\" into a BigDecimal");
         }
       }
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Decimal");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a BigDecimal/ByteBuffer");
   }
 
   @Override
@@ -123,7 +127,7 @@ public class AvroDecimal extends Decimal implements AvroPrimitive {
       return DECIMAL_CONVERTER.fromFixed((GenericFixed) value, null, this);
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Decimal");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a BigDecimal");
   }
 
   @Override

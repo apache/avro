@@ -60,11 +60,18 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.logicaltypes.AvroBoolean;
+import org.apache.avro.logicaltypes.AvroBytes;
 import org.apache.avro.logicaltypes.AvroDatatype;
 import org.apache.avro.logicaltypes.AvroDate;
 import org.apache.avro.logicaltypes.AvroDecimal;
+import org.apache.avro.logicaltypes.AvroDouble;
+import org.apache.avro.logicaltypes.AvroFloat;
+import org.apache.avro.logicaltypes.AvroInt;
 import org.apache.avro.logicaltypes.AvroLocalTimestampMicros;
 import org.apache.avro.logicaltypes.AvroLocalTimestampMillis;
+import org.apache.avro.logicaltypes.AvroLong;
+import org.apache.avro.logicaltypes.AvroString;
 import org.apache.avro.logicaltypes.AvroTimeMicros;
 import org.apache.avro.logicaltypes.AvroTimeMillis;
 import org.apache.avro.logicaltypes.AvroTimestampMicros;
@@ -91,25 +98,25 @@ public class TestDatatype {
   public void testDatatypeForPrimitives() throws IOException {
     Map<Field, Object> fields = new HashMap<>();
     fields.put(new Field("string1", Schema.create(Type.STRING), null, null), fortyTwo);
-    fields.put(new Field("string2", Schema.create(Type.STRING), null, null), fortyTwoInt);
+    fields.put(new Field("string2", AvroString.create().getRecommendedSchema(), null, null), fortyTwoInt);
 
     fields.put(new Field("bytes1", Schema.create(Type.BYTES), null, null), ByteBuffer.wrap(fortyTwoByteArray));
-    fields.put(new Field("bytes2", Schema.create(Type.BYTES), null, null), fortyTwoByte);
+    fields.put(new Field("bytes2", AvroBytes.create().getRecommendedSchema(), null, null), fortyTwoByte);
 
     fields.put(new Field("int1", Schema.create(Type.INT), null, null), fortyTwoInt);
-    fields.put(new Field("int2", Schema.create(Type.INT), null, null), fortyTwo);
+    fields.put(new Field("int2", AvroInt.create().getRecommendedSchema(), null, null), fortyTwo);
 
     fields.put(new Field("long1", Schema.create(Type.LONG), null, null), fortyTwoLong);
-    fields.put(new Field("long2", Schema.create(Type.LONG), null, null), fortyTwo);
+    fields.put(new Field("long2", AvroLong.create().getRecommendedSchema(), null, null), fortyTwo);
 
     fields.put(new Field("float1", Schema.create(Type.FLOAT), null, null), fortyTwoFloat);
-    fields.put(new Field("float2", Schema.create(Type.FLOAT), null, null), fortyTwoInt);
+    fields.put(new Field("float2", AvroFloat.create().getRecommendedSchema(), null, null), fortyTwoInt);
 
     fields.put(new Field("double1", Schema.create(Type.DOUBLE), null, null), fortyTwoDouble);
-    fields.put(new Field("double2", Schema.create(Type.DOUBLE), null, null), fortyTwoInt);
+    fields.put(new Field("double2", AvroDouble.create().getRecommendedSchema(), null, null), fortyTwoInt);
 
     fields.put(new Field("boolean1", Schema.create(Type.BOOLEAN), null, null), true);
-    fields.put(new Field("boolean2", Schema.create(Type.BOOLEAN), null, null), "True");
+    fields.put(new Field("boolean2", AvroBoolean.create().getRecommendedSchema(), null, null), "True");
 
     Schema fixedSchema = Schema.createFixed("fixed", null, null, 2);
     fields.put(new Field("fixed1", fixedSchema, null, null), new GenericData.Fixed(fixedSchema, fortyTwoByteArray));
@@ -266,7 +273,7 @@ public class TestDatatype {
     Schema timemicroschema = LogicalTypes.timeMicros().addToSchema(Schema.create(Type.LONG));
     fields.put(new Field("timeMicros1", AvroTimeMicros.create().getRecommendedSchema(), null, null), fortwoinstant);
     fields.put(new Field("timeMicros2", AvroTimeMicros.create().getRecommendedSchema(), null, null),
-        LocalTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+        fortwoinstant.atZone(ZoneId.of("UTC")).toLocalTime());
     fields.put(new Field("timeMicros3", AvroTimeMicros.create().getRecommendedSchema(), null, null),
         Date.from(fortwoinstant));
     fields.put(new Field("timeMicros4", AvroTimeMicros.create().getRecommendedSchema(), null, null), fortwotimestring);
@@ -276,7 +283,7 @@ public class TestDatatype {
     Schema timemillischema = LogicalTypes.timeMillis().addToSchema(Schema.create(Type.INT));
     fields.put(new Field("timeMillis1", AvroTimeMillis.create().getRecommendedSchema(), null, null), fortwoinstant);
     fields.put(new Field("timeMillis2", AvroTimeMillis.create().getRecommendedSchema(), null, null),
-        LocalTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+        fortwoinstant.atZone(ZoneId.of("UTC")).toLocalTime());
     fields.put(new Field("timeMillis3", AvroTimeMillis.create().getRecommendedSchema(), null, null),
         Date.from(fortwoinstant));
     fields.put(new Field("timeMillis4", AvroTimeMillis.create().getRecommendedSchema(), null, null), fortwotimestring);

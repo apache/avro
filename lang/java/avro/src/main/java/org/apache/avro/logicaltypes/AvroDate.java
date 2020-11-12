@@ -38,7 +38,7 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
   public static final String TYPENAME = LogicalTypes.DATE;
   private static Schema schema;
   private static AvroDate element = new AvroDate();
-  private static DateConversion CONVERTER = new DateConversion();
+  private static final DateConversion CONVERTER = new DateConversion();
 
   static {
     schema = element.addToSchema(Schema.create(Type.INT));
@@ -78,7 +78,7 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
       return convertToRawType(ZonedDateTime.ofInstant(d, ZoneId.of("UTC")));
     }
     throw new AvroTypeException(
-        "Conversion from type \"" + value.getClass().getSimpleName() + "\" into a LocalDate is not supported");
+        "Conversion from type \"" + value.getClass().getSimpleName() + "\" into a LocalDate/Integer is not supported");
   }
 
   @Override
@@ -88,8 +88,8 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
     } else if (value instanceof Integer) {
       return CONVERTER.fromInt((Integer) value, null, this);
     }
-    throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\", must be an INTEGER");
+    throw new AvroTypeException("Cannot convert a value of type \"" + value.getClass().getSimpleName()
+        + "\" into a LocalDate, value must be an INTEGER");
   }
 
   @Override

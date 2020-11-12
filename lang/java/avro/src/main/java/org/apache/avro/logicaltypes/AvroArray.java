@@ -51,7 +51,7 @@ public class AvroArray implements AvroPrimitive {
       return (Collection<?>) value;
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a List");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Collection");
   }
 
   @Override
@@ -62,7 +62,7 @@ public class AvroArray implements AvroPrimitive {
       return (Collection<?>) value;
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a List");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Collection");
   }
 
   @Override

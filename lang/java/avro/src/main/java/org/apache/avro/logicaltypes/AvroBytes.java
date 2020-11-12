@@ -60,11 +60,11 @@ public class AvroBytes implements AvroPrimitive {
   }
 
   @Override
-  public Object convertToRawType(Object value) {
+  public ByteBuffer convertToRawType(Object value) {
     if (value == null) {
       return null;
     } else if (value instanceof ByteBuffer) {
-      return value;
+      return (ByteBuffer) value;
     } else if (value instanceof byte[]) {
       return ByteBuffer.wrap((byte[]) value);
     } else if (value instanceof Number) {

@@ -39,6 +39,10 @@ public class AvroFixed implements AvroPrimitive {
     this.length = length;
   }
 
+  public static AvroFixed create(int length) {
+    return new AvroFixed(length);
+  }
+
   public AvroFixed(String text) {
     this(LogicalTypeWithLength.getLength(text));
   }

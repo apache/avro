@@ -36,6 +36,10 @@ public class AvroEnum implements AvroPrimitive {
     this.schema = schema;
   }
 
+  public static AvroEnum create(Schema schema) {
+    return new AvroEnum(schema);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)

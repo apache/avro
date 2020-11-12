@@ -44,6 +44,10 @@ public class AvroVarchar extends LogicalTypeWithLength {
     this.schema = schema;
   }
 
+  public static AvroVarchar create(int length) {
+    return new AvroVarchar(length);
+  }
+
   @Override
   public void toString(StringBuffer b, Object value) {
     if (value != null) {

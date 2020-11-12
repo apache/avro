@@ -35,6 +35,10 @@ public class AvroNVarchar extends LogicalTypeWithLength {
     this.schema = addToSchema(Schema.create(Type.STRING));
   }
 
+  public static AvroNVarchar create(int length) {
+    return new AvroNVarchar(length);
+  }
+
   public AvroNVarchar(String text) {
     this(getLength(text));
   }

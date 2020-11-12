@@ -42,7 +42,7 @@ public class AvroLocalTimestampMillis extends LocalTimestampMillis implements Av
   }
   public static final String NAME = "LOCALTIMESTAMPMILLIS";
   public static final String TYPENAME = LogicalTypes.LOCAL_TIMESTAMP_MILLIS;
-  public static final LocalTimestampMillisConversion CONVERTER = new LocalTimestampMillisConversion();
+  private static final LocalTimestampMillisConversion CONVERTER = new LocalTimestampMillisConversion();
 
   public AvroLocalTimestampMillis() {
     super();

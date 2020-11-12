@@ -96,7 +96,7 @@ public class AvroByte extends LogicalType implements AvroPrimitive {
       return ((Number) value).intValue();
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Byte");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into an Integer");
   }
 
   @Override
