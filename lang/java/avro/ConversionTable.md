@@ -1,6 +1,5 @@
 ## Conversion Table for Logical Types
 
-
 ### AvroDate
 
 - getBackingType(): INT
