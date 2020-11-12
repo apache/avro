@@ -60,7 +60,7 @@
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.2</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.29.0</grpc.version>
+    <grpc.version>1.33.1</grpc.version>
     <zstd-jni.version>1.4.5-12</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.1.2</archetype-plugin.version>
@@ -570,11 +570,23 @@
         <groupId>io.grpc</groupId>
         <artifactId>grpc-stub</artifactId>
         <version>${grpc.version}</version>
+        <exclusions>
+          <exclusion> <!-- GPL -->
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
         <version>${grpc.version}</version>
+        <exclusions>
+          <exclusion> <!-- GPL -->
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.tukaani</groupId>
