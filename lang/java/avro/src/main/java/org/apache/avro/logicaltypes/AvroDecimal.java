@@ -69,20 +69,15 @@ public class AvroDecimal extends Decimal implements AvroPrimitive {
       } else if (value instanceof GenericFixed) {
         return ByteBuffer.wrap(((GenericFixed) value).bytes());
       } else if (value instanceof BigDecimal) {
-        if (getScale() != ((BigDecimal) value).scale()) {
-          v = ((BigDecimal) value).setScale(getScale(), RoundingMode.HALF_UP);
-        } else {
-          v = (BigDecimal) value;
-        }
-        ByteBuffer buffer = DECIMAL_CONVERTER.toBytes(v, null, this);
+        ByteBuffer buffer = DECIMAL_CONVERTER.toBytes((BigDecimal) value, null, this);
         return buffer;
       } else if (value instanceof Number) {
         Number n = (Number) value;
-        v = BigDecimal.valueOf(Double.valueOf(n.doubleValue())).setScale(getScale());
+        v = BigDecimal.valueOf(Double.valueOf(n.toString())).setScale(getScale(), RoundingMode.HALF_DOWN);
         return convertToRawType(v);
-      } else if (value instanceof String) {
+      } else if (value instanceof CharSequence) {
         try {
-          v = new BigDecimal((String) value);
+          v = new BigDecimal(((CharSequence) value).toString());
           return convertToRawType(v);
         } catch (NumberFormatException e) {
           throw new AvroTypeException("Cannot convert the string \"" + value + "\" into a Decimal");

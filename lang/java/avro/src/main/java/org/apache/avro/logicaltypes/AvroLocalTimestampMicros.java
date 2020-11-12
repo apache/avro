@@ -17,7 +17,9 @@
  */
 package org.apache.avro.logicaltypes;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
@@ -61,15 +63,21 @@ public class AvroLocalTimestampMicros extends LocalTimestampMicros implements Av
       return null;
     } else if (value instanceof Long) {
       return (Long) value;
+    } else if (value instanceof Number) {
+      return ((Number) value).longValue();
     } else if (value instanceof Date) {
       return convertToRawType(((Date) value).toInstant());
     } else if (value instanceof ZonedDateTime) {
       return convertToRawType(((ZonedDateTime) value).toInstant());
+    } else if (value instanceof Instant) {
+      return convertToRawType(((Instant) value).atOffset(ZoneOffset.UTC).toLocalDateTime());
+    } else if (value instanceof CharSequence) {
+      return convertToRawType(LocalDateTime.parse((CharSequence) value));
     } else if (value instanceof LocalDateTime) {
       return CONVERTER.toLong((LocalDateTime) value, null, this);
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a TimestampMicros");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a LocalTimestampMicros");
   }
 
   @Override
@@ -80,7 +88,7 @@ public class AvroLocalTimestampMicros extends LocalTimestampMicros implements Av
       return CONVERTER.fromLong((Long) value, null, this);
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a TimestampMicros");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a LocalDateTime");
   }
 
   @Override

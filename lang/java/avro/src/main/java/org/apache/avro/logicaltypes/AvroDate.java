@@ -19,8 +19,8 @@ package org.apache.avro.logicaltypes;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
 import java.util.Date;
 
 import org.apache.avro.AvroTypeException;
@@ -38,7 +38,7 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
   public static final String TYPENAME = LogicalTypes.DATE;
   private static Schema schema;
   private static AvroDate element = new AvroDate();
-  private DateConversion converter = new DateConversion();
+  private static DateConversion CONVERTER = new DateConversion();
 
   static {
     schema = element.addToSchema(Schema.create(Type.INT));
@@ -64,19 +64,21 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
     } else if (value instanceof Integer) {
       return (Integer) value;
     } else if (value instanceof LocalDate) {
-      return converter.toInt((LocalDate) value, null, this);
+      return CONVERTER.toInt((LocalDate) value, null, this);
     } else if (value instanceof Number) {
       return convertToRawType(((Number) value).intValue());
+    } else if (value instanceof CharSequence) {
+      return convertToRawType(LocalDate.parse((CharSequence) value));
     } else if (value instanceof Date) {
       return convertToRawType(((Date) value).toInstant());
     } else if (value instanceof ZonedDateTime) {
-      return convertToRawType(((ZonedDateTime) value).toInstant());
+      return convertToRawType(((ZonedDateTime) value).toLocalDate());
     } else if (value instanceof Instant) {
       Instant d = (Instant) value;
-      return (int) d.getLong(ChronoField.EPOCH_DAY);
+      return convertToRawType(ZonedDateTime.ofInstant(d, ZoneId.of("UTC")));
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Date");
+        "Conversion from type \"" + value.getClass().getSimpleName() + "\" into a LocalDate is not supported");
   }
 
   @Override
@@ -84,13 +86,10 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
     if (value == null) {
       return null;
     } else if (value instanceof Integer) {
-      return converter.fromInt((Integer) value, null, this);
-    } else if (value instanceof Number) {
-      int v = ((Number) value).intValue();
-      return converter.fromInt(v, null, null);
+      return CONVERTER.fromInt((Integer) value, null, this);
     }
     throw new AvroTypeException(
-        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Date");
+        "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\", must be an INTEGER");
   }
 
   @Override

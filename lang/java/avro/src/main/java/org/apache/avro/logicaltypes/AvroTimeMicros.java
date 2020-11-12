@@ -17,7 +17,10 @@
  */
 package org.apache.avro.logicaltypes;
 
+import java.time.Instant;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.util.Date;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.LogicalTypes;
@@ -65,8 +68,17 @@ public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
       return null;
     } else if (value instanceof Long) {
       return (Long) value;
+    } else if (value instanceof Number) {
+      return ((Number) value).longValue();
+    } else if (value instanceof Instant) {
+      Instant t = (Instant) value;
+      return convertToRawType(t.atOffset(ZoneOffset.UTC).toLocalTime());
     } else if (value instanceof LocalTime) {
       return CONVERTER.toLong((LocalTime) value, null, this);
+    } else if (value instanceof Date) {
+      return convertToRawType(((Date) value).toInstant());
+    } else if (value instanceof CharSequence) {
+      return convertToRawType(LocalTime.parse((CharSequence) value));
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a TimeMicros");
@@ -86,8 +98,8 @@ public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
   @Override
   public void toString(StringBuffer b, Object value) {
     if (value != null) {
-      if (value instanceof Integer) {
-        LocalTime time = LocalTime.ofNanoOfDay(((Integer) value).longValue() * 1000);
+      if (value instanceof Long) {
+        LocalTime time = CONVERTER.fromLong((Long) value, schema, null);
         b.append('\"');
         b.append(time.toString());
         b.append('\"');

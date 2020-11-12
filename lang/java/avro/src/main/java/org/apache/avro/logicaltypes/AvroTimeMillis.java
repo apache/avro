@@ -17,7 +17,10 @@
  */
 package org.apache.avro.logicaltypes;
 
+import java.time.Instant;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.util.Date;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.LogicalTypes;
@@ -60,6 +63,15 @@ public class AvroTimeMillis extends TimeMillis implements AvroPrimitive {
       return null;
     } else if (value instanceof Integer) {
       return (Integer) value;
+    } else if (value instanceof Number) {
+      return ((Number) value).intValue();
+    } else if (value instanceof Instant) {
+      Instant t = (Instant) value;
+      return convertToRawType(t.atOffset(ZoneOffset.UTC).toLocalTime());
+    } else if (value instanceof Date) {
+      return convertToRawType(((Date) value).toInstant());
+    } else if (value instanceof CharSequence) {
+      return convertToRawType(LocalTime.parse((CharSequence) value));
     } else if (value instanceof LocalTime) {
       return CONVERTER.toInt((LocalTime) value, null, this);
     }

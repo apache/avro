@@ -61,10 +61,14 @@ public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitiv
       return null;
     } else if (value instanceof Long) {
       return (Long) value;
+    } else if (value instanceof Number) {
+      return ((Number) value).longValue();
     } else if (value instanceof Date) {
       return convertToRawType(((Date) value).toInstant());
     } else if (value instanceof ZonedDateTime) {
       return convertToRawType(((ZonedDateTime) value).toInstant());
+    } else if (value instanceof CharSequence) {
+      return convertToRawType(Instant.parse((CharSequence) value));
     } else if (value instanceof Instant) {
       return CONVERTER.toLong((Instant) value, schema, this);
     }

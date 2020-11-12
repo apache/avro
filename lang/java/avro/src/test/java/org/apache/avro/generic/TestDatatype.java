@@ -19,19 +19,39 @@ package org.apache.avro.generic;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.Conversions.DecimalConversion;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.SchemaBuilder;
+import org.apache.avro.data.TimeConversions.DateConversion;
+import org.apache.avro.data.TimeConversions.LocalTimestampMicrosConversion;
+import org.apache.avro.data.TimeConversions.LocalTimestampMillisConversion;
+import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
+import org.apache.avro.data.TimeConversions.TimeMillisConversion;
+import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
+import org.apache.avro.data.TimeConversions.TimestampMillisConversion;
 import org.apache.avro.generic.GenericData.Array;
 import org.apache.avro.generic.GenericData.EnumSymbol;
 import org.apache.avro.generic.GenericData.Record;
@@ -41,6 +61,14 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.logicaltypes.AvroDatatype;
+import org.apache.avro.logicaltypes.AvroDate;
+import org.apache.avro.logicaltypes.AvroDecimal;
+import org.apache.avro.logicaltypes.AvroLocalTimestampMicros;
+import org.apache.avro.logicaltypes.AvroLocalTimestampMillis;
+import org.apache.avro.logicaltypes.AvroTimeMicros;
+import org.apache.avro.logicaltypes.AvroTimeMillis;
+import org.apache.avro.logicaltypes.AvroTimestampMicros;
+import org.apache.avro.logicaltypes.AvroTimestampMillis;
 import org.junit.Test;
 
 public class TestDatatype {
@@ -51,7 +79,6 @@ public class TestDatatype {
   byte[] fortyTwoBytes1 = { Byte.valueOf((byte) 42) };
   Float fortyTwoFloat = Float.valueOf((float) 42.0);
   Double fortyTwoDouble = Double.valueOf(42.0);
-  Map<Field, Object> fields = new HashMap<>();
   byte[] fortyTwoByteArray = { 0x04, 0x02 };
   List<String> enumValues = new ArrayList<>();
   Schema arraySchema = Schema.createArray(Schema.create(Type.STRING));
@@ -62,6 +89,7 @@ public class TestDatatype {
 
   @Test
   public void testDatatypeForPrimitives() throws IOException {
+    Map<Field, Object> fields = new HashMap<>();
     fields.put(new Field("string1", Schema.create(Type.STRING), null, null), fortyTwo);
     fields.put(new Field("string2", Schema.create(Type.STRING), null, null), fortyTwoInt);
 
@@ -119,7 +147,7 @@ public class TestDatatype {
       testRecord.put(f.name(), f.getDataType().convertToRawType(value));
     }
 
-    validateRecord(testRecord);
+    validateRecord(testRecord, fields);
 
     /*
      * It might be that putting values does not change the object thus reading the
@@ -139,11 +167,160 @@ public class TestDatatype {
     GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
     GenericRecord testRecord2 = datumReader.read(null, decoder);
 
-    validateRecord(testRecord2);
+    validateRecord(testRecord2, fields);
+  }
+
+  String fortwodatestring = "2004-02-01";
+  String fortwotimestring = "00:04:02.00";
+  Instant fortwoinstant = Instant.parse(fortwodatestring + "T" + fortwotimestring + "Z");
+  String forcommatwostring = "4.2";
+  BigDecimal forcommatwo = BigDecimal.valueOf(4.2);
+  static DateConversion DATE_CONVERTER = new DateConversion();
+  static final DecimalConversion DECIMAL_CONVERTER = new DecimalConversion();
+  static final TimestampMicrosConversion TSMICRO_CONVERTER = new TimestampMicrosConversion();
+  static final TimestampMillisConversion TSMILLI_CONVERTER = new TimestampMillisConversion();
+  static final LocalTimestampMicrosConversion LOCALTSMICRO_CONVERTER = new LocalTimestampMicrosConversion();
+  static final LocalTimestampMillisConversion LOCALTSMILLI_CONVERTER = new LocalTimestampMillisConversion();
+  static final TimeMicrosConversion TIMEMICRO_CONVERTER = new TimeMicrosConversion();
+  static final TimeMillisConversion TIMEMILLI_CONVERTER = new TimeMillisConversion();
+
+  @Test
+  public void testDatatypeForLogicalType1() throws IOException {
+    Map<Field, Object> fields = new HashMap<>();
+
+    Schema dateschema = LogicalTypes.date().addToSchema(Schema.create(Type.INT));
+    fields.put(new Field("date1", AvroDate.create().getRecommendedSchema(), null, null), "2004-02-01");
+    fields.put(new Field("date2", AvroDate.create().getRecommendedSchema(), null, null), LocalDate.parse("2004-02-01"));
+    fields.put(new Field("date3", AvroDate.create().getRecommendedSchema(), null, null),
+        LocalDate.parse("2004-02-01").toEpochDay());
+    fields.put(new Field("date4", AvroDate.create().getRecommendedSchema(), null, null), Date.from(fortwoinstant));
+    fields.put(new Field("date5", AvroDate.create().getRecommendedSchema(), null, null),
+        ZonedDateTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("date6", AvroDate.create().getRecommendedSchema(), null, null), fortwoinstant);
+    fields.put(new Field("dateC", dateschema, null, null),
+        DATE_CONVERTER.toInt(fortwoinstant.atOffset(ZoneOffset.UTC).toLocalDate(), dateschema, LogicalTypes.date()));
+
+    fields.put(new Field("decimal1", new AvroDecimal(27, 7).getRecommendedSchema(), null, null), forcommatwo);
+    fields.put(new Field("decimal2", new AvroDecimal(27, 7).getRecommendedSchema(), null, null),
+        forcommatwo.floatValue());
+    fields.put(new Field("decimal3", new AvroDecimal(27, 7).getRecommendedSchema(), null, null), forcommatwostring);
+    LogicalType decimaltype = LogicalTypes.decimal(27, 7);
+    Schema decimalschema = decimaltype.addToSchema(Schema.create(Type.BYTES));
+    fields.put(new Field("decimalC", decimalschema, null, null),
+        DECIMAL_CONVERTER.toBytes(forcommatwo, decimalschema, decimaltype));
+
+    Schema timestampmicroschema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Type.LONG));
+    fields.put(new Field("tsMicros1", AvroTimestampMicros.create().getRecommendedSchema(), null, null),
+        fortwodatestring + "T" + fortwotimestring + "Z");
+    fields.put(new Field("tsMicros2", AvroTimestampMicros.create().getRecommendedSchema(), null, null), fortwoinstant);
+    fields.put(new Field("tsMicros3", AvroTimestampMicros.create().getRecommendedSchema(), null, null),
+        ZonedDateTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("tsMicros4", AvroTimestampMicros.create().getRecommendedSchema(), null, null),
+        Date.from(fortwoinstant));
+    fields.put(new Field("tsMicros5", AvroTimestampMicros.create().getRecommendedSchema(), null, null), fortwoinstant);
+    fields.put(new Field("tsMicrosC", timestampmicroschema, null, null),
+        TSMICRO_CONVERTER.toLong(fortwoinstant, timestampmicroschema, LogicalTypes.timestampMicros()));
+
+    Schema timestampmillischema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Type.LONG));
+    fields.put(new Field("tsMillis1", AvroTimestampMillis.create().getRecommendedSchema(), null, null),
+        fortwodatestring + "T" + fortwotimestring + "Z");
+    fields.put(new Field("tsMillis2", AvroTimestampMillis.create().getRecommendedSchema(), null, null), fortwoinstant);
+    fields.put(new Field("tsMillis3", AvroTimestampMillis.create().getRecommendedSchema(), null, null),
+        ZonedDateTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("tsMillis4", AvroTimestampMillis.create().getRecommendedSchema(), null, null),
+        Date.from(fortwoinstant));
+    fields.put(new Field("tsMillis5", AvroTimestampMillis.create().getRecommendedSchema(), null, null), fortwoinstant);
+    fields.put(new Field("tsMillisC", timestampmillischema, null, null),
+        TSMILLI_CONVERTER.toLong(fortwoinstant, timestampmillischema, LogicalTypes.timestampMillis()));
+
+    Schema localtimestampmicroschema = LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Type.LONG));
+    fields.put(new Field("localtsMicros1", AvroLocalTimestampMicros.create().getRecommendedSchema(), null, null),
+        LocalDateTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("localtsMicros2", AvroLocalTimestampMicros.create().getRecommendedSchema(), null, null),
+        Date.from(fortwoinstant));
+    fields.put(new Field("localtsMicros3", AvroLocalTimestampMicros.create().getRecommendedSchema(), null, null),
+        ZonedDateTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("localtsMicros4", AvroLocalTimestampMicros.create().getRecommendedSchema(), null, null),
+        fortwoinstant);
+    fields.put(new Field("localtsMicros5", AvroLocalTimestampMicros.create().getRecommendedSchema(), null, null),
+        fortwodatestring + "T" + fortwotimestring);
+    fields.put(new Field("localtsMicrosC", localtimestampmicroschema, null, null),
+        LOCALTSMICRO_CONVERTER.toLong(fortwoinstant.atZone(ZoneId.of("UTC")).toLocalDateTime(),
+            localtimestampmicroschema, LogicalTypes.localTimestampMicros()));
+
+    Schema localtimestampmillischema = LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Type.LONG));
+    fields.put(new Field("localtsMillis1", AvroLocalTimestampMillis.create().getRecommendedSchema(), null, null),
+        LocalDateTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("localtsMillis2", AvroLocalTimestampMillis.create().getRecommendedSchema(), null, null),
+        Date.from(fortwoinstant));
+    fields.put(new Field("localtsMillis3", AvroLocalTimestampMillis.create().getRecommendedSchema(), null, null),
+        ZonedDateTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("localtsMillis4", AvroLocalTimestampMillis.create().getRecommendedSchema(), null, null),
+        fortwoinstant);
+    fields.put(new Field("localtsMillis5", AvroLocalTimestampMillis.create().getRecommendedSchema(), null, null),
+        fortwodatestring + "T" + fortwotimestring);
+    fields.put(new Field("localtsMillisC", localtimestampmillischema, null, null),
+        LOCALTSMILLI_CONVERTER.toLong(fortwoinstant.atZone(ZoneId.of("UTC")).toLocalDateTime(),
+            localtimestampmillischema, LogicalTypes.localTimestampMillis()));
+
+    Schema timemicroschema = LogicalTypes.timeMicros().addToSchema(Schema.create(Type.LONG));
+    fields.put(new Field("timeMicros1", AvroTimeMicros.create().getRecommendedSchema(), null, null), fortwoinstant);
+    fields.put(new Field("timeMicros2", AvroTimeMicros.create().getRecommendedSchema(), null, null),
+        LocalTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("timeMicros3", AvroTimeMicros.create().getRecommendedSchema(), null, null),
+        Date.from(fortwoinstant));
+    fields.put(new Field("timeMicros4", AvroTimeMicros.create().getRecommendedSchema(), null, null), fortwotimestring);
+    fields.put(new Field("timeMicrosC", timemicroschema, null, null), TIMEMICRO_CONVERTER
+        .toLong(fortwoinstant.atZone(ZoneId.of("UTC")).toLocalTime(), timemicroschema, LogicalTypes.timeMicros()));
+
+    Schema timemillischema = LogicalTypes.timeMillis().addToSchema(Schema.create(Type.INT));
+    fields.put(new Field("timeMillis1", AvroTimeMillis.create().getRecommendedSchema(), null, null), fortwoinstant);
+    fields.put(new Field("timeMillis2", AvroTimeMillis.create().getRecommendedSchema(), null, null),
+        LocalTime.ofInstant(fortwoinstant, ZoneId.of("UTC")));
+    fields.put(new Field("timeMillis3", AvroTimeMillis.create().getRecommendedSchema(), null, null),
+        Date.from(fortwoinstant));
+    fields.put(new Field("timeMillis4", AvroTimeMillis.create().getRecommendedSchema(), null, null), fortwotimestring);
+    fields.put(new Field("timeMillisC", timemillischema, null, null), TIMEMILLI_CONVERTER
+        .toInt(fortwoinstant.atZone(ZoneId.of("UTC")).toLocalTime(), timemillischema, LogicalTypes.timeMillis()));
+
+    Schema schema = Schema.createRecord("Foo", "test", "mytest", false);
+    List<Field> fieldlist = new ArrayList<Field>();
+    fieldlist.addAll(fields.keySet());
+
+    schema.setFields(fieldlist);
+
+    Record testRecord = new Record(schema);
+
+    for (Field f : fields.keySet()) {
+      Object value = fields.get(f);
+      testRecord.put(f.name(), f.getDataType().convertToRawType(value));
+    }
+
+    validateRecordLogicalType1(testRecord, fields);
+
+    /*
+     * It might be that putting values does not change the object thus reading the
+     * same object and comparing is kind of a no-operation. Thus the data is put
+     * through a DatumWriter/Reader to make sure all objects are recreated for sure.
+     */
+
+    DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<GenericRecord>(schema);
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    Encoder encoder = EncoderFactory.get().validatingEncoder(schema,
+        EncoderFactory.get().binaryEncoder(byteArrayOutputStream, null));
+    datumWriter.write(testRecord, encoder);
+    encoder.flush();
+
+    Decoder decoder = DecoderFactory.get().validatingDecoder(schema,
+        DecoderFactory.get().binaryDecoder(byteArrayOutputStream.toByteArray(), null));
+    GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>(schema);
+    GenericRecord testRecord2 = datumReader.read(null, decoder);
+
+    validateRecordLogicalType1(testRecord2, fields);
 
   }
 
-  private void validateRecord(GenericRecord testRecord) {
+  private void validateRecord(GenericRecord testRecord, Map<Field, Object> fields) {
     for (Field f : fields.keySet()) {
       AvroDatatype datatype = f.getDataType();
       Object o = datatype.convertToLogicalType(testRecord.get(f.name()));
@@ -198,4 +375,52 @@ public class TestDatatype {
     }
   }
 
+  private void validateRecordLogicalType1(GenericRecord testRecord, Map<Field, Object> fields) {
+    for (Field f : fields.keySet()) {
+      if (!f.name().endsWith("C")) { // only take fields that have been defined using the new logical types way
+        AvroDatatype datatype = f.getDataType();
+        Object oNew = datatype.convertToLogicalType(testRecord.get(f.name()));
+        Object oRawNew = testRecord.get(f.name());
+        String referencefieldname = f.name().substring(0, f.name().length() - 1) + "C";
+        Object oRawClassic = testRecord.get(referencefieldname);
+        assertEquals("Raw data of " + f.name() + " not equal to " + referencefieldname, oRawNew, oRawClassic);
+        switch (datatype.getAvroType()) {
+        case AVRODATE:
+          assertEquals("AvroDate " + f.name() + " not equal to " + fortwodatestring, oNew,
+              LocalDate.parse(fortwodatestring));
+          break;
+        case AVRODECIMAL:
+          assertTrue("AvroDecimal " + f.name() + " not equal to " + forcommatwo.toString(),
+              forcommatwo.compareTo((BigDecimal) oNew) == 0);
+          break;
+        case AVROLOCALTIMESTAMPMICROS:
+          assertEquals(
+              "AvroTimestampMicros " + f.name() + " not equal to " + fortwodatestring + "T" + fortwotimestring + "Z",
+              oNew, LocalDateTime.parse(fortwodatestring + "T" + fortwotimestring));
+          break;
+        case AVROLOCALTIMESTAMPMILLIS:
+          assertEquals(
+              "AvroTimestampMillis " + f.name() + " not equal to " + fortwodatestring + "T" + fortwotimestring + "Z",
+              oNew, LocalDateTime.parse(fortwodatestring + "T" + fortwotimestring));
+          break;
+        case AVROTIMEMICROS:
+          assertEquals("AvroTimeMicros " + f.name() + " not equal to " + fortwotimestring, oNew,
+              LocalTime.parse(fortwotimestring));
+          break;
+        case AVROTIMEMILLIS:
+          assertEquals("AvroTimeMillis " + f.name() + " not equal to " + fortwotimestring, oNew,
+              LocalTime.parse(fortwotimestring));
+          break;
+        case AVROTIMESTAMPMICROS:
+          assertEquals("AvroTimestampMicros " + f.name() + " not equal to " + fortwoinstant, oNew, fortwoinstant);
+          break;
+        case AVROTIMESTAMPMILLIS:
+          assertEquals("AvroTimestampMillis " + f.name() + " not equal to " + fortwoinstant, oNew, fortwoinstant);
+          break;
+        default:
+          break;
+        }
+      }
+    }
+  }
 }
