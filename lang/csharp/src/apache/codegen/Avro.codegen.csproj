@@ -20,7 +20,13 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <!--
+    Support all .NET Core 2.1 (LTS), .NET Core 3.1 (LTS) and .NET 5.0 (latest)
+    When installing with 'dotnet tool install', the proper/supported framwork will be selected,
+    unless framework is explicitly specified with 'dotnet tool install'
+    https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-install
+    -->
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <AssemblyName>avrogen</AssemblyName>
     <RootNamespace>Avro.codegen</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
