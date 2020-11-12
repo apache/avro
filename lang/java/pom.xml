@@ -74,7 +74,7 @@
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
     <shade-plugin.version>3.2.3</shade-plugin.version>
-    <surefire-plugin.version>3.0.0-M4</surefire-plugin.version>
+    <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
   </properties>
 
   <modules>
@@ -156,13 +156,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire-plugin.version}</version>
-          <dependencies>
-            <dependency>
-              <groupId>org.apache.maven.surefire</groupId>
-              <artifactId>surefire-junit47</artifactId>
-              <version>${surefire-plugin.version}</version>
-            </dependency>
-          </dependencies>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
