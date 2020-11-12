@@ -56,7 +56,7 @@
     <ant.version>1.10.8</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
     <commons-compress.version>1.20</commons-compress.version>
-    <commons-lang.version>3.9</commons-lang.version>
+    <commons-lang.version>3.11</commons-lang.version>
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.2</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
