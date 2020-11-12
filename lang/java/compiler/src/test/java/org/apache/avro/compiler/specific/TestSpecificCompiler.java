@@ -345,6 +345,7 @@ public class TestSpecificCompiler {
     Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
     Schema timeSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
     Schema timestampSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+    Schema localTimestampSchema = LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
     Schema decimalSchema = LogicalTypes.decimal(9, 2).addToSchema(Schema.create(Schema.Type.BYTES));
     Schema uuidSchema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
 
@@ -357,6 +358,8 @@ public class TestSpecificCompiler {
         compiler.javaType(timeSchema));
     Assert.assertEquals("Should use DateTime for timestamp-millis type", "java.time.Instant",
         compiler.javaType(timestampSchema));
+    Assert.assertEquals("Should use LocalDateTime for local-timestamp-millis type", "java.time.LocalDateTime",
+        compiler.javaType(localTimestampSchema));
     Assert.assertEquals("Should use Java BigDecimal type", "java.math.BigDecimal", compiler.javaType(decimalSchema));
     Assert.assertEquals("Should use Java CharSequence type", "java.lang.CharSequence", compiler.javaType(uuidSchema));
   }
