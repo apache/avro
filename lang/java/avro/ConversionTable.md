@@ -2,7 +2,6 @@
 
 ### AvroDate
 
-
 - getBackingType(): INT
 - getConvertedType(): LocalDate
 - convertToRawType(Object):
