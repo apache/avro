@@ -314,6 +314,7 @@
                 <exclude>lang/perl/blib/**/.exists</exclude>
                 <exclude>vendor/**</exclude>
                 <exclude>lang/php/vendor/**</exclude>
+                <exclude>lang/php/.phpunit.result.cache</exclude>
                 <exclude>lang/ruby/Gemfile.lock</exclude>
                 <exclude>lang/ruby/avro.gemspec</exclude>
                 <exclude>lang/ruby/.gem/**</exclude>
