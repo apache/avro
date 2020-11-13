@@ -74,3 +74,59 @@
   - Date: Extracts the time from Date
   - String: Converts the string into a LocalTime and from there to the internal representation
 
+
+### AvroBoolean
+- getBackingType(): BOOLEAN
+- getConvertedType(): Boolean
+- convertToRawType(Object):
+  - Boolean: The best fitting data type
+  - String: Translates TRUE and FALSE into a Boolean (ignoreCase)
+  - Number: Translates 1 and 0 to a Boolean
+
+
+### AvroFloat
+- getBackingType(): FLOAT
+- getConvertedType(): Float
+- convertToRawType(Object):
+  - Float: The best fitting data type
+  - String: Translates the string into a float via Float.parse(string)
+  - Number: Translates the number into a float using Number.floatValue()
+  
+
+### AvroInt
+- getBackingType(): INTEGER
+- getConvertedType(): Integer
+- convertToRawType(Object):
+  - Integer: The best fitting data type
+  - String: Translates the string into a float via Integer.parse(string)
+  - Number: Translates the number into a float using Number.intValue()
+
+
+### AvroLong
+- getBackingType(): LONG
+- getConvertedType(): Long
+- convertToRawType(Object):
+  - Long: The best fitting data type
+  - String: Translates the string into a float via Long.parse(string)
+  - Number: Translates the number into a float using Number.longValue()
+
+
+### AvroByte
+- getBackingType(): INTEGER
+- getConvertedType(): Byte
+- convertToRawType(Object):
+  - Byte: The best fitting data type
+  - String: Translates the string into a float via Integer.parse(string)
+  - Number: Translates the number into a float using Number.intValue()
+
+### AvroShort
+- getBackingType(): INTEGER
+- getConvertedType(): Short
+- convertToRawType(Object):
+  - Short: The best fitting data type
+  - String: Translates the string into a float via Integer.parse(string)
+  - Number: Translates the number into a float using Number.intValue()
+
+
+
+

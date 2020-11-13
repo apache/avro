@@ -92,6 +92,12 @@ public class AvroByte extends LogicalType implements AvroPrimitive {
       return null;
     } else if (value instanceof Integer) {
       return (Integer) value;
+    } else if (value instanceof String) {
+      try {
+        return Integer.valueOf((String) value);
+      } catch (NumberFormatException e) {
+        throw new AvroTypeException("Cannot convert the string \"" + value + "\" into an Integer");
+      }
     } else if (value instanceof Number) {
       return ((Number) value).intValue();
     }
