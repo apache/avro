@@ -1,0 +1,15 @@
+@version("1.0.5")
+@namespace("org.apache.avro.test")
+protocol LogicalTypeTest {
+    record LogicalTypeFields {
+        date aDate;
+        time_ms aTime;
+        timestamp_ms aTimestamp;
+        local_timestamp_ms aLocalTimestamp;
+        decimal(6,2) pocketMoney;
+        uuid identifier;
+        @logicalType("timestamp-micros") long anotherTimestamp;
+        @logicalType("decimal") @precision(6) @scale(2) bytes allowance;
+        @logicalType("decimal") @precision(3000000000) @scale(0) bytes byteArray;
+    }
+}

@@ -69,6 +69,7 @@ import java.util.Map;
 import java.net.URL;
 
 import org.apache.avro.Schema;
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema.*;
 import org.apache.avro.Protocol;
@@ -1039,6 +1040,9 @@ private Schema NamedSchemaDeclaration(Map<String, JsonNode> props):
      } else {                                     // add all other props
        Accessor.addProp(s, key, props.get(key));
      }
+   LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+   if (logicalType != null)
+     logicalType.addToSchema(s);
 
    return s;
  }
@@ -1420,7 +1424,6 @@ Schema Type():
   Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
-
     ( SchemaProperty(props) )*
   (
       LOOKAHEAD(2) s = ReferenceType()
@@ -1432,6 +1435,9 @@ Schema Type():
   {
     for (String key : props.keySet())
       Accessor.addProp(s, key, props.get(key));
+    LogicalType logicalType = LogicalTypes.fromSchemaIgnoreInvalid(s);
+    if (logicalType != null)
+      logicalType.addToSchema(s);
     return s;
   }
 }
