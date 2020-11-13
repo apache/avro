@@ -1602,7 +1602,14 @@ private JsonNode Json() :
 { String s; Token t; JsonNode n; }
 { 
 ( s = JsonString() { n = new TextNode(s); }
-| (t=<INTEGER_LITERAL> { n = new LongNode(Long.parseLong(t.image)); })
+| (t=<INTEGER_LITERAL> {
+  long longValue = Long.parseLong(t.image);
+  int intValue = (int)longValue;
+  if (intValue == longValue)
+    n = new IntNode(intValue);
+  else
+    n = new LongNode(longValue);
+})
 | (t=<FLOATING_POINT_LITERAL> {n=new DoubleNode(Double.parseDouble(t.image));})
 | n=JsonObject()
 | n=JsonArray()
