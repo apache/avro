@@ -17,6 +17,8 @@
  */
 package org.apache.avro.io.parsing;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -24,8 +26,18 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaValidationException;
 import org.apache.avro.SchemaValidatorBuilder;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.not;
 
 /** ResolvingGrammarGenerator tests that are not Parameterized. */
 public class TestResolvingGrammarGenerator2 {
@@ -111,4 +123,40 @@ public class TestResolvingGrammarGenerator2 {
     Symbol.UnionAdjustAction action = (Symbol.UnionAdjustAction) grammar.production[1];
     Assert.assertEquals(4, action.rindex);
   }
+
+  @Test
+  public void testAvro2702StringProperties() throws IOException {
+
+    // Create a nested record schema with string fields at two levels.
+    Schema inner = SchemaBuilder.builder().record("B").fields().requiredString("b1").endRecord();
+    Schema outer = SchemaBuilder.builder().record("A").fields().requiredString("a1").name("inner").type().unionOf()
+        .nullType().and().type(inner).endUnion().noDefault().endRecord();
+
+    // Make a copy with the two string fields annotated.
+    Schema outer2 = new Schema.Parser().parse(outer.toString());
+    outer2.getField("a1").schema().addProp(GenericData.STRING_PROP, "String");
+    Schema inner2 = outer2.getField("inner").schema().getTypes().get(1);
+    inner2.getField("b1").schema().addProp(GenericData.STRING_PROP, "String");
+
+    // The two schemas are not the same, but they serialize to the same.
+    assertThat(outer, not(outer2));
+
+    // This is a serialized record.
+    byte[] serialized = { 2, 'a', // a1 is a one character string
+        2, // Pick the non-null UNION branch and
+        2, 'b' // Another one character string
+    };
+
+    GenericRecord out = null;
+    try (ByteArrayInputStream bais = new ByteArrayInputStream(serialized)) {
+      Decoder decoder = DecoderFactory.get().binaryDecoder(bais, null);
+      DatumReader<GenericRecord> r = new GenericDatumReader<>(outer, outer2, GenericData.get());
+      out = r.read(null, decoder);
+    }
+
+    // Assert that the two fields were read and are of type String.
+    assertThat(out.get("a1"), instanceOf(String.class));
+    assertThat(((GenericRecord) out.get("inner")).get("b1"), instanceOf(String.class));
+  }
+
 }
