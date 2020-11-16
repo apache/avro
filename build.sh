@@ -92,7 +92,7 @@ do
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh lint test)
       (cd lang/ruby; ./build.sh lint test)
-      (cd lang/php; ./build.sh test)
+      (cd lang/php; ./build.sh lint test)
       (cd lang/perl; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
