@@ -12,7 +12,7 @@ Install-Package Apache.Avro
 
 ## Build & Test
 
-1. Install [.NET Core SDK 2.2+](https://www.microsoft.com/net/download/linux)
+1. Install [.NET SDK 5.0+](https://dotnet.microsoft.com/download/dotnet-core)
 2. `dotnet test`
 
 ## Notes
