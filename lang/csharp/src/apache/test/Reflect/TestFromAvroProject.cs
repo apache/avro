@@ -189,7 +189,6 @@ namespace Avro.Test
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                // Note: Re-throwing caught exception changes stack information
                 throw;
             }
         }
