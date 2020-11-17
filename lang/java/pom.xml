@@ -317,9 +317,10 @@
             <removeUnusedImports/>
           </java>
         </configuration>
+        <!--
         <executions>
           <execution>
-            <!-- Runs in compile phase to fail fast in case of formatting issues.-->
+            &lt;!&ndash; Runs in compile phase to fail fast in case of formatting issues.&ndash;&gt;
             <id>spotless-check</id>
             <phase>compile</phase>
             <goals>
@@ -327,6 +328,7 @@
             </goals>
           </execution>
         </executions>
+        -->
       </plugin>
     </plugins>
   </build>

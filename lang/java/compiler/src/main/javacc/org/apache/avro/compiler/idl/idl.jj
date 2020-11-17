@@ -1300,20 +1300,11 @@ private void SchemaProperty(Map<String, JsonNode> properties):
 void FieldDeclaration(List<Field> fields):
 {
   Schema type;
-  Map<String, JsonNode> props = new LinkedHashMap<String, JsonNode>();
 }
 {
-  // TODO should we be able to specify properties on any Type?
-  // or just on field declarations as done here
-
-  ( SchemaProperty(props) )*
   type = Type()
   VariableDeclarator(type, fields) ( "," VariableDeclarator(type, fields) )*
   ";"
-  {
-    for (String key : props.keySet())
-      Accessor.addProp(type, key, props.get(key));
-  }
 }
 
 void VariableDeclarator(Schema type, List<Field> fields):
