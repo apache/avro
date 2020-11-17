@@ -70,7 +70,7 @@
     <file-management.version>3.0.0</file-management.version>
     <jar-plugin.version>3.2.0</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
-    <maven-site-plugin.version>3.9.0</maven-site-plugin.version>
+    <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
     <shade-plugin.version>3.2.4</shade-plugin.version>
