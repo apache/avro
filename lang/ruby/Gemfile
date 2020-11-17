@@ -27,4 +27,4 @@ gem 'parallel', '<= 1.19.2'
 gem 'rubocop', '<= 0.81'
 
 # rdoc 6.2.1 requires Ruby 2.4+
-gem 'rdoc', '<= 6.2.0'
+gem 'rdoc', '<= 6.3.0'
