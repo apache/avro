@@ -73,7 +73,7 @@
     <maven-site-plugin.version>3.9.0</maven-site-plugin.version>
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
-    <shade-plugin.version>3.2.3</shade-plugin.version>
+    <shade-plugin.version>3.2.4</shade-plugin.version>
     <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
   </properties>
 
