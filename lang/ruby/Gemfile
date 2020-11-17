@@ -24,7 +24,7 @@ gem 'test-unit'
 gem 'parallel', '<= 1.19.2'
 
 # rubocop 0.82 requires Ruby 2.4+
-gem 'rubocop', '<= 0.81'
+gem 'rubocop', '<= 1.4'
 
 # rdoc 6.2.1 requires Ruby 2.4+
 gem 'rdoc', '<= 6.2.0'
