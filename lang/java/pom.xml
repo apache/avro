@@ -63,7 +63,7 @@
     <grpc.version>1.33.1</grpc.version>
     <zstd-jni.version>1.4.5-12</zstd-jni.version>
     <!-- version properties for plugins -->
-    <archetype-plugin.version>3.1.2</archetype-plugin.version>
+    <archetype-plugin.version>3.2.0</archetype-plugin.version>
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
     <exec-plugin.version>1.6.0</exec-plugin.version>
