@@ -21,7 +21,7 @@
 
 <Project>
   <!--
-    These package versions are the latest, which are tools are packaged with. 
+    These package versions are the latest, which our tools are packaged with. 
     These might override the bare minimum requirement of a class library.
     !!! SHIPPED CLASS LIBRARIES SHOULD USE MINIMUMVERSIONs. SEE BELOW !!!
   -->
