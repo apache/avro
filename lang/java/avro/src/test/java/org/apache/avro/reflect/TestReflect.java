@@ -726,11 +726,22 @@ public class TestReflect {
     @AvroEncode(using = DateAsLongEncoding.class)
     java.util.Date date;
 
+    @AvroEncode(using = DateAsNullableLongEncoding.class)
+    java.util.Date nullableDate;
+
     @Override
     public boolean equals(Object o) {
       if (!(o instanceof AvroEncRecord))
         return false;
-      return date.equals(((AvroEncRecord) o).date);
+
+      final AvroEncRecord other = (AvroEncRecord) o;
+      if (!Objects.equals(this.date, other.date)) {
+        return false;
+      }
+      if (!Objects.equals(this.nullableDate, other.nullableDate)) {
+        return false;
+      }
+      return true;
     }
   }
 
@@ -818,16 +829,32 @@ public class TestReflect {
   }
 
   @Test
-  public void testAvroEncodeInducing() throws IOException {
+  public void testAvroEncodeInducing() {
     Schema schm = ReflectData.get().getSchema(AvroEncRecord.class);
     assertEquals(schm.toString(),
         "{\"type\":\"record\",\"name\":\"AvroEncRecord\",\"namespace"
             + "\":\"org.apache.avro.reflect.TestReflect\",\"fields\":[{\"name\":\"date\","
-            + "\"type\":{\"type\":\"long\",\"CustomEncoding\":\"DateAsLongEncoding\"}}]}");
+            + "\"type\":{\"type\":\"long\",\"CustomEncoding\":\"DateAsLongEncoding\"}},"
+            + "{\"name\":\"nullableDate\",\"type\":[\"null\",\"long\"],\"default\":null}]}");
   }
 
   @Test
   public void testAvroEncodeIO() throws IOException {
+    Schema schm = ReflectData.get().getSchema(AvroEncRecord.class);
+    ReflectDatumWriter<AvroEncRecord> writer = new ReflectDatumWriter<>(schm);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    AvroEncRecord record = new AvroEncRecord();
+    record.date = new java.util.Date(948833323L);
+    record.nullableDate = new java.util.Date();
+    writer.write(record, factory.directBinaryEncoder(out, null));
+    ReflectDatumReader<AvroEncRecord> reader = new ReflectDatumReader<>(schm);
+    AvroEncRecord decoded = reader.read(new AvroEncRecord(),
+        DecoderFactory.get().binaryDecoder(out.toByteArray(), null));
+    assertEquals(record, decoded);
+  }
+
+  @Test
+  public void testAvroEncodeWithNullDateIO() throws IOException {
     Schema schm = ReflectData.get().getSchema(AvroEncRecord.class);
     ReflectDatumWriter<AvroEncRecord> writer = new ReflectDatumWriter<>(schm);
     ByteArrayOutputStream out = new ByteArrayOutputStream();
