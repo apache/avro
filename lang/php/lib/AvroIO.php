@@ -31,24 +31,24 @@ class AvroIO
     /**
      * @var string general read mode
      */
-    const READ_MODE = 'r';
+    public const READ_MODE = 'r';
     /**
      * @var string general write mode.
      */
-    const WRITE_MODE = 'w';
+    public const WRITE_MODE = 'w';
 
     /**
      * @var int set position to current index + $offset bytes
      */
-    const SEEK_CUR = SEEK_CUR;
+    public const SEEK_CUR = SEEK_CUR;
     /**
      * @var int set position equal to $offset bytes
      */
-    const SEEK_SET = SEEK_SET;
+    public const SEEK_SET = SEEK_SET;
     /**
      * @var int set position to end of file + $offset bytes
      */
-    const SEEK_END = SEEK_END;
+    public const SEEK_END = SEEK_END;
 
     /**
      * Read $len bytes from AvroIO instance

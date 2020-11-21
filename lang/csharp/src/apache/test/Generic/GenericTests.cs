@@ -108,6 +108,15 @@ namespace Avro.Test.Generic
             test(schema, mkMap(values));
         }
 
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"Unknown\", \"A\", \"B\"], \"default\": \"Unknown\" }", "C", "Unknown")]
+        [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"Unknown\", \"A\", \"B\"], \"default\": \"Unknown\" }", "A", "A")]
+        public void TestEnumDefault(string schema, string attemptedValue, string expectedValue)
+        {
+            var newEnum = mkEnum(schema, attemptedValue) as GenericEnum;
+            Assert.NotNull(newEnum);
+            Assert.AreEqual(newEnum.Value, expectedValue);
+        }
+
         [TestCase()]
         public void TestLogical_Date()
         {
