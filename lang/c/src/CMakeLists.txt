@@ -123,6 +123,13 @@ install(TARGETS avro-static avro-shared
 endif(WIN32)
 
 # Install pkg-config file
+get_target_property(avro-static-libraries avro-static LINK_LIBRARIES)
+foreach(lib ${avro-static-libraries})
+    if(${lib} MATCHES "^[A-Za-z0-9_]+$")
+        list(APPEND CODEC_LIBRARIES_STATIC_LIST "${CMAKE_LINK_LIBRARY_FLAG}${lib}")
+    endif()
+endforeach()
+string(REPLACE ";" " " CODEC_LIBRARIES_STATIC "${CODEC_LIBRARIES_STATIC_LIST}")
 
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(VERSION ${AVRO_VERSION})
