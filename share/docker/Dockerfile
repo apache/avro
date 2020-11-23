@@ -153,6 +153,11 @@ RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-micro
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
+# Install travis_retry to overcome downloading artifacts
+#   more: https://docs.travis-ci.com/user/common-build-problems
+RUN curl -sSL -o /usr/local/bin/travis_retry https://github.com/travis-ci/travis-build/blob/v10.0.0/lib/travis/build/bash/travis_retry.bash \
+ && chmod +x /usr/local/bin/travis_retry
+
 # Install Ruby modules
 COPY lang/ruby/Gemfile /tmp
 RUN bundle install --gemfile=/tmp/Gemfile

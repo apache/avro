@@ -19,11 +19,14 @@ set -e
 
 # This is to resolve the issue when Travis CI fails to download dependencies,
 #   as documented on: https://docs.travis-ci.com/user/common-build-problems
-if [ -z "${TRAVIS_OS_NAME}" ]; then
+if [ ! -z "${TRAVIS_OS_NAME}" ]; then
   function mvn() {
     travis_retry mvn
   }
 fi
+
+# making sure the TRAVIS_* ENV is passed to the docker
+printenv | grep "^TRAVIS"
 
 usage() {
   echo "Usage: $0 {lint|test|dist|clean}"
