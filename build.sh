@@ -34,6 +34,14 @@ change_java_version() {
   java -version
 }
 
+# This is to resolve the issue when Travis CI fails to download dependencies,
+#   as documented on: https://docs.travis-ci.com/user/common-build-problems
+if [ -z "${TRAVIS_OS_NAME}" ]; then
+  function mvn() {
+    travis_retry mvn
+  }
+fi
+
 # Stop here if sourcing for functions
 [[ "$0" == *"bash" ]] && return 0
 

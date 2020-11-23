@@ -17,6 +17,14 @@
 
 set -e
 
+# This is to resolve the issue when Travis CI fails to download dependencies,
+#   as documented on: https://docs.travis-ci.com/user/common-build-problems
+if [ -z "${TRAVIS_OS_NAME}" ]; then
+  function mvn() {
+    travis_retry mvn
+  }
+fi
+
 usage() {
   echo "Usage: $0 {lint|test|dist|clean}"
   exit 1

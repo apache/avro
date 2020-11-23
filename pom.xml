@@ -57,7 +57,7 @@
     <maven-plugin-plugin.version>3.6.0</maven-plugin-plugin.version>
     <rat.version>0.13</rat.version>
     <source-plugin.version>3.2.1</source-plugin.version>
-    <spotless-maven-plugin.version>1.31.1</spotless-maven-plugin.version>
+    <spotless-maven-plugin.version>1.31.3</spotless-maven-plugin.version>
   </properties>
 
   <modules>
