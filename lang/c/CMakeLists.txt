@@ -176,7 +176,6 @@ else (LZMA_FOUND)
 endif (LZMA_FOUND)
 
 set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES} ${SNAPPY_LIBRARIES})
-set(CODEC_PKG "${ZLIB_PKG} ${LZMA_PKG} ${SNAPPY_PKG}")
 
 # Jansson JSON library
 pkg_check_modules(JANSSON jansson>=2.3)
@@ -188,6 +187,7 @@ else (JANSSON_FOUND)
     message(FATAL_ERROR "libjansson >=2.3 not found")
 endif (JANSSON_FOUND)
 
+set(AVRO_REQUIRES "${ZLIB_PKG} ${LZMA_PKG} ${SNAPPY_PKG} ${JANSSON_PKG}")
 
 add_subdirectory(src)
 add_subdirectory(examples)
