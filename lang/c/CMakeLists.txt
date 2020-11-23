@@ -151,7 +151,7 @@ endif (ZLIB_FOUND)
 
 find_package(Snappy)
 if (SNAPPY_FOUND AND ZLIB_FOUND)  # Snappy borrows crc32 from zlib
-    set(SNAPPY_PKG libsnappy)
+    set(SNAPPY_PKG "") # google explicitly does not provide a pkg-config for snappy: https://github.com/google/snappy/pull/86
     add_definitions(-DSNAPPY_CODEC)
     include_directories(${SNAPPY_INCLUDE_DIRS})
     message("Enabled snappy codec")
