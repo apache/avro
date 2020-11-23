@@ -180,7 +180,7 @@ set(CODEC_LIBRARIES ${ZLIB_LIBRARIES} ${LZMA_LIBRARIES} ${SNAPPY_LIBRARIES})
 # Jansson JSON library
 pkg_check_modules(JANSSON jansson>=2.3)
 if (JANSSON_FOUND)
-    set(JANSSON_PKG libjansson)
+    set(JANSSON_PKG jansson) # pkg-config --exists jansson
     include_directories(${JANSSON_INCLUDE_DIRS})
     link_directories(${JANSSON_LIBRARY_DIRS})
 else (JANSSON_FOUND)
