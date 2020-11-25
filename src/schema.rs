@@ -122,17 +122,17 @@ impl PartialEq for Schema {
 
 impl SchemaKind {
     pub fn is_primitive(self) -> bool {
-        match self {
+        matches!(
+            self,
             SchemaKind::Null
-            | SchemaKind::Boolean
-            | SchemaKind::Int
-            | SchemaKind::Long
-            | SchemaKind::Double
-            | SchemaKind::Float
-            | SchemaKind::Bytes
-            | SchemaKind::String => true,
-            _ => false,
-        }
+                | SchemaKind::Boolean
+                | SchemaKind::Int
+                | SchemaKind::Long
+                | SchemaKind::Double
+                | SchemaKind::Float
+                | SchemaKind::Bytes
+                | SchemaKind::String,
+        )
     }
 }
 
