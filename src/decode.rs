@@ -261,7 +261,7 @@ mod tests {
             precision: 4,
             scale: 2,
         };
-        let bigint = -423.to_bigint().unwrap();
+        let bigint = (-423).to_bigint().unwrap();
         let value = Value::Decimal(Decimal::from(bigint.to_signed_bytes_be()));
 
         let mut buffer = Vec::new();
@@ -286,7 +286,7 @@ mod tests {
             scale: 2,
         };
         let value = Value::Decimal(Decimal::from(
-            (-423.to_bigint().unwrap()).to_signed_bytes_be(),
+            ((-423).to_bigint().unwrap()).to_signed_bytes_be(),
         ));
         let mut buffer = Vec::<u8>::new();
 
