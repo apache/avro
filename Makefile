@@ -39,7 +39,7 @@ clean-lint:
 
 .PHONY: clippy
 clippy: install-hooks
-	cargo clippy --all-targets --all-features -- -Dclippy::all
+	cargo clippy --all-features --all-targets -- -Dclippy::all -Dunused_imports
 
 # TESTING
 
