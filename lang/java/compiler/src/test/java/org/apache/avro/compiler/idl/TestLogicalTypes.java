@@ -89,7 +89,7 @@ public class TestLogicalTypes {
 
     Assert.assertNull(fieldSchema.getLogicalType());
     Assert.assertEquals("decimal", fieldSchema.getObjectProp("logicalType"));
-    Assert.assertEquals(3000000000L, fieldSchema.getObjectProp("precision")); // Not an int, so not a valid decimal
+    Assert.assertEquals(3000000000L, fieldSchema.getObjectProp("precision")); // Not an int, so not a valid precision
     Assert.assertEquals(0, fieldSchema.getObjectProp("scale"));
   }
 
