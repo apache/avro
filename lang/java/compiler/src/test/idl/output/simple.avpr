@@ -69,6 +69,10 @@
       "type": {"type": "long", "foo.bar": "bar.foo"},
       "default": 0
     } , {
+      "name": "a",
+      "type": {"type": "array", "items": "string", "foo.bar.bar": "foo.bar2"},
+      "default": []
+    } , {
       "name": "prop",
       "type": [ "null" , {"type":"string", "foo.foo.bar": 42, "foo.foo.foo": "3foo"} ],
       "default": null
