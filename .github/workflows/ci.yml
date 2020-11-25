@@ -49,3 +49,10 @@ jobs:
         with:
           command: test
           args: --all-features --all-targets
+
+      # because of https://github.com/rust-lang/cargo/issues/6669
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --doc

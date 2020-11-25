@@ -44,9 +44,20 @@ lazy_static! {
 /// To convert the digest to the commonly used 64-bit integer value, you can use the byteorder crate:
 ///
 /// ```rust
+/// # use avro_rs::rabin::Rabin;
+/// # use digest::Digest;
+/// # use hex_literal::hex;
+///
+/// # let mut hasher = Rabin::new();
+///
+/// # hasher.update(b"hello world");
+///
+/// # let result = hasher.finalize();
+///
+/// # assert_eq!(result[..], hex!("60335ba6d0415528"));
 /// use byteorder::{ByteOrder, LittleEndian};
 ///
-/// let i = LittleEndian::read_i64(&result.to_vec())
+/// let i = LittleEndian::read_i64(&result.to_vec());
 ///
 /// assert_eq!(i, 2906301498937520992)
 /// ```

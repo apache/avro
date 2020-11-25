@@ -45,7 +45,9 @@ clippy: install-hooks
 
 .PHONY: test
 test: install-hooks
-	cargo test --all-features
+	cargo test --all-features --all-targets
+	# because of https://github.com/rust-lang/cargo/issues/6669
+	cargo test --doc
 	$(VENV)/bin/pre-commit run --all-files
 
 # BENCHMARKING
