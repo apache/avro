@@ -4,6 +4,7 @@ on:
       paths:
         - '**/Cargo.toml'
         - '**/Cargo.lock'
+  workflow_dispatch:
 
 name: Security Audit
 
