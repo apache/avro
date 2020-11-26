@@ -1,5 +1,6 @@
 NAME
-    Avro - official Perl API for the Avro serialization and RPC framework
+    Avro - the official Perl API for the Apache Avro project's serialization
+    and RPC framework
 
 SYNOPSIS
       use Avro;
@@ -16,6 +17,8 @@ HISTORY
 
 COPYRIGHT
     Copyright 2014 Apache Software Foundation.
+
+    Apache and Apache Avro are trademarks of the Apache Software Foundation.
 
 LICENSE
     The Apache License, Version 2.0

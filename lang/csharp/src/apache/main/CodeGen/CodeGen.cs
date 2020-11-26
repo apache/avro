@@ -607,6 +607,10 @@ namespace Avro
                 string privFieldName = string.Concat("_", field.Name);
                 var codeField = new CodeMemberField(ctrfield, privFieldName);
                 codeField.Attributes = MemberAttributes.Private;
+                if (field.Schema is EnumSchema es && es.Default != null)
+                {
+                    codeField.InitExpression = new CodeTypeReferenceExpression($"{es.Name}.{es.Default}");
+                }
 
                 // Process field documentation if it exist and add to the field
                 CodeCommentStatement propertyComment = null;
