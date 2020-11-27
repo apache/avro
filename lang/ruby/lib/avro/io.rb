@@ -510,6 +510,8 @@ module Avro
 
     # DatumWriter for generic ruby objects
     class DatumWriter
+      VALIDATION_OPTIONS = { recursive: false, encoded: true }.freeze
+
       attr_accessor :writers_schema
       def initialize(writers_schema=nil)
         @writers_schema = writers_schema
@@ -522,7 +524,7 @@ module Avro
       def write_data(writers_schema, logical_datum, encoder)
         datum = writers_schema.type_adapter.encode(logical_datum)
 
-        unless Schema.validate(writers_schema, datum, { recursive: false, encoded: true })
+        unless Schema.validate(writers_schema, datum, VALIDATION_OPTIONS)
           raise AvroTypeError.new(writers_schema, datum)
         end
 
