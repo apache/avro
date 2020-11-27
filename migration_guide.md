@@ -1,5 +1,11 @@
 # Migration Guide
 ## Unreleased
+All changes are backward-compatible so far.
+
+# 0.12.0
+All changes are backward compatible.
+
+## 0.11.0
 - A custom `Error` enum has been introduced to replace all existing errors and
   the `failure` crate has been replaced by `thiserror`.
 
@@ -11,7 +17,7 @@
   ```rust
   match decoded {
       Ok(msg) => Ok(msg.to_string()),
-      // assuming you were reading a Duration 
+      // assuming you were reading a Duration
       Err(ref e) => match e.downcast_ref::<SchemaResolutionError>() {
           Some(_) => Ok("default".to_string()),
           None => Err(format!("Unexpected error: {}", e)),

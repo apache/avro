@@ -5,8 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.12.0] - 2020-11-27
 ### Added
 - Added support for the Rabin fingerprint (#157)
+
+### Fixed
 - Strip more fields in PCF and fix panic (#164)
 
 ## [0.11.0] - 2020-08-13
