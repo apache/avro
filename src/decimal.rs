@@ -29,12 +29,10 @@ impl Decimal {
         let mut decimal_bytes = vec![sign_byte; len];
         let raw_bytes = self.value.to_signed_bytes_be();
         let num_raw_bytes = raw_bytes.len();
-        let start_byte_index = len
-            .checked_sub(num_raw_bytes)
-            .ok_or_else(|| Error::SignExtend {
-                requested: len,
-                needed: num_raw_bytes,
-            })?;
+        let start_byte_index = len.checked_sub(num_raw_bytes).ok_or(Error::SignExtend {
+            requested: len,
+            needed: num_raw_bytes,
+        })?;
         decimal_bytes[start_byte_index..].copy_from_slice(&raw_bytes);
         Ok(decimal_bytes)
     }

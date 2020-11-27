@@ -262,7 +262,7 @@ impl std::convert::TryFrom<Value> for JsonValue {
                 .ok_or_else(|| Error::ConvertF64ToJson(f.into())),
             Value::Double(d) => Number::from_f64(d)
                 .map(Self::Number)
-                .ok_or_else(|| Error::ConvertF64ToJson(d)),
+                .ok_or(Error::ConvertF64ToJson(d)),
             Value::Bytes(bytes) => Ok(Self::Array(bytes.into_iter().map(|b| b.into()).collect())),
             Value::String(s) => Ok(Self::String(s)),
             Value::Fixed(_size, items) => {
@@ -644,9 +644,7 @@ impl Value {
             v => v,
         };
         // Find the first match in the reader schema.
-        let (_, inner) = schema
-            .find_schema(&v)
-            .ok_or_else(|| Error::FindUnionVariant)?;
+        let (_, inner) = schema.find_schema(&v).ok_or(Error::FindUnionVariant)?;
         Ok(Value::Union(Box::new(v.resolve(inner)?)))
     }
 

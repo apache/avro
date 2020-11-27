@@ -199,7 +199,7 @@ impl Name {
 
     /// Parse a `serde_json::Value` into a `Name`.
     fn parse(complex: &Map<String, Value>) -> AvroResult<Self> {
-        let name = complex.name().ok_or_else(|| Error::GetNameField)?;
+        let name = complex.name().ok_or(Error::GetNameField)?;
 
         let namespace = complex.string("namespace");
 
@@ -276,7 +276,7 @@ pub enum RecordFieldOrder {
 impl RecordField {
     /// Parse a `serde_json::Value` into a `RecordField`.
     fn parse(field: &Map<String, Value>, position: usize) -> AvroResult<Self> {
-        let name = field.name().ok_or_else(|| Error::GetNameFieldFromRecord)?;
+        let name = field.name().ok_or(Error::GetNameFieldFromRecord)?;
 
         // TODO: "type" = "<record name>"
         let schema = Schema::parse_complex(field)?;
@@ -287,7 +287,7 @@ impl RecordField {
             .get("order")
             .and_then(|order| order.as_str())
             .and_then(|order| RecordFieldOrder::from_str(order).ok())
-            .unwrap_or_else(|| RecordFieldOrder::Ascending);
+            .unwrap_or(RecordFieldOrder::Ascending);
 
         Ok(RecordField {
             name,
@@ -563,7 +563,7 @@ impl Schema {
         let fields: Vec<RecordField> = complex
             .get("fields")
             .and_then(|fields| fields.as_array())
-            .ok_or_else(|| Error::GetRecordFieldsJson)
+            .ok_or(Error::GetRecordFieldsJson)
             .and_then(|fields| {
                 fields
                     .iter()
@@ -593,13 +593,13 @@ impl Schema {
         let symbols = complex
             .get("symbols")
             .and_then(|v| v.as_array())
-            .ok_or_else(|| Error::GetEnumSymbolsField)
+            .ok_or(Error::GetEnumSymbolsField)
             .and_then(|symbols| {
                 symbols
                     .iter()
                     .map(|symbol| symbol.as_str().map(|s| s.to_string()))
                     .collect::<Option<_>>()
-                    .ok_or_else(|| Error::GetEnumSymbols)
+                    .ok_or(Error::GetEnumSymbols)
             })?;
 
         Ok(Schema::Enum {
@@ -614,7 +614,7 @@ impl Schema {
     fn parse_array(complex: &Map<String, Value>) -> AvroResult<Self> {
         complex
             .get("items")
-            .ok_or_else(|| Error::GetArrayItemsField)
+            .ok_or(Error::GetArrayItemsField)
             .and_then(|items| Schema::parse(items))
             .map(|schema| Schema::Array(Box::new(schema)))
     }
@@ -624,7 +624,7 @@ impl Schema {
     fn parse_map(complex: &Map<String, Value>) -> AvroResult<Self> {
         complex
             .get("values")
-            .ok_or_else(|| Error::GetMapValuesField)
+            .ok_or(Error::GetMapValuesField)
             .and_then(|items| Schema::parse(items))
             .map(|schema| Schema::Map(Box::new(schema)))
     }
@@ -647,7 +647,7 @@ impl Schema {
         let size = complex
             .get("size")
             .and_then(|v| v.as_i64())
-            .ok_or_else(|| Error::GetFixedSizeField)?;
+            .ok_or(Error::GetFixedSizeField)?;
 
         Ok(Schema::Fixed {
             name,

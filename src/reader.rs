@@ -61,7 +61,7 @@ impl<R: Read> Block<R> {
                         None
                     }
                 })
-                .ok_or_else(|| Error::GetAvroSchemaFromMap)?;
+                .ok_or(Error::GetAvroSchemaFromMap)?;
             self.writer_schema = Schema::parse(&json)?;
 
             if let Some(codec) = meta
