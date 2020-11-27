@@ -39,42 +39,42 @@
 
     <!-- version properties for dependencies -->
 
-    <hadoop.version>3.2.1</hadoop.version>
-    <jackson.version>2.11.0</jackson.version>
-    <jackson.databind.version>2.11.0</jackson.databind.version>
+    <hadoop.version>3.3.0</hadoop.version>
+    <jackson.version>2.11.3</jackson.version>
+    <jackson.databind.version>2.11.3</jackson.databind.version>
     <servlet-api.version>4.0.1</servlet-api.version>
-    <jetty.version>9.4.28.v20200408</jetty.version>
+    <jetty.version>9.4.34.v20201102</jetty.version>
     <jopt-simple.version>5.0.4</jopt-simple.version>
-    <junit.version>4.13</junit.version>
-    <netty.version>4.1.50.Final</netty.version>
-    <protobuf.version>3.11.1</protobuf.version>
+    <junit.version>4.13.1</junit.version>
+    <netty.version>4.1.54.Final</netty.version>
+    <protobuf.version>3.14.0</protobuf.version>
     <thrift.version>0.13.0</thrift.version>
     <slf4j.version>1.7.30</slf4j.version>
-    <snappy.version>1.1.7.5</snappy.version>
+    <snappy.version>1.1.8.1</snappy.version>
     <velocity.version>2.2</velocity.version>
-    <maven.version>3.3.9</maven.version>
-    <ant.version>1.10.8</ant.version>
+    <maven.version>3.6.3</maven.version>
+    <ant.version>1.10.9</ant.version>
     <commons-cli.version>1.4</commons-cli.version>
     <commons-compress.version>1.20</commons-compress.version>
-    <commons-lang.version>3.9</commons-lang.version>
+    <commons-lang.version>3.11</commons-lang.version>
     <tukaani.version>1.8</tukaani.version>
     <easymock.version>4.2</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
-    <grpc.version>1.29.0</grpc.version>
-    <zstd-jni.version>1.4.5-2</zstd-jni.version>
+    <grpc.version>1.33.1</grpc.version>
+    <zstd-jni.version>1.4.5-12</zstd-jni.version>
     <!-- version properties for plugins -->
-    <archetype-plugin.version>3.1.2</archetype-plugin.version>
+    <archetype-plugin.version>3.2.0</archetype-plugin.version>
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
-    <exec-plugin.version>1.6.0</exec-plugin.version>
+    <exec-plugin.version>3.0.0</exec-plugin.version>
     <file-management.version>3.0.0</file-management.version>
     <jar-plugin.version>3.2.0</jar-plugin.version>
     <javacc-plugin.version>2.6</javacc-plugin.version>
-    <maven-site-plugin.version>3.9.0</maven-site-plugin.version>
+    <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
     <plugin-plugin.version>3.6.0</plugin-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
-    <shade-plugin.version>3.2.3</shade-plugin.version>
-    <surefire-plugin.version>3.0.0-M4</surefire-plugin.version>
+    <shade-plugin.version>3.2.4</shade-plugin.version>
+    <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
   </properties>
 
   <modules>
@@ -104,7 +104,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.1.0</version>
+          <version>3.2.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -156,13 +156,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire-plugin.version}</version>
-          <dependencies>
-            <dependency>
-              <groupId>org.apache.maven.surefire</groupId>
-              <artifactId>surefire-junit47</artifactId>
-              <version>${surefire-plugin.version}</version>
-            </dependency>
-          </dependencies>
           <configuration>
             <includes>
               <!-- Avro naming convention for JUnit tests -->
@@ -578,11 +571,23 @@
         <groupId>io.grpc</groupId>
         <artifactId>grpc-stub</artifactId>
         <version>${grpc.version}</version>
+        <exclusions>
+          <exclusion> <!-- GPL -->
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-netty</artifactId>
         <version>${grpc.version}</version>
+        <exclusions>
+          <exclusion> <!-- GPL -->
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.tukaani</groupId>

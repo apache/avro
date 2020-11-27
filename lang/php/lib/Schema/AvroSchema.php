@@ -56,174 +56,174 @@ class AvroSchema
     /**
      * @var int lower bound of integer values: -(1 << 31)
      */
-    const INT_MIN_VALUE = -2147483648;
+    public const INT_MIN_VALUE = -2147483648;
 
     /**
      * @var int upper bound of integer values: (1 << 31) - 1
      */
-    const INT_MAX_VALUE = 2147483647;
+    public const INT_MAX_VALUE = 2147483647;
 
     /**
      * @var long lower bound of long values: -(1 << 63)
      */
-    const LONG_MIN_VALUE = -9223372036854775808;
+    public const LONG_MIN_VALUE = -9223372036854775808;
 
     /**
      * @var long upper bound of long values: (1 << 63) - 1
      */
-    const LONG_MAX_VALUE = 9223372036854775807;
+    public const LONG_MAX_VALUE = 9223372036854775807;
 
     /**
      * @var string null schema type name
      */
-    const NULL_TYPE = 'null';
+    public const NULL_TYPE = 'null';
 
     /**
      * @var string boolean schema type name
      */
-    const BOOLEAN_TYPE = 'boolean';
+    public const BOOLEAN_TYPE = 'boolean';
 
     /**
      * int schema type value is a 32-bit signed int
      * @var string int schema type name.
      */
-    const INT_TYPE = 'int';
+    public const INT_TYPE = 'int';
 
     /**
      * long schema type value is a 64-bit signed int
      * @var string long schema type name
      */
-    const LONG_TYPE = 'long';
+    public const LONG_TYPE = 'long';
 
     /**
      * float schema type value is a 32-bit IEEE 754 floating-point number
      * @var string float schema type name
      */
-    const FLOAT_TYPE = 'float';
+    public const FLOAT_TYPE = 'float';
 
     /**
      * double schema type value is a 64-bit IEEE 754 floating-point number
      * @var string double schema type name
      */
-    const DOUBLE_TYPE = 'double';
+    public const DOUBLE_TYPE = 'double';
 
     /**
      * string schema type value is a Unicode character sequence
      * @var string string schema type name
      */
-    const STRING_TYPE = 'string';
+    public const STRING_TYPE = 'string';
 
     /**
      * bytes schema type value is a sequence of 8-bit unsigned bytes
      * @var string bytes schema type name
      */
-    const BYTES_TYPE = 'bytes';
+    public const BYTES_TYPE = 'bytes';
 
     // Complex Types
     // Unnamed Schema
     /**
      * @var string array schema type name
      */
-    const ARRAY_SCHEMA = 'array';
+    public const ARRAY_SCHEMA = 'array';
 
     /**
      * @var string map schema type name
      */
-    const MAP_SCHEMA = 'map';
+    public const MAP_SCHEMA = 'map';
 
     /**
      * @var string union schema type name
      */
-    const UNION_SCHEMA = 'union';
+    public const UNION_SCHEMA = 'union';
 
     /**
      * Unions of error schemas are used by Avro messages
      * @var string error_union schema type name
      */
-    const ERROR_UNION_SCHEMA = 'error_union';
+    public const ERROR_UNION_SCHEMA = 'error_union';
 
     // Named Schema
 
     /**
      * @var string enum schema type name
      */
-    const ENUM_SCHEMA = 'enum';
+    public const ENUM_SCHEMA = 'enum';
 
     /**
      * @var string fixed schema type name
      */
-    const FIXED_SCHEMA = 'fixed';
+    public const FIXED_SCHEMA = 'fixed';
 
     /**
      * @var string record schema type name
      */
-    const RECORD_SCHEMA = 'record';
+    public const RECORD_SCHEMA = 'record';
     // Other Schema
 
     /**
      * @var string error schema type name
      */
-    const ERROR_SCHEMA = 'error';
+    public const ERROR_SCHEMA = 'error';
 
     /**
      * @var string request schema type name
      */
-    const REQUEST_SCHEMA = 'request';
+    public const REQUEST_SCHEMA = 'request';
 
 
     // Schema attribute names
     /**
      * @var string schema type name attribute name
      */
-    const TYPE_ATTR = 'type';
+    public const TYPE_ATTR = 'type';
 
     /**
      * @var string named schema name attribute name
      */
-    const NAME_ATTR = 'name';
+    public const NAME_ATTR = 'name';
 
     /**
      * @var string named schema namespace attribute name
      */
-    const NAMESPACE_ATTR = 'namespace';
+    public const NAMESPACE_ATTR = 'namespace';
 
     /**
      * @var string derived attribute: doesn't appear in schema
      */
-    const FULLNAME_ATTR = 'fullname';
+    public const FULLNAME_ATTR = 'fullname';
 
     /**
      * @var string array schema size attribute name
      */
-    const SIZE_ATTR = 'size';
+    public const SIZE_ATTR = 'size';
 
     /**
      * @var string record fields attribute name
      */
-    const FIELDS_ATTR = 'fields';
+    public const FIELDS_ATTR = 'fields';
 
     /**
      * @var string array schema items attribute name
      */
-    const ITEMS_ATTR = 'items';
+    public const ITEMS_ATTR = 'items';
 
     /**
      * @var string enum schema symbols attribute name
      */
-    const SYMBOLS_ATTR = 'symbols';
+    public const SYMBOLS_ATTR = 'symbols';
 
     /**
      * @var string map schema values attribute name
      */
-    const VALUES_ATTR = 'values';
+    public const VALUES_ATTR = 'values';
 
     /**
      * @var string document string attribute name
      */
-    const DOC_ATTR = 'doc';
-    
+    public const DOC_ATTR = 'doc';
+
     /** @var string aliases string attribute name */
-    const ALIASES_ATTR = 'aliases';
+    public const ALIASES_ATTR = 'aliases';
 
     /**
      * @var array list of primitive schema type names
