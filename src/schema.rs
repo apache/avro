@@ -818,16 +818,11 @@ fn parsing_canonical_form(schema: &serde_json::Value) -> String {
         serde_json::Value::Object(map) => pcf_map(map),
         serde_json::Value::String(s) => pcf_string(s),
         serde_json::Value::Array(v) => pcf_array(v),
-        serde_json::Value::Number(n) => pcf_number(n),
         json => panic!(
             "got invalid JSON value for canonical form of schema: {0}",
             json
         ),
     }
-}
-
-fn pcf_number(number: &serde_json::Number) -> String {
-    number.to_string()
 }
 
 fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
@@ -844,7 +839,7 @@ fn pcf_map(schema: &Map<String, serde_json::Value>) -> String {
         }
 
         // Strip out unused fields ([STRIP] rule)
-        if field_ordering_position(k).is_none() {
+        if field_ordering_position(k).is_none() || k == "default" || k == "doc" || k == "aliases" {
             continue;
         }
 
@@ -1144,16 +1139,16 @@ mod tests {
 
         let schema = Schema::parse_str(raw_schema).unwrap();
         assert_eq!(
-            "1ceb6cefd5961f5744751a950b44cb28bac0315f89563870bf4b88cb00b00805",
+            "abf662f831715ff78f88545a05a9262af75d6406b54e1a8a174ff1d2b75affc4",
             format!("{}", schema.fingerprint::<Sha256>())
         );
 
         assert_eq!(
-            "660ecfda702dfcf7512961d232e94dbe",
+            "6e21c350f71b1a34e9efe90970f1bc69",
             format!("{}", schema.fingerprint::<Md5>())
         );
         assert_eq!(
-            "25dec0a03ef42014",
+            "28cf0a67d9937bb3",
             format!("{}", schema.fingerprint::<Rabin>())
         )
     }
