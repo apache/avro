@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added support for the Rabin fingerprint (#157)
+- Strip more fields in PCF and fix panic (#164)
 
 ## [0.11.0] - 2020-08-13
 ### Changed
