@@ -49,7 +49,6 @@ RUN apt-get -qqy update \
                                                  libsnappy-dev \
                                                  libsnappy1v5 \
                                                  make \
-                                                 maven \
                                                  mypy \
                                                  openjdk-8-jdk \
                                                  perl \
@@ -67,6 +66,36 @@ RUN apt-get -qqy update \
                                                  vim \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
+
+# Install a maven release  -------------------------------------------
+# Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
+
+ENV MAVEN_VERSION 3.6.3
+ENV APACHE_DIST_URLS \
+  https://www.apache.org/dyn/closer.cgi?action=download&filename= \
+  # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+  https://www-us.apache.org/dist/ \
+  https://www.apache.org/dist/ \
+  https://archive.apache.org/dist/
+RUN set -eux; \
+  download() { \
+    local f="$1"; shift; \
+    local distFile="$1"; shift; \
+    local success=; \
+    local distUrl=; \
+    for distUrl in $APACHE_DIST_URLS; do \
+      if wget -nv -O "$f" "$distUrl$distFile"; then \
+        success=1; \
+        break; \
+      fi; \
+    done; \
+    [ -n "$success" ]; \
+  }; \
+  download "maven.tar.gz" "maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz"; \
+  tar xzf "maven.tar.gz" -C /tmp/; \
+  mv /tmp/apache-maven-$MAVEN_VERSION /opt/maven; \
+  rm "maven.tar.gz"
+ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs 6
 RUN curl -sSL https://deb.nodesource.com/setup_10.x \
