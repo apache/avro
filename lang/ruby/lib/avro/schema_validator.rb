@@ -22,6 +22,14 @@ module Avro
     LONG_RANGE = Schema::LONG_MIN_VALUE..Schema::LONG_MAX_VALUE
     COMPLEX_TYPES = [:array, :error, :map, :record, :request].freeze
     BOOLEAN_VALUES = [true, false].freeze
+    DEFAULT_VALIDATION_OPTIONS = { recursive: true, encoded: false, fail_on_extra_fields: false }.freeze
+    RECURSIVE_SIMPLE_VALIDATION_OPTIONS = { encoded: true }.freeze
+    RUBY_CLASS_TO_AVRO_TYPE = {
+      NilClass => 'null'.freeze,
+      String => 'string'.freeze,
+      Float => 'float'.freeze,
+      Hash => 'record'.freeze
+    }.freeze
 
     class Result
       def <<(error)
@@ -62,12 +70,11 @@ module Avro
     TypeMismatchError = Class.new(ValidationError)
 
     class << self
-      def validate!(expected_schema, logical_datum, options = { recursive: true, encoded: false, fail_on_extra_fields: false })
+      def validate!(expected_schema, logical_datum, options = DEFAULT_VALIDATION_OPTIONS)
         options ||= {}
-        options[:recursive] = true unless options.key?(:recursive)
 
         result = Result.new
-        if options[:recursive]
+        if options.fetch(:recursive, true)
           validate_recursive(expected_schema, logical_datum, ROOT_IDENTIFIER, result, options)
         else
           validate_simple(expected_schema, logical_datum, ROOT_IDENTIFIER, result, options)
@@ -78,10 +85,10 @@ module Avro
 
       private
 
-      def validate_recursive(expected_schema, logical_datum, path, result, options = {})
+      def validate_recursive(expected_schema, logical_datum, path, result, options)
         datum = resolve_datum(expected_schema, logical_datum, options[:encoded])
 
-        validate_simple(expected_schema, datum, path, result, encoded: true)
+        validate_simple(expected_schema, datum, path, result, RECURSIVE_SIMPLE_VALIDATION_OPTIONS)
 
         case expected_schema.type_sym
         when :array
@@ -108,7 +115,7 @@ module Avro
         result.add_error(path, "expected type #{expected_schema.type_sym}, got #{actual_value_message(datum)}")
       end
 
-      def validate_simple(expected_schema, logical_datum, path, result, options = {})
+      def validate_simple(expected_schema, logical_datum, path, result, options)
         datum = resolve_datum(expected_schema, logical_datum, options[:encoded])
         validate_type(expected_schema)
 
@@ -162,14 +169,14 @@ module Avro
         "expected enum with values #{symbols}, got #{actual_value_message(datum)}"
       end
 
-      def validate_array(expected_schema, datum, path, result, options = {})
+      def validate_array(expected_schema, datum, path, result, options)
         fail TypeMismatchError unless datum.is_a?(Array)
         datum.each_with_index do |d, i|
-          validate_recursive(expected_schema.items, d, path + "[#{i}]", result, options)
+          validate_recursive(expected_schema.items, d, "#{path}[#{i}]", result, options)
         end
       end
 
-      def validate_map(expected_schema, datum, path, result, options = {})
+      def validate_map(expected_schema, datum, path, result, options)
         fail TypeMismatchError unless datum.is_a?(Hash)
         datum.keys.each do |k|
           result.add_error(path, "unexpected key type '#{ruby_to_avro_type(k.class)}' in map") unless k.is_a?(String)
@@ -180,7 +187,7 @@ module Avro
         end
       end
 
-      def validate_union(expected_schema, datum, path, result, options = {})
+      def validate_union(expected_schema, datum, path, result, options)
         if expected_schema.schemas.size == 1
           validate_recursive(expected_schema.schemas.first, datum, path, result, options)
           return
@@ -200,6 +207,9 @@ module Avro
 
       def first_compatible_type(datum, expected_schema, path, failures, options = {})
         expected_schema.schemas.find do |schema|
+          # Avoid expensive validation if we're just validating a nil
+          next datum.nil? if schema.type_sym == :null
+
           result = Result.new
           validate_recursive(schema, datum, path, result, options)
           failures << { type: schema.type_sym, result: result } if result.failure?
@@ -208,7 +218,9 @@ module Avro
       end
 
       def deeper_path_for_hash(sub_key, path)
-        "#{path}#{PATH_SEPARATOR}#{sub_key}".squeeze(PATH_SEPARATOR)
+        deeper_path = "#{path}#{PATH_SEPARATOR}#{sub_key}"
+        deeper_path.squeeze!(PATH_SEPARATOR)
+        deeper_path
       end
 
       def actual_value_message(value)
@@ -225,16 +237,11 @@ module Avro
       end
 
       def ruby_to_avro_type(ruby_class)
-        {
-          NilClass => 'null',
-          String => 'string',
-          Float => 'float',
-          Hash => 'record'
-        }.fetch(ruby_class, ruby_class)
+        RUBY_CLASS_TO_AVRO_TYPE.fetch(ruby_class, ruby_class)
       end
 
       def ruby_integer_to_avro_type(value)
-        INT_RANGE.cover?(value) ? 'int' : 'long'
+        INT_RANGE.cover?(value) ? 'int'.freeze : 'long'.freeze
       end
     end
   end
