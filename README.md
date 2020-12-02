@@ -35,35 +35,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 # Usage
 
-Add the following to your `build.gradle` file.  Substitute the desired version based on [CHANGES.md](https://github.com/davidmc24/gradle-avro-plugin/blob/master/CHANGES.md).
-
-```groovy
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:VERSION"
-    }
-}
-apply plugin: "com.commercehub.gradle.plugin.avro"
-```
-
-Additionally, ensure that you have a compile dependency on Avro, such as:
-
-```groovy
-repositories {
-    jcenter()
-}
-dependencies {
-    compile "org.apache.avro:avro:1.10.0"
-}
-```
-
-If you now run `gradle build`, Java classes will be compiled from Avro files in `src/main/avro`.
-Actually, it will attempt to process an "avro" directory in every `SourceSet` (main, test, etc.)
-
-Alternatively, if you prefer to use the incubating plugins DSL, see the following example:
+Add the following to your build files.  Substitute the desired version based on [CHANGES.md](https://github.com/davidmc24/gradle-avro-plugin/blob/master/CHANGES.md).
 
 `settings.gradle`:
 ```groovy
@@ -85,6 +57,20 @@ plugins {
     id "com.commercehub.gradle.plugin.avro" version "VERSION"
 }
 ```
+
+Additionally, ensure that you have a compile dependency on Avro, such as:
+
+```groovy
+repositories {
+    jcenter()
+}
+dependencies {
+    compile "org.apache.avro:avro:1.10.0"
+}
+```
+
+If you now run `gradle build`, Java classes will be compiled from Avro files in `src/main/avro`.
+Actually, it will attempt to process an "avro" directory in every `SourceSet` (main, test, etc.)
 
 # Configuration
 
