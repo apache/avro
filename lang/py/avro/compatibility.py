@@ -18,7 +18,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from copy import copy
 from enum import Enum
 from typing import Dict, List, Optional, Set, cast
@@ -123,7 +122,7 @@ class ReaderWriterCompatibilityChecker:
     ROOT_REFERENCE_TOKEN = "/"
 
     def __init__(self):
-        self.memoize_map: Dict[ReaderWriter, SchemaCompatibilityResult] = {}
+        self.memoize_map = {}
 
     def get_compatibility(
         self,
@@ -136,7 +135,7 @@ class ReaderWriterCompatibilityChecker:
             location = []
         pair = ReaderWriter(reader, writer)
         if pair in self.memoize_map:
-            result = self.memoize_map[pair]
+            result = cast(SchemaCompatibilityResult, self.memoize_map[pair])
             if result.compatibility is SchemaCompatibilityType.recursion_in_progress:
                 result = CompatibleResult
         else:
@@ -193,11 +192,11 @@ class ReaderWriterCompatibilityChecker:
                             result,
                             incompatible(
                                 SchemaIncompatibilityType.missing_union_branch,
-                                f"reader union lacking writer type: {writer_branch.type.upper()}", location + [f"{i}"]
+                                "reader union lacking writer type: {}".format(writer_branch.type.upper()), location + [str(i)]
                             )
                         )
                 return result
-            raise AvroRuntimeException(f"Unknown schema type: {reader.type}")
+            raise AvroRuntimeException("Unknown schema type: {}".format(reader.type))
         if writer.type == SchemaType.UNION:
             writer = cast(UnionSchema, writer)
             for s in writer.schemas:
@@ -234,14 +233,14 @@ class ReaderWriterCompatibilityChecker:
                 if compat.compatibility is SchemaCompatibilityType.compatible:
                     return result
             # No branch in reader compatible with writer
-            message = f"reader union lacking writer type {writer.type}"
+            message = "reader union lacking writer type {}".format(writer.type)
             return merge(
                 result,
                 incompatible(
                     SchemaIncompatibilityType.missing_union_branch, message, location
                 )
             )
-        raise AvroRuntimeException(f"Unknown schema type: {reader.type}")
+        raise AvroRuntimeException("Unknown schema type: {}".format(reader.type))
 
     # pylSchemaType.INT: enable=too-many-return-statements
 
@@ -258,27 +257,27 @@ class ReaderWriterCompatibilityChecker:
                         result = merge(
                             result,
                             self.get_compatibility(
-                                reader_field.type, writer, "type", location + ["fields", f"{i}"]
+                                reader_field.type, writer, "type", location + ["fields", str(i)]
                             ))
                     else:
                         result = merge(
                             result,
                             incompatible(
                                 SchemaIncompatibilityType.reader_field_missing_default_value,
-                                reader_field.name, location + ["fields", f"{i}"]
+                                reader_field.name, location + ["fields", str(i)]
                             )
                         )
             else:
                 result = merge(
                     result,
                     self.get_compatibility(
-                        reader_field.type, writer_field.type, "type", location + ["fields", f"{i}"]
+                        reader_field.type, writer_field.type, "type", location + ["fields", str(i)]
                     ))
         return result
 
 
 def type_mismatch(reader: Schema, writer: Schema, location: List[str]) -> SchemaCompatibilityResult:
-    message = f"reader type: {reader.type.upper()} not compatible with writer type: {writer.type.upper()}"
+    message = "reader type: {} not compatible with writer type: {}".format(reader.type.upper(), writer.type.upper())
     return incompatible(SchemaIncompatibilityType.type_mismatch, message, location)
 
 
@@ -288,7 +287,7 @@ def check_schema_names(
 ) -> SchemaCompatibilityResult:
     result = CompatibleResult
     if not schema_name_equals(reader, writer):
-        message = f"expected: {writer.fullname}"
+        message = "expected: {}".format(writer.fullname)
         result = incompatible(SchemaIncompatibilityType.name_mismatch, message, location + ["name"])
     return result
 
@@ -301,7 +300,7 @@ def check_fixed_size(
     actual = reader.size
     expected = writer.size
     if actual != expected:
-        message = f"expected: {expected}, found: {actual}"
+        message = "expected: {}, found: {}".format(expected, actual)
         result = incompatible(
             SchemaIncompatibilityType.fixed_size_mismatch,
             message,
@@ -323,7 +322,7 @@ def check_reader_enum_contains_writer_enum(
         else:
             result = incompatible(
                 SchemaIncompatibilityType.missing_enum_symbols,
-                f"{extra_symbols}", location + ["symbols"]
+                str(extra_symbols), location + ["symbols"]
             )
     return result
 

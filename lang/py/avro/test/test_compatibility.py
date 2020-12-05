@@ -601,8 +601,8 @@ def test_schema_compatibility_fixed_size_mismatch():
     for (reader, writer, message, location) in incompatible_fixed_pairs:
         result = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
         assert result.compatibility is SchemaCompatibilityType.incompatible
-        assert location in result.locations, f"expected {location}, found {result}"
-        assert message in result.messages, f"expected {message}, found {result}"
+        assert location in result.locations, "expected {}, found {}".format(location, result)
+        assert message in result.messages, "expected {}, found {}".format(location, result)
 
 
 def test_schema_compatibility_missing_enum_symbols():
