@@ -374,7 +374,6 @@ RECORD1_WITH_ENUM_ABC = parse(
 
 
 def test_simple_schema_promotion():
-    reader = parse(json.dumps({"name": "foo", "type": "record", "fields": [{"type": "int", "name": "f1"}]}))
     field_alias_reader = parse(
         json.dumps({
             "name": "foo",
@@ -416,80 +415,6 @@ def test_simple_schema_promotion():
     assert res.compatibility is SchemaCompatibilityType.compatible, res.locations
     res = ReaderWriterCompatibilityChecker().get_compatibility(record_alias_reader, writer)
     assert res.compatibility is SchemaCompatibilityType.compatible, res.locations
-
-    res = ReaderWriterCompatibilityChecker().get_compatibility(reader, writer)
-    assert res.compatibility is SchemaCompatibilityType.compatible, res
-    res = ReaderWriterCompatibilityChecker().get_compatibility(writer, reader)
-    assert res.compatibility is SchemaCompatibilityType.incompatible, res
-
-    writer = parse(
-        json.dumps({
-            "type": "record",
-            "name": "CA",
-            "namespace": "ns1",
-            "fields": [{
-                "type": "string",
-                "name": "provider"
-            }, {
-                "type": ["null", "string"],
-                "name": "name",
-                "default": None
-            }, {
-                "type": ["null", "string"],
-                "name": "phone",
-                "default": None
-            }, {
-                "type": ["null", "string"],
-                "name": "email",
-                "default": None
-            }, {
-                "type": ["null", "string"],
-                "name": "reference",
-                "default": None
-            }, {
-                "type": ["null", "double"],
-                "name": "price",
-                "default": None
-            }]
-        })
-    )
-    reader = parse(
-        json.dumps({
-            "type": "record",
-            "name": "CA",
-            "namespace": "ns1",
-            "fields": [{
-                "type": "string",
-                "name": "provider"
-            }, {
-                "type": ["null", "string"],
-                "name": "name",
-                "default": None
-            }, {
-                "type": ["null", "string"],
-                "name": "phone",
-                "default": None
-            }, {
-                "type": ["null", "string"],
-                "name": "email",
-                "default": None
-            }, {
-                "type": ["null", "string"],
-                "name": "reference",
-                "default": None
-            }, {
-                "type": ["null", "double"],
-                "name": "price",
-                "default": None
-            }, {
-                "type": ["null", "string"],
-                "name": "status_date",
-                "default": None
-            }]
-        })
-    )
-    res = ReaderWriterCompatibilityChecker().get_compatibility(writer=writer, reader=reader)
-    assert res.compatibility is SchemaCompatibilityType.compatible, res
 
 
 def test_schema_compatibility():

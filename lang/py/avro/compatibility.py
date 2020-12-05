@@ -79,27 +79,28 @@ class SchemaCompatibilityResult:
         self.compatibility = compatibility
         self.incompatibilities = incompatibilities or []
 
-    def merged_with(self, that):
-        """
-        Merges the current {@code SchemaCompatibilityResult} with the supplied result
-        into a new instance, combining the list of Incompatibilities and regressing to the
-        SchemaCompatibilityType.incompatible state if any incompatibilities are encountered.
-        :param that: SchemaCompatibilityResult
-        :return: SchemaCompatibilityResult
-        """
-        that = cast(SchemaCompatibilityResult, that)
-        merged = [*copy(self.incompatibilities), *copy(that.incompatibilities)]
-        if self.compatibility is SchemaCompatibilityType.compatible:
-            compat = that.compatibility
-            messages = that.messages
-            locations = that.locations
-        else:
-            compat = self.compatibility
-            messages = self.messages.union(that.messages)
-            locations = self.locations.union(that.locations)
-        return SchemaCompatibilityResult(
-            compatibility=compat, incompatibilities=merged, messages=messages, locations=locations
-        )
+
+def merge(this: SchemaCompatibilityResult, that: SchemaCompatibilityResult) -> SchemaCompatibilityResult:
+    """
+    Merges two {@code SchemaCompatibilityResult} into a new instance, combining the list of Incompatibilities
+    and regressing to the SchemaCompatibilityType.incompatible state if any incompatibilities are encountered.
+    :param this: SchemaCompatibilityResult
+    :param that: SchemaCompatibilityResult
+    :return: SchemaCompatibilityResult
+    """
+    that = cast(SchemaCompatibilityResult, that)
+    merged = [*copy(this.incompatibilities), *copy(that.incompatibilities)]
+    if this.compatibility is SchemaCompatibilityType.compatible:
+        compat = that.compatibility
+        messages = that.messages
+        locations = that.locations
+    else:
+        compat = this.compatibility
+        messages = this.messages.union(that.messages)
+        locations = this.locations.union(that.locations)
+    return SchemaCompatibilityResult(
+        compatibility=compat, incompatibilities=merged, messages=messages, locations=locations
+    )
 
 
 CompatibleResult = SchemaCompatibilityResult(SchemaCompatibilityType.compatible)
@@ -167,28 +168,29 @@ class ReaderWriterCompatibilityChecker:
                 return result
             if reader.type == SchemaType.ARRAY:
                 reader, writer = cast(ArraySchema, reader), cast(ArraySchema, writer)
-                return result.merged_with(self.get_compatibility(reader.items, writer.items, "items", location))
+                return merge(result, self.get_compatibility(reader.items, writer.items, "items", location))
             if reader.type == SchemaType.MAP:
                 reader, writer = cast(MapSchema, reader), cast(MapSchema, writer)
-                return result.merged_with(self.get_compatibility(reader.values, writer.values, "values", location))
+                return merge(result, self.get_compatibility(reader.values, writer.values, "values", location))
             if reader.type == SchemaType.FIXED:
                 reader, writer = cast(FixedSchema, reader), cast(FixedSchema, writer)
-                result = result.merged_with(check_schema_names(reader, writer, location))
-                return result.merged_with(check_fixed_size(reader, writer, location))
+                result = merge(result, check_schema_names(reader, writer, location))
+                return merge(result, check_fixed_size(reader, writer, location))
             if reader.type == SchemaType.ENUM:
                 reader, writer = cast(EnumSchema, reader), cast(EnumSchema, writer)
-                result = result.merged_with(check_schema_names(reader, writer, location))
-                return result.merged_with(check_reader_enum_contains_writer_enum(reader, writer, location))
+                result = merge(result, check_schema_names(reader, writer, location))
+                return merge(result, check_reader_enum_contains_writer_enum(reader, writer, location))
             if reader.type == SchemaType.RECORD:
                 reader, writer = cast(RecordSchema, reader), cast(RecordSchema, writer)
-                result = result.merged_with(check_schema_names(reader, writer, location))
-                return result.merged_with(self.check_reader_writer_record_fields(reader, writer, location))
+                result = merge(result, check_schema_names(reader, writer, location))
+                return merge(result, self.check_reader_writer_record_fields(reader, writer, location))
             if reader.type == SchemaType.UNION:
                 reader, writer = cast(UnionSchema, reader), cast(UnionSchema, writer)
                 for i, writer_branch in enumerate(writer.schemas):
                     compat = self.get_compatibility(reader, writer_branch)
                     if compat.compatibility is SchemaCompatibilityType.incompatible:
-                        result = result.merged_with(
+                        result = merge(
+                            result,
                             incompatible(
                                 SchemaIncompatibilityType.missing_union_branch,
                                 f"reader union lacking writer type: {writer_branch.type.upper()}", location + [f"{i}"]
@@ -199,32 +201,32 @@ class ReaderWriterCompatibilityChecker:
         if writer.type == SchemaType.UNION:
             writer = cast(UnionSchema, writer)
             for s in writer.schemas:
-                result = result.merged_with(self.get_compatibility(reader, s))
+                result = merge(result, self.get_compatibility(reader, s))
             return result
         if reader.type in {SchemaType.NULL, SchemaType.BOOLEAN, SchemaType.INT}:
-            return result.merged_with(type_mismatch(reader, writer, location))
+            return merge(result, type_mismatch(reader, writer, location))
         if reader.type == SchemaType.LONG:
             if writer.type == SchemaType.INT:
                 return result
-            return result.merged_with(type_mismatch(reader, writer, location))
+            return merge(result, type_mismatch(reader, writer, location))
         if reader.type == SchemaType.FLOAT:
             if writer.type in {SchemaType.INT, SchemaType.LONG}:
                 return result
-            return result.merged_with(type_mismatch(reader, writer, location))
+            return merge(result, type_mismatch(reader, writer, location))
         if reader.type == SchemaType.DOUBLE:
             if writer.type in {SchemaType.INT, SchemaType.LONG, SchemaType.FLOAT}:
                 return result
-            return result.merged_with(type_mismatch(reader, writer, location))
+            return merge(result, type_mismatch(reader, writer, location))
         if reader.type == SchemaType.BYTES:
             if writer.type == SchemaType.STRING:
                 return result
-            return result.merged_with(type_mismatch(reader, writer, location))
+            return merge(result, type_mismatch(reader, writer, location))
         if reader.type == SchemaType.STRING:
             if writer.type == SchemaType.BYTES:
                 return result
-            return result.merged_with(type_mismatch(reader, writer, location))
+            return merge(result, type_mismatch(reader, writer, location))
         if reader.type in {SchemaType.ARRAY, SchemaType.MAP, SchemaType.FIXED, SchemaType.ENUM, SchemaType.RECORD}:
-            return result.merged_with(type_mismatch(reader, writer, location))
+            return merge(result, type_mismatch(reader, writer, location))
         if reader.type == SchemaType.UNION:
             reader = cast(UnionSchema, reader)
             for reader_branch in reader.schemas:
@@ -233,7 +235,8 @@ class ReaderWriterCompatibilityChecker:
                     return result
             # No branch in reader compatible with writer
             message = f"reader union lacking writer type {writer.type}"
-            return result.merged_with(
+            return merge(
+                result,
                 incompatible(
                     SchemaIncompatibilityType.missing_union_branch, message, location
                 )
@@ -252,19 +255,22 @@ class ReaderWriterCompatibilityChecker:
             if writer_field is None:
                 if not reader_field.has_default:
                     if reader_field.type.type == SchemaType.ENUM and reader_field.type.props.get("default"):
-                        result = result.merged_with(
+                        result = merge(
+                            result,
                             self.get_compatibility(
                                 reader_field.type, writer, "type", location + ["fields", f"{i}"]
                             ))
                     else:
-                        result = result.merged_with(
+                        result = merge(
+                            result,
                             incompatible(
                                 SchemaIncompatibilityType.reader_field_missing_default_value,
                                 reader_field.name, location + ["fields", f"{i}"]
                             )
                         )
             else:
-                result = result.merged_with(
+                result = merge(
+                    result,
                     self.get_compatibility(
                         reader_field.type, writer_field.type, "type", location + ["fields", f"{i}"]
                     ))
@@ -322,7 +328,7 @@ def check_reader_enum_contains_writer_enum(
     return result
 
 
-def incompatible(incompat_type: SchemaIncompatibilityType, message: str, location: List[str]):
+def incompatible(incompat_type: SchemaIncompatibilityType, message: str, location: List[str]) -> SchemaCompatibilityResult:
     locations = "/".join(location)
     if len(location) > 1:
         locations = locations[1:]
@@ -344,9 +350,9 @@ def schema_name_equals(reader: NamedSchema, writer: NamedSchema) -> bool:
 def lookup_writer_field(writer_schema: RecordSchema, reader_field: Field) -> Optional[Field]:
     direct = writer_schema.fields_dict.get(reader_field.name)
     if direct:
-        return direct
+        return cast(Field, direct)
     for alias in reader_field.props.get("aliases", []):
         writer_field = writer_schema.fields_dict.get(alias)
         if writer_field is not None:
-            return writer_field
+            return cast(Field, writer_field)
     return None
