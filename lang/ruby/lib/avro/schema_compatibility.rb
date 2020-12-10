@@ -15,6 +15,9 @@
 # limitations under the License.
 module Avro
   module SchemaCompatibility
+    INT_PROMOTABLE = [:long, :float, :double].freeze
+    LONG_PROMOTABLE = [:float, :double].freeze
+
     # Perform a full, recursive check that a datum written using the writers_schema
     # can be read using the readers_schema.
     def self.can_read?(writers_schema, readers_schema)
@@ -62,9 +65,9 @@ module Avro
       end
 
       # Handle schema promotion
-      if w_type == :int && [:long, :float, :double].include?(r_type)
+      if w_type == :int && INT_PROMOTABLE.include?(r_type)
         return true
-      elsif w_type == :long && [:float, :double].include?(r_type)
+      elsif w_type == :long && LONG_PROMOTABLE.include?(r_type)
         return true
       elsif w_type == :float && r_type == :double
         return true
