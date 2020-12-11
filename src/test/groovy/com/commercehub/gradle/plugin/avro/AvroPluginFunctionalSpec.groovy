@@ -59,16 +59,24 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
 
         when:
         def result = run()
+        def interopJavaContent = projectFile("build/generated-main-avro-java/org/apache/avro/Interop.java").text
 
         then:
         result.task(":generateAvroProtocol").outcome == SUCCESS
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
+        projectFile("build/generated-main-avro-java/org/apache/avro/Interop.java").file
         projectFile(buildOutputClassPath("org/apache/avro/Foo.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Kind.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/MD5.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Node.class")).file
+        interopJavaContent
+        interopJavaContent.contains("BigDecimal decimalField")
+        interopJavaContent.contains("LocalDate dateField")
+        interopJavaContent.contains("LocalTime timeField")
+        interopJavaContent.contains("Instant timeStampField")
+        interopJavaContent.contains("LocalDateTime localTimeStampField")
     }
 
     def "supports json schema files in subdirectories"() {

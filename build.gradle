@@ -14,7 +14,7 @@ repositories {
     jcenter()
 }
 
-def compileAvroVersion = "1.10.0"
+def compileAvroVersion = "1.10.1"
 def codenarcVersion = "1.5"
 def codenarcGroovyVersion = "2.5.10" // Newer version than included in 1.5 required for Java 14 support
 

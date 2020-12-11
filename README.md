@@ -19,8 +19,9 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
     * If you need support for Gradle 4.4-5.0, version 0.18.0 was the last version tested for compatibility
     * If you need support for Gradle 3.0-3.5.1 or 4.0-4.3, version 0.17.0 was the last version tested for compatibility
     * If you need support for Gradle 2.0-2.14.1, version 0.9.1 was the last version tested for compatibility; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
-* Currently built against Avro 1.10.0
-    * Currently tested against Avro 1.10.0
+* Currently built against Avro 1.10.1
+    * Currently tested against Avro 1.10.1
+    * If you need support for Avro 1.10.0 try plugin version 0.20.0
     * If you need support for Avro 1.9.0-1.9.2 try plugin version 0.20.0
     * If you need support for Avro 1.8.2, try plugin version 0.16.0
     * If you need support for Avro 1.8.0-1.8.1, try plugin version 0.10.0
@@ -65,7 +66,7 @@ repositories {
     jcenter()
 }
 dependencies {
-    compile "org.apache.avro:avro:1.10.0"
+    compile "org.apache.avro:avro:1.10.1"
 }
 ```
 
@@ -248,7 +249,7 @@ apply plugin: "java"
 apply plugin: "com.commercehub.gradle.plugin.avro-base"
 
 dependencies {
-    implementation "org.apache.avro:avro:1.10.0"
+    implementation "org.apache.avro:avro:1.10.1"
 }
 
 def generateAvro = tasks.register("generateAvro", com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
