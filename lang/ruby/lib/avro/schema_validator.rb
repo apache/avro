@@ -71,8 +71,6 @@ module Avro
 
     class << self
       def validate!(expected_schema, logical_datum, options = DEFAULT_VALIDATION_OPTIONS)
-        options ||= {}
-
         result = Result.new
         if options.fetch(:recursive, true)
           validate_recursive(expected_schema, logical_datum, ROOT_IDENTIFIER, result, options)
