@@ -14,7 +14,9 @@ repositories {
     jcenter()
 }
 
-def compileAvroVersion = "1.10.1"
+def compileAvroVersionMinor = "1.10"
+def compileAvroVersionPatch = 1     // 1.10.1
+def compileAvroVersion = "${compileAvroVersionMinor}.${compileAvroVersionPatch}"
 def codenarcVersion = "1.5"
 def codenarcGroovyVersion = "2.5.10" // Newer version than included in 1.5 required for Java 14 support
 
@@ -207,7 +209,9 @@ tasks.create("testRecentVersionCompatibility") {
 // Java 8+ is also required by Gradle 5.x
 sourceCompatibility = 8
 
-def avroVersions = ["1.10.0"]
+def avroVersions = (0..compileAvroVersionPatch).collect { "${compileAvroVersionMinor}.${it}" }
+// println "Checked avroVersions = ${avroVersions}"
+
 def keyAvroVersions = avroVersions.last()
 def gradle5KotlinVersions =[]
 if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_10)) {
