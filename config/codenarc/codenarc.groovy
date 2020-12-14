@@ -306,7 +306,7 @@ ruleset {
     UnnecessaryModOne
     UnnecessaryNullCheck
     UnnecessaryNullCheckBeforeInstanceOf
-    UnnecessaryObjectReferences
+    // UnnecessaryObjectReferences // <= this has problem with Spock asserts
     UnnecessaryOverridingMethod
     UnnecessaryPackageReference
     UnnecessaryParenthesesForMethodCallWithClosure

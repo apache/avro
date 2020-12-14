@@ -41,10 +41,16 @@ protocol InteropProtocol {
     null nullField;
     array<double> arrayField = [];
     map<Foo> mapField;
-    union { boolean, double, array<bytes> } unionFIeld;
+    union { boolean, double, array<bytes> } unionField;
     Kind enumField;
     MD5 fixedField;
     Node recordField;
+    decimal(10,2) decimalField;
+    date dateField;
+    time_ms timeField;
+    timestamp_ms timeStampField;
+    local_timestamp_ms localTimeStampField;
+    // uuid uuidField; // not compilable with Avro 1.10.1
   }
 
 }

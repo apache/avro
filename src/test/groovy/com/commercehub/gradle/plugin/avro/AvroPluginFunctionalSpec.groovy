@@ -59,16 +59,40 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
 
         when:
         def result = run()
+        def interopJavaContent = projectFile("build/generated-main-avro-java/org/apache/avro/Interop.java").text
 
         then:
         result.task(":generateAvroProtocol").outcome == SUCCESS
         result.task(":generateAvroJava").outcome == SUCCESS
         result.task(":compileJava").outcome == SUCCESS
+        projectFile("build/generated-main-avro-java/org/apache/avro/Interop.java").file
         projectFile(buildOutputClassPath("org/apache/avro/Foo.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Interop.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Kind.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/MD5.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Node.class")).file
+        /* codenarc-disable */ // <= this doesn't help, so I have to switch the rule off
+        interopJavaContent
+        interopJavaContent.contains("int intField")
+        interopJavaContent.contains("long longField")
+        interopJavaContent.contains("String stringField")
+        interopJavaContent.contains("boolean boolField")
+        interopJavaContent.contains("float floatField")
+        interopJavaContent.contains("double doubleField")
+        interopJavaContent.contains("java.lang.Void nullField")
+        interopJavaContent.contains("java.util.List<java.lang.Double> arrayField")
+        interopJavaContent =~ /Map<java.lang.String,.*Foo> mapField/
+        interopJavaContent.contains("Object unionField")
+        interopJavaContent.contains("Kind enumField")
+        interopJavaContent.contains("MD5 fixedField")
+        interopJavaContent.contains("Node recordField")
+        interopJavaContent.contains("BigDecimal decimalField")
+        interopJavaContent.contains("LocalDate dateField")
+        interopJavaContent.contains("LocalTime timeField")
+        interopJavaContent.contains("Instant timeStampField")
+        interopJavaContent.contains("LocalDateTime localTimeStampField")
+        // interopJavaContent.contains("CharSequence uuidField") // not compilable with Avro 1.10.1 yet
+        /* codenarc-enable */
     }
 
     def "supports json schema files in subdirectories"() {
