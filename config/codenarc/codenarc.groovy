@@ -306,7 +306,8 @@ ruleset {
     UnnecessaryModOne
     UnnecessaryNullCheck
     UnnecessaryNullCheckBeforeInstanceOf
-    // UnnecessaryObjectReferences // <= this has problem with Spock asserts
+    // Unnecessarily complicates Spock assertions
+    // UnnecessaryObjectReferences
     UnnecessaryOverridingMethod
     UnnecessaryPackageReference
     UnnecessaryParenthesesForMethodCallWithClosure

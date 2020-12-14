@@ -71,7 +71,6 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         projectFile(buildOutputClassPath("org/apache/avro/Kind.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/MD5.class")).file
         projectFile(buildOutputClassPath("org/apache/avro/Node.class")).file
-        /* codenarc-disable */ // <= this doesn't help, so I have to switch the rule off
         interopJavaContent
         interopJavaContent.contains("int intField")
         interopJavaContent.contains("long longField")
@@ -91,8 +90,6 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         interopJavaContent.contains("LocalTime timeField")
         interopJavaContent.contains("Instant timeStampField")
         interopJavaContent.contains("LocalDateTime localTimeStampField")
-        // interopJavaContent.contains("CharSequence uuidField") // not compilable with Avro 1.10.1 yet
-        /* codenarc-enable */
     }
 
     def "supports json schema files in subdirectories"() {
