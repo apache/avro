@@ -250,8 +250,8 @@ if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_14)) {
     gradleVersions.addAll("6.0", "6.0.1", "6.1", "6.1.1", "6.2", "6.2.1", "6.2.2")
     keyGradleVersions.addAll("6.0", "6.2.2") // First and last for the 6.x line before Java 14 support
 }
-gradleVersions.addAll("6.3", "6.4", "6.4.1", "6.5")
-keyGradleVersions.addAll("6.3", "6.5") // First and last for the 6.x line after Java 14 support
+gradleVersions.addAll("6.3", "6.4", "6.4.1", "6.5", "6.5.1", "6.6", "6.6.1", "6.7", "6.7.1")
+keyGradleVersions.addAll("6.3", "6.7.1") // First and last for the 6.x line after Java 14 support
 
 def latestAvroVersion = avroVersions.last()
 def latestGradleVersion = gradleVersions.last()
@@ -353,4 +353,5 @@ tasks.withType(Test) {
     jvmArgs "-Xss320k"
     minHeapSize "120m"
     maxHeapSize "280m"
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
 }

@@ -51,7 +51,7 @@ jobs:
         # Exclude mac as it's unreliable at the moment
         # See https://github.com/actions/virtual-environments/issues/736
         os: [ubuntu-latest, windows-latest]
-        java: [8, 11, 13, 14] # All supported major versions
+        java: [8, 11, 13, 14, 15] # All supported major versions
       fail-fast: true
     steps:
     - name: Check out repository
@@ -123,7 +123,7 @@ jobs:
         # Exclude mac as it's unreliable at the moment
         # See https://github.com/actions/virtual-environments/issues/736
         os: [ubuntu-latest, windows-latest]
-        java: [15-ea] # EA builds of all current pre-release major versions
+        java: [16-ea] # EA builds of all current pre-release major versions
       fail-fast: false
     steps:
     - name: Check out repository
