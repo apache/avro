@@ -261,8 +261,13 @@ if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_14)) {
     gradleVersions.addAll("6.0", "6.0.1", "6.1", "6.1.1", "6.2", "6.2.1", "6.2.2")
     keyGradleVersions.addAll("6.0", "6.2.2") // First and last for the 6.x line before Java 14 support
 }
-gradleVersions.addAll("6.3", "6.4", "6.4.1", "6.5", "6.5.1", "6.6", "6.6.1", "6.7", "6.7.1")
-keyGradleVersions.addAll("6.3", "6.7.1") // First and last for the 6.x line after Java 14 support
+if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_15)) {
+    // Java 15 support was added in Gradle 6.7
+    gradleVersions.addAll("6.3", "6.4", "6.4.1", "6.5", "6.5.1", "6.6", "6.6.1")
+    keyGradleVersions.addAll("6.3", "6.6.1") // First and last for the 6.x line before Java 15 support
+}
+gradleVersions.addAll("6.7", "6.7.1")
+keyGradleVersions.addAll("6.7", "6.7.1") // First and last for the 6.x line after Java 15 support
 
 def latestAvroVersion = avroVersions.last()
 def latestGradleVersion = gradleVersions.last()
