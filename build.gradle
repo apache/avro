@@ -12,6 +12,11 @@ plugins {
 
 repositories {
     jcenter()
+    maven {
+        // Used for snapshot builds for some libraries
+        name 'Sonatype OSS'
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
 }
 
 def compileAvroVersion = "1.10.1"
@@ -205,13 +210,19 @@ tasks.create("testRecentVersionCompatibility") {
 
 // Java 8+ is required due to requirements introduced in Avro 1.9.0
 // Java 8+ is also required by Gradle 5.x
-sourceCompatibility = 8
+if (JavaVersion.current().java9Compatible) {
+    compileJava {
+        options.release = 8
+    }
+} else {
+    sourceCompatibility = 8
+}
 
 def avroVersions = ["1.10.0", "1.10.1"]
 
 def keyAvroVersions = avroVersions.last()
 def gradle5KotlinVersions =[]
-if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_10)) {
+if (!JavaVersion.current().java10Compatible) {
     // Java 10 support was added in Kotlin 1.2.30
     gradle5KotlinVersions.addAll([
         "1.2.20", "1.2.21",
@@ -226,7 +237,7 @@ def latestGradleKotlinVersions = [
 ]
 def kotlinVersions = gradle5KotlinVersions + latestGradleKotlinVersions
 def keyKotlinVersions = [] // First and last version for each supported line
-if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_10)) {
+if (!JavaVersion.current().java10Compatible) {
     // Java 10 support was added in Kotlin 1.2.30
     keyKotlinVersions.add("1.2.20")
 } else {
@@ -264,6 +275,12 @@ test {
         kotlinVersion: latestKotlinVersion,
     ]
     finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+jacoco {
+    // 0.8.7+ needed for Java 15 support
+    // See https://www.jacoco.org/jacoco/trunk/doc/changes.html
+    toolVersion = "0.8.7-SNAPSHOT"
 }
 
 jacocoTestReport {
