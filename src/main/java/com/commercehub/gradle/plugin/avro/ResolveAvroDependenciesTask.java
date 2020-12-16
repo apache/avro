@@ -17,7 +17,7 @@ import static com.commercehub.gradle.plugin.avro.Constants.SCHEMA_EXTENSION;
  */
 @CacheableTask
 public class ResolveAvroDependenciesTask extends OutputDirTask {
-    private final SchemaResolver resolver = new SchemaResolver(getProject(), getLogger());
+    private final SchemaResolver resolver = new SchemaResolver(getProject().getLayout(), getLogger());
 
     @TaskAction
     protected void process() {

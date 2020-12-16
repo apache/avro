@@ -12,7 +12,7 @@ class SchemaResolverSpec extends Specification {
 
     def setup() {
         project = ProjectBuilder.builder().build()
-        resolver = new SchemaResolver(project, project.logger)
+        resolver = new SchemaResolver(project.layout, project.logger)
     }
 
     @Unroll

@@ -1,3 +1,5 @@
+import org.gradle.util.GradleVersion
+
 plugins {
     id "groovy"
     id "checkstyle"
@@ -221,7 +223,7 @@ if (JavaVersion.current().java9Compatible) {
 def avroVersions = ["1.10.0", "1.10.1"]
 
 def keyAvroVersions = avroVersions.last()
-def gradle5KotlinVersions =[]
+def gradle5KotlinVersions = []
 if (!JavaVersion.current().java10Compatible) {
     // Java 10 support was added in Kotlin 1.2.30
     gradle5KotlinVersions.addAll([
@@ -233,10 +235,12 @@ gradle5KotlinVersions.addAll([
     "1.3.0", "1.3.10", "1.3.11",
 ])
 def latestGradleKotlinVersions = [
-    "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61",
+    "1.3.20", "1.3.21", "1.3.30", "1.3.31", "1.3.40", "1.3.41", "1.3.50", "1.3.60", "1.3.61", "1.3.70", "1.3.71", "1.3.72",
+    "1.4.0", "1.4.10", "1.4.20", "1.4.21"
 ]
 def kotlinVersions = gradle5KotlinVersions + latestGradleKotlinVersions
 def keyKotlinVersions = [] // First and last version for each supported line
+// Determine first supported version
 if (!JavaVersion.current().java10Compatible) {
     // Java 10 support was added in Kotlin 1.2.30
     keyKotlinVersions.add("1.2.20")
@@ -245,8 +249,10 @@ if (!JavaVersion.current().java10Compatible) {
 }
 keyKotlinVersions.addAll([
     "1.2.71",
-    "1.3.0", "1.3.61",
+    "1.3.0", "1.3.72", // First and last version for 1.3.x line
+    "1.4.0", "1.4.21", // First and last version for 1.4.x line
 ])
+def pre5_3KotlinVersion = "1.3.72" // Kotlin plugin 1.4.x appears to require Gradle 5.3+
 def keyGradleVersions = [] // First and last version for each supported line
 def firstSupportedGradleVersion = null
 def gradleVersions = []
@@ -297,7 +303,7 @@ jacocoTestReport {
 
 avroVersions.each { def avroVersion ->
     gradleVersions.each { def gradleVersion ->
-        def kotlinVersion = latestKotlinVersion
+        def kotlinVersion = GradleVersion.version(gradleVersion) < GradleVersion.version("5.3") ? pre5_3KotlinVersion : latestKotlinVersion
         def newTask = tasks.create(name: "testAvro${avroVersion}Gradle${gradleVersion}", type: Test) {
             description = "Test cross-compatibility of the plugin with Avro ${avroVersion} and Gradle ${gradleVersion}"
             systemProperties = [

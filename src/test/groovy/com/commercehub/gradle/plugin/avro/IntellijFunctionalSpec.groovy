@@ -15,6 +15,8 @@
  */
 package com.commercehub.gradle.plugin.avro
 
+import org.gradle.testkit.runner.BuildResult
+
 import static org.gradle.testkit.runner.TaskOutcome.SUCCESS
 
 class IntellijFunctionalSpec extends FunctionalSpec {
@@ -31,7 +33,7 @@ class IntellijFunctionalSpec extends FunctionalSpec {
         testProjectDir.newFolder("src", "test", "avro")
 
         when:
-        run("idea")
+        runIdea()
 
         then:
         def moduleFile = new File(testProjectDir.root, "${testProjectDir.root.name}.iml")
@@ -48,7 +50,7 @@ class IntellijFunctionalSpec extends FunctionalSpec {
 
     def "generated output directories are created by default"() {
         when:
-        def result = run("idea")
+        def result = runIdea()
 
         then:
         result.task(":idea").outcome == SUCCESS
@@ -68,7 +70,7 @@ class IntellijFunctionalSpec extends FunctionalSpec {
         |""".stripMargin()
 
         when:
-        def result = run("idea")
+        def result = runIdea()
 
         then:
         result.task(":idea").outcome == SUCCESS
@@ -76,5 +78,15 @@ class IntellijFunctionalSpec extends FunctionalSpec {
         !projectFile("build/generated-test-avro-java").directory
         projectFile("build/generatedMainAvro").directory
         projectFile("build/generatedTestAvro").directory
+    }
+
+    private BuildResult runIdea() {
+        def args = ["idea"]
+        if (GradleFeatures.configCache.isSupportedBy(gradleVersion)) {
+            // As of Gradle 6.7.1, idea plugin doesn't support configuration cache yet.
+            // Thus, don't try to use it in this spec.
+            args << "--no-configuration-cache"
+        }
+        return run(args as String[])
     }
 }

@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import org.gradle.api.file.ProjectLayout;
 
 /**
  * General file manipulation utilities.
@@ -131,5 +133,20 @@ class FileUtils {
      */
     static void writeJsonFile(File file, String data) throws IOException {
         writeStringToFile(file, data, Constants.UTF8_ENCODING);
+    }
+
+    /**
+     * Acts as a replacement for {@link org.gradle.api.Project#relativePath(Object)}, as Configuration Cache support doesn't allow
+     * maintaining references to the {@link org.gradle.api.Project}.
+     */
+    static String projectRelativePath(ProjectLayout projectLayout, File file) {
+        Path path = file.toPath();
+        if (path.isAbsolute()) {
+            Path projectDirectoryPath = projectLayout.getProjectDirectory().getAsFile().toPath();
+            path = projectDirectoryPath.relativize(path);
+        } else {
+            path = file.toPath();
+        }
+        return path.toString();
     }
 }

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaParseException;
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.logging.Logger;
 
 import static com.commercehub.gradle.plugin.avro.MapUtils.asymmetricDifference;
@@ -18,16 +18,16 @@ class SchemaResolver {
     private static Pattern ERROR_UNKNOWN_TYPE = Pattern.compile("(?i).*(undefined name|not a defined name|type not supported).*");
     private static Pattern ERROR_DUPLICATE_TYPE = Pattern.compile("Can't redefine: (.*)");
 
-    private final Project project;
+    private final ProjectLayout projectLayout;
     private final Logger logger;
 
-    SchemaResolver(Project project, Logger logger) {
-        this.project = project;
+    SchemaResolver(ProjectLayout projectLayout, Logger logger) {
+        this.projectLayout = projectLayout;
         this.logger = logger;
     }
 
     ProcessingState resolve(Iterable<File> files) {
-        ProcessingState processingState = new ProcessingState(files, project);
+        ProcessingState processingState = new ProcessingState(files, projectLayout);
         while (processingState.isWorkRemaining()) {
             processSchemaFile(processingState, processingState.nextFileState());
         }

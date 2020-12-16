@@ -117,14 +117,23 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected BuildResult run(String... args = ["build"]) {
-        return createGradleRunner().withArguments(Arrays.asList(args) + "--stacktrace").build()
+        return createGradleRunner().withArguments(determineGradleArguments(args)).build()
     }
 
     protected BuildResult runAndFail(String... args = ["build"]) {
-        return createGradleRunner().withArguments(Arrays.asList(args) + "--stacktrace").buildAndFail()
+        return createGradleRunner().withArguments(determineGradleArguments(args)).buildAndFail()
     }
 
     protected String buildOutputClassPath(String suffix) {
         return "build/classes/java/main/${suffix}"
+    }
+
+    private List<String> determineGradleArguments(String... args) {
+        def arguments = ["--stacktrace"]
+        arguments.addAll(Arrays.asList(args))
+        if (GradleFeatures.configCache.isSupportedBy(gradleVersion) && !arguments.contains("--no-configuration-cache")) {
+            arguments << "--configuration-cache"
+        }
+        return arguments
     }
 }

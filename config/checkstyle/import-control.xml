@@ -8,6 +8,7 @@
     <allow pkg="java.lang"/>
     <allow pkg="java.net"/>
     <allow pkg="java.nio.charset"/>
+    <allow pkg="java.nio.file"/>
     <allow pkg="java.util"/>
     <allow pkg="java.util.concurrent"/>
     <allow pkg="javax.annotation"/>
