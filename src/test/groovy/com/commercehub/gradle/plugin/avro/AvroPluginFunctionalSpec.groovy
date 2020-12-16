@@ -174,9 +174,7 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
             expectedConfiguredTasks << ":clean"
         }
         def actualConfiguredTasks = []
-        result.output.findAll(/(?m)^Configured task: (.*)$/) { match, taskPath ->
-            actualConfiguredTasks << taskPath
-        }
+        result.output.findAll(/(?m)^Configured task: (.*)$/) { match, taskPath -> actualConfiguredTasks << taskPath }
         actualConfiguredTasks == expectedConfiguredTasks
     }
 }
