@@ -21,16 +21,25 @@ import org.gradle.util.GradleVersion;
 enum GradleFeatures {
     extensionInjection() {
         @Override
-        boolean isSupported() {
-            return GradleVersion.current().compareTo(GradleVersions.v5_2) >= 0;
+        boolean isSupportedBy(GradleVersion version) {
+            return version.compareTo(GradleVersions.v5_2) >= 0;
         }
     },
     objectFactoryFileCollection() {
         @Override
-        boolean isSupported() {
-            return GradleVersion.current().compareTo(GradleVersions.v5_3) >= 0;
+        boolean isSupportedBy(GradleVersion version) {
+            return version.compareTo(GradleVersions.v5_3) >= 0;
+        }
+    },
+    configCache() {
+        @Override
+        boolean isSupportedBy(GradleVersion version) {
+            return version.compareTo(GradleVersions.v6_6) >= 0;
         }
     };
 
-    abstract boolean isSupported();
+    abstract boolean isSupportedBy(GradleVersion version);
+    boolean isSupported() {
+        return isSupportedBy(GradleVersion.current());
+    }
 }

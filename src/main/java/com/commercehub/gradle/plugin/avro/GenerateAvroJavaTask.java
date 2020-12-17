@@ -32,6 +32,7 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
@@ -81,6 +82,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
     private final Provider<StringType> stringTypeProvider;
     private final Provider<FieldVisibility> fieldVisibilityProvider;
 
+    private final ProjectLayout projectLayout;
     private final SchemaResolver resolver;
 
     @Inject
@@ -103,7 +105,8 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         this.logicalTypeFactories = objects.mapProperty(String.class, Constants.LOGICAL_TYPE_FACTORY_TYPE.getConcreteClass())
             .convention(DEFAULT_LOGICAL_TYPE_FACTORIES);
         this.customConversions = objects.listProperty(Constants.CONVERSION_TYPE.getConcreteClass()).convention(DEFAULT_CUSTOM_CONVERSIONS);
-        this.resolver = new SchemaResolver(getProject(), getLogger());
+        this.projectLayout = getProject().getLayout();
+        this.resolver = new SchemaResolver(projectLayout, getLogger());
     }
 
     @Optional
@@ -312,7 +315,7 @@ public class GenerateAvroJavaTask extends OutputDirTask {
         Set<File> files = filterSources(new FileExtensionSpec(SCHEMA_EXTENSION)).getFiles();
         ProcessingState processingState = resolver.resolve(files);
         for (File file : files) {
-            String path = getProject().relativePath(file);
+            String path = FileUtils.projectRelativePath(projectLayout, file);
             for (Schema schema : processingState.getSchemasForLocation(path)) {
                 try {
                     compile(new SpecificCompiler(schema), file);

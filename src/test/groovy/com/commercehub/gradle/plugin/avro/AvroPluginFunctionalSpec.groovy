@@ -159,19 +159,22 @@ class AvroPluginFunctionalSpec extends FunctionalSpec {
         buildFile << """
         |def configuredTasks = []
         |tasks.configureEach {
-        |    configuredTasks << it
-        |}        
-        |gradle.buildFinished {
-        |    println "Configured tasks: \${configuredTasks*.path}"
+        |    println "Configured task: \${it.path}"
         |}
         |""".stripMargin()
+
         when:
         def result = run("help")
 
         then:
-        def taskMatcher = result.output =~ /(?m)^Configured tasks: (.*)$/
-        taskMatcher.find()
-        def configuredTasks = taskMatcher.group(1)
-        configuredTasks == "[:help]"
+        def expectedConfiguredTasks = [":help"]
+        if (GradleFeatures.configCache.isSupportedBy(gradleVersion)) {
+            // Not sure why, but when configuration caching was introduced, the base plugin started configuring the
+            // clean task even if it wasn't called.
+            expectedConfiguredTasks << ":clean"
+        }
+        def actualConfiguredTasks = []
+        result.output.findAll(/(?m)^Configured task: (.*)$/) { match, taskPath -> actualConfiguredTasks << taskPath }
+        actualConfiguredTasks == expectedConfiguredTasks
     }
 }

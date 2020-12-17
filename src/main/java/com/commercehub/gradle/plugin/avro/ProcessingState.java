@@ -24,7 +24,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
-import org.gradle.api.Project;
+import org.gradle.api.file.ProjectLayout;
 
 class ProcessingState {
     private final Map<String, TypeState> typeStates = new HashMap<>();
@@ -32,9 +32,9 @@ class ProcessingState {
     private final Queue<FileState> filesToProcess = new LinkedList<>();
     private int processedTotal;
 
-    ProcessingState(Iterable<File> files, Project project) {
+    ProcessingState(Iterable<File> files, ProjectLayout projectLayout) {
         for (File file : files) {
-            filesToProcess.add(new FileState(file, project.relativePath(file)));
+            filesToProcess.add(new FileState(file, FileUtils.projectRelativePath(projectLayout, file)));
         }
     }
 
