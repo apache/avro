@@ -15,6 +15,9 @@
  */
 package com.commercehub.gradle.plugin.avro
 
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.util.GradleVersion
+
 @SuppressWarnings(["Println"])
 class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
     @SuppressWarnings(["FieldName"])
@@ -39,9 +42,22 @@ class KotlinCompatibilityFunctionalSpec extends FunctionalSpec {
         copyResource("helloWorld.kt", kotlinDir)
 
         when:
-        def result = run("run")
+        def result = runBuild()
 
         then:
         result.output.contains("Hello, David")
+    }
+
+    private BuildResult runBuild() {
+        def args = ["run"]
+        if (GradleFeatures.configCache.isSupportedBy(gradleVersion)) {
+            // The kotlin plugin prior to 1.4.20 doesn't support the configuration cache, so we need to disable it.
+            // This is a bit of a mis-use of the GradleVersion class, but it's way easier than writing our own
+            // version comparison logic.
+            if (GradleVersion.version(kotlinVersion) < GradleVersion.version("1.4.20")) {
+                args << "--no-configuration-cache"
+            }
+        }
+        return run(args as String[])
     }
 }
