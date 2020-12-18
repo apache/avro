@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 0.22.0
 * Add [Configuration Cache](https://docs.gradle.org/6.6/userguide/configuration_cache.html) support (#129; thanks to [dcabasson](https://github.com/dcabasson) and [eskatos](https://github.com/eskatos))
 * Add coverage reporting via JaCoco/Codecov to the plugin's build pipeline
 * Add support for multiple IDL files with the same name in different directories (#123)
