@@ -1,0 +1,142 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: 'Test PHP'
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    paths:
+    - lang/php/**
+
+defaults:
+  run:
+    working-directory: lang/php
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php }} Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php:
+        - '7.3'
+        - '7.4'
+        - '8.0'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Lint
+        run: ./build.sh lint
+
+      - name: Test
+        run: ./build.sh test
+
+  interop:
+    name: PHP ${{ matrix.php }} Interop
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php:
+        - '7.3'
+        - '7.4'
+        - '8.0'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Java Avro for Interop Test
+        working-directory: .
+        run: mvn -B install -DskipTests
+
+      - name: Create Interop Data Directory
+        working-directory: .
+        run: mkdir -p build/interop/data
+
+      - name: Generate Interop Resources
+        working-directory: lang/java/avro
+        run: mvn -B -P interop-data-generate generate-resources
+
+      - uses: actions/checkout@v2
+        with:
+          repository: kjdev/php-ext-zstd
+          path: lang/php/php-ext-zstd
+
+      - name: Install php-ext-zstd
+        working-directory: lang/php/php-ext-zstd
+        run: |
+          sudo apt-get install -qqy --no-install-recommends libzstd-dev libbz2-dev
+          phpize
+          ./configure --with-libzstd
+          make
+          sudo make install
+          echo "extension=zstd.so" | sudo tee -a /etc/php/${{ matrix.php }}/cli/conf.d/10-zstd.ini
+          php -m
+
+      - uses: actions/checkout@v2
+        with:
+          repository: kjdev/php-ext-snappy
+          path: lang/php/php-ext-snappy
+          submodules: true
+
+
+      - name: Install php-ext-snappy
+        working-directory: lang/php/php-ext-snappy
+        run: |
+          sudo apt-get install -qqy --no-install-recommends libsnappy-dev
+          phpize
+          ./configure --with-libsnappy
+          make
+          sudo make install
+          echo "extension=snappy.so" | sudo tee -a /etc/php/${{ matrix.php }}/cli/conf.d/10-snappy.ini
+          php -m
+
+      - name: Generate Interop Data
+        run: ./build.sh interop-data-generate
+
+      - name: Run Interop Tests
+        run: ./build.sh test-interop
