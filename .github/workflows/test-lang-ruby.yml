@@ -29,13 +29,20 @@ defaults:
 
 jobs:
   test:
+    name: Ruby ${{ matrix.ruby }} Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby:
+        - '2.5'
+        - '2.6'
+        - '2.7'
     steps:
       - uses: actions/checkout@v2
 
       - uses: actions/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: ${{ matrix.ruby }}
 
       - name: Install Dependencies
         run: sudo apt-get install -qqy bundler libsnappy-dev
@@ -61,13 +68,20 @@ jobs:
           ./build.sh test
 
   interop:
+    name: Ruby ${{ matrix.ruby }} Interop
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby:
+        - '2.5'
+        - '2.6'
+        - '2.7'
     steps:
       - uses: actions/checkout@v2
 
       - uses: actions/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: ${{ matrix.ruby }}
 
       - name: Install Dependencies
         run: sudo apt-get install -qqy bundler libsnappy-dev
