@@ -128,7 +128,7 @@ class TestTetherTaskRunner(unittest.TestCase):
             time.sleep(1)
 
             # make sure the other thread terminated
-            self.assertFalse(sthread.isAlive())
+            self.assertFalse(sthread.is_alive())
 
             # shutdown the logging
             logging.shutdown()
