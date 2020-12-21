@@ -50,13 +50,6 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Apt Install Compression Libs
         run: |
           sudo apt-get install -qqy --no-install-recommends libbz2-dev \
@@ -100,13 +93,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
-
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
       - name: Apt Install Compression Libs
         run: |
