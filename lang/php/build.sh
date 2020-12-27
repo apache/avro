@@ -57,6 +57,7 @@ do
       ;;
 
     lint)
+      composer install -d "../.."
       find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
       vendor/bin/phpcs --standard=PSR12 lib
       ;;

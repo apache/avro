@@ -24,14 +24,8 @@ module Avro
     BOOLEAN_VALUES = [true, false].freeze
 
     class Result
-      attr_reader :errors
-
-      def initialize
-        @errors = []
-      end
-
       def <<(error)
-        @errors << error
+        errors << error
       end
 
       def add_error(path, message)
@@ -39,11 +33,16 @@ module Avro
       end
 
       def failure?
-        @errors.any?
+        defined?(@errors) && errors.any?
       end
 
       def to_s
-        errors.join("\n")
+        failure? ? errors.join("\n") : ''
+      end
+
+      def errors
+        # Use less memory for success results by lazily creating the errors array
+        @errors ||= []
       end
     end
 
