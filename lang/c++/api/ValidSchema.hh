@@ -27,7 +27,7 @@ namespace avro {
 class AVRO_DECL Schema;
 
 /// A ValidSchema is basically a non-mutable Schema that has passed some
-/// minumum of sanity checks.  Once valididated, any Schema that is part of
+/// minimum of sanity checks.  Once validated, any Schema that is part of
 /// this ValidSchema is considered locked, and cannot be modified (an attempt
 /// to modify a locked Schema will throw).  Also, as it is validated, any
 /// recursive duplications of schemas are replaced with symbolic links to the
