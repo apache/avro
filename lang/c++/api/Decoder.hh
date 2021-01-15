@@ -31,7 +31,7 @@
 /// \file
 ///
 /// Low level support for decoding avro values.
-/// This class has two types of funtions.  One type of functions support
+/// This class has two types of functions.  One type of functions support
 /// decoding of leaf values (for example, decodeLong and
 /// decodeString). These functions have analogs in Encoder.
 ///
@@ -93,7 +93,7 @@ public:
         return result;
     }
 
-    /// Decodes arbitray binary data from the current stream and puts it
+    /// Decodes arbitrary binary data from the current stream and puts it
     /// in value.
     virtual void decodeBytes(std::vector<uint8_t>& value) = 0;
 
@@ -178,7 +178,7 @@ typedef std::shared_ptr<Decoder> DecoderPtr;
 
 /**
  * ResolvingDecoder is derived from \ref Decoder, with an additional
- * function to obtain the field ordering of fiedls within a record.
+ * function to obtain the field ordering of fields within a record.
  */
 class AVRO_DECL ResolvingDecoder : public Decoder {
 public:
