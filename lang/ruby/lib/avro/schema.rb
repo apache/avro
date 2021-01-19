@@ -36,6 +36,8 @@ module Avro
     LONG_MIN_VALUE = -(1 << 63)
     LONG_MAX_VALUE = (1 << 63) - 1
 
+    DEFAULT_VALIDATE_OPTIONS = { recursive: true, encoded: false }.freeze
+
     def self.parse(json_string)
       real_parse(MultiJson.load(json_string), {})
     end
@@ -109,7 +111,7 @@ module Avro
     end
 
     # Determine if a ruby datum is an instance of a schema
-    def self.validate(expected_schema, logical_datum, options = { recursive: true, encoded: false })
+    def self.validate(expected_schema, logical_datum, options = DEFAULT_VALIDATE_OPTIONS)
       SchemaValidator.validate!(expected_schema, logical_datum, options)
       true
     rescue SchemaValidator::ValidationError
