@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -15,20 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+name: 'Rat'
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
-case "$TRAVIS_OS_NAME" in
-"linux")
-    # Workaround for Yetus. For now, Yetus assumes the directory in which Dockerfile is placed is the docker context.
-    # So the Dockerfile should be here to refer to other subdirectories than share/docker from inside the Dockerfile.
-    cp share/docker/Dockerfile .
-    /tmp/apache-yetus-0.10.0/bin/test-patch --plugins=buildtest --java-home=/usr/local/openjdk-"${JAVA}" --user-plugins=share/precommit/ --run-tests --empty-patch --docker --dockerfile=Dockerfile --dirty-workspace
-    ;;
-"windows")
-    ./lang/csharp/build.sh test
-    ;;
-*)
-    echo "Invalid PLATFORM"
-    exit 1
-    ;;
-esac
+jobs:
+  rat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Local Maven Repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+
+      - name: Run Rat
+        run: mvn test -Dmaven.main.skip=true -Dmaven.test.skip=true -DskipTests=true -P rat -pl :avro-toplevel

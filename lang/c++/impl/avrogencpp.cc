@@ -524,31 +524,31 @@ string CodeGen::generateDeclaration(const NodePtr& n)
 
 void CodeGen::generateEnumTraits(const NodePtr& n)
 {
-	string dname = decorate(n->name());
-	string fn = fullname(dname);
-	string last = n->nameAt(n->names() - 1);
+    string dname = decorate(n->name());
+    string fn = fullname(dname);
+    string last = n->nameAt(n->names() - 1);
 
-	os_ << "template<> struct codec_traits<" << fn << "> {\n"
-		<< "    static void encode(Encoder& e, " << fn << " v) {\n"
-		<< "		if (v > " << fn << "::" << last << ")\n"
-		<< "		{\n"
-		<< "			std::ostringstream error;\n"
-		<< "			error << \"enum value \" << static_cast<unsigned>(v) << \" is out of bound for " << fn << " and cannot be encoded\";\n"
-		<< "			throw avro::Exception(error.str());\n"
-		<< "		}\n"
-		<< "        e.encodeEnum(static_cast<size_t>(v));\n"
-		<< "    }\n"
-		<< "    static void decode(Decoder& d, " << fn << "& v) {\n"
-		<< "		size_t index = d.decodeEnum();\n"
-		<< "		if (index > static_cast<size_t>(" << fn << "::" << last << "))\n"
-		<< "		{\n"
-		<< "			std::ostringstream error;\n"
-		<< "			error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
-		<< "			throw avro::Exception(error.str());\n"
-		<< "		}\n"
-		<< "        v = static_cast<" << fn << ">(index);\n"
-		<< "    }\n"
-		<< "};\n\n";
+    os_ << "template<> struct codec_traits<" << fn << "> {\n"
+        << "    static void encode(Encoder& e, " << fn << " v) {\n"
+        << "        if (v > " << fn << "::" << last << ")\n"
+        << "        {\n"
+        << "            std::ostringstream error;\n"
+        << "            error << \"enum value \" << static_cast<unsigned>(v) << \" is out of bound for " << fn << " and cannot be encoded\";\n"
+        << "            throw avro::Exception(error.str());\n"
+        << "        }\n"
+        << "        e.encodeEnum(static_cast<size_t>(v));\n"
+        << "    }\n"
+        << "    static void decode(Decoder& d, " << fn << "& v) {\n"
+        << "        size_t index = d.decodeEnum();\n"
+        << "        if (index > static_cast<size_t>(" << fn << "::" << last << "))\n"
+        << "        {\n"
+        << "            std::ostringstream error;\n"
+        << "            error << \"enum value \" << index << \" is out of bound for " << fn << " and cannot be decoded\";\n"
+        << "            throw avro::Exception(error.str());\n"
+        << "        }\n"
+        << "        v = static_cast<" << fn << ">(index);\n"
+        << "    }\n"
+        << "};\n\n";
 }
 
 void CodeGen::generateRecordTraits(const NodePtr& n)

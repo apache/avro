@@ -48,6 +48,7 @@ for target in "$@"
 do
   case "$target" in
     interop-data-generate)
+      composer install -d "../.."
       php test/generate_interop_data.php
       ;;
 

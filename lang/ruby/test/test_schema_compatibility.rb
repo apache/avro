@@ -25,7 +25,9 @@ class TestSchemaCompatibility < Test::Unit::TestCase
   end
 
   def test_compatible_reader_writer_pairs
+    cached_schema = a_int_record1_schema
     [
+      cached_schema, cached_schema,
       long_schema, int_schema,
       float_schema, int_schema,
       float_schema, long_schema,
