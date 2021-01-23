@@ -12,7 +12,7 @@ use uuid::Uuid;
 /// Compute the maximum decimal value precision of a byte array of length `len` could hold.
 fn max_prec_for_len(len: usize) -> Result<usize, Error> {
     let len = i32::try_from(len).map_err(|e| Error::ConvertLengthToI32(e, len))?;
-    Ok((2.0_f64.powi(8 * len - 1) - 1.0 as f64).log10().floor() as usize)
+    Ok((2.0_f64.powi(8 * len - 1) - 1.0).log10().floor() as usize)
 }
 
 /// A valid Avro value.
