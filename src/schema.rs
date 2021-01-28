@@ -342,10 +342,16 @@ impl UnionSchema {
     /// within this union.
     pub fn find_schema(&self, value: &types::Value) -> Option<(usize, &Schema)> {
         let type_index = &SchemaKind::from(value);
-        self.variant_index
-            .get(type_index)
-            .copied()
-            .map(|i| (i, &self.schemas[i]))
+        if let Some(&i) = self.variant_index.get(type_index) {
+            // fast path
+            Some((i, &self.schemas[i]))
+        } else {
+            // slow path (required for matching logical types)
+            self.schemas
+                .iter()
+                .enumerate()
+                .find(|(_, schema)| value.validate(schema))
+        }
     }
 }
 

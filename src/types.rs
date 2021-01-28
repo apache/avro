@@ -786,6 +786,13 @@ mod tests {
                 true,
             ),
             (
+                Value::Union(Box::new(Value::Long(42i64))),
+                Schema::Union(
+                    UnionSchema::new(vec![Schema::Null, Schema::TimestampMillis]).unwrap(),
+                ),
+                true,
+            ),
+            (
                 Value::Array(vec![Value::Long(42i64)]),
                 Schema::Array(Box::new(Schema::Long)),
                 true,
