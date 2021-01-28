@@ -331,6 +331,7 @@ impl Value {
             (&Value::String(_), &Schema::String) => true,
             (&Value::String(_), &Schema::Uuid) => true,
             (&Value::Fixed(n, _), &Schema::Fixed { size, .. }) => n == size,
+            (&Value::Bytes(ref b), &Schema::Fixed { size, .. }) => b.len() == size,
             (&Value::Fixed(n, _), &Schema::Duration) => n == 12,
             // TODO: check precision against n
             (&Value::Fixed(_n, _), &Schema::Decimal { .. }) => true,
@@ -811,6 +812,8 @@ mod tests {
 
         assert!(Value::Fixed(4, vec![0, 0, 0, 0]).validate(&schema));
         assert!(!Value::Fixed(5, vec![0, 0, 0, 0, 0]).validate(&schema));
+        assert!(Value::Bytes(vec![0, 0, 0, 0]).validate(&schema));
+        assert!(!Value::Bytes(vec![0, 0, 0, 0, 0]).validate(&schema));
     }
 
     #[test]
