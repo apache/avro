@@ -51,7 +51,6 @@
         <plugins>
           <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>${antrun-plugin.version}</version>
             <executions>
               <execution>
                 <phase>generate-test-sources</phase>

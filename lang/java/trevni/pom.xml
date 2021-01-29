@@ -49,7 +49,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>${surefire-plugin.version}</version>
           <configuration>
             <failIfNoTests>false</failIfNoTests>
             <!-- some tests hang if not run in a separate JVM -->
