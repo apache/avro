@@ -104,14 +104,17 @@
                   for users (optional).</li>
 		<li><code>type:</code> a <a href="#schemas">schema</a>, as defined above</li>
 		<li><code>default:</code> A default value for this
-		  field, used when reading instances that lack this
-		  field (optional).  Permitted values depend on the
-		  field's schema type, according to the table below.
-		  Default values for union fields correspond to the
-		  first schema in the union. Default values for bytes
-		  and fixed fields are JSON strings, where Unicode
-		  code points 0-255 are mapped to unsigned 8-bit byte
-		  values 0-255.
+      field, only used when reading instances that lack
+      the field for schema evolution purposes. The
+      presence of a default value does not make the
+      field optional at encoding time. Permitted values
+      depend on the field's schema type, according to the
+      table below. Default values for union fields correspond
+      to the first schema in the union. Default values for bytes
+      and fixed fields are JSON strings, where Unicode
+      code points 0-255 are mapped to unsigned 8-bit byte
+      values 0-255. Avro encodes a field even if its
+      value is equal to its default.
 		  <table class="right">
 		    <caption>field default values</caption>
 		    <tr><th>avro type</th><th>json type</th><th>example</th></tr>
@@ -578,7 +581,7 @@
                 followed by the serialized string:
                 <source>02 02 61</source></li>
             </ul>
-            <p><em>NOTE</em>: Currently for C/C++ implementtions, the positions are practically an int, but theoretically a long.
+            <p><em>NOTE</em>: Currently for C/C++ implementations, the positions are practically an int, but theoretically a long.
             In reality, we don't expect unions with 215M members </p>
           </section>
 
