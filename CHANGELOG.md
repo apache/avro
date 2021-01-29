@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.13.0] - 2021-01-29
+### Added
+- Support for parsing a list of schemas which may have cross dependencies (#173)
+
+### Changed
+- Allow Value::Bytes to be assigned to Schema::Fixed (#171)
+
+### Fixed
+- Allow resolution of union schemas with logical types (#176)
+
+
 ## [0.12.0] - 2020-11-27
 ### Added
 - Added support for the Rabin fingerprint (#157)

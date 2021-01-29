@@ -2,6 +2,9 @@
 ## Unreleased
 All changes are backward-compatible so far.
 
+# 0.13.0
+All changes are backward compatible.
+
 # 0.12.0
 All changes are backward compatible.
 
