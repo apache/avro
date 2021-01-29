@@ -199,6 +199,8 @@ public class NettyTransceiver extends Transceiver {
         channelFuture.channel().close();
       }
 
+      workerGroup.shutdownGracefully();
+
       if (e instanceof IOException)
         throw (IOException) e;
       if (e instanceof RuntimeException)

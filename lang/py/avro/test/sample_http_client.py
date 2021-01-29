@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -18,11 +20,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import sys
 
-from avro import ipc, protocol
+import avro.errors
+import avro.ipc
+import avro.protocol
 
 MAIL_PROTOCOL_JSON = """\
 {"namespace": "example.proto",
@@ -50,27 +52,19 @@ MAIL_PROTOCOL_JSON = """\
  }
 }
 """
-MAIL_PROTOCOL = protocol.parse(MAIL_PROTOCOL_JSON)
+MAIL_PROTOCOL = avro.protocol.parse(MAIL_PROTOCOL_JSON)
 SERVER_HOST = 'localhost'
 SERVER_PORT = 9090
 
 
-class UsageError(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-
 def make_requestor(server_host, server_port, protocol):
-    client = ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
-    return ipc.Requestor(protocol, client)
+    client = avro.ipc.HTTPTransceiver(SERVER_HOST, SERVER_PORT)
+    return avro.ipc.Requestor(protocol, client)
 
 
 if __name__ == '__main__':
     if len(sys.argv) not in [4, 5]:
-        raise UsageError("Usage: <to> <from> <body> [<count>]")
+        raise avro.errors.UsageError("Usage: <to> <from> <body> [<count>]")
 
     # client code - attach to the server and send a message
     # fill in the Message record

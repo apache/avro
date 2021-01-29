@@ -23,6 +23,7 @@ test-output
 .factorypath
 .mypy_cache
 .python-version
+.java-version
 .coverage
 vendor
 composer.lock

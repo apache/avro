@@ -43,7 +43,15 @@ set -xe
 cd "${0%/*}"
 
 VERSION=$(<share/VERSION.txt)
-DOCKER_XTRA_ARGS=""
+
+# Extra flags to add to the docker run command.  This can be overridden using the --args argument.
+DOCKER_RUN_XTRA_ARGS=${DOCKER_RUN_XTRA_ARGS-}
+# The entrypoint when running the avro docker from this script.
+DOCKER_RUN_ENTRYPOINT=${DOCKER_RUN_ENTRYPOINT-bash}
+# Extra flags to add to the docker build command.
+DOCKER_BUILD_XTRA_ARGS=${DOCKER_BUILD_XTRA_ARGS-}
+# Override the docker image name used.
+DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME-}
 
 usage() {
   echo "Usage: $0 {lint|test|dist|sign|clean|veryclean|docker [--args \"docker-args\"]|rat|githooks|docker-test}"
@@ -92,7 +100,7 @@ do
       (cd lang/csharp; ./build.sh test)
       (cd lang/js; ./build.sh lint test)
       (cd lang/ruby; ./build.sh lint test)
-      (cd lang/php; ./build.sh test)
+      (cd lang/php; ./build.sh lint test)
       (cd lang/perl; ./build.sh lint test)
 
       (cd lang/py; ./build.sh interop-data-generate)
@@ -280,7 +288,7 @@ do
 
     docker)
       if [[ $1 =~ ^--args ]]; then
-        DOCKER_XTRA_ARGS=$2
+        DOCKER_RUN_XTRA_ARGS=$2
         shift 2
       fi
       if [[ "$(uname -s)" = Linux ]]; then
@@ -292,6 +300,7 @@ do
         USER_ID=1000
         GROUP_ID=50
       fi
+      DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME:-"avro-build-$USER_NAME:latest"}
       {
         cat share/docker/Dockerfile
         grep -vF 'FROM avro-build-ci' share/docker/DockerfileLocal
@@ -299,7 +308,8 @@ do
         echo "RUN getent group $GROUP_ID || groupadd -g $GROUP_ID $USER_NAME"
         echo "RUN getent passwd $USER_ID || useradd -g $GROUP_ID -u $USER_ID -k /root -m $USER_NAME"
       } > Dockerfile
-      tar -cf- lang/ruby/Gemfile Dockerfile | docker build -t "avro-build-$USER_NAME" -
+      # shellcheck disable=SC2086
+      tar -cf- lang/ruby/Gemfile Dockerfile | docker build $DOCKER_BUILD_XTRA_ARGS -t "$DOCKER_IMAGE_NAME" -
       rm Dockerfile
       # By mapping the .m2 directory you can do an mvn install from
       # within the container and use the result on your normal
@@ -311,6 +321,7 @@ do
       # Using :delegated will drop the "mvn install" time from over 30 minutes
       # down to under 10.  However, editing files from OSX may take a few
       # extra second before the changes are available within the docker container.
+      # shellcheck disable=SC2086
       docker run --rm -t -i \
         --env "JAVA=${JAVA:-8}" \
         --user "${USER_NAME}" \
@@ -318,8 +329,7 @@ do
         --volume "${HOME}/.m2:/home/${USER_NAME}/.m2${DOCKER_MOUNT_FLAG}" \
         --volume "${PWD}:/home/${USER_NAME}/avro${DOCKER_MOUNT_FLAG}" \
         --workdir "/home/${USER_NAME}/avro" \
-        ${DOCKER_XTRA_ARGS} \
-        "avro-build-${USER_NAME}" bash
+        ${DOCKER_RUN_XTRA_ARGS} "$DOCKER_IMAGE_NAME" ${DOCKER_RUN_ENTRYPOINT}
       ;;
 
     rat)

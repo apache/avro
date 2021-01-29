@@ -37,7 +37,7 @@ function dist {
     mkdir -p "$build_dir/$libname" "$lib_dir/examples"
     cp -pr lib "$lib_dir"
     cp -pr examples/*.php "$lib_dir/examples"
-    cp README.txt LICENSE NOTICE "$lib_dir"
+    cp README.md LICENSE NOTICE "$lib_dir"
     cd "$build_dir"
     tar -cjf "$tarball" "$libname"
     mkdir -p "../$dist_dir"
@@ -48,6 +48,7 @@ for target in "$@"
 do
   case "$target" in
     interop-data-generate)
+      composer install -d "../.."
       php test/generate_interop_data.php
       ;;
 
@@ -57,6 +58,7 @@ do
       ;;
 
     lint)
+      composer install -d "../.."
       find . -name "*.php" -print0 | xargs -0 -n1 -P8 php -l
       vendor/bin/phpcs --standard=PSR12 lib
       ;;

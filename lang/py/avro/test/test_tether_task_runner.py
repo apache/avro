@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -17,8 +19,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import io
 import logging
 import os
@@ -33,11 +33,6 @@ import avro.test.word_count_task
 import avro.tether.tether_task
 import avro.tether.tether_task_runner
 import avro.tether.util
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 
 class TestTetherTaskRunner(unittest.TestCase):
@@ -66,6 +61,12 @@ class TestTetherTaskRunner(unittest.TestCase):
             runner = avro.tether.tether_task_runner.TaskRunner(avro.test.word_count_task.WordCountTask())
 
             runner.start(outputport=parent_port, join=False)
+            for _ in range(12):
+                if runner.server is not None:
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError("Server never started")
 
             # Test sending various messages to the server and ensuring they are processed correctly
             requestor = avro.tether.tether_task.HTTPRequestor(
@@ -77,12 +78,12 @@ class TestTetherTaskRunner(unittest.TestCase):
             # Test the mapper
             requestor.request("configure", {
                 "taskType": avro.tether.tether_task.TaskType.MAP,
-                "inSchema": unicode(str(runner.task.inschema)),
-                "outSchema": unicode(str(runner.task.midschema))
+                "inSchema": str(runner.task.inschema),
+                "outSchema": str(runner.task.midschema)
             })
 
             # Serialize some data so we can send it to the input function
-            datum = unicode("This is a line of text")
+            datum = "This is a line of text"
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(runner.task.inschema)
@@ -97,12 +98,12 @@ class TestTetherTaskRunner(unittest.TestCase):
             # Test the reducer
             requestor.request("configure", {
                 "taskType": avro.tether.tether_task.TaskType.REDUCE,
-                "inSchema": unicode(str(runner.task.midschema)),
-                "outSchema": unicode(str(runner.task.outschema))}
+                "inSchema": str(runner.task.midschema),
+                "outSchema": str(runner.task.outschema)}
             )
 
             # Serialize some data so we can send it to the input function
-            datum = {"key": unicode("word"), "value": 2}
+            datum = {"key": "word", "value": 2}
             writer = io.BytesIO()
             encoder = avro.io.BinaryEncoder(writer)
             datum_writer = avro.io.DatumWriter(runner.task.midschema)
@@ -127,7 +128,7 @@ class TestTetherTaskRunner(unittest.TestCase):
             time.sleep(1)
 
             # make sure the other thread terminated
-            self.assertFalse(sthread.isAlive())
+            self.assertFalse(sthread.is_alive())
 
             # shutdown the logging
             logging.shutdown()

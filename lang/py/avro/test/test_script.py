@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -17,27 +19,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import csv
 import io
 import json
+import operator
+import os
+import os.path
+import subprocess
 import sys
+import tempfile
 import unittest
-from operator import itemgetter
-from os import remove
-from os.path import dirname, isfile, join
-from subprocess import check_call, check_output
-from tempfile import NamedTemporaryFile
 
+import avro.datafile
+import avro.io
 import avro.schema
-from avro.datafile import DataFileWriter
-from avro.io import DatumWriter
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 NUM_RECORDS = 7
 
@@ -56,13 +51,13 @@ SCHEMA = '''
 '''
 
 LOONIES = (
-    (unicode("daffy"), unicode("duck"), unicode("duck")),
-    (unicode("bugs"), unicode("bunny"), unicode("bunny")),
-    (unicode("tweety"), unicode(""), unicode("bird")),
-    (unicode("road"), unicode("runner"), unicode("bird")),
-    (unicode("wile"), unicode("e"), unicode("coyote")),
-    (unicode("pepe"), unicode("le pew"), unicode("skunk")),
-    (unicode("foghorn"), unicode("leghorn"), unicode("rooster")),
+    ("daffy", "duck", "duck"),
+    ("bugs", "bunny", "bunny"),
+    ("tweety", "", "bird"),
+    ("road", "runner", "bird"),
+    ("wile", "e", "coyote"),
+    ("pepe", "le pew", "skunk"),
+    ("foghorn", "leghorn", "rooster"),
 )
 
 
@@ -71,7 +66,7 @@ def looney_records():
         yield {"first": f, "last": l, "type": t}
 
 
-SCRIPT = join(dirname(dirname(dirname(__file__))), "scripts", "avro")
+SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "scripts", "avro")
 
 _JSON_PRETTY = '''{
     "first": "daffy",
@@ -83,28 +78,30 @@ _JSON_PRETTY = '''{
 def gen_avro(filename):
     schema = avro.schema.parse(SCHEMA)
     fo = open(filename, "wb")
-    writer = DataFileWriter(fo, DatumWriter(), schema)
+    writer = avro.datafile.DataFileWriter(fo, avro.io.DatumWriter(), schema)
     for record in looney_records():
         writer.append(record)
     writer.close()
     fo.close()
 
 
-def tempfile():
-    return NamedTemporaryFile(delete=False).name
+def _tempfile():
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        pass
+    return f.name
 
 
 class TestCat(unittest.TestCase):
     def setUp(self):
-        self.avro_file = tempfile()
+        self.avro_file = _tempfile()
         gen_avro(self.avro_file)
 
     def tearDown(self):
-        if isfile(self.avro_file):
-            remove(self.avro_file)
+        if os.path.isfile(self.avro_file):
+            os.unlink(self.avro_file)
 
     def _run(self, *args, **kw):
-        out = check_output([sys.executable, SCRIPT, "cat", self.avro_file] + list(args)).decode()
+        out = subprocess.check_output([sys.executable, SCRIPT, "cat", self.avro_file] + list(args)).decode()
         if kw.get("raw"):
             return out
         return out.splitlines()
@@ -124,7 +121,7 @@ class TestCat(unittest.TestCase):
         assert len(list(reader)) == NUM_RECORDS
 
     def test_csv_header(self):
-        r = {"type": unicode("duck"), "last": unicode("duck"), "first": unicode("daffy")}
+        r = {"type": "duck", "last": "duck", "first": "daffy"}
         out = self._run("-f", "csv", "--header", raw=True)
         io_ = io.StringIO(out)
         reader = csv.DictReader(io_)
@@ -144,7 +141,7 @@ class TestCat(unittest.TestCase):
         self.assertEqual(out.strip(), _JSON_PRETTY.strip())
 
     def test_version(self):
-        check_output([sys.executable, SCRIPT, "cat", "--version"])
+        subprocess.check_output([sys.executable, SCRIPT, "cat", "--version"])
 
     def test_files(self):
         out = self._run(self.avro_file)
@@ -157,37 +154,37 @@ class TestCat(unittest.TestCase):
 
         # Field selection (with comma and space)
         out = self._run('--fields', 'first, last')
-        assert json.loads(out[0]) == {'first': unicode('daffy'), 'last': unicode('duck')}
+        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
 
         # Empty fields should get all
         out = self._run('--fields', '')
         assert json.loads(out[0]) == \
-            {'first': unicode('daffy'), 'last': unicode('duck'),
-             'type': unicode('duck')}
+            {'first': 'daffy', 'last': 'duck',
+             'type': 'duck'}
 
         # Non existing fields are ignored
         out = self._run('--fields', 'first,last,age')
-        assert json.loads(out[0]) == {'first': unicode('daffy'), 'last': unicode('duck')}
+        assert json.loads(out[0]) == {'first': 'daffy', 'last': 'duck'}
 
 
 class TestWrite(unittest.TestCase):
     def setUp(self):
-        self.json_file = tempfile() + ".json"
+        self.json_file = _tempfile() + ".json"
         fo = open(self.json_file, "w")
         for record in looney_records():
             json.dump(record, fo)
             fo.write("\n")
         fo.close()
 
-        self.csv_file = tempfile() + ".csv"
+        self.csv_file = _tempfile() + ".csv"
         fo = open(self.csv_file, "w")
         write = csv.writer(fo).writerow
-        get = itemgetter("first", "last", "type")
+        get = operator.itemgetter("first", "last", "type")
         for record in looney_records():
             write(get(record))
         fo.close()
 
-        self.schema_file = tempfile()
+        self.schema_file = _tempfile()
         fo = open(self.schema_file, "w")
         fo.write(SCHEMA)
         fo.close()
@@ -195,31 +192,31 @@ class TestWrite(unittest.TestCase):
     def tearDown(self):
         for filename in (self.csv_file, self.json_file, self.schema_file):
             try:
-                remove(filename)
+                os.unlink(filename)
             except OSError:
                 continue
 
     def _run(self, *args, **kw):
         args = [sys.executable, SCRIPT, "write", "--schema", self.schema_file] + list(args)
-        check_call(args, **kw)
+        subprocess.check_call(args, **kw)
 
     def load_avro(self, filename):
-        out = check_output([sys.executable, SCRIPT, "cat", filename]).decode()
+        out = subprocess.check_output([sys.executable, SCRIPT, "cat", filename]).decode()
         return [json.loads(o) for o in out.splitlines()]
 
     def test_version(self):
-        check_call([sys.executable, SCRIPT, "write", "--version"])
+        subprocess.check_call([sys.executable, SCRIPT, "write", "--version"])
 
     def format_check(self, format, filename):
-        tmp = tempfile()
+        tmp = _tempfile()
         with open(tmp, "wb") as fo:
             self._run(filename, "-f", format, stdout=fo)
 
         records = self.load_avro(tmp)
         assert len(records) == NUM_RECORDS
-        assert records[0]["first"] == unicode("daffy")
+        assert records[0]["first"] == "daffy"
 
-        remove(tmp)
+        os.unlink(tmp)
 
     def test_write_json(self):
         self.format_check("json", self.json_file)
@@ -228,24 +225,24 @@ class TestWrite(unittest.TestCase):
         self.format_check("csv", self.csv_file)
 
     def test_outfile(self):
-        tmp = tempfile()
-        remove(tmp)
+        tmp = _tempfile()
+        os.unlink(tmp)
         self._run(self.json_file, "-o", tmp)
 
         assert len(self.load_avro(tmp)) == NUM_RECORDS
-        remove(tmp)
+        os.unlink(tmp)
 
     def test_multi_file(self):
-        tmp = tempfile()
+        tmp = _tempfile()
         with open(tmp, 'wb') as o:
             self._run(self.json_file, self.json_file, stdout=o)
         assert len(self.load_avro(tmp)) == 2 * NUM_RECORDS
-        remove(tmp)
+        os.unlink(tmp)
 
     def test_stdin(self):
-        tmp = tempfile()
+        tmp = _tempfile()
         info = open(self.json_file, "rb")
         self._run("--input-type", "json", "-o", tmp, stdin=info)
 
         assert len(self.load_avro(tmp)) == NUM_RECORDS
-        remove(tmp)
+        os.unlink(tmp)

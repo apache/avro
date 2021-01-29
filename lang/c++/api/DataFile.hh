@@ -73,6 +73,7 @@ class AVRO_DECL DataFileWriterBase : boost::noncopyable {
     typedef std::map<std::string, std::vector<uint8_t> > Metadata;
 
     Metadata metadata_;
+    int64_t lastSync_;
 
     static std::unique_ptr<OutputStream> makeStream(const char* filename);
     static DataFileSync makeSync();
@@ -101,6 +102,11 @@ public:
      * inserted.
      */
     void syncIfNeeded();
+
+    /**
+     * Returns the byte offset (within the current file) of the start of the current block being written.
+     */
+    uint64_t getCurrentBlockStart();
 
     /**
      * Increments the object count.
@@ -162,6 +168,12 @@ public:
     }
 
     /**
+     *  Returns the byte offset (within the current file) of the start of the current block being written.
+     */
+    uint64_t getCurrentBlockStart() { return base_->getCurrentBlockStart(); }
+
+
+    /**
      * Closes the current file. Once closed this datafile object cannot be
      * used for writing any more.
      */
@@ -179,7 +191,7 @@ public:
 };
 
 /**
- * The type independent portion of rader.
+ * The type independent portion of reader.
  */
 class AVRO_DECL DataFileReaderBase : boost::noncopyable {
     const std::string filename_;
@@ -242,7 +254,7 @@ public:
 
     /**
      * Initializes the reader to read objects according to the given
-     * schema. This gives an opportinity for the reader to see the schema
+     * schema. This gives an opportunity for the reader to see the schema
      * in the data file before deciding the right schema to use for reading.
      * This must be called exactly once after constructing the
      * DataFileReaderBase object.
@@ -272,7 +284,7 @@ public:
 
     /**
      * Move to the next synchronization point after a position. To process a
-     * range of file entires, call this with the starting position, then check
+     * range of file entries, call this with the starting position, then check
      * pastSync() with the end point before each use of decoder().
      */
     void sync(int64_t position);
@@ -326,7 +338,7 @@ public:
     /**
      * Constructs a reader using the reader base. This form of constructor
      * allows the user to examine the schema of a given file and then
-     * decide to use the right type of data to be desrialize. Without this
+     * decide to use the right type of data to be deserialize. Without this
      * the user must know the type of data for the template _before_
      * he knows the schema within the file.
      * The schema present in the data file will be used for reading
@@ -339,7 +351,7 @@ public:
     /**
      * Constructs a reader using the reader base. This form of constructor
      * allows the user to examine the schema of a given file and then
-     * decide to use the right type of data to be desrialize. Without this
+     * decide to use the right type of data to be deserialize. Without this
      * the user must know the type of data for the template _before_
      * he knows the schema within the file.
      * The argument readerSchema will be used for reading
@@ -387,7 +399,7 @@ public:
 
     /**
      * Move to the next synchronization point after a position. To process a
-     * range of file entires, call this with the starting position, then check
+     * range of file entries, call this with the starting position, then check
      * pastSync() with the end point before each call to read().
      */
     void sync(int64_t position) { base_->sync(position); }

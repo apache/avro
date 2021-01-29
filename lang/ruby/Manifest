@@ -6,6 +6,7 @@ Rakefile
 avro.gemspec
 interop/test_interop.rb
 lib/avro.rb
+lib/avro/VERSION.txt
 lib/avro/data_file.rb
 lib/avro/io.rb
 lib/avro/ipc.rb

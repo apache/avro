@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,30 +21,19 @@
 
 """Test the protocol parsing logic."""
 
-from __future__ import absolute_import, division, print_function
-
 import json
 import unittest
 
+import avro.errors
 import avro.protocol
 import avro.schema
 
-try:
-    unicode
-except NameError:
-    unicode = str
 
-try:
-    basestring  # type: ignore
-except NameError:
-    basestring = (bytes, unicode)
-
-
-class TestProtocol(object):
+class TestProtocol:
     """A proxy for a protocol string that provides useful test metadata."""
 
     def __init__(self, data, name='', comment=''):
-        if not isinstance(data, basestring):
+        if not isinstance(data, str):
             data = json.dumps(data)
         self.data = data
         self.name = name or data
@@ -304,14 +295,14 @@ class ProtocolParseTestCase(unittest.TestCase):
         """Parsing a valid protocol should not error."""
         try:
             self.test_proto.parse()
-        except avro.protocol.ProtocolParseException:
+        except avro.errors.ProtocolParseException:
             self.fail("Valid protocol failed to parse: {!s}".format(self.test_proto))
 
     def parse_invalid(self):
         """Parsing an invalid schema should error."""
         try:
             self.test_proto.parse()
-        except (avro.protocol.ProtocolParseException, avro.schema.SchemaParseException):
+        except (avro.errors.ProtocolParseException, avro.errors.SchemaParseException):
             pass
         else:
             self.fail("Invalid protocol should not have parsed: {!s}".format(self.test_proto))

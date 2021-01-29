@@ -48,7 +48,6 @@
     <!-- plugin versions -->
     <antrun-plugin.version>3.0.0</antrun-plugin.version>
     <checkstyle-plugin.version>3.1.1</checkstyle-plugin.version>
-    <extra-enforcer-rules.version>1.2</extra-enforcer-rules.version>
     <spotless-maven-plugin.version>1.31.1</spotless-maven-plugin.version>
     <plugin-tools-javadoc.version>3.5</plugin-tools-javadoc.version>
   </properties>
@@ -289,6 +288,8 @@
                 <exclude>**/*.egg-info/**</exclude>
                 <exclude>build/**</exclude>
                 <exclude>doc/build/**</exclude>
+                <exclude>doc/examples/java-example/target/**</exclude>
+                <exclude>doc/examples/mr-example/target/**</exclude>
                 <exclude>lang/java/archetypes/**</exclude>
                 <exclude>lang/java/**/target/**</exclude>
                 <exclude>lang/js/node_modules/**</exclude>
@@ -297,6 +298,9 @@
                 <exclude>lang/csharp/build/**</exclude>
                 <exclude>lang/perl/pm_to_blib</exclude>
                 <exclude>lang/perl/blib/**/.exists</exclude>
+                <exclude>vendor/**</exclude>
+                <exclude>lang/php/vendor/**</exclude>
+                <exclude>lang/php/.phpunit.result.cache</exclude>
                 <exclude>lang/ruby/Gemfile.lock</exclude>
                 <exclude>lang/ruby/avro.gemspec</exclude>
                 <exclude>lang/ruby/.gem/**</exclude>
@@ -311,6 +315,10 @@
                 <exclude>lang/java/tools/src/test/compiler/output/Player.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/Position.java</exclude>
                 <exclude>lang/java/tools/src/test/compiler/output/FieldVisibilityTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/NoSettersTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/OptionalGettersNullableFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/OptionalGettersAllFieldsTest.java</exclude>
+                <exclude>lang/java/tools/src/test/compiler/output/AddExtraOptionalGettersTest.java</exclude>
                 <exclude>lang/csharp/build/doc/html/**</exclude>
                 <exclude>lang/csharp/src/apache/ipc.test/GeneratedFiles/**/*.cs</exclude>
                 <exclude>lang/csharp/src/apache/perf/com/foo/*.cs</exclude>

@@ -49,15 +49,10 @@ RUN apt-get -qqy update \
                                                  libsnappy-dev \
                                                  libsnappy1v5 \
                                                  make \
-                                                 maven \
                                                  mypy \
                                                  openjdk-8-jdk \
                                                  perl \
-                                                 python \
-                                                 python-pip \
-                                                 python-setuptools \
-                                                 python-snappy \
-                                                 python-wheel \
+                                                 python3 \
                                                  python3-pip \
                                                  python3-setuptools \
                                                  python3-snappy \
@@ -68,8 +63,39 @@ RUN apt-get -qqy update \
                                                  source-highlight \
                                                  subversion \
                                                  valgrind \
+                                                 vim \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
+
+# Install a maven release  -------------------------------------------
+# Inspired from https://github.com/apache/accumulo-docker/blob/master/Dockerfile#L53
+
+ENV MAVEN_VERSION 3.6.3
+ENV APACHE_DIST_URLS \
+  https://www.apache.org/dyn/closer.cgi?action=download&filename= \
+  # if the version is outdated (or we're grabbing the .asc file), we might have to pull from the dist/archive :/
+  https://www-us.apache.org/dist/ \
+  https://www.apache.org/dist/ \
+  https://archive.apache.org/dist/
+RUN set -eux; \
+  download() { \
+    local f="$1"; shift; \
+    local distFile="$1"; shift; \
+    local success=; \
+    local distUrl=; \
+    for distUrl in $APACHE_DIST_URLS; do \
+      if wget -nv -O "$f" "$distUrl$distFile"; then \
+        success=1; \
+        break; \
+      fi; \
+    done; \
+    [ -n "$success" ]; \
+  }; \
+  download "maven.tar.gz" "maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz"; \
+  tar xzf "maven.tar.gz" -C /tmp/; \
+  mv /tmp/apache-maven-$MAVEN_VERSION /opt/maven; \
+  rm "maven.tar.gz"
+ENV PATH="/opt/maven/bin:${PATH}"
 
 # Install nodejs 6
 RUN curl -sSL https://deb.nodesource.com/setup_10.x \
@@ -115,11 +141,12 @@ RUN curl -sSL https://packages.sury.org/php/apt.gpg \
  && apt-get -qqy clean \
  && rm -rf /var/lib/apt/lists
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN curl -sS https://getcomposer.org/installer | php -- --version=2.0.7 --install-dir=/usr/local/bin --filename=composer
 
 # Install Perl modules
 RUN apt-get -qqy update \
  && apt-get -qqy install --no-install-recommends libcompress-raw-zlib-perl \
+                                                 libcpan-uploader-perl \
                                                  libencode-perl \
                                                  libio-string-perl \
                                                  libjson-xs-perl \
@@ -142,13 +169,9 @@ RUN curl -sSL https://cpanmin.us \
 # Install Python packages
 ENV PIP_NO_CACHE_DIR=off
 
-# Install Python2 packages
-RUN python2 -m pip install --upgrade pip setuptools wheel \
- && python2 -m pip install zstandard
-
 # Install Python3 packages
 RUN python3 -m pip install --upgrade pip setuptools wheel \
- && python3 -m pip install tox zstandard
+ && python3 -m pip install tox-wheel zstandard
 
 # Install .NET SDK
 RUN curl -sSLO https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb \

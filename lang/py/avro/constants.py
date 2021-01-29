@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -19,7 +21,6 @@
 
 """Contains Constants for Python Avro"""
 
-from __future__ import absolute_import, division, print_function
 
 DATE = "date"
 DECIMAL = "decimal"

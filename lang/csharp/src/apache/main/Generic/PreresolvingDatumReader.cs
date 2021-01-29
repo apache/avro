@@ -195,8 +195,10 @@ namespace Avro.Generic
 
             var translator = new int[writerSchema.Symbols.Count];
 
+            var readerDefaultOrdinal = null != readerSchema.Default ? readerSchema.Ordinal(readerSchema.Default) : -1;
+
             foreach (var symbol in writerSchema.Symbols)
-            {
+            { 
                 var writerOrdinal = writerSchema.Ordinal(symbol);
                 if (readerSchema.Contains(symbol))
                 {
@@ -212,6 +214,11 @@ namespace Avro.Generic
                         {
                             var writerOrdinal = d.ReadEnum();
                             var readerOrdinal = translator[writerOrdinal];
+                            if (readerOrdinal == -1 && readerDefaultOrdinal != -1) //the symbol doesn't exist, but the default does
+                            {
+                                return enumAccess.CreateEnum(r, readerDefaultOrdinal);
+                            }
+
                             if (readerOrdinal == -1)
                             {
                                 throw new AvroException("No such symbol: " + writerSchema[writerOrdinal]);

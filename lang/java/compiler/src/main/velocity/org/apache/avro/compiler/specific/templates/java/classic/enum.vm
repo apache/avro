@@ -16,7 +16,7 @@
 ## limitations under the License.
 ##
 #if ($schema.getNamespace())
-package $schema.getNamespace();
+package $this.mangle($schema.getNamespace());
 #end
 #if ($schema.getDoc())
 /** $schema.getDoc() */

@@ -51,6 +51,7 @@ import org.apache.avro.SchemaNormalization;
 import org.apache.avro.JsonProperties;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericData.StringType;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -103,6 +104,8 @@ public class SpecificCompiler {
     specificData.addLogicalTypeConversion(new TimeConversions.TimeMicrosConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMillisConversion());
     specificData.addLogicalTypeConversion(new TimeConversions.TimestampMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMicrosConversion());
+    specificData.addLogicalTypeConversion(new TimeConversions.LocalTimestampMillisConversion());
   }
 
   private final SpecificData specificData = new SpecificData();
@@ -531,7 +534,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String mangledName = mangle(protocol.getName());
-    outputFile.path = makePath(mangledName, protocol.getNamespace());
+    outputFile.path = makePath(mangledName, mangle(protocol.getNamespace()));
     outputFile.contents = out;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -603,7 +606,7 @@ public class SpecificCompiler {
 
     OutputFile outputFile = new OutputFile();
     String name = mangle(schema.getName());
-    outputFile.path = makePath(name, schema.getNamespace());
+    outputFile.path = makePath(name, mangle(schema.getNamespace()));
     outputFile.contents = output;
     outputFile.outputCharacterEncoding = outputCharacterEncoding;
     return outputFile;
@@ -1018,13 +1021,20 @@ public class SpecificCompiler {
 
   /** Utility for template use. Adds a dollar sign to reserved words. */
   public static String mangle(String word, Set<String> reservedWords, boolean isMethod) {
+    if (StringUtils.isBlank(word)) {
+      return word;
+    }
     if (word.contains(".")) {
       // If the 'word' is really a full path of a class we must mangle just the
-      // classname
-      int lastDot = word.lastIndexOf(".");
-      String packageName = word.substring(0, lastDot + 1);
-      String className = word.substring(lastDot + 1);
-      return packageName + mangle(className, reservedWords, isMethod);
+      String[] packageWords = word.split("\\.");
+      String[] newPackageWords = new String[packageWords.length];
+
+      for (int i = 0; i < packageWords.length; i++) {
+        String oldName = packageWords[i];
+        newPackageWords[i] = mangle(oldName, reservedWords, false);
+      }
+
+      return String.join(".", newPackageWords);
     }
     if (reservedWords.contains(word) || (isMethod && reservedWords
         .contains(Character.toLowerCase(word.charAt(0)) + ((word.length() > 1) ? word.substring(1) : "")))) {

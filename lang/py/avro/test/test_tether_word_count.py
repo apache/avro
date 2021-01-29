@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -17,8 +19,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import collections
 import distutils.spawn
 import os
@@ -35,11 +35,6 @@ import avro.io
 import avro.schema
 import avro.tether.tether_task_runner
 
-try:
-    unicode
-except NameError:
-    unicode = str
-
 _AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
 
 
@@ -53,9 +48,9 @@ _AVRO_VERSION = _version()
 _JAR_PATH = os.path.join(os.path.dirname(os.path.dirname(_AVRO_DIR)),
                          "java", "tools", "target", "avro-tools-{}.jar".format(_AVRO_VERSION))
 
-_LINES = (unicode("the quick brown fox jumps over the lazy dog"),
-          unicode("the cow jumps over the moon"),
-          unicode("the rain in spain falls mainly on the plains"))
+_LINES = ("the quick brown fox jumps over the lazy dog",
+          "the cow jumps over the moon",
+          "the rain in spain falls mainly on the plains")
 _IN_SCHEMA = '"string"'
 
 # The schema for the output of the mapper and reducer

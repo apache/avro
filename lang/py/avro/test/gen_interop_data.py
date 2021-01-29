@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -18,41 +20,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import, division, print_function
-
 import os
 import sys
 
+import avro.codecs
 import avro.datafile
 import avro.io
 import avro.schema
-from avro.codecs import Codecs
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 NULL_CODEC = 'null'
-CODECS_TO_VALIDATE = Codecs.supported_codec_names()
+CODECS_TO_VALIDATE = avro.codecs.supported_codec_names()
 
 DATUM = {
     'intField': 12,
     'longField': 15234324,
-    'stringField': unicode('hey'),
+    'stringField': 'hey',
     'boolField': True,
     'floatField': 1234.0,
     'doubleField': -1234.0,
     'bytesField': b'12312adf',
     'nullField': None,
     'arrayField': [5.0, 0.0, 12.0],
-    'mapField': {unicode('a'): {'label': unicode('a')},
-                 unicode('bee'): {'label': unicode('cee')}},
+    'mapField': {'a': {'label': 'a'},
+                 'bee': {'label': 'cee'}},
     'unionField': 12.0,
     'enumField': 'C',
     'fixedField': b'1019181716151413',
-    'recordField': {'label': unicode('blah'),
-                    'children': [{'label': unicode('inner'), 'children': []}]},
+    'recordField': {'label': 'blah',
+                    'children': [{'label': 'inner', 'children': []}]},
 }
 
 

@@ -510,6 +510,8 @@ module Avro
 
     # DatumWriter for generic ruby objects
     class DatumWriter
+      VALIDATION_OPTIONS = { recursive: false, encoded: true }.freeze
+
       attr_accessor :writers_schema
       def initialize(writers_schema=nil)
         @writers_schema = writers_schema
@@ -522,7 +524,7 @@ module Avro
       def write_data(writers_schema, logical_datum, encoder)
         datum = writers_schema.type_adapter.encode(logical_datum)
 
-        unless Schema.validate(writers_schema, datum, { recursive: false, encoded: true })
+        unless Schema.validate(writers_schema, datum, VALIDATION_OPTIONS)
           raise AvroTypeError.new(writers_schema, datum)
         end
 
@@ -580,12 +582,15 @@ module Avro
       end
 
       def write_union(writers_schema, datum, encoder)
-        index_of_schema = -1
-        found = writers_schema.schemas.
-          find{|e| index_of_schema += 1; found = Schema.validate(e, datum) }
-        unless found  # Because find_index doesn't exist in 1.8.6
+        index_of_schema = writers_schema.schemas.find_index do |schema|
+          # Optimize away expensive validation calls for the common null type
+          schema.type_sym == :null ? datum.nil? : Schema.validate(schema, datum)
+        end
+
+        unless index_of_schema
           raise AvroTypeError.new(writers_schema, datum)
         end
+
         encoder.write_long(index_of_schema)
         write_data(writers_schema.schemas[index_of_schema], datum, encoder)
       end

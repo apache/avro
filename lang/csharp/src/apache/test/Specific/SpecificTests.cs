@@ -18,7 +18,6 @@
 using System;
 using System.Collections;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using Avro.IO;
 using System.CodeDom;
@@ -246,6 +245,24 @@ namespace Avro.Test
             // deserialize
             var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
             Assert.AreEqual( EnumType.SECOND, rec2.enumType );
+        }
+
+        [Test]
+        public void TestEnumDefault()
+        {
+            //writerSchema has "SECOND"
+            Schema writerSchema = Schema.Parse("{ \"type\": \"record\", \"name\": \"EnumRecord\", \"fields\": [ { \"name\": \"enumType\", \"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [ \"DEFAULT\", \"FIRST\", \"SECOND\", \"THIRD\" ], \"default\": \"DEFAULT\" } } ] }");
+            Schema readerSchema = Schema.Parse("{ \"type\": \"record\", \"name\": \"EnumRecord\", \"fields\": [ { \"name\": \"enumType\", \"type\": { \"type\": \"enum\", \"name\": \"EnumType\", \"symbols\": [ \"DEFAULT\", \"FIRST\", \"THIRD\" ], \"default\": \"DEFAULT\" } } ] }");
+
+            //readerSchema is missing "SECOND" so should therefore be "DEFAULT"
+            var testRecord = new EnumRecord {enumType = EnumType.SECOND};
+
+            // serialize
+            var stream = serialize(writerSchema, testRecord);
+
+            // deserialize
+            var rec2 = deserialize<EnumRecord>(stream, writerSchema, readerSchema);
+            Assert.AreEqual(EnumType.DEFAULT, rec2.enumType);
         }
 
         [Test]
@@ -528,11 +545,12 @@ namespace Avro.Test
         }
     }
 
-    enum EnumType
+    public enum EnumType
     {
-        THIRD,
+        DEFAULT, //putting the default first here so there isn't an ordinal collision for testing defaults
         FIRST,
-        SECOND
+        SECOND,
+        THIRD,
     }
 
     class EnumRecord : ISpecificRecord
@@ -541,10 +559,28 @@ namespace Avro.Test
         public Schema Schema
         {
             get
-            {
-                return Schema.Parse("{\"type\":\"record\",\"name\":\"EnumRecord\",\"namespace\":\"Avro.Test\"," +
-                                        "\"fields\":[{\"name\":\"enumType\",\"type\": { \"type\": \"enum\", \"name\":" +
-                                        " \"EnumType\", \"symbols\": [\"THIRD\", \"FIRST\", \"SECOND\"]} }]}");
+            { 
+                return Schema.Parse(@"{
+   ""type"":""record"",
+   ""name"":""EnumRecord"",
+   ""namespace"":""Avro.Test"",
+   ""fields"":[
+      {
+         ""name"":""enumType"",
+         ""type"":{
+            ""type"":""enum"",
+            ""name"":""EnumType"",
+            ""symbols"":[
+               ""DEFAULT"",
+               ""FIRST"",
+               ""SECOND"",
+               ""THIRD""
+            ]
+         },
+         ""default"": ""DEFAULT""
+      }
+   ]
+}");
             }
         }
 

@@ -29,32 +29,32 @@ class AvroField extends AvroSchema
     /**
      * @var string fields name attribute name
      */
-    const FIELD_NAME_ATTR = 'name';
+    public const FIELD_NAME_ATTR = 'name';
 
     /**
      * @var string
      */
-    const DEFAULT_ATTR = 'default';
+    public const DEFAULT_ATTR = 'default';
 
     /**
      * @var string
      */
-    const ORDER_ATTR = 'order';
+    public const ORDER_ATTR = 'order';
 
     /**
      * @var string
      */
-    const ASC_SORT_ORDER = 'ascending';
+    public const ASC_SORT_ORDER = 'ascending';
 
     /**
      * @var string
      */
-    const DESC_SORT_ORDER = 'descending';
+    public const DESC_SORT_ORDER = 'descending';
 
     /**
      * @var string
      */
-    const IGNORE_SORT_ORDER = 'ignore';
+    public const IGNORE_SORT_ORDER = 'ignore';
 
     /**
      * @var array list of valid field sort order values
@@ -85,14 +85,20 @@ class AvroField extends AvroSchema
      *              defined in the AvroNamedSchemata instance
      */
     private $isTypeFromSchemata;
+    /**
+     * @var array|null
+     */
+    private $aliases;
 
     /**
-     * @param string $type
      * @param string $name
      * @param AvroSchema $schema
      * @param boolean $is_type_from_schemata
+     * @param $has_default
      * @param string $default
      * @param string $order
+     * @param array $aliases
+     * @throws AvroSchemaParseException
      * @todo Check validity of $default value
      * @todo Check validity of $order value
      */
@@ -102,13 +108,14 @@ class AvroField extends AvroSchema
         $is_type_from_schemata,
         $has_default,
         $default,
-        $order = null
+        $order = null,
+        $aliases = null
     ) {
         if (!AvroName::isWellFormedName($name)) {
             throw new AvroSchemaParseException('Field requires a "name" attribute');
         }
 
-        $this->type = $schema;
+        parent::__construct($schema);
         $this->isTypeFromSchemata = $is_type_from_schemata;
         $this->name = $name;
         $this->hasDefault = $has_default;
@@ -117,6 +124,8 @@ class AvroField extends AvroSchema
         }
         self::checkOrderValue($order);
         $this->order = $order;
+        self::hasValidAliases($aliases);
+        $this->aliases = $aliases;
     }
 
     /**
@@ -185,5 +194,15 @@ class AvroField extends AvroSchema
     public function hasDefaultValue()
     {
         return $this->hasDefault;
+    }
+
+    public function getAliases()
+    {
+        return $this->aliases;
+    }
+
+    public function hasAliases()
+    {
+        return $this->aliases !== null;
     }
 }

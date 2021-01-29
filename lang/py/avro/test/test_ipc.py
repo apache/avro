@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 
 ##
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -22,13 +24,9 @@ There are currently no IPC tests within python, in part because there are no
 servers yet available.
 """
 
-from __future__ import absolute_import, division, print_function
-
 import unittest
 
-# This test does import this code, to make sure it at least passes
-# compilation.
-from avro import ipc
+import avro.ipc
 
 
 class TestIPC(unittest.TestCase):
@@ -36,10 +34,10 @@ class TestIPC(unittest.TestCase):
         pass
 
     def test_server_with_path(self):
-        client_with_custom_path = ipc.HTTPTransceiver('apache.org', 80, '/service/article')
+        client_with_custom_path = avro.ipc.HTTPTransceiver('apache.org', 80, '/service/article')
         self.assertEqual('/service/article', client_with_custom_path.req_resource)
 
-        client_with_default_path = ipc.HTTPTransceiver('apache.org', 80)
+        client_with_default_path = avro.ipc.HTTPTransceiver('apache.org', 80)
         self.assertEqual('/', client_with_default_path.req_resource)
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,35 +18,20 @@
 
 """Command line utility for reading and writing Avro files."""
 
-from __future__ import absolute_import, division, print_function
-
 import csv
-import itertools
+import functools
 import json
+import optparse
 import os.path
 import sys
-from functools import partial
-from optparse import OptionGroup, OptionParser
 
 import avro
+import avro.datafile
+import avro.errors
+import avro.io
 import avro.schema
-from avro.datafile import DataFileReader, DataFileWriter
-from avro.io import DatumReader, DatumWriter
 
 _AVRO_DIR = os.path.abspath(os.path.dirname(avro.__file__))
-
-ifilter = getattr(itertools, 'ifilter', filter)
-imap = getattr(itertools, 'imap', map)
-
-try:
-    unicode
-except NameError:
-    unicode = str
-
-try:
-    long
-except NameError:
-    long = int
 
 
 def _version():
@@ -55,10 +40,6 @@ def _version():
 
 
 _AVRO_VERSION = _version()
-
-
-class AvroError(Exception):
-    pass
 
 
 def print_json(row):
@@ -112,11 +93,12 @@ def field_selector(fields):
 
 def print_avro(avro, opts):
     if opts.header and (opts.format != "csv"):
-        raise AvroError("--header applies only to CSV format")
+        raise avro.errors.UsageError("--header applies only to CSV format")
 
     # Apply filter first
     if opts.filter:
-        avro = ifilter(partial(record_match, opts.filter), avro)
+        predicate = functools.partial(record_match, opts.filter)
+        avro = (r for r in avro if predicate(r))
 
     for i in range(opts.skip):
         try:
@@ -126,7 +108,8 @@ def print_avro(avro, opts):
 
     fields = parse_fields(opts.fields)
     if fields:
-        avro = imap(field_selector(fields), avro)
+        fs = field_selector(fields)
+        avro = (fs(r) for r in avro)
 
     printer = select_printer(opts.format)
     for i, record in enumerate(avro):
@@ -145,13 +128,13 @@ def print_schema(avro):
 
 def cat(opts, args):
     if not args:
-        raise AvroError("No files to show")
+        raise avro.errors.UsageError("No files to show")
     for filename in args:
-        with DataFileReader(open(filename, 'rb'), DatumReader()) as avro:
+        with avro.datafile.DataFileReader(open(filename, 'rb'), avro.io.DatumReader()) as avro_:
             if opts.print_schema:
-                print_schema(avro)
+                print_schema(avro_)
                 continue
-            print_avro(avro, opts)
+            print_avro(avro_, opts)
 
 
 def _open(filename, mode):
@@ -180,10 +163,10 @@ def convert(value, field):
 
     return  {
         "int": int,
-        "long": long,
+        "long": int,
         "float": float,
         "double": float,
-        "string": unicode,
+        "string": str,
         "bytes": bytes,
         "boolean": bool,
         "null": lambda _: None,
@@ -221,11 +204,11 @@ def guess_input_type(files):
 
 def write(opts, files):
     if not opts.schema:
-        raise AvroError("No schema specified")
+        raise avro.errors.UsageError("No schema specified")
 
     input_type = opts.input_type or guess_input_type(files)
     if not input_type:
-        raise AvroError("Can't guess input file type (not .json or .csv)")
+        raise avro.errors.UsageError("Can't guess input file type (not .json or .csv)")
     iter_records = {"json": iter_json, "csv": iter_csv}[input_type]
 
     try:
@@ -233,9 +216,9 @@ def write(opts, files):
             schema = avro.schema.parse(schema_file.read())
         out = _open(opts.output, "wb")
     except (IOError, OSError) as e:
-        raise AvroError("Can't open file - %s" % e)
+        raise avro.errors.UsageError("Can't open file - %s" % e)
 
-    writer = DataFileWriter(getattr(out, 'buffer', out), DatumWriter(), schema)
+    writer = avro.datafile.DataFileWriter(getattr(out, 'buffer', out), avro.io.DatumWriter(), schema)
 
     for filename in (files or ["-"]):
         info = _open(filename, "rb")
@@ -245,15 +228,12 @@ def write(opts, files):
     writer.close()
 
 
-def main(argv=None):
-    argv = argv or sys.argv
-
-    parser = OptionParser(description="Display/write for Avro files",
-                          version=_AVRO_VERSION,
-                          usage="usage: %prog cat|write [options] FILE [FILE...]")
+def main(argv):
+    parser = optparse.OptionParser(description="Display/write for Avro files",
+                                   version=_AVRO_VERSION,
+                                   usage="usage: %prog cat|write [options] FILE [FILE...]")
     # cat options
-
-    cat_options = OptionGroup(parser, "cat options")
+    cat_options = optparse.OptionGroup(parser, "cat options")
     cat_options.add_option("-n", "--count", default=float("Infinity"),
                            help="number of records to print", type=int)
     cat_options.add_option("-s", "--skip", help="number of records to skip",
@@ -272,7 +252,7 @@ def main(argv=None):
     parser.add_option_group(cat_options)
 
     # write options
-    write_options = OptionGroup(parser, "write options")
+    write_options = optparse.OptionGroup(parser, "write options")
     write_options.add_option("--schema", help="schema file (required)")
     write_options.add_option("--input-type",
                              help="input file(s) type (json or csv)",
@@ -284,17 +264,16 @@ def main(argv=None):
     if len(args) < 1:
         parser.error("You much specify `cat` or `write`")  # Will exit
 
-    command = args.pop(0)
+    command_name = args.pop(0)
     try:
-        if command == "cat":
-            cat(opts, args)
-        elif command == "write":
-            write(opts, args)
-        else:
-            raise AvroError("Unknown command - %s" % command)
-    except AvroError as e:
-        parser.error("%s" % e)  # Will exit
+        command = {
+            "cat": cat,
+            "write": write,
+        }[command_name]
+    except KeyError:
+        raise avro.errors.UsageError("Unknown command - {!s}".format(command_name))
+    command(opts, args)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
