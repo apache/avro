@@ -624,6 +624,397 @@ fn test_equivalence_after_round_trip() {
     }
 }
 
+#[test]
+/// Test that a list of schemas whose definitions do not depend on each other produces the same
+/// result as parsing each element of the list individually
+fn test_parse_list_without_cross_deps() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "float"}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "B",
+        "type": "fixed",
+        "size": 16
+    }"#;
+    let schema_strs = [schema_str_1, schema_str_2];
+    let schemas = Schema::parse_list(&schema_strs).expect("Test failed");
+
+    for schema_str in &schema_strs {
+        let parsed = Schema::parse_str(schema_str).expect("Test failed");
+        assert!(schemas.contains(&parsed));
+    }
+}
+
+#[test]
+/// Test that the parsing of a list of schemas, whose definitions do depend on each other, can
+/// perform the necessary schema composition. This should work regardless of the order in which
+/// the schemas are input.
+/// However, the output order is guaranteed to be the same as the input order.
+fn test_parse_list_with_cross_deps_basic() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "float"}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "A"}
+        ]
+    }"#;
+    let schema_composite = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            { "name": "field_one",
+            "type": {
+                "name": "A",
+                "type": "record",
+                "fields": [
+                    {"name": "field_one", "type": "float"}
+                    ]
+                }
+            }
+        ]
+
+    }"#;
+    let schema_strs_first = [schema_str_1, schema_str_2];
+    let schema_strs_second = [schema_str_2, schema_str_1];
+    let schemas_first = Schema::parse_list(&schema_strs_first).expect("Test failed");
+    let schemas_second = Schema::parse_list(&schema_strs_second).expect("Test failed");
+
+    let parsed_1 = Schema::parse_str(&schema_str_1).expect("Test failed");
+    let parsed_2 = Schema::parse_str(&schema_composite).expect("Test failed");
+    assert_eq!(schemas_first, vec!(parsed_1.clone(), parsed_2.clone()));
+    assert_eq!(schemas_second, vec!(parsed_2, parsed_1));
+}
+
+#[test]
+/// Test that if a cycle of dependencies occurs in the input schema jsons, the algorithm terminates
+/// and returns an error. N.B. In the future, when recursive types are supported, this should be
+/// revisited.
+fn test_parse_list_recursive_type_error() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "B"}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "A"}
+        ]
+    }"#;
+    let schema_strs_first = [schema_str_1, schema_str_2];
+    let schema_strs_second = [schema_str_2, schema_str_1];
+    let _ = Schema::parse_list(&schema_strs_first).expect_err("Test failed");
+    let _ = Schema::parse_list(&schema_strs_second).expect_err("Test failed");
+}
+
+#[test]
+/// Test that schema composition resolves namespaces.
+fn test_parse_list_with_cross_deps_and_namespaces() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "namespace": "namespace",
+        "fields": [
+            {"name": "field_one", "type": "float"}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "namespace.A"}
+        ]
+    }"#;
+    let schema_composite = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            { "name": "field_one",
+            "type": {
+                "name": "A",
+                "type": "record",
+                "namespace": "namespace",
+                "fields": [
+                    {"name": "field_one", "type": "float"}
+                    ]
+                }
+            }
+        ]
+    }"#;
+    let schema_strs_first = [schema_str_1, schema_str_2];
+    let schema_strs_second = [schema_str_2, schema_str_1];
+    let schemas_first = Schema::parse_list(&schema_strs_first).expect("Test failed");
+    let schemas_second = Schema::parse_list(&schema_strs_second).expect("Test failed");
+
+    let parsed_1 = Schema::parse_str(&schema_str_1).expect("Test failed");
+    let parsed_2 = Schema::parse_str(&schema_composite).expect("Test failed");
+    assert_eq!(schemas_first, vec!(parsed_1.clone(), parsed_2.clone()));
+    assert_eq!(schemas_second, vec!(parsed_2, parsed_1));
+}
+
+#[test]
+/// Test that schema composition fails on namespace errors.
+fn test_parse_list_with_cross_deps_and_namespaces_error() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "namespace": "namespace",
+        "fields": [
+            {"name": "field_one", "type": "float"}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "A"}
+        ]
+    }"#;
+
+    let schema_strs_first = [schema_str_1, schema_str_2];
+    let schema_strs_second = [schema_str_2, schema_str_1];
+    let _ = Schema::parse_list(&schema_strs_first).expect_err("Test failed");
+    let _ = Schema::parse_list(&schema_strs_second).expect_err("Test failed");
+}
+
+/// Return all permutations of an input slice
+fn permutations<T>(list: &[T]) -> Vec<Vec<&T>> {
+    let size = list.len();
+    let indices = permutation_indices((0..size).collect());
+    let mut perms = Vec::new();
+    for perm_map in &indices {
+        let mut perm = Vec::new();
+        for ix in perm_map {
+            perm.push(&list[*ix]);
+        }
+        perms.push(perm)
+    }
+    perms
+}
+
+/// Return all permutations of the indices of a vector
+fn permutation_indices(indices: Vec<usize>) -> Vec<Vec<usize>> {
+    let size = indices.len();
+    let mut perms: Vec<Vec<usize>> = Vec::new();
+    if size == 1 {
+        perms.push(indices);
+        return perms;
+    }
+    for index in 0..size {
+        let (head, tail) = indices.split_at(index);
+        let (first, rest) = tail.split_at(1);
+        let mut head = head.to_vec();
+        head.extend_from_slice(rest);
+        for mut sub_index in permutation_indices(head) {
+            sub_index.insert(0, first[0]);
+            perms.push(sub_index);
+        }
+    }
+
+    perms
+}
+
+#[test]
+/// Test that a type that depends on more than one other type is parsed correctly when all
+/// definitions are passed in as a list. This should work regardless of the ordering of the list.
+fn test_parse_list_multiple_dependencies() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": ["null", "B", "C"]}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "B",
+        "type": "fixed",
+        "size": 16
+    }"#;
+    let schema_str_3 = r#"{
+        "name": "C",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "string"}
+        ]
+    }"#;
+    let schema_composite = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {
+                "name": "field_one",
+                "type":  [
+                    "null",
+                    {
+                        "name": "B",
+                        "type": "fixed",
+                        "size": 16
+                    },
+                    {
+                        "name": "C",
+                        "type": "record",
+                        "fields": [
+                            {"name": "field_one", "type": "string"}
+                        ]
+                    }
+                ]
+            }
+        ]
+    }"#;
+
+    let parsed = vec![
+        Schema::parse_str(schema_str_2).expect("Test failed"),
+        Schema::parse_str(schema_str_3).expect("Test failed"),
+        Schema::parse_str(schema_composite).expect("Test failed"),
+    ];
+    let schema_strs = vec![schema_str_1, schema_str_2, schema_str_3];
+    for schema_str_perm in permutations(&schema_strs) {
+        let schema_str_perm: Vec<&str> = schema_str_perm.iter().map(|s| **s).collect();
+        let schemas = Schema::parse_list(&schema_str_perm).expect("Test failed");
+        assert_eq!(schemas.len(), 3);
+        for parsed_schema in &parsed {
+            assert!(schemas.contains(parsed_schema));
+        }
+    }
+}
+
+#[test]
+/// Test that a type that is depended on by more than one other type is parsed correctly when all
+/// definitions are passed in as a list. This should work regardless of the ordering of the list.
+fn test_parse_list_shared_dependency() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": {"type": "array", "items": "C"}}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": {"type": "map", "values": "C"}}
+        ]
+    }"#;
+    let schema_str_3 = r#"{
+        "name": "C",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "string"}
+        ]
+    }"#;
+    let schema_composite_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            { "name": "field_one",
+              "type": {"type": "array",
+                       "items": {
+                            "name": "C",
+                            "type": "record",
+                            "fields": [
+                                {"name": "field_one", "type": "string"}
+                                ]
+                            }
+                      }
+            }
+        ]
+    }"#;
+    let schema_composite_2 = r#"{
+        "name": "B",
+        "type": "record",
+        "fields": [
+            { "name": "field_one",
+              "type": {"type": "map",
+                       "values": {
+                            "name": "C",
+                            "type":  "record",
+                            "fields": [
+                                {"name": "field_one", "type": "string"}
+                                ]
+                            }
+                      }
+                 }
+            ]
+    }"#;
+
+    let parsed = vec![
+        Schema::parse_str(schema_str_3).expect("Test failed"),
+        Schema::parse_str(schema_composite_1).expect("Test failed"),
+        Schema::parse_str(schema_composite_2).expect("Test failed"),
+    ];
+    let schema_strs = vec![schema_str_1, schema_str_2, schema_str_3];
+    for schema_str_perm in permutations(&schema_strs) {
+        let schema_str_perm: Vec<&str> = schema_str_perm.iter().map(|s| **s).collect();
+        let schemas = Schema::parse_list(&schema_str_perm).expect("Test failed");
+        assert_eq!(schemas.len(), 3);
+        for parsed_schema in &parsed {
+            assert!(schemas.contains(parsed_schema));
+        }
+    }
+}
+
+#[test]
+/// Test that trying to parse two schemas with the same fullname returns an Error
+fn test_name_collision_error() {
+    let schema_str_1 = r#"{
+        "name": "foo.A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "double"}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "A",
+        "type": "record",
+        "namespace": "foo",
+        "fields": [
+            {"name": "field_two", "type": "string"}
+        ]
+    }"#;
+
+    let _ = Schema::parse_list(&[schema_str_1, schema_str_2]).expect_err("Test failed");
+}
+
+#[test]
+/// Test that having the same name but different fullnames does not return an error
+fn test_namespace_prevents_collisions() {
+    let schema_str_1 = r#"{
+        "name": "A",
+        "type": "record",
+        "fields": [
+            {"name": "field_one", "type": "double"}
+        ]
+    }"#;
+    let schema_str_2 = r#"{
+        "name": "A",
+        "type": "record",
+        "namespace": "foo",
+        "fields": [
+            {"name": "field_two", "type": "string"}
+        ]
+    }"#;
+
+    let parsed = Schema::parse_list(&[schema_str_1, schema_str_2]).expect("Test failed");
+    let parsed_1 = Schema::parse_str(&schema_str_1).expect("Test failed");
+    let parsed_2 = Schema::parse_str(&schema_str_2).expect("Test failed");
+    assert_eq!(parsed, vec!(parsed_1, parsed_2));
+}
+
 // The fullname is determined in one of the following ways:
 //  * A name and namespace are both specified.  For example,
 //    one might use "name": "X", "namespace": "org.foo"

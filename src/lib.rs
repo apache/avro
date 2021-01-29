@@ -79,6 +79,38 @@
 //! println!("{:?}", schema);
 //! ```
 //!
+//! Additionally, a list of of definitions (which may depend on each other) can be given and all of
+//! them will be parsed into the corresponding schemas.
+//!
+//! ```
+//! use avro_rs::Schema;
+//!
+//! let raw_schema_1 = r#"{
+//!         "name": "A",
+//!         "type": "record",
+//!         "fields": [
+//!             {"name": "field_one", "type": "float"}
+//!         ]
+//!     }"#;
+//!
+//! // This definition depends on the definition of A above
+//! let raw_schema_2 = r#"{
+//!         "name": "B",
+//!         "type": "record",
+//!         "fields": [
+//!             {"name": "field_one", "type": "A"}
+//!         ]
+//!     }"#;
+//!
+//! // if the schemas are not valid, this function will return an error
+//! let schemas = Schema::parse_list(&[raw_schema_1, raw_schema_2]).unwrap();
+//!
+//! // schemas can be printed for debugging
+//! println!("{:?}", schemas);
+//! ```
+//! *N.B.* It is important to note that the composition of schema definitions requires schemas with names.
+//! For this reason, only schemas of type Record, Enum, and Fixed should be input into this function.
+//!
 //! The library provides also a programmatic interface to define schemas without encoding them in
 //! JSON (for advanced use), but we highly recommend the JSON interface. Please read the API
 //! reference in case you are interested.

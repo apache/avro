@@ -275,11 +275,11 @@ pub enum RecordFieldOrder {
 
 impl RecordField {
     /// Parse a `serde_json::Value` into a `RecordField`.
-    fn parse(field: &Map<String, Value>, position: usize) -> AvroResult<Self> {
+    fn parse(field: &Map<String, Value>, position: usize, parser: &mut Parser) -> AvroResult<Self> {
         let name = field.name().ok_or(Error::GetNameFieldFromRecord)?;
 
         // TODO: "type" = "<record name>"
-        let schema = Schema::parse_complex(field)?;
+        let schema = parser.parse_complex(field)?;
 
         let default = field.get("default").cloned();
 
@@ -384,25 +384,14 @@ fn parse_json_integer_for_decimal(value: &serde_json::Number) -> Result<DecimalM
     })
 }
 
+#[derive(Default)]
+struct Parser {
+    input_schemas: HashMap<String, Value>,
+    input_order: Vec<String>,
+    parsed_schemas: HashMap<String, Schema>,
+}
+
 impl Schema {
-    /// Create a `Schema` from a string representing a JSON Avro schema.
-    pub fn parse_str(input: &str) -> Result<Self, Error> {
-        // TODO: (#82) this should be a ParseSchemaError wrapping the JSON error
-        let value = serde_json::from_str(input).map_err(Error::ParseSchemaJson)?;
-        Self::parse(&value)
-    }
-
-    /// Create a `Schema` from a `serde_json::Value` representing a JSON Avro
-    /// schema.
-    pub fn parse(value: &Value) -> AvroResult<Self> {
-        match *value {
-            Value::String(ref t) => Schema::parse_primitive(t.as_str()),
-            Value::Object(ref data) => Schema::parse_complex(data),
-            Value::Array(ref data) => Schema::parse_union(data),
-            _ => Err(Error::ParseSchemaFromValidJson),
-        }
-    }
-
     /// Converts `self` into its [Parsing Canonical Form].
     ///
     /// [Parsing Canonical Form]:
@@ -427,10 +416,102 @@ impl Schema {
         }
     }
 
-    /// Parse a `serde_json::Value` representing a primitive Avro type into a
-    /// `Schema`.
-    fn parse_primitive(primitive: &str) -> AvroResult<Self> {
-        match primitive {
+    /// Create a `Schema` from a string representing a JSON Avro schema.
+    pub fn parse_str(input: &str) -> Result<Schema, Error> {
+        let mut parser = Parser::default();
+        parser.parse_str(input)
+    }
+
+    /// Create a array of `Schema`'s from a list of named JSON Avro schemas (Record, Enum, and
+    /// Fixed).
+    ///
+    /// It is allowed that the schemas have cross-dependencies; these will be resolved
+    /// during parsing.
+    ///
+    /// If two of the input schemas have the same fullname, an Error will be returned.
+    pub fn parse_list(input: &[&str]) -> Result<Vec<Schema>, Error> {
+        let mut input_schemas: HashMap<String, Value> = HashMap::with_capacity(input.len());
+        let mut input_order: Vec<String> = Vec::with_capacity(input.len());
+        for js in input {
+            let schema: Value = serde_json::from_str(js).map_err(Error::ParseSchemaJson)?;
+            if let Value::Object(inner) = &schema {
+                let fullname = Name::parse(&inner)?.fullname(None);
+                let previous_value = input_schemas.insert(fullname.clone(), schema);
+                if previous_value.is_some() {
+                    return Err(Error::NameCollision(fullname));
+                }
+                input_order.push(fullname);
+            } else {
+                return Err(Error::GetNameField);
+            }
+        }
+        let mut parser = Parser {
+            input_schemas,
+            input_order,
+            parsed_schemas: HashMap::with_capacity(input.len()),
+        };
+        parser.parse_list()
+    }
+
+    pub fn parse(value: &Value) -> AvroResult<Schema> {
+        let mut parser = Parser::default();
+        parser.parse(value)
+    }
+}
+
+impl Parser {
+    /// Create a `Schema` from a string representing a JSON Avro schema.
+    fn parse_str(&mut self, input: &str) -> Result<Schema, Error> {
+        // TODO: (#82) this should be a ParseSchemaError wrapping the JSON error
+        let value = serde_json::from_str(input).map_err(Error::ParseSchemaJson)?;
+        self.parse(&value)
+    }
+
+    /// Create an array of `Schema`'s from an iterator of JSON Avro schemas. It is allowed that
+    /// the schemas have cross-dependencies; these will be resolved during parsing.
+    fn parse_list(&mut self) -> Result<Vec<Schema>, Error> {
+        while !self.input_schemas.is_empty() {
+            let next_name = self
+                .input_schemas
+                .keys()
+                .next()
+                .expect("Input schemas unexpectedly empty")
+                .to_owned();
+            let (name, value) = self
+                .input_schemas
+                .remove_entry(&next_name)
+                .expect("Key unexpectedly missing");
+            let parsed = self.parse(&value)?;
+            self.parsed_schemas.insert(name, parsed);
+        }
+
+        let mut parsed_schemas = Vec::with_capacity(self.parsed_schemas.len());
+        for name in self.input_order.drain(0..) {
+            let parsed = self
+                .parsed_schemas
+                .remove(&name)
+                .expect("One of the input schemas was unexpectedly not parsed");
+            parsed_schemas.push(parsed);
+        }
+        Ok(parsed_schemas)
+    }
+
+    /// Create a `Schema` from a `serde_json::Value` representing a JSON Avro
+    /// schema.
+    fn parse(&mut self, value: &Value) -> AvroResult<Schema> {
+        match *value {
+            Value::String(ref t) => self.parse_known_schema(t.as_str()),
+            Value::Object(ref data) => self.parse_complex(data),
+            Value::Array(ref data) => self.parse_union(data),
+            _ => Err(Error::ParseSchemaFromValidJson),
+        }
+    }
+
+    /// Parse a `serde_json::Value` representing an Avro type whose Schema is known into a
+    /// `Schema`. A Schema for a `serde_json::Value` is known if it is primitive or has
+    /// been parsed previously by the parsed and stored in its map of parsed_schemas.
+    fn parse_known_schema(&mut self, name: &str) -> AvroResult<Schema> {
+        match name {
             "null" => Ok(Schema::Null),
             "boolean" => Ok(Schema::Boolean),
             "int" => Ok(Schema::Int),
@@ -439,8 +520,28 @@ impl Schema {
             "float" => Ok(Schema::Float),
             "bytes" => Ok(Schema::Bytes),
             "string" => Ok(Schema::String),
-            other => Err(Error::ParsePrimitive(other.into())),
+            _ => self.fetch_schema(name),
         }
+    }
+
+    /// Given a name, tries to retrieve the parsed schema from `parsed_schemas`.
+    /// If a parsed schema is not found, it checks if a json  with that name exists
+    /// in `input_schemas` and then parses it  (removing it from `input_schemas`)
+    /// and adds the parsed schema to `parsed_schemas`
+    ///
+    /// This method allows schemas definitions that depend on other types to
+    /// parse their dependencies (or look them up if already parsed).
+    fn fetch_schema(&mut self, name: &str) -> AvroResult<Schema> {
+        if let Some(parsed) = self.parsed_schemas.get(name) {
+            return Ok(parsed.clone());
+        }
+        let value = self
+            .input_schemas
+            .remove(name)
+            .ok_or_else(|| Error::ParsePrimitive(name.into()))?;
+        let parsed = self.parse(&value)?;
+        self.parsed_schemas.insert(name.to_string(), parsed.clone());
+        Ok(parsed)
     }
 
     fn parse_precision_and_scale(
@@ -469,14 +570,15 @@ impl Schema {
     ///
     /// Avro supports "recursive" definition of types.
     /// e.g: {"type": {"type": "string"}}
-    fn parse_complex(complex: &Map<String, Value>) -> AvroResult<Self> {
+    fn parse_complex(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         fn logical_verify_type(
             complex: &Map<String, Value>,
             kinds: &[SchemaKind],
+            parser: &mut Parser,
         ) -> AvroResult<Schema> {
             match complex.get("type") {
                 Some(value) => {
-                    let ty = Schema::parse(value)?;
+                    let ty = parser.parse(value)?;
                     if kinds
                         .iter()
                         .any(|&kind| SchemaKind::from(ty.clone()) == kind)
@@ -495,6 +597,7 @@ impl Schema {
                     let inner = Box::new(logical_verify_type(
                         complex,
                         &[SchemaKind::Fixed, SchemaKind::Bytes],
+                        self,
                     )?);
 
                     let (precision, scale) = Self::parse_precision_and_scale(complex)?;
@@ -506,31 +609,31 @@ impl Schema {
                     });
                 }
                 "uuid" => {
-                    logical_verify_type(complex, &[SchemaKind::String])?;
+                    logical_verify_type(complex, &[SchemaKind::String], self)?;
                     return Ok(Schema::Uuid);
                 }
                 "date" => {
-                    logical_verify_type(complex, &[SchemaKind::Int])?;
+                    logical_verify_type(complex, &[SchemaKind::Int], self)?;
                     return Ok(Schema::Date);
                 }
                 "time-millis" => {
-                    logical_verify_type(complex, &[SchemaKind::Int])?;
+                    logical_verify_type(complex, &[SchemaKind::Int], self)?;
                     return Ok(Schema::TimeMillis);
                 }
                 "time-micros" => {
-                    logical_verify_type(complex, &[SchemaKind::Long])?;
+                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
                     return Ok(Schema::TimeMicros);
                 }
                 "timestamp-millis" => {
-                    logical_verify_type(complex, &[SchemaKind::Long])?;
+                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
                     return Ok(Schema::TimestampMillis);
                 }
                 "timestamp-micros" => {
-                    logical_verify_type(complex, &[SchemaKind::Long])?;
+                    logical_verify_type(complex, &[SchemaKind::Long], self)?;
                     return Ok(Schema::TimestampMicros);
                 }
                 "duration" => {
-                    logical_verify_type(complex, &[SchemaKind::Fixed])?;
+                    logical_verify_type(complex, &[SchemaKind::Fixed], self)?;
                     return Ok(Schema::Duration);
                 }
                 // In this case, of an unknown logical type, we just pass through to the underlying
@@ -545,15 +648,15 @@ impl Schema {
         }
         match complex.get("type") {
             Some(&Value::String(ref t)) => match t.as_str() {
-                "record" => Schema::parse_record(complex),
-                "enum" => Schema::parse_enum(complex),
-                "array" => Schema::parse_array(complex),
-                "map" => Schema::parse_map(complex),
-                "fixed" => Schema::parse_fixed(complex),
-                other => Schema::parse_primitive(other),
+                "record" => self.parse_record(complex),
+                "enum" => Self::parse_enum(complex),
+                "array" => self.parse_array(complex),
+                "map" => self.parse_map(complex),
+                "fixed" => Self::parse_fixed(complex),
+                other => self.parse_known_schema(other),
             },
-            Some(&Value::Object(ref data)) => Schema::parse_complex(data),
-            Some(&Value::Array(ref variants)) => Schema::parse_union(variants),
+            Some(&Value::Object(ref data)) => self.parse_complex(data),
+            Some(&Value::Array(ref variants)) => self.parse_union(variants),
             Some(unknown) => Err(Error::GetComplexType(unknown.clone())),
             None => Err(Error::GetComplexTypeField),
         }
@@ -561,7 +664,7 @@ impl Schema {
 
     /// Parse a `serde_json::Value` representing a Avro record type into a
     /// `Schema`.
-    fn parse_record(complex: &Map<String, Value>) -> AvroResult<Self> {
+    fn parse_record(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
         let mut lookup = HashMap::new();
@@ -575,7 +678,7 @@ impl Schema {
                     .iter()
                     .filter_map(|field| field.as_object())
                     .enumerate()
-                    .map(|(position, field)| RecordField::parse(field, position))
+                    .map(|(position, field)| RecordField::parse(field, position, self))
                     .collect::<Result<_, _>>()
             })?;
 
@@ -593,7 +696,7 @@ impl Schema {
 
     /// Parse a `serde_json::Value` representing a Avro enum type into a
     /// `Schema`.
-    fn parse_enum(complex: &Map<String, Value>) -> AvroResult<Self> {
+    fn parse_enum(complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
         let symbols = complex
@@ -617,37 +720,37 @@ impl Schema {
 
     /// Parse a `serde_json::Value` representing a Avro array type into a
     /// `Schema`.
-    fn parse_array(complex: &Map<String, Value>) -> AvroResult<Self> {
+    fn parse_array(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         complex
             .get("items")
             .ok_or(Error::GetArrayItemsField)
-            .and_then(|items| Schema::parse(items))
+            .and_then(|items| self.parse(items))
             .map(|schema| Schema::Array(Box::new(schema)))
     }
 
     /// Parse a `serde_json::Value` representing a Avro map type into a
     /// `Schema`.
-    fn parse_map(complex: &Map<String, Value>) -> AvroResult<Self> {
+    fn parse_map(&mut self, complex: &Map<String, Value>) -> AvroResult<Schema> {
         complex
             .get("values")
             .ok_or(Error::GetMapValuesField)
-            .and_then(|items| Schema::parse(items))
+            .and_then(|items| self.parse(items))
             .map(|schema| Schema::Map(Box::new(schema)))
     }
 
     /// Parse a `serde_json::Value` representing a Avro union type into a
     /// `Schema`.
-    fn parse_union(items: &[Value]) -> AvroResult<Self> {
+    fn parse_union(&mut self, items: &[Value]) -> AvroResult<Schema> {
         items
             .iter()
-            .map(Schema::parse)
+            .map(|v| self.parse(v))
             .collect::<Result<Vec<_>, _>>()
             .and_then(|schemas| Ok(Schema::Union(UnionSchema::new(schemas)?)))
     }
 
     /// Parse a `serde_json::Value` representing a Avro fixed type into a
     /// `Schema`.
-    fn parse_fixed(complex: &Map<String, Value>) -> AvroResult<Self> {
+    fn parse_fixed(complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
         let size = complex
