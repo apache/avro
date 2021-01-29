@@ -17,7 +17,7 @@
 require 'test_help'
 
 class TestSchemaValidator < Test::Unit::TestCase
-  def validate!(schema, value, options=nil)
+  def validate!(schema, value, options = {})
     Avro::SchemaValidator.validate!(schema, value, options)
   end
 
@@ -194,6 +194,12 @@ class TestSchemaValidator < Test::Unit::TestCase
     schema = hash_to_schema(type: 'record', name: 'name', fields: [{ type: 'null', name: 'sub' }])
 
     assert_valid_schema(schema, [{ 'sub' => nil }], [{ 'sub' => 1 }])
+  end
+
+  def test_validate_record_with_symbol_keys
+    schema = hash_to_schema(type: 'record', name: 'name', fields: [{ type: 'int', name: 'sub' }])
+
+    assert_valid_schema(schema, [{ sub: 1 }], [{ sub: '1' }])
   end
 
   def test_validate_shallow_record

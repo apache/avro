@@ -54,7 +54,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>${source-plugin.version}</version>
           <configuration>
             <excludes>
               <exclude>META-INF/LICENSE</exclude>

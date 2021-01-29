@@ -15,6 +15,9 @@
 # limitations under the License.
 module Avro
   module SchemaCompatibility
+    INT_COERCIBLE_TYPES_SYM = [:long, :float, :double].freeze
+    LONG_COERCIBLE_TYPES_SYM = [:float, :double].freeze
+
     # Perform a full, recursive check that a datum written using the writers_schema
     # can be read using the readers_schema.
     def self.can_read?(writers_schema, readers_schema)
@@ -31,6 +34,9 @@ module Avro
     # be read using the readers_schema. This check includes matching the types,
     # including schema promotion, and matching the full name (including aliases) for named types.
     def self.match_schemas(writers_schema, readers_schema)
+      # Bypass deeper checks if the schemas are the same Ruby objects
+      return true if writers_schema.equal?(readers_schema)
+
       w_type = writers_schema.type_sym
       r_type = readers_schema.type_sym
 
@@ -62,9 +68,9 @@ module Avro
       end
 
       # Handle schema promotion
-      if w_type == :int && [:long, :float, :double].include?(r_type)
+      if w_type == :int && INT_COERCIBLE_TYPES_SYM.include?(r_type)
         return true
-      elsif w_type == :long && [:float, :double].include?(r_type)
+      elsif w_type == :long && LONG_COERCIBLE_TYPES_SYM.include?(r_type)
         return true
       elsif w_type == :float && r_type == :double
         return true

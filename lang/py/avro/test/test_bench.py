@@ -19,6 +19,7 @@
 
 import argparse
 import json
+import platform
 import random
 import string
 import tempfile
@@ -43,18 +44,18 @@ SCHEMA = avro.schema.parse(json.dumps({
 READER = avro.io.DatumReader(SCHEMA)
 WRITER = avro.io.DatumWriter(SCHEMA)
 NUMBER_OF_TESTS = 10000
-MAX_WRITE_SECONDS = 1
-MAX_READ_SECONDS = 1
+MAX_WRITE_SECONDS = 3 if platform.python_implementation() == 'PyPy' else 1
+MAX_READ_SECONDS = 3 if platform.python_implementation() == 'PyPy' else 1
 
 
 class TestBench(unittest.TestCase):
     def test_minimum_speed(self):
         with tempfile.NamedTemporaryFile(suffix='avr') as temp:
             pass
-        self.assertTrue(time_writes(temp.name, NUMBER_OF_TESTS) < MAX_WRITE_SECONDS,
+        self.assertLess(time_writes(temp.name, NUMBER_OF_TESTS), MAX_WRITE_SECONDS,
                         'Took longer than {} second(s) to write the test file with {} values.'
                         .format(MAX_WRITE_SECONDS, NUMBER_OF_TESTS))
-        self.assertTrue(time_read(temp.name) < MAX_READ_SECONDS,
+        self.assertLess(time_read(temp.name), MAX_READ_SECONDS,
                         'Took longer than {} second(s) to read the test file with {} values.'
                         .format(MAX_READ_SECONDS, NUMBER_OF_TESTS))
 
