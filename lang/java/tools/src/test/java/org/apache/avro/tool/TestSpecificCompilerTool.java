@@ -219,7 +219,8 @@ public class TestSpecificCompilerTool {
    * file content and comparing provides nice diffs via JUnit when failures occur.
    */
   private static String readFile(File file) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+    BufferedReader reader = new BufferedReader(
+        new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
     StringBuilder sb = new StringBuilder();
     String line = null;
     boolean first = true;
