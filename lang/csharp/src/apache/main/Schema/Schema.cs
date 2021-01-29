@@ -166,7 +166,7 @@ namespace Avro
                 if (null != ps) return ps;
 
                 NamedSchema schema = null;
-                if (names.TryGetValue(value, null, encspace, out schema)) return schema;
+                if (names.TryGetValue(value, null, encspace, null, out schema)) return schema;
 
                 throw new SchemaParseException($"Undefined name: {value} at '{jtok.Path}'");
             }
