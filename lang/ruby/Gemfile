@@ -21,7 +21,7 @@ gem 'snappy'
 gem 'zstd-ruby'
 gem 'test-unit'
 # parallel 1.20.0 requires Ruby 2.5+
-gem 'parallel', '<= 1.19.2'
+gem 'parallel', '<= 1.20.2'
 # webrick is no longer included with Ruby 3.0+
 gem 'webrick'
 
