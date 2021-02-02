@@ -95,7 +95,7 @@ public class SpecificCompiler {
   protected static final int MAX_FIELD_PARAMETER_UNIT_COUNT = JVM_METHOD_ARG_LIMIT - 1;
 
   public enum FieldVisibility {
-    PUBLIC, PUBLIC_DEPRECATED, PRIVATE
+    PUBLIC, PRIVATE
   }
 
   void addLogicalTypeConversions(SpecificData specificData) {
@@ -199,25 +199,17 @@ public class SpecificCompiler {
   }
 
   /**
-   * @return true if the record fields should be marked as deprecated
-   */
-  public boolean deprecatedFields() {
-    return (this.fieldVisibility == FieldVisibility.PUBLIC_DEPRECATED);
-  }
-
-  /**
    * @return true if the record fields should be public
    */
   public boolean publicFields() {
-    return (this.fieldVisibility == FieldVisibility.PUBLIC
-        || this.fieldVisibility == FieldVisibility.PUBLIC_DEPRECATED);
+    return this.fieldVisibility == FieldVisibility.PUBLIC;
   }
 
   /**
    * @return true if the record fields should be private
    */
   public boolean privateFields() {
-    return (this.fieldVisibility == FieldVisibility.PRIVATE);
+    return this.fieldVisibility == FieldVisibility.PRIVATE;
   }
 
   /**
