@@ -29,10 +29,10 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroMap implements AvroPrimitive {
   public static final String NAME = "MAP";
-  private static final AvroMap element = new AvroMap();
+  private static final AvroMap ELEMENT = new AvroMap();
 
   public static AvroMap create() {
-    return element;
+    return ELEMENT;
   }
 
   private AvroMap() {

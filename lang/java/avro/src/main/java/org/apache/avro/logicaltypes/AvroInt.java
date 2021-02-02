@@ -27,15 +27,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroInt implements AvroPrimitive {
   public static final String NAME = "INT";
-  private static final AvroInt element = new AvroInt();
-  private static final Schema schema = Schema.create(Type.INT);
+  private static final AvroInt ELEMENT = new AvroInt();
+  private static final Schema SCHEMA = Schema.create(Type.INT);
 
   private AvroInt() {
     super();
   }
 
   public static AvroInt create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -80,7 +80,7 @@ public class AvroInt implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

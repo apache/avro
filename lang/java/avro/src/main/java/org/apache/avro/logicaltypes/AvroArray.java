@@ -27,14 +27,14 @@ import org.apache.avro.Schema.Type;
 public class AvroArray implements AvroPrimitive {
   public static final String NAME = "ARRAY";
   public static final String TYPENAME = NAME;
-  private static final AvroArray element = new AvroArray();
+  private static final AvroArray ELEMENT = new AvroArray();
 
   public AvroArray() {
     super();
   }
 
   public static AvroArray create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override

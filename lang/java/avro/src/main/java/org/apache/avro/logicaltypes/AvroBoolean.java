@@ -26,15 +26,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroBoolean implements AvroPrimitive {
   public static final String NAME = "BOOLEAN";
-  private static final AvroBoolean element = new AvroBoolean();
-  private static final Schema schema = Schema.create(Type.BOOLEAN);
+  private static final AvroBoolean ELEMENT = new AvroBoolean();
+  private static final Schema SCHEMA = Schema.create(Type.BOOLEAN);
 
   private AvroBoolean() {
     super();
   }
 
   public static AvroBoolean create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -84,7 +84,7 @@ public class AvroBoolean implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

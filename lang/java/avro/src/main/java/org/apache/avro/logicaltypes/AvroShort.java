@@ -29,11 +29,11 @@ import org.apache.avro.Schema.Type;
 public class AvroShort extends LogicalType implements AvroPrimitive {
   public static final String NAME = "SHORT";
   public static final String TYPENAME = NAME;
-  private static final AvroShort element = new AvroShort();
-  private static final Schema schema;
+  private static final AvroShort ELEMENT = new AvroShort();
+  private static final Schema SCHEMA;
 
   static {
-    schema = element.addToSchema(Schema.create(Type.INT));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.INT));
   }
 
   private AvroShort() {
@@ -41,7 +41,7 @@ public class AvroShort extends LogicalType implements AvroPrimitive {
   }
 
   public static AvroShort create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -97,7 +97,7 @@ public class AvroShort extends LogicalType implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

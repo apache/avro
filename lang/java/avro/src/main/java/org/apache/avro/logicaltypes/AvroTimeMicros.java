@@ -34,14 +34,14 @@ import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
  *
  */
 public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
-  private static final Schema schema;
-  private static final AvroTimeMicros element = new AvroTimeMicros();
+  private static final Schema SCHEMA;
+  private static final AvroTimeMicros ELEMENT = new AvroTimeMicros();
   public static final String NAME = "TIMEMICROS";
   public static final String TYPENAME = LogicalTypes.TIME_MICROS;
   private static final TimeMicrosConversion CONVERTER = new TimeMicrosConversion();
 
   static {
-    schema = element.addToSchema(Schema.create(Type.LONG));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.LONG));
   }
 
   private AvroTimeMicros() {
@@ -49,7 +49,7 @@ public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
   }
 
   public static AvroTimeMicros create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -97,7 +97,7 @@ public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

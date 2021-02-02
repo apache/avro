@@ -27,15 +27,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroDouble implements AvroPrimitive {
   public static final String NAME = "DOUBLE";
-  private static final AvroDouble element = new AvroDouble();
-  private static final Schema schema = Schema.create(Type.DOUBLE);
+  private static final AvroDouble ELEMENT = new AvroDouble();
+  private static final Schema SCHEMA = Schema.create(Type.DOUBLE);
 
   private AvroDouble() {
     super();
   }
 
   public static AvroDouble create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -80,7 +80,7 @@ public class AvroDouble implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

@@ -35,10 +35,10 @@ import org.apache.avro.data.TimeConversions.LocalTimestampMillisConversion;
  *
  */
 public class AvroLocalTimestampMillis extends LocalTimestampMillis implements AvroPrimitive {
-  private static final Schema schema;
-  private static final AvroLocalTimestampMillis element = new AvroLocalTimestampMillis();
+  private static final Schema SCHEMA;
+  private static final AvroLocalTimestampMillis ELEMENT = new AvroLocalTimestampMillis();
   static {
-    schema = element.addToSchema(Schema.create(Type.LONG));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.LONG));
   }
   public static final String NAME = "LOCALTIMESTAMPMILLIS";
   public static final String TYPENAME = LogicalTypes.LOCAL_TIMESTAMP_MILLIS;
@@ -49,7 +49,7 @@ public class AvroLocalTimestampMillis extends LocalTimestampMillis implements Av
   }
 
   public static AvroLocalTimestampMillis create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -98,7 +98,7 @@ public class AvroLocalTimestampMillis extends LocalTimestampMillis implements Av
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

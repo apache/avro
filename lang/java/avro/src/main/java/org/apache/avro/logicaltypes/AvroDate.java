@@ -36,12 +36,12 @@ import org.apache.avro.data.TimeConversions.DateConversion;
 public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
   public static final String NAME = "DATE";
   public static final String TYPENAME = LogicalTypes.DATE;
-  private static final Schema schema;
-  private static final AvroDate element = new AvroDate();
+  private static final Schema SCHEMA;
+  private static final AvroDate ELEMENT = new AvroDate();
   private static final DateConversion CONVERTER = new DateConversion();
 
   static {
-    schema = element.addToSchema(Schema.create(Type.INT));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.INT));
   }
 
   private AvroDate() {
@@ -49,7 +49,7 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
   }
 
   public static AvroDate create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -99,7 +99,7 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

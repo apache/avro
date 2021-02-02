@@ -27,15 +27,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroFloat implements AvroPrimitive {
   public static final String NAME = "FLOAT";
-  private static final AvroFloat element = new AvroFloat();
-  private static final Schema schema = Schema.create(Type.FLOAT);
+  private static final AvroFloat ELEMENT = new AvroFloat();
+  private static final Schema SCHEMA = Schema.create(Type.FLOAT);
 
   private AvroFloat() {
     super();
   }
 
   public static AvroFloat create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -80,7 +80,7 @@ public class AvroFloat implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

@@ -288,7 +288,7 @@ public class TestGenericLogicalTypes {
     checkCopy(value, model.deepCopy(schema, value), false);
 
     // test nested in a record
-    Schema recordSchema = Schema.createRecord("X", "", "test", false);
+    Schema recordSchema = schema.createRecord("X", "", "test", false);
     List<Schema.Field> fields = new ArrayList<>();
     fields.add(new Schema.Field("x", schema, "", null));
     recordSchema.setFields(fields);
@@ -299,12 +299,12 @@ public class TestGenericLogicalTypes {
     checkCopy(record, model.deepCopy(recordSchema, record), true);
 
     // test nested in array
-    Schema arraySchema = Schema.createArray(schema);
+    Schema arraySchema = schema.createArray(schema);
     ArrayList array = new ArrayList(Collections.singletonList(value));
     checkCopy(array, model.deepCopy(arraySchema, array), true);
 
     // test record nested in array
-    Schema recordArraySchema = Schema.createArray(recordSchema);
+    Schema recordArraySchema = schema.createArray(recordSchema);
     ArrayList recordArray = new ArrayList(Collections.singletonList(record));
     checkCopy(recordArray, model.deepCopy(recordArraySchema, recordArray), true);
   }

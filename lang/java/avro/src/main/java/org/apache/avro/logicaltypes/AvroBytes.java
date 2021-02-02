@@ -29,15 +29,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroBytes implements AvroPrimitive {
   public static final String NAME = "BYTES";
-  private static final AvroBytes element = new AvroBytes();
-  private static final Schema schema = Schema.create(Type.BYTES);
+  private static final AvroBytes ELEMENT = new AvroBytes();
+  private static final Schema SCHEMA = Schema.create(Type.BYTES);
 
   private AvroBytes() {
     super();
   }
 
   public static AvroBytes create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -74,7 +74,7 @@ public class AvroBytes implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

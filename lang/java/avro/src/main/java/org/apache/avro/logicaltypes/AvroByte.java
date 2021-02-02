@@ -31,11 +31,11 @@ import org.apache.avro.Schema.Type;
 public class AvroByte extends LogicalType implements AvroPrimitive {
   public static final String NAME = "BYTE";
   public static final String TYPENAME = NAME;
-  private static final AvroByte element = new AvroByte();
-  private static final Schema schema;
+  private static final AvroByte ELEMENT = new AvroByte();
+  private static final Schema SCHEMA;
 
   static {
-    schema = element.addToSchema(Schema.create(Type.INT));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.INT));
   }
 
   private AvroByte() {
@@ -43,7 +43,7 @@ public class AvroByte extends LogicalType implements AvroPrimitive {
   }
 
   public static AvroByte create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -86,7 +86,7 @@ public class AvroByte extends LogicalType implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

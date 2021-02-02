@@ -27,13 +27,13 @@ import org.apache.avro.Schema.Type;
  *
  */
 public class AvroUUID extends LogicalType implements AvroPrimitive {
-  private static final Schema schema;
-  private static final AvroUUID element = new AvroUUID();
+  private static final Schema SCHEMA;
+  private static final AvroUUID ELEMENT = new AvroUUID();
   public static final String NAME = "UUID";
   public static final String TYPENAME = LogicalTypes.UUID;
 
   static {
-    schema = element.addToSchema(Schema.create(Type.STRING));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.STRING));
   }
 
   private AvroUUID() {
@@ -41,7 +41,7 @@ public class AvroUUID extends LogicalType implements AvroPrimitive {
   }
 
   public static AvroUUID create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -87,7 +87,7 @@ public class AvroUUID extends LogicalType implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

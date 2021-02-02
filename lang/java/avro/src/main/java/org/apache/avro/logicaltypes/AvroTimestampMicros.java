@@ -33,10 +33,10 @@ import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
  *
  */
 public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitive {
-  private static final Schema schema;
-  private static final AvroTimestampMicros element = new AvroTimestampMicros();
+  private static final Schema SCHEMA;
+  private static final AvroTimestampMicros ELEMENT = new AvroTimestampMicros();
   static {
-    schema = element.addToSchema(Schema.create(Type.LONG));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.LONG));
   }
   public static final String NAME = "TIMESTAMPMICROS";
   public static final String TYPENAME = LogicalTypes.TIMESTAMP_MICROS;
@@ -52,7 +52,7 @@ public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitiv
   }
 
   public static AvroTimestampMicros create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -70,7 +70,7 @@ public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitiv
     } else if (value instanceof CharSequence) {
       return convertToRawType(Instant.parse((CharSequence) value));
     } else if (value instanceof Instant) {
-      return CONVERTER.toLong((Instant) value, schema, this);
+      return CONVERTER.toLong((Instant) value, SCHEMA, this);
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a TimestampMicros");
@@ -94,7 +94,7 @@ public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitiv
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

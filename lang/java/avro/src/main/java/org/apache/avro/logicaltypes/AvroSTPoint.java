@@ -28,11 +28,11 @@ import org.apache.avro.Schema.Type;
 public class AvroSTPoint extends LogicalType implements AvroPrimitive {
   public static final String NAME = "ST_POINT";
   public static final String TYPENAME = NAME;
-  private static final AvroSTPoint element = new AvroSTPoint();
-  private static final Schema schema;
+  private static final AvroSTPoint ELEMENT = new AvroSTPoint();
+  private static final Schema SCHEMA;
 
   static {
-    schema = element.addToSchema(Schema.create(Type.STRING));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.STRING));
   }
 
   private AvroSTPoint() {
@@ -40,7 +40,7 @@ public class AvroSTPoint extends LogicalType implements AvroPrimitive {
   }
 
   public static AvroSTPoint create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -86,7 +86,7 @@ public class AvroSTPoint extends LogicalType implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

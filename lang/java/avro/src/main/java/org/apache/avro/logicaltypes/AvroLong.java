@@ -27,15 +27,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroLong implements AvroPrimitive {
   public static final String NAME = "LONG";
-  private static final AvroLong element = new AvroLong();
-  private static final Schema schema = Schema.create(Type.LONG);
+  private static final AvroLong ELEMENT = new AvroLong();
+  private static final Schema SCHEMA = Schema.create(Type.LONG);
 
   private AvroLong() {
     super();
   }
 
   public static AvroLong create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -80,7 +80,7 @@ public class AvroLong implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

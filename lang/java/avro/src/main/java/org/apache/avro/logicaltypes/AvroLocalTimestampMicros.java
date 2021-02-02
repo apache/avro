@@ -35,10 +35,10 @@ import org.apache.avro.data.TimeConversions.LocalTimestampMicrosConversion;
  *
  */
 public class AvroLocalTimestampMicros extends LocalTimestampMicros implements AvroPrimitive {
-  private static final Schema schema;
-  private static final AvroLocalTimestampMicros element = new AvroLocalTimestampMicros();
+  private static final Schema SCHEMA;
+  private static final AvroLocalTimestampMicros ELEMENT = new AvroLocalTimestampMicros();
   static {
-    schema = element.addToSchema(Schema.create(Type.LONG));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.LONG));
   }
   public static final String NAME = "LOCALTIMESTAMPMICROS";
   public static final String TYPENAME = LogicalTypes.LOCAL_TIMESTAMP_MICROS;
@@ -54,7 +54,7 @@ public class AvroLocalTimestampMicros extends LocalTimestampMicros implements Av
   }
 
   public static AvroLocalTimestampMicros create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -98,7 +98,7 @@ public class AvroLocalTimestampMicros extends LocalTimestampMicros implements Av
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

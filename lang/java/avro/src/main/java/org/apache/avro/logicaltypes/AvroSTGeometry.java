@@ -28,11 +28,11 @@ import org.apache.avro.Schema.Type;
 public class AvroSTGeometry extends LogicalType implements AvroPrimitive {
   public static final String NAME = "ST_GEOMETRY";
   public static final String TYPENAME = NAME;
-  private static final AvroSTGeometry element = new AvroSTGeometry();
-  private static final Schema schema;
+  private static final AvroSTGeometry ELEMENT = new AvroSTGeometry();
+  private static final Schema SCHEMA;
 
   static {
-    schema = element.addToSchema(Schema.create(Type.STRING));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.STRING));
   }
 
   private AvroSTGeometry() {
@@ -40,7 +40,7 @@ public class AvroSTGeometry extends LogicalType implements AvroPrimitive {
   }
 
   public static AvroSTGeometry create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -86,7 +86,7 @@ public class AvroSTGeometry extends LogicalType implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

@@ -28,14 +28,14 @@ import org.apache.avro.generic.IndexedRecord;
  */
 public class AvroRecord implements AvroDatatype {
   public static final String NAME = "RECORD";
-  static final AvroRecord element = new AvroRecord();
+  static final AvroRecord ELEMENT = new AvroRecord();
 
   private AvroRecord() {
     super();
   }
 
   public static AvroRecord create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override

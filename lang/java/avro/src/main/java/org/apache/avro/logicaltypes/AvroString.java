@@ -25,16 +25,16 @@ import org.apache.avro.Schema.Type;
  *
  */
 public class AvroString implements AvroPrimitive {
-  private static Schema schema = Schema.create(Type.STRING);
+  private static Schema SCHEMA = Schema.create(Type.STRING);
   public static final String NAME = "STRING";
-  private static final AvroString element = new AvroString();
+  private static final AvroString ELEMENT = new AvroString();
 
   private AvroString() {
     super();
   }
 
   public static AvroString create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -71,7 +71,7 @@ public class AvroString implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override

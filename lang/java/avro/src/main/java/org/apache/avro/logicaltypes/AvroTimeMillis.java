@@ -34,14 +34,14 @@ import org.apache.avro.data.TimeConversions.TimeMillisConversion;
  *
  */
 public class AvroTimeMillis extends TimeMillis implements AvroPrimitive {
-  private static final Schema schema;
-  private static final AvroTimeMillis element = new AvroTimeMillis();
+  private static final Schema SCHEMA;
+  private static final AvroTimeMillis ELEMENT = new AvroTimeMillis();
   public static final String NAME = "TIME";
   public static final String TYPENAME = LogicalTypes.TIME_MILLIS;
   private static final TimeMillisConversion CONVERTER = new TimeMillisConversion();
 
   static {
-    schema = element.addToSchema(Schema.create(Type.INT));
+    SCHEMA = ELEMENT.addToSchema(Schema.create(Type.INT));
   }
 
   private AvroTimeMillis() {
@@ -49,7 +49,7 @@ public class AvroTimeMillis extends TimeMillis implements AvroPrimitive {
   }
 
   public static AvroTimeMillis create() {
-    return element;
+    return ELEMENT;
   }
 
   @Override
@@ -97,7 +97,7 @@ public class AvroTimeMillis extends TimeMillis implements AvroPrimitive {
 
   @Override
   public Schema getRecommendedSchema() {
-    return schema;
+    return SCHEMA;
   }
 
   @Override
