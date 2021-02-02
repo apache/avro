@@ -224,7 +224,7 @@ public abstract class Schema extends JsonProperties implements Serializable {
 
   /**
    * @param schema of the field
-   * @return The AvroDatatype object useful for conversions
+   * @return The AvroDatatype object useful for conversions or null if unknown
    */
   private static AvroDatatype getBackingDataType(Schema schema) {
     switch (schema.getType()) {

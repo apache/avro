@@ -35,8 +35,8 @@ import org.apache.avro.data.TimeConversions.LocalTimestampMicrosConversion;
  *
  */
 public class AvroLocalTimestampMicros extends LocalTimestampMicros implements AvroPrimitive {
-  private static Schema schema;
-  private static AvroLocalTimestampMicros element = new AvroLocalTimestampMicros();
+  private static final Schema schema;
+  private static final AvroLocalTimestampMicros element = new AvroLocalTimestampMicros();
   static {
     schema = element.addToSchema(Schema.create(Type.LONG));
   }
@@ -44,7 +44,7 @@ public class AvroLocalTimestampMicros extends LocalTimestampMicros implements Av
   public static final String TYPENAME = LogicalTypes.LOCAL_TIMESTAMP_MICROS;
   public static final LocalTimestampMicrosConversion CONVERTER = new LocalTimestampMicrosConversion();
 
-  public AvroLocalTimestampMicros() {
+  private AvroLocalTimestampMicros() {
     super();
   }
 
@@ -89,18 +89,6 @@ public class AvroLocalTimestampMicros extends LocalTimestampMicros implements Av
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a LocalDateTime");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof Long) {
-        LocalDateTime d = convertToLogicalType(value);
-        b.append('\"');
-        b.append(d.toString());
-        b.append('\"');
-      }
-    }
   }
 
   @Override

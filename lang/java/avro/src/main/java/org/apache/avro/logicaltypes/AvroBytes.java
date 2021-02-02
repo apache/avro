@@ -29,29 +29,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroBytes implements AvroPrimitive {
   public static final String NAME = "BYTES";
-  private static AvroBytes element = new AvroBytes();
-  private static Schema schema = Schema.create(Type.BYTES);
+  private static final AvroBytes element = new AvroBytes();
+  private static final Schema schema = Schema.create(Type.BYTES);
 
-  public AvroBytes() {
+  private AvroBytes() {
     super();
   }
 
   public static AvroBytes create() {
     return element;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
   }
 
   @Override
@@ -79,15 +65,6 @@ public class AvroBytes implements AvroPrimitive {
   @Override
   public ByteBuffer convertToLogicalType(Object value) {
     return (ByteBuffer) value;
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(value.toString());
-      b.append('\"');
-    }
   }
 
   @Override

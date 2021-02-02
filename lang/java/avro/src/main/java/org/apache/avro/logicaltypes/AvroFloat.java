@@ -27,29 +27,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroFloat implements AvroPrimitive {
   public static final String NAME = "FLOAT";
-  private static AvroFloat element = new AvroFloat();
-  private static Schema schema = Schema.create(Type.FLOAT);
+  private static final AvroFloat element = new AvroFloat();
+  private static final Schema schema = Schema.create(Type.FLOAT);
 
-  public AvroFloat() {
+  private AvroFloat() {
     super();
   }
 
   public static AvroFloat create() {
     return element;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
   }
 
   @Override
@@ -85,13 +71,6 @@ public class AvroFloat implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Float");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append(value.toString());
-    }
   }
 
   @Override

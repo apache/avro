@@ -27,29 +27,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroDouble implements AvroPrimitive {
   public static final String NAME = "DOUBLE";
-  private static AvroDouble element = new AvroDouble();
-  private static Schema schema = Schema.create(Type.DOUBLE);
+  private static final AvroDouble element = new AvroDouble();
+  private static final Schema schema = Schema.create(Type.DOUBLE);
 
-  public AvroDouble() {
+  private AvroDouble() {
     super();
   }
 
   public static AvroDouble create() {
     return element;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
   }
 
   @Override
@@ -85,13 +71,6 @@ public class AvroDouble implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Double");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append(value.toString());
-    }
   }
 
   @Override

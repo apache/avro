@@ -36,15 +36,15 @@ import org.apache.avro.data.TimeConversions.DateConversion;
 public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
   public static final String NAME = "DATE";
   public static final String TYPENAME = LogicalTypes.DATE;
-  private static Schema schema;
-  private static AvroDate element = new AvroDate();
+  private static final Schema schema;
+  private static final AvroDate element = new AvroDate();
   private static final DateConversion CONVERTER = new DateConversion();
 
   static {
     schema = element.addToSchema(Schema.create(Type.INT));
   }
 
-  public AvroDate() {
+  private AvroDate() {
     super();
   }
 
@@ -90,18 +90,6 @@ public class AvroDate extends LogicalTypes.Date implements AvroPrimitive {
     }
     throw new AvroTypeException("Cannot convert a value of type \"" + value.getClass().getSimpleName()
         + "\" into a LocalDate, value must be an INTEGER");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof Integer || value instanceof Long) {
-        LocalDate date = convertToLogicalType(value);
-        b.append('\"');
-        b.append(date.toString());
-        b.append('\"');
-      }
-    }
   }
 
   @Override

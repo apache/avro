@@ -34,7 +34,7 @@ public class AvroFixed implements AvroPrimitive {
   private int length;
   private Schema schema;
 
-  public AvroFixed(int length) {
+  private AvroFixed(int length) {
     super();
     this.length = length;
   }
@@ -63,7 +63,7 @@ public class AvroFixed implements AvroPrimitive {
 
   @Override
   public int hashCode() {
-    return 1;
+    return Integer.valueOf(length).hashCode();
   }
 
   @Override
@@ -95,15 +95,6 @@ public class AvroFixed implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a GenericFixed");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(value.toString());
-      b.append('\"');
-    }
   }
 
   @Override

@@ -34,8 +34,8 @@ import org.apache.avro.data.TimeConversions.TimeMillisConversion;
  *
  */
 public class AvroTimeMillis extends TimeMillis implements AvroPrimitive {
-  private static Schema schema;
-  private static AvroTimeMillis element = new AvroTimeMillis();
+  private static final Schema schema;
+  private static final AvroTimeMillis element = new AvroTimeMillis();
   public static final String NAME = "TIME";
   public static final String TYPENAME = LogicalTypes.TIME_MILLIS;
   private static final TimeMillisConversion CONVERTER = new TimeMillisConversion();
@@ -44,7 +44,7 @@ public class AvroTimeMillis extends TimeMillis implements AvroPrimitive {
     schema = element.addToSchema(Schema.create(Type.INT));
   }
 
-  public AvroTimeMillis() {
+  private AvroTimeMillis() {
     super();
   }
 
@@ -88,18 +88,6 @@ public class AvroTimeMillis extends TimeMillis implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Time");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof Integer) {
-        LocalTime time = LocalTime.ofSecondOfDay((Integer) value);
-        b.append('\"');
-        b.append(time.toString());
-        b.append('\"');
-      }
-    }
   }
 
   @Override

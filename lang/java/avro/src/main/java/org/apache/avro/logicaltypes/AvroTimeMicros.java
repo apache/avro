@@ -34,8 +34,8 @@ import org.apache.avro.data.TimeConversions.TimeMicrosConversion;
  *
  */
 public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
-  private static Schema schema;
-  private static AvroTimeMicros element = new AvroTimeMicros();
+  private static final Schema schema;
+  private static final AvroTimeMicros element = new AvroTimeMicros();
   public static final String NAME = "TIMEMICROS";
   public static final String TYPENAME = LogicalTypes.TIME_MICROS;
   private static final TimeMicrosConversion CONVERTER = new TimeMicrosConversion();
@@ -44,17 +44,12 @@ public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
     schema = element.addToSchema(Schema.create(Type.LONG));
   }
 
-  public AvroTimeMicros() {
+  private AvroTimeMicros() {
     super();
   }
 
   public static AvroTimeMicros create() {
     return element;
-  }
-
-  @Override
-  public Schema addToSchema(Schema schema) {
-    return super.addToSchema(schema);
   }
 
   @Override
@@ -93,18 +88,6 @@ public class AvroTimeMicros extends TimeMicros implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a TimeMicros");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof Long) {
-        LocalTime time = CONVERTER.fromLong((Long) value, schema, null);
-        b.append('\"');
-        b.append(time.toString());
-        b.append('\"');
-      }
-    }
   }
 
   @Override

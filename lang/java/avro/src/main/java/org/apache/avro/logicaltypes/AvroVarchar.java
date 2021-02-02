@@ -28,9 +28,9 @@ import org.apache.avro.Schema.Type;
 public class AvroVarchar extends LogicalTypeWithLength {
   public static final String NAME = "VARCHAR";
   public static final String TYPENAME = NAME;
-  private Schema schema;
+  private final Schema schema;
 
-  public AvroVarchar(int length) {
+  private AvroVarchar(int length) {
     super(TYPENAME, length);
     schema = addToSchema(Schema.create(Type.STRING));
   }
@@ -46,15 +46,6 @@ public class AvroVarchar extends LogicalTypeWithLength {
 
   public static AvroVarchar create(int length) {
     return new AvroVarchar(length);
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(AvroType.encodeJson(value.toString()));
-      b.append('\"');
-    }
   }
 
   @Override

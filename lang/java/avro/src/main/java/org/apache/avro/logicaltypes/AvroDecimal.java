@@ -93,21 +93,6 @@ public class AvroDecimal extends Decimal implements AvroPrimitive {
   }
 
   @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof ByteBuffer) {
-        ByteBuffer v = (ByteBuffer) value;
-        if (v.capacity() != 0) {
-          v.position(0);
-          BigDecimal n = DECIMAL_CONVERTER.fromBytes(v, null, this);
-          v.position(0);
-          b.append(n.toString());
-        }
-      }
-    }
-  }
-
-  @Override
   public Type getBackingType() {
     return Type.BYTES;
   }

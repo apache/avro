@@ -28,8 +28,8 @@ import org.apache.avro.Schema.Type;
 public class AvroNCLOB extends LogicalType implements AvroPrimitive {
   public static final String NAME = "NCLOB";
   public static final String TYPENAME = NAME;
-  private static AvroNCLOB element = new AvroNCLOB();
-  private static Schema schema;
+  private static final AvroNCLOB element = new AvroNCLOB();
+  private static final Schema schema;
 
   static {
     schema = element.addToSchema(Schema.create(Type.STRING));
@@ -44,11 +44,6 @@ public class AvroNCLOB extends LogicalType implements AvroPrimitive {
   }
 
   @Override
-  public Schema addToSchema(Schema schema) {
-    return super.addToSchema(schema);
-  }
-
-  @Override
   public void validate(Schema schema) {
     super.validate(schema);
     // validate the type
@@ -58,31 +53,8 @@ public class AvroNCLOB extends LogicalType implements AvroPrimitive {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
-  }
-
-  @Override
   public String toString() {
     return NAME;
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(AvroType.encodeJson(value.toString()));
-      b.append('\"');
-    }
   }
 
   @Override

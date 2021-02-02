@@ -27,28 +27,14 @@ import org.apache.avro.Schema.Type;
 public class AvroString implements AvroPrimitive {
   private static Schema schema = Schema.create(Type.STRING);
   public static final String NAME = "STRING";
-  private static AvroString element = new AvroString();
+  private static final AvroString element = new AvroString();
 
-  public AvroString() {
+  private AvroString() {
     super();
   }
 
   public static AvroString create() {
     return element;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
   }
 
   @Override
@@ -75,15 +61,6 @@ public class AvroString implements AvroPrimitive {
       return (CharSequence) value;
     } else {
       return value.toString();
-    }
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(AvroType.encodeJson(value.toString()));
-      b.append('\"');
     }
   }
 

@@ -34,8 +34,8 @@ import org.apache.avro.data.TimeConversions.TimestampMillisConversion;
  *
  */
 public class AvroTimestampMillis extends TimestampMillis implements AvroPrimitive {
-  private static Schema schema;
-  private static AvroTimestampMillis element = new AvroTimestampMillis();
+  private static final Schema schema;
+  private static final AvroTimestampMillis element = new AvroTimestampMillis();
   static {
     schema = element.addToSchema(Schema.create(Type.LONG));
   }
@@ -43,7 +43,7 @@ public class AvroTimestampMillis extends TimestampMillis implements AvroPrimitiv
   public static final String TYPENAME = LogicalTypes.TIMESTAMP_MILLIS;
   public static final TimestampMillisConversion CONVERTER = new TimestampMillisConversion();
 
-  public AvroTimestampMillis() {
+  private AvroTimestampMillis() {
     super();
   }
 
@@ -86,18 +86,6 @@ public class AvroTimestampMillis extends TimestampMillis implements AvroPrimitiv
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Timestamp");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof Long) {
-        Date d = new Date((Long) value);
-        b.append('\"');
-        b.append(d.toString());
-        b.append('\"');
-      }
-    }
   }
 
   @Override

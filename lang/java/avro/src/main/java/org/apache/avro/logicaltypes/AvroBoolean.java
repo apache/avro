@@ -26,29 +26,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroBoolean implements AvroPrimitive {
   public static final String NAME = "BOOLEAN";
-  private static AvroBoolean element = new AvroBoolean();
-  private static Schema schema = Schema.create(Type.BOOLEAN);
+  private static final AvroBoolean element = new AvroBoolean();
+  private static final Schema schema = Schema.create(Type.BOOLEAN);
 
-  public AvroBoolean() {
+  private AvroBoolean() {
     super();
   }
 
   public static AvroBoolean create() {
     return element;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
   }
 
   @Override
@@ -89,13 +75,6 @@ public class AvroBoolean implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Boolean");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append(value.toString());
-    }
   }
 
   @Override

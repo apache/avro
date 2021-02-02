@@ -27,29 +27,15 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroLong implements AvroPrimitive {
   public static final String NAME = "LONG";
-  private static AvroLong element = new AvroLong();
-  private static Schema schema = Schema.create(Type.LONG);
+  private static final AvroLong element = new AvroLong();
+  private static final Schema schema = Schema.create(Type.LONG);
 
-  public AvroLong() {
+  private AvroLong() {
     super();
   }
 
   public static AvroLong create() {
     return element;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
   }
 
   @Override
@@ -85,13 +71,6 @@ public class AvroLong implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Long");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append(value.toString());
-    }
   }
 
   @Override

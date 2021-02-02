@@ -28,16 +28,6 @@ import org.apache.avro.Schema.Type;
 public interface AvroDatatype {
 
   /**
-   * The primary use case for this function is for writing record values to the
-   * console output for debugging
-   * 
-   * @param buffer is the StringBuffer the object value's string representation
-   *               should be added
-   * @param value  for this field
-   */
-  void toString(StringBuffer buffer, Object value);
-
-  /**
    * Converts an input value into the object used by the backing data type. For
    * example the data type is a timestamp-millis, which is backed by a Long. This
    * method will convert any suitable input, e.g. Long, Instant,... into a long
@@ -54,7 +44,7 @@ public interface AvroDatatype {
   Type getBackingType();
 
   /**
-   * @return a default schema for this data type
+   * @return a default schema for this data type for primitives, null otherwise
    */
   Schema getRecommendedSchema();
 

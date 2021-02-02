@@ -21,7 +21,7 @@ import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 
 public abstract class LogicalTypeWithLength extends LogicalType implements AvroPrimitive {
-  static final String LENGTH_PROP = "length";
+  public static final String LENGTH_PROP = "length";
 
   private int length;
 

@@ -33,8 +33,8 @@ import org.apache.avro.data.TimeConversions.TimestampMicrosConversion;
  *
  */
 public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitive {
-  private static Schema schema;
-  private static AvroTimestampMicros element = new AvroTimestampMicros();
+  private static final Schema schema;
+  private static final AvroTimestampMicros element = new AvroTimestampMicros();
   static {
     schema = element.addToSchema(Schema.create(Type.LONG));
   }
@@ -42,7 +42,7 @@ public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitiv
   public static final String TYPENAME = LogicalTypes.TIMESTAMP_MICROS;
   private static final TimestampMicrosConversion CONVERTER = new TimestampMicrosConversion();
 
-  public AvroTimestampMicros() {
+  private AvroTimestampMicros() {
     super();
   }
 
@@ -85,18 +85,6 @@ public class AvroTimestampMicros extends TimestampMicros implements AvroPrimitiv
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a TimestampMicros");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof Long) {
-        Instant d = convertToLogicalType(value);
-        b.append('\"');
-        b.append(d.toString());
-        b.append('\"');
-      }
-    }
   }
 
   @Override

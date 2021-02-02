@@ -29,7 +29,7 @@ import org.apache.avro.generic.GenericEnumSymbol;
  */
 public class AvroEnum implements AvroPrimitive {
   public static final String NAME = "ENUM";
-  private Schema schema;
+  private final Schema schema;
 
   public AvroEnum(Schema schema) {
     super();
@@ -46,12 +46,23 @@ public class AvroEnum implements AvroPrimitive {
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
-    return true;
+    if (schema != null) {
+      if (((AvroEnum) o).getRecommendedSchema() != null) {
+        return schema.equals(((AvroEnum) o).getRecommendedSchema());
+      }
+    } else if (((AvroEnum) o).getRecommendedSchema() == null) {
+      return true;
+    }
+    return false;
   }
 
   @Override
   public int hashCode() {
-    return 1;
+    if (schema != null) {
+      return schema.hashCode();
+    } else {
+      return 1;
+    }
   }
 
   @Override
@@ -79,15 +90,6 @@ public class AvroEnum implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a GenericEnumSymbol");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(value.toString());
-      b.append('\"');
-    }
   }
 
   @Override

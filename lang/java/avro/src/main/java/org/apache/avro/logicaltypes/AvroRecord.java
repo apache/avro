@@ -19,9 +19,7 @@ package org.apache.avro.logicaltypes;
 
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
-import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.generic.GenericData.Record;
 import org.apache.avro.generic.IndexedRecord;
 
 /**
@@ -30,42 +28,14 @@ import org.apache.avro.generic.IndexedRecord;
  */
 public class AvroRecord implements AvroDatatype {
   public static final String NAME = "RECORD";
-  static AvroRecord element = new AvroRecord();
+  static final AvroRecord element = new AvroRecord();
 
-  public AvroRecord() {
+  private AvroRecord() {
     super();
   }
 
   public static AvroRecord create() {
     return element;
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value instanceof Record) {
-      Record r = (Record) value;
-      Schema schema = r.getSchema();
-      b.append('{');
-      boolean first = true;
-      for (Field f : schema.getFields()) {
-        Object v = r.get(f.pos());
-        if (v != null) {
-          AvroDatatype datatype = AvroType.getBaseSchema(f.schema()).getDataType();
-          if (datatype != null) {
-            if (!first) {
-              b.append(',');
-            } else {
-              first = false;
-            }
-            b.append('\"');
-            b.append(f.name());
-            b.append("\":");
-            datatype.toString(b, v);
-          }
-        }
-      }
-      b.append('}');
-    }
   }
 
   @Override

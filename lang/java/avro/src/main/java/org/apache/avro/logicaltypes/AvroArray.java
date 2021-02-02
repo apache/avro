@@ -23,12 +23,11 @@ import java.util.List;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.generic.GenericData.Record;
 
 public class AvroArray implements AvroPrimitive {
   public static final String NAME = "ARRAY";
   public static final String TYPENAME = NAME;
-  private static AvroArray element = new AvroArray();
+  private static final AvroArray element = new AvroArray();
 
   public AvroArray() {
     super();
@@ -63,43 +62,6 @@ public class AvroArray implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a Collection");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      if (value instanceof List) {
-        List<?> l = (List<?>) value;
-        if (l.size() > 0) {
-          b.append('[');
-          boolean first = true;
-          Object row1 = l.get(0);
-          if (row1 instanceof Record) {
-            AvroRecord recorddatatype = AvroRecord.create();
-            for (Object o : l) {
-              if (!first) {
-                b.append(',');
-              } else {
-                first = false;
-              }
-              recorddatatype.toString(b, o);
-            }
-          } else {
-            // This is not a perfect implementation as it renders the base Avro datatype
-            // only, e.g ByteBuffer and not BigDecimal
-            for (Object o : l) {
-              if (!first) {
-                b.append(',');
-              } else {
-                first = false;
-              }
-              b.append(o.toString());
-            }
-          }
-          b.append(']');
-        }
-      }
-    }
   }
 
   @Override

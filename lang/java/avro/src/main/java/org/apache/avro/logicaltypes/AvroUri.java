@@ -28,24 +28,19 @@ import org.apache.avro.Schema.Type;
 public class AvroUri extends LogicalType implements AvroPrimitive {
   public static final String NAME = "URI";
   public static final String TYPENAME = NAME;
-  private static AvroUri element = new AvroUri();
-  private static Schema schema;
+  private static final AvroUri element = new AvroUri();
+  private static final Schema schema;
 
   static {
     schema = element.addToSchema(Schema.create(Type.STRING));
   }
 
-  public AvroUri() {
+  private AvroUri() {
     super(TYPENAME);
   }
 
   public static AvroUri create() {
     return element;
-  }
-
-  @Override
-  public Schema addToSchema(Schema schema) {
-    return super.addToSchema(schema);
   }
 
   @Override
@@ -58,31 +53,8 @@ public class AvroUri extends LogicalType implements AvroPrimitive {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
-  }
-
-  @Override
   public String toString() {
     return NAME;
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(value.toString());
-      b.append('\"');
-    }
   }
 
   @Override

@@ -29,13 +29,13 @@ import org.apache.avro.Schema.Type;
  */
 public class AvroMap implements AvroPrimitive {
   public static final String NAME = "MAP";
-  private static AvroMap element = new AvroMap();
+  private static final AvroMap element = new AvroMap();
 
   public static AvroMap create() {
     return element;
   }
 
-  public AvroMap() {
+  private AvroMap() {
     super();
   }
 
@@ -46,11 +46,6 @@ public class AvroMap implements AvroPrimitive {
     if (o == null || getClass() != o.getClass())
       return false;
     return true;
-  }
-
-  @Override
-  public int hashCode() {
-    return 1;
   }
 
   @Override
@@ -78,15 +73,6 @@ public class AvroMap implements AvroPrimitive {
     }
     throw new AvroTypeException(
         "Cannot convert a value of type \"" + value.getClass().getSimpleName() + "\" into a GenericFixed");
-  }
-
-  @Override
-  public void toString(StringBuffer b, Object value) {
-    if (value != null) {
-      b.append('\"');
-      b.append(value.toString());
-      b.append('\"');
-    }
   }
 
   @Override
