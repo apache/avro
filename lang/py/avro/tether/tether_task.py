@@ -51,7 +51,7 @@ inputProtocol = avro.protocol.parse(prototxt)
 taskschema = inputProtocol.types_dict["TaskType"]
 # Mypy cannot statically type check a dynamically constructed named tuple.
 # Since InputProtocol.avpr is hard-coded here, we can hard-code the symbols.
-_ttype = collections.namedtuple("_tasktype", ("MAP", "REDUCE"))
+_ttype = collections.namedtuple("_ttype", ("MAP", "REDUCE"))
 TaskType = _ttype(*taskschema.symbols)
 
 pfile = os.path.split(__file__)[0] + os.sep + "OutputProtocol.avpr"
