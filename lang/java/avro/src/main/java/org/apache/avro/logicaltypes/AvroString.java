@@ -25,7 +25,7 @@ import org.apache.avro.Schema.Type;
  *
  */
 public class AvroString implements AvroPrimitive {
-  private static Schema SCHEMA = Schema.create(Type.STRING);
+  private static final Schema SCHEMA = Schema.create(Type.STRING);
   public static final String NAME = "STRING";
   private static final AvroString ELEMENT = new AvroString();
 
