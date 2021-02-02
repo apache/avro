@@ -18,7 +18,6 @@
 package org.apache.avro;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -45,23 +44,32 @@ public class TestDataFileReader {
   @Test
   // regression test for bug AVRO-2286
   public void testForLeakingFileDescriptors() throws IOException {
-    Path emptyFile = Files.createTempFile("empty", ".avro");
-    Files.deleteIfExists(emptyFile);
-    Files.createFile(emptyFile);
+    StringBuilder sb = new StringBuilder();
+    int maxTries = 3;
+    for (int tries = 0; tries < maxTries; tries++) {
+      Path emptyFile = Files.createTempFile("empty", ".avro");
+      Files.deleteIfExists(emptyFile);
+      Files.createFile(emptyFile);
 
-    long openFilesBeforeOperation = getNumberOfOpenFileDescriptors();
-    try (DataFileReader<Object> reader = new DataFileReader<>(emptyFile.toFile(), new GenericDatumReader<>())) {
-      fail("Reading on empty file is supposed to fail.");
-    } catch (IOException e) {
-      // everything going as supposed to
+      long openFilesBeforeOperation = getNumberOfOpenFileDescriptors();
+      try (DataFileReader<Object> reader = new DataFileReader<>(emptyFile.toFile(), new GenericDatumReader<>())) {
+        fail("Reading on empty file is supposed to fail.");
+      } catch (IOException e) {
+        // everything going as supposed to
+      }
+      Files.delete(emptyFile);
+
+      long openFilesAfterOperation = getNumberOfOpenFileDescriptors();
+      if (openFilesBeforeOperation == openFilesAfterOperation)
+        return;
+
+      // Sometimes the number of file descriptors is off due to other processes or
+      // garbage
+      // collection. We note each inconsistency and retry.
+      sb.append(openFilesBeforeOperation).append("!=").append(openFilesAfterOperation).append(",");
     }
-    Files.delete(emptyFile);
-
-    long openFilesAfterOperation = getNumberOfOpenFileDescriptors();
-
-    // Sometimes we have less open files because of a GC run during the test cycle.
-    assertTrue("File descriptor leaked from new DataFileReader() (expected:" + openFilesBeforeOperation + " actual:"
-        + openFilesAfterOperation + ")", openFilesBeforeOperation >= openFilesAfterOperation);
+    fail("File descriptor leaked from new DataFileReader() over " + maxTries + " tries: ("
+        + sb.substring(0, sb.length() - 1) + ")");
   }
 
   private long getNumberOfOpenFileDescriptors() {
