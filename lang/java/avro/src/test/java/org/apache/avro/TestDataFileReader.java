@@ -148,8 +148,8 @@ public class TestDataFileReader {
     // magic header check. This potentially happens with a defective input stream
     // where a -1 value is unexpectedly returned from a read.
     Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
-      .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
-        + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+        .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
+            + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
     File f = Files.createTempFile("testInputStreamEOF", ".avro").toFile();
     try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
       w.create(legacySchema, f);
