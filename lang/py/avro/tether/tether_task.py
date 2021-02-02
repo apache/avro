@@ -54,7 +54,7 @@ if (inputProtocol is None):
     taskschema = inputProtocol.types_dict["TaskType"]
     # Mypy cannot statically type check a dynamically constructed named tuple.
     # Since InputProtocol.avpr is hard-coded here, we can hard-code the symbols.
-    _ttype = collections.namedtuple("_tasktype", ("MAP", "REDUCE"))
+    _ttype = collections.namedtuple("_ttype", ("MAP", "REDUCE"))
     TaskType = _ttype(*taskschema.symbols)
 
 if (outputProtocol is None):
