@@ -111,7 +111,7 @@ static {
 #foreach ($annotation in $this.javaAnnotations($field))
   @$annotation
 #end
-  #if (${this.deprecatedFields()})@Deprecated#end #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
+  #if (${this.publicFields()})public#elseif (${this.privateFields()})private#end ${this.javaUnbox($field.schema(), false)} ${this.mangle($field.name(), $schema.isError())};
 #end
 #if ($schema.isError())
 

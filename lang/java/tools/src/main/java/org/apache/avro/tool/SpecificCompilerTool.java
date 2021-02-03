@@ -56,7 +56,7 @@ public class SpecificCompilerTool implements Tool {
       System.err.println(" outputdir - directory to write generated java");
       System.err.println(" -encoding <outputencoding> - set the encoding of " + "output file(s)");
       System.err.println(" -string - use java.lang.String instead of Utf8");
-      System.err.println(" -fieldVisibility [private|public|public_deprecated]- use either and default private");
+      System.err.println(" -fieldVisibility [private|public] - use either and default private");
       System.err.println(" -noSetters - do not generate setters");
       System.err
           .println(" -addExtraOptionalGetters - generate extra getters with this format: 'getOptional<FieldName>'");
