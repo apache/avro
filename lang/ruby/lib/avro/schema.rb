@@ -38,6 +38,8 @@ module Avro
 
     DEFAULT_VALIDATE_OPTIONS = { recursive: true, encoded: false }.freeze
 
+    DECIMAL_LOGICAL_TYPE = 'decimal'.freeze
+
     def self.parse(json_string)
       real_parse(MultiJson.load(json_string), {})
     end
@@ -467,6 +469,11 @@ module Avro
         hsh = super
         hsh.size == 1 ? type : hsh
       end
+
+      def match_schema?(schema)
+        return type_sym == schema.type_sym
+        # TODO: eventually this could handle schema promotion for primitive schemas too
+      end
     end
 
     class BytesSchema < PrimitiveSchema
@@ -484,6 +491,19 @@ module Avro
         avro['precision'] = precision if precision
         avro['scale'] = scale if scale
         avro
+      end
+
+      def match_schema?(schema)
+        if type_sym == schema.type_sym
+          return false if logical_type != schema.logical_type
+
+          if logical_type == DECIMAL_LOGICAL_TYPE
+            return false if precision != schema.precision
+            return false if (scale || 0) != (schema.scale || 0)
+          end
+        end
+
+        return super
       end
     end
 

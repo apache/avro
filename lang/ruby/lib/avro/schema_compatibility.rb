@@ -46,7 +46,7 @@ module Avro
       end
 
       if w_type == r_type
-        return true if Schema::PRIMITIVE_TYPES_SYM.include?(r_type)
+        return readers_schema.match_schema?(writers_schema) if Schema::PRIMITIVE_TYPES_SYM.include?(r_type)
 
         case r_type
         when :record

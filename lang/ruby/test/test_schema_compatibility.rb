@@ -292,6 +292,29 @@ class TestSchemaCompatibility < Test::Unit::TestCase
     assert_false(can_read?(writer_schema, reader_schema))
   end
 
+  def test_bytes_decimal
+    bytes_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes2_decimal_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":4}')
+    bytes_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+    bytes2_decimal_no_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4}')
+    bytes_decimal_zero_scale_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"decimal", "precision":4, "scale":0}')
+    bytes_unknown_logical_type_schema = Avro::Schema.
+      parse('{"type":"bytes", "logicalType":"unknown"}')
+
+    assert_false(can_read?(bytes_schema, bytes_decimal_schema))
+    assert_false(can_read?(bytes_decimal_schema, bytes_unknown_logical_type_schema))
+    assert_false(can_read?(bytes_decimal_schema, bytes_decimal_no_scale_schema))
+    assert_false(can_read?(bytes_decimal_schema, bytes_decimal_zero_scale_schema))
+    assert_true(can_read?(bytes_decimal_zero_scale_schema, bytes_decimal_no_scale_schema))
+    assert_true(can_read?(bytes_decimal_schema, bytes2_decimal_schema))
+    assert_true(can_read?(bytes2_decimal_no_scale_schema, bytes_decimal_no_scale_schema))
+  end
+
   # Tests from lang/java/avro/src/test/java/org/apache/avro/io/parsing/TestResolvingGrammarGenerator2.java
 
   def point_2d_schema
