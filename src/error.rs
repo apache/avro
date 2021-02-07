@@ -256,6 +256,12 @@ pub enum Error {
     #[error("Unable to parse `symbols` in enum")]
     GetEnumSymbols,
 
+    #[error("Invalid enum symbol name {0}")]
+    EnumSymbolName(String),
+
+    #[error("Duplicate enum symbol {0}")]
+    EnumSymbolDuplicate(String),
+
     #[error("No `items` in array")]
     GetArrayItemsField,
 

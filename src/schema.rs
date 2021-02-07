@@ -1,13 +1,25 @@
 //! Logic for parsing and interacting with schemas in Avro format.
 use crate::{error::Error, types, util::MapHelper, AvroResult};
 use digest::Digest;
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde::{
     ser::{SerializeMap, SerializeSeq},
     Deserialize, Serialize, Serializer,
 };
 use serde_json::{Map, Value};
-use std::{borrow::Cow, collections::HashMap, convert::TryInto, fmt, str::FromStr};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+    convert::TryInto,
+    fmt,
+    str::FromStr,
+};
 use strum_macros::{EnumDiscriminants, EnumString};
+
+lazy_static! {
+    static ref ENUM_SYMBOL_NAME: Regex = Regex::new(r"[A-Za-z_][A-Za-z0-9_]*").unwrap();
+}
 
 /// Represents an Avro schema fingerprint
 /// More information about Avro schema fingerprints can be found in the
@@ -699,7 +711,7 @@ impl Parser {
     fn parse_enum(complex: &Map<String, Value>) -> AvroResult<Schema> {
         let name = Name::parse(complex)?;
 
-        let symbols = complex
+        let symbols: Vec<String> = complex
             .get("symbols")
             .and_then(|v| v.as_array())
             .ok_or(Error::GetEnumSymbolsField)
@@ -710,6 +722,21 @@ impl Parser {
                     .collect::<Option<_>>()
                     .ok_or(Error::GetEnumSymbols)
             })?;
+
+        let mut existing_symbols: HashSet<&String> = HashSet::with_capacity(symbols.len());
+        for symbol in symbols.iter() {
+            // Ensure enum symbol names match [A-Za-z_][A-Za-z0-9_]*
+            if !ENUM_SYMBOL_NAME.is_match(symbol) {
+                return Err(Error::EnumSymbolName(symbol.to_string()));
+            }
+
+            // Ensure there are no duplicate symbols
+            if existing_symbols.contains(&symbol) {
+                return Err(Error::EnumSymbolDuplicate(symbol.to_string()));
+            }
+
+            existing_symbols.insert(symbol);
+        }
 
         Ok(Schema::Enum {
             name,
@@ -1167,6 +1194,24 @@ mod tests {
         };
 
         assert_eq!(expected, schema);
+    }
+
+    #[test]
+    fn test_enum_schema_duplicate() {
+        // Duplicate "diamonds"
+        let schema = Schema::parse_str(
+            r#"{"type": "enum", "name": "Suit", "symbols": ["diamonds", "spades", "clubs", "diamonds"]}"#,
+        );
+        assert!(schema.is_err());
+    }
+
+    #[test]
+    fn test_enum_schema_name() {
+        // Invalid name "0000" does not match [A-Za-z_][A-Za-z0-9_]*
+        let schema = Schema::parse_str(
+            r#"{"type": "enum", "name": "Enum", "symbols": ["0000", "variant"]}"#,
+        );
+        assert!(schema.is_err());
     }
 
     #[test]
