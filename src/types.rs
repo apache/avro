@@ -358,6 +358,15 @@ impl Value {
                         },
                     )
             }
+            (&Value::Map(ref items), &Schema::Record { ref fields, .. }) => {
+                fields.iter().all(|field| {
+                    if let Some(item) = items.get(&field.name) {
+                        item.validate(&field.schema)
+                    } else {
+                        false
+                    }
+                })
+            }
             _ => false,
         }
     }
@@ -920,6 +929,34 @@ mod tests {
             ("c".to_string(), Value::Null),
         ])
         .validate(&schema));
+
+        assert!(Value::Map(
+            vec![
+                ("a".to_string(), Value::Long(42i64)),
+                ("b".to_string(), Value::String("foo".to_string())),
+            ]
+            .into_iter()
+            .collect()
+        )
+        .validate(&schema));
+
+        let union_schema = Schema::Union(UnionSchema::new(vec![Schema::Null, schema]).unwrap());
+
+        assert!(Value::Union(Box::new(Value::Record(vec![
+            ("a".to_string(), Value::Long(42i64)),
+            ("b".to_string(), Value::String("foo".to_string())),
+        ])))
+        .validate(&union_schema));
+
+        assert!(Value::Union(Box::new(Value::Map(
+            vec![
+                ("a".to_string(), Value::Long(42i64)),
+                ("b".to_string(), Value::String("foo".to_string())),
+            ]
+            .into_iter()
+            .collect()
+        )))
+        .validate(&union_schema));
     }
 
     #[test]
