@@ -6,26 +6,19 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 # Compatibility
 
+**NOTE**: Historical versions used a different publishing process.  The artifacts are still available in [GitHub Releases](https://github.com/davidmc24/gradle-avro-plugin/releases), but may use different coordinates or may no longer be available in a repository that can be directly referenced from Gradle.
+Please upgrade to a modern version or self-host historical artifacts using a Maven repository such as [JFrog Artifactory](https://jfrog.com/artifactory/) or [Sonatype Nexus](https://www.sonatype.com/nexus/repository-oss).
+
 * Currently tested against Java 8-15
     * Java 15 support requires Gradle 6.7 or higher (as per Gradle's release notes)
     * Java 14 support requires Gradle 6.3 or higher (as per Gradle's release notes)
     * Java 13 support requires Gradle 6.0 or higher
     * Java 11 support requires Gradle 5.1 or higher (versions lower than 5.1 are no longer supported)
     * Though not supported yet, tests are also run against early-access builds of Java 16 to provide early notification of potential incompatibilities
-    * If you need support for Java 7, version 0.16.0 was the last supported version
-    * If you need support for Java 6, version 0.9.1 was the last supported version; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
 * Currently built against Gradle 6.7.1
     * Currently tested against Gradle 5.1-5.6.4 and 6.0-6.7.1
-    * If you need support for Gradle 4.4-5.0, version 0.18.0 was the last version tested for compatibility
-    * If you need support for Gradle 3.0-3.5.1 or 4.0-4.3, version 0.17.0 was the last version tested for compatibility
-    * If you need support for Gradle 2.0-2.14.1, version 0.9.1 was the last version tested for compatibility; please see [the Gradle plugin portal](https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro)
 * Currently built against Avro 1.10.1
     * Currently tested against Avro 1.10.0-1.10.1
-    * If you need support for Avro 1.9.0-1.9.2 try plugin version 0.20.0
-    * If you need support for Avro 1.8.2, try plugin version 0.16.0
-    * If you need support for Avro 1.8.0-1.8.1, try plugin version 0.10.0
-    * If you need support for Avro 1.7.7, try plugin version 0.8.1 (updated for Gradle 5.6)
-    * Versions of Avro prior to 1.7.x are unlikely to work
 * Support for Kotlin
     * Currently tested against Kotlin plugin versions 1.3.20-1.3.72 and 1.4.0-1.4.20 using the latest compatible version of Gradle
     * Currently tested against Kotlin plugin versions 1.2.20-1.2.71 and 1.3.0-1.3.11 using Gradle 5.1
