@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions: Q&A
+    url: https://github.com/davidmc24/gradle-avro-plugin/discussions/categories/q-a
+    about: Please ask and answer questions here.
