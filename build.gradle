@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "com.github.davidmc24.gradle.plugin"
-version = "1.0.0"
+version = "1.0.1-SNAPSHOT"
 
 def isCI = System.getenv("CI") == "true"
 def isSnapshot = version.endsWith('-SNAPSHOT')
@@ -137,10 +137,6 @@ signing {
         def signingKeyId = System.getenv("SIGNING_KEY_ID")
         def signingKey = System.getenv("SIGNING_KEY")
         def signingPassword = System.getenv("SIGNING_PASSWORD")
-        // TODO: remove once I get publishing working
-        logger.warn("signingKeyId: ${signingKeyId}")
-        logger.warn("signingKey: ${signingKey != null ? 'present' : 'absent'}")
-        logger.warn("signingPassword: ${signingPassword != null ? 'present' : 'absent'}")
         useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     }
     publishing.publications.all { publication ->
