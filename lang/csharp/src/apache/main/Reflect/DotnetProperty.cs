@@ -79,23 +79,22 @@ namespace Avro.Reflect
             return false;
         }
 
-        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag,  IAvroFieldConverter converter, ClassCache cache)
+        public DotnetProperty(PropertyInfo property, Avro.Schema.Type schemaTag, IAvroFieldConverter converter, ClassCache cache)
         {
             _property = property;
             Converter = converter;
 
+            if (Converter == null)
+            {
+                var c = cache.GetDefaultConverter(schemaTag, _property.PropertyType);
+                if (c != null)
+                {
+                    Converter = c;
+                }
+            }
+
             if (!IsPropertyCompatible(schemaTag))
             {
-                if (Converter == null)
-                {
-                    var c = cache.GetDefaultConverter(schemaTag, _property.PropertyType);
-                    if (c != null)
-                    {
-                        Converter = c;
-                        return;
-                    }
-                }
-
                 throw new AvroException($"Property {property.Name} in object {property.DeclaringType} isn't compatible with Avro schema type {schemaTag}");
             }
         }
