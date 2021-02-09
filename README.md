@@ -6,8 +6,7 @@ This is a [Gradle](http://www.gradle.org/) plugin to allow easily performing Jav
 
 # Compatibility
 
-**NOTE**: Historical versions used a different publishing process.  The artifacts are still available in [GitHub Releases](https://github.com/davidmc24/gradle-avro-plugin/releases), but may use different coordinates or may no longer be available in a repository that can be directly referenced from Gradle.
-Please upgrade to a modern version or self-host historical artifacts using a Maven repository such as [JFrog Artifactory](https://jfrog.com/artifactory/) or [Sonatype Nexus](https://www.sonatype.com/nexus/repository-oss).
+**NOTE**: Pre-1.0 versions used a different publishing process/namespace.  It is strongly recommended to upgrade to a newer version.  Further details can be found in the [change log](CHANGES.md).
 
 * Currently tested against Java 8-15
     * Java 15 support requires Gradle 6.7 or higher (as per Gradle's release notes)

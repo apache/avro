@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+# Pre-1.0 Versions
+
+These versions used a different publishing process.  They use different coordinates/packages and may no longer be available in a traditional Maven repository.  It is strongly recommended to upgrade to a newer version.
+
+If you still need to use them, the artifacts can be downloaded from [GitHub Releases](https://github.com/davidmc24/gradle-avro-plugin/releases) or accessed via [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin).
+The plugin IDs are `com.commercehub.gradle.plugin.avro` and `com.commercehub.gradle.plugin.avro-base`, with all tasks in the package `com.commercehub.gradle.plugin.avro`.
+
 ## 0.22.0
 * Add [Configuration Cache](https://docs.gradle.org/6.6/userguide/configuration_cache.html) support (#129; thanks to [dcabasson](https://github.com/dcabasson) and [eskatos](https://github.com/eskatos))
 * Add coverage reporting via JaCoco/Codecov to the plugin's build pipeline
@@ -13,6 +20,10 @@
 * Updated compatibility testing through Gradle 6.7.1
 * Updated compatibility testing through Kotlin 1.4.20
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.22.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.22.0)
+
 ## 0.21.0
 * Built using Avro 1.10.0
 * Drop support for Avro 1.9.X
@@ -20,15 +31,27 @@
 * Add support for `optionalGettersForNullableFieldsOnly`
 * Apply @Classpath annotation to classpath on `GenerateAvroProtocolTask`
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.21.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.21.0)
+
 ## 0.20.0
 * Built using Gradle 6.5
 * Updated compatibility testing to include Java 14
 * Updated compatibility testing through Gradle 6.5
 * Add `ResolveAvroDependenciesTask` (#115)
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.20.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.20.0)
+
 ## 0.19.1
 * Fix schema dependency resolution when types are referenced with a `{ "type": NAME }` block rather than just `NAME` (#107)
 * Eliminate `NullPointerException` handling in schema dependency resolution, as it no longer appears to be needed.
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.19.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.19.1)
 
 ## 0.19.0
 * Add support for Gradle 6.0-6.2.2 (#101)
@@ -42,6 +65,10 @@
 * Support [Task Configuration Avoidance](https://docs.gradle.org/current/userguide/task_configuration_avoidance.html) (#97); thanks to [dcabasson](https://github.com/dcabasson) for the collaboration
 * Upgrade Codenarc from 1.4 to 1.5
 * Preliminary Java 14 support
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.19.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.19.0)
 
 ## 0.18.0
 * Use reproducible file order for plugin archives
@@ -61,11 +88,19 @@
 * Add support for generating getters that return Optional (#90); contribution from [bspeakmon](https://github.com/bspeakmon)
 * Add support for `logicalTypeFactories` and `customConversions`; fixes #92
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.18.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.18.0)
+
 ## 0.17.0
 * Built using Avro 1.9.0
 * Removed configuration setting `validateDefaults`; defaults are now always validated due to an upstream change
 * Java 7 is no longer supported, as Avro 1.9.0 is now Java 8+
 * Began testing using Java 12
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.17.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.17.0)
 
 ## 0.16.0
 * Built using Gradle 4.10.2
@@ -74,8 +109,16 @@
 * Upgrade Spock from 1.0 to 1.2
 * Update plugin publishing mode to address Gradle 5.0 deprecation warning
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.16.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.16.0)
+
 ## 0.15.1
 * Fix "Boolean configuration cannot be set with boolean values from Kotlin DSL" (#60)
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.15.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.15.1)
 
 ## 0.15.0
 * Built using Gradle 4.9
@@ -84,8 +127,16 @@
 * Add support for generating schema files (#56)
 * Fix bug where `GenerateAvroProtocolTask` can't be used without a runtime configuration
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.15.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.15.0)
+
 ## 0.14.2
 * Stop creating default generated output directories when `outputDir` is customized and IntelliJ integration is used (#52)
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.14.2)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.14.2)
 
 ## 0.14.1
 * Built using Gradle 4.6
@@ -94,16 +145,32 @@
 * Began testing using Kotlin 1.2.31
 * Fixed infinite loop when a schema file contains multiple definitions of the same type (#47)
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.14.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.14.1)
+
 ## 0.14.0
 * Built using Gradle 4.5
 * Updated compatibility testing through Gradle 4.5
 * Support for validation of default values in schema (#42)
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.14.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.14.0)
+
 ## 0.13.0
 * Remove pre-cleaning behavior from `GenerateAvroJavaTask` (#41)
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.13.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.13.0)
+
 ## 0.12.0
 * Improve support for Kotlin (#36)
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.12.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.12.0)
 
 ## 0.11.0
 * Built using Gradle 4.2.1
@@ -112,6 +179,10 @@
 * Breaking backward compatibility with Avro versions older than 1.8.2
 * Add new configuration option "enableDecimalLogicalType" to generate `BigDecimal` for fields annotated with `logicalType` equals to `decimal`
 * Breaking backward compatibility caused by "enableDecimalLogicalType" default value set `true`. `BigDecimal` will be used instead of old usage of `ByteBuffer`
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.11.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.11.0)
 
 ## 0.10.0
 * Drop support for Gradle 2.x
@@ -122,20 +193,40 @@
 * Published to [Bintray](https://bintray.com/commercehub-oss/main/gradle-avro-plugin)
 * MapUtils class is no longer public
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.10.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.10.0)
+
 ## 0.9.1
 * Built using Gradle 4.1
 * Updated versions for cross-compatibility testing
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.9.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.9.1)
 
 ## 0.9.0
 * Built using Avro 1.8.1 (#23)
 * Built using Gradle 2.13
 * Added version cross-compatibility testing
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.9.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.9.0)
+
 ## 0.8.1
 * Compatible at runtime with Gradle 5; no functional changes.  Compiled with Gradle 5.6.
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.8.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.8.1)
+
 ## 0.8.0
 * Add support for Java 6 (#21)
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.8.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.8.0)
 
 ## 0.7.0
 * Remove usage of Apache Commons IO (#19)
@@ -148,9 +239,17 @@
 * Automatically use encoding from `JavaCompile` task as "outputCharacterEncoding", if set
 * Change default "outputCharacterEncoding" to system default to match `JavaCompile` task behavior (#20)
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.7.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.7.0)
+
 ## 0.6.1
 * Add Checkstyle ImportControl to prevent accidentally adding dependencies on libraries that Gradle makes available for build but not runtime.
 * Remove usage of Guava (#18)
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.6.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.6.1)
 
 ## 0.6.0
 * Add new configuration option "templateDirectory" to set source directory for the Avro compiler's Velocity templates.
@@ -161,9 +260,17 @@
 * Added Checkstyle and Codenarc to build
 * Known Bug: doesn't work properly unless you manually add a dependency on guava; please upgrade to 0.6.1
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.6.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.6.0)
+
 ## 0.5.0
 * Add support for schemas/protocols/IDL in subdirectories of `src/main/avro`, etc. (#11)
 * Expose original error messages from `avro-compiler` when compilation fails
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.5.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.5.0)
 
 ## 0.4.0
 * Add ability to specify fieldVisibility for generated Java source; contribution from [wooder79](https://github.com/wooder79)
@@ -172,24 +279,48 @@
 * Stopped publishing to previous location on Bintray
 * Built against Gradle 2.6; uses [test kit](https://docs.gradle.org/current/userguide/test_kit.html) for functional testing
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.4.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.4.0)
+
 ## 0.3.4
 * Fix registration of generated sources for compilation (#8)
 * Change classloader handling to better support import of external dependencies (#9)
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.3.4)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.3.4)
+
 ## 0.3.3
 * Fix generation of Java files from .avdl files; contribution from [viacoban](https://github.com/viacoban)
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.3.3)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.3.3)
+
 ## 0.3.2
 * Improve handling when custom buildDir is used
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.3.2)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.3.2)
 
 ## 0.3.1
 * Fix extension support for configuring encoding
 * Make default encoding UTF-8
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.3.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.3.1)
+
 ## 0.3.0
 * IntelliJ: register generated source directories even if they don't already exist.
 * Add avro-base plugin, which exposes tasks and the extension without creating tasks, defaults, etc.
 * Add support for configuring encoding
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.3.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.3.0)
 
 ## 0.2.0
 * Build against Gradle 1.12
@@ -197,14 +328,30 @@
 * Support for qualified plugin ID
 * Deprecate unqualified plugin ID
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.2.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.2.0)
+
 ## 0.1.3
 * Always regenerate all Java classes when any schema file changes to avoid some classes having outdated schema information.
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.1.3)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.1.3)
 
 ## 0.1.2
 * Eliminate dependency on guava, make dependency on commons-io explicit
 
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.1.2)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.1.2)
+
 ## 0.1.1
 * Fixed NullPointerException when performing clean builds
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.1.1)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.1.1)
 
 ## 0.1.0
 * Add support for converting IDL files to JSON protocol declaration files
@@ -213,3 +360,7 @@
 * Add support for inter-dependent JSON schema declaration files
 * Add support for tweaking source/exclude directories in IntelliJ
 * Add support for specifying the string type to use in generated classes
+
+Links:
+* [Release](https://github.com/davidmc24/gradle-avro-plugin/releases/tag/0.1.0)
+* [JitPack](https://jitpack.io/#davidmc24/gradle-avro-plugin/0.1.0)
