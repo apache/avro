@@ -1,8 +1,8 @@
 <!DOCTYPE import-control PUBLIC
     "-//Checkstyle//DTD ImportControl Configuration 1.4//EN"
     "https://checkstyle.org/dtds/import_control_1_4.dtd">
-<import-control pkg="com.commercehub.gradle.plugin.avro">
-    <allow pkg="com.commercehub.gradle.plugin.avro"/>
+<import-control pkg="com.github.davidmc24.gradle.plugin.avro">
+    <allow pkg="com.github.davidmc24.gradle.plugin.avro"/>
 
     <allow pkg="java.io"/>
     <allow pkg="java.lang"/>

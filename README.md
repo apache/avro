@@ -47,7 +47,7 @@ pluginManagement {
 `build.gradle`:
 ```groovy
 plugins {
-    id "com.commercehub.gradle.plugin.avro" version "VERSION"
+    id "com.github.davidmc24.gradle.plugin.avro" version "VERSION"
 }
 ```
 
@@ -232,19 +232,21 @@ If you do it in the other order, IntelliJ may not properly exclude some director
 # Alternate Usage
 
 If the defaults used by the plugin don't work for you, you can still use the tasks by themselves.
-In this case, use the `com.commercehub.gradle.plugin.avro-base` plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
+In this case, use the `com.github.davidmc24.gradle.plugin.avro-base` plugin instead, and create tasks of type `GenerateAvroJavaTask` and/or `GenerateAvroProtocolTask`.
 
 Here's a short example of what this might look like:
 
 ```groovy
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask
+
 apply plugin: "java"
-apply plugin: "com.commercehub.gradle.plugin.avro-base"
+apply plugin: "com.github.davidmc24.gradle.plugin.avro-base"
 
 dependencies {
     implementation "org.apache.avro:avro:1.10.1"
 }
 
-def generateAvro = tasks.register("generateAvro", com.commercehub.gradle.plugin.avro.GenerateAvroJavaTask) {
+def generateAvro = tasks.register("generateAvro", GenerateAvroJavaTask) {
     source("src/avro")
     outputDir = file("dest/avro")
 }
@@ -331,7 +333,7 @@ In `gradle.build.kts` add:
 ```kotlin
 plugins {
 	// Find latest release here: https://github.com/davidmc24/gradle-avro-plugin/releases
-	id("com.commercehub.gradle.plugin.avro") version "VERSION"
+	id("com.github.davidmc24.gradle.plugin.avro") version "VERSION"
 }
 ```
 
@@ -370,9 +372,11 @@ If desired, you can generate JSON schema with dependencies resolved.
 Example build:
 
 ```groovy
-apply plugin: "com.commercehub.gradle.plugin.avro-base"
+import com.github.davidmc24.gradle.plugin.avro.ResolveAvroDependenciesTask
 
-tasks.register("resolveAvroDependencies", com.commercehub.gradle.plugin.avro.ResolveAvroDependenciesTask) {
+apply plugin: "com.github.davidmc24.gradle.plugin.avro-base"
+
+tasks.register("resolveAvroDependencies", ResolveAvroDependenciesTask) {
     source file("src/avro/normalized")
     outputDir = file("build/avro/resolved")
 }
@@ -388,15 +392,18 @@ From IDL files, first use `GenerateAvroProtocolTask` to convert the IDL files to
 Example using base plugin with support for both IDL and JSON protocol files in `src/main/avro`:
 
 ```groovy
-apply plugin: "com.commercehub.gradle.plugin.avro-base"
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroSchemaTask
 
-def generateProtocol = tasks.register("generateProtocol", com.commercehub.gradle.plugin.avro.GenerateAvroProtocolTask) {
+apply plugin: "com.github.davidmc24.gradle.plugin.avro-base"
+
+def generateProtocol = tasks.register("generateProtocol", GenerateAvroProtocolTask) {
     source file("src/main/avro")
     include("**/*.avdl")
     outputDir = file("build/generated-avro-main-avpr")
 }
 
-tasks.register("generateSchema", com.commercehub.gradle.plugin.avro.GenerateAvroSchemaTask) {
+tasks.register("generateSchema", GenerateAvroSchemaTask) {
     dependsOn generateProtocol
     source file("src/main/avro")
     source file("build/generated-avro-main-avpr")

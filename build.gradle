@@ -8,12 +8,11 @@ plugins {
     id "jacoco"
     id "maven-publish"
     id "java-gradle-plugin"
-    id "com.jfrog.bintray" version "1.8.1"
     id "org.nosphere.gradle.github.actions" version "1.2.0"
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
     maven {
         // Used for snapshot builds for some libraries
         name 'Sonatype OSS'
@@ -70,8 +69,9 @@ tasks.withType(JavaCompile) {
     options.compilerArgs << "-Xlint:all" << "-Xlint:-options" << "-Werror"
 }
 
-version = "0.23.0-SNAPSHOT"
-group = "com.commercehub.gradle.plugin"
+group = "com.github.davidmc24.gradle.plugin"
+version = "1.0.0-SNAPSHOT"
+def isSnapshot = version.endsWith('-SNAPSHOT')
 
 tasks.withType(AbstractArchiveTask) {
     preserveFileTimestamps = false
@@ -91,50 +91,57 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 publishing {
-    publications {
-        mainMaven(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
+    publications.withType(MavenPublication) {
+//        from components.java
+        artifact sourcesJar
+        artifact javadocJar
+        pom {
+            name = "gradle-avro-plugin"
+            description = "A Gradle plugin to allow easily performing Java code generation for Apache Avro. It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files."
+            url = "https://github.com/davidmc24/gradle-avro-plugin"
+            licenses {
+                license {
+                    name = "The Apache License, Version 2.0"
+                    url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                }
+            }
+            developers {
+                developer {
+                    id = 'davidmc24'
+                    name = 'David M. Carr'
+                    email = 'david@carrclan.us'
+                }
+            }
+            scm {
+                connection = 'scm:git:https://github.com/davidmc24/gradle-avro-plugin.git'
+                developerConnection = 'scm:git:ssh://github.com/davidmc24/gradle-avro-plugin.git'
+                url = 'https://github.com/davidmc24/gradle-avro-plugin'
+            }
+        }
+    }
+    repositories {
+        maven {
+            def snapshotUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            def releaseUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            name = "OSSRH"
+            url = isSnapshot ? snapshotUrl : releaseUrl
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
         }
     }
 }
-
-bintray {
-    // dryRun = true
-    // publish = true
-    user = project.hasProperty("bintrayUserName") ? bintrayUserName : null
-    key = project.hasProperty("bintrayApiKey") ? bintrayApiKey : null
-    publications = ["mainMaven", "avroBasePluginMarkerMaven", "avroPluginMarkerMaven"]
-    pkg {
-        repo = "main"
-        name = project.name
-        userOrg = "commercehub-oss"
-        licenses = ["Apache-2.0"]
-        desc = "A Gradle plugin to allow easily performing Java code generation for Apache Avro. It supports JSON schema declaration files, JSON protocol declaration files, and Avro IDL files."
-        websiteUrl = "https://github.com/davidmc24/gradle-avro-plugin"
-        issueTrackerUrl = 'https://github.com/davidmc24/gradle-avro-plugin/issues'
-        vcsUrl = "https://github.com/davidmc24/gradle-avro-plugin"
-        labels = ["serialization", "avro"]
-        githubRepo = "davidmc24/gradle-avro-plugin"
-        version {
-            name = project.version
-            vcsTag = project.version
-        }
-    }
-}
-
-bintrayUpload.dependsOn build, { generatePomFileForAvroBasePluginMarkerMavenPublication }, { generatePomFileForAvroPluginMarkerMavenPublication }
 
 gradlePlugin {
     plugins {
         avro {
-            id = "com.commercehub.gradle.plugin.avro"
-            implementationClass = "com.commercehub.gradle.plugin.avro.AvroPlugin"
+            id = "com.github.davidmc24.gradle.plugin.avro"
+            implementationClass = "com.github.davidmc24.gradle.plugin.avro.AvroPlugin"
         }
         avroBase {
-            id = "com.commercehub.gradle.plugin.avro-base"
-            implementationClass = "com.commercehub.gradle.plugin.avro.AvroBasePlugin"
+            id = "com.github.davidmc24.gradle.plugin.avro-base"
+            implementationClass = "com.github.davidmc24.gradle.plugin.avro.AvroBasePlugin"
         }
     }
 }
