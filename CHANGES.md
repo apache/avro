@@ -1,6 +1,8 @@
 # Change Log
 
 ## Unreleased
+
+## 1.0.0
 * Published to Maven Central (no longer published to JCenter)
 * New plugin IDs: `com.github.davidmc24.gradle.plugin.avro` and `com.github.davidmc24.gradle.plugin.avro-base`
 * New package for tasks: `com.github.davidmc24.gradle.plugin.avro`
