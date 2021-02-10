@@ -70,40 +70,26 @@ namespace Avro.Reflect
             _defaultConverters.Add(new FuncFieldConverter<TAvro, TProperty>(from, to));
         }
 
-        /// <summary>
-        /// Find a default converter
-        /// </summary>
-        /// <param name="tag"></param>
-        /// <param name="propType"></param>
-        /// <returns>The first matching converter - null if there isnt one</returns>
-        public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
+        private Type GetAvroType(Avro.Schema.Type schemaTag, bool nullable)
         {
-            Type avroType;
-            switch (tag)
+            switch (schemaTag)
             {
                 case Avro.Schema.Type.Null:
                     return null;
                 case Avro.Schema.Type.Boolean:
-                    avroType = typeof(bool);
-                    break;
+                    return nullable ? typeof(bool?) : typeof(bool);
                 case Avro.Schema.Type.Int:
-                    avroType = typeof(int);
-                    break;
+                    return nullable ? typeof(int?) : typeof(int);
                 case Avro.Schema.Type.Long:
-                    avroType = typeof(long);
-                    break;
+                    return nullable ? typeof(long?) : typeof(long);
                 case Avro.Schema.Type.Float:
-                    avroType = typeof(float);
-                    break;
+                    return nullable ? typeof(float?) : typeof(float);
                 case Avro.Schema.Type.Double:
-                    avroType = typeof(double);
-                    break;
+                    return nullable ? typeof(double?) : typeof(double);
                 case Avro.Schema.Type.Bytes:
-                    avroType = typeof(byte[]);
-                    break;
+                    return typeof(byte[]);
                 case Avro.Schema.Type.String:
-                    avroType = typeof(string);
-                    break;
+                    return typeof(string);
                 case Avro.Schema.Type.Record:
                     return null;
                 case Avro.Schema.Type.Enumeration:
@@ -115,14 +101,54 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Union:
                     return null;
                 case Avro.Schema.Type.Fixed:
-                    avroType = typeof(byte[]);
-                    break;
+                    return typeof(byte[]);
                 case Avro.Schema.Type.Error:
                     return null;
                 default:
                     return null;
             }
+        }
 
+        /// <summary>
+        /// Find a default converter
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="propType"></param>
+        /// <returns>The first matching converter - null if there isnt one</returns>
+        public IAvroFieldConverter GetDefaultConverter(Avro.Schema schema, Type propType)
+        {
+            bool nullable = false;
+            Avro.Schema.Type schemaTag = schema.Tag;
+
+            if (schema.Tag == Avro.Schema.Type.Union)
+            {
+                var us = schema as UnionSchema;
+
+                if (us.Count == 2)
+                {
+                    bool mightbenullable = false;
+                    Avro.Schema.Type unionTag = Avro.Schema.Type.Null;
+                    for (var i = 0; i < us.Count; i++)
+                    {
+                        if (us[i].Tag == Avro.Schema.Type.Null)
+                        {
+                            mightbenullable = true;
+                        }
+                        else
+                        {
+                            unionTag = us[i].Tag;
+                        }
+                    }
+
+                    if (mightbenullable && unionTag != Avro.Schema.Type.Null)
+                    {
+                        nullable = true;
+                        schemaTag = unionTag;
+                    }
+                }
+            }
+
+            Type avroType = GetAvroType(schemaTag, nullable);
             foreach (var c in _defaultConverters)
             {
                 if (c.GetAvroType() == avroType && c.GetPropertyType() == propType)
@@ -181,7 +207,7 @@ namespace Avro.Reflect
             DotnetClass c;
             if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
             {
-               return null;
+                return null;
             }
 
             return c;
