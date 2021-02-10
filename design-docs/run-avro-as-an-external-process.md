@@ -8,7 +8,7 @@ This is simple and works, but has a few drawbacks:
 Instead, here is an alternative view of how it could work.
 
 * There is an enhanced-avro-compiler library that externalizes most of the logic currently present in GenerateAvroJavaTask/GenerateAvroProtocolTask, and makes those calls accessible as JVM entry points (via `main` methods).
-    * This library would be published on JCenter and/or Maven Central, and potentially have multiple versions as needed for compatibility with multiple versions of Avro
+    * This library would be published on Maven Central, and potentially have multiple versions as needed for compatibility with multiple versions of Avro
     * It's possible we might be able to get this logic pushed upstream into avro-compiler, in which case the need for this library would be eliminated.
 * For a source-set, the plugin would take a single declaration of the desired Avro version, which is then used for both generation and compilation
 * The plugin would use a configuration per source-set to resolve the appropriate version of enhanced-avro-compiler

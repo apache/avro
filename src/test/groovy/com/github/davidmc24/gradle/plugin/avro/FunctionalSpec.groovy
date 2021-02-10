@@ -72,7 +72,7 @@ abstract class FunctionalSpec extends Specification {
     }
 
     protected void addDefaultRepository() {
-        buildFile << "repositories { jcenter() }\n"
+        buildFile << "repositories { mavenCentral() }\n"
     }
 
     protected void addImplementationDependency(String dependencySpec) {

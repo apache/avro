@@ -35,11 +35,7 @@ Add the following to your build files.  Substitute the desired version based on 
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        jcenter()
-        maven {
-            name "JCenter Gradle Plugins"
-            url  "https://dl.bintray.com/gradle/gradle-plugins"
-        }
+        mavenCentral()
     }
 }
 ```
@@ -55,7 +51,7 @@ Additionally, ensure that you have a compile dependency on Avro, such as:
 
 ```groovy
 repositories {
-    jcenter()
+    mavenCentral()
 }
 dependencies {
     compile "org.apache.avro:avro:1.10.1"
@@ -332,8 +328,8 @@ In `gradle.build.kts` add:
 
 ```kotlin
 plugins {
-	// Find latest release here: https://github.com/davidmc24/gradle-avro-plugin/releases
-	id("com.github.davidmc24.gradle.plugin.avro") version "VERSION"
+    // Find latest release here: https://github.com/davidmc24/gradle-avro-plugin/releases
+    id("com.github.davidmc24.gradle.plugin.avro") version "VERSION"
 }
 ```
 
@@ -341,11 +337,10 @@ And then in your `settings.gradle.kts` add:
 
 ```kotlin
 pluginManagement {
-	repositories {
-		gradlePluginPortal()
-		jcenter()
-		maven (url="https://dl.bintray.com/gradle/gradle-plugins")
-	}
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
 }
 ```
 

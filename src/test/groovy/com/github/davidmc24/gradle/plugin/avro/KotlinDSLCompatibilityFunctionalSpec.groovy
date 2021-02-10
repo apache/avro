@@ -14,7 +14,7 @@ class KotlinDSLCompatibilityFunctionalSpec extends FunctionalSpec {
         |    id("com.github.davidmc24.gradle.plugin.avro")
         |}
         |repositories {
-        |    jcenter()
+        |    mavenCentral()
         |}
         |dependencies {
         |    implementation("org.apache.avro:avro:${avroVersion}")
