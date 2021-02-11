@@ -69,7 +69,7 @@ namespace Avro.Generic
         /// <inheritdoc/>
         public T Read(T reuse, Decoder decoder)
         {
-            return (T)_reader(reuse, decoder);
+            return _reader(reuse, decoder).TryCast<T>();
         }
 
         /// <summary>

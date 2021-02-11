@@ -16,9 +16,13 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Avro.IO;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using Avro.Reflect;
 
 namespace Avro.Generic
 {
@@ -129,7 +133,7 @@ namespace Avro.Generic
         /// <typeparam name="T">The type of object to read. A single schema typically returns an object of a single .NET class.
         /// The only exception is UnionSchema, which can return a object of different types based on the branch selected.
         /// </typeparam>
-        /// <param name="reuse">If not null, the implemenation will try to use to return the object</param>
+        /// <param name="reuse">If not null, the implementation will try to use to return the object</param>
         /// <param name="decoder">The decoder for deserialization</param>
         /// <returns>Object read from the decoder.</returns>
         public T Read<T>(T reuse, Decoder decoder)
@@ -137,7 +141,7 @@ namespace Avro.Generic
             if (!ReaderSchema.CanRead(WriterSchema))
                 throw new AvroException("Schema mismatch. Reader: " + ReaderSchema + ", writer: " + WriterSchema);
 
-            return (T)Read(reuse, WriterSchema, ReaderSchema, decoder);
+            return Read(reuse, WriterSchema, ReaderSchema, decoder).TryCast<T>();
         }
 
         /// <summary>

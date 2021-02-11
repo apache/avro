@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Encoder = Avro.IO.Encoder;
 
@@ -124,7 +125,7 @@ namespace Avro.Generic
                     //return obj is GenericEnum && (obj as GenericEnum).Schema.Equals(s);
                     return obj is GenericEnum && (obj as GenericEnum).Schema.SchemaName.Equals((sc as EnumSchema).SchemaName);
                 case Schema.Type.Array:
-                    return obj is Array && !(obj is byte[]);
+                    return obj is IList && !(obj is byte[]);
                 case Schema.Type.Map:
                     return obj is IDictionary<string, object>;
                 case Schema.Type.Union:
@@ -143,21 +144,21 @@ namespace Avro.Generic
         {
             public void EnsureArrayObject( object value )
             {
-                if( value == null || !( value is Array ) ) throw TypeMismatch( value, "array", "Array" );
+                if( value == null || !( value is IList ) ) throw TypeMismatch( value, "array", "Array" );
             }
 
             public long GetArrayLength( object value )
             {
-                return ( (Array) value ).Length;
+                return ( (IList) value ).Count;
             }
 
             public void WriteArrayValues(object array, WriteItem valueWriter, Encoder encoder)
             {
-                var arrayInstance = (Array) array;
-                for(int i = 0; i < arrayInstance.Length; i++)
+                var arrayInstance = (IList) array;
+                for(int i = 0; i < arrayInstance.Count; i++)
                 {
                     encoder.StartItem();
-                    valueWriter(arrayInstance.GetValue(i), encoder);
+                    valueWriter(arrayInstance[i], encoder);
                 }
             }
         }
