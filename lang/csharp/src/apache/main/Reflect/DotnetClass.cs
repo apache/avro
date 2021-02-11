@@ -19,7 +19,6 @@
 using System;
 using System.Reflection;
 using System.Collections.Concurrent;
-using Avro;
 
 namespace Avro.Reflect
 {
@@ -28,9 +27,9 @@ namespace Avro.Reflect
     /// </summary>
     public class DotnetClass
     {
-        private ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
+        private readonly ConcurrentDictionary<string, DotnetProperty> _propertyMap = new ConcurrentDictionary<string, DotnetProperty>();
 
-        private Type _type;
+        private readonly Type _type;
 
         /// <summary>
         /// Constructor
@@ -52,14 +51,14 @@ namespace Avro.Reflect
                     if (avroAttr != null)
                     {
                         hasAttribute = true;
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag, avroAttr.Converter, cache));
+                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, avroAttr.Converter, cache));
                         break;
                     }
                 }
 
                 if (!hasAttribute)
                 {
-                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema.Tag, cache));
+                    _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, cache));
                 }
             }
         }

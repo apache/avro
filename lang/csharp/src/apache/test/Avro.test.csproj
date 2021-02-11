@@ -21,6 +21,8 @@
     <TargetFrameworks Condition="'$(OS)'=='Windows_NT'">net461;netcoreapp3.1</TargetFrameworks>
     <RootNamespace>Avro.test</RootNamespace>
     <AssemblyName>Avro.test</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\..\Avro.snk</AssemblyOriginatorKeyFile>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>

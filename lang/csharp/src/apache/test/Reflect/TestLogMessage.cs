@@ -51,6 +51,23 @@ namespace Avro.Test
         public MessageTypes Severity { get; set; }
     }
 
+    public interface ITimeStamp
+    {
+        DateTimeOffset? TimeStamp { get; set; }
+    }
+
+    public class NullableWithNoDefinedConverter : ITimeStamp
+    {
+        public DateTimeOffset? TimeStamp { get; set; }
+    }
+
+    public class NullableWithNullableConverter : ITimeStamp
+    {
+        [AvroField(typeof(NullableConverter<DateTimeOffsetToLongConverter>))]
+        public DateTimeOffset? TimeStamp { get; set; }
+    }
+
+
     [TestFixture]
     public class TestLogMessage
     {
@@ -77,6 +94,20 @@ namespace Avro.Test
             ]
         }";
 
+        private const string _nullableConverterV1 = @"
+        {
+            ""namespace"": ""MessageTypes"",
+            ""type"": ""record"",
+            ""name"": ""NullableConverter"",
+            ""fields"": [
+                { ""name"": ""TimeStamp"", ""type"": [
+                    ""null"",
+                    ""long""
+                    ]
+                }
+             ]
+         }";
+
         [TestCase]
         public void Serialize()
         {
@@ -90,7 +121,8 @@ namespace Avro.Test
             {
                 IP = "10.20.30.40",
                 message = "Log entry",
-                Severity = MessageTypes.Error
+                Severity = MessageTypes.Error,
+                TimeStamp = new DateTimeOffset(2002, 1, 21, 8, 15, 54, TimeSpan.FromHours(-4))
             };
 
             using (var stream = new MemoryStream(256))
@@ -108,6 +140,160 @@ namespace Avro.Test
             Assert.AreEqual(logMessage.IP, deserialized.IP);
             Assert.AreEqual(logMessage.message, deserialized.message);
             Assert.AreEqual(logMessage.Severity, deserialized.Severity);
+            Assert.AreEqual(logMessage.TimeStamp, deserialized.TimeStamp);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNullableWithNullableConverter(bool useNull)
+        {
+            var converters = ClassCache.ClearDefaultConverters();
+            try
+            {
+                SerializeTest<NullableWithNullableConverter>(_nullableConverterV1, useNull);
+            }
+            finally
+            {
+                // leave the cache the same as it was before we started
+                foreach (var converter in converters)
+                {
+                    ClassCache.AddDefaultConverter(converter);
+                }
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNullableDefaultWithClass(bool useNull)
+        {
+            var converters = ClassCache.ClearDefaultConverters();
+            ClassCache.AddDefaultConverter(new DateTimeOffsetToLongConverter());
+            try
+            {
+                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
+            }
+            finally
+            {
+                // leave the cache the same as it was before we started
+                ClassCache.ClearDefaultConverters();
+                foreach (var converter in converters)
+                {
+                    ClassCache.AddDefaultConverter(converter);
+                }
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNullableDefaultWithDelegate(bool useNull)
+        {
+            var converters = ClassCache.ClearDefaultConverters();
+
+            var converter = new DateTimeOffsetToLongConverter();
+
+            ClassCache.AddDefaultConverter<long, DateTimeOffset>(
+                (l, s) => (DateTimeOffset) converter.FromAvroType(l, s),
+                (d, s) => (long)converter.ToAvroType(d, s));
+
+            try
+            {
+                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
+            }
+            finally
+            {
+                // leave the cache the same as it was before we started
+                ClassCache.ClearDefaultConverters();
+                foreach (var c in converters)
+                {
+                    ClassCache.AddDefaultConverter(c);
+                }
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNullableDefaultWithNullableDelegate(bool useNull)
+        {
+            var converters = ClassCache.ClearDefaultConverters();
+
+            var converter = new DateTimeOffsetToLongConverter();
+
+            ClassCache.AddDefaultConverter<long, DateTimeOffset?>(
+                (l, s) => (DateTimeOffset?) converter.FromAvroType(l, s),
+                (d, s) => d == null ? (long) 0 : (long) converter.ToAvroType(d, s));
+
+            try
+            {
+                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
+            }
+            finally
+            {
+                // leave the cache the same as it was before we started
+                ClassCache.ClearDefaultConverters();
+                foreach (var c in converters)
+                {
+                    ClassCache.AddDefaultConverter(c);
+                }
+            }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNullableDefaultWithDoubleNullableDelegate(bool useNull)
+        {
+            var converters = ClassCache.ClearDefaultConverters();
+
+            var converter = new DateTimeOffsetToLongConverter();
+
+            ClassCache.AddDefaultConverter<long?, DateTimeOffset?>(
+                (l, s) => l == null ? null : (DateTimeOffset?) converter.FromAvroType(l, s),
+                (d, s) => d == null ? null : (long?) converter.ToAvroType(d, s));
+
+            try
+            {
+                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
+            }
+            finally
+            {
+                // leave the cache the same as it was before we started
+                ClassCache.ClearDefaultConverters();
+                foreach (var c in converters)
+                {
+                    ClassCache.AddDefaultConverter(c);
+                }
+            }
+        }
+
+        private void SerializeTest<T>(string schemaJson, bool useNull)
+            where T : class, ITimeStamp, new()
+        {
+            var schema = Schema.Parse(schemaJson);
+            var avroWriter = new ReflectWriter<T>(schema);
+            var avroReader = new ReflectReader<T>(schema, schema);
+
+            byte[] serialized;
+
+            var message = new T
+            {
+                TimeStamp = useNull
+                    ? (DateTimeOffset?) null
+                    : new DateTimeOffset(2002, 1, 21, 8, 15, 54, TimeSpan.FromHours(-4))
+            };
+
+            using (var stream = new MemoryStream(256))
+            {
+                avroWriter.Write(message, new BinaryEncoder(stream));
+                serialized = stream.ToArray();
+            }
+
+            T deserialized = default(T);
+            using (var stream = new MemoryStream(serialized))
+            {
+                deserialized = avroReader.Read(default(T), new BinaryDecoder(stream));
+            }
+
+            Assert.IsNotNull(deserialized);
+            Assert.AreEqual(message.TimeStamp, deserialized.TimeStamp);
         }
     }
 }

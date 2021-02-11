@@ -19,6 +19,8 @@
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Avro.Reflect
 {
@@ -28,6 +30,8 @@ namespace Avro.Reflect
     public class ClassCache
     {
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
+
+        private static ConcurrentDictionary<Tuple<Type, Type, bool>, IAvroFieldConverter> _typeDefaultConverters = new ConcurrentDictionary<Tuple<Type, Type, bool>, IAvroFieldConverter>();
 
         private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
 
@@ -49,12 +53,29 @@ namespace Avro.Reflect
         }
 
         /// <summary>
+        /// Clears all the default converters for testing purposes
+        /// </summary>
+        internal static List<IAvroFieldConverter> ClearDefaultConverters()
+        {
+            var result = new List<IAvroFieldConverter>();
+            while (_defaultConverters.TryTake(out IAvroFieldConverter item))
+            {
+                result.Add(item);
+            }
+
+            _typeDefaultConverters.Clear();
+
+            return result;
+        }
+
+        /// <summary>
         /// Add a default field converter
         /// </summary>
         /// <param name="converter"></param>
         public static void AddDefaultConverter(IAvroFieldConverter converter)
         {
             _defaultConverters.Add(converter);
+            _typeDefaultConverters.Clear();
         }
 
         /// <summary>
@@ -67,43 +88,34 @@ namespace Avro.Reflect
         /// <typeparam name="TProperty"></typeparam>
         public static void AddDefaultConverter<TAvro, TProperty>(Func<TAvro, Schema, TProperty> from, Func<TProperty, Schema, TAvro> to)
         {
-            _defaultConverters.Add(new FuncFieldConverter<TAvro, TProperty>(from, to));
+            AddDefaultConverter(new FuncFieldConverter<TAvro, TProperty>(from, to));
         }
 
         /// <summary>
-        /// Find a default converter
+        /// Returns the Type for a given Schema.Type
         /// </summary>
         /// <param name="tag"></param>
-        /// <param name="propType"></param>
-        /// <returns>The first matching converter - null if there isnt one</returns>
-        public IAvroFieldConverter GetDefaultConverter(Avro.Schema.Type tag, Type propType)
+        /// <returns>The type</returns>
+        private Type GetAvroTypeForTag(Avro.Schema.Type tag)
         {
-            Type avroType;
             switch (tag)
             {
                 case Avro.Schema.Type.Null:
                     return null;
                 case Avro.Schema.Type.Boolean:
-                    avroType = typeof(bool);
-                    break;
+                    return typeof(bool);
                 case Avro.Schema.Type.Int:
-                    avroType = typeof(int);
-                    break;
+                    return typeof(int);
                 case Avro.Schema.Type.Long:
-                    avroType = typeof(long);
-                    break;
+                    return typeof(long);
                 case Avro.Schema.Type.Float:
-                    avroType = typeof(float);
-                    break;
+                    return typeof(float);
                 case Avro.Schema.Type.Double:
-                    avroType = typeof(double);
-                    break;
+                    return typeof(double);
                 case Avro.Schema.Type.Bytes:
-                    avroType = typeof(byte[]);
-                    break;
+                    return typeof(byte[]);
                 case Avro.Schema.Type.String:
-                    avroType = typeof(string);
-                    break;
+                    return typeof(string);
                 case Avro.Schema.Type.Record:
                     return null;
                 case Avro.Schema.Type.Enumeration:
@@ -115,23 +127,122 @@ namespace Avro.Reflect
                 case Avro.Schema.Type.Union:
                     return null;
                 case Avro.Schema.Type.Fixed:
-                    avroType = typeof(byte[]);
-                    break;
+                    return typeof(byte[]);
                 case Avro.Schema.Type.Error:
                     return null;
                 default:
                     return null;
             }
+        }
 
-            foreach (var c in _defaultConverters)
+        /// <summary>
+        /// Find a default converter
+        /// </summary>
+        /// <param name="schema"></param>
+        /// <param name="propType"></param>
+        /// <returns>The first matching converter - null if there isnt one</returns>
+        public IAvroFieldConverter GetDefaultConverter(Avro.Schema schema, Type propType)
+        {
+            bool nullable = false;
+            Avro.Schema.Type schemaTag = schema.Tag;
+
+            // if this is a nullable union and the property is a primitive type, look for a default converter for the nullable schema type
+            if ((propType.IsPrimitive || propType.IsNullable())
+                && schema.Tag == Avro.Schema.Type.Union)
             {
-                if (c.GetAvroType() == avroType && c.GetPropertyType() == propType)
+                var us = (UnionSchema) schema;
+
+                if (us.Count == 2)
                 {
-                    return c;
+                    // only check simple nullable unions
+                    bool mightbenullable = false;
+                    Avro.Schema.Type unionTag = Avro.Schema.Type.Null;
+                    for (var i = 0; i < us.Count; i++)
+                    {
+                        if (us[i].Tag == Avro.Schema.Type.Null)
+                        {
+                            mightbenullable = true;
+                        }
+                        else
+                        {
+                            unionTag = us[i].Tag;
+                        }
+                    }
+
+                    if (mightbenullable && unionTag != Avro.Schema.Type.Null)
+                    {
+                        // this is a union of a nullable primitive type
+                        nullable = true;
+                        schemaTag = unionTag;
+                    }
                 }
             }
 
-            return null;
+            Type avroType = GetAvroTypeForTag(schemaTag);
+            if (avroType == null)
+            {
+                // nothing to do, return null
+                return null;
+            }
+
+            return _typeDefaultConverters.GetOrAdd(Tuple.Create(avroType, propType, nullable), GenerateConverter);
+        }
+
+        /// <summary>
+        /// Creates an IAvroFieldConverter for caching.  Returns null if there are no matching converters.
+        /// </summary>
+        private static IAvroFieldConverter GenerateConverter(Tuple<Type, Type, bool> tupleTypes)
+        {
+            Type avroType = tupleTypes.Item1;
+            Type propType = tupleTypes.Item2;
+            bool nullable = tupleTypes.Item3;
+
+            if (!nullable)
+            {
+                return FindConverter(avroType, propType);
+            }
+
+            var avroTypes = new[]
+            {
+                avroType.MakePrimitive(),
+                avroType.MakeNullable()
+            };
+
+            var propTypes = new[]
+            {
+                propType.MakePrimitive(),
+                propType.MakeNullable()
+            };
+
+            return avroTypes
+                .Where(at => at != null)
+                .SelectMany(
+                    at => propTypes
+                        .Where(pt => pt != null)
+                        .Select(pt => FindAndMakeNullableHelperConverter(at, pt)))
+                .FirstOrDefault(c => c != null);
+        }
+
+        private static IAvroFieldConverter FindAndMakeNullableHelperConverter(Type avroType, Type propType)
+        {
+            var converter = FindConverter(avroType, propType);
+
+            if (converter == null)
+            {
+                return null;
+            }
+
+            if (!avroType.IsNullable() || !propType.IsNullable())
+            {
+                return new NullableConverter(converter, avroType, propType);
+            }
+
+            return converter;
+        }
+
+        private static IAvroFieldConverter FindConverter(Type avroType, Type propType)
+        {
+            return _defaultConverters.FirstOrDefault(c => c.GetAvroType() == avroType && c.GetPropertyType() == propType);
         }
 
         /// <summary>
