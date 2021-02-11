@@ -54,10 +54,10 @@
   <PropertyGroup Label="Build, Test, Code Analysis Package Versions">
     <MicrosoftBuildFrameworkVersion>16.8.0</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildUtilitiesCoreVersion>16.8.0</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>3.3.1</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
+    <MicrosoftCodeAnalysisFxCopAnalyzersVersion>3.3.2</MicrosoftCodeAnalysisFxCopAnalyzersVersion>
     <MicrosoftNETTestSdkVersion>16.8.0</MicrosoftNETTestSdkVersion>
-    <NUnitVersion>3.12.0</NUnitVersion>
-    <NUnitConsoleRunnerVersion>3.11.1</NUnitConsoleRunnerVersion>
+    <NUnitVersion>3.13.1</NUnitVersion>
+    <NUnitConsoleRunnerVersion>3.12.0</NUnitConsoleRunnerVersion>
     <NUnit3TestAdapterVersion>3.17.0</NUnit3TestAdapterVersion>
     <StyleCopAnalyzersVersion>1.1.118</StyleCopAnalyzersVersion>
   </PropertyGroup>

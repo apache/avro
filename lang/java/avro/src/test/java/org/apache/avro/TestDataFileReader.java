@@ -20,8 +20,10 @@ package org.apache.avro;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -139,6 +141,55 @@ public class TestDataFileReader {
     };
   }
 
+  @Test(expected = EOFException.class)
+  // another regression test for bug AVRO-2944, testing EOF case
+  public void testInputStreamEOF() throws IOException {
+    // AVRO-2944 describes hanging/failure in reading Avro file with performing
+    // magic header check. This potentially happens with a defective input stream
+    // where a -1 value is unexpectedly returned from a read.
+    Schema legacySchema = new Schema.Parser().setValidate(false).setValidateDefaults(false)
+        .parse("{\"type\": \"record\", \"name\": \"TestSchema\", \"fields\": "
+            + "[ {\"name\": \"id\", \"type\": [\"long\", \"null\"], \"default\": null}]}");
+    File f = Files.createTempFile("testInputStreamEOF", ".avro").toFile();
+    try (DataFileWriter<?> w = new DataFileWriter<>(new GenericDatumWriter<>())) {
+      w.create(legacySchema, f);
+      w.flush();
+    }
+
+    // Should throw an EOFException
+    DataFileReader.openReader(eofInputStream(f), new GenericDatumReader<>());
+  }
+
+  private SeekableInput eofInputStream(File f) throws IOException {
+    SeekableFileInput input = new SeekableFileInput(f);
+    return new SeekableInput() {
+      @Override
+      public void close() throws IOException {
+        input.close();
+      }
+
+      @Override
+      public void seek(long p) throws IOException {
+        input.seek(p);
+      }
+
+      @Override
+      public long tell() throws IOException {
+        return input.tell();
+      }
+
+      @Override
+      public long length() throws IOException {
+        return input.length();
+      }
+
+      @Override
+      public int read(byte[] b, int off, int len) throws IOException {
+        return -1;
+      }
+    };
+  }
+
   @Test
   public void testIgnoreSchemaValidationOnRead() throws IOException {
     // This schema has an accent in the name and the default for the field doesn't
@@ -161,4 +212,23 @@ public class TestDataFileReader {
     }
   }
 
+  @Test(expected = InvalidAvroMagicException.class)
+  public void testInvalidMagicLength() throws IOException {
+    File f = Files.createTempFile("testInvalidMagicLength", ".avro").toFile();
+    try (FileWriter w = new FileWriter(f)) {
+      w.write("-");
+    }
+
+    DataFileReader.openReader(new SeekableFileInput(f), new GenericDatumReader<>());
+  }
+
+  @Test(expected = InvalidAvroMagicException.class)
+  public void testInvalidMagicBytes() throws IOException {
+    File f = Files.createTempFile("testInvalidMagicBytes", ".avro").toFile();
+    try (FileWriter w = new FileWriter(f)) {
+      w.write("invalid");
+    }
+
+    DataFileReader.openReader(new SeekableFileInput(f), new GenericDatumReader<>());
+  }
 }
