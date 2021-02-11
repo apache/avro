@@ -29,7 +29,7 @@ namespace Avro.Reflect
     {
         private static ConcurrentBag<IAvroFieldConverter> _defaultConverters = new ConcurrentBag<IAvroFieldConverter>();
 
-        private ConcurrentDictionary<string, DotnetClass> _nameClassMap = new ConcurrentDictionary<string, DotnetClass>();
+        private ConcurrentDictionary<RecordSchema, DotnetClass> _nameClassMap = new ConcurrentDictionary<RecordSchema, DotnetClass>();
 
         private ConcurrentDictionary<string, Type> _nameArrayMap = new ConcurrentDictionary<string, Type>();
 
@@ -45,7 +45,7 @@ namespace Avro.Reflect
                 throw new AvroException($"Type {dotnetClass.Name} is not a class");
             }
 
-            _nameClassMap.TryAdd(schema.Fullname, new DotnetClass(dotnetClass, schema, this));
+            _nameClassMap.TryAdd(schema, new DotnetClass(dotnetClass, schema, this));
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Avro.Reflect
         public DotnetClass GetClass(RecordSchema schema)
         {
             DotnetClass c;
-            if (!_nameClassMap.TryGetValue(schema.Fullname, out c))
+            if (!_nameClassMap.TryGetValue(schema, out c))
             {
                return null;
             }

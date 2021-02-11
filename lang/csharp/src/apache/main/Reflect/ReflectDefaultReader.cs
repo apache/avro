@@ -409,6 +409,12 @@ namespace Avro.Reflect
                 }
             }
 
+            DotnetClass readerClass = _classCache.GetClass(rs);
+            if (readerClass == null)
+            {
+                throw new Exception($"Class for {rs.Fullname} is not registered in class cache");
+            }
+
             object obj = null;
             foreach (Field wf in writerSchema)
             {
@@ -417,8 +423,7 @@ namespace Avro.Reflect
                     Field rf;
                     if (rs.TryGetField(wf.Name, out rf))
                     {
-//                        obj = _classCache.GetClass(writerSchema).GetValue(rec, rf);
-                        _classCache.GetClass(writerSchema).SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
+                        readerClass.SetValue(rec, rf, Read(obj, wf.Schema, rf.Schema, dec));
                     }
                     else
                     {
@@ -438,7 +443,7 @@ namespace Avro.Reflect
                     continue;
                 }
 
-                _classCache.GetClass(rs).SetValue(rec, rf, GetDefaultValue(rf.Schema, rf.DefaultValue));
+                readerClass.SetValue(rec, rf, GetDefaultValue(rf.Schema, rf.DefaultValue));
             }
 
             return rec;
