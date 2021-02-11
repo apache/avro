@@ -30,7 +30,7 @@ namespace Avro.Reflect
         private readonly IAvroFieldConverter _converter;
 
         /// <summary>
-        /// Creates a new instance of <see cref="NullableConverter{T}"/> for the <see cref="T"/>
+        /// Creates a new instance of <see cref="NullableConverter{T}"/> for the <see typeparam="T"/>
         /// </summary>
         public NullableConverter()
         {
