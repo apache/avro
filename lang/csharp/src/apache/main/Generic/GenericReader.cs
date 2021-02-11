@@ -16,13 +16,9 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Avro.IO;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using Avro.Reflect;
 
 namespace Avro.Generic
 {

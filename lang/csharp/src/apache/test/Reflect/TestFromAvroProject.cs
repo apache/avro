@@ -16,13 +16,10 @@
  * limitations under the License.
  */
 
- using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
-using Avro;
 using Avro.IO;
-using Avro.Generic;
-using Avro.Specific;
 using Avro.Reflect;
 using NUnit.Framework;
 

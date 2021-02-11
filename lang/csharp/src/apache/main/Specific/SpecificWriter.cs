@@ -16,9 +16,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Avro;
 using Avro.IO;
 using Avro.Generic;
 

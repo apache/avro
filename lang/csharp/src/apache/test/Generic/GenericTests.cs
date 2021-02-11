@@ -17,7 +17,6 @@
  */
 using System;
 using System.IO;
-using System.Linq;
 using Avro.IO;
 using System.Collections.Generic;
 using Avro.Generic;
