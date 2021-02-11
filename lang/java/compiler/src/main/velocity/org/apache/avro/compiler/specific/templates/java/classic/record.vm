@@ -53,10 +53,10 @@ static {
 
 #if (!$schema.isError())
   private static final BinaryMessageEncoder<${this.mangle($schema.getName())}> ENCODER =
-      new BinaryMessageEncoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+      new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
   private static final BinaryMessageDecoder<${this.mangle($schema.getName())}> DECODER =
-      new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$);
+      new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -80,7 +80,7 @@ static {
    * @return a BinaryMessageDecoder instance for this class backed by the given SchemaStore
    */
   public static BinaryMessageDecoder<${this.mangle($schema.getName())}> createDecoder(SchemaStore resolver) {
-    return new BinaryMessageDecoder<${this.mangle($schema.getName())}>(MODEL$, SCHEMA$, resolver);
+    return new BinaryMessageDecoder<>(MODEL$, SCHEMA$, resolver);
   }
 
   /**
