@@ -51,7 +51,7 @@ namespace Avro.Reflect
                     if (avroAttr != null)
                     {
                         hasAttribute = true;
-                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, avroAttr.Converter, cache));
+                        _propertyMap.TryAdd(f.Name, new DotnetProperty(prop, f.Schema, NullableConverter.CreateNullableWrapper(avroAttr.Converter, prop.PropertyType), cache));
                         break;
                     }
                 }

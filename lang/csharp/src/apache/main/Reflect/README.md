@@ -106,6 +106,40 @@ _Example TypedFieldConverter_:
     }
 ```
 
+### Nullable primitive properties
+
+Converters for primitive types (int, long, decimal, etc) automatically work with simple nullable unions/properties with the converters defined for the 
+non-nullable type.  You can create one converter and it will work for both nullable and non-nullable properties.
+
+```csharp
+        public class StringToDecimalConverter : TypedFieldConverter<string,decimal>
+        {
+            public override decimal From(string o, Schema s)
+            {
+                return decimal.Parse(o);
+            }
+
+            public override string To(decimal o, Schema s)
+            {
+                return o.Value;
+            }
+        }
+
+        public class MyModel1
+        {
+            [AvroField(typeof(DateTimeOffsetToLongConverter))]
+            public decimal Amount { get; set; }
+        }
+
+        public class MyModel2
+        {
+            [AvroField(typeof(DateTimeOffsetToLongConverter))]
+            public decimal? Amount { get; set; }
+        }
+```
+
+
+
 ### Default Converters
 
 Default converters are defined to convert between an Avro primitive and C# type without explicitly defining the converter for a field. Default converters are static and are registered with the class cache.
@@ -116,6 +150,7 @@ Default converters are defined to convert between an Avro primitive and C# type 
     var reader = new ReflectReader<GenericFixedRec>(schema, schema);
 
 ```
+
 ## Attributes
 
 The AvroField attribute can be used to defined field converters or to change the name of the dotnet property (or both).

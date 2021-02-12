@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Avro.IO;
 using Avro.Reflect;
@@ -61,15 +62,49 @@ namespace Avro.Test
         public DateTimeOffset? TimeStamp { get; set; }
     }
 
-    public class NullableWithNullableConverter : ITimeStamp
+    public class NullableWithDefinedConverter : ITimeStamp
     {
-        [AvroField(typeof(NullableConverter<DateTimeOffsetToLongConverter>))]
+        [AvroField(typeof(DateTimeOffsetToLongConverter))]
         public DateTimeOffset? TimeStamp { get; set; }
     }
 
+    public class StringToDecimalConverter : TypedFieldConverter<string, decimal>
+    {
+        public override decimal From(string o, Schema s)
+        {
+            return decimal.Parse(o);
+        }
+
+        public override string To(decimal o, Schema s)
+        {
+            return o.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    public class NullableDecimal
+    {
+        public decimal? Amount { get; set; }
+    }
+
+    public class NonNullableDecimal
+    {
+        public decimal Amount { get; set; }
+    }
+
+    public class NullableDecimalWithConverter
+    {
+        [AvroField(typeof(StringToDecimalConverter))]
+        public decimal? Amount { get; set; }
+    }
+
+    public class NonNullableDecimalWithConverter
+    {
+        [AvroField(typeof(StringToDecimalConverter))]
+        public decimal Amount { get; set; }
+    }
 
     [TestFixture]
-    public class TestLogMessage
+    public class TestConverters
     {
         private const string _logMessageSchemaV1 = @"
         {
@@ -107,6 +142,24 @@ namespace Avro.Test
                 }
              ]
          }";
+
+        private List<IAvroFieldConverter> _converters;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _converters = ClassCache.ClearDefaultConverters();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            ClassCache.ClearDefaultConverters();
+            foreach (var converter in _converters)
+            {
+                ClassCache.AddDefaultConverter(converter);
+            }
+        }
 
         [TestCase]
         public void Serialize()
@@ -147,125 +200,129 @@ namespace Avro.Test
         [TestCase(false)]
         public void SerializeNullableWithNullableConverter(bool useNull)
         {
-            var converters = ClassCache.ClearDefaultConverters();
-            try
-            {
-                SerializeTest<NullableWithNullableConverter>(_nullableConverterV1, useNull);
-            }
-            finally
-            {
-                // leave the cache the same as it was before we started
-                foreach (var converter in converters)
-                {
-                    ClassCache.AddDefaultConverter(converter);
-                }
-            }
+            SerializeTest<NullableWithDefinedConverter>(_nullableConverterV1, useNull);
         }
 
         [TestCase(true)]
         [TestCase(false)]
         public void SerializeNullableDefaultWithClass(bool useNull)
         {
-            var converters = ClassCache.ClearDefaultConverters();
             ClassCache.AddDefaultConverter(new DateTimeOffsetToLongConverter());
-            try
-            {
-                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
-            }
-            finally
-            {
-                // leave the cache the same as it was before we started
-                ClassCache.ClearDefaultConverters();
-                foreach (var converter in converters)
-                {
-                    ClassCache.AddDefaultConverter(converter);
-                }
-            }
+            SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
         }
 
         [TestCase(true)]
         [TestCase(false)]
         public void SerializeNullableDefaultWithDelegate(bool useNull)
         {
-            var converters = ClassCache.ClearDefaultConverters();
-
             var converter = new DateTimeOffsetToLongConverter();
-
             ClassCache.AddDefaultConverter<long, DateTimeOffset>(
                 (l, s) => (DateTimeOffset) converter.FromAvroType(l, s),
                 (d, s) => (long)converter.ToAvroType(d, s));
 
-            try
-            {
-                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
-            }
-            finally
-            {
-                // leave the cache the same as it was before we started
-                ClassCache.ClearDefaultConverters();
-                foreach (var c in converters)
-                {
-                    ClassCache.AddDefaultConverter(c);
-                }
-            }
+            SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
         }
 
         [TestCase(true)]
         [TestCase(false)]
         public void SerializeNullableDefaultWithNullableDelegate(bool useNull)
         {
-            var converters = ClassCache.ClearDefaultConverters();
-
             var converter = new DateTimeOffsetToLongConverter();
 
             ClassCache.AddDefaultConverter<long, DateTimeOffset?>(
                 (l, s) => (DateTimeOffset?) converter.FromAvroType(l, s),
                 (d, s) => d == null ? (long) 0 : (long) converter.ToAvroType(d, s));
 
-            try
-            {
-                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
-            }
-            finally
-            {
-                // leave the cache the same as it was before we started
-                ClassCache.ClearDefaultConverters();
-                foreach (var c in converters)
-                {
-                    ClassCache.AddDefaultConverter(c);
-                }
-            }
+            SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
         }
 
         [TestCase(true)]
         [TestCase(false)]
         public void SerializeNullableDefaultWithDoubleNullableDelegate(bool useNull)
         {
-            var converters = ClassCache.ClearDefaultConverters();
-
             var converter = new DateTimeOffsetToLongConverter();
 
             ClassCache.AddDefaultConverter<long?, DateTimeOffset?>(
                 (l, s) => l == null ? null : (DateTimeOffset?) converter.FromAvroType(l, s),
                 (d, s) => d == null ? null : (long?) converter.ToAvroType(d, s));
 
-            try
-            {
-                SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
-            }
-            finally
-            {
-                // leave the cache the same as it was before we started
-                ClassCache.ClearDefaultConverters();
-                foreach (var c in converters)
-                {
-                    ClassCache.AddDefaultConverter(c);
+            SerializeTest<NullableWithNoDefinedConverter>(_nullableConverterV1, useNull);
+        }
+
+        private const string _nullableDecimalV1 = @"
+        {
+            ""namespace"": ""MessageTypes"",
+            ""type"": ""record"",
+            ""name"": ""NullableDecimal"",
+            ""fields"": [
+                { ""name"": ""Amount"", ""type"": [
+                    ""null"",
+                    ""string""
+                    ]
                 }
-            }
+             ]
+         }";
+
+        private const string _nonNullableDecimalV1 = @"
+        {
+            ""namespace"": ""MessageTypes"",
+            ""type"": ""record"",
+            ""name"": ""NonNullableDecimal"",
+            ""fields"": [
+                { ""name"": ""Amount"", ""type"": ""string"" }
+             ]
+         }";
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNullableStringToDecimalConverter(bool useNull)
+        {
+            ClassCache.AddDefaultConverter(new StringToDecimalConverter());
+
+            SerializeTest<NullableDecimal>(_nullableDecimalV1, useNull,
+                (d, n) => d.Amount = n ? (decimal?) null : 14.34M,
+                (l, r) => Assert.AreEqual(l.Amount, r.Amount));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNullableStringToDecimalConverterWithAttribute(bool useNull)
+        {
+            SerializeTest<NullableDecimalWithConverter>(_nullableDecimalV1, useNull,
+                (d, n) => d.Amount = n ? (decimal?) null : 14.34M,
+                (l, r) => Assert.AreEqual(l.Amount, r.Amount));
+        }
+
+        // [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeNonNullableStringToDecimalConverterWithAttribute(bool useNull)
+        {
+            SerializeTest<NonNullableDecimalWithConverter>(_nullableDecimalV1, useNull,
+                (d, n) => d.Amount = n ? throw new NotSupportedException("cannot test null") : 14.34M,
+                (l, r) => Assert.AreEqual(l.Amount, r.Amount));
+        }
+
+        // [TestCase(true)]
+        [TestCase(false)]
+        public void SerializeStringToDecimalConverter(bool useNull)
+        {
+            ClassCache.AddDefaultConverter(new StringToDecimalConverter());
+
+            SerializeTest<NonNullableDecimal>(_nonNullableDecimalV1, useNull,
+                (d, n) => d.Amount = n ? throw new NotSupportedException("cannot test null") : 14.34M,
+                (l, r) => Assert.AreEqual(l.Amount, r.Amount));
         }
 
         private void SerializeTest<T>(string schemaJson, bool useNull)
             where T : class, ITimeStamp, new()
+        {
+            SerializeTest<T>(schemaJson, useNull,
+                (m, n) => m.TimeStamp = n ? (DateTimeOffset?) null : new DateTimeOffset(2002, 1, 21, 8, 15, 54, TimeSpan.FromHours(-4)),
+                (l, r) => Assert.AreEqual(l.TimeStamp, r.TimeStamp));
+        }
+
+        private void SerializeTest<T>(string schemaJson, bool useNull, Action<T, bool> setValue, Action<T, T> assert)
+            where T : class, new()
         {
             var schema = Schema.Parse(schemaJson);
             var avroWriter = new ReflectWriter<T>(schema);
@@ -273,12 +330,9 @@ namespace Avro.Test
 
             byte[] serialized;
 
-            var message = new T
-            {
-                TimeStamp = useNull
-                    ? (DateTimeOffset?) null
-                    : new DateTimeOffset(2002, 1, 21, 8, 15, 54, TimeSpan.FromHours(-4))
-            };
+            var message = new T();
+
+            setValue(message, useNull);
 
             using (var stream = new MemoryStream(256))
             {
@@ -293,7 +347,8 @@ namespace Avro.Test
             }
 
             Assert.IsNotNull(deserialized);
-            Assert.AreEqual(message.TimeStamp, deserialized.TimeStamp);
+
+            assert(message, deserialized);
         }
     }
 }

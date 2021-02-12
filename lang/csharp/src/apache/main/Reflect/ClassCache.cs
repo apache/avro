@@ -205,13 +205,15 @@ namespace Avro.Reflect
             var avroTypes = new[]
             {
                 avroType.MakePrimitive(),
-                avroType.MakeNullable()
+                avroType.MakeNullable(),
+                avroType // in case avroType isn't primitive (eg: a string)
             };
 
             var propTypes = new[]
             {
                 propType.MakePrimitive(),
-                propType.MakeNullable()
+                propType.MakeNullable(),
+                propType // in case propType isn't primitive (eg: a string)
             };
 
             return avroTypes
