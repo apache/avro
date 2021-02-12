@@ -75,6 +75,11 @@ namespace Avro.Reflect
         public static void AddDefaultConverter(IAvroFieldConverter converter)
         {
             _defaultConverters.Add(converter);
+
+            // when a new converter is added, clear all the cached converters
+            // to see if the new one might match something next time a converter is asked for
+            // Most likely, the list is already empty. All default converters are added before
+            // any serialization begins, right?
             _typeDefaultConverters.Clear();
         }
 
