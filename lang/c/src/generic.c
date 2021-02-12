@@ -29,6 +29,7 @@
 #include "avro_generic_internal.h"
 #include "avro_private.h"
 
+#define align_up(sz) ((sz + (sizeof(void*)-1)) & ~(sizeof(void*)-1))
 
 /*-----------------------------------------------------------------------
  * Forward definitions
@@ -3156,6 +3157,9 @@ avro_generic_record_class(avro_schema_t schema, memoize_state_t *state)
 			goto error;
 		}
 
+		/* align to the nearest multiple of pointer size */
+		field_size = align_up(field_size);
+
 #if DEBUG_FIELD_OFFSETS
 		fprintf(stderr, "    Offset %" PRIsz ", size %" PRIsz "\n",
 			next_offset, field_size);
@@ -3241,7 +3245,7 @@ typedef struct avro_generic_union {
 
 /** Return a pointer to the active branch within a union struct. */
 #define avro_generic_union_branch(_union) \
-	(((char *) (_union)) + sizeof(avro_generic_union_t))
+	(((char *) (_union)) + align_up(sizeof(avro_generic_union_t)))
 
 
 static avro_value_iface_t *
@@ -3534,7 +3538,8 @@ avro_generic_union_class(avro_schema_t schema, memoize_state_t *state)
 	}
 
 	iface->instance_size =
-		sizeof(avro_generic_union_t) + max_branch_size;
+		align_up(sizeof(avro_generic_union_t)) + max_branch_size;
+
 #if DEBUG_BRANCHES
 	fprintf(stderr, "MAX BRANCH SIZE: %" PRIsz "\n", max_branch_size);
 #endif
