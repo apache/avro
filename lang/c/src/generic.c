@@ -3192,11 +3192,11 @@ error:
  * union
  */
 
-#ifndef DEBUG_BRANCHES_OFFSETS
-#define DEBUG_BRANCHES_OFFSETS 0
+#ifndef DEBUG_BRANCHES
+#define DEBUG_BRANCHES 0
 #endif
 
-#if DEBUG_BRANCHES_OFFSETS
+#if DEBUG_BRANCHES
 #include <stdio.h>
 #endif
 
