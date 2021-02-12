@@ -35,7 +35,7 @@ extern "C" {
  */
 
 static inline void
-avro_refcount_set(volatile int *refcount, int value);
+avro_refcount_set(volatile long *refcount, int value);
 
 /**
  * Increments a reference count, ensuring that its value doesn't
@@ -43,7 +43,7 @@ avro_refcount_set(volatile int *refcount, int value);
  */
 
 static inline void
-avro_refcount_inc(volatile int *refcount);
+avro_refcount_inc(volatile long *refcount);
 
 /**
  * Decrements a reference count, and returns whether the resulting
@@ -51,7 +51,7 @@ avro_refcount_inc(volatile int *refcount);
  */
 
 static inline int
-avro_refcount_dec(volatile int *refcount);
+avro_refcount_dec(volatile long *refcount);
 
 
 /*-----------------------------------------------------------------------
@@ -59,13 +59,13 @@ avro_refcount_dec(volatile int *refcount);
  */
 #if defined(AVRO_NON_ATOMIC_REFCOUNT)
 static inline void
-avro_refcount_set(volatile int *refcount, int value)
+avro_refcount_set(volatile long *refcount, int value)
 {
 	*refcount = value;
 }
 
 static inline void
-avro_refcount_inc(volatile int *refcount)
+avro_refcount_inc(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		*refcount += 1;
@@ -73,7 +73,7 @@ avro_refcount_inc(volatile int *refcount)
 }
 
 static inline int
-avro_refcount_dec(volatile int *refcount)
+avro_refcount_dec(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		*refcount -= 1;
@@ -91,13 +91,13 @@ avro_refcount_dec(volatile int *refcount)
 #include <libkern/OSAtomic.h>
 
 static inline void
-avro_refcount_set(volatile int *refcount, int value)
+avro_refcount_set(volatile long *refcount, int value)
 {
 	*refcount = value;
 }
 
 static inline void
-avro_refcount_inc(volatile int *refcount)
+avro_refcount_inc(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		OSAtomicIncrement32(refcount);
@@ -105,7 +105,7 @@ avro_refcount_inc(volatile int *refcount)
 }
 
 static inline int
-avro_refcount_dec(volatile int *refcount)
+avro_refcount_dec(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		return (OSAtomicDecrement32(refcount) == 0);
@@ -122,13 +122,13 @@ avro_refcount_dec(volatile int *refcount)
 || defined(__clang__)
 
 static inline void
-avro_refcount_set(volatile int *refcount, int value)
+avro_refcount_set(volatile long *refcount, int value)
 {
 	*refcount = value;
 }
 
 static inline void
-avro_refcount_inc(volatile int *refcount)
+avro_refcount_inc(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		__sync_add_and_fetch(refcount, 1);
@@ -136,7 +136,7 @@ avro_refcount_inc(volatile int *refcount)
 }
 
 static inline int
-avro_refcount_dec(volatile int *refcount)
+avro_refcount_dec(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		return (__sync_sub_and_fetch(refcount, 1) == 0);
@@ -164,13 +164,13 @@ avro_refcount_dec(volatile int *refcount)
 #endif
 
 static inline void
-avro_refcount_set(volatile int *refcount, int value)
+avro_refcount_set(volatile long *refcount, int value)
 {
 	*refcount = value;
 }
 
 static inline void
-avro_refcount_inc(volatile int *refcount)
+avro_refcount_inc(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		__asm__ __volatile__ ("lock ; inc"REFCOUNT_SS" %0"
@@ -180,7 +180,7 @@ avro_refcount_inc(volatile int *refcount)
 }
 
 static inline int
-avro_refcount_dec(volatile int *refcount)
+avro_refcount_dec(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		char result;
@@ -202,7 +202,7 @@ avro_refcount_dec(volatile int *refcount)
 #elif defined(__GNUC__) && defined(__ppc__)
 
 static inline int
-avro_refcount_LL_int(volatile int *ptr)
+avro_refcount_LL_int(volatile long *ptr)
 {
 	int val;
 	__asm__ __volatile__ ("lwarx %[val],0,%[ptr]"
@@ -215,7 +215,7 @@ avro_refcount_LL_int(volatile int *ptr)
 
 /* Returns non-zero if the store was successful, zero otherwise. */
 static inline int
-avro_refcount_SC_int(volatile int *ptr, int val)
+avro_refcount_SC_int(volatile long *ptr, int val)
 {
 	int ret = 1; /* init to non-zero, will be reset to 0 if SC was successful */
 	__asm__ __volatile__ ("stwcx. %[val],0,%[ptr];\n"
@@ -229,13 +229,13 @@ avro_refcount_SC_int(volatile int *ptr, int val)
 }
 
 static inline void
-avro_refcount_set(volatile int *refcount, int value)
+avro_refcount_set(volatile long *refcount, int value)
 {
 	*refcount = value;
 }
 
 static inline void
-avro_refcount_inc(volatile int *refcount)
+avro_refcount_inc(volatile long *refcount)
 {
 	int prev;
 	do {
@@ -247,7 +247,7 @@ avro_refcount_inc(volatile int *refcount)
 }
 
 static inline int
-avro_refcount_dec(volatile int *refcount)
+avro_refcount_dec(volatile long *refcount)
 {
 	int prev;
 	do {
@@ -273,13 +273,13 @@ avro_refcount_dec(volatile int *refcount)
 #endif // __cplusplus
 
 static inline void
-avro_refcount_set(volatile int *refcount, int value)
+avro_refcount_set(volatile long *refcount, int value)
 {
 	*refcount = value;
 }
 
 static inline void
-avro_refcount_inc(volatile int *refcount)
+avro_refcount_inc(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		_InterlockedIncrement((volatile long *) refcount);
@@ -287,7 +287,7 @@ avro_refcount_inc(volatile int *refcount)
 }
 
 static inline int
-avro_refcount_dec(volatile int *refcount)
+avro_refcount_dec(volatile long *refcount)
 {
 	if (*refcount != (int) -1) {
 		return (_InterlockedDecrement((volatile long *) refcount) == 0);
