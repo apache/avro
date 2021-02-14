@@ -58,7 +58,7 @@
     <easymock.version>4.2</easymock.version>
     <hamcrest.version>2.2</hamcrest.version>
     <grpc.version>1.35.0</grpc.version>
-    <zstd-jni.version>1.4.8-3</zstd-jni.version>
+    <zstd-jni.version>1.4.8-4</zstd-jni.version>
     <!-- version properties for plugins -->
     <archetype-plugin.version>3.2.0</archetype-plugin.version>
     <bundle-plugin-version>4.1.0</bundle-plugin-version>
