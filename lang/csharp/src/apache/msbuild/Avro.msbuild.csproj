@@ -31,7 +31,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Microsoft.Build.Framework" Version="15.6.82" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.6.82" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.8.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
