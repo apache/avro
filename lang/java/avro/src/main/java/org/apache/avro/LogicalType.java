@@ -21,6 +21,8 @@ package org.apache.avro;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.specific.SpecificData;
 
+import java.util.List;
+
 /**
  * Logical types provides an opt-in way to extend Avro's types. Logical types
  * specify a way of representing a high-level type as a base Avro type. For
@@ -87,6 +89,38 @@ public class LogicalType {
         throw new IllegalArgumentException(LOGICAL_TYPE_PROP + " cannot be used with " + incompatible);
       }
     }
+  }
+
+  /**
+   * Utility function to resolve the logical type from the given Schema
+   * 
+   * @param schema a Schema representing a logical type
+   * @return the logical type represented by the schema, or null if the schema
+   *         doesn't represent a logical type, or if the logical type is ambiguous
+   */
+  public static LogicalType resolveLogicalType(Schema schema) {
+    if (schema.getLogicalType() != null) {
+      return schema.getLogicalType();
+    } else if (schema.isUnion()) {
+      List<Schema> types = schema.getTypes();
+      if (types.size() == 1) {
+        // The union has a single branch that may or may not be a logical type - return
+        // it either way
+        return types.get(0).getLogicalType();
+      } else if (types.size() == 2) {
+        // The union has exactly two branches.
+        // If one branch is null and one is a logical type, return the logical type,
+        // else return neither
+        LogicalType t1 = types.get(0).getLogicalType();
+        LogicalType t2 = types.get(1).getLogicalType();
+        if (t1 != null && t2 == null) {
+          return t1;
+        } else if (t1 == null && t2 != null) {
+          return t2;
+        }
+      }
+    }
+    return null;
   }
 
 }

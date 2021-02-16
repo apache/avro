@@ -632,6 +632,24 @@ public class TestSpecificCompiler {
   }
 
   @Test
+  public void testLogicalTypeUnionProducesConversionField() throws Exception {
+    this.src = new File("src/test/resources/union_and_fixed_fields.avsc");
+    SpecificCompiler compiler = createCompiler();
+    compiler.compileToDestination(this.src, OUTPUT_DIR.getRoot());
+    this.outputFile = new File(OUTPUT_DIR.getRoot(), "org/apache/avro/specific/UnionAndFixedFields.java");
+    assertTrue(this.outputFile.exists());
+    boolean classContainsConversion = false;
+    try (BufferedReader reader = new BufferedReader(new FileReader(this.outputFile))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        classContainsConversion |= line
+            .contains("new org.apache.avro.data.TimeConversions.TimestampMillisConversion(),");
+      }
+    }
+    assertTrue(classContainsConversion);
+  }
+
+  @Test
   public void testLogicalTypesWithMultipleFieldsDateTime() throws Exception {
     Schema logicalTypesWithMultipleFields = new Schema.Parser()
         .parse(new File("src/test/resources/logical_types_with_multiple_fields.avsc"));

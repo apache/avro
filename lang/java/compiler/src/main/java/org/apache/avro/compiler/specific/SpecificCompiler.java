@@ -39,6 +39,7 @@ import java.util.Set;
 
 import org.apache.avro.Conversion;
 import org.apache.avro.Conversions;
+import org.apache.avro.LogicalType;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.data.TimeConversions;
 import org.apache.avro.specific.SpecificData;
@@ -59,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.avro.LogicalType.resolveLogicalType;
 import static org.apache.avro.specific.SpecificData.RESERVED_WORDS;
 
 /**
@@ -908,7 +910,7 @@ public class SpecificCompiler {
 
   public boolean hasLogicalTypeField(Schema schema) {
     for (Schema.Field field : schema.getFields()) {
-      if (field.schema().getLogicalType() != null) {
+      if (resolveLogicalType(field.schema()) != null) {
         return true;
       }
     }
@@ -916,15 +918,18 @@ public class SpecificCompiler {
   }
 
   public String conversionInstance(Schema schema) {
-    if (schema == null || schema.getLogicalType() == null) {
+    if (schema == null) {
       return "null";
     }
 
-    if (LogicalTypes.Decimal.class.equals(schema.getLogicalType().getClass()) && !enableDecimalLogicalType) {
+    LogicalType logicalType = resolveLogicalType(schema);
+
+    if (logicalType == null
+        || (LogicalTypes.Decimal.class.equals(logicalType.getClass()) && !enableDecimalLogicalType)) {
       return "null";
     }
 
-    final Conversion<Object> conversion = specificData.getConversionFor(schema.getLogicalType());
+    final Conversion<Object> conversion = specificData.getConversionFor(logicalType);
     if (conversion != null) {
       return "new " + conversion.getClass().getCanonicalName() + "()";
     }

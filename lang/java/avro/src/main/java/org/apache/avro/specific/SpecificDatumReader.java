@@ -17,6 +17,8 @@
  */
 package org.apache.avro.specific;
 
+import static org.apache.avro.LogicalType.resolveLogicalType;
+
 import org.apache.avro.Conversion;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
@@ -131,7 +133,7 @@ public class SpecificDatumReader<T> extends GenericDatumReader<T> {
 
       Object datum;
       if (conversion != null) {
-        datum = readWithConversion(oldDatum, field.schema(), field.schema().getLogicalType(), conversion, in);
+        datum = readWithConversion(oldDatum, field.schema(), resolveLogicalType(field.schema()), conversion, in);
       } else {
         datum = readWithoutConversion(oldDatum, field.schema(), in);
       }
