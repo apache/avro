@@ -72,8 +72,8 @@ public class AddExtraOptionalGettersTest extends org.apache.avro.specific.Specif
     return DECODER.decode(b);
   }
 
-   private java.lang.CharSequence name;
-   private java.lang.Integer favorite_number;
+  private java.lang.CharSequence name;
+  private java.lang.Integer favorite_number;
 
   /**
    * Default constructor.  Note that this does not initialize fields

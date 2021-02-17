@@ -77,12 +77,12 @@ static {
   }
 
   /** The number of the player */
-   private int number;
-   private java.lang.String last_name;
-   private java.time.Instant timestamp;
-   private java.time.Instant timestampMicros;
-   private java.time.LocalTime timeMillis;
-   private java.time.LocalTime timeMicros;
+  private int number;
+  private java.lang.String last_name;
+  private java.time.Instant timestamp;
+  private java.time.Instant timestampMicros;
+  private java.time.LocalTime timeMillis;
+  private java.time.LocalTime timeMicros;
 
   /**
    * Default constructor.  Note that this does not initialize fields
