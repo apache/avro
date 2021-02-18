@@ -222,6 +222,11 @@ namespace Avro.Test
             var rs = Schema.Parse(s) as RecordSchema;
             Assert.IsNotNull(rs);
             Assert.AreEqual(expectedDoc, rs.Documentation);
+
+            var roundTrip = Schema.Parse(rs.ToString()) as RecordSchema;
+
+            Assert.IsNotNull(roundTrip);
+            Assert.AreEqual(expectedDoc, roundTrip.Documentation);
         }
 
         [TestCase("{\"type\": \"enum\", \"name\": \"Test\", \"symbols\": [\"A\", \"B\"]}",

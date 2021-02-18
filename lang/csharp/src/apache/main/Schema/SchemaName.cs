@@ -107,7 +107,7 @@ namespace Avro
             if (null != this.Name)  // write only if not anonymous
             {
                 JsonHelper.writeIfNotNullOrEmpty(writer, "name", this.Name);
-                JsonHelper.writeIfNotNullOrEmpty(writer, "doc", this.Documentation);
+                JsonHelper.writeIfNotNull(writer, "doc", this.Documentation);
                 if (!String.IsNullOrEmpty(this.Space))
                     JsonHelper.writeIfNotNullOrEmpty(writer, "namespace", this.Space);
                 else if (!String.IsNullOrEmpty(this.EncSpace)) // need to put enclosing name space for code generated classes
