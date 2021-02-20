@@ -352,6 +352,20 @@ public class TestBinaryDecoder {
   }
 
   @Test
+  public void testHugeStringLengthEncoding() throws IOException {
+    byte[] bad = new byte[10];
+    BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
+    Decoder bd = factory.binaryDecoder(bad, null);
+    String message = "";
+    try {
+      bd.readString();
+    } catch (UnsupportedOperationException e) {
+      message = e.getMessage();
+    }
+    Assert.assertEquals("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes", message);
+  }
+
+  @Test
   public void testNegativeBytesLengthEncoding() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
@@ -362,6 +376,20 @@ public class TestBinaryDecoder {
       message = e.getMessage();
     }
     Assert.assertEquals("Malformed data. Length is negative: -1", message);
+  }
+
+  @Test
+  public void testHugeBytesLengthEncoding() throws IOException {
+    byte[] bad = new byte[10];
+    BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
+    Decoder bd = factory.binaryDecoder(bad, null);
+    String message = "";
+    try {
+      bd.readBytes(null);
+    } catch (UnsupportedOperationException e) {
+      message = e.getMessage();
+    }
+    Assert.assertEquals("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes", message);
   }
 
   @Test(expected = UnsupportedOperationException.class)

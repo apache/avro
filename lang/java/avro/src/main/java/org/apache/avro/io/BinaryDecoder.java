@@ -48,7 +48,7 @@ public class BinaryDecoder extends Decoder {
    * an array. Attempts to allocate larger arrays may result in OutOfMemoryError:
    * Requested array size exceeds VM limit
    */
-  private static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
+  static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
 
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a
@@ -307,6 +307,9 @@ public class BinaryDecoder extends Decoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = readInt();
+    if (length > MAX_ARRAY_SIZE) {
+      throw new UnsupportedOperationException("Cannot read strings longer than " + MAX_ARRAY_SIZE + " bytes");
+    }
     if (length < 0L) {
       throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
     }
