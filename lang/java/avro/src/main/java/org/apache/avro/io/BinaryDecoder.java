@@ -97,7 +97,8 @@ public class BinaryDecoder extends Decoder {
       try {
         i = Integer.parseUnsignedInt(o);
       } catch (NumberFormatException nfe) {
-        LoggerFactory.getLogger(BinaryDecoder.class).warn("Could not parse property " + MAX_BYTES_LENGTH_PROPERTY + ": " + o, nfe);
+        LoggerFactory.getLogger(BinaryDecoder.class)
+            .warn("Could not parse property " + MAX_BYTES_LENGTH_PROPERTY + ": " + o, nfe);
       }
     }
     maxBytesLength = i;

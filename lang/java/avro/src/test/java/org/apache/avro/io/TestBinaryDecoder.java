@@ -343,9 +343,7 @@ public class TestBinaryDecoder {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
 
-    Assert.assertThrows("Malformed data. Length is negative: -1",
-                        AvroRuntimeException.class,
-                        bd::readString);
+    Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, bd::readString);
   }
 
   @Test
@@ -355,8 +353,7 @@ public class TestBinaryDecoder {
     Decoder bd = factory.binaryDecoder(bad, null);
 
     Assert.assertThrows("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
-                        UnsupportedOperationException.class,
-                        bd::readString);
+        UnsupportedOperationException.class, bd::readString);
   }
 
   @Test
@@ -364,9 +361,7 @@ public class TestBinaryDecoder {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
 
-    Assert.assertThrows("Malformed data. Length is negative: -1",
-                        AvroRuntimeException.class,
-                        () -> bd.readBytes(null));
+    Assert.assertThrows("Malformed data. Length is negative: -1", AvroRuntimeException.class, () -> bd.readBytes(null));
   }
 
   @Test
@@ -376,8 +371,7 @@ public class TestBinaryDecoder {
     Decoder bd = factory.binaryDecoder(bad, null);
 
     Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
-                        UnsupportedOperationException.class,
-                        () -> bd.readBytes(null));
+        UnsupportedOperationException.class, () -> bd.readBytes(null));
   }
 
   @Test
@@ -389,9 +383,8 @@ public class TestBinaryDecoder {
       System.setProperty("org.apache.avro.limits.bytes.maxLength", Long.toString(maxLength));
       Decoder bd = factory.binaryDecoder(bad, null);
 
-      Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed",
-                          AvroRuntimeException.class,
-                          () -> bd.readBytes(null));
+      Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed", AvroRuntimeException.class,
+          () -> bd.readBytes(null));
     } finally {
       System.clearProperty("org.apache.avro.limits.bytes.maxLength");
     }
