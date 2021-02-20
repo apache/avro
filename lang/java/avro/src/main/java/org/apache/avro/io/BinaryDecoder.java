@@ -308,7 +308,7 @@ public class BinaryDecoder extends Decoder {
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = readInt();
     if (length > MAX_ARRAY_SIZE) {
-      throw new UnsupportedOperationException("Cannot read strings longer than " + MAX_ARRAY_SIZE + " bytes");
+      throw new UnsupportedOperationException("Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes");
     }
     if (length < 0L) {
       throw new AvroRuntimeException("Malformed data. Length is negative: " + length);

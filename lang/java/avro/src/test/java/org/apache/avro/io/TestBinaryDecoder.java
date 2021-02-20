@@ -342,13 +342,10 @@ public class TestBinaryDecoder {
   public void testNegativeStringLength() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
-    String message = "";
-    try {
-      bd.readString();
-    } catch (AvroRuntimeException e) {
-      message = e.getMessage();
-    }
-    Assert.assertEquals("Malformed data. Length is negative: -1", message);
+
+    Assert.assertThrows("Malformed data. Length is negative: -1",
+                        AvroRuntimeException.class,
+                        bd::readString);
   }
 
   @Test
@@ -356,26 +353,20 @@ public class TestBinaryDecoder {
     byte[] bad = new byte[10];
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
     Decoder bd = factory.binaryDecoder(bad, null);
-    String message = "";
-    try {
-      bd.readString();
-    } catch (UnsupportedOperationException e) {
-      message = e.getMessage();
-    }
-    Assert.assertEquals("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes", message);
+
+    Assert.assertThrows("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
+                        UnsupportedOperationException.class,
+                        bd::readString);
   }
 
   @Test
   public void testNegativeBytesLength() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
-    String message = "";
-    try {
-      bd.readBytes(null);
-    } catch (AvroRuntimeException e) {
-      message = e.getMessage();
-    }
-    Assert.assertEquals("Malformed data. Length is negative: -1", message);
+
+    Assert.assertThrows("Malformed data. Length is negative: -1",
+                        AvroRuntimeException.class,
+                        () -> bd.readBytes(null));
   }
 
   @Test
@@ -383,13 +374,10 @@ public class TestBinaryDecoder {
     byte[] bad = new byte[10];
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
     Decoder bd = factory.binaryDecoder(bad, null);
-    String message = "";
-    try {
-      bd.readBytes(null);
-    } catch (UnsupportedOperationException e) {
-      message = e.getMessage();
-    }
-    Assert.assertEquals("Cannot read strings longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes", message);
+
+    Assert.assertThrows("Cannot read arrays longer than " + BinaryDecoder.MAX_ARRAY_SIZE + " bytes",
+                        UnsupportedOperationException.class,
+                        () -> bd.readBytes(null));
   }
 
   @Test(expected = UnsupportedOperationException.class)
