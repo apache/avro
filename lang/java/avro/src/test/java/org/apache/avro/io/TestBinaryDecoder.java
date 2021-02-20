@@ -339,7 +339,7 @@ public class TestBinaryDecoder {
   }
 
   @Test
-  public void testNegativeStringLengthEncoding() throws IOException {
+  public void testNegativeStringLength() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
     String message = "";
@@ -352,7 +352,7 @@ public class TestBinaryDecoder {
   }
 
   @Test
-  public void testHugeStringLengthEncoding() throws IOException {
+  public void testStringMaxArraySize() throws IOException {
     byte[] bad = new byte[10];
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
     Decoder bd = factory.binaryDecoder(bad, null);
@@ -366,7 +366,7 @@ public class TestBinaryDecoder {
   }
 
   @Test
-  public void testNegativeBytesLengthEncoding() throws IOException {
+  public void testNegativeBytesLength() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
     String message = "";
@@ -379,7 +379,7 @@ public class TestBinaryDecoder {
   }
 
   @Test
-  public void testHugeBytesLengthEncoding() throws IOException {
+  public void testBytesMaxArraySize() throws IOException {
     byte[] bad = new byte[10];
     BinaryData.encodeLong(BinaryDecoder.MAX_ARRAY_SIZE + 1, bad, 0);
     Decoder bd = factory.binaryDecoder(bad, null);
