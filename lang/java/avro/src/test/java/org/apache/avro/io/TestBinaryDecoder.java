@@ -339,12 +339,25 @@ public class TestBinaryDecoder {
   }
 
   @Test
-  public void testNegativeLengthEncoding() throws IOException {
+  public void testNegativeStringLengthEncoding() throws IOException {
     byte[] bad = new byte[] { (byte) 1 };
     Decoder bd = factory.binaryDecoder(bad, null);
     String message = "";
     try {
       bd.readString();
+    } catch (AvroRuntimeException e) {
+      message = e.getMessage();
+    }
+    Assert.assertEquals("Malformed data. Length is negative: -1", message);
+  }
+
+  @Test
+  public void testNegativeBytesLengthEncoding() throws IOException {
+    byte[] bad = new byte[] { (byte) 1 };
+    Decoder bd = factory.binaryDecoder(bad, null);
+    String message = "";
+    try {
+      bd.readBytes(null);
     } catch (AvroRuntimeException e) {
       message = e.getMessage();
     }

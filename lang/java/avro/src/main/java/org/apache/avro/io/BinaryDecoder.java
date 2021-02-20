@@ -307,6 +307,9 @@ public class BinaryDecoder extends Decoder {
   @Override
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
     int length = readInt();
+    if (length < 0L) {
+      throw new AvroRuntimeException("Malformed data. Length is negative: " + length);
+    }
     final ByteBuffer result;
     if (old != null && length <= old.capacity()) {
       result = old;
