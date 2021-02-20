@@ -27,6 +27,7 @@ import java.util.Arrays;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.InvalidNumberEncodingException;
 import org.apache.avro.util.Utf8;
+import org.slf4j.LoggerFactory;
 
 /**
  * An {@link Decoder} for binary-format data.
@@ -49,6 +50,9 @@ public class BinaryDecoder extends Decoder {
    * Requested array size exceeds VM limit
    */
   static final long MAX_ARRAY_SIZE = (long) Integer.MAX_VALUE - 8L;
+
+  private static final String MAX_BYTES_LENGTH_PROPERTY = "org.apache.avro.limits.bytes.maxLength";
+  private final int maxBytesLength;
 
   private ByteSource source = null;
   // we keep the buffer and its state variables in this class and not in a
@@ -87,15 +91,25 @@ public class BinaryDecoder extends Decoder {
 
   /** protected constructor for child classes */
   protected BinaryDecoder() {
+    String o = System.getProperty(MAX_BYTES_LENGTH_PROPERTY);
+    int i = Integer.MAX_VALUE;
+    if (o != null) {
+      try {
+        i = Integer.parseUnsignedInt(o);
+      } catch (NumberFormatException nfe) {
+        LoggerFactory.getLogger(BinaryDecoder.class).warn("Could not parse property " + MAX_BYTES_LENGTH_PROPERTY + ": " + o, nfe);
+      }
+    }
+    maxBytesLength = i;
   }
 
   BinaryDecoder(InputStream in, int bufferSize) {
-    super();
+    this();
     configure(in, bufferSize);
   }
 
   BinaryDecoder(byte[] data, int offset, int length) {
-    super();
+    this();
     configure(data, offset, length);
   }
 
@@ -309,6 +323,9 @@ public class BinaryDecoder extends Decoder {
     int length = readInt();
     if (length > MAX_ARRAY_SIZE) {
       throw new UnsupportedOperationException("Cannot read arrays longer than " + MAX_ARRAY_SIZE + " bytes");
+    }
+    if (length > maxBytesLength) {
+      throw new AvroRuntimeException("Bytes length " + length + " exceeds maximum allowed");
     }
     if (length < 0L) {
       throw new AvroRuntimeException("Malformed data. Length is negative: " + length);

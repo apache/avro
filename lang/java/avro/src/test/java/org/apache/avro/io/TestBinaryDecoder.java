@@ -380,6 +380,23 @@ public class TestBinaryDecoder {
                         () -> bd.readBytes(null));
   }
 
+  @Test
+  public void testBytesMaxLengthProperty() throws IOException {
+    int maxLength = 128;
+    byte[] bad = new byte[10];
+    BinaryData.encodeLong(maxLength + 1, bad, 0);
+    try {
+      System.setProperty("org.apache.avro.limits.bytes.maxLength", Long.toString(maxLength));
+      Decoder bd = factory.binaryDecoder(bad, null);
+
+      Assert.assertThrows("Bytes length " + (maxLength + 1) + " exceeds maximum allowed",
+                          AvroRuntimeException.class,
+                          () -> bd.readBytes(null));
+    } finally {
+      System.clearProperty("org.apache.avro.limits.bytes.maxLength");
+    }
+  }
+
   @Test(expected = UnsupportedOperationException.class)
   public void testLongLengthEncoding() throws IOException {
     // Size equivalent to Integer.MAX_VALUE + 1
