@@ -91,6 +91,7 @@ public class BinaryDecoder extends Decoder {
 
   /** protected constructor for child classes */
   protected BinaryDecoder() {
+    super();
     String o = System.getProperty(MAX_BYTES_LENGTH_PROPERTY);
     int i = Integer.MAX_VALUE;
     if (o != null) {
