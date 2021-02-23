@@ -153,6 +153,7 @@ gen (tree1 tr1)
 gen (tree2 tr2)
 gen (crossref cr)
 gen (primitivetypes pt)
+gen (cpp_reserved_words cppres)
 
 add_executable (avrogencpp impl/avrogencpp.cc)
 target_link_libraries (avrogencpp avrocpp_s ${Boost_LIBRARIES} ${SNAPPY_LIBRARIES})
@@ -177,6 +178,9 @@ unittest (DataFileTests)
 unittest (JsonTests)
 unittest (AvrogencppTests)
 unittest (CompilerTests)
+unittest (AvrogencppTestReservedWords)
+
+add_dependencies (AvrogencppTestReservedWords cpp_reserved_words_hh)
 
 add_dependencies (AvrogencppTests bigrecord_hh bigrecord_r_hh bigrecord2_hh
     tweet_hh
