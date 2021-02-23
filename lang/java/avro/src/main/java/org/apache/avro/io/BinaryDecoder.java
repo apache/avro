@@ -38,6 +38,13 @@ import org.slf4j.LoggerFactory;
  * required to serve its read methods. The number of unused bytes in the buffer
  * can be accessed by inputStream().remaining(), if the BinaryDecoder is not
  * 'direct'.
+ * <p/>
+ * To prevent this class from making large allocations when handling potentially
+ * pathological input data, set Java properties
+ * <tt>org.apache.avro.limits.string.maxLength</tt> and
+ * <tt>org.apache.avro.limits.bytes.maxLength</tt> before instantiating this
+ * class to limit the maximum sizes of <tt>string</tt> and <tt>bytes</tt> types
+ * handled. The default is to permit sizes up to Java's maximum array length.
  *
  * @see Encoder
  */
