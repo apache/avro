@@ -409,28 +409,40 @@ namespace Avro.Test
         [Test]
         public void TestSoftMatchOption()
         {
-            var base64 = "AhR0ZXN0IHZhbHVl";
-            
-            using (var stream = new MemoryStream(Convert.FromBase64String(base64)))
+            var srcSpecificRecord = new RootType
             {
-                var schema1 = Schema.Parse(
-                    "{\"type\":\"record\",\"name\":\"RootType\",\"namespace\":\"Avro.Test.Specific.SoftMatch\",\"fields\":" +
-                    "[{\"name\":\"InnerComplexValue\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"InnerType1\"" +
-                    ",\"fields\":[{\"name\":\"value\",\"type\":\"string\"}]}]}]}");
+                InnerComplexValue = new InnerType2
+                {
+                    value = "test value"
+                }
+            };
 
-                var schema2 = Schema.Parse(
-                    "{\"type\":\"record\",\"name\":\"RootType\",\"namespace\":\"Avro.Test.Specific.SoftMatch\",\"fields\":" +
-                    "[{\"name\":\"InnerComplexValue\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"InnerType2\"" +
-                    ",\"fields\":[{\"name\":\"value\",\"type\":\"string\"}]}]}]}");
+            var schema1 = Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"RootType\",\"namespace\":\"Avro.Test.Specific.SoftMatch\",\"fields\":" +
+                "[{\"name\":\"InnerComplexValue\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"InnerType1\"" +
+                ",\"fields\":[{\"name\":\"value\",\"type\":\"string\"}]}]}]}");
 
-                Assert.DoesNotThrow(() => _ = deserialize<RootType>(stream, schema2, schema2));
+            var schema2 = Schema.Parse(
+                "{\"type\":\"record\",\"name\":\"RootType\",\"namespace\":\"Avro.Test.Specific.SoftMatch\",\"fields\":" +
+                "[{\"name\":\"InnerComplexValue\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"InnerType2\"" +
+                ",\"fields\":[{\"name\":\"value\",\"type\":\"string\"}]}]}]}");
+
+            using (var stream = serialize(schema2, srcSpecificRecord))
+            {
+                RootType deserializedWithShema2 = null;
+                Assert.DoesNotThrow(() => deserializedWithShema2 = deserialize<RootType>(stream, schema2, schema2));
+
                 stream.Position = 0;
 
                 Assert.Throws<AvroException>(() => _ = deserialize<RootType>(stream, schema1, schema2));
                 stream.Position = 0;
 
                 SchemaConfiguration.UseSoftMatch = true;
-                Assert.DoesNotThrow(() => _ = deserialize<RootType>(stream, schema1, schema2));
+                RootType deserializedWithSchema1ToSchema2 = null;
+                Assert.DoesNotThrow(() => deserializedWithSchema1ToSchema2 = deserialize<RootType>(stream, schema1, schema2));
+
+                AssertSpecificRecordEqual(srcSpecificRecord, deserializedWithShema2);
+                AssertSpecificRecordEqual(srcSpecificRecord, deserializedWithSchema1ToSchema2);
             }
         }
 
