@@ -26,6 +26,7 @@ using Avro.Specific;
 using System.Reflection;
 using Avro.Test.Specific;
 using System.Collections.Generic;
+using Avro.Test.Specific.SoftMatch;
 
 namespace Avro.Test
 {
@@ -403,6 +404,34 @@ namespace Avro.Test
             Assert.AreEqual("5", dstRecord.UserMatrix[1][0][0].name);
             Assert.AreEqual("6", dstRecord.UserMatrix[1][0][1].name);
             Assert.AreEqual(0, dstRecord.UserMatrix[2].Count);
+        }
+
+        [Test]
+        public void TestSoftMatchOption()
+        {
+            var base64 = "AhR0ZXN0IHZhbHVl";
+            
+            using (var stream = new MemoryStream(Convert.FromBase64String(base64)))
+            {
+                var schema1 = Schema.Parse(
+                    "{\"type\":\"record\",\"name\":\"RootType\",\"namespace\":\"Avro.Test.Specific.SoftMatch\",\"fields\":" +
+                    "[{\"name\":\"InnerComplexValue\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"InnerType1\"" +
+                    ",\"fields\":[{\"name\":\"value\",\"type\":\"string\"}]}]}]}");
+
+                var schema2 = Schema.Parse(
+                    "{\"type\":\"record\",\"name\":\"RootType\",\"namespace\":\"Avro.Test.Specific.SoftMatch\",\"fields\":" +
+                    "[{\"name\":\"InnerComplexValue\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"InnerType2\"" +
+                    ",\"fields\":[{\"name\":\"value\",\"type\":\"string\"}]}]}]}");
+
+                Assert.DoesNotThrow(() => _ = deserialize<RootType>(stream, schema2, schema2));
+                stream.Position = 0;
+
+                Assert.Throws<AvroException>(() => _ = deserialize<RootType>(stream, schema1, schema2));
+                stream.Position = 0;
+
+                SchemaConfiguration.UseSoftMatch = true;
+                Assert.DoesNotThrow(() => _ = deserialize<RootType>(stream, schema1, schema2));
+            }
         }
 
         private static S deserialize<S>(Stream ms, Schema ws, Schema rs) where S : class, ISpecificRecord
