@@ -286,7 +286,7 @@ struct TestCodeGenerator {
         // in this test I know choice was 0
         {
             BOOST_CHECK_EQUAL(rec1.anotherunion.choice, 0);
-            typedef std::vector<uint8_t> mytype;
+            using mytype = std::vector<uint8_t>;
             checkBytes(rec1.anotherunion.getValue<mytype>(), rec2.anotherunion.getValue<testgen::Union_of_bytes_null::T0>());
         }
 
@@ -452,7 +452,7 @@ struct TestSchemaResolving {
 
         {
             BOOST_CHECK_EQUAL(rec1.anotherunion.choice, 0);
-            typedef std::vector<uint8_t> mytype;
+            using mytype = std::vector<uint8_t>;
             checkBytes(rec1.anotherunion.getValue<mytype>(), rec2.anotherunion);
         }
 

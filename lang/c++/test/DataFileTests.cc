@@ -67,8 +67,8 @@ struct Integer {
     Integer(int64_t r) : re(r) { }
 };
 
-typedef Complex<int64_t> ComplexInteger;
-typedef Complex<double> ComplexDouble;
+using ComplexInteger = Complex<int64_t>;
+using ComplexDouble = Complex<double>;
 
 struct Double {
     double re;
@@ -196,7 +196,7 @@ public:
         filename(f), writerSchema(makeValidSchema(wsch)),
         readerSchema(makeValidSchema(rsch)), count(count) { }
 
-    typedef pair<ValidSchema, GenericDatum> Pair;
+    using Pair = pair<ValidSchema, GenericDatum>;
 
     void testCleanup() {
         BOOST_CHECK(boost::filesystem::remove(filename));

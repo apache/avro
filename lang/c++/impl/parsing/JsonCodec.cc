@@ -21,7 +21,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
-#include <ctype.h>
+#include <cctype>
 #include <memory>
 #include <boost/math/special_functions/fpclassify.hpp>
 
@@ -59,7 +59,7 @@ class JsonGrammarGenerator : public ValidatingGrammarGenerator {
 static std::string nameOf(const NodePtr& n)
 {
     if (n->hasName()) {
-        return n->name();
+        return std::string(n->name());
     }
     std::ostringstream oss;
     oss << n->type();

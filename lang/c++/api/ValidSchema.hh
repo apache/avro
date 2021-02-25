@@ -39,7 +39,7 @@ class AVRO_DECL Schema;
 
 class AVRO_DECL ValidSchema {
 public:
-    explicit ValidSchema(const NodePtr &root);
+    explicit ValidSchema(NodePtr root);
     explicit ValidSchema(const Schema &schema);
     ValidSchema();
 

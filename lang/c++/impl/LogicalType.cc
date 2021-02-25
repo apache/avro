@@ -53,30 +53,30 @@ void LogicalType::printJson(std::ostream& os) const {
     case LogicalType::NONE:
         break;
     case LogicalType::DECIMAL:
-        os << "\"logicalType\": \"decimal\"";
+        os << R"("logicalType": "decimal")";
         os << ", \"precision\": " << precision_;
         os << ", \"scale\": " << scale_;
         break;
     case DATE:
-        os << "\"logicalType\": \"date\"";
+        os << R"("logicalType": "date")";
         break;
     case TIME_MILLIS:
-        os << "\"logicalType\": \"time-millis\"";
+        os << R"("logicalType": "time-millis")";
         break;
     case TIME_MICROS:
-        os << "\"logicalType\": \"time-micros\"";
+        os << R"("logicalType": "time-micros")";
         break;
     case TIMESTAMP_MILLIS:
-        os << "\"logicalType\": \"timestamp-millis\"";
+        os << R"("logicalType": "timestamp-millis")";
         break;
     case TIMESTAMP_MICROS:
-        os << "\"logicalType\": \"timestamp-micros\"";
+        os << R"("logicalType": "timestamp-micros")";
         break;
     case DURATION:
-        os << "\"logicalType\": \"duration\"";
+        os << R"("logicalType": "duration")";
         break;
     case UUID:
-        os << "\"logicalType\": \"uuid\"";
+        os << R"("logicalType": "uuid")";
         break;
     }
 }

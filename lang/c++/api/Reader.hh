@@ -19,7 +19,7 @@
 #ifndef avro_Reader_hh__
 #define avro_Reader_hh__
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 #include <array>
 #include <boost/noncopyable.hpp>
@@ -38,19 +38,16 @@ namespace avro {
 ///
 
 template<class ValidatorType>
-class ReaderImpl : private boost::noncopyable
-{
+class ReaderImpl : private boost::noncopyable {
 
-  public:
+public:
 
     explicit ReaderImpl(const InputBuffer &buffer) :
-        reader_(buffer)
-    {}
+        reader_(buffer) {}
 
     ReaderImpl(const ValidSchema &schema, const InputBuffer &buffer) :
         validator_(schema),
-        reader_(buffer)
-    {}
+        reader_(buffer) {}
 
     void readValue(Null &) {
         validator_.checkTypeExpected(AVRO_NULL);
@@ -65,7 +62,7 @@ class ReaderImpl : private boost::noncopyable
 
     void readValue(int32_t &val) {
         validator_.checkTypeExpected(AVRO_INT);
-        uint32_t encoded = static_cast<uint32_t>(readVarInt());
+        auto encoded = static_cast<uint32_t>(readVarInt());
         val = decodeZigzag32(encoded);
     }
 
@@ -97,13 +94,13 @@ class ReaderImpl : private boost::noncopyable
 
     void readValue(std::string &val) {
         validator_.checkTypeExpected(AVRO_STRING);
-        size_t size = static_cast<size_t>(readSize());
+        auto size = static_cast<size_t>(readSize());
         reader_.read(val, size);
     }
 
     void readBytes(std::vector<uint8_t> &val) {
         validator_.checkTypeExpected(AVRO_BYTES);
-        size_t size = static_cast<size_t>(readSize());
+        auto size = static_cast<size_t>(readSize());
         val.resize(size);
         reader_.read(reinterpret_cast<char *>(val.data()), size);
     }
@@ -113,12 +110,12 @@ class ReaderImpl : private boost::noncopyable
         reader_.read(reinterpret_cast<char *>(val), size);
     }
 
-    template <size_t N>
+    template<size_t N>
     void readFixed(uint8_t (&val)[N]) {
         this->readFixed(val, N);
     }
 
-    template <size_t N>
+    template<size_t N>
     void readFixed(std::array<uint8_t, N> &val) {
         this->readFixed(val.data(), N);
     }
@@ -167,7 +164,7 @@ class ReaderImpl : private boost::noncopyable
         return validator_.getNextFieldName(name);
     }
 
-  private:
+private:
 
     uint64_t readVarInt() {
         uint64_t encoded = 0;
@@ -197,12 +194,12 @@ class ReaderImpl : private boost::noncopyable
     }
 
     ValidatorType validator_;
-    BufferReader  reader_;
+    BufferReader reader_;
 
 };
 
-typedef ReaderImpl<NullValidator> Reader;
-typedef ReaderImpl<Validator> ValidatingReader;
+using Reader = ReaderImpl<NullValidator>;
+using ValidatingReader = ReaderImpl<Validator>;
 
 } // namespace avro
 
