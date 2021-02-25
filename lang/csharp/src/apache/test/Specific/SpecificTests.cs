@@ -429,19 +429,24 @@ namespace Avro.Test
 
             using (var stream = serialize(schema2, srcSpecificRecord))
             {
-                RootType deserializedWithShema2 = null;
-                Assert.DoesNotThrow(() => deserializedWithShema2 = deserialize<RootType>(stream, schema2, schema2));
-
+                var deserializedWithSchema2 = deserialize<RootType>(stream, schema2, schema2);
                 stream.Position = 0;
 
                 Assert.Throws<AvroException>(() => _ = deserialize<RootType>(stream, schema1, schema2));
                 stream.Position = 0;
 
-                SchemaConfiguration.UseSoftMatch = true;
                 RootType deserializedWithSchema1ToSchema2 = null;
-                Assert.DoesNotThrow(() => deserializedWithSchema1ToSchema2 = deserialize<RootType>(stream, schema1, schema2));
+                try
+                {
+                    SchemaConfiguration.UseSoftMatch = true;
+                    Assert.DoesNotThrow(() => deserializedWithSchema1ToSchema2 = deserialize<RootType>(stream, schema1, schema2));
+                }
+                finally
+                {
+                    SchemaConfiguration.UseSoftMatch = false;
+                }
 
-                AssertSpecificRecordEqual(srcSpecificRecord, deserializedWithShema2);
+                AssertSpecificRecordEqual(srcSpecificRecord, deserializedWithSchema2);
                 AssertSpecificRecordEqual(srcSpecificRecord, deserializedWithSchema1ToSchema2);
             }
         }
